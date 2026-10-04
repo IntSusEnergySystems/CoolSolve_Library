@@ -1,0 +1,92 @@
+$UnitSystem SI MASS DEG PA C J
+
+{=============================================================================
+  Vapour-compression refrigeration cycle with a simple compressor model
+  CoolSolve Library model CSL-0001
+ -----------------------------------------------------------------------------
+  A refrigeration cycle (evaporation at 0 °C, condensation at 40 °C, 8 K of
+  superheating, 5 K of subcooling) is driven by a reciprocating compressor
+  described by two simple laws:
+    - a volumetric efficiency accounting for the clearance volume:
+        epsilon_v = 1 - C*(r_v - 1)   with r_v = v_su/v_ex, the volume ratio
+        of the isentropic compression, and V_dot_su = epsilon_v*V_dot_s;
+    - an electrical power made of constant losses plus losses proportional
+        to the isentropic power:  W_dot = W_dot_loss_0 + (1 + alpha)*W_dot_in.
+  The model returns the refrigerant mass flow rate, the cooling capacity, the
+  compressor power and the COP. The refrigerant is selected with fluid$; the
+  original exercise compares R22, R134a and propane (see README.md).
+
+  Inputs : W_dot_loss_0, alpha, C, V_dot_s (compressor);
+           fluid$, T_ev, T_cd, DELTAT_oh, DELTAT_sc (cycle)
+  Outputs: M_dot_r, Q_dot_ev, W_dot, COP
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course "Machines et systèmes thermiques", exercise session 1,
+           exercise 3 (EES file MSTh-SB-R1-Ex3.EES) - see README.md
+=============================================================================}
+
+"Compressor data"
+W_dot_loss_0 = 3400          "constant electromechanical losses [W]"
+alpha = 0.3                  "loss factor proportional to the isentropic power [-]"
+C = 0.06                     "clearance factor [-]"
+V_dot_s = 0.04               "swept volume flow rate [m^3/s]"
+
+"Refrigeration cycle data"
+fluid$ = 'R22'               "refrigerant: the original exercise compares R22, R134a and Propane"
+T_ev = 0                     "evaporation temperature [°C]"
+DELTAT_oh = 8                "superheating at the evaporator outlet [K]"
+T_cd = 40                    "condensation temperature [°C]"
+DELTAT_sc = 5                "subcooling at the condenser outlet [K]"
+
+"!Compressor model"
+epsilon_v = V_dot_su/V_dot_s           "volumetric efficiency (definition)"
+V_dot_su = M_dot_r*v_su                "volume flow rate at the compressor supply [m^3/s]"
+epsilon_v = 1 - C*(r_v - 1)            "volumetric efficiency of a compressor with clearance volume"
+r_v = v_su/v_ex                        "volume ratio of the isentropic compression"
+v_su = VOLUME(fluid$, T=T_su, P=P_su)  "supply state: superheated vapour (corrected, see README)"
+v_ex = VOLUME(fluid$, s=s_su, P=P_ex)  "isentropic exhaust state"
+
+W_dot = W_dot_loss_0 + (1 + alpha)*W_dot_in   "electrical power consumption [W]"
+
+W_dot_in = M_dot_r*(h_ex_s - h_su)            "isentropic compression power [W]"
+h_su = ENTHALPY(fluid$, T=T_su, P=P_su)       "corrected, see README"
+h_ex_s = ENTHALPY(fluid$, s=s_su, P=P_ex)
+s_su = ENTROPY(fluid$, T=T_su, P=P_su)        "corrected, see README"
+
+"Connection between the compressor and the cycle"
+P_su = P_ev
+T_su = T_1
+P_ex = P_cd
+
+"!Refrigeration cycle"
+P_ev = PRESSURE(fluid$, T=T_ev, x=0.5)        "evaporation pressure [Pa]"
+P_cd = PRESSURE(fluid$, T=T_cd, x=0.5)        "condensation pressure [Pa]"
+
+Q_dot_ev = M_dot_r*(h_1 - h_4)                "cooling capacity [W]"
+h_4 = h_3                                     "isenthalpic expansion"
+h_3 = ENTHALPY(fluid$, T=T_3, x=0)            "condenser outlet (subcooled liquid, enthalpy taken at saturation)"
+T_3 = T_cd - DELTAT_sc
+h_1 = ENTHALPY(fluid$, T=T_1, P=P_ev)         "evaporator outlet: superheated vapour (corrected, see README)"
+T_1 = T_ev + DELTAT_oh
+
+COP = Q_dot_ev/W_dot                          "coefficient of performance [-]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: evaporator outlet = compressor supply, 2: isentropic compressor exhaust,
+ 3: condenser outlet, 4: evaporator inlet. Use the arrays h[i]/P[i] or s[i]/T[i]
+ with the "Overlay array path" option of the CoolSolve Diagram tab.}
+P[1] = P_ev
+h[1] = h_1
+T[1] = T_1
+s[1] = s_su
+P[2] = P_cd
+h[2] = h_ex_s
+T[2] = TEMPERATURE(fluid$, h=h[2], P=P[2])
+s[2] = s_su
+P[3] = P_cd
+h[3] = h_3
+T[3] = T_3
+s[3] = ENTROPY(fluid$, T=T_3, x=0)
+P[4] = P_ev
+h[4] = h_4
+T[4] = TEMPERATURE(fluid$, h=h_4, P=P_ev)
+s[4] = ENTROPY(fluid$, h=h_4, P=P_ev)

@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0001",
+  "name": "refrigeration_cycle_simple_compressor",
+  "title": "Refrigeration cycle with a simple compressor model",
+  "summary": "Vapour-compression refrigeration cycle driven by a reciprocating compressor described by a clearance-volume volumetric efficiency and a linear loss model; compares R22, R134a and propane.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "refrigeration_cycle_simple_compressor.eescode",
+  "fluids": [
+    "R22",
+    "R134a",
+    "Propane"
+  ],
+  "tags": [
+    "refrigeration",
+    "reciprocating compressor",
+    "volumetric efficiency",
+    "clearance volume",
+    "fluid comparison",
+    "exercise"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 48,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 01/SB/MSTh-SB-R1-Ex3.EES",
+    "candidate_id": "TM-0018",
+    "authors": [
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "Machines et systèmes thermiques (ULiège), exercise session 1, exercise 3"
+  },
+  "verification": {
+    "reference": "EES parametric table stored in the source file (3 runs: R22, R134a, Propane) for the faithful import; CoolSolve example compressor_refrigeration_simple for the corrected model",
+    "date": "2026-10-04",
+    "coolsolve_version": "0.3.0",
+    "max_rel_diff": 0.014,
+    "notes": "Faithful import vs EES: R134a 0.06 %, propane 0.3 %, R22 1.4 % (EES 7.4 vs CoolProp R22 properties). Corrected model vs CoolSolve example: < 0.02 %."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [
+    "CoolSolve examples/compressor_refrigeration_simple.eescode (same exercise, R22 and R134a computed side by side)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-007"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-04",
+      "action": "added (pilot model of the library methodology)",
+      "by": "Claude (Opus 5.5) for S. Quoilin"
+    }
+  ]
+}
