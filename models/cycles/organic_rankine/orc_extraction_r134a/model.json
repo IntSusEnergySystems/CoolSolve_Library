@@ -1,0 +1,63 @@
+{
+  "id": "CSL-0036",
+  "name": "orc_extraction_r134a",
+  "title": "ORC with two-stage expander and intermediate extraction (R134a)",
+  "summary": "R134a Organic Rankine Cycle (T_ev = 90 °C, T_cd = 30 °C) whose screw/scroll-type expander is described stage by stage: isentropic first expansion, extraction of 13 % of the flow at an intermediate pressure, isentropic second expansion and constant-volume discharge; the extracted vapour is mixed with the exhaust and cools the pumped liquid in an internal heat exchanger. Determines the pressures, all state points, a 4.99 kW expander power, 35.6 kW boiler duty and a cycle efficiency of 11.7 %.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "orc_extraction_r134a.eescode",
+  "fluids": [
+    "R134a"
+  ],
+  "tags": [
+    "organic Rankine cycle",
+    "expander",
+    "two-stage expansion",
+    "extraction",
+    "recuperator",
+    "semi-empirical",
+    "volume ratios"
+  ],
+  "language_features": [
+    "property functions",
+    "arrays",
+    "string variables",
+    "min/max functions"
+  ],
+  "stats": {"n_equations": 163, "largest_block": 1},
+  "origin": {
+    "type": "research",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/orc_extraction.eescode",
+    "candidate_id": "CSX-030",
+    "authors": [
+      "S. Quoilin (ULiège Thermodynamics Laboratory) — probable, to be confirmed by the maintainer"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.920 (CoolSolve EES_ok/orc_extraction.EES); identical equations in X7.991 (thermo_models/modeles/cycle a extraction.EES, TM-0267)",
+    "language": "en (3 French comments in the diagram section)"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file (CoolSolve misc/EES_ok.zip, EES_ok/orc_extraction.EES, EES 9.920, 132 stored variables); the equations of that file are byte-identical to ~/Nextcloud/thermo_models/modeles/cycle a extraction.EES (EES 7.991)",
+    "date": "2026-10-05",
+    "coolsolve_version": "main 2026-10-05",
+    "max_rel_diff": 0.002,
+    "notes": "132 common variables: 52 agree within 0.1 %. The 52 h/u/s variables differ by a constant reference-state offset (+148.19 kJ/kg, +795.79 J/(kg K): EES default R134a reference vs CoolProp IIR); after removing it they agree within 0.09 %. Remaining deviations 0.1-0.2 % (R134a equation of state): specific volumes +0.21 %, mass flow -0.21 %, Q_dot_ev -0.16 %, Q_dot_cd -0.17 %, W_dot_exp -0.12 %, W_dot_pp -0.20 %, eta +0.06 %. EES quality() outside the dome: -100/100 sentinels vs 0 in CoolSolve (diagnostic only). The original is over-determined (5 variables defined twice or three times, 2 never defined): the free inputs were restored with the stored values and the redundant definitions removed without changing any equation of the physics."
+  },
+  "missing_features": [],
+  "related": ["CSL-0004", "CSL-0007", "CSL-0019"],
+  "related_external": [
+    "CoolSolve examples/orc_extraction.eescode (same model, kept in CoolSolve as a test case)",
+    "CoolSolve misc/EES_ok.zip: EES_ok/orc_extraction.EES (original EES file with the stored solution, used as reference)",
+    "~/Nextcloud/thermo_models/modeles/cycle a extraction.EES (EES 7.991, byte-identical equations, TM-0267)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-030"
+  ],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-05", "action": "added (roadmap card C-37, batch B-03)", "by": "opencode worker for S. Quoilin"}
+  ]
+}

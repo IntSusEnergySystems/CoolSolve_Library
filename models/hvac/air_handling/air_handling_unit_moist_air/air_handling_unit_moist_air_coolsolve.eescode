@@ -1,0 +1,101 @@
+{=============================================================================
+  Air handling unit with moist-air conditioning: runnable transcription
+  CoolSolve Library model CSL-0028 - variant of
+  air_handling_unit_moist_air.eescode
+ -----------------------------------------------------------------------------
+  The main file keeps the native EES syntax and does not run in CoolSolve. This
+  transcription is identical to it, with one change. The changed line is valid
+  EES (DEWPOINT is documented in the EES manual and listed as supported in
+  CoolSolve docs/ees_vs_coolsolve.csv); it is needed only because CoolSolve
+  rejects the native form (gap CS-GAP-PSYCHRO-SAT).
+
+    1. the contact temperature is evaluated with
+       T_c = dewpoint(airH2O, P=P_in, w=w_c, T=T_out) (the dew-point
+       temperature at the contact humidity ratio, i.e. the same saturated
+       state as T_c = temperature(airH2O, P=P_in, w=w_c, R=1)) instead of the
+       native EES form with R=1 - gap CS-GAP-PSYCHRO-SAT. This is the form
+       used by the CoolSolve example humidair2.eescode of the same exercise.
+
+  No other equation or value was changed; the results reproduce the stored
+  solution of the original EES file. The variant needs the curated initial
+  guesses of air_handling_unit_moist_air_coolsolve.initials (from the stored
+  EES solution): from default guesses it converges to a non-physical root.
+  See README.md.
+
+  Inputs : P_in, T_in, RH_in, M_dot_w, V_dot_a, Q_dot_t, T_out, RH_out,
+           epsilon_c
+  Outputs: T_su, w_su, RH_su, M_dot_a, T_c, T_ex_bat, Q_dot_pc, M_dot_w_cond,
+           Q_dot_batt, T[i], w[i]
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège exercise (VL050429, repetition 10, exercise 3), rewritten as
+           CoolSolve example humidair2 by S. Quoilin - see README.md
+=============================================================================}
+
+"VL050429
+Repetition 10, exercise 3
+
+The air supplied to the room of the previous exercise comes from outdoors.
+The outdoor air temperature is 30 °C and its relative humidity is 60 %. The
+supply conditions are achieved with an air handling unit. Calculate the heat
+exchanged at the cooling coil (contact effectiveness of 80 %), the power
+needed for post-heating and the condensate flow rate at the cooling coil.
+"
+
+P_in=1E5 "outdoor and room air pressure [Pa]"
+T_in=25 "room air temperature [C]"
+RH_in=0.5 "room air relative humidity [-]"
+M_dot_w=0.08/3600 "[kg/s]"
+V_dot_a=40/3600 "[m^3/s]"
+Q_dot_t=130 "[W]"
+
+"supply air conditions"
+Q_dot_t=M_dot_a*(h_in-h_su) "room sensible energy balance [W]"
+h_in=ENTHALPY(AirH2O,T=T_in,P=P_in,R=RH_in) "room air specific enthalpy [J/kg dry air]"
+M_dot_a=V_dot_a/v_a_su "dry-air mass flow rate [kg/s dry air]"
+
+v_a_su=volume(airH2O,T=T_su{in},P=P_in,w=w_su{in}) "supply air specific volume [m^3/kg dry air], for updating initial guesses"
+T_su=temperature(airH2O,h=h_su,P=P_in,w=w_su) "supply air temperature [C]"
+
+"water mass balance"
+M_dot_a*w_su+M_dot_w=M_dot_a*w_in "room moisture balance [kg/s]"
+w_in=humrat(airH2O,T=T_in,P=P_in,R=RH_in) "room air humidity ratio [kg/kg dry air]"
+
+RH_su=Relhum(AIRH2O,P=P_in,T=T_su,w=w_su) "supply air relative humidity [-]"
+
+"outdoor conditions"
+
+T_out=30 "outdoor air temperature [C]"
+RH_out=0.60 "outdoor air relative humidity [-]"
+	"cooling coil"
+epsilon_c=0.8 "coil contact effectiveness [-]"
+epsilon_c=(w_out-w_su)/(w_out-w_c) "to compute w_c [-]"
+w_out=humrat(airH2O,T=T_out,R=RH_out,P=P_in) "outdoor air humidity ratio [kg/kg dry air]"
+T_c=dewpoint(airH2O,P=P_in,w=w_c,T=T_out) "coil contact temperature [C], same saturated state as temperature(airH2O, P=P_in, w=w_c, R=1) - gap CS-GAP-PSYCHRO-SAT"
+epsilon_c=(T_out-T_ex_bat)/(T_out-T_c) "contact effectiveness on the temperatures [-]"
+
+	"post-heating"
+Q_dot_pc=M_dot_a*(h_su-h_ex_bat) "post-heating power [W]"
+h_ex_bat=enthalpy(airH2O,P=P_in,T=T_ex_bat,w=w_su) "air enthalpy at the coil outlet [J/kg dry air]"
+ "or"
+Q_dot_pc_bis=M_dot_a*(h_su_air-h_ex_bat_air) "same power from the dry-air enthalpies only [W], as in the original"
+h_su_air=enthalpy(air,T=T_su) "supply dry-air specific enthalpy [J/kg]"
+h_ex_bat_air=enthalpy(air,T=T_ex_bat) "coil-outlet dry-air specific enthalpy [J/kg]"
+
+	"condensate flow rate"
+M_dot_w_cond=M_dot_a*(w_out-w_su) "water condensed at the cooling coil [kg/s]"
+
+	"cooling coil capacity"
+h_out=enthalpy(airH2O,P=P_in,T=T_out,w=w_out) "outdoor air specific enthalpy [J/kg dry air]"
+Q_dot_batt=M_dot_a*(h_out-h_ex_bat) "cooling coil capacity [W]"
+
+ 	"Q_dot_pc equals Q_dot_pc_bis since there is no latent heat exchange after the cooling coil (humidity ratio stays at w_su)"
+
+"states for the psychrometric chart"
+T[1]=T_out "outdoor state [C]"
+w[1]=w_out "outdoor humidity ratio [kg/kg dry air]"
+T[2]=T_ex_bat "coil outlet state [C]"
+w[2]=w_su "coil outlet humidity ratio [kg/kg dry air]"
+T[3]=T_su "supply state [C]"
+w[3]=w_su "supply humidity ratio [kg/kg dry air]"
+T[4]=T_in "room state [C]"
+w[4]=w_in "room humidity ratio [kg/kg dry air]"

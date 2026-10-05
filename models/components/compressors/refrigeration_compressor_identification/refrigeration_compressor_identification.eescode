@@ -1,0 +1,175 @@
+{=============================================================================
+  Refrigeration compressor - parameter identification from two operating points
+  CoolSolve Library model CSL-0022
+  -----------------------------------------------------------------------------
+  A R22 reciprocating refrigeration compressor in a simple vapour-compression
+  cycle (evaporator, isentropic compression reference, condenser with
+  subcooling, isenthalpic expansion, suction superheat) is described by four
+  parameters:
+    - V_dot_s: swept volume flow rate at the (constant) running speed [m^3/s],
+    - C: clearance factor [-],
+    - W_dot_loss_0: constant electromechanical losses [W],
+    - alpha: loss factor proportional to the isentropic power [-],
+  with a volumetric efficiency epsilon_v = 1 - C*(r_v - 1), r_v the volume
+  ratio of the isentropic compression, and a power consumption
+  W_dot = W_dot_loss_0 + (1 + alpha)*W_dot_s.
+  Two measured operating points (cooling capacity and power at two
+  condensing/evaporating temperature pairs) identify the four parameters
+  (square system); the identified parameters, imposed at their rounded
+  values, then predict the cooling capacity and power at a third operating
+  point (40 C condensing, 2 C evaporating) — hence the tag
+  "parameter identification", kind "steady".
+
+  Inputs : T_cd_1, T_ev_1, Q_dot_ev_1, W_dot_1, T_cd_2, T_ev_2, Q_dot_ev_2,
+           W_dot_2 (measured points); T_cd_3, T_ev_3 (prediction point);
+           DELTAT_sc, DELTAT_oh (subcooling, superheat)
+  Outputs: V_dot_s, C, W_dot_loss_0, alpha (identified parameters);
+           M_dot_3, Q_dot_ev_3, W_dot_3 (prediction)
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course "Machines et systèmes thermiques", repetition 1,
+           exercise 2 (EES solution by S. Bertagnolio) - see README.md
+=============================================================================}
+
+"Subcooling at the condenser outlet and superheat at the evaporator outlet, as in the original"
+DELTAT_sc = 3                  "subcooling [K]"
+DELTAT_oh = 5                  "superheat [K]"
+
+"First measured operating regime, as in the original"
+T_cd_1 = 34                    "condensing temperature [C]"
+T_ev_1 = -6                    "evaporating temperature [C]"
+Q_dot_ev_1 = 64000             "measured cooling capacity [W]"
+W_dot_1 = 16000                "measured power consumption [W]"
+
+"Second measured operating regime, as in the original"
+T_cd_2 = 46                    "condensing temperature [C]"
+T_ev_2 = 0                     "evaporating temperature [C]"
+Q_dot_ev_2 = 70000             "measured cooling capacity [W]"
+W_dot_2 = 20000                "measured power consumption [W]"
+
+"!Calculations for regime 1"
+"Evaporator"
+Q_dot_ev_1 = M_dot_1*(h_1_1 - h_4_1)              "cooling capacity [W]"
+h_1_1 = ENTHALPY(R22, T=T_1_1, P=P_ev_1)         "compressor suction specific enthalpy [J/kg]"
+P_ev_1 = PRESSURE(R22, x=0.5, T=T_ev_1)          "evaporating pressure [Pa]"
+T_1_1 = T_ev_1 + DELTAT_oh                       "compressor suction temperature [C]"
+h_4_1 = h_3_1                                    "isenthalpic expansion [J/kg]"
+h_3_1 = ENTHALPY(R22, T=T_3_1, P=P_cd_1)         "condenser outlet specific enthalpy [J/kg]"
+P_cd_1 = PRESSURE(R22, x=0.5, T=T_cd_1)          "condensing pressure [Pa]"
+T_3_1 = T_cd_1 - DELTAT_sc                       "condenser outlet temperature [C]"
+
+"Compressor"
+W_dot_s_1 = M_dot_1*(h_2_1 - h_1_1)               "isentropic compression power [W]"
+h_2_1 = ENTHALPY(R22, s=s_1_1, P=P_cd_1)         "isentropic exhaust specific enthalpy [J/kg]"
+s_1_1 = ENTROPY(R22, T=T_1_1, P=P_ev_1)          "suction specific entropy [J/kg-K]"
+
+W_dot_1 = W_dot_loss_0 + (1 + alpha)*W_dot_s_1   "power consumption [W]"
+
+epsilon_v_1 = V_dot_su_1/V_dot_s                 "volumetric efficiency (definition) [-]"
+V_dot_su_1 = M_dot_1*v_1_1                       "suction volume flow rate [m^3/s]"
+v_1_1 = VOLUME(R22, T=T_1_1, P=P_ev_1)           "suction specific volume [m^3/kg]"
+epsilon_v_1 = 1 - C*(r_v_1 - 1)                  "volumetric efficiency with clearance volume [-]"
+r_v_1 = v_1_1/v_2_1                              "volume ratio of the isentropic compression [-]"
+v_2_1 = VOLUME(R22, h=h_2_1, P=P_cd_1)           "isentropic exhaust specific volume [m^3/kg]"
+
+"State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+h[1] = h_1_1
+h[2] = h_2_1
+h[3] = h_3_1
+h[4] = h_4_1
+P[1] = P_ev_1
+P[2] = P_cd_1
+P[3] = P_cd_1
+P[4] = P_ev_1
+
+"!Calculations for regime 2"
+"Evaporator"
+Q_dot_ev_2 = M_dot_2*(h_1_2 - h_4_2)              "cooling capacity [W]"
+h_1_2 = ENTHALPY(R22, T=T_1_2, P=P_ev_2)         "compressor suction specific enthalpy [J/kg]"
+P_ev_2 = PRESSURE(R22, x=0.5, T=T_ev_2)          "evaporating pressure [Pa]"
+T_1_2 = T_ev_2 + DELTAT_oh                       "compressor suction temperature [C]"
+h_4_2 = h_3_2                                    "isenthalpic expansion [J/kg]"
+h_3_2 = ENTHALPY(R22, T=T_3_2, P=P_cd_2)         "condenser outlet specific enthalpy [J/kg]"
+P_cd_2 = PRESSURE(R22, x=0.5, T=T_cd_2)          "condensing pressure [Pa]"
+T_3_2 = T_cd_2 - DELTAT_sc                       "condenser outlet temperature [C]"
+
+"Compressor"
+W_dot_s_2 = M_dot_2*(h_2_2 - h_1_2)               "isentropic compression power [W]"
+h_2_2 = ENTHALPY(R22, s=s_1_2, P=P_cd_2)         "isentropic exhaust specific enthalpy [J/kg]"
+s_1_2 = ENTROPY(R22, T=T_1_2, P=P_ev_2)          "suction specific entropy [J/kg-K]"
+
+W_dot_2 = W_dot_loss_0 + (1 + alpha)*W_dot_s_2   "power consumption [W]"
+
+epsilon_v_2 = V_dot_su_2/V_dot_s                 "volumetric efficiency (definition) [-]"
+V_dot_su_2 = M_dot_2*v_1_2                       "suction volume flow rate [m^3/s]"
+v_1_2 = VOLUME(R22, T=T_1_2, P=P_ev_2)           "suction specific volume [m^3/kg]"
+epsilon_v_2 = 1 - C*(r_v_2 - 1)                  "volumetric efficiency with clearance volume [-]"
+r_v_2 = v_1_2/v_2_2                              "volume ratio of the isentropic compression [-]"
+v_2_2 = VOLUME(R22, h=h_2_2, P=P_cd_2)           "isentropic exhaust specific volume [m^3/kg]"
+
+"!Identified compressor characteristics (EES solution, as in the original)"
+"alpha = 0.204
+C = 0.06018
+V_dot_s = 0.0251
+W_dot_loss_0 = 2238"
+
+"!Prediction at a third operating regime with the identified parameters imposed"
+T_cd_3 = 40                    "condensing temperature [C]"
+T_ev_3 = 2                     "evaporating temperature [C]"
+alpha_cp = 0.204               "imposed loss factor [-], as in the original"
+C_cp = 0.06018                 "imposed clearance factor [-], as in the original"
+V_dot_s_cp = 0.0251            "imposed swept volume flow rate [m^3/s], as in the original"
+W_dot_loss_0_cp = 2238         "imposed constant losses [W], as in the original"
+"_cp = compressor characteristic, as in the original"
+
+"!Refrigeration cycle at regime 3"
+"Evaporator"
+Q_dot_ev_3 = M_dot_3*(h_1_3 - h_4_3)              "predicted cooling capacity [W]"
+h_1_3 = ENTHALPY(R22, T=T_1_3, P=P_ev_3)         "compressor suction specific enthalpy [J/kg]"
+P_ev_3 = PRESSURE(R22, x=0.5, T=T_ev_3)          "evaporating pressure [Pa]"
+T_1_3 = T_ev_3 + DELTAT_oh                       "compressor suction temperature [C]"
+h_4_3 = h_3_3                                    "isenthalpic expansion [J/kg]"
+h_3_3 = ENTHALPY(R22, T=T_3_3, P=P_cd_3)         "condenser outlet specific enthalpy [J/kg]"
+P_cd_3 = PRESSURE(R22, x=0.5, T=T_cd_3)          "condensing pressure [Pa]"
+T_3_3 = T_cd_3 - DELTAT_sc                       "condenser outlet temperature [C]"
+
+"Compressor"
+W_dot_s_3 = M_dot_3*(h_2_3 - h_1_3)               "isentropic compression power [W]"
+h_2_3 = ENTHALPY(R22, s=s_1_3, P=P_cd_3)         "isentropic exhaust specific enthalpy [J/kg]"
+s_1_3 = ENTROPY(R22, T=T_1_3, P=P_ev_3)          "suction specific entropy [J/kg-K]"
+
+W_dot_3 = W_dot_loss_0_cp + (1 + alpha_cp)*W_dot_s_3   "predicted power consumption [W]"
+
+epsilon_v_3 = V_dot_su_3/V_dot_s_cp              "volumetric efficiency (definition) [-]"
+V_dot_su_3 = M_dot_3*v_1_3                       "suction volume flow rate [m^3/s]"
+v_1_3 = VOLUME(R22, T=T_1_3, P=P_ev_3)           "suction specific volume [m^3/kg]"
+epsilon_v_3 = 1 - C_cp*(r_v_3 - 1)               "volumetric efficiency with clearance volume [-]"
+r_v_3 = v_1_3/v_2_3                              "volume ratio of the isentropic compression [-]"
+v_2_3 = VOLUME(R22, h=h_2_3, P=P_cd_3)           "isentropic exhaust specific volume [m^3/kg]"
+
+"State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+h[5] = h_1_3
+h[6] = h_2_3
+h[7] = h_3_3
+h[8] = h_4_3
+P[5] = P_ev_3
+P[6] = P_cd_3
+P[7] = P_cd_3
+P[8] = P_ev_3
+
+"!Temperatures and entropies at the diagram state points (post-processing, no effect on the results)"
+T[1] = T_1_1
+s[1] = s_1_1
+T[2] = TEMPERATURE(R22, h=h[2], P=P[2])           "compressor exhaust temperature [C]"
+s[2] = s_1_1                                      "isentropic compression [J/kg-K]"
+T[3] = T_3_1
+s[3] = ENTROPY(R22, T=T_3_1, P=P_cd_1)            "condenser outlet entropy [J/kg-K]"
+T[4] = TEMPERATURE(R22, h=h[4], P=P[4])           "evaporator inlet temperature [C]"
+s[4] = ENTROPY(R22, h=h[4], P=P[4])               "evaporator inlet entropy [J/kg-K]"
+T[5] = T_1_3
+s[5] = s_1_3
+T[6] = TEMPERATURE(R22, h=h[6], P=P[6])           "compressor exhaust temperature [C]"
+s[6] = s_1_3                                      "isentropic compression [J/kg-K]"
+T[7] = T_3_3
+s[7] = ENTROPY(R22, T=T_3_3, P=P_cd_3)            "condenser outlet entropy [J/kg-K]"
+T[8] = TEMPERATURE(R22, h=h[8], P=P[8])           "evaporator inlet temperature [C]"
+s[8] = ENTROPY(R22, h=h[8], P=P[8])               "evaporator inlet entropy [J/kg-K]"

@@ -1,0 +1,59 @@
+{=============================================================================
+  Moist-air cooling coil with contact factor
+  CoolSolve Library model CSL-0016
+  -----------------------------------------------------------------------------
+  Moist air at 32 °C and 40 % relative humidity (1 bar) is cooled to 20 °C by
+  passage over a coil whose mean surface (contact) temperature is 5 °C. The
+  coil is described by its contact factor epsilon_c, applied identically to
+  the temperatures and to the humidity ratios (as in the original). The model
+  computes the total heat extracted per kg of dry air, its sensible and
+  latent parts, and the mass of condensate per kg of dry air.
+
+  Inputs : T_su, RH_su, T_ex, T_c (coil contact temperature), P
+  Outputs: epsilon_c, q, q_s, q_l, DELTAw (condensate), w_ex
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège exercise (VL050429, repetition 10, exercise 1) and CoolSolve
+           example humidair1 - see README.md
+=============================================================================}
+
+"Supply air and coil data"
+T_su = 32                   "supply air dry-bulb temperature [C]"
+RH_su = 0.4                 "supply air relative humidity [-]"
+T_ex = 20                   "air temperature at the coil outlet [C]"
+T_c = 5                     "mean coil surface (contact) temperature [C]"
+P = 1E5                     "air pressure [Pa] (1 bar in the original)"
+
+"Contact factor, applied to the temperatures"
+epsilon_c = (T_su - T_ex)/(T_su - T_c)   "contact factor [-]"
+w_su = HUMRAT(AirH2O, T=T_su, R=RH_su, P=P)   "supply air humidity ratio [kg/kg dry air]"
+
+RH_c = 1                    "saturated air at the contact temperature [-]"
+w_c = HUMRAT(AirH2O, T=T_c, R=RH_c, P=P)      "humidity ratio at the contact state [kg/kg dry air]"
+
+"Outlet humidity ratio from the same contact factor"
+epsilon_c = (w_su - w_ex)/(w_su - w_c)   "contact factor applied to the humidity ratios [-]"
+
+"Total heat extracted per kg of dry air"
+q = h_su - h_ex                          "total heat extracted [J/kg dry air]"
+h_su = ENTHALPY(AirH2O, T=T_su, P=P, w=w_su)   "supply moist-air specific enthalpy [J/kg dry air]"
+h_ex = ENTHALPY(AirH2O, T=T_ex, P=P, w=w_ex)   "outlet moist-air specific enthalpy [J/kg dry air]"
+
+"Sensible heat, from the dry-air enthalpies"
+q_s = h_su_air - h_ex_air                "sensible heat [J/kg dry air]"
+h_su_air = ENTHALPY(Air, T=T_su)          "supply dry-air specific enthalpy [J/kg dry air]"
+h_ex_air = ENTHALPY(Air, T=T_ex)          "outlet dry-air specific enthalpy [J/kg dry air]"
+
+"Latent heat, with the latent heat value as in the original"
+q_l = (w_su - w_ex)*L_fg                 "latent heat [J/kg dry air]"
+L_fg = 2500000                           "latent heat of vaporisation [J/kg] (as in the original)"
+
+"Condensed water per kg of dry air"
+DELTAw = w_su - w_ex                     "condensate [kg/kg dry air]"
+
+"State points (supply, outlet, contact) for post-processing"
+T[1] = T_su
+T[2] = T_ex
+T[3] = T_c
+w[1] = w_su
+w[2] = w_ex
+w[3] = w_c

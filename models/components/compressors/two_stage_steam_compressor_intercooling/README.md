@@ -18,7 +18,7 @@ single-stage isentropic, two-stage with intercooling, isothermal
 | **Source** | ULiège — course *Thermodynamique appliquée* (MECA0002), repetition session R04, exercise 2 (EES file `R04_E2_2022.EES`) |
 | **Authors** | N. Paulus, B. Dechesne (repetition assistants) and S. Quoilin (course), per the source metadata — the EES file names no author |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file **blocked** by `CS-GAP-INTEGRAL-LIMITS` and `CS-BUG-INTEGRAL-FACTOR`; the transcription `two_stage_steam_compressor_intercooling_coolsolve.eescode` runs and is verified against the EES stored solution (34/34 variables ≤ 4.2·10⁻⁶) |
+| **CoolSolve** | v0.3.0 — native file **blocked** by `CS-GAP-INTEGRAL-LIMITS` and `CS-BUG-INTEGRAL-FACTOR` (and `CS-GAP-OPTIM`: the optimisation step is not reproducible, the model is shipped at the optimum); the transcription `two_stage_steam_compressor_intercooling_coolsolve.eescode` runs and is verified against the EES stored solution (34/34 variables ≤ 4.2·10⁻⁶) |
 
 ## Problem statement
 

@@ -1,0 +1,78 @@
+{=============================================================================
+  1-2 shell-and-tube steam condenser
+  CoolSolve Library model CSL-0027
+-----------------------------------------------------------------------------
+  1-2 shell-and-tube heat exchanger (1 shell pass, 2 tube passes) condensing
+  steam of a power plant on cooling water. Semi-isothermal exchanger rated
+  with the effectiveness-NTU method (epsilon = 1 - exp(-NTU)); the water-side
+  heat transfer coefficient follows from the Colburn j-factor analogy, the
+  overall coefficient combines the water and steam sides in series, and the
+  tube length follows from the required exchange area.
+
+  Inputs : geometry (tube diameter, number of tubes), steam-side coefficient,
+           duty, water flow rate per tube, inlet temperatures
+  Outputs: water temperature rise, overall conductance, exchange area,
+           tube length
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège exercise (repetition 12, exercise 4) - see README.md
+=============================================================================}
+
+"1-2 shell-and-tube condenser of a steam power plant: 30000 thin tubes of
+25 mm outer diameter, 1 shell pass and 2 tube passes. Convective heat
+transfer coefficient on the steam side of 11000 W/(m2.K). Exchanger duty of
+2000 MW. Water (1 kg/s per tube) enters at 20 C, steam condenses at 50 C.
+Determine the water temperature rise and the tube length."
+
+"Given data"
+D_ext = 0.025                "outer tube diameter [m]"
+N_tubes = 30000              "number of tubes [-]"
+h_vap = 11000                "steam-side convective coefficient [W/m^2-K]"
+Q_dot = 2000E6               "exchanger duty [W]"
+M_dot_1tube = 1              "water flow rate per tube [kg/s]"
+T_w_su = 20                  "water inlet temperature [C]"
+T_vap = 50                   "steam (condensation) temperature [C]"
+
+"Water outlet temperature"
+{cp_w = 4186}
+cp_w = CP(Water, T=T_w_bar, P=100000)                    "water specific heat [J/kg-K], evaluated at the mean bulk temperature, as in the original"
+Q_dot = N_tubes * M_dot_1tube * cp_w * (T_w_ex - T_w_su)  "energy balance on the water side [W]"
+
+"Effectiveness"
+Q_dot = epsilon * Q_dot_max                        "transferred power from the effectiveness definition [W]"
+Q_dot_max = N_tubes * M_dot_1tube * cp_w * (T_vap - T_w_su)  "maximum (semi-isothermal) transferable power [W]"
+
+"Overall conductance from NTU"
+epsilon = 1 - exp(-NTU)      "effectiveness-NTU law of the semi-isothermal exchanger [-]"
+NTU = AU / C_dot_w           "number of transfer units [-]"
+C_dot_w = N_tubes * M_dot_1tube * cp_w  "water-side capacity rate [W/K]"
+
+"Water-side convective coefficient"
+Re = vit * D_in / nu_w       "Reynolds number [-]"
+D_in = D_ext                 "inner tube diameter [m]; simplifying assumption: tube wall thickness neglected, as in the original"
+vit = V_dot_1tube / A_in     "mean water velocity in one tube [m/s]"
+A_in = PI * D_in^2 / 4        "inner cross-section area of one tube [m^2]"
+V_dot_1tube = M_dot_1tube / rho_w  "volume flow rate per tube [m^3/s]"
+T_w_bar = 0.5 * (T_w_su + T_w_ex)  "mean water bulk temperature [C]"
+rho_w = density(Water, T=T_w_bar, P=100000)  "water density [kg/m^3]"
+nu_w = mu_w / rho_w          "kinematic viscosity [m^2/s]"
+mu_w = VISCOSITY(Water, T=T_w_bar, P=100000)  "dynamic viscosity [kg/m-s]"
+j = 0.023 * Re^(-0.2)        "Colburn j-factor [-], as in the original"
+j = St * Pr^(2 / 3)          "Colburn analogy [-]"
+St = Nu / (Re * Pr)          "Stanton number [-]"
+Pr = nu_w / alpha_w          "Prandtl number [-]"
+alpha_w = k_w / (rho_w * cp_w)  "thermal diffusivity [m^2/s]"
+k_w = CONDUCTIVITY(Water, T=T_w_bar, P=100000)  "water thermal conductivity [W/m-K]"
+Nu = h_w * D_in / k_w        "Nusselt number [-]"
+
+"Overall heat transfer coefficient"
+U = 1 / (1 / h_w + 1 / h_vap)  "overall coefficient, water and steam sides in series [W/m^2-K], as in the original"
+
+"Total exchange area"
+AU = A * U                   "overall conductance from area and coefficient [W/K]"
+
+"Tube length"
+A = N_tubes * L_tube * PI * D_ext  "exchange area of the tube bundle [m^2]"
+L_tube_bis = L_tube / 2      "length of one water-side pass [m]; two water-side passes, as in the original"
+
+"Water temperature rise"
+DELTAT_w = T_w_ex - T_w_su   "water temperature rise [K]"

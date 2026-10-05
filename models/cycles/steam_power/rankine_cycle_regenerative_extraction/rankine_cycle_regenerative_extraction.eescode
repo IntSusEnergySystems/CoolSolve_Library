@@ -1,0 +1,124 @@
+{=============================================================================
+  Steam Rankine cycle with regenerative extraction at 25 bar
+  CoolSolve Library model CSL-0029
+ -----------------------------------------------------------------------------
+  Same 60 MW steam plant as rankine_cycle_60mw (CSL-0004: live steam 70 bar /
+  500 °C, condenser at 0.1 bar, boiler pressure drop and efficiency, pump and
+  turbine isentropic efficiencies, alternator and pump-motor efficiencies),
+  but with a regenerative steam extraction from the turbine at 25 bar. The
+  extracted steam preheats the feedwater in an open (mixing) feedwater
+  heater, whose outlet is saturated water. The model computes the steam flow
+  rate, the extraction flow rate, the boiler power, the cooling-water flow
+  rate and the plant thermal efficiency.
+
+  Inputs : W_dot_el, p_cd, DELTA_p, eta_boiler, DELTAT_w_cd, epsilon_s_t,
+           eta_a, epsilon_s_p, eta_m, P_3a (extraction pressure)
+  Outputs: M_dot_steam, M_dot_steam_s, Q_dot_boiler, Q_dot_cd, M_dot_w_cd, eta
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course "Machines et systèmes thermiques", repetition 7,
+           exercise 3 (EES file rankine2.EES, V. Lemort) - see README.md
+=============================================================================}
+
+W_dot_el = 60E6              "net electrical power output [W]"
+p_cd = 0.1E5                 "condenser pressure [Pa]"
+DELTA_p = 4E5                "boiler pressure drop [Pa]"
+eta_boiler = 0.9             "boiler overall efficiency [-]"
+DELTAT_w_cd = 10             "cooling-water temperature rise in the condenser [K]"
+epsilon_s_t = 0.83           "turbine stages isentropic efficiency [-]"
+eta_a = 0.95                 "alternator efficiency [-]"
+epsilon_s_p = 0.85           "pumps isentropic efficiency [-]"
+eta_m = 0.94                 "pump drive-motor efficiency [-]"
+
+"POINT 1: condenser outlet"
+x_1 = 0                                   "saturated liquid at the condenser outlet [-]"
+h_1 = enthalpy(water, P=P_cd, x=x_1)      "as in the original [J/kg]"
+s_1 = entropy(water, P=P_cd, x=x_1)        "as in the original [J/kg-K]"
+
+"POINT 2: pump 1 outlet"
+epsilon_s_p = (h_2_s - h_1)/(h_2 - h_1)   "pump 1 isentropic efficiency [-]"
+h_2_s = enthalpy(water, s=s_1, P=P_2)     "isentropic pump 1 outlet [J/kg]"
+P_2 = P_2a                                "pump 1 outlet pressure [Pa]"
+P_2a = P_3a                               "feedwater-heater pressure = extraction pressure [Pa]"
+P_3a = 25E5                               "turbine extraction pressure [Pa]"
+P_3 = 70E5                                "turbine inlet (live-steam) pressure [Pa]"
+
+"POINT 2A: mixer (open feedwater heater) outlet"
+(M_dot_steam - M_dot_steam_s)*h_2 + M_dot_steam_s*h_3a = M_dot_steam*h_2a  "heater energy balance [W]"
+h_2a = enthalpy(water, P=P_2a, x=0)       "heater outlet: saturated water, as in the original [J/kg]"
+s_2a = entropy(water, P=P_2a, h=h_2a)     "as in the original [J/kg-K]"
+
+"POINT 2B: pump 2 outlet"
+epsilon_s_p*(h_2b - h_2a) = (h_2b_s - h_2a)   "pump 2 isentropic efficiency [-]"
+h_2b_s = enthalpy(water, s=s_2a, P=P_2b)      "isentropic pump 2 outlet [J/kg]"
+P_2b = P_3 + DELTA_p                          "pump 2 outlet pressure [Pa]"
+
+"POINT 3: boiler outlet = turbine inlet"
+T_3 = 500                              "live-steam temperature [C]"
+h_3 = enthalpy(water, P=P_3, T=T_3)     "as in the original [J/kg]"
+s_3 = entropy(water, P=P_3, T=T_3)      "as in the original [J/kg-K]"
+
+"POINT 3a: turbine stage 1 outlet (extraction point)"
+epsilon_s_t = (h_3 - h_3a)/(h_3 - h_3a_s)   "allows computing h_3a, as in the original [-]"
+h_3a_s = enthalpy(water, s=s_3, P=P_3a)     "isentropic stage-1 outlet [J/kg]"
+s_3a = entropy(water, h=h_3a, P=P_3a)       "as in the original [J/kg-K]"
+
+"POINT 4: turbine stage 2 outlet"
+epsilon_s_t = (h_3a - h_4)/(h_3a - h_4_s)   "as in the original [-]"
+h_4_s = enthalpy(water, s=s_3a, P=P_cd)     "isentropic stage-2 outlet [J/kg]"
+x_4 = quality(water, P=P_cd, h=h_4)         "turbine outlet vapour quality [-]"
+
+"PLANT POWER"
+W_dot_el = W_dot_t*eta_a                 "net electrical power [W]"
+W_dot_t = W_dot_t_1 + W_dot_t_2          "total turbine mechanical power [W]"
+W_dot_t_1 = M_dot_steam*(h_3 - h_3a)     "HP stage power (full flow) [W]"
+W_dot_t_2 = (M_dot_steam - M_dot_steam_s)*(h_3a - h_4)  "LP stage power (flow without extraction) [W]"
+
+"BOILER"
+Q_dot_boiler = M_dot_steam*(h_3 - h_2b)/eta_boiler   "boiler heat release [W]"
+
+"PUMP WORK"
+W_dot_p = W_dot_p_1 + W_dot_p_2            "total pump electrical power [W]"
+W_dot_p_1 = M_dot_steam*(h_2 - h_1)/eta_m   "pump 1 electrical power [W]"
+W_dot_p_2 = M_dot_steam*(h_2b - h_2a)/eta_m  "pump 2 electrical power [W]"
+
+"THERMAL EFFICIENCY"
+eta = W_dot_el/(Q_dot_boiler + W_dot_p)   "plant thermal efficiency [-]"
+
+"CONDENSER COOLING-WATER FLOW RATE"
+Q_dot_cd = (M_dot_steam - M_dot_steam_s)*(h_4 - h_1)   "heat rejected in the condenser [W]"
+Q_dot_cd = M_dot_w_cd*cp_w*DELTAT_w_cd                "carried away by the cooling water [W]"
+cp_w = 4186                              "cooling-water specific heat [J/kg-K]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: condenser outlet, 2: pump 1 outlet, 3: heater outlet, 4: pump 2 outlet,
+ 5: turbine inlet, 6: extraction point, 7: turbine outlet. Use the arrays
+ h[i]/P[i] or s[i]/T[i] with the "Overlay array path" option of the
+ CoolSolve Diagram tab.}
+P[1] = P_cd
+h[1] = h_1
+T[1] = temperature(water, P=P_cd, h=h_1)
+s[1] = s_1
+P[2] = P_2
+h[2] = h_2
+T[2] = temperature(water, P=P[2], h=h[2])
+s[2] = entropy(water, P=P[2], h=h[2])
+P[3] = P_2a
+h[3] = h_2a
+T[3] = temperature(water, P=P[3], h=h[3])
+s[3] = s_2a
+P[4] = P_2b
+h[4] = h_2b
+T[4] = temperature(water, P=P[4], h=h[4])
+s[4] = entropy(water, P=P[4], h=h[4])
+P[5] = P_3
+h[5] = h_3
+T[5] = T_3
+s[5] = s_3
+P[6] = P_3a
+h[6] = h_3a
+T[6] = temperature(water, P=P[6], h=h[6])
+s[6] = s_3a
+P[7] = P_cd
+h[7] = h_4
+T[7] = temperature(water, P=P[7], h=h[7])
+s[7] = entropy(water, P=P[7], h=h[7])

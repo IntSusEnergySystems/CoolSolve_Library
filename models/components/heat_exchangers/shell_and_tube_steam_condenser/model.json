@@ -1,0 +1,67 @@
+{
+  "id": "CSL-0027",
+  "name": "shell_and_tube_steam_condenser",
+  "title": "1-2 shell-and-tube steam condenser (effectiveness-NTU)",
+  "summary": "1-2 shell-and-tube condenser of a steam power plant (30 000 water-cooled tubes, steam at 50 C) rated as a semi-isothermal exchanger with the effectiveness-NTU method: water temperature rise, Colburn-analogy water-side coefficient, overall coefficient and tube length.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "shell_and_tube_steam_condenser.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "heat exchanger",
+    "shell-and-tube",
+    "steam condenser",
+    "effectiveness-NTU",
+    "Colburn analogy",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 35,
+    "largest_block": 3
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/exchangers3.eescode",
+    "candidate_id": "CSX-018",
+    "authors": [
+      "Vincent Lemort (ULiège Thermodynamics Laboratory)",
+      "S. Quoilin (CoolSolve example)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.920",
+    "language": "fr",
+    "course": "ULiège exercise session (repetition 12, exercise 4)"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file (CoolSolve misc/EES_ok.zip, EES_ok/exchangers3.EES, EES 9.920)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0",
+    "max_rel_diff": 0.0203,
+    "notes": "24/35 variables within rtol=0.001 as printed by compare_solution.py; 11 differ, all traced to the EES 9.920 vs CoolProp liquid-water thermal conductivity at (1 bar, 28 C), 1.9 % (k_w, Pr, alpha_w up to 2.0 %; sizing A/L_tube 0.76 %, U 0.79 %). Energy-level results (T_w_ex, DELTAT_w, epsilon) within 0.1 %. No .initials needed (converges from defaults, 105 iterations)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0002", "CSL-0026", "CSL-0008"],
+  "related_external": [
+    "CoolSolve examples/exchangers3.eescode (same model, kept in CoolSolve as a test case)",
+    "CoolSolve misc/EES_ok.zip: EES_ok/exchangers3.EES (original French EES file with stored solution)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-018"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-28, batch B-03)",
+      "by": "opencode worker (muse-spark) for S. Quoilin"
+    }
+  ]
+}

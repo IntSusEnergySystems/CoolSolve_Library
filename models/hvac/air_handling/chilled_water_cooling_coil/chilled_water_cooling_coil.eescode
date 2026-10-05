@@ -1,0 +1,125 @@
+{=============================================================================
+  Chilled-water air cooling coil, dry and wet regimes
+  CoolSolve Library model CSL-0017
+  -----------------------------------------------------------------------------
+  A chilled-water air cooling coil (air-side, wall and water-side thermal
+  resistances in series) with 1 kg/s of air at 30 °C and 50 % relative
+  humidity and 2 kg/s of water at 5 °C (as in the original). The model
+  computes the dry regime with the counterflow epsilon-NTU relation, checks
+  the condensation risk at the dry-regime outlet (relative humidity above
+  100 %, so the coil actually runs wet), then computes the wet regime with
+  the wet-bulb-based effectiveness and the contact (bypass-factor) state at
+  the coil surface, including the condensate flow rate.
+
+  Inputs : R_a, R_m, R_w (resistances), M_dot_a, M_dot_w, supply air
+           (T_a_su, RH_su, P_a_su) and supply water (T_w_su, P_w_su)
+  Outputs: Q_dot_dry, Q_dot_wet (dry- and wet-regime duties), outlet air and
+           water temperatures, humidity ratios, M_dot_cd (condensate),
+           epsilon_dry, epsilon_wet_f, epsilon_c (contact factor)
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MSTh exercise (SB solution) and CoolSolve example
+           cooling_coil - see README.md
+=============================================================================}
+
+"MSTh R5 exercise 1, SB solution (as in the original)"
+
+R_a = 0.5E-3               "air-side thermal resistance [m2-K/W]"
+M_dot_a = 1                "air mass flow rate [kg/s]"
+R_m = 0.1E-3               "wall metal resistance [m2-K/W]"
+R_w = 0.3E-3               "water-side thermal resistance [m2-K/W]"
+M_dot_w = 2                "water mass flow rate [kg/s]"
+
+"Supply conditions (as in the original):"
+P_a_su = 101325            "supply air pressure [Pa]"
+T_a_su = 30                "supply air dry-bulb temperature [C]"
+RH_su = 0.5                "supply air relative humidity [-]"
+T_w_su = 5                 "supply water temperature [C]"
+P_w_su = 101325            "supply water pressure [Pa]"
+
+"!Dry regime"
+"Air side (as in the original):"
+Q_dot_dry = C_dot_a_dry*(T_a_su - T_a_ex_dry)          "air-side energy balance [W]"
+C_dot_a_dry = M_dot_a*cp_a_dry                         "air-side capacity rate [W/K]"
+cp_a_dry = CP(AirH2O, T=T_a_m, P=P_a_su, R=RH_su)      "moist-air specific heat [J/kg-K]"
+"provisional value (as in the original):"
+"cp_a_dry=1200"
+T_a_m = (T_a_su + T_a_ex_dry)/2                        "mean air temperature [C]"
+
+"Water side (as in the original):"
+Q_dot_dry = C_dot_w_dry*(T_w_ex_dry - T_w_su)          "water-side energy balance [W]"
+C_dot_w_dry = M_dot_w*cp_w_dry                         "water-side capacity rate [W/K]"
+cp_w_dry = CP(Water, T=T_w_m, P=P_w_su)                "water specific heat [J/kg-K]"
+"provisional value (as in the original):"
+"cp_w_dry=4187"
+T_w_m = (T_w_su + T_w_ex_dry)/2                        "mean water temperature [C]"
+
+"Dry-regime performance"
+Q_dot_dry = epsilon_dry*C_dot_min_dry*(T_a_su - T_w_su) "effectiveness definition [W]"
+C_dot_min_dry = min(C_dot_a_dry, C_dot_w_dry)           "minimum capacity rate [W/K]"
+
+"Counterflow heat-exchanger assumption (as in the original):"
+epsilon_dry = (1 - exp(-NTU_dry*(1 - omega_dry)))/(1 - omega_dry*exp(-NTU_dry*(1 - omega_dry)))  "counterflow effectiveness [-]"
+NTU_dry = AU_dry/C_dot_min_dry                         "number of transfer units [-]"
+1/AU_dry = R_a + R_m + R_w                              "overall conductance from the series resistances [W/K]"
+omega_dry = C_dot_min_dry/C_dot_max_dry                "capacity-rate ratio [-]"
+C_dot_max_dry = max(C_dot_a_dry, C_dot_w_dry)           "maximum capacity rate [W/K]"
+
+"Condensation-risk check"
+w_su = HUMRAT(AirH2O, T=T_a_su, P=P_a_su, R=RH_su)     "supply-air humidity ratio [kg/kg dry air]"
+w_ex_dry = w_su "(no condensation in the dry regime) [kg/kg dry air]"
+RH_ex_dry = RELHUM(AirH2O, T=T_a_ex_dry, P=P_a_su, w=w_ex_dry)  "outlet relative humidity in the dry regime [-]"
+
+"!Wet regime"
+Q_dot_wet = M_dot_a*(h_a_su - h_a_ex_wet) - M_dot_cd*cp_w_wet*T_cd  "air-side energy balance with condensate enthalpy [W]"
+h_a_su = ENTHALPY(AirH2O, T=T_a_su, P=P_a_su, w=w_su)              "supply moist-air specific enthalpy [J/kg dry air]"
+h_a_ex_wet = ENTHALPY(AirH2O, T=T_a_ex_wet, P=P_a_su, w=w_ex_wet)  "outlet moist-air specific enthalpy [J/kg dry air]"
+M_dot_cd = M_dot_a*(w_su - w_ex_wet)                   "condensate mass flow rate [kg/s]"
+T_cd = T_a_ex_wet                                      "condensate temperature, taken at the outlet air temperature [C]"
+
+"Air side (as in the original):"
+Q_dot_wet = C_dot_a_wet_f*(T_wb_su - T_wb_ex)          "wet-regime air-side balance on the wet-bulb temperatures [W]"
+C_dot_a_wet_f = M_dot_a*cp_a_wet_f                     "fictitious wet air-side capacity rate [W/K]"
+T_wb_su = WETBULB(AirH2O, T=T_a_su, P=P_a_su, R=RH_su)          "supply-air wet-bulb temperature [C]"
+T_wb_ex = WETBULB(AirH2O, T=T_a_ex_wet, P=P_a_su, w=w_ex_wet)   "outlet-air wet-bulb temperature [C]"
+RH_ex_wet = RELHUM(AirH2O, T=T_a_ex_wet, P=P_a_su, w=w_ex_wet)  "outlet relative humidity in the wet regime [-]"
+
+"provisional value (as in the original):"
+"cp_a_wet_f=3000"
+
+"Water side (as in the original):"
+Q_dot_wet = C_dot_w_wet*(T_w_ex_wet - T_w_su)          "water-side energy balance [W]"
+C_dot_w_wet = M_dot_w*cp_w_wet                         "water-side capacity rate [W/K]"
+cp_w_wet = CP(Water, T=T_w_m_wet, P=P_w_su)            "water specific heat [J/kg-K]"
+"provisional value (as in the original):"
+"cp_w_wet=4187"
+T_w_m_wet = (T_w_su + T_w_ex_wet)/2                    "mean water temperature [C]"
+
+"Wet-regime performance (section titled as the dry regime in the original)"
+Q_dot_wet = epsilon_wet_f*C_dot_min_wet_f*(T_wb_su - T_w_su)  "wet-regime effectiveness definition [W]"
+C_dot_min_wet_f = min(C_dot_a_wet_f, C_dot_w_wet)             "minimum capacity rate [W/K]"
+
+"Counterflow heat-exchanger assumption (as in the original):"
+epsilon_wet_f = (1 - exp(-NTU_wet_f*(1 - omega_wet)))/(1 - omega_wet*exp(-NTU_wet_f*(1 - omega_wet)))  "counterflow effectiveness [-]"
+"provisional value (as in the original):"
+"epsilon_wet_f=0.4"
+NTU_wet_f = AU_wet_f/C_dot_min_wet_f                   "number of transfer units [-]"
+1/AU_wet_f = R_a_f + R_m + R_w                          "overall conductance from the series resistances [W/K]"
+R_a/R_a_f = cp_a_wet_f/cp_a_dry                         "fictitious wet-regime air-side resistance R_a_f, as in the original [m2-K/W]"
+omega_wet = C_dot_min_wet_f/C_dot_max_wet_f "!! guess for omega_wet =1"
+C_dot_max_wet_f = max(C_dot_a_wet_f, C_dot_w_wet)       "maximum capacity rate [W/K]"
+
+"provisional value (as in the original):"
+"RH_ex_wet=0.9"
+
+"Outlet air conditions (contact-factor method):"
+(h_a_su - h_a_ex_wet)/(h_a_su - h_a_c_wet) = epsilon_c  "contact factor on the enthalpies [-]"
+(w_su - w_ex_wet)/(w_su - w_c_wet) = epsilon_c          "contact factor on the humidity ratios [-]"
+epsilon_c = 1 - exp(-NTU_c)                            "contact factor [-]"
+NTU_c = 1/(R_a*C_dot_a_dry)                            "number of transfer units of the contact coil [-]"
+w_c_wet = HUMRAT(AirH2O, T=T_c_wet, P=P_a_su, R=1)     "humidity ratio at the saturated contact state [kg/kg dry air]"
+T_c_wet = TEMPERATURE(AirH2O, h=h_a_c_wet, P=P_a_su, R=1)  "contact-state temperature [C]"
+"!or (equivalent formulation, as in the original):"
+Q_dot_wet = epsilon_c_bis*M_dot_a*(h_a_su - h_a_c_wet_bis)   "duty from the bypassed flow [W]"
+M_dot_cd = epsilon_c_bis*M_dot_a*(w_su - w_c_wet_bis)        "condensate from the bypassed flow [kg/s]"
+M_dot_c = epsilon_c_bis*M_dot_a                             "contact (bypassed) air flow rate [kg/s]"
+epsilon_c_bis = epsilon_c                                   "same contact factor [-]"

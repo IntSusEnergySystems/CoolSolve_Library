@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0030",
+  "name": "two_speed_cooling_tower",
+  "title": "Two-speed cooling tower (regimes and mean fan power vs water set-point)",
+  "summary": "Evaporative cooling tower with a two-speed fan, each regime rated with the epsilon-NTU method on a fictitious dry fluid following the wet-bulb temperatures of the moist air; returns the outlet temperatures, heat rejected and weighted-mean fan powers for a given water outlet set-point.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "two_speed_cooling_tower.eescode",
+  "fluids": [
+    "AirH2O"
+  ],
+  "tags": [
+    "cooling tower",
+    "evaporative",
+    "two-speed fan",
+    "part load",
+    "psychrometrics",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 54,
+    "largest_block": 11
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/cooling_tower.eescode",
+    "candidate_id": "CSX-011",
+    "authors": [
+      "ULiège MSTh course (J. Lebrun, V. Lemort, S. Bertagnolio)",
+      "S. Quoilin (CoolSolve example)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh, exercise session of 2005-10-24, exercise 2"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file (~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 06/MSTH051024EXERCICE2.EES, EES 7.458, candidate TM-0094)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.00071,
+    "notes": "54/54 common variables, 0 differ (rtol=0.001); largest deviation 7.1e-4 on omega_f_r/c_p_f_r from the humid-air property backend (EES 7.458 vs CoolProp AirH2O). Default run t_w_ex_set=35 C added per ees_import.md §8 (set-point of the GUI parametric study; value of the stored solution). No unit conversion needed (SI-C-Pa-J)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0016", "CSL-0017"],
+  "related_external": [
+    "CoolSolve examples/cooling_tower.eescode (same model, kept in CoolSolve as a test case)",
+    "CoolSolve examples/cooling_tower2.eescode (single-speed companion exercise, candidate CSX-012, not imported)",
+    "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 06/MSTH051024EXERCICE2.EES (original French EES file with stored solution, TM-0094; duplicate TM-0088)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-011"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-31, batch B-02)",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    }
+  ]
+}

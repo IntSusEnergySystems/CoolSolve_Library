@@ -1,0 +1,70 @@
+{
+  "id": "CSL-0028",
+  "name": "air_handling_unit_moist_air",
+  "title": "Air handling unit with moist-air conditioning",
+  "summary": "Room supplied with outdoor air through an air handling unit: supply state from the room sensible and moisture loads, cooling coil by contact effectiveness with post-heating; computes coil capacity, post-heating power and condensate flow.",
+  "kind": "steady",
+  "level": 1,
+  "status": "blocked",
+  "main_file": "air_handling_unit_moist_air.eescode",
+  "fluids": [
+    "Air",
+    "AirH2O"
+  ],
+  "tags": [
+    "air handling unit",
+    "psychrometrics",
+    "cooling coil",
+    "contact factor",
+    "dehumidification",
+    "post-heating",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 37,
+    "largest_block": 5
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/humidair2.eescode",
+    "candidate_id": "CSX-022",
+    "authors": [
+      "Vincent Lemort (ULiège Thermodynamics Laboratory)",
+      "S. Quoilin (CoolSolve example)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.920",
+    "language": "fr",
+    "course": "ULiège exercise (VL050429, repetition 10, exercise 3)"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file (CoolSolve misc/EES_ok.zip, EES_ok/humidair2.EES, EES 9.920), via tools/compare_solution.py on the _coolsolve variant",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0",
+    "max_rel_diff": 0.0113,
+    "notes": "37 common variables, 26 differ (rtol=0.001). Per-kg-dry-air quantities within 0.5 % (humidity ratios 0.25-0.46 %, enthalpies 0.14-0.32 %); v_a_su +0.96 % (EES vs CoolProp humid-air formulation, checked against ideal gas) propagates to M_dot_a -0.96 %, Q_dot_pc -1.11 %, Q_dot_batt -0.56 %, M_dot_w_cond -0.38 %. Dry-air absolute enthalpies differ by reference-state offset (EES 0 K); their difference Q_dot_pc_bis within 1.13 %."
+  },
+  "missing_features": ["CS-GAP-PSYCHRO-SAT"],
+  "related": ["CSL-0016", "CSL-0017"],
+  "related_external": [
+    "CoolSolve examples/humidair2.eescode (same model, kept in CoolSolve as a test case)",
+    "CoolSolve misc/EES_ok.zip: EES_ok/humidair2.EES (original French EES file with stored solution)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-022"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-29, batch B-03)",
+      "by": "opencode worker (muse-spark) for S. Quoilin"
+    }
+  ]
+}

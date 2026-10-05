@@ -16,7 +16,7 @@ EES `INTEGRAL`/`$IntegralTable` time-integration model.
 | **Source** | ULiège — course *Thermodynamique appliquée et introduction aux machines thermiques* (MECA0002-1), repetition 3, exercise 3 (EES file `R3_E3_2022.EES`) |
 | **Authors** | N. Paulus, B. Dechesne (ULiège repetition assistants, per the source inventory and its companion files) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file **blocked** by `CS-GAP-IF5` and `CS-GAP-INTEGRAL-LIMITS`; the variant `dhw_tank_dynamic_coolsolve.eescode` runs and is verified against the EES integral table (≤ 6.1·10⁻⁵) |
+| **CoolSolve** | v0.3.0 — native file **blocked** by `CS-GAP-IF5`, `CS-GAP-INTEGRAL-LIMITS`, `CS-BUG-INTEGRAL-TABLE-SEP` and `CS-BUG-INTEGRAL-MAXSTEPS`; the variant `dhw_tank_dynamic_coolsolve.eescode` runs and is verified against the EES integral table (≤ 6.1·10⁻⁵) |
 
 ## Problem statement
 

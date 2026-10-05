@@ -1,0 +1,65 @@
+{
+  "id": "CSL-0029",
+  "name": "rankine_cycle_regenerative_extraction",
+  "title": "Steam Rankine cycle with regenerative extraction",
+  "summary": "60 MW steam plant (70 bar, 500 C, 0.1 bar condenser) with a regenerative steam extraction at 25 bar to an open feedwater heater: steam and extraction flow rates, boiler power, cooling-water flow rate, plant thermal efficiency; state points as arrays for the diagrams.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "rankine_cycle_regenerative_extraction.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "rankine",
+    "steam cycle",
+    "power plant",
+    "regeneration",
+    "extraction",
+    "feedwater heater",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "state arrays"
+  ],
+  "stats": {
+    "n_equations": 73,
+    "largest_block": 4
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "coolsolve_examples",
+    "source_path": "../CoolSolve/misc/EES_ok.zip!/EES_ok/rankine2.EES",
+    "candidate_id": "CSX-037",
+    "authors": [
+      "Vincent Lemort (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.210",
+    "language": "fr",
+    "course": "Machines et systèmes thermiques (ULiège), repetition 7, exercise 3"
+  },
+  "verification": {
+    "reference": "EES stored solution of EES_ok/rankine2.EES (44 variables, 25 bar extraction run)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0",
+    "max_rel_diff": 5.5e-04,
+    "notes": "All 44 common variables agree within the default rtol=0.001 of compare_solution.py (0 differ); largest deviation 5.5e-4 on M_dot_steam_s (EES 7.2 vs CoolProp water properties). The 29 CoolSolve-only variables are the 28 diagram state-array elements plus P_2b (not stored by EES)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0004"],
+  "related_external": [
+    "CoolSolve examples/rankine2.eescode (CSX-037): same EES origin, solved at 14 bar while its header announces 25 bar; stays in CoolSolve as a test case"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (task C-30: faithful import of EES_ok/rankine2.EES at the 25 bar stored solution; CSX-037 merged; DG-0107 triaged as duplicates)",
+      "by": "opencode worker (muse-spark) for S. Quoilin"
+    }
+  ]
+}

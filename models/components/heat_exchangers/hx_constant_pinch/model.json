@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0014",
+  "name": "hx_constant_pinch",
+  "title": "Heat exchanger with an imposed pinch (three zones)",
+  "summary": "Condenser sized by an imposed pinch and subcooling: three refrigerant zones (desuperheating, condensation, subcooling) against a single-phase coolant, with the saturation pressure closed by the pinch condition. Translation of the LaboThapPy HexCstPinch condenser branch.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "hx_constant_pinch.eescode",
+  "fluids": [
+    "R744",
+    "Water"
+  ],
+  "tags": [
+    "heat exchanger",
+    "condenser",
+    "pinch point",
+    "three zones",
+    "phase change",
+    "design"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 51,
+    "largest_block": 18
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/component/heat_exchanger/hex_cstpinch.py",
+    "candidate_id": "LTP-013",
+    "authors": [
+      "Basile Chaudoir",
+      "Elise Neven",
+      "Titouan Janod"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en"
+  },
+  "verification": {
+    "reference": "LaboThapPy COND_CO2 example run in a throw-away venv (CoolProp 8.0.0, solved: True, pinch residual 5e-10 K) plus a clean re-run driving the original system_cond with an independent brentq (agrees to 1e-7)",
+    "date": "2026-10-05",
+    "coolsolve_version": "main 2026-10-05",
+    "max_rel_diff": 0.028,
+    "notes": "State enthalpies <= 0.3 % (subcooled outlet 1.7 %), P_sat 0.33 %, zone duties sh/tp <= 1.6 %, pinch exact. Q_dot 2.8 % off: LaboThapPy evaluates h 0.1 K below saturation with BICUBIC tables (dh 5607 J/kg, implies cp 56 kJ/kgK) vs HEOS 608 J/kg (cp 6.0 kJ/kgK, used by CoolSolve) - artifact of the original backend, translation faithful. LaboThapPy fluid name CO2 maps to EES R744 (bare CO2 is the ideal-gas species in EES)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0008",
+    "CSL-0002"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (T-TRANSLATE of LaboThapPy HexCstPinch condenser branch, verified vs the COND_CO2 example)",
+      "by": "opencode/Muse Spark worker for S. Quoilin"
+    }
+  ]
+}

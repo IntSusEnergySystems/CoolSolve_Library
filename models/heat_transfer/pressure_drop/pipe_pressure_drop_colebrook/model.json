@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0018",
+  "name": "pipe_pressure_drop_colebrook",
+  "title": "Pipe pressure drop with the Colebrook-White friction factor",
+  "summary": "Friction pressure drop of n-pentane in a straight pipe (16 mm diameter, 10 m): Darcy friction factor from the implicit Colebrook-White equation checked against an explicit approximation, linear and total pressure drop, dynamic pressure.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "pipe_pressure_drop_colebrook.eescode",
+  "fluids": [
+    "n-Pentane"
+  ],
+  "tags": [
+    "pressure drop",
+    "friction factor",
+    "Colebrook-White",
+    "pipe flow",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "string variables"
+  ],
+  "stats": {
+    "n_equations": 26,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/pressuredrop.eescode",
+    "candidate_id": "CSX-035",
+    "authors": [
+      "Vincent Lemort (ULiège Thermodynamics Laboratory)",
+      "S. Quoilin (CoolSolve example)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.920",
+    "language": "fr",
+    "course": "ULiège Thermodynamics Laboratory model (2006), curated as a CoolSolve example"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file (CoolSolve misc/EES_ok.zip, EES_ok/pressuredrop.EES, EES 9.920); ULiège original TM-0315 holds byte-identical equations with stored values within 0.05 %",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.057,
+    "notes": "25/25 variables compared: 11 within 0.1 %; DELTAP within 0.50 %, f within 0.56 %; mu/nu/Re up to 5.7 % from EES-vs-CoolProp n-pentane transport-property formulations (explained in README)."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [
+    "CoolSolve examples/pressuredrop.eescode (same model, kept in CoolSolve as a test case)",
+    "CoolSolve misc/EES_ok.zip: EES_ok/pressuredrop.EES (EES original re-saved, EES 9.920, stored solution used as reference)",
+    "thermo_models TM-0315 (modeles/perte de charge VL060830.EES, EES 7.458, byte-identical equations)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-035"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-18, batch B-02)",
+      "by": "opencode worker (muse-spark) for S. Quoilin"
+    }
+  ]
+}

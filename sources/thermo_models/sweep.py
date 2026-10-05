@@ -58,7 +58,7 @@ import time
 import unicodedata
 import zipfile
 
-DEFAULT_ROOT = '/home/sylvain/Nextcloud/thermo_models'
+DEFAULT_ROOT = os.path.expanduser('~/Nextcloud/thermo_models')
 HERE = os.path.dirname(os.path.abspath(__file__))
 EXTS = ('.ees', '.lib', '.lkt')
 DATA_EXTS = ('.txt', '.csv', '.asc', '.dat', '.xls', '.xlsx', '.xlsm', '.mat')

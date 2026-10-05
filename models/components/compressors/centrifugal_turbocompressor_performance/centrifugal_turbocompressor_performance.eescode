@@ -1,0 +1,65 @@
+{=============================================================================
+  Centrifugal turbocompressor performance (air)
+  CoolSolve Library model CSL-0023
+ -----------------------------------------------------------------------------
+  Air flow rate drawn by a centrifugal turbocompressor (impeller + vaneless
+  diffuser) at constant efficiencies: velocity triangles at the impeller
+  outlet, Euler turbine equation, impeller and diffuser isentropic
+  efficiencies. Exercise MSTH_041012 2 (ULiege, course Machines et systemes
+  thermiques): impeller diameter 7 cm, peripheral blade width 1 cm, blade
+  outlet angle 130 deg; suction 20 C and 1 bar, discharge 1.5 bar,
+  100 000 rpm.
+
+  Inputs : D_2, e, beta_2 (geometry); t_su, p_su, p_ex, rpm (operating point);
+           epsilon_s_i, epsilon_s_d (impeller/diffuser isentropic efficiencies)
+  Outputs: M_dot (air flow rate), w (specific work), r_p, r_p_i
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège course (J. Lebrun) - see README.md
+=============================================================================}
+
+"MSTH_041012 exercise 2, corrected version"
+"Very coarse simulation (at constant efficiencies and ignoring the surge risk) - as in the original"
+"Increase r_p progressively until M_dot vanishes; this gives the maximum
+theoretically achievable pressure ratio (ignoring the surge risk).
+Note: below a certain pressure ratio the sonic regime is reached (see plot window).
+Solving for r_p as a function of M_dot is therefore risky: it can give two theoretical solutions!"
+D_2=0.07                  "impeller diameter [m]"
+e=0.01                    "peripheral blade width [m]"
+beta_2=130                "blade outlet (inclination) angle at the periphery [deg]"
+t_su=20                   "suction temperature [C]"
+p_su=1E5                  "suction pressure [Pa]"
+p_ex=1.5E5                "discharge pressure [Pa] - default run (swept towards higher r_p in the original)"
+rpm=100000                "rotation speed [rev/min]"
+"Impeller and diffuser equations (textbook, p. 60) - as in the original"
+"First without the diffuser:"
+V_dot_2=A_2*W_2*sin(beta_2)  "volume flow rate at the impeller outlet [m3/s]"
+A_2=pi*D_2*e              "impeller outlet area [m2]"
+M_dot=V_dot_2/v_2         "air mass flow rate [kg/s]"
+w=h_t_2-h_1               "specific work [J/kg]"
+w=U_2^2+U_2*W_2*cos(beta_2)  "Euler equation [J/kg]"
+h_t_2=h_2+C_2^2/2         "total enthalpy at the impeller outlet [J/kg]"
+h_2s+C_2^2/2-h_1=epsilon_s_i*w  "impeller isentropic efficiency relation [J/kg]"
+r_p_i=p_2/p_1             "impeller pressure ratio [-]"
+"provisional estimate, without the diffuser:"
+"r_p_i=1.25"
+C_2^2=W_2^2+U_2^2+2*U_2*W_2*cos(beta_2)  "absolute velocity at the impeller outlet [m/s]"
+h_3=h_2+C_2^2/2           "diffuser outlet enthalpy (kinetic energy recovered) [J/kg]"
+"h_3-h_1=w"
+h_3s-h_2=epsilon_s_d*C_2^2/2  "adiabatic diffuser efficiency relation [J/kg]"
+r_p=p_3/p_1               "overall pressure ratio [-]"
+U_2=pi*D_2*N              "blade tip speed [m/s]"
+N=rpm/60                  "rotation speed [rev/s]"
+h_1=enthalpy(air,t=t_1)   "suction specific enthalpy [J/kg]"
+s_1=entropy(air, t=t_1, p=p_1)  "suction specific entropy [J/kg-K]"
+t_1=t_su                  "suction temperature [C]"
+p_1=p_su                  "suction pressure [Pa]"
+h_2s=enthalpy(air,p=p_2,s=s_1)  "isentropic impeller outlet enthalpy [J/kg]"
+s_2=entropy(air, h=h_2, p=p_2)  "impeller outlet specific entropy [J/kg-K]"
+
+h_3s=enthalpy(air,p=p_3,s=s_2)  "isentropic diffuser outlet enthalpy [J/kg]"
+p_3=p_ex                  "discharge pressure [Pa]"
+v_2=VOLUME(Air,h=h_2,P=P_2)  "specific volume at the impeller outlet [m3/kg]"
+epsilon_s_i=0.85            "impeller isentropic efficiency [-]"
+"epsilon_s_i=1"
+epsilon_s_d=0.75            "diffuser isentropic efficiency [-]"
+"epsilon_s_d=1"

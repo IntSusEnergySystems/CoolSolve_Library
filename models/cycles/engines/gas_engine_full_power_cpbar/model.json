@@ -1,0 +1,88 @@
+{
+  "id": "CSL-0034",
+  "name": "gas_engine_full_power_cpbar",
+  "title": "Full-power operating point of a 4-stroke gas engine (combustion products with cpbar)",
+  "summary": "Steady-state energy and mass balances of a 4-stroke gas engine at its nominal operating point: throttle, isentropic compression, combustion in which the products are described by their mean specific heat cpbar (routine of the ULiege combustion library, copied from CSL-0005), isentropic expansion and cooling by the water jacket.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "gas_engine_full_power_cpbar.eescode",
+  "fluids": [
+    "Air",
+    "CH4",
+    "CO2",
+    "CO",
+    "H2O",
+    "N2",
+    "O2"
+  ],
+  "tags": [
+    "internal combustion engine",
+    "four-stroke",
+    "gas engine",
+    "natural gas",
+    "mean specific heat",
+    "combustion products",
+    "eps-NTU",
+    "cooling water",
+    "exercise",
+    "throttle"
+  ],
+  "language_features": [
+    "procedures",
+    "CALL with several outputs",
+    "IF/THEN/ELSE (in cpbar)",
+    "single-input property calls",
+    "min/max",
+    "exp",
+    "UNITSYSTEM / CALL ERROR (in cpbar)"
+  ],
+  "stats": {
+    "n_equations": 85,
+    "largest_block": 13
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "coolsolve_examples + thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 08/MSTH051114 EXERCICE 4.EES",
+    "candidate_id": "CSX-026 (+EES original TM-0127)",
+    "authors": [
+      "ULiege MSTh course (J. Lebrun, V. Lemort, S. Bertagnolio)",
+      "S. Quoilin (CoolSolve example internal_combustion_engine_cpbar)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiege MSTh, machines et systemes thermiques, repetition TP 08 (exercise 4 of 2005-11-14)"
+  },
+  "verification": {
+    "reference": "EES stored solution of the original (69 variables, EES X7.458, parametric run with W_dot_sh = 0 and P_2 = 17945.38 Pa)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0+fix/library-gaps",
+    "max_rel_diff": 0.0094,
+    "notes": "compare_solution.py (rtol = 0.001): '69 common variables, 3 differ'. t_6/t_7 (0.084 %, the degenerate point t_7 = t_6, see README) and the cpbar outputs / cooling terms derived from them (<= 0.09 %); the exercise results P_2, p_3, p_4, v_3, v_4, V_dot_3, t_3, Q_dot_gw, Q_dot_wa, t_w_ex_1, t_w_ex, W_dot_in_act, W_dot_p, W_dot_m <= 3e-7. Two deviations remain: c_f = CP(CH4, 20 C) 2220.6 vs 2241.7 J/kg-K (0.94 %, EES ideal-gas CH4 vs CoolProp) and Q_dot_2 (2.57 vs 2.59 W) which follows it; s_2 = 4360.94 vs 6175.19 J/kg-K is a constant entropy reference-state offset (EES Air table vs CoolProp Air): all entropy-derived results (t_3, v_3, C_3) agree. Needs the shipped .initials (EES guesses) and coolsolve.conf (tolerance 1E-4, see README)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0005",
+    "CSL-0006",
+    "CSL-0024"
+  ],
+  "related_external": [
+    "CoolSolve examples/internal_combustion_engine_cpbar.eescode (CSX-026: this model is its curated version; the example stays in the CoolSolve repository)",
+    "thermo_models MSTH051114EXERCICE4.EES (TM-0131: byte-identical copy of the EES original)",
+    "thermo_models MSTH051114 EXERCICE 1..3.EES / MSTH051114EXERCICE1..3.EES (TM-0124 to TM-0126, TM-0128 to TM-0130): the other three exercises of the same series, still todo"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-026"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (T-IMPORT card C-35, verified against the EES stored solution)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

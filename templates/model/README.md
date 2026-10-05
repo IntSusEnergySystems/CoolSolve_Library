@@ -12,7 +12,7 @@
 
 | | |
 |---|---|
-| **Category** | <Top category> › <Sub-category> |
+| **Category** | <Top category> › <Sub-category> (titles of `taxonomy.json`, e.g. Cycles and machines › Steam power cycles) |
 | **Fluids** | <fluids> |
 | **Size** | <n> equations (largest block: <m>) |
 | **Source** | <source, with link when public> |
@@ -27,7 +27,9 @@
 <Assumptions, governing equations (LaTeX allowed), sub-models, correlations; inputs/outputs table.>
 
 ## How to run
-<GUI / CLI command, notes on guesses (`.initials`), `coolsolve.conf` if any, variants.>
+<GUI / CLI command, notes on guesses (`.initials`), `coolsolve.conf` if any, variants.
+ Blocked native file: list the runnable variant(s) `<name>_coolsolve.eescode` — what the gap forces
+ (every change is logged in the conversion log), its `.sol` baseline (tested as `CSL-XXXX:coolsolve`).>
 
 ## Results
 <Main results table.>
@@ -36,7 +38,8 @@
      saved in figures/, e.g.  ![P-h diagram of the cycle](figures/<name>_ph.png)  + one-line caption -->
 
 ## Verification
-<Reference used (EES stored solution, parametric table, publication, other tool), comparison table, tolerance, explained deviations.>
+<Reference used (EES stored solution, parametric table, publication, other tool), comparison table, tolerance quoted exactly as
+ `compare_solution.py` prints it, explained deviations. Blocked model: say it is the variant that was verified.>
 
 ## Source and attribution
 <Authors of the original model (found in the file, or TBD), institution, course or publication, library and
@@ -45,9 +48,12 @@
 ## Conversion log
 - **YYYY-MM-DD — import**: <tool, unit-system conversion, inputs restored, comments translated…>
 - **YYYY-MM-DD — <change>**: <corrections, simplifications, merges, with their impact on results>
+- **Level**: <score of docs/taxonomy.md §3, criterion by criterion> → level N
 
 ## Limitations and CoolSolve gaps
-<Physical limitations; CoolSolve gaps (CS-GAP-… IDs, see CoolSolve docs/model_library_support.md).>
+<Physical limitations; CoolSolve gaps (CS-GAP-… IDs, see CoolSolve docs/model_library_support.md): one line per gap that
+ blocks the native file, i.e. every ID of `missing_features`.>
 
 ## Related models
-<CSL-xxxx (title): how it relates (variant, merged, uses its functions…).>
+<CSL-xxxx (title): how it relates (variant, merged, uses its functions…). The same ids, and only ids, go to
+ `model.json` `related`, with the back-link in the other model's `model.json`.>

@@ -1,0 +1,65 @@
+{
+  "id": "CSL-0019",
+  "name": "orc_simple_r245fa",
+  "title": "Simple ORC with imposed component performance (R245fa)",
+  "summary": "Subcritical R245fa Organic Rankine Cycle for quick performance screening (Quoilin thesis Ch. 5.3): oil-heated evaporator, water-cooled condenser, recuperator, expander and pump with imposed effectivenesses and pinch constraints; computes pressures, state points, net power (14.8 kW) and cycle efficiency (15.7 %).",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "orc_simple_r245fa.eescode",
+  "fluids": [
+    "R245fa",
+    "Water",
+    "Therminol-66"
+  ],
+  "tags": [
+    "organic Rankine cycle",
+    "waste heat recovery",
+    "screening",
+    "recuperator",
+    "imposed effectiveness",
+    "pinch"
+  ],
+  "language_features": [
+    "property functions",
+    "procedures",
+    "arrays",
+    "string variables"
+  ],
+  "stats": {"n_equations": 182, "largest_block": 12},
+  "origin": {
+    "type": "research",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/orc_r245fa.eescode",
+    "candidate_id": "CSX-031",
+    "authors": [
+      "S. Quoilin (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.920",
+    "language": "en",
+    "course": "PhD thesis (S. Quoilin, ULiège, 2011), Chapter 5.3 screening method"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file (CoolSolve misc/EES_ok.zip, EES_ok/orc_r245fa.EES, EES 9.920, 186 variables)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.052,
+    "notes": "88/177 common variables within 0.1 % (compare_solution.py rtol=0.001, max 5.2e-02 on k[6]); systematic 0.1-2.1 % deviations on the thermodynamic quantities traced to R245fa properties (EES $REFERENCE r245fa IIR vs CoolProp): saturation pressures +0.4-0.5 %, cp_vap_rec -1.75 %, Q_dot_rec -2.06 %, vapour conductivity k[6] -5.2 %. Derived results: W_dot_net -0.10 %, eta_cycle -0.27 %. x: EES stores 100 (superheated exhaust) vs CoolSolve 0 (diagnostic only). 9 stale EES-only variables from a commented-out block ignored. Shipped .initials required (oil-property block singular from default guesses)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0004", "CSL-0015"],
+  "related_external": [
+    "CoolSolve examples/orc_r245fa.eescode (same model, kept in CoolSolve as a test case)",
+    "CoolSolve misc/EES_ok.zip: EES_ok/orc_r245fa.EES (original EES file with stored solution)",
+    "CoolSolve examples/orc_simple.eescode (air-source sibling, same thesis model, merged here)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-031"
+  ],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-05", "action": "added (roadmap card C-19, batch B-02)", "by": "opencode worker (muse-spark) for S. Quoilin"}
+  ]
+}

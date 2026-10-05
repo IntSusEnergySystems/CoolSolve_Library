@@ -48,7 +48,7 @@ Companion documents in the CoolSolve repository (cloned next to this one, as
 | `T-FIGURE` | A runnable model without figure | A diagram or plot in `figures/`, shown in the README (maintainer) | §7 |
 | `T-TAXO` | Taxonomy review | Updated `taxonomy.json`, moved folders | [taxonomy.md §6](taxonomy.md#6-changing-the-taxonomy-without-breaking-anything) |
 | `T-TOOL` | Tooling need | Script/doc update | – |
-| `T-REVIEW` | A finished batch | Checks run, roadmap updated | roadmap §2 |
+| `T-REVIEW` | A finished batch | Checks run (index, regression with variants, inventories), workflow/templates/taxonomy refined, roadmap updated | roadmap §2 |
 
 ---
 
@@ -91,9 +91,33 @@ decide for each of them with this decision tree:
    newest EES version) as the file to import; skim the others for better
    comments, data, corrections or author names.
 
-Record every decision in the source inventory, columns `decision`
+Decide `duplicate` only after comparing the equations (strip comments and
+blanks, then diff): identical equations → `duplicate`; same system with other
+equations, assumptions or closures → `merged`, and write the difference in the
+model README (a variant file or a table, otherwise say that it is described
+only). Record every decision in the source inventory, columns `decision`
 (`todo`, `added`, `superseding`, `merged`, `duplicate`, `discarded`, `parked`)
-and `library_id`, with a short reason in `notes`.
+and `library_id`, with a **one-line reason in the `notes` cell of every row you
+decide on** (duplicates and discarded files included). Edit only these cells of
+your rows and keep the rest of the file byte-identical; **put a `notes` cell
+that contains a comma between double quotes** — an unquoted comma shifts
+`decision` and `library_id` to the wrong columns (`python3 tools/backlog_stats.py`
+reports such rows as errors). Edit the cells by line surgery (the last cells of
+the line); never rewrite an inventory with a csv writer: `thermo_models` rows
+carry extra trailing columns and a rewrite changes the quoting of other rows.
+
+**CoolSolve examples** (`coolsolve_examples`; the example stays in the CoolSolve
+repository) follow the C-01 pattern: the row of the file the model is imported
+from — the example, with its EES original from `misc/EES_ok.zip` or
+`thermo_models` as verification reference — is `added` with the new `library_id`;
+the other rows of the same system (variants, earlier conversions, copies of the
+same exercise) are `merged` or `duplicate` and name that ID. When the EES
+original is itself a row of `thermo_models` (the model then follows that file,
+`model.json` `origin.candidate_id`), its row is `added` with the same ID too:
+two `added` rows, one model (`backlog_stats.py` counts rows, not models). The
+note of the example row says where the library model differs from the example
+(typo, imposed input, simplified transcription). Never leave a processed row
+at `todo`.
 
 ---
 
@@ -119,12 +143,24 @@ existing library). `tools/build_index.py` rejects source files and
    Read `work/<name>/reference/ees_extract_report.md`: EES version, **unit
    system**, lookup/parametric tables, **functions called but not defined**,
    warnings (−9999 values, unsupported features).
+
+   **Embedded tables are decoded by a heuristic: expect false positives.** The
+   `tables` column of the inventory and the report may show a table that is not
+   one (TM-0413: "761×2" was not the integral table; TM-0326: "74×2" was a
+   mis-decoded pair of string-keyed lookup tables, `CS-BUG-EXTRACT-LOOKUP-STRING`)
+   or miss one. Never trust a decoded table without checking it against the
+   EES file: its row/column counts and a few values (the equations that call
+   `LOOKUP`/`INTERPOLATE`, the table names, the stored solution), the **plot
+   objects** of the file (a time series or an integral table is often stored
+   there, as for TM-0413), or a hand decoding of the binary. State in the README
+   how the table was recovered and checked.
 2. **Find the authors.** Look in the file: header comments ("Author", "Auteur",
    "par", names, dates), comments next to the equations, the folder and file
    names (initials, see the table below), and the `authors` column of the
    inventory. The `{$ID$…}` tag gives the EES licence holder, not necessarily
    the author. If no author can be identified, write `"TBD"`: the maintainer
-   completes it (`tools/build_index.py` lists these models).
+   completes it (`tools/build_index.py` lists these models). An institution or a
+   course alone is not an author: write `"TBD (<institution, course>)"`.
 
    | Initials | Author |
    |---|---|
@@ -143,8 +179,14 @@ existing library). `tools/build_index.py` rejects source files and
    If it does not converge: CoolSolve `docs/debugging_models.md` (debug folder,
    simplified model for initials, *Try Harder*/`coolsolve.conf`). Time-box the
    effort; if it still fails, set `failing` with the diagnosis, or `blocked` if
-   a CoolSolve gap is the cause (§6). Keep EES syntax (principle: CoolSolve
-   must read native EES).
+   a CoolSolve gap is the cause (§6). Keep EES syntax in the native file
+   (principle: CoolSolve must read native EES); a faithful runnable variant of a
+   blocked file is shipped separately (§6). **Quote tolerances exactly as
+   `compare_solution.py` prints them** (README, `verification.max_rel_diff`: the
+   maximum over all common variables), and explain every deviation above them
+   (property backend, reference state…); if you leave variables out of the figure
+   (absolute `h`/`s` carrying a reference-state offset, diagnostic outputs), name
+   them next to it.
 4. **Convert the units by hand** if the report shows anything other than
    `SI MASS DEG PA C J`: every input value, every equation, every constant, the
    tables and the guesses, following CoolSolve `docs/ees_import.md` §6; verify
@@ -154,7 +196,10 @@ existing library). `tools/build_index.py` rejects source files and
 5. **Curate** (each change logged in the README conversion log):
    standard header (`templates/model/header.eescode`), comments in English,
    corrections of genuine errors (with their impact on the results), removal
-   of dead code. Keep variable names unless they are misleading. If the model
+   of dead code. Keep variable names unless they are misleading. **Comments do
+   not invent physical meaning**: paraphrase the original's own comments or
+   write "as in the original"; give every dimensional quantity its SI unit
+   (`[-]` only for dimensionless ones). Fluid names follow §9. If the model
    is a cycle or a component on a real fluid, make it **diagram-ready**: add at
    the end a block of post-processing equations giving the state points as
    arrays `P[i]`, `h[i]`, `T[i]`, `s[i]` (pattern: `CSL-0001`, block *State
@@ -169,12 +214,25 @@ existing library). `tools/build_index.py` rejects source files and
 7. **Document**: `README.md` (all template sections, results table, the figure
    placeholder of §7), `model.json` (ID = next free ID printed by
    `tools/build_index.py`; level computed with
-   [taxonomy.md §3](taxonomy.md#3-level--complexity-rating); source path with `~`).
+   [taxonomy.md §3](taxonomy.md#3-level--complexity-rating); source path with `~`;
+   `verification.coolsolve_version` = the version the binary prints plus the
+   commit of the CoolSolve checkout that built it, e.g. `0.3.0@fbdb6a7` from
+   `git -C ../CoolSolve rev-parse --short HEAD` — not `main <date>`; `build_index.py`
+   warns otherwise). `related` holds plain `CSL-xxxx` ids (prose goes to the
+   README), with the back-link in the `model.json` of the other model, and
+   mentions only models that exist (parallel cards: no "planned"/"forthcoming").
+   Write the level justification (score of taxonomy.md §3) in the conversion
+   log; check every README sentence about a trajectory or a sweep against the
+   output table; label a CoolSolve-only construct (e.g. the three-argument
+   `IF`) as such.
 8. **Register and test**:
    ```bash
    python3 tools/build_index.py            # must report 0 errors
    python3 tools/test_models.py CSL-XXXX --coolsolve ../CoolSolve/build/coolsolve
+   python3 tools/backlog_stats.py          # no ERROR: inventory rows well-formed
    ```
+   `test_models.py` also tests the variants of the model that have a `.sol`
+   (`CSL-XXXX:variant`, §6); `CSL-XXXX:variant` selects one, `--no-variants` skips them.
 9. **Close the card**: inventory `decision`/`library_id`, one line in the
    roadmap progress log, gap register rows if any; **delete `work/<name>/`**.
    Do not commit: the maintainer reviews and commits (suggested message
@@ -220,7 +278,8 @@ For LaboThapPy, TESPy and other Python/Modelica/paper models (see
 - Translate the **physics**, not the code: iterative loops and numerical
   solvers become simultaneous equations; discretisation loops become
   `DUPLICATE` arrays; `PropsSI` calls become EES property functions (units:
-  °C, Pa, J); optimiser calls make the model `kind = optimization`.
+  °C, Pa, J, fluid names as in §9: a CoolProp `'CO2'` becomes `R744`);
+  optimiser calls make the model `kind = optimization`.
 - Keep the variable naming of the source where possible, and cite equations
   (paper, documentation page).
 - Verify against the source's own results (tests, documentation examples,
@@ -235,18 +294,53 @@ For LaboThapPy, TESPy and other Python/Modelica/paper models (see
 
 ---
 
-## 6. CoolSolve gaps and re-checks
+## 6. CoolSolve gaps, blocked models and re-checks
 
-- When a model fails because of CoolSolve (missing or non-EES behaviour), write
-  a **minimal reproducer**, add or update the row in the CoolSolve gap register
-  (`../CoolSolve/docs/model_library_support.md`), and put its ID in the model's
-  `missing_features` (status `blocked`). Do not rewrite the model around the
-  gap.
-- `T-RECHECK`: when a CoolSolve release closes a gap, filter
-  `library.csv` on `missing_features`, re-run these models and update their
-  status and README.
+**Registering a gap or bug (`T-GAP`).** Read the CoolSolve register
+(`../CoolSolve/docs/model_library_support.md`) first and reference the ID of an
+already registered gap instead of re-reporting it. Register a new one **only
+with evidence that the EES syntax or behaviour is valid** — a reference in the
+EES manual/help, or an existing EES file that uses it — **and a minimal
+reproducer written in valid EES**. Without such evidence, do not register: put
+it in your final message as an *unverified suggestion* (the maintainer keeps a
+pending list, roadmap Phase 5). Follow the column count of the register section
+you write in; bugs of the tools (`ees_extract.py`, `compare_solution.py`) go in
+the register too. Any claim "EES/CoolSolve cannot / does X" needs a minimal run
+or a file reference.
 
----
+**Blocked native file.** When a model fails because of CoolSolve, set its status
+to `blocked` and put in `missing_features` **every** registered gap ID that
+blocks the native file (those of the card and those found later;
+`CS-GAP-OPTIM` is also listed for an optimisation model shipped at the optimum,
+for information). The native file stays in valid EES: never rewrite it around
+a gap. Never call CoolSolve-only syntax "valid EES" (write "CoolSolve-only
+syntax, not valid EES").
+
+**Runnable variant.** When a faithful runnable transcription exists, ship it
+next to the native file as `<name>_coolsolve.eescode` (+ `.sol`, and `.initials`
+or companion tables when needed). This is the only place where the code is
+rewritten around a gap, and:
+
+- it changes **only what the gap forces**, keeps the variable names, and **logs
+  every change** (header of the variant + README conversion log), stating when
+  it uses CoolSolve-only syntax;
+- it is verified against the same EES reference as the native file would be
+  (README *Verification* says it concerns the variant);
+- **lookup tables**: the native file ships its tables as EES expects them
+  (e.g. string-keyed `<name>-<table>.csv`); the variant has its own companion
+  tables `<name>_coolsolve-<table>.csv`, with default values agreeing with the
+  native ones;
+- **regression**: `tools/test_models.py` solves every `*.eescode` of a model
+  folder that has a sibling `.sol` of the same stem and compares it with that
+  baseline (reported as `CSL-xxxx:variant`, e.g. `CSL-0009:coolsolve`),
+  whatever the status of the model; blocked native files are skipped. A variant
+  without `.sol` is not tested: always commit its `.sol`.
+
+**Re-checks (`T-RECHECK`).** When a CoolSolve release closes gaps, filter
+`library.csv` on `missing_features`, run the native files, and update status,
+`missing_features`, README and baseline (`.sol` of the native file). Keep or
+delete the variant as the README decides; while it exists it stays in the
+regression.
 
 ## 7. Figures (`T-FIGURE`, maintainer)
 
@@ -295,12 +389,17 @@ contains the state-point arrays (§3, step 5). This procedure was tested on
 - [ ] Header, English comments, no `$UnitSystem` directive, units converted
       by hand when needed
 - [ ] Status set and justified: verification table (`verified`), sanity checks
-      (`runs`), list of changes (`modified`), gap IDs (`blocked`), diagnosis
-      (`failing`)
-- [ ] `.sol` baseline produced for runnable models; `tools/test_models.py` passes
+      (`runs`), list of changes (`modified`), gap IDs (`blocked`: **all** the
+      gaps blocking the native file in `missing_features`), diagnosis
+      (`failing`); tolerances quoted as `compare_solution.py` prints them
+- [ ] `.sol` baseline produced for runnable models **and for every runnable
+      variant** (`*_coolsolve.eescode`, …); `tools/test_models.py <ID>` passes
+      (variants included, reported as `<ID>:variant`)
 - [ ] README with the figure placeholder (runnable models)
 - [ ] `tools/build_index.py` reports 0 errors; generated files updated (left uncommitted: the maintainer commits)
-- [ ] Inventory decision, roadmap log line, gap register updated; work folder deleted
+- [ ] Inventory `decision`, `library_id` and a one-line reason in `notes` for every
+      row decided on; roadmap log line, gap register updated (evidence rule, §6);
+      work folder deleted
 
 ## 9. Style guide for `.eescode` files
 
@@ -312,5 +411,13 @@ contains the state-point arrays (§3, step 5). This procedure was tested on
 - Converted input values keep the original value in their comment:
   `p_t = 500E3 [Pa]  "500 kPa in the original"`.
 - EES naming conventions are kept (`T_su`, `P_ex`, `M_dot_r`, `h_ex_s`, `DELTAT_sc`).
+- Comments paraphrase the original's or say "as in the original"; they never
+  invent physical meaning. Dimensional quantities carry their SI unit; `[-]` is
+  for dimensionless ones only.
+- **Fluid names**: chemical formulas (`CO2`, `N2`, `O2`, `H2O`, `Air`) are
+  **ideal-gas** substances in EES (their enthalpy includes the formation
+  enthalpy); real fluids use their names (`R744` or `CarbonDioxide`, `Nitrogen`,
+  `Water`, `R134a`; `AirH2O` for humid air). Translating a source that calls
+  CoolProp `'CO2'` for the real fluid therefore gives `R744`.
 - No EES GUI tags (`{$ID$…}`, `{$PX$…}`), no commented-out dead code unless it
   documents an alternative (then say so).

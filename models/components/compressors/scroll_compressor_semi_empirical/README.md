@@ -218,6 +218,9 @@ Source files (collection of S. Quoilin):
 - `CSL-0001` refrigeration cycle with a simple compressor model: same
   component at level 1 (clearance-volume volumetric efficiency + linear loss
   law) instead of the full semi-empirical decomposition.
+- `CSL-0020` dry air screw compressor with internal leakage: the same
+  equivalent-nozzle leakage physics at a simpler level (fixed parameters,
+  ideal-gas air).
 - CoolSolve example `scroll_compressor.eescode` (`CSX-042`): simplified
   version of this model (stays in the CoolSolve repository as a test case);
   LaboThapPy has a Python implementation of the same model family.

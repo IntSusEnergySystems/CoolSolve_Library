@@ -1,0 +1,66 @@
+{
+  "id": "CSL-0024",
+  "name": "single_cylinder_engine_weibe",
+  "title": "Single-cylinder engine with Weibe combustion (crank-angle dynamic)",
+  "summary": "Crank-angle-resolved model of one cylinder of a four-stroke spark-ignition engine: the cylinder pressure, gas mass, combustion heat release (Weibe function in a PROCEDURE), wall heat losses and piston work are integrated with INTEGRAL over the intake stroke (-360 to -180 deg), with a choked intake flow through the intake valve and the charge modelled as a single ideal gas with constant gamma.",
+  "kind": "dynamic",
+  "level": 3,
+  "status": "runs",
+  "main_file": "single_cylinder_engine_weibe.eescode",
+  "fluids": [],
+  "tags": [
+    "internal combustion engine",
+    "four-stroke",
+    "spark ignition",
+    "Weibe combustion",
+    "crank angle",
+    "time integration",
+    "ideal gas",
+    "choked flow",
+    "exercise",
+    "reference model"
+  ],
+  "language_features": [
+    "INTEGRAL",
+    "$IntegralTable",
+    "PROCEDURE",
+    "IF (3 arguments)",
+    "nested IF"
+  ],
+  "stats": {"n_equations": 72, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/engine_weibe_cycle.eescode",
+    "candidate_id": "CSX-014",
+    "authors": [
+      "TBD (ULiège engine thermodynamics course exercise, 2008-2009; author not identified in the source)",
+      "S. Quoilin (CoolSolve example)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "ULiège, engine thermodynamics, Weibe combustion model, repetition 4 (2008-2009)"
+  },
+  "verification": {
+    "reference": "None available (no .sol file and no original EES file, searched in ~/Nextcloud/thermo_models and in CoolSolve misc/EES_ok.zip): reproduction of the CoolSolve example solution (75/75 scalar variables bit-identical) and of the value committed in the CoolSolve regression test for that example (tests/test_examples.cpp, p = 89221.7 Pa), plus CoolSolve solution check (0 residual) and geometric / choked-flow sanity checks",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.0,
+    "notes": "Status runs (no independent reference): the example solution and the library model are bit-identical, so max_rel_diff = 0. Final p 89221.7 Pa, T 276.14 K (absolute temperature, see README), W_tot 59.76 J. Sanity checks: 67/67 equations satisfied with max |residual| 0, RK4 180 accepted/0 rejected steps of 1 deg, V(theta) matches the closed-form slider-crank volume at the 37 trajectory rows, M_dot equals the isentropic choked flow 0.10193 kg/s only between the valve angles and while p < p_out."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [
+    "CoolSolve examples/engine_weibe_cycle.eescode (same model, kept in CoolSolve as a test case)",
+    "thermo_models TM-0121, TM-0128, TM-0136 (ULiège MSTh repetition 8, 5 L gas engine exercises: steady-state engine models of the same course, still todo)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-014"
+  ],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-05", "action": "added (roadmap card C-24, batch B-02)", "by": "opencode worker (space-bunny-free) for S. Quoilin"}
+  ]
+}

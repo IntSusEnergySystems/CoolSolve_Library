@@ -11,7 +11,7 @@ four state points are stored in arrays, ready for the T-s or P-h diagram.
 
 | | |
 |---|---|
-| **Category** | Cycles › Steam power |
+| **Category** | Cycles and machines › Steam power cycles |
 | **Fluids** | Water |
 | **Size** | 41 equations, all explicit (largest block: 1) |
 | **Source** | ULiège — course *Thermodynamique appliquée* (MECA0002), exercise session R07, exercise 1 (EES file `R07_E01_2022.EES`) |
@@ -169,5 +169,6 @@ collection of S. Quoilin:
 
 ## Related models
 
-None yet in the library. See the CoolSolve example
-`rankine1.eescode` (CSX-036), superseded by this model.
+- `CSL-0019` *orc_simple_r245fa*: same category family (vapour power cycle
+  with an organic working fluid and imposed component performance).
+- CoolSolve example `rankine1.eescode` (CSX-036), superseded by this model.

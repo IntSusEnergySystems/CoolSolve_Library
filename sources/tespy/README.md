@@ -4,7 +4,7 @@ Quick sweep (not an audit) of **TESPy (Thermal Engineering Systems in Python)** 
 
 | | |
 |---|---|
-| Repository | https://github.com/oemof/tespy (local snapshot `/home/sylvain/svn/tespy`, commit `19425523`, 2026-10-01; 5 715 commits, 47 distinct author names) |
+| Repository | https://github.com/oemof/tespy (local snapshot `~/git/tespy`, commit `19425523`, 2026-10-01; 5 715 commits, 47 distinct author names) |
 | Documentation | https://tespy.readthedocs.io |
 | Version | 0.11.3.dev0 (Python >= 3.11; roadmap: v0.12, 1.0) |
 | Stack | CoolProp (also IAPWS, PyroMat, ThermoPack, REFPROP back ends), NumPy/SciPy, pandas, fluprodia, pymoo (optional) |

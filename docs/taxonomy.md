@@ -151,7 +151,7 @@ zones, needs good guesses) scores 1+2+1+1+0+1 = 6 → level 3.
 | `verified` | ✅ **Verified** | Runs in CoolSolve and agrees with an independent reference (EES stored solution, parametric table, publication, other tool) within the tolerances of CoolSolve `docs/ees_import.md` §11 | Comparison in README, `.sol` baseline |
 | `runs` | ☑️ **Runs** | Runs; no independent reference available (sanity checks only: balances, physical ranges) | `.sol` baseline |
 | `modified` | ⚠️ **Runs (modified)** | Runs only after simplifications or changes of the original physics (documented); results not comparable 1:1 with the original | Changes and their impact in the conversion log |
-| `blocked` | ⛔ **Blocked** | Cannot run because of missing CoolSolve features (`missing_features` lists the `CS-GAP-…` IDs); kept in native EES syntax | Gap IDs, reproducer in the CoolSolve gap register |
+| `blocked` | ⛔ **Blocked** | Cannot run because of missing CoolSolve features (`missing_features` lists **every** `CS-GAP-…`/`CS-BUG-…` ID that blocks the native file); the native file is kept in valid EES syntax; a faithful runnable variant may ship beside it (workflow §6) | Gap IDs, reproducer in valid EES in the CoolSolve gap register; runnable variant `<name>_coolsolve.eescode` + `.sol` when a faithful one exists |
 | `failing` | ❌ **Failing** | Should be supported but does not converge / errors; diagnosis in progress | Diagnosis notes (debug output, what was tried) |
 | `stub` | 📄 **Documented only** | Folder and documentation only (source referenced in `model.json`); conversion not attempted yet (e.g. parked optimisation models) | README, `model.json` |
 
@@ -176,10 +176,11 @@ debugging, `blocked → verified` when a CoolSolve gap is closed (roadmap task
 ├── model.json              metadata (template: templates/model/model.json)
 ├── <name>.eescode          the model (header: templates/model/header.eescode)
 ├── <name>.initials         guess values (when needed)
-├── <name>.sol              CoolSolve solution = regression baseline (when the model runs)
+├── <name>.sol              CoolSolve solution = regression baseline (when the model runs; every `.eescode` with a `.sol` of the same stem is tested)
 ├── <name>-<table>.csv      lookup tables (CoolSolve companion convention)
 ├── coolsolve.conf          solver configuration (when needed)
-├── <name>_<variant>.eescode  optional variants (simplified, other fluid…), listed in the README
+├── <name>_<variant>.eescode  optional variants (simplified, other fluid…, or `_coolsolve`: the runnable variant of a blocked native file), listed in the README;
+│   with its own `<name>_<variant>.sol` (and `.initials`, `-<table>.csv`) it is regression-tested as `CSL-xxxx:<variant>`
 └── figures/                diagram or plot made in CoolSolve by the maintainer, shown in the README
 ```
 

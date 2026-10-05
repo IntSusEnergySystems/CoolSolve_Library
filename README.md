@@ -104,6 +104,7 @@ Each model folder is a self-contained CoolSolve project:
 | `<name>.eescode` | The model in EES language, starting with a commented introduction and with English comments on the equations |
 | `<name>.initials`, `coolsolve.conf`, `<name>-<table>.csv` | Guess values, solver settings, lookup tables (when needed) |
 | `<name>.sol` | CoolSolve solution, also used as regression baseline |
+| `<name>_<variant>.eescode` (+ `.sol`) | Variants; for a `blocked` model, `<name>_coolsolve.eescode` is the verified runnable variant of the native file; each variant with a `.sol` is regression-tested |
 | `figures/` | Thermodynamic diagram or plot made with CoolSolve, shown in the README |
 
 Open `<name>.eescode` in the CoolSolve GUI (companion files are picked up
@@ -144,11 +145,12 @@ Before committing, run:
 
 ```bash
 python3 tools/build_index.py
-python3 tools/test_models.py --coolsolve ../CoolSolve/build/coolsolve
+python3 tools/backlog_stats.py          # inventories well-formed
+python3 tools/test_models.py --coolsolve ../CoolSolve/build/coolsolve   # main files and variants
 ```
 
 CoolSolve aims to read native EES code: when a model needs a feature CoolSolve
-lacks, the model keeps its EES syntax and the gap is reported in the
+lacks, the model keeps its EES syntax (a runnable variant may ship beside it) and the gap is reported in the
 [CoolSolve gap register](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md).
 
 ## License

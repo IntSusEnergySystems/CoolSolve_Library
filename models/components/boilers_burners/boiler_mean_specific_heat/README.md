@@ -22,7 +22,7 @@ library: the procedure is copied in a block
 | **Source** | CoolSolve example `boiler_cpbar.eescode` (CSX-004, S. Quoilin), derived from the EES reference model *Classical fuel-oil heating boiler with ON/OFF control* (TM-0492, J. Lebrun & S. Bertagnolio, ULiège model bank, 2008) |
 | **Authors** | S. Quoilin (CoolSolve example); J. Lebrun, S. Bertagnolio (EES reference model); P. Ngendakumana (`cpbar` library) |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0+fix/library-gaps@fbdb6a7 — **verified** against the EES stored solution (42 variables, ≤ 0.08 %). Needs the CoolSolve fixes of the branch `fix/library-gaps` (`CS-BUG-IF-IGNORED`, `CS-BUG-MOLARMASS`, `CS-BUG-SINGLE-INPUT-PAIR`): CoolSolve v0.3.0 fails on the `cpbar` calls (SingularJacobian) |
+| **CoolSolve** | 0.3.0+fix/library-gaps@fbdb6a7 — **verified** against the EES stored solution (42 variables, ≤ 0.08 %). Needs the CoolSolve fixes of the branch `fix/library-gaps` (merged in CoolSolve `main` on 2026-10-05; `CS-BUG-IF-IGNORED`, `CS-BUG-MOLARMASS`, `CS-BUG-SINGLE-INPUT-PAIR`): CoolSolve v0.3.0 fails on the `cpbar` calls (SingularJacobian) |
 
 ## Problem statement
 
@@ -82,7 +82,8 @@ burner control, parameters of the identified model, mean specific heats fixed
 to 1300 J/kg·K as in the CoolSolve example CSX-005) runs without guesses:
 θ = 0.514, η = 0.884, mean efficiency η_set = 0.875 for a set point of 80 °C
 with water supplied at 70 °C — it reproduces the stored solution of the example
-(48/48 variables identical).
+(48/48 variables identical); `boiler_mean_specific_heat_onoff.sol` is its regression
+baseline (tested as `CSL-0006:onoff`).
 ## Results
 Values at the shipped inputs (f = 0.062, complete combustion with excess air,
 e = 0.116), as computed by `boiler_mean_specific_heat.eescode`:
@@ -166,8 +167,8 @@ the origin"). The `cpbar` procedure is by **P. Ngendakumana** (ULiège, 2003),
 imported as CSL-0005.
 
 Sources (never copied into the library):
-`~/svn/CoolSolve/examples/boiler_cpbar.eescode` and
-`~/svn/CoolSolve/examples/boiler_cpbar2.eescode` (CSX-004/CSX-005);
+`~/git/CoolSolve/examples/boiler_cpbar.eescode` and
+`~/git/CoolSolve/examples/boiler_cpbar2.eescode` (CSX-004/CSX-005);
 `~/Nextcloud/thermo_models/Model data bank/Heat_and_Cool_Production_Systems/Heat_Production_by_Combustion/CLASSICAL_ONOFF_BOILER_SIMULATION_REFERENCE_MODEL_SBJL080212.zip`
 (TM-0492, with its `UserLib` copies of the combustion library).
 
@@ -194,6 +195,8 @@ Sources (never copied into the library):
   example removed; the equations are unchanged (c̄_p kept at the constants of
   the example, which is what makes the variant runnable). Verified against
   the stored solution of the example (48/48 identical).
+- **2026-10-05 — variant baseline (C-14 review)**: `boiler_mean_specific_heat_onoff.sol`
+  added so that `tools/test_models.py` tests the variant (`CSL-0006:onoff`).
 - **Not imported** from TM-0492 (documented decision): the `WRITERESULTS`
   procedure that logs the results into an external lookup table
   (`Lookup_Results`, an `.lkt` file not shipped in the zip — output logging,
@@ -217,7 +220,7 @@ Sources (never copied into the library):
 
 ## Limitations and CoolSolve gaps
 - **Needs CoolSolve with the fixes of the branch `fix/library-gaps`**
-  (CoolSolve > v0.3.0). Closed gaps: `CS-BUG-IF-IGNORED`, `CS-BUG-MOLARMASS`,
+  (CoolSolve > v0.3.0; merged in `main` on 2026-10-05). Closed gaps: `CS-BUG-IF-IGNORED`, `CS-BUG-MOLARMASS`,
   `CS-BUG-SINGLE-INPUT-PAIR` (and `CS-GAP-UNITSYSTEM-FUNC` for the guards of the
   copied routine); none is left in `missing_features`.
 - **Convergence needs the shipped guess values**: from the default guesses the

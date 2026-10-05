@@ -193,6 +193,9 @@ model (its `.initials` were used to start the crossflow variant).
 
 ## Related models
 
-None yet in the library. See the CoolSolve example
-`condenser_3zones.eescode` and, for single-zone ε-NTU exchangers,
-`counterflow_hx_oil_water` (CSL-0002).
+- `CSL-0002` *counterflow_hx_oil_water*: single-zone ε-NTU exchanger
+  (introductory level).
+- `CSL-0014` *hx_constant_pinch*: three-zone condenser (desuperheating,
+  condensation, subcooling) closed by an imposed pinch instead of fitted
+  conductances.
+- See also the CoolSolve example `condenser_3zones.eescode`.

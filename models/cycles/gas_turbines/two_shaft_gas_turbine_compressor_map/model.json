@@ -1,0 +1,76 @@
+{
+  "id": "CSL-0011",
+  "name": "two_shaft_gas_turbine_compressor_map",
+  "title": "Two-shaft gas turbine with a compressor map and two expanders",
+  "summary": "Steady-state model of a two-shaft gas turbine (single-spool compressor and combustor, two mechanically independent expanders) on air: the compressor is described by a performance map (reduced flow, pressure ratio and isentropic efficiency versus reduced speed), the combustor by an energy balance with the mean specific heats of the ULiege combustion library, and expander 1 by a power balance from which its isentropic efficiency is found. Revision exercise of the ULiege course 'Machines et systemes thermiques', in three parts.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "two_shaft_gas_turbine_compressor_map.eescode",
+  "fluids": [
+    "Air",
+    "N2",
+    "O2",
+    "CO2",
+    "H2O"
+  ],
+  "tags": [
+    "gas turbine",
+    "two-shaft",
+    "compressor map",
+    "lookup table",
+    "turbine map",
+    "combustion chamber",
+    "mean specific heat",
+    "reduced properties",
+    "ideal gas",
+    "exercise"
+  ],
+  "language_features": [
+    "INTERPOLATE (native EES call form with a named argument)",
+    "user-library routines cpbar and gamma (implicit library, copied in the runnable variants)",
+    "property functions (Air and ideal-gas species)"
+  ],
+  "stats": {
+    "n_equations": 44,
+    "largest_block": 7
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 09/Revision JL051223-02.EES",
+    "candidate_id": "TM-0150",
+    "authors": [
+      "Jean Lebrun (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "MECA0006 Machines et systèmes thermiques (ULiège), revision exercises of 2005-12-23, part 2"
+  },
+  "verification": {
+    "reference": "EES stored solutions of the three files of the revision exercise: TM-0150 (main file, nominal speed), TM-0151 (ambient variant, 0.76 bar and 0 °C) and TM-0149 (95 % speed, t_ex_burner and epsilon_s_exp1 given), compared with tools/compare_solution.py",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0+fix/library-gaps@fbdb6a7",
+    "max_rel_diff": 0.0016,
+    "notes": "40 of the 44 EES variables agree within 1.6e-3 relative (largest: the mean specific heat of air, 1.6e-3); all derived results (powers, temperatures, efficiency, flows) within 1.1e-3. h_1, h_2, h_2s and s_1 differ by CoolProp's reference state for air; their differences agree to 6e-4. Same deviations for the ambient variant (max 1.4e-3) and for the 95 % speed case."
+  },
+  "missing_features": [
+    "CS-GAP-INTERP-EES",
+    "CS-GAP-INCLUDE"
+  ],
+  "related": [
+    "CSL-0005"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-10, duplicate group DG-0032: TM-0150 representative, TM-0149 and TM-0151 merged, TM-0175/76/77 byte-identical duplicates)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

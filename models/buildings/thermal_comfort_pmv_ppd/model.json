@@ -1,0 +1,75 @@
+{
+  "id": "CSL-0012",
+  "name": "thermal_comfort_pmv_ppd",
+  "title": "Thermal comfort: Fanger PMV-PPD model",
+  "summary": "Predicted Mean Vote (PMV) and Predicted Percentage of Dissatisfied (PPD) after Fanger (1970): full body heat balance (breathing, perspiration, sweat, clothing, radiation, convection) with the activity and clothing selected from two embedded lookup tables.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "thermal_comfort_pmv_ppd.eescode",
+  "fluids": [
+    "AirH2O",
+    "Water"
+  ],
+  "tags": [
+    "thermal comfort",
+    "Fanger",
+    "PMV",
+    "PPD",
+    "clothing",
+    "metabolic rate",
+    "buildings",
+    "exercise"
+  ],
+  "language_features": [
+    "$if directives",
+    "LOOKUP$ROW",
+    "lookup tables",
+    "string variables",
+    "humid-air properties",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 57,
+    "largest_block": 7
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/Thermal confort PMV-PPD SQSB080131/thermal_confort_PMV_PPD SQSB080131.EES",
+    "candidate_id": "TM-0326",
+    "authors": [
+      "Sylvain Quoilin (ULiège Thermodynamics Laboratory)",
+      "Jean Lebrun (ULiège Thermodynamics Laboratory)",
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.991",
+    "language": "fr",
+    "course": "Climatisation (ULiège), thermal comfort chapter"
+  },
+  "verification": {
+    "reference": "EES solution stored in the source file (57 variables) against the runnable variant thermal_comfort_pmv_ppd_coolsolve.eescode (activity row 3, clothing row 2)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0",
+    "max_rel_diff": 0.0052,
+    "notes": "46/57 variables agree within 1e-3 (51/57 within 0.5%; mostly exact); the 5 EES-side overwritten cells (E_dot_m, Q_dot_m, M_dot_CO2, T_sk, H_dot_sweat) mix a second operating point into the stored panel (see README); largest consistent-subset deviation 5.2e-3 on w_R_ex (humid-air formulation)."
+  },
+  "missing_features": [
+    "CS-GAP-IF-DIRECTIVE",
+    "CS-GAP-LOOKUPROW",
+    "CS-BUG-LOOKUP-STRING"
+  ],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-11; DG-0061 triaged: TM-0263 duplicate)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

@@ -20,7 +20,7 @@ future `$INCLUDE library:cpbar_combustion_products`) can use it unchanged.
 | **Source** | ULiège Thermodynamics Laboratory — EES library `CombCmHn_SI_PNG2003_V2.LIB` (2003); also the CoolSolve example `cpbar.eescode` (CSX-013) |
 | **Authors** | P. Ngendakumana (ULiège Thermodynamics Laboratory, 2003) |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0+fix/library-gaps@fbdb6a7 — **verified** against the EES stored solution (≤ 0.22 %). Needs the CoolSolve fixes of the branch `fix/library-gaps` (`CS-BUG-IF-IGNORED`, `CS-BUG-MOLARMASS`, `CS-BUG-SINGLE-INPUT-PAIR`, `CS-GAP-FORMATION-ENTHALPY`, `CS-GAP-UNITSYSTEM-FUNC`): CoolSolve v0.3.0 runs the file but its results are wrong |
+| **CoolSolve** | 0.3.0+fix/library-gaps@fbdb6a7 — **verified** against the EES stored solution (≤ 0.22 %). Needs the CoolSolve fixes of the branch `fix/library-gaps` (merged in CoolSolve `main` on 2026-10-05; `CS-BUG-IF-IGNORED`, `CS-BUG-MOLARMASS`, `CS-BUG-SINGLE-INPUT-PAIR`, `CS-GAP-FORMATION-ENTHALPY`, `CS-GAP-UNITSYSTEM-FUNC`): CoolSolve v0.3.0 runs the file but its results are wrong |
 
 ## Problem statement
 
@@ -195,7 +195,7 @@ Source file (plain-text EES library, comments in French):
 
 ## Limitations and CoolSolve gaps
 - **Needs CoolSolve with the fixes of the branch `fix/library-gaps`**
-  (CoolSolve > v0.3.0): the file also *runs* under v0.3.0 but gives wrong
+  (CoolSolve > v0.3.0; merged in `main` on 2026-10-05): the file also *runs* under v0.3.0 but gives wrong
   results (see *Verification*). Closed gaps: `CS-BUG-IF-IGNORED`,
   `CS-BUG-MOLARMASS`, `CS-BUG-SINGLE-INPUT-PAIR`, `CS-GAP-FORMATION-ENTHALPY`,
   `CS-GAP-UNITSYSTEM-FUNC`; none is left in `missing_features`.
@@ -214,5 +214,6 @@ Source file (plain-text EES library, comments in French):
   procedure is a copy of this one, in a block marked
   `{--- Library functions copied from CSL-0005 ---}`, until `$INCLUDE library:…`
   (`CS-FEAT-IMPORT`) is available.
-- Gas-turbine and engine models of the collection (e.g. the two-shaft gas
-  turbine, roadmap card C-10) also call `cpbar`/`gamma`.
+- `CSL-0011` *two_shaft_gas_turbine_compressor_map*: calls `cpbar` and `gamma`
+  (copied in its runnable variants).
+- Engine models of the collection also call `cpbar`/`gamma`.

@@ -1,0 +1,74 @@
+{
+  "id": "CSL-0020",
+  "name": "dry_air_screw_compressor_leakage",
+  "title": "Dry air screw compressor with internal leakage",
+  "summary": "Dry (oil-free) screw air compressor between 1 bar / 15 C suction and 3 bar discharge: three parameters identified at the 7000 rpm nominal point (swept volume, mechanical-loss torque, equivalent leakage-throat area) are imposed, and the model predicts the performance at another speed (2000 rpm default) with the leakage flow through a choked equivalent nozzle mixed back into the suction, isentropic internal compression and mechanical losses dissipated to the surroundings.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "dry_air_screw_compressor_leakage.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "screw compressor",
+    "dry air",
+    "internal leakage",
+    "volumetric efficiency",
+    "isentropic efficiency",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "max() builtin"
+  ],
+  "stats": {
+    "n_equations": 40,
+    "largest_block": 13
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/air_screw_compressor.eescode",
+    "candidate_id": "CSX-002",
+    "authors": [
+      "Vincent Lemort (ULiège Thermodynamics Laboratory, original exercise)",
+      "S. Quoilin (CoolSolve example)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.403",
+    "language": "en",
+    "course": "ULiège, Machines et systèmes thermiques, repetition 2, exercise 1 (second part)"
+  },
+  "verification": {
+    "reference": "EES stored solution of thermo_models TM-0039 (VL050926_2-1-2 questionsVL051023.EES, EES 7.403, partial: inputs and suction state) and full stored solution of TM-0032 (MSTh-SB-R2-Ex1-2.EES, EES 7.458, SB variant at the same 2000 rpm point)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.0015,
+    "notes": "16/19 stored variables of TM-0039 agree; the 3 absolute enthalpies/entropies differ by a constant reference-state offset (EES air_ha vs CoolProp Air, +125.97 kJ/kg on h) while energy differences agree (h_ex_s - h_su within 0.03 %). Against the SB variant (Air fluid, parameters within 0.15 %, gamma solved 1.395 vs fixed 1.4): all 16 comparable derived results within 0.15 % (M_dot 0.08 %, epsilon_v 0.05 %, epsilon_s 0.07 %, W_dot 0.04 %, M_dot_leak 0.14 %). No unit conversion needed (SI-C-Pa-J)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0007",
+    "CSL-0021",
+    "CSL-0023"
+  ],
+  "related_external": [
+    "CoolSolve examples/air_screw_compressor.eescode (same model, kept in CoolSolve as a test case)",
+    "CoolSolve examples/air_screw_compressor_simple.eescode (same model with rpm as sweep variable, merged here as documented variant)",
+    "thermo_models TM-0039/DG-0007 (VL050926_2-1-x, French EES original of the example, EES 7.403)",
+    "thermo_models TM-0032 (MSTh-SB-R2-Ex1-2.EES, SB variant with solved gamma, merged here)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-002"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (task C-20: import of CSX-002 with its thermo_models EES originals TM-0039/DG-0007 and TM-0032)",
+      "by": "opencode worker (muse-spark) for S. Quoilin"
+    }
+  ]
+}

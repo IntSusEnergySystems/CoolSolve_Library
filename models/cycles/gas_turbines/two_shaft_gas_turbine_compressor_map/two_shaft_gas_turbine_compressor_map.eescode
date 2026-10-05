@@ -1,0 +1,120 @@
+{=============================================================================
+  Two-shaft gas turbine with a compressor map, a combustion chamber and two
+  expanders
+  CoolSolve Library model CSL-0011
+ -----------------------------------------------------------------------------
+  Steady-state model of a two-shaft gas turbine (single-spool compressor +
+  combustor, two mechanically independent expanders driving respectively the
+  compressor and the generator), on air as the working fluid.
+
+    - the compressor is described by its performance map, an embedded lookup
+      table giving, versus the reduced rotational speed N_rN, the reduced mass
+      flow M_r_cp, the pressure ratio r_p and the isentropic efficiency
+      epsilon_s_cp of the machine at its design point;
+    - the combustor has no pressure loss and no heat loss; the natural gas (CH4,
+      LHV = 50 MJ/kg, assumed to arrive at 25 °C) is burnt at the air-fuel
+      ratio f that closes the energy balance q_1+q_2+q_3+q_4+q_5 = 0, in which
+      q_1 (air) and q_5 (products) are sensible enthalpies relative to a 25 °C
+      reference (not heat losses), q_3 = -f*LHV is the heat released, and
+      q_2 = q_4 = 0. The mean specific heats of air and of the combustion
+      products are given by the cpbar routine of the ULiège combustion library
+      (CSL-0005);
+    - expander 1 (high pressure) drives the compressor: its power balance sets
+      the product mass flow M_dot_p from the compressor power, with an
+      isentropic efficiency epsilon_s_exp1 to be found; expander 2 (low
+      pressure) drives the generator and expands from p_3 to p_4, its exhaust
+      pressure being unknown (no mechanical loss is considered).
+
+  Operating point of the exercise (revision part 2, "back to nominal speed"):
+  p_1 = 1 bar, t_1 = 15 °C, N = N_design = 10000/60 rev/s, the two reduced
+  flows of parts 1 and 2 being given (M_r_exp1, M_r_exp2).
+
+  Inputs : p_1, t_1, N_design (compressor design), N, LHV, the map lookup_1,
+           M_r_exp1, M_r_exp2
+  Outputs: M_dot_1 (air flow), r_p, epsilon_s_cp (from the map), t_ex_burner,
+           f, epsilon_s_exp1, t_4, p_4 and the specific works w_cp and w_exp1
+           (J/kg; the powers follow by multiplying with the mass flows)
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+           (273 is used instead of 273.15 in the reduced-property definitions,
+           as in the original file)
+  Source : ULiège, course "Machines et systèmes thermiques" (MECA0006), revision
+           exercises of 2005-12-23 (JL), file "Revision JL051223-02.EES"
+           - see README.md
+  Status : BLOCKED in CoolSolve v0.3.0: the native INTERPOLATE call form
+           (CS-GAP-INTERP-EES) is not supported, and the cpbar and gamma
+           routines, loaded implicitly by EES from the ULiège combustion
+           library, are not available (CS-GAP-INCLUDE). The runnable
+           transcription is two_shaft_gas_turbine_compressor_map_coolsolve.eescode.
+=============================================================================}
+
+"Revision JL051223-02"
+"Two-shaft gas turbine: back to nominal speed (values given by the exercise)"
+N = N_design                   "rotational speed: nominal [rev/s]"
+M_r_exp1 = 205.8               "reduced flow of expander 1, given by the exercise [(kg/s)*sqrt(K)/bar]"
+M_r_exp2 = 385.3               "reduced flow of expander 2, given by the exercise [(kg/s)*sqrt(K)/bar]"
+
+"!Ambient conditions and design data"
+p_1 = 1E5                      "compressor inlet pressure [Pa] (1 bar)"
+t_1 = 15                       "compressor inlet temperature [°C]"
+N_design = 10000/60            "design rotational speed [rev/s] (10000 rpm)"
+t_1_design = 15                "design inlet temperature used to define the reduced speed [°C]"
+
+"!Reduced properties"
+N_r = N/sqrt(t_1+273)          "reduced rotational speed [rev/s/sqrt(K)]"
+N_r_design = N_design/sqrt(t_1_design+273)
+N_rN = N_r/N_r_design          "ratio of the reduced speeds [-]"
+M_r_cp = M_dot_1*sqrt(t_1+273)/(p_1/1E5)   "reduced flow of the compressor [(kg/s)*sqrt(K)/bar]"
+
+"Provisional value"
+"p_2 = 5E5"
+
+"The machine is run at 95 % of its nominal speed in revision part 1"
+"N = N_design*0.95"
+
+"!Compressor map (embedded table lookup_1: N_rN, M_r_cp, r_p, epsilon_s_cp)"
+M_r_cp = INTERPOLATE('lookup_1','M_r_cp','N_rN',N_rN=0.95)
+r_p = INTERPOLATE('lookup_1','r_p','N_rN',N_rN=0.95)
+epsilon_s_cp = INTERPOLATE('lookup_1','epsilon_s_cp','N_rN',N_rN=0.95)
+
+"!Compressor balance"
+w_cp = w_s_cp/epsilon_s_cp     "specific work consumed by the compressor [J/kg]"
+w_s_cp = h_2s-h_1              "isentropic specific compression work [J/kg]"
+h_1 = ENTHALPY(Air,T=T_1)      "compressor inlet enthalpy [J/kg]"
+h_2s = ENTHALPY(Air,p=p_2,s=s_1)   "isentropic compression end enthalpy [J/kg]"
+p_2 = p_1*r_p                  "compressor discharge pressure [Pa]"
+s_1 = ENTROPY(Air,T=T_1,P=P_1) "compressor inlet entropy [J/kg-K]"
+h_2 = h_1+w_cp                 "compressor discharge enthalpy [J/kg]"
+t_2 = TEMPERATURE(Air,h=h_2)  "compressor discharge temperature [°C]"
+
+"!Combustion chamber (natural gas assumed to arrive at 25 °C)"
+q_1 = c_p_a*(25-t_2)           "sensible enthalpy of the compressor discharge air relative to 25 °C, sign reversed (balance term) [J/kg]"
+c_p_a = cpbar(1,4,0,25,T_2)   "mean specific heat of the air between 25 °C and t_2 [J/kg-K]"
+q_2 = 0                        "heat loss of the combustion chamber: none (adiabatic) [J/kg]"
+q_3 = -f*LHV                   "heat released by the combustion of the natural gas (negative: released) [J/kg]"
+LHV = 50E6                     "lower heating value of the natural gas [J/kg]"
+q_4 = 0                        "energy loss by unburned CO: none (complete combustion) [J/kg]"
+q_5 = c_p_p_burner*(t_ex_burner-25)   "sensible enthalpy of the combustion products at t_ex_burner relative to 25 °C [J/kg]"
+"c_p_p = 1100"                 "not used: replaced by the cpbar routine below"
+c_p_p_burner = cpbar(1,4,f,25,T_ex_burner)   "mean specific heat of the products [J/kg-K]"
+"t_ex_burner = 802"            "given in revision part 1, solved here"
+q_1+q_2+q_3+q_4+q_5 = 0        "energy balance of the combustion chamber, sensible enthalpies counted from 25 °C [J/kg]"
+
+"!Expander 1 (drives the compressor): reduced flow and power balance"
+M_r_exp1 = M_dot_p*sqrt(t_3+273)/(p_3/1E5)    "reduced flow of expander 1 [(kg/s)*sqrt(K)/bar]"
+t_3 = t_ex_burner              "expander 1 inlet temperature [°C]"
+p_3 = p_2                      "expander 1 inlet pressure [Pa]"
+M_dot_p = M_dot_a*(1+f)        "flow of combustion products [kg/s]"
+M_dot_a = M_dot_1              "air flow [kg/s]"
+M_dot_p*w_exp1 = M_dot_a*w_cp  "power balance of expander 1 [W]"
+w_exp1 = epsilon_s_exp1*w_s_exp1   "specific work delivered by expander 1 [J/kg]"
+"epsilon_s_exp1 = 0.85"        "given in revision part 1, solved here"
+"(missing data)"
+w_exp1 = c_p_p_exp1*(t_3-t_4)  "specific work delivered by expander 1, enthalpy drop [J/kg]"
+c_p_p_exp1 = c_p_p_burner      "mean specific heat of the products [J/kg-K]"
+
+"!Expander 1 isentropic end state and expander 2"
+w_s_exp1 = c_p_p_exp1*(t_3-t_4s)   "isentropic specific work of expander 1 [J/kg]"
+(t_4s+273)/(t_3+273) = (p_4/p_3)^((gamma-1)/gamma)   "isentropic relation of the products [-]"
+"gamma = 1.35"                 "not used: replaced by the gamma routine below"
+gamma = gamma (1,4,f,T_3,T_4)  "ratio of the specific heats of the products [-]"
+M_r_exp2 = M_dot_p*sqrt(t_4+273)/(p_4/1E5)    "reduced flow of expander 2 [(kg/s)*sqrt(K)/bar]"

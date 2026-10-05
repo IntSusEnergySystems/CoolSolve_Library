@@ -4,7 +4,7 @@
   -----------------------------------------------------------------------------
    Same model, same inputs, same physics and same 1-s integration step as
    dhw_tank_dynamic.eescode, transcribed in the CoolSolve v0.3.0 dialect
-   because two native EES constructs are blocked (see the README of CSL-0009):
+   because three native EES constructs are blocked (see the README of CSL-0009):
      - the 5-argument IF(A,B,X,Y,Z) schedules are replaced by the 3-argument
        if(cond, a, b) with the condition shifted by half a step
        (if(3600.5-tau, 10000, 0) is true for tau <= 3600 on the 1-s grid,
@@ -13,7 +13,7 @@
        literal values 0 and 18000 (CS-GAP-INTEGRAL-LIMITS);
      - the $IntegralTable columns are space-separated instead of ';'
        (CS-BUG-INTEGRAL-TABLE-SEP).
-   Solve time is about 80 s (18 000 RK4 steps of 1 s); the trajectory is
+   Solve time is about 2 min (18 000 RK4 steps of 1 s); the trajectory is
    written to dhw_tank_dynamic_coolsolve-integral.csv.
 
    Verified against the integral table stored by EES: 18 001 points,

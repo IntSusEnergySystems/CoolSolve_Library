@@ -109,6 +109,30 @@ def functions_in(eescode):
     return out
 
 
+VERSION_RE = re.compile(r"^\d+\.\d+\.\d+(\+[\w./-]+)?@[0-9a-f]{7,}$")
+
+
+def check_links_and_versions(rows):
+    """Warnings on conventions of workflow section 3 (step 7) that the validation does not enforce."""
+    known = {r["id"] for r in rows}
+    related = {r["id"]: [x for x in r["related"].split(";") if x] for r in rows}
+    prose = sorted(i for i, rel in related.items() if any(not ID_RE.match(x) for x in rel))
+    if prose:
+        print("warning: 'related' must hold model ids only (prose belongs in the README): " + ", ".join(prose))
+    unknown = ["%s->%s" % (i, x) for i, rel in sorted(related.items()) for x in rel
+               if ID_RE.match(x) and x not in known]
+    if unknown:
+        print("warning: 'related' points to a model that is not in the library: " + ", ".join(unknown))
+    one_way = ["%s->%s" % (i, x) for i, rel in sorted(related.items()) for x in rel
+               if x in known and i not in related.get(x, [])]
+    if one_way:
+        print("warning: 'related' without back-link: " + ", ".join(one_way))
+    old_ver = sorted(r["id"] for r in rows if r["coolsolve_version"] and not VERSION_RE.match(r["coolsolve_version"]))
+    if old_ver:
+        print("warning: verification.coolsolve_version should be '<version>@<commit>' "
+              "(e.g. 0.3.0@536d427): " + ", ".join(old_ver))
+
+
 def validate(folder, meta, tax_paths, errors):
     rel = folder.relative_to(MODELS).as_posix()
     where = "models/" + rel
@@ -228,6 +252,7 @@ def main(argv=None):
                     r["id"], fig.name, fig.stat().st_size // 1000, FIGURE_MAX_BYTES // 1000))
     content_hash, n_files, n_bytes = snapshot_identity([ROOT / r["path"] for r in rows])
     print("snapshot: %d files, %.1f MB, %s" % (n_files, n_bytes / 1e6, content_hash))
+    check_links_and_versions(rows)
     todo_authors = [r["id"] for r in rows if "TBD" in r["authors"]]
     todo_figures = [r["id"] for r in rows if not r["figures"] and r["status"] in ("verified", "runs", "modified")]
     if todo_authors:

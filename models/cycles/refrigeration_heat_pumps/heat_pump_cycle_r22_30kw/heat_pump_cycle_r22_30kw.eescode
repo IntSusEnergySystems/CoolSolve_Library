@@ -1,0 +1,109 @@
+{=============================================================================
+  R22 heat pump cycle delivering 30 kW
+  CoolSolve Library model CSL-0025
+  -----------------------------------------------------------------------------
+  A R22 heat pump delivering 30 kW of heating. Operating conditions:
+  evaporation at 8 °C, condensation at 60 °C with 10 K of subcooling and no
+  superheat. The compressor is described by an isentropic efficiency of 0.80
+  (its drive motor efficiency is commented out in the original, so the
+  reported power is the shaft power). The heat source is groundwater at
+  10 °C feeding the evaporator, whose effectiveness is 1. The model
+  determines the COP, the refrigerant mass flow rate and the groundwater
+  flow rate extracted. ULiège exercise (repetition 8, exercise 3).
+
+  Inputs : T_cond, T_ev, DELTA_T_sc, DELTA_T_oh (cycle);
+           epsilon_s_cp (compressor); Q_dot_23 (heating capacity);
+           T_w_su, cp_w, rho_w, epsilon_ev (groundwater source)
+  Outputs: M_dot_r, W_dot_cp, COP, M_dot_w, V_dot_w
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège course (repetition 8, exercise 3, V. Lemort) - see README.md
+=============================================================================}
+
+"R22 heat pump delivering 30 kW of heating: evaporation at 8 °C,
+ condensation at 60 °C with 10 K of subcooling, no superheat, compressor
+ isentropic efficiency 0.80. Groundwater at 10 °C feeds the evaporator
+ (effectiveness 1). COP, refrigerant mass flow rate and groundwater flow
+ rate extracted (as in the original)"
+T_cond = 60             "condensation temperature [°C]"
+T_ev = 8                "evaporation temperature [°C]"
+DELTA_T_sc = 10         "subcooling at the condenser outlet [K]"
+DELTA_T_oh = 0          "superheat at the evaporator outlet [K]"
+epsilon_s_cp = 0.8      "compressor isentropic efficiency [-]"
+{eta_m = 0.8}           "drive motor efficiency, commented out in the original (unused)"
+
+"!Mass flow rate"
+"Point 1: compressor inlet"
+T_1 = T_ev + DELTA_T_oh
+P_1 = P_ev
+P_ev = PRESSURE(R22, T=T_ev, x=1)   "saturation pressure at T_ev (phase-change plateau: any x in [0, 1] gives the same pressure) [Pa]"
+h_1 = ENTHALPY(R22, P=P_1, x=x_1)   "compressor inlet enthalpy (saturated vapour, no superheat) [J/kg]"
+x_1 = 1                             "compressor inlet quality [-]"
+
+"Point 2: compressor outlet = condenser inlet"
+P_2 = P_cd
+P_cd = PRESSURE(R22, T=T_cond, x=1)   "saturation pressure at T_cond [Pa]"
+s_1 = ENTROPY(R22, T=T_1, x=x_1)       "compressor inlet entropy [J/kg-K]"
+h_2_s = ENTHALPY(R22, P=P_2, s=s_1)    "isentropic compressor outlet enthalpy [J/kg]"
+epsilon_s_cp = w_s/w                   "isentropic efficiency (definition)"
+w_s = h_2_s - h_1                      "isentropic specific compression work [J/kg]"
+w = h_2 - h_1                          "actual specific compression work; determines h_2 [J/kg]"
+T_2 = TEMPERATURE(R22, P=P_2, h=h_2)   "compressor outlet temperature [°C]"
+
+"Point 3: condenser outlet"
+P_3 = P_cd
+T_3 = T_cond - DELTA_T_sc
+h_3 = ENTHALPY(R22, P=P_3, T=T_3)   "condenser outlet enthalpy [J/kg]"
+
+"Point 4: evaporator inlet"
+h_4 = h_3                          "isenthalpic expansion [J/kg]"
+x_4 = QUALITY(R22, P=P_4, h=h_4)   "vapour quality at the evaporator inlet [-]"
+P_4 = P_ev
+
+"!Mass flow rate from the prescribed heating capacity (condenser side)"
+Q_dot_23 = -30E3          "prescribed heating capacity [W]"
+Q_dot_23 = M_dot_r*w_23
+w_23 = h_3 - h_2          "specific heat rejected at the condenser [J/kg]"
+
+"!Compressor power consumption"
+W_dot_12 = M_dot_r*w_12
+w_12 = h_2 - h_1          "actual specific compression work [J/kg]"
+W_dot_cp = W_dot_12{/eta_m}   "shaft power (the motor efficiency is commented out in the original) [W]"
+
+"!COP"
+COP = -Q_dot_23/W_dot_cp   "coefficient of performance [-]"
+
+"!Groundwater flow rate extracted from the aquifer"
+Q_dot_41 = M_dot_r*(h_1 - h_4)            "heat absorbed at the evaporator [W]"
+Q_dot_41 = M_dot_w*cp_w*(T_w_su - T_w_ex)   "determines M_dot_w [W]"
+epsilon_ev = 1                              "evaporator effectiveness [-]"
+T_w_su = 10                                 "groundwater supply temperature [°C]"
+cp_w = 4186                                 "groundwater specific heat [J/kg-K]"
+epsilon_ev = (T_w_su - T_w_ex)/(T_w_su - T_ev)   "effectiveness definition (determines T_w_ex)"
+V_dot_w = M_dot_w/rho_w*3600   "groundwater volume flow rate [m^3/h] (factor 3600 converts m^3/s to m^3/h, as in the original)"
+rho_w = 1000                   "groundwater density [kg/m^3]"
+
+"!Cycle representation in the P-h diagram (uncommented from the original, as in the original)"
+P[1] = P_1
+h[1] = h_1
+
+P[2] = P_2
+h[2] = h_2
+
+P[3] = P_3
+h[3] = h_3
+
+P[4] = P_4
+h[4] = h_4
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: compressor inlet, 2: compressor outlet = condenser inlet,
+ 3: condenser outlet, 4: evaporator inlet. Use the arrays h[i]/P[i] or s[i]/T[i]
+ with the "Overlay array path" option of the CoolSolve Diagram tab.}
+T[1] = T_1
+s[1] = s_1
+T[2] = T_2
+s[2] = ENTROPY(R22, P=P_2, h=h_2)
+T[3] = T_3
+s[3] = ENTROPY(R22, P=P_3, T=T_3)
+T[4] = TEMPERATURE(R22, P=P_4, h=h_4)
+s[4] = ENTROPY(R22, P=P_4, h=h_4)

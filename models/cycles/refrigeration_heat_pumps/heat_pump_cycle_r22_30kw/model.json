@@ -1,0 +1,61 @@
+{
+  "id": "CSL-0025",
+  "name": "heat_pump_cycle_r22_30kw",
+  "title": "R22 heat pump cycle delivering 30 kW",
+  "summary": "R22 heat pump between 8 °C (evaporator) and 60 °C (condenser) with 10 K subcooling, no superheat and a compressor of 0.80 isentropic efficiency, fed by 10 °C groundwater (evaporator effectiveness 1); computes the COP, the refrigerant flow rate and the groundwater flow rate for 30 kW of heating.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "heat_pump_cycle_r22_30kw.eescode",
+  "fluids": [
+    "R22",
+    "Water"
+  ],
+  "tags": [
+    "heat pump",
+    "vapour compression",
+    "isentropic efficiency",
+    "groundwater",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "arrays"
+  ],
+  "stats": {"n_equations": 55, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/refrigeration2.eescode",
+    "candidate_id": "CSX-039",
+    "authors": [
+      "Vincent Lemort (ULiège Thermodynamics Laboratory, original exercise)",
+      "S. Quoilin (CoolSolve example)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.210",
+    "language": "fr",
+    "course": "ULiège, repetition 8, exercise 3"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file (CoolSolve misc/EES_ok.zip, EES_ok/refrigeration2.EES, EES 7.210)",
+    "date": "2026-10-05",
+    "coolsolve_version": "main 2026-10-05",
+    "max_rel_diff": 0.00269,
+    "notes": "All live model variables agree within 0.27 % (largest: evaporator-inlet quality x_4; flow rate and specific heating effect 0.13 %; COP 0.05 %; EES 7.210 vs CoolProp R22 properties). The stored P[1..3]/h[1..4] are stale (diagram block commented out at last EES run), ignored; stray scalar h and commented-out eta_m define no variable. No unit conversion needed (SI-C-Pa-J)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0001", "CSL-0013", "CSL-0015"],
+  "related_external": [
+    "CoolSolve examples/refrigeration2.eescode (same model, kept in CoolSolve as a test case)",
+    "CoolSolve misc/EES_ok.zip: EES_ok/refrigeration2.EES (original French EES file with stored solution)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-039"
+  ],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-05", "action": "added (roadmap card C-26, batch B-03)", "by": "opencode worker (muse-spark) for S. Quoilin"}
+  ]
+}

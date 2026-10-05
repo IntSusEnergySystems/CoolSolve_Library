@@ -1,0 +1,145 @@
+{=============================================================================
+  Single-cylinder engine with Weibe combustion, resolved along the crank angle
+  CoolSolve Library model CSL-0024
+ -----------------------------------------------------------------------------
+  Crank-angle-resolved model of one cylinder of a four-stroke spark-ignition
+  engine. Pressure, gas mass and the cumulative heat and work are integrated
+  with INTEGRAL over the crank angle theta from the intake valve opening
+  (-360 deg) to the intake valve closing (-180 deg), the intake stroke.
+
+  The Weibe function gives the combustion heat-release rate; the intake mass
+  flow is computed with an inlined choked-flow expression valid while the
+  intake valve is open and the cylinder pressure is below the ambient one.
+  Wall heat losses, the piston work and the ideal-gas state equation close the
+  algebraic subsystem at each crank angle.
+
+  Note  : the temperatures of this model are absolute temperatures (K), as
+           in the original: T is obtained from the ideal gas law p*V = m*r*T
+           and enters the heat flows as T - T_w and T_out - T. CoolSolve's
+           unit system is °C, so the temperature values and T must be read as
+           kelvin (see README.md).
+
+  Note  : as in the original, the integrated crank-angle window (-360 to
+           -180 deg) does not contain the Weibe combustion window
+           (theta_s = -20 deg, theta_d = 40 deg), so no fuel is burned in the
+           simulated stroke and Q_tot stays zero (see README.md).
+
+  Inputs : cylinder geometry, speed, ambient state, air/fuel ratio, Weibe
+           parameters, wall temperature and heat transfer coefficient
+  Outputs: pressure, temperature and mass along the crank angle, piston work
+           of the stroke, mean effective pressure and engine power
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : CoolSolve example engine_weibe_cycle (ULiège engine thermodynamics
+           course exercise, 2008-2009, Weibe combustion model repetition 4) -
+           see README.md
+=============================================================================}
+
+"Weibe combustion model: fraction of the fuel energy released and its rate,
+x_b in [0, 1] and x_dot_b in [1/deg] (theta in degrees)"
+PROCEDURE weibe(theta, theta_s, theta_d : x_b, x_dot_b)
+    x_b = 1 - exp(-a_weibe * ((theta - theta_s) / theta_d)^n_weibe)
+    x_dot_b = n_weibe * a_weibe / theta_d * (((theta - theta_s) / theta_d)^(n_weibe - 1)) * exp(-a_weibe * ((theta - theta_s) / theta_d)^n_weibe)
+    IF theta < theta_s THEN
+        x_b = 0
+        x_dot_b = 0
+    ENDIF
+    IF theta > (theta_s + theta_d) THEN
+        x_b = 1
+        x_dot_b = 0
+    ENDIF
+END
+
+"--- Geometry and operating point ---"
+D = 0.1                "cylinder bore [m]"
+L = D                  "stroke (connecting rod / crank ratio = 1 as in the original) [m]"
+B = 0.15               "connecting rod length [m]"
+R_v = 10               "compression ratio (swept volume / clearance volume)"
+A_v = 6.4E-4           "intake valve opening area [m^2]"
+N = 3000 / 60          "engine speed [1/s]"
+p_out = 1E5            "ambient pressure, and cylinder pressure at the start of the stroke [Pa]"
+T_out = 300            "intake air temperature [K] (absolute temperature, as in the original)"
+MM_mel = 29            "molar mass of the gas mixture (as in the original) [kg/kmol]"
+f = 14.6               "air/fuel mass ratio [kg air per kg fuel]"
+LHV = 43E6             "lower heating value of the fuel [J/kg]"
+n_c = 6                "number of cylinders of the engine"
+i = 0.5                "mechanical efficiency of the engine"
+a_weibe = 5.14         "Weibe combustion parameter [dimensionless]"
+n_weibe = 3            "Weibe combustion parameter (shape) [dimensionless]"
+
+"--- Geometric volumes ---"
+V_s = PI * D^2 / 4 * L    "swept volume of the cylinder [m^3]"
+V_c = V_s / (R_v - 1)     "clearance volume [m^3]"
+V_bdc = V_s + V_c         "volume at bottom dead centre [m^3]"
+
+"--- Gas properties ---"
+r_mel = R# / MM_mel      "specific gas constant of the mixture [J/(kg·K)]"
+gamma = 1.3              "ratio of specific heats of the mixture [dimensionless]"
+rho_out = p_out / (r_mel * T_out)  "density of the intake air [kg/m^3]"
+C_v = r_mel / (gamma - 1)           "specific heat at constant volume [J/(kg·K)]"
+C_d = 0.7                "discharge coefficient of the intake valve [dimensionless]"
+c_son = sqrt(gamma * r_mel * T_out) "speed of sound in the intake air [m/s]"
+
+"--- Kinematics (crank angle theta [deg]) ---"
+R = L / 2                "crank radius [m]"
+C_m = 2 * L * N          "mean piston speed [m/s]"
+y = B + R - (R * cos(theta) + sqrt(B^2 - R^2 * sin(theta)^2))  "piston position from TDC [m]"
+C = C_m * PI / 2 * sin(theta) * (1 + cos(theta) / sqrt((B / R)^2 - sin(theta)^2))  "instantaneous piston speed [m/s]"
+V = V_c + y * PI * D^2 / 4   "cylinder volume [m^3]"
+V_dot = C * PI * D^2 / 4     "volume rate of change (piston speed x piston area) [m^3/s]"
+
+"--- Crank-angle limits ---"
+theta_ivo = -360        "intake valve opening [deg]"
+theta_ivc = -180        "intake valve closing [deg]"
+theta_evo = 180         "exhaust valve opening [deg]"
+theta_evc = 360         "exhaust valve closing [deg]"
+theta_s = -20           "start of the Weibe combustion [deg]"
+theta_d = 40            "duration of the Weibe combustion [deg]"
+theta_1 = theta_ivo     "initial crank angle [deg]"
+theta_2 = -180          "final crank angle [deg]"
+
+"--- Initial charge ---"
+T_c = 1400                    "temperature of the residual gases [K] (absolute temperature, as in the original)"
+rho_residuel = p_out / (r_mel * T_c)  "density of the residual gases [kg/m^3]"
+m_residuel = V_c * rho_residuel       "mass of residual gas in the clearance volume [kg]"
+m_s = V_s * rho_out           "mass of fresh air charge at the ambient state [kg]"
+m_tot = m_residuel + m_s      "total initial mass of gas [kg]"
+p_start = p_out               "initial pressure [Pa]"
+T_start = m_s / m_tot * T_out + m_residuel / m_tot * T_c   "initial temperature [K]"
+Q_comb = m_s / f * LHV        "energy of the fuel charge [J]"
+
+"--- Integrated states (crank-angle march) ---"
+p = p_start + INTEGRAL(p_dot_scaled, theta, -360, -180, 1)     "cylinder pressure [Pa]"
+m = m_residuel + INTEGRAL(M_dot_scaled, theta, -360, -180, 1) "gas mass in the cylinder [kg]"
+Q_tot = INTEGRAL(Q_dot_weibe_deg, theta, -360, -180, 1)       "combustion heat released so far [J]"
+W_tot = INTEGRAL(W_dot_scaled, theta, -360, -180, 1)          "piston work done so far [J]"
+Q_tot_w = INTEGRAL(Q_dot_w_scaled, theta, -360, -180, 1)      "wall heat losses so far [J]"
+
+"Rates divided by the crank angular speed, to integrate with respect to theta"
+p_dot_scaled = p_dot / (360 * N)
+M_dot_scaled = M_dot / (360 * N)
+W_dot_scaled = W_dot / (360 * N)
+Q_dot_w_scaled = Q_dot_w / (360 * N)
+
+"--- Pressure dynamics (admission inlined; Weibe via procedure) ---"
+CALL weibe(theta, theta_s, theta_d : x_b, x_dot_b)
+"Intake mass flow [kg/s] — zero outside the intake valve opening interval"
+M_dot = IF(theta - theta_ivo, IF(theta_ivc - theta, IF(p - p_out, 0, C_d * A_v * p_out / c_son * gamma * (2 / (gamma + 1))^((gamma + 1) / (2 * (gamma - 1)))), 0), 0)
+"Choked flow at the discharge section of the intake valve (inlined expression, as in the original)"
+Q_dot_weibe_deg = x_dot_b * Q_comb
+Q_dot_weibe = Q_dot_weibe_deg * 360 * N    "combustion heat-release rate [W]"
+A_w = PI * D * y + 2 * PI * D^2 / 4        "heat transfer area (cylinder wall and crown) [m^2]"
+U_w = 500                                  "heat transfer coefficient gases-walls [W/(m^2·K)]"
+T_w = 400                                  "wall temperature [K] (absolute temperature, as in the original)"
+Q_dot_w = A_w * U_w * (T - T_w)            "wall heat rate (positive = heat lost by the gas) [W]"
+p * V = m * r_mel * T                      "ideal gas law: cylinder temperature T [K], absolute temperature as in the original"
+Q_dot_mel = M_dot * C_v * (T_out - T)      "energy carried by the incoming air [W]"
+Q_dot_net = Q_dot_weibe - Q_dot_w + Q_dot_mel   "net heat rate received by the gas [W]"
+p_dot = -gamma * p / V * V_dot + ((gamma - 1) / V) * Q_dot_net + M_dot / m * p   "pressure rate [Pa/s]"
+W_dot = p * V_dot          "piston power (positive when the cylinder volume grows) [W]"
+
+"--- Performance indicators ---"
+eta_eng = W_tot / Q_comb        "work of the stroke per unit of fuel energy [dimensionless]"
+DELTAp_e = W_tot / V_s          "mean effective pressure of the stroke [Pa] (bar in the original name)"
+W_dot_eng = W_tot * i * n_c * N "engine power [W]"
+
+$IntegralTable theta:5 p T m Q_dot_weibe Q_dot_w Q_dot_net V V_dot W_dot M_dot

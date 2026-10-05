@@ -147,5 +147,11 @@ Source file (EES 7.458, comments in French), collection of S. Quoilin:
 
 ## Related models
 
-None yet in the library. See the CoolSolve example
-`compressor_refrigeration_simple.eescode`.
+- `CSL-0007` *scroll_compressor_semi_empirical*: same component at the
+  semi-empirical level of detail.
+- `CSL-0013` *heat_pump_basic_tespy*, `CSL-0015` *refrigeration_cycle_basic_r134a*:
+  basic R134a vapour-compression cycles (constant isentropic efficiency).
+- `CSL-0022` *refrigeration_compressor_identification*: same SB solution
+  series (repetition 1, exercise 2) on R22, identification of a
+  clearance-volume/loss-factor compressor model from two points.
+- See also the CoolSolve example `compressor_refrigeration_simple.eescode`.

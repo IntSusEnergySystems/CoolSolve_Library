@@ -4,7 +4,7 @@ Quick sweep (not an audit) of the ULiege Thermodynamics Laboratory Python librar
 
 | | |
 |---|---|
-| Repository | https://github.com/PyLaboThap/LaboThapPy (local snapshot `/home/sylvain/svn/LaboThapPy`, commit `f03f7f47`, 2026-09-25; 744 commits since 2024-08) |
+| Repository | https://github.com/PyLaboThap/LaboThapPy (local snapshot `~/git/LaboThapPy`, commit `f03f7f47`, 2026-09-25; 744 commits since 2024-08) |
 | Documentation | https://labothappy.readthedocs.io (Sphinx; `docs/source`) |
 | Version | 0.1.0 (`pyproject.toml`, `setup.py`) |
 | Language / stack | Python, CoolProp `AbstractState`, NumPy/SciPy (`fsolve`, `brentq`, `root`), pyswarms (PSO) |

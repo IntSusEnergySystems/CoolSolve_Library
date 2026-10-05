@@ -1,0 +1,74 @@
+{
+  "id": "CSL-0022",
+  "name": "refrigeration_compressor_identification",
+  "title": "Refrigeration compressor - parameter identification from two operating points",
+  "summary": "R22 reciprocating refrigeration compressor in a vapour-compression cycle (3 K subcooling, 5 K superheat): four parameters (swept volume flow rate, clearance factor, constant electromechanical losses, loss factor) identified from two measured operating points (cooling capacity and power at two condensing/evaporating temperature pairs, square system) are imposed at their rounded values, and the model predicts the cooling capacity and power at a third operating point (40 C condensing, 2 C evaporating).",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "refrigeration_compressor_identification.eescode",
+  "fluids": [
+    "R22"
+  ],
+  "tags": [
+    "reciprocating compressor",
+    "piston compressor",
+    "refrigeration compressor",
+    "parameter identification",
+    "volumetric efficiency",
+    "clearance volume",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 102,
+    "largest_block": 4
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 01/SB/MSTh-SB-R1-Ex2.EES",
+    "candidate_id": "TM-0016",
+    "authors": [
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory, EES solution)",
+      "Vincent Lemort (ULiège Thermodynamics Laboratory, original exercise)",
+      "S. Quoilin (CoolSolve example)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège, Machines et systèmes thermiques, repetition 1, exercise 2"
+  },
+  "verification": {
+    "reference": "EES stored solution of thermo_models TM-0016 (MSTh-SB-R1-Ex2.EES, EES 7.458, full solution of all 86 stored variables)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.0085,
+    "notes": "77/86 stored variables agree within 0.1 %. The 9 remaining deviations (C 0.85 %, alpha 0.71 %, W_dot_loss_0 0.32 %, M_dot_1/M_dot_2 0.11-0.12 %, v_2_* 0.11 %, epsilon_v_2 0.11 %) all trace to the R22 property formulation (EES 7.4 vs CoolProp); all saturation pressures within 0.04 %, enthalpies within 0.06 %; predictions M_dot_3/W_dot_3/Q_dot_ev_3 within 0.08 %. No unit conversion needed (SI-C-Pa-J)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0021",
+    "CSL-0001"
+  ],
+  "related_external": [
+    "CoolSolve examples/refrigeration_compressor.eescode (same model, kept in CoolSolve as a test case; transcribed from the TM-0017 variant, see README)",
+    "thermo_models TM-0010 (VL050919_1-2-1.EES, VL identification original of the same exercise, EES 7.403)",
+    "thermo_models TM-0011 (VL050919_1-2-2.EES, VL prediction with imposed parameters of the same exercise)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-041"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (task C-22: import of CSX-041 with its thermo_models EES original TM-0016)",
+      "by": "opencode worker (muse-spark) for S. Quoilin"
+    }
+  ]
+}

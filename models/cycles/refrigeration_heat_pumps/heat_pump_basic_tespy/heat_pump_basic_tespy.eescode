@@ -1,0 +1,79 @@
+{=============================================================================
+  Basic heat pump (TESPy tutorial)
+  CoolSolve Library model CSL-0013
+-----------------------------------------------------------------------------
+  Vapour-compression heat pump on R134a after the TESPy basic tutorial
+  "Heat Pump" (tutorial/basics/heat_pump.py): an evaporator and a condenser
+  (each with a 2 % pressure drop), a compressor with isentropic efficiency
+  eta_s and an isenthalpic expansion valve. The cycle delivers a prescribed
+  condenser heat output Q_dot_cond from saturated vapour at T_2 (evaporator
+  outlet) to saturated liquid at T_4 (condenser outlet).
+
+  Inputs : fluid$, Q_dot_cond, T_2, T_4, eta_s, pr_ev, pr_co
+  Outputs: m_dot, P_comp, COP, p_2, p_3, T_3, x_0
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : TESPy tutorial/basics/heat_pump.py, commit 19425523 - see README.md
+=============================================================================}
+
+"Inputs (base case = TESPy tutorial sec_5/sec_6)"
+fluid$ = 'R134a'               "working fluid"
+Q_dot_cond = 1000E3            "condenser heat output [W]"
+T_2 = 20                       "evaporator outlet temperature = saturated vapour [C]"
+T_4 = 80                       "condenser outlet temperature = saturated liquid [C]"
+eta_s = 0.85                   "compressor isentropic efficiency [-]"
+pr_ev = 0.98                   "evaporator pressure ratio p_out/p_in [-]"
+pr_co = 0.98                   "condenser pressure ratio p_out/p_in [-]"
+
+"!Evaporator outlet = compressor suction (saturated vapour, TESPy connection c2)"
+p_2 = PRESSURE(fluid$, T=T_2, x=1)     "suction pressure [Pa]"
+h_2 = ENTHALPY(fluid$, T=T_2, x=1)     "suction enthalpy [J/kg]"
+s_2 = ENTROPY(fluid$, T=T_2, x=1)      "suction entropy [J/kg-K]"
+
+"!Condenser outlet (saturated liquid, TESPy connection c4)"
+p_4 = PRESSURE(fluid$, T=T_4, x=0)     "condenser outlet pressure [Pa]"
+h_4 = ENTHALPY(fluid$, T=T_4, x=0)     "condenser outlet enthalpy [J/kg]"
+
+"!Evaporator pressure drop (TESPy SimpleHeatExchanger pr)"
+p_2 = pr_ev*p_1                "evaporator outlet pressure [Pa]"
+
+"!Condenser pressure drop (TESPy SimpleHeatExchanger pr)"
+p_4 = pr_co*p_3                "condenser outlet pressure [Pa]"
+
+"!Compressor (TESPy Compressor eta_s)"
+h_3s = ENTHALPY(fluid$, s=s_2, P=p_3)  "isentropic discharge enthalpy [J/kg]"
+(h_3 - h_2)*eta_s = h_3s - h_2      "isentropic efficiency definition [J/kg]"
+T_3 = TEMPERATURE(fluid$, h=h_3, P=p_3)  "discharge temperature [C]"
+s_3 = ENTROPY(fluid$, h=h_3, P=p_3)      "discharge entropy [J/kg-K]"
+
+"!Expansion valve (isenthalpic, TESPy Valve) and cycle closer (TESPy CycleCloser)"
+h_0 = h_4                      "valve outlet enthalpy = condenser outlet enthalpy [J/kg]"
+p_0 = p_1                      "valve outlet pressure = evaporator inlet pressure [Pa]"
+T_0 = TEMPERATURE(fluid$, h=h_0, P=p_0)  "evaporator inlet temperature [C]"
+x_0 = QUALITY(fluid$, h=h_0, P=p_0)      "evaporator inlet vapour quality [-]"
+
+"!Energy balances"
+Q_dot_cond = m_dot*(h_3 - h_4)  "condenser heat output [W]"
+P_comp = m_dot*(h_3 - h_2)      "compressor power consumption [W]"
+COP = Q_dot_cond/P_comp         "coefficient of performance [-]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: compressor suction = evaporator outlet (TESPy c2),
+ 2: compressor discharge (TESPy c3), 3: condenser outlet (TESPy c4),
+ 4: evaporator inlet after the valve (TESPy c0 = c1). Use the arrays h[i]/P[i]
+ or s[i]/T[i] with the "Overlay array path" option of the CoolSolve Diagram tab.}
+P[1] = p_2
+h[1] = h_2
+T[1] = T_2
+s[1] = s_2
+P[2] = p_3
+h[2] = h_3
+T[2] = T_3
+s[2] = s_3
+P[3] = p_4
+h[3] = h_4
+T[3] = T_4
+s[3] = ENTROPY(fluid$, T=T_4, x=0)
+P[4] = p_0
+h[4] = h_0
+T[4] = T_0
+s[4] = ENTROPY(fluid$, h=h_0, P=p_0)

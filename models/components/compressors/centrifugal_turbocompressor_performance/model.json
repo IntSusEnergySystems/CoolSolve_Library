@@ -1,0 +1,66 @@
+{
+  "id": "CSL-0023",
+  "name": "centrifugal_turbocompressor_performance",
+  "title": "Centrifugal turbocompressor performance (air)",
+  "summary": "Air flow rate drawn by a centrifugal turbocompressor (impeller + vaneless diffuser) at constant isentropic efficiencies: velocity triangles at the impeller outlet, Euler equation, diffuser pressure recovery; solves the nominal point and can be swept towards the maximum pressure ratio.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "centrifugal_turbocompressor_performance.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "centrifugal compressor",
+    "turbocompressor",
+    "impeller",
+    "diffuser",
+    "velocity triangles",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 32,
+    "largest_block": 9
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 04/MSTH_041012_exercice_2_corrigé.EES",
+    "candidate_id": "TM-0056",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory, course Machines et systèmes thermiques, repetition of 2004-10-12, exercise 2; author not identified)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.210",
+    "language": "fr",
+    "course": "ULiège, Machines et systèmes thermiques, repetition 4 (2004-10-12), exercise 2"
+  },
+  "verification": {
+    "reference": "EES stored solution of thermo_models TM-0055 (MSTH_041012_exercice_2.EES, EES 7.210, full solution of all 33 stored variables at the nominal point; same equations as the imported corrigé TM-0056)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.0002,
+    "notes": "24/32 comparable variables agree within 0.1 % (M_dot 0.013 %, w 0.007 %, p_2 0.003 %, v_2 0.018 %). The 8 remaining variables are the absolute enthalpies/entropies, offset by the EES-7 vs CoolProp Air reference states (+125.87 kJ/kg on h, -1814.9 J/kg-K on s, constant within 5 J/kg and 0.01 J/kg-K); all energy differences agree. No unit conversion needed (SI-C-Pa-J)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0020"],
+  "related_external": [
+    "CoolSolve examples/turbocompressor.eescode (CSX-044: same exercise, kept in CoolSolve as a test case; transcribed with r_p_i imposed at 1.25 instead of r_p_i = p_2/p_1, see README)",
+    "thermo_models TM-0066 (MSTh-SB-R4-Ex3.EES, SB impeller + adiabatic diffuser on air, same physics, different exercise — candidate for a future related model)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-044"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-23, batch B-02)",
+      "by": "opencode worker (muse-spark) for S. Quoilin"
+    }
+  ]
+}

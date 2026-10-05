@@ -1,0 +1,85 @@
+{=============================================================================
+  Heat exchanger with an imposed pinch - condenser (three zones)
+  CoolSolve Library model CSL-0014
+ -----------------------------------------------------------------------------
+  Translation of the LaboThapPy component HexCstPinch (condenser branch) into
+  EES-language equations. The exchanger condenses a superheated vapour (hot
+  side) against a single-phase coolant (cold side) and is sized by two design
+  parameters: the pinch (minimum temperature difference between the streams)
+  and the subcooling at the hot outlet. The three zones - desuperheating,
+  two-phase condensation, subcooling - are written as simultaneous energy
+  balances; the Python scalar root-find on the saturation pressure becomes an
+  unknown P_sat closed by the pinch condition. Pressure drops are zero, as in
+  the defaults of the original (DP_h = DP_c = 0).
+
+  Inputs : fluid_H$, T_su_H, P_su_H, M_dot_H (hot vapour supply);
+           fluid_C$, T_su_C, P_su_C, M_dot_C (cold coolant supply);
+           Pinch, Delta_T_sh_sc (design parameters)
+  Outputs: P_sat, T_sat, Q_dot and the zone duties Q_dot_sh/tp/sc, outlet states
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : LaboThapPy, HexCstPinch by B. Chaudoir, E. Neven, T. Janod - see README.md
+=============================================================================}
+
+"Design inputs (default run: COND_CO2 example of the original)"
+fluid_H$ = 'R744'             "hot fluid: condensing CO2 vapour (CoolProp 'CO2' maps to EES 'R744', the real fluid; bare 'CO2' is the ideal-gas species in EES)"
+T_su_H = 30                  "hot supply temperature [C]"
+P_su_H = 60E5                "hot supply pressure [Pa]"
+M_dot_H = 15                 "hot mass flow rate [kg/s]"
+fluid_C$ = 'Water'           "cold fluid: single-phase coolant"
+T_su_C = 15                  "cold supply temperature [C]"
+P_su_C = 5E5                 "cold supply pressure [Pa]"
+M_dot_C = 100                "cold mass flow rate [kg/s]"
+Pinch = 5                    "imposed minimum temperature difference [K]"
+Delta_T_sh_sc = 0.1          "subcooling at the hot outlet [K]"
+
+"!Hot side: three refrigerant zones in series (as in the original system_cond)"
+h_su_H = ENTHALPY(fluid_H$, T=T_su_H, P=P_su_H)   "hot supply enthalpy [J/kg]"
+T_sat = TEMPERATURE(fluid_H$, P=P_sat, x=0)      "saturation temperature at P_sat [C]"
+h_H_x1 = ENTHALPY(fluid_H$, P=P_sat, x=1)         "saturated vapour at P_sat [J/kg]"
+h_H_x0 = ENTHALPY(fluid_H$, P=P_sat, x=0)         "saturated liquid at P_sat [J/kg]"
+Q_dot_sh = M_dot_H*(h_su_H - h_H_x1)              "desuperheating duty [W]"
+Q_dot_tp = M_dot_H*(h_H_x1 - h_H_x0)              "condensation duty [W]"
+T_ex_H = T_sat - Delta_T_sh_sc                   "hot outlet temperature [C]"
+h_ex_H = ENTHALPY(fluid_H$, P=P_sat, T=T_ex_H)    "hot outlet enthalpy [J/kg]"
+Q_dot_sc = M_dot_H*(h_H_x0 - h_ex_H)              "subcooling duty [W]"
+Q_dot = Q_dot_sh + Q_dot_tp + Q_dot_sc            "total heat duty [W]"
+P_ex_H = P_su_H                                  "hot outlet pressure [Pa] (no pressure drop, as in the original defaults)"
+
+"!Cold side: single-phase coolant heated through the three zones (as in the original)"
+h_su_C = ENTHALPY(fluid_C$, T=T_su_C, P=P_su_C)   "cold supply enthalpy [J/kg]"
+h_C_x0 = h_su_C + Q_dot_sc/M_dot_C               "cold enthalpy after the subcooling zone [J/kg]"
+T_C_x0 = TEMPERATURE(fluid_C$, h=h_C_x0, P=P_su_C)  "cold temperature after the subcooling zone [C]"
+h_C_x1 = h_C_x0 + Q_dot_tp/M_dot_C               "cold enthalpy after the two-phase zone [J/kg]"
+T_C_x1 = TEMPERATURE(fluid_C$, h=h_C_x1, P=P_su_C)  "cold temperature after the two-phase zone [C]"
+h_ex_C = h_C_x1 + Q_dot_sh/M_dot_C               "cold outlet enthalpy [J/kg]"
+T_ex_C = TEMPERATURE(fluid_C$, h=h_ex_C, P=P_su_C)  "cold outlet temperature [C]"
+P_ex_C = P_su_C                                  "cold outlet pressure [Pa] (no pressure drop, as in the original defaults)"
+
+"!Pinch condition: the saturation pressure is the unknown that enforces the pinch"
+PP_hot = T_su_H - T_ex_C         "hot-end temperature difference [K]"
+PP_int = T_sat - T_C_x1          "internal temperature difference at the dew-point interface [K]"
+PP_cold = T_ex_H - T_su_C        "cold-end temperature difference [K]"
+PP_min_int = MIN(PP_int, PP_cold)  "inner minimum [K]"
+PPTD = MIN(PP_hot, PP_min_int)   "pinch point: minimum over the three candidates [K]"
+PPTD = Pinch                     "design condition closing P_sat"
+
+"!Refrigerant path for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: hot supply, 2: saturated vapour at P_sat, 3: saturated liquid at P_sat,
+ 4: subcooled outlet. Use the arrays h[i]/P[i] or s[i]/T[i] with the
+ "Overlay array path" option of the CoolSolve Diagram tab.}
+P[1] = P_su_H
+h[1] = h_su_H
+T[1] = T_su_H
+s[1] = ENTROPY(fluid_H$, T=T_su_H, P=P_su_H)
+P[2] = P_sat
+h[2] = h_H_x1
+T[2] = T_sat
+s[2] = ENTROPY(fluid_H$, P=P_sat, x=1)
+P[3] = P_sat
+h[3] = h_H_x0
+T[3] = T_sat
+s[3] = ENTROPY(fluid_H$, P=P_sat, x=0)
+P[4] = P_ex_H
+h[4] = h_ex_H
+T[4] = T_ex_H
+s[4] = ENTROPY(fluid_H$, P=P_sat, T=T_ex_H)

@@ -1,0 +1,135 @@
+{=============================================================================
+  Thermal comfort: Fanger PMV-PPD model
+  CoolSolve Library model CSL-0012
+-----------------------------------------------------------------------------
+  Predicted Mean Vote (PMV) and Predicted Percentage of Dissatisfied (PPD)
+  after Fanger (1970), following the course notes of J. Lebrun (ULiege,
+  2006-2007). Inputs: metabolic rate, body mass and height (Dubois skin
+  area), clothing insulation in clo, air and mean radiant temperature,
+  relative humidity and air speed. Metabolic rate and clothing are either
+  given directly or selected from the embedded lookup tables 'activite'
+  (7 activities) and 'veture' (6 clothing ensembles) — see README.md.
+
+  This file keeps the native EES syntax ($if directives, LOOKUP$ROW) and
+  does NOT run in CoolSolve yet (CS-GAP-IF-DIRECTIVE, CS-GAP-LOOKUPROW, and
+  then CS-BUG-LOOKUP-STRING for its string-keyed tables);
+  the runnable variant thermal_comfort_pmv_ppd_coolsolve.eescode resolves
+  the $if blocks to the stored EES selections (activity row 3, clothing
+  row 2) and is verified against the solution stored in the source file.
+
+  Inputs : E_dot_m_in (metabolic rate) or activite$ (table key); I_cl_in
+           (clothing resistance) or veture$ (table key); M_i, H_i (body);
+           T_a, T_w, RH_a, U, P_a
+  Outputs: PMV, PPD (and the whole heat-balance detail)
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : ULiège Thermodynamics Laboratory, S. Quoilin, J. Lebrun,
+           S. Bertagnolio (2008-01-30) - see README.md
+=============================================================================}
+
+"Inputs (default run: values stored in the source EES file)"
+M_i = 70 [kg]  "body mass"
+H_i = 1.7 [m]  "body height"
+E_dot_m_in = 100 [W]  "metabolic rate, used when defined directly"
+I_cl_in = 1 [Clo]  "clothing insulation, used when defined by its resistance"
+T_a = 14 [C]  "air temperature (the commented default of the source is 20 C; the stored run used 14 C)"
+T_w = 20 [C]  "mean radiant (wall) temperature"
+RH_a = 0.5  "indoor relative humidity [-]"
+U = 0.05 [m/s]  "air speed"
+P_a = 1E5 [Pa]  "atmospheric pressure"
+
+"Selection of the activity and of the clothing (string variables: the source file uses them
+in the $if directives but never defines them, the whole data block being commented out).
+Default = the stored run: standing person at rest (row 3 of table 'activite', 70 W/m2) in
+summer clothing (row 2 of table 'veture', 0.5 clo). Other keys of 'activite': 'Sommeil',
+'Repos_assis', 'Marche_5km/h', 'Travail_leger', 'Travail_lourd', 'Sport'; of 'veture':
+'Tropicale', 'Interieur (legere)', 'Normale (interieur hiver)', 'Hiver', 'Polaire'.
+'définie par le métabolisme' / 'Définie par sa résistance' (accented, exact literals of
+the $if tests) select the direct inputs E_dot_m_in / I_cl_in instead of the tables; the
+keys of the tables themselves are ASCII-folded"
+activite$ = 'Repos_debout'
+Veture$ = 'Ete'
+
+$if activite$='définie par le métabolisme'
+E_dot_m = E_dot_m_in
+$else
+row = LOOKUP$ROW('activite','activite',activite$)
+alpha_E_dot = lookup('activite',row,2)
+E_dot_m = alpha_E_dot * A_sk
+$endif
+
+$if Veture$='Définie par sa résistance'
+I_cl = I_cl_in
+$else
+row2 = LOOKUP$ROW('veture','veture',veture$)
+I_cl = lookup('veture',row2,2)
+$endif
+
+
+
+"!Model"
+
+"Dubois correlation for the skin area"
+A_sk = 0.203 * M_i^0.425 * H_i^0.725 [m^2]
+
+"PMV: Predicted Mean Vote"
+PMV = C*L_dot/A_sk
+C = 0.303*exp(-0.037*Q_dot_m/A_sk)+0.0275
+PMV_abs=abs(PMV)
+"Thermal load"
+L_dot = Q_dot_m-Q_dot_a
+"Metabolic heat to dissipate (comfortable conditions)"
+W_dot = 0 "(no external physical work)"
+Q_dot_m = E_dot_m - W_dot
+"Dissipable heat without thermoregulation (comfortable conditions)"
+
+"1) Breathing"
+H_dot_R=M_dot_R*(h_R_ex-h_R_su)
+h_R_ex=enthalpy(AIRH2O,T=T_R_ex,w=w_R_ex,P=P_a)
+w_R_ex=humrat(AIRH2O,T=35.8,R=1,P=P_a)
+h_R_su=enthalpy(AIRH2O,T=T_a,r=RH_a,P=P_a)
+T_R_ex=34 [C]
+M_dot_R=M_dot_CO2*MM_air/(X_CO2*MM_CO2)
+MM_air=molarmass(AIR)
+MM_CO2=molarmass(CO2)
+X_CO2=0.05
+M_dot_CO2=1.05E-7*E_dot_m
+
+"2) Latent flux at the skin surface (perspiration)"
+H_dot_persp = M_dot_w_persp*h_g_sk
+M_dot_w_persp = A_sk*K_D*(p_s_sk-p_a_w)
+p_s_sk=pressure(WATER,T=T_sk,x=1) "saturated water partial pressure under the skin"
+p_a_w=RH_a*pressure(WATER,T=T_a,x=1) "saturated water partial pressure in the air"
+h_g_sk=enthalpy(WATER,T=T_sk,x=1) "saturated water enthalpy under the skin"
+K_D = 1.3E-9
+T_sk=35.7-0.028*Q_dot_m/A_sk
+
+H_dot_sweat/A_sk =max(0,0.42*(Q_dot_m/A_sk-58) ) "no negative sweat flux, which would be meaningless"
+
+"3) Flux transmitted through the clothing"
+Q_dot_cl=A_sk/R_cl*(T_sk-T_cl)
+R_cl=0.155*I_cl
+Q_dot_cl=Q_dot_c+Q_dot_R
+
+"4) Radiative flux"
+Q_dot_R=A_cl*F*h_r*(T_cl-T_w)
+h_r=epsilon*sigma*4*((T_cl+273+T_w+273)/2)^3
+epsilon=0.95
+sigma=5.7E-8
+
+F=0.71
+A_cl=f_cl*A_sk
+f_cl=1.05+0.1*I_cl
+
+"5) Convective flux"
+Q_dot_c=A_cl*h_c*(T_cl-T_a)
+h_c=max(h_c_N,h_c_F)
+h_c_N=2.5*(abs(T_cl-T_a))^0.25
+h_c_F=12.1*U^0.5
+
+"Total dissipable flux"
+Q_dot_a=H_dot_R+H_dot_persp+H_dot_sweat+Q_dot_R+Q_dot_c
+
+"PPD: Predicted Percentage of Dissatisfied (correlation of the source model)"
+PPD=4.95615632 + 1.20075969*PMV_abs + 14.2159139*PMV_abs^2 + 10.6634434*PMV_abs^3 - 4.61400694*PMV_abs^4
+PPD[1]=PPD
+PMV_abs[1]=PMV_abs

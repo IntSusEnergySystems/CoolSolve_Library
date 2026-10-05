@@ -1,0 +1,101 @@
+{=============================================================================
+  Dry air screw compressor with internal leakage
+  CoolSolve Library model CSL-0020
+  -----------------------------------------------------------------------------
+  A dry (oil-free, no clearance volume) screw compressor for air, tested at
+  7000 rpm (volumetric efficiency 90%, isentropic efficiency 70%) between
+  1 bar / 15 C suction and 3 bar discharge. Three model parameters are
+  imposed (identified from the nominal test): the swept volume V_s, the
+  mechanical-loss torque T_m and the equivalent leakage-throat area A_thr.
+  The model predicts the performance at another speed (2000 rpm here):
+  the leakage flow through the equivalent throat (choked isentropic nozzle)
+  is mixed back into the suction flow, the internal compression is assumed
+  isentropic, and the shaft power adds the mechanical losses (2*PI*N*T_m),
+  assumed dissipated to the surroundings (adiabatic compressor).
+
+  Inputs : P_su, T_su, P_ex, N (speed), V_s, T_m, A_thr
+  Outputs: M_dot, epsilon_v, epsilon_s, W_dot, M_dot_leak, exhaust state
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : ULiège course Machines et systèmes thermiques, R2 Ex1 (V. Lemort);
+           CoolSolve example air_screw_compressor - see README.md
+
+  SOLVER NOTE: the Newton solver alone fails on this model (highly nonlinear
+  leakage loop); the default pipeline falls back to TrustRegion. Keep the
+  .initials file (guesses from the EES stored solution) for convergence.
+=============================================================================}
+
+"Compressor model parameters imposed: V_s (swept volume), T_m (mechanical loss torque), A_thr_leak (equivalent leakage throat area)"
+
+"***********************************************************************************"
+
+V_s=0.007876 "swept volume [m3], identified at the nominal point"
+A_thr=0.0001309 "equivalent leakage throat area [m2], identified at the nominal point"
+T_m=46.25 "mechanical loss torque [N-m], identified at the nominal point"
+
+P_su=1E5 "suction pressure [Pa]"
+T_su=15 "suction temperature [C]"
+P_ex=3E5 "discharge pressure [Pa]"
+N=2000/60{7000/60} "shaft speed [Hz]" 
+
+"Inlet conditions"
+
+h_su=enthalpy(air_ha,P=P_su,T=T_su)
+s_su=entropy(air_ha,P=P_su,T=T_su)
+v_su=volume(air_ha,P=P_su,T=T_su)
+
+{epsilon_v=0.9 
+epsilon_s=0.7} "!!"
+
+"Leakage flow rate calculation"
+
+epsilon_v=M_dot/M_dot_th
+{M_dot=1 "relative values"}"!!"
+M_dot_th=V_dot_s/v_su 
+M_dot_in=V_dot_s/{v_su}v_su1 "v_su1 accounts for mixing with leakage flow (start with v_su, then update guess)"
+{v_su1=v_su "first approximation"}
+M_dot=M_dot_in-M_dot_leak"determines M_dot_leak"
+V_dot_s=N*V_s
+
+"Mixing with leakage flow"
+
+M_dot_leak*h_ex+M_dot*h_su=M_dot_in*h_su1
+v_su1=volume(air_ha,P=P_su,h=h_su1)
+s_su1=entropy(air_ha,P=P_su,h=h_su1)
+
+
+"Compression work"
+
+h_ex1_s=enthalpy(air_ha,P=P_ex,s=s_su1)
+W_dot_in=M_dot_in*(h_ex1_s-h_su1)
+W_dot=W_dot_in+W_dot_loss
+W_dot_loss=2*PI*N*T_m "mechanical loss torque identification"
+epsilon_s=W_dot_s/W_dot
+W_dot_s=M_dot*w_s
+w_s=h_ex_s-h_su
+h_ex_s=enthalpy(air_ha,P=P_ex,s=s_su)
+
+h_ex={h_ex_s}h_ex1_s "adiabatic compressor assumed; mechanical losses dissipated to surroundings (start with h_ex_s, then update guess)"
+s_ex=entropy(air_ha,P=P_ex,h=h_ex)
+v_ex=volume(air_ha,P=P_ex,h=h_ex)
+
+"Equivalent leakage throat area calculation"
+
+M_dot_leak=V_dot_leak/v_thr_leak
+{v_thr_leak=v_ex} "first approximation" 
+V_dot_leak=C_thr_leak*A_thr "to determine the equivalent leakage throat area"
+P_thr_leak=((2/(gamma+1))^(gamma/(gamma-1)))*P_ex "critical pressure depends only on the nozzle inlet pressure"
+	"the nozzle exit pressure (compressor inlet) is below the critical pressure: the nozzle is choked"
+gamma=1.4
+h_ex=h_thr_leak+0.5*C_thr_leak^2 "isenthalpic flow"
+h_thr_leak=enthalpy(air_ha,P=P_thr_leak,s=s_ex) "isentropic expansion in the nozzle"
+v_thr_leak=volume(air_ha,P=P_thr_leak,s=s_ex) "isentropic expansion in the nozzle"
+T_thr_leak=temperature(air_ha,P=P_thr_leak,s=s_ex) "isentropic expansion in the nozzle"
+
+
+r=8314/MM_air
+MM_air=MOLARMASS(Air_ha)
+C_thr_leak_bis=sqrt(gamma*r*(T_thr_leak+273)) "alternative calculation of throat velocity"
+
+
+
+

@@ -1,6 +1,6 @@
 # thermo_models - sweep of the private EES model collection
 
-Quick automated sweep (not an audit) of `/home/sylvain/Nextcloud/thermo_models/` (Prof. S. Quoilin; ULiège Thermodynamics Laboratory and teaching material) to produce a **backlog for the CoolSolve_Library**. Source folder untouched (read-only), nothing extracted to disk.
+Quick automated sweep (not an audit) of `~/Nextcloud/thermo_models/` (Prof. S. Quoilin; ULiège Thermodynamics Laboratory and teaching material) to produce a **backlog for the CoolSolve_Library**. Source folder untouched (read-only), nothing extracted to disk.
 
 | file | role |
 |---|---|
@@ -29,6 +29,7 @@ Quick automated sweep (not an audit) of `/home/sylvain/Nextcloud/thermo_models/`
 * Titles, descriptions, category/kind/level/priority were curated from a skim of titles, comments and code heads (not by running the models): treat them as a guide, not as validated facts. Language labels: fr / en / `en+fr` / none (no comments) / unknown.
 
 * Columns added after the sweep (filled when the CoolSolve repository is next to the library): `ees_units` = unit system decoded from the binary (`SI MASS DEG PA C J` for 288 of 540 EES files; 248 use kPa/kJ and/or K; `+decimal-comma` for 230 files written with the European number format), `stored_solution` = variables with a value stored by EES / variables decoded (the EES reference for verification), `tables` = embedded lookup/parametric tables; `decision` and `library_id` = workflow columns (see `docs/model_workflow.md` §2), preserved when `sweep.py` is re-run.
+* **`tables` and `stored_solution` come from a heuristic binary decoder and can be wrong.** Known false positives: TM-0413 (`parametric:table1(761x2)` is not the 18 001-row integral table, which was recovered from the plot objects of the file) and TM-0326/TM-0263 (the former `74x2` was a mis-decoded pair of string-keyed lookup tables, hand-decoded as `activite` 7x2 and `veture` 6x2: CoolSolve `CS-BUG-EXTRACT-LOOKUP-STRING`; the cells were corrected). Before relying on a decoded table, check it against the EES file (row/column counts and values used by the equations, plot objects, or a hand decoding) and say in the model README how it was verified (`docs/model_workflow.md` §3, step 1).
 
 ## 2. Sub-folders: origin, authors (licence notes superseded, see the box at the top)
 

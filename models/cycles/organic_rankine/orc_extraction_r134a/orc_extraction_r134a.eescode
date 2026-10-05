@@ -1,0 +1,312 @@
+{=============================================================================
+  ORC with two-stage expander and intermediate extraction (R134a)
+  CoolSolve Library model CSL-0036
+ -----------------------------------------------------------------------------
+  Organic Rankine Cycle on R134a (T_ev = 90 °C, T_cd = 30 °C) whose expander
+  is described stage by stage: an isentropic first expansion (inlet volume
+  ratio r_v_in_1), the extraction of a fraction x_ext of the flow at the
+  intermediate pressure P_int, an isentropic second expansion (volume ratio
+  r_v_in_2) and a constant-volume discharge down to the condensation
+  pressure. The mass flow follows from the expander displaced volume per
+  revolution V_s_exp and the speed N; the extracted vapour is mixed with the
+  expander exhaust (mixing chamber) and cooled in the internal heat
+  exchanger (recuperator) before the boiler.
+
+  Inputs : fluid$, T_ev, T_cd, V_s_exp, N, DELTAT_f_su_exp, r_v_in, r_v_in_2,
+           x_ext, DELTAT_f_ex_cd, w_pp, epsilon_hex, DELTAT_ex_hex_h
+  Outputs: W_dot_exp, W_dot_pp, Q_dot_ev, Q_dot_cd, eta, P_int, T_int,
+           epsilon_s_exp, epsilon_s_pp
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège Thermodynamics Laboratory, modeles/cycle a extraction.EES
+           (EES 7.991/9.920) - see README.md
+ =============================================================================}
+
+"!0. CYCLE PARAMETERS"
+T_ev = 90   "evaporation temperature (saturation) [°C]"
+T_cd = 30   "condensation temperature (saturation) [°C]"
+fluid$ = 'R134a'   "working fluid (as in the original)"
+P_ev = pressure(fluid$,T=T_ev,x=0.5)   "evaporation pressure [Pa]"
+P_cd = pressure(fluid$,T=T_cd,x=0.5)   "condensation pressure [Pa]"
+
+"Intermediate pressure: as in the original, it is derived from the second-stage
+ inlet pressure, and P_int_star is the corresponding dimensionless ratio."
+P_int_star = P_int/sqrt(P_ev*P_cd)   "dimensionless intermediate pressure [-]"
+P_int = P_f_in2_exp*0.9   "intermediate (extraction) pressure [Pa]"
+T_int = temperature(fluid$,P=P_int,x=0.5)   "intermediate saturation temperature [°C]"
+
+"!1. EXPANDER"
+"1.0 Parameters"
+V_s_exp = 2.114557056E-5   "expander displaced volume per revolution [m^3] (value stored by EES; the input line of the original is commented out)"
+N = 3000   "expander speed [tr/min]"
+DELTAT_f_su_exp = 5   "superheating of the vapour at the expander inlet [K]"
+r_v_in = 3   "overall inlet volume ratio of the expansion [-]"
+r_v_in_2 = 1.2   "inlet volume ratio of the second expansion [-]"
+r_v_in_1 = r_v_in/r_v_in_2   "inlet volume ratio of the first expansion [-]"
+
+"1.1. Connections"
+P_f_su_exp = P_ev   "expander inlet pressure [Pa]"
+P_f_ex_exp = P_cd   "expander discharge pressure [Pa]"
+
+"1.2. Supply status"
+T_f_su_exp = T_ev+DELTAT_f_su_exp   "expander inlet temperature [°C]"
+v_f_su_exp = volume(fluid$,P=P_f_su_exp,T=T_f_su_exp)   "specific volume [m^3/kg]"
+h_f_su_exp = enthalpy(fluid$,P=P_f_su_exp,T=T_f_su_exp)   "specific enthalpy [J/kg]"
+s_f_su_exp = entropy(fluid$,P=P_f_su_exp,T=T_f_su_exp)   "specific entropy [J/(kg K)]"
+
+"1.3. Supply pressure drop: su=>su1 (neglected)"
+P_f_su1_exp = P_f_su_exp   "inlet pressure after the supply line [Pa]"
+T_f_su1_exp = T_f_su_exp   "inlet temperature after the supply line [°C]"
+v_f_su1_exp = volume(fluid$,P=P_f_su1_exp,T=T_f_su1_exp)   "specific volume [m^3/kg]"
+h_f_su1_exp = enthalpy(fluid$,P=P_f_su1_exp,T=T_f_su1_exp)   "specific enthalpy [J/kg]"
+s_f_su1_exp = entropy(fluid$,P=P_f_su1_exp,T=T_f_su1_exp)   "specific entropy [J/(kg K)]"
+
+"1.4. Displaced mass flow"
+V_dot_s_exp = N/60*V_s_exp   "displaced volume flow rate [m^3/s]"
+M_dot_f_in_exp = V_dot_s_exp/v_f_su1_exp   "mass flow rate entering the expander [kg/s]"
+M_dot_f_ev = M_dot_f_in_exp   "evaporator flow rate [kg/s]"
+
+"1.4. First expansion: su=>in1 (isentropic)"
+v_f_in1_exp = r_v_in_1*v_f_su1_exp   "specific volume at the first-stage outlet [m^3/kg]"
+p_f_in1_exp = pressure(fluid$,v=v_f_in1_exp,s=s_f_su1_exp)   "first-stage outlet pressure [Pa]"
+h_f_in1_exp = enthalpy(fluid$,v=v_f_in1_exp,s=s_f_su1_exp)   "first-stage outlet enthalpy [J/kg]"
+u_f_in1_exp = intenergy(fluid$,v=v_f_in1_exp,s=s_f_su1_exp)   "first-stage outlet internal energy [J/kg]"
+h_f_in1_bis_exp = u_f_in1_exp+P_f_in1_exp*v_f_in1_exp   "same enthalpy from u + pv (cross-check) [J/kg]"
+w_in_1_exp = h_f_su1_exp-h_f_in1_exp   "isentropic specific work of the first expansion [J/kg]"
+
+"1.5. Extraction: in1=>in2 (the extracted vapour leaves at the enthalpy of state in1)"
+x_ext = 0.1321470819   "fraction of the flow extracted after the first expansion [-] (value stored by EES, the input line of the original is commented out; the commented alternatives of the original were x_ext = 0.2 and x_ext = 0.01)"
+M_dot_f_ext = x_ext*M_dot_f_ev   "extracted mass flow rate [kg/s]"
+M_dot_f_cd = "(1-x_ext)*"M_dot_f_ev   "mass flow rate reaching the condenser [kg/s]"
+M_dot_f_in_exp*u_f_in1_exp-M_dot_f_ext*h_f_in1_exp = (M_dot_f_in_exp-M_dot_f_ext)*u_f_in2_exp   "energy balance of the extraction chamber"
+v_f_in2_exp = r_v_in_1*V_dot_s_exp/(M_dot_f_in_exp-M_dot_f_ext)   "specific volume at the second-stage inlet [m^3/kg]"
+p_f_in2_exp = pressure(fluid$,v=v_f_in2_exp,u=u_f_in2_exp)   "second-stage inlet pressure [Pa]"
+
+"h_f_in2_exp = u_f_in2_exp+P_f_in2_exp*v_f_in2_exp (alternative, commented out in the original)"
+h_f_in2_exp = enthalpy(fluid$,v=v_f_in2_exp,u=u_f_in2_exp)   "second-stage inlet enthalpy [J/kg]"
+s_f_in2_exp = entropy(fluid$,v=v_f_in2_exp,h=h_f_in2_exp)   "second-stage inlet entropy [J/(kg K)]"
+w_in_2_exp = v_f_in1_exp*(P_f_in1_exp-P_f_in2_exp)   "specific work of the constant-volume drop in1=>in2 [J/kg]"
+
+"!1.6. Second expansion: in2=>in3 (isentropic)"
+v_f_in3_exp = r_v_in_2*v_f_in2_exp   "specific volume at the second-stage outlet [m^3/kg]"
+h_f_in3_exp = enthalpy(fluid$,s=s_f_in2_exp,v=v_f_in3_exp)   "second-stage outlet enthalpy [J/kg]"
+P_f_in3_exp = pressure(fluid$,s=s_f_in2_exp,v=v_f_in3_exp)   "second-stage outlet pressure [Pa]"
+w_in_3_exp = h_f_in2_exp-h_f_in3_exp   "isentropic specific work of the second expansion [J/kg]"
+
+"!1.7. Constant volume expansion: in3=>ex"
+w_in_4_exp = v_f_in3_exp*(P_f_in3_exp-P_f_ex_exp)   "specific work of the constant-volume discharge [J/kg]"
+
+"!1.8. Expansion power"
+W_dot_in_exp = M_dot_f_in_exp*(w_in_1_exp+w_in_2_exp)+(M_dot_f_in_exp-M_dot_f_ext)*(w_in_3_exp+w_in_4_exp)   "expander power [W]"
+W_dot_exp = W_dot_in_exp   "expander power [W] (the original also had 'W_dot_exp=5000' before this equation; EES keeps the last assignment)"
+
+"!1.9. Exhaust state"
+h_f_ex_exp = h_f_in3_exp-w_in_4_exp   "expander exhaust enthalpy [J/kg]"
+T_f_ex_exp = temperature(fluid$,P=P_f_ex_exp,s=s_f_su_exp)   "expander exhaust temperature [°C]"
+s_f_ex_exp = s_f_su_exp   "expander exhaust entropy [J/(kg K)] (isentropic expansion)"
+
+"!1.10. Overall isentropic efficiency"
+epsilon_s_exp = W_dot_exp/(M_dot_f_ev*(h_f_su_exp-h_f_ex_exp_s))   "overall isentropic efficiency [-]"
+h_f_ex_exp_s = enthalpy(fluid$,P=P_f_ex_exp,s=s_f_su_exp)   "enthalpy of the isentropic exhaust [J/kg]"
+
+"!2. MIXING"
+M_dot_f_ev*h_f_su_cd = (M_dot_f_ev-M_dot_f_ext)*h_f_ex_exp+M_dot_f_ext*h_f_ex_hex_h   "mixing chamber: enthalpy at the condenser inlet"
+
+"!3. CONDENSER"
+"3.0. Parameters"
+DELTAT_f_ex_cd = 5   "subcooling at the condenser outlet [K]"
+
+"3.1. Inputs and connections"
+"h_f_su_cd=h_f_ex_exp (alternative, commented out in the original)"
+
+"3.2. Vapour zone"
+x_f_su_cd = quality(fluid$,P=P_cd,h=h_f_su_cd)   "quality at the condenser inlet [-]"
+T_f_su_cd = temperature(fluid$,P=P_cd,h=h_f_su_cd)   "condenser inlet temperature [°C]"
+s_f_su_cd = entropy(fluid$,P=P_cd,h=h_f_su_cd)   "condenser inlet entropy [J/(kg K)]"
+
+"3.3. Two-phase"
+h_f_su_cd_tp = min(h_f_su_cd,enthalpy(fluid$,P=P_cd,x=1))   "enthalpy at the vapour limit of the two-phase zone [J/kg]"
+h_f_ex_cd_tp = min(h_f_su_cd,enthalpy(fluid$,P=P_cd,x=0))   "enthalpy at the liquid limit of the two-phase zone [J/kg]"
+s_f_su_cd_tp = min(s_f_su_cd,entropy(fluid$,P=P_cd,x=1))   "entropy at the vapour limit of the two-phase zone [J/(kg K)]"
+s_f_ex_cd_tp = min(s_f_su_cd,entropy(fluid$,P=P_cd,x=0))   "entropy at the liquid limit of the two-phase zone [J/(kg K)]"
+
+"3.4. Liquid zone"
+h_f_ex_cd = enthalpy(fluid$,P=P_cd,T=T_f_ex_cd)   "enthalpy at the condenser outlet [J/kg]"
+s_f_ex_cd = entropy(fluid$,P=P_cd,T=T_f_ex_cd)   "entropy at the condenser outlet [J/(kg K)]"
+T_f_ex_cd = T_cd-DELTAT_f_ex_cd   "condenser outlet temperature [°C]"
+
+"3.5. Total power"
+Q_dot_cd = M_dot_f_cd*(h_f_su_cd-h_f_ex_cd)   "condenser heat rejection [W]"
+
+"!4. PUMP"
+"4.0. Parameters"
+"epsilon_s_pp = 0.5 of the original is reported below, as a check on the pump
+ work (see 4.2)."
+
+"4.1. Connections"
+h_f_su_pp = h_f_ex_cd   "pump inlet enthalpy [J/kg]"
+
+"4.1. Supply"
+T_f_su_pp = temperature(fluid$,P=P_cd,h=h_f_su_pp)   "pump inlet temperature [°C]"
+s_f_su_pp = entropy(fluid$,P=P_cd,h=h_f_su_pp)   "pump inlet entropy [J/(kg K)]"
+x_f_su_pp = quality(fluid$,P=P_cd,h=h_f_su_pp)   "quality at the pump inlet [-]"
+
+"4.2. Compression power"
+"The original imposes epsilon_s_pp = 0.5 in the parameter list above and lets
+ EES determine the pump outlet enthalpy from its variable dialog. The specific
+ work w_pp of the stored solution (4086.16 J/kg = w_pp_s/0.5) is used here as the
+ input, because it does not depend on the reference state of the fluid."
+w_pp = 4086.162629   "specific pump work [J/kg] (value stored by EES)"
+h_f_ex_pp = h_f_su_pp+w_pp   "pump outlet enthalpy [J/kg] (original: h_f_ex_pp-h_f_su_pp)"
+h_f_ex_pp_s = enthalpy(fluid$,P=P_ev,s=s_f_su_pp)   "isentropic pump outlet enthalpy [J/kg]"
+w_pp_s = h_f_ex_pp_s-h_f_su_pp   "isentropic specific pump work [J/kg]"
+epsilon_s_pp = w_pp_s/w_pp   "pump isentropic efficiency (the original imposes 0.5) [-]"
+W_dot_pp = M_dot_f_ev*w_pp   "pump power [W]"
+
+"4.3. Exhaust conditions"
+T_f_ex_pp = temperature(fluid$,P=P_ev,h=h_f_ex_pp)   "pump outlet temperature [°C]"
+s_f_ex_pp = entropy(fluid$,P=P_ev,h=h_f_ex_pp)   "pump outlet entropy [J/(kg K)]"
+x_f_ex_pp = quality(fluid$,P=P_ev,h=h_f_ex_pp)   "quality at the pump outlet [-]"
+
+"!5. INTERNAL HEAT EXCHANGER"
+"5.1. Parameters"
+epsilon_hex = 0.9   "internal heat exchanger effectiveness [-] (value imposed by the original, not used: the duty is set by the heat balances below)"
+DELTAT_ex_hex_h = 5   "temperature drop of the extracted vapour in the internal heat exchanger [K]"
+
+"5.2. Connections"
+T_f_su_hex = T_f_ex_pp   "cold-side inlet temperature (pump outlet) [°C]"
+
+"5.3. State of the extracted vapour"
+h_f_int_exp = h_f_in1_exp   "enthalpy of the extracted vapour [J/kg]"
+T_f_int_exp = temperature(fluid$,P=P_int,h=h_f_in1_exp)   "temperature of the extracted vapour [°C]"
+x_f_int_exp = quality(fluid$,P=P_int,h=h_f_in1_exp)   "quality of the extracted vapour [-] ('ok vapor' in the original)"
+s_f_int_exp = s_f_su_exp   "entropy of the extracted vapour [J/(kg K)]"
+
+"5.4. Heat balance on the hot side"
+Q_dot_hex = M_dot_f_ext*(h_f_int_exp-h_f_ex_hex_h)   "internal heat exchanger duty [W]"
+h_f_ex_hex_h = enthalpy(fluid$,P=P_int,T=T_f_ex_hex_h)   "enthalpy of the extracted vapour at the hot-side outlet [J/kg]"
+T_f_ex_hex_h = T_int-DELTAT_ex_hex_h   "hot-side outlet temperature [°C]"
+
+"5.5. Heat balance on the cold side: the same duty. The original writes
+      Q_dot_hex = M_dot_f_ev*(h_f_ex_hex-h_f_ex_pp); the equation is solved for
+      the outlet enthalpy here (EES left h_f_ex_hex free in its variable
+      dialog), which is the same statement."
+h_f_ex_hex = h_f_ex_pp+Q_dot_hex/M_dot_f_ev   "cold-side outlet enthalpy [J/kg]"
+T_f_ex_hex = temperature(fluid$,P=P_ev,h=h_f_ex_hex)   "cold-side outlet temperature [°C]"
+
+"5.6. Heat capacity rate of the working fluid (as in the original). The
+      approximate duty epsilon_hex*C_dot_f_hex*(T_int-T_f_su_hex) of the
+      original (marked '0' there) is not used: the duty comes from the balances."
+C_dot_f_hex = M_dot_f_ev*c_f_ex_pp   "heat capacity rate of the working fluid [W/K]"
+c_f_ex_pp = CP(fluid$,P=P_ev,T=T_f_ex_pp)   "specific heat capacity of the superheated vapour [J/(kg K)]"
+
+"!6. BOILER"
+"6.1. Inputs and connections"
+h_f_su_ev = h_f_ex_hex   "enthalpy at the evaporator inlet [J/kg]"
+T_f_su_ev = T_f_ex_hex   "temperature at the evaporator inlet [°C]"
+
+"6.2. liquid zone"
+s_f_su_ev = entropy(fluid$,P=P_ev,h=h_f_su_ev)   "entropy at the evaporator inlet [J/(kg K)]"
+h_f_su_ev_tp = enthalpy(fluid$,P=P_ev,x=0)   "enthalpy at the liquid limit of the evaporator [J/kg]"
+s_f_su_ev_tp = entropy(fluid$,P=P_ev,x=0)   "entropy at the liquid limit of the evaporator [J/(kg K)]"
+
+"6.3. two-phase zone"
+h_f_ex_ev_tp = enthalpy(fluid$,P=P_ev,x=1)   "enthalpy at the vapour limit of the evaporator [J/kg]"
+s_f_ex_ev_tp = entropy(fluid$,P=P_ev,x=1)   "entropy at the vapour limit of the evaporator [J/(kg K)]"
+
+"6.4. vapor zone"
+h_f_ex_ev = h_f_su_exp   "enthalpy at the evaporator outlet [J/kg]"
+s_f_ex_ev = s_f_su_exp   "entropy at the evaporator outlet [J/(kg K)]"
+
+"total"
+Q_dot_ev = M_dot_f_ev*(h_f_su_exp-h_f_su_ev)   "boiler heat input [W]"
+
+"!7. Global performance"
+res = Q_dot_ev-W_dot_exp-Q_dot_cd+W_dot_pp   "cycle energy balance residual [W] (check)"
+eta = (W_dot_exp-W_dot_pp)/Q_dot_ev   "cycle efficiency [-]"
+
+"!8. State points for the thermodynamic diagrams (added by the library)"
+"8.1 Expander inlet"
+T[1] = T_f_su_exp
+s[1] = s_f_su_exp
+P[1] = P_f_su_exp
+h[1] = h_f_su_exp
+
+"8.2 Extraction state (after the first expansion)"
+T[2] = T_f_int_exp
+s[2] = s_f_int_exp
+P[2] = P_int
+h[2] = h_f_int_exp
+
+"8.3 Expander discharge"
+T[3] = T_f_ex_exp
+s[3] = s_f_ex_exp
+P[3] = P_f_ex_exp
+h[3] = h_f_ex_exp
+
+"8.4 Condenser inlet"
+T[4] = T_f_su_cd
+s[4] = s_f_su_cd
+P[4] = P_cd
+h[4] = h_f_su_cd
+
+"8.5 Vapour limit of the condenser"
+T[5] = T_cd
+s[5] = s_f_su_cd_tp
+P[5] = P_cd
+h[5] = h_f_su_cd_tp
+
+"8.6 Liquid limit of the condenser"
+T[6] = T_cd
+s[6] = s_f_ex_cd_tp
+P[6] = P_cd
+h[6] = h_f_ex_cd_tp
+
+"8.7 Condenser outlet"
+T[7] = T_f_ex_cd
+s[7] = s_f_ex_cd
+P[7] = P_cd
+h[7] = h_f_ex_cd
+
+"8.8 Pump inlet"
+T[8] = T_f_su_pp
+s[8] = s_f_su_pp
+P[8] = P_cd
+h[8] = h_f_su_pp
+
+"8.9 Pump outlet"
+T[9] = T_f_ex_pp
+s[9] = s_f_ex_pp
+P[9] = P_ev
+h[9] = h_f_ex_pp
+
+"8.10 Evaporator inlet"
+T[10] = T_f_su_ev
+s[10] = s_f_su_ev
+P[10] = P_ev
+h[10] = h_f_su_ev
+
+"8.11 Liquid limit of the evaporator"
+T[11] = T_ev
+s[11] = s_f_su_ev_tp
+P[11] = P_ev
+h[11] = h_f_su_ev_tp
+
+"8.12 Vapour limit of the evaporator"
+T[12] = T_ev
+s[12] = s_f_ex_ev_tp
+P[12] = P_ev
+h[12] = h_f_ex_ev_tp
+
+"8.13 Last state of the original T[13]/s[13] pair: it repeats the expander inlet
+      (leftover of the original); P and h are added here for the diagram."
+T[13] = T_f_su_exp
+s[13] = s_f_su_exp
+P[13] = P_f_su_exp
+h[13] = h_f_su_exp
+
+"8.14 Second-stage inlet (intermediate pressure): added by the library, the
+      state is not recorded in the original"
+T[14] = temperature(fluid$,v=v_f_in2_exp,h=h_f_in2_exp)
+s[14] = s_f_in2_exp
+P[14] = P_f_in2_exp
+h[14] = h_f_in2_exp

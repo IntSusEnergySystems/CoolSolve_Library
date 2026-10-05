@@ -1,0 +1,63 @@
+{=============================================================================
+  Crossflow heat exchanger - hot gas heating water (effectiveness-NTU)
+  CoolSolve Library model CSL-0026
+  -----------------------------------------------------------------------------
+  Hot gas of constant specific heat c = 1000 J/(kg.K) entering at 300 °C heats
+  water entering at 35 °C and 2 bar in a crossflow heat exchanger. Water flow
+  rate: 1 kg/s. Gas and water leave the exchanger at 100 °C and 125 °C
+  respectively. The convective heat transfer coefficient on the gas side is
+  h = 100 W/(m2.K) and pressure drops are neglected. The effectiveness-NTU
+  method for crossflow (one fluid mixed) gives the transferred power, the gas
+  flow rate, NTU, the overall conductance AU and the required exchange area.
+
+  Inputs : c_gaz, T_gaz_su, T_gaz_ex (gas side); M_dot_w, T_w_su, T_w_ex, P_w
+           (water side); h_gaz
+  Outputs: Q_dot, M_dot_gaz, epsilon, NTU, AU, A
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège exercise session (repetition 12, exercise 3), V. Lemort;
+           CoolSolve example exchangers2 - see README.md
+ =============================================================================}
+
+"Exchanger data and inlet states"
+c_gaz=1000           "specific heat of the hot gas [J/kg-K]"
+T_gaz_su=300         "gas inlet temperature [C]"
+T_w_su=35            "water inlet temperature [C]"
+P_w=2E5              "water pressure [Pa] (2 bar in the original)"
+M_dot_w=1            "water mass flow rate [kg/s]"
+T_gaz_ex=100         "gas outlet temperature [C]"
+T_w_ex=125           "water outlet temperature [C]"
+h_gaz=100            "convective coefficient on the gas side [W/m^2-K]"
+
+"Energy balances"
+Q_dot=M_dot_gaz*c_gaz*(T_gaz_su-T_gaz_ex)   "gas-side energy balance [W]"
+Q_dot=M_dot_w*c_w*(T_w_ex-T_w_su)           "water-side energy balance [W]"
+
+"Capacity flow rates"
+C_dot_w=M_dot_w*c_w                         "water capacity rate [W/K]"
+c_w=CP(Water,P=P_w,T=T_w_bar)               "water specific heat [J/kg-K], evaluated at the mean inlet/outlet temperature, as in the original"
+T_w_bar=0.5*(T_w_su+T_w_ex)                 "mean water temperature [C]"
+C_dot_gaz=M_dot_gaz*c_gaz                   "gas capacity rate [W/K]"
+C_dot_min=min(C_dot_w,C_dot_gaz)            "minimum capacity rate [W/K]"
+C_dot_max=max(C_dot_w,C_dot_gaz)            "maximum capacity rate [W/K]"
+omega=C_dot_min/C_dot_max                   "capacity rate ratio [-]"
+
+"Effectiveness for computing NTU (crossflow correlation, as in the original)"
+epsilon=1-exp((1/omega)*NTU^0.22*(exp(-omega*NTU^0.78)-1))   "heat exchanger effectiveness [-]"
+Q_dot=epsilon*C_dot_min*(T_gaz_su-T_w_su)                    "transferred power from the effectiveness definition [W]"
+
+"Overall conductance from NTU"
+NTU=AU/C_dot_min   "number of transfer units [-]; AU is the overall conductance [W/K]"
+
+"Alternative conductance from the logarithmic mean temperature difference (reference IX.24 of the original)"
+Q_dot=AU_bis*DELTAT_LM           "transferred power [W]; AU_bis is the LMTD-based conductance [W/K]"
+{AU=A*U}
+DELTAT_0=T_gaz_su-T_w_su         "inlet-end temperature difference [K], as in the original"
+DELTAT_L=T_w_ex-T_gaz_ex         "outlet-end temperature difference [K], as in the original"
+DELTAT_LM=(DELTAT_0-DELTAT_L)/(ln(DELTAT_0/DELTAT_L))   "logarithmic mean temperature difference [K]"
+
+"Wall temperature and overall coefficient, as in the original (gives non-physical values, see README)"
+Q_dot=A*h_gaz*(T_gaz_bar-T_wall)   "gas-side convection [W]"
+T_gaz_bar=0.5*(T_gaz_su+T_gaz_ex)  "mean gas temperature [C]"
+Q_dot=A*h_w*(T_wall-T_w_bar)       "water-side convection [W]"
+Q_dot=A*U*(T_gaz_bar-T_w_bar)      "overall transfer [W]"
+1/U=1/h_gaz+1/h_w                  "series resistances [(W/m^2-K)^-1]"

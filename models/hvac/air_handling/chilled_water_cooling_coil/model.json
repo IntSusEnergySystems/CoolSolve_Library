@@ -1,0 +1,69 @@
+{
+  "id": "CSL-0017",
+  "name": "chilled_water_cooling_coil",
+  "title": "Chilled-water air cooling coil, dry and wet regimes",
+  "summary": "Chilled-water air cooling coil (series air/wall/water resistances): dry regime by counterflow epsilon-NTU, condensation-risk check, wet regime by wet-bulb effectiveness with contact-factor outlet state and condensate flow.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "chilled_water_cooling_coil.eescode",
+  "fluids": [
+    "AirH2O",
+    "Water"
+  ],
+  "tags": [
+    "cooling coil",
+    "dehumidification",
+    "epsilon-NTU",
+    "contact factor",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 60,
+    "largest_block": 23
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 05/MSTh-SB-R5-Ex1.EES",
+    "candidate_id": "TM-0077",
+    "authors": [
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)",
+      "S. Quoilin (CoolSolve example)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh repetition 5, exercise 1 (chilled-water cooling coil)"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file MSTh-SB-R5-Ex1.EES (EES 7.458), via tools/compare_solution.py",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.006,
+    "notes": "60/60 variables compared: 50 exact within 0.1 % (all duties, effectivenesses, temperatures, enthalpies, humidity ratios); 10 within 0.6 %: water cp +0.15 % (CoolProp vs EES water formulation, propagates to C_dot_w and omega), condensate flow +0.17 %, RH_ex_dry +0.6 % (ratio above saturation, same humid-air formulation difference as CSL-0016). No unit conversion needed (SI-C-Pa-J)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0016"
+  ],
+  "related_external": [
+    "CoolSolve examples/cooling_coil.eescode (same exercise, simplified variant with provisional values, kept in CoolSolve as a test case)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-010",
+    "thermo_models:TM-0077"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-17, batch B-02)",
+      "by": "opencode worker (muse-spark) for S. Quoilin"
+    }
+  ]
+}

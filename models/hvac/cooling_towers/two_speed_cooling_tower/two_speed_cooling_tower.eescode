@@ -1,0 +1,89 @@
+{=============================================================================
+  Two-speed cooling tower
+  CoolSolve Library model CSL-0030
+ -----------------------------------------------------------------------------
+  Operating regimes of an evaporative cooling tower equipped with a two-speed
+  fan (nominal speed and half speed), MSTH 051024 exercise 2. Each regime is
+  rated with the epsilon-NTU method written between the water and a fictitious
+  ideal dry fluid whose temperatures are the wet-bulb temperatures of the
+  moist air (course equations, page 95). Given the set-point temperature of
+  the water at the tower outlet, the model returns the outlet temperatures,
+  the heat rejected in each regime and the weighted-mean fan powers.
+
+  Inputs : AU, M_dot_w, M_dot_a, AU_r, M_dot_a_r, t_w_su, P, t_a_su, RH_su,
+           t_w_ex_set (default run; the original exercise sweeps it from
+           26 to 36 C with a parametric table)
+  Outputs: Q_dot, Q_dot_r, t_w_ex, t_w_ex_r, theta, theta_1, W_dot, W_dot_r,
+           W_dot_mean, W_dot_mean_1
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MSTh course (EES original MSTH051024EXERCICE2.EES) and
+           CoolSolve example cooling_tower - see README.md
+=============================================================================}
+
+"Data (nominal and reduced regimes):"
+AU=90E3           "UA of the tower at nominal fan speed [W/K]"
+M_dot_w=50        "water mass flow rate [kg/s]"
+M_dot_a=60        "air mass flow rate at nominal speed [kg/s]"
+AU_r=45E3         "UA at half fan speed (proportional to the fan speed, as stated in the exercise) [W/K]"
+M_dot_a_r=30      "air mass flow rate at half speed [kg/s]"
+t_w_su=35         "water inlet temperature [C]"
+P=101325          "atmospheric pressure [Pa]"
+t_a_su=25         "air inlet temperature [C]"
+RH_su=70E-2       "air inlet relative humidity [-]"
+
+"Heat rejection in each regime (course equations, page 95):"
+Q_dot=epsilon_f*C_dot_min_f*(t_w_su-t_wb_su)        "heat rejected at nominal speed [W]"
+epsilon_f=(1-exp(-NTU_f*(1-omega_f)))/(1-omega_f*exp(-NTU_f*(1-omega_f)))        "counterflow effectiveness, nominal regime [-]"
+NTU_f=AU_f/C_dot_min_f                              "number of transfer units, nominal regime [-]"
+AU_f=AU*c_p_f/c_p                                   "UA referred to the fictitious dry fluid, nominal regime [W/K]"
+c_p_f=(h_a_ex-h_a_su)/(t_wb_ex-t_wb_su)             "fictitious specific heat of the moist air, nominal regime [J/kg-K]"
+Q_dot_r=epsilon_f_r*C_dot_min_f_r*(t_w_su-t_wb_su)  "heat rejected at half speed [W]"
+epsilon_f_r=(1-exp(-NTU_f_r*(1-omega_f_r)))/(1-omega_f_r*exp(-NTU_f_r*(1-omega_f_r)))  "counterflow effectiveness, reduced regime [-]"
+NTU_f_r=AU_f_r/C_dot_min_f_r                        "number of transfer units, reduced regime [-]"
+AU_f_r=AU_r*c_p_f_r/c_p                             "UA referred to the fictitious dry fluid, reduced regime [W/K]"
+c_p_f_r=(h_a_ex_r-h_a_su)/(t_wb_ex_r-t_wb_su)       "fictitious specific heat of the moist air, reduced regime [J/kg-K]"
+
+"Inlet state of the moist air (the original kept provisional values c_p_f=4000 and c_p_f_r=4000 in comments):"
+c_p=SPECHEAT(AirH2O,T=T_a_su,P=P,R=RH_su)           "inlet moist air specific heat [J/kg-K]"
+t_wb_su=WETBULB(AirH2O,T=T_a_su,P=P,R=RH_su)        "inlet air wet-bulb temperature [C]"
+h_a_su=ENTHALPY(AirH2O,T=T_a_su,P=P,R=RH_su)        "inlet moist air specific enthalpy [J/kg]"
+v_a=VOLUME(AirH2O,T=T_a_su,P=P,R=RH_su)             "inlet moist air specific volume [m3/kg]"
+
+"Fictitious capacity rates (water side and fictitious dry fluid on wet-bulb temperatures):"
+C_dot_min_f=min(C_dot_w,C_dot_f)                    "minimum capacity rate, nominal regime [W/K]"
+C_dot_min_f_r=min(C_dot_w,C_dot_f_r)                "minimum capacity rate, reduced regime [W/K]"
+C_dot_w=M_dot_w*c_w                                 "water capacity rate [W/K]"
+c_w=4187                                            "water specific heat (constant) [J/kg-K]"
+C_dot_f=M_dot_a*c_p_f                               "fictitious air capacity rate, nominal regime [W/K]"
+omega_f=C_dot_min_f/C_dot_max_f                     "capacity rate ratio, nominal regime [-]"
+C_dot_max_f=max(C_dot_w,C_dot_f)                    "maximum capacity rate, nominal regime [W/K]"
+Q_dot=M_dot_a*(h_a_ex-h_a_su)                       "air-side energy balance, nominal regime [W]"
+C_dot_f_r=M_dot_a_r*c_p_f_r                         "fictitious air capacity rate, reduced regime [W/K]"
+omega_f_r=C_dot_min_f_r/C_dot_max_f_r               "capacity rate ratio, reduced regime [-]"
+C_dot_max_f_r=max(C_dot_w,C_dot_f_r)                "maximum capacity rate, reduced regime [W/K]"
+Q_dot_r=M_dot_a_r*(h_a_ex_r-h_a_su)                 "air-side energy balance, reduced regime [W]"
+
+"Outlet air states (saturated outlet air, R=1, as in the original) and water outlet temperatures:"
+t_wb_ex=temperature(AirH2O,h=h_a_ex,P=P,R=1)        "wet-bulb temperature of the saturated outlet air, nominal regime [C]"
+Q_dot=C_dot_w*(t_w_su-t_w_ex)                       "water-side energy balance, nominal regime [W]"
+t_wb_ex_r=temperature(AirH2O,h=h_a_ex_r,P=P,R=1)    "wet-bulb temperature of the saturated outlet air, reduced regime [C]"
+Q_dot_r=C_dot_w*(t_w_su-t_w_ex_r)                   "water-side energy balance, reduced regime [W]"
+
+"Fan power consumption:"
+W_dot=15E3                                          "fan electrical power at nominal speed (exercise data) [W]"
+W_dot=V_dot_a*DELTAp/eta                            "matches the air-side power V_dot_a*DELTAp over the fan efficiency [W]"
+eta=0.6                                             "fan efficiency (hypothetical value; has no influence on the results here) [-]"
+V_dot_a=A*C_a                                       "air volume flow rate, nominal speed [m3/s]"
+V_dot_a=M_dot_a*v_a                                 "[m3/s]"
+v_a*DELTAp=C_a^2/2                                  "links the air-side pressure drop to the air velocity [Pa]"
+W_dot_r=V_dot_a_r*DELTAp_r/eta                      "fan electrical power at half speed [W]"
+V_dot_a_r=A*C_a_r                                   "air volume flow rate, half speed [m3/s]"
+V_dot_a_r=M_dot_a_r*v_a                             "[m3/s]"
+v_a*DELTAp_r=C_a_r^2/2                              "links the air-side pressure drop to the air velocity, half speed [Pa]"
+
+"Operating regimes at the water set-point:"
+t_w_ex_set=35                                       "water set-point at the tower outlet, default run [C] (value of the EES stored solution; the original exercise sweeps it from 26 to 36 C with a parametric table - CoolSolve: CS-GAP-PARAMETRIC)"
+t_w_ex_set=theta*t_w_ex+(1-theta)*t_w_ex_r          "set-point met by weighting the nominal and reduced regimes [-]"
+W_dot_mean=theta*W_dot+(1-theta)*W_dot_r            "mean fan power weighting the nominal and reduced regimes [W]"
+W_dot_mean_1=theta_1*W_dot_r                        "mean fan power weighting the reduced and off regimes [W]"
+t_w_ex_set=theta_1*t_w_ex_r+(1-theta_1)*t_w_su      "set-point met by weighting the reduced and off regimes [-]"

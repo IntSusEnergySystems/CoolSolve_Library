@@ -106,10 +106,10 @@ that example, which remains in the CoolSolve repository as a test case.
 
 Sources (not copied into the library):
 
-- CoolSolve example: `~/svn/CoolSolve/examples/exchangers1.eescode`
+- CoolSolve example: `~/git/CoolSolve/examples/exchangers1.eescode`
   (inventory candidate `CSX-016`);
 - original EES file with its stored solution:
-  `~/svn/CoolSolve/misc/EES_ok.zip` → `EES_ok/exchangers1.EES` (EES 9.920).
+  `~/git/CoolSolve/misc/EES_ok.zip` → `EES_ok/exchangers1.EES` (EES 9.920).
 
 ## Conversion log
 
@@ -141,6 +141,9 @@ Sources (not copied into the library):
 
 ## Related models
 
-None yet in the library. See the CoolSolve examples `exchangers2`
-(crossflow HX) and `exchangers3` (shell-and-tube condenser) for the companion
-exercises of the same session.
+- `CSL-0008` *condenser_three_zones*: three-zone ε-NTU model of an air-cooled
+  condenser, each zone with its own effectiveness law (this model is the
+  single-zone counterflow case).
+- `CSL-0014` *hx_constant_pinch*: three-zone condenser sized by an imposed pinch.
+- See also the CoolSolve examples `exchangers2` (crossflow HX) and `exchangers3`
+  (shell-and-tube condenser) for the companion exercises of the same session.

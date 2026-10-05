@@ -1,0 +1,59 @@
+{
+  "id": "CSL-0015",
+  "name": "refrigeration_cycle_basic_r134a",
+  "title": "Basic vapour-compression refrigeration cycle (R134a)",
+  "summary": "R134a refrigeration machine between -10 °C (evaporator) and 20 °C (condenser) with 6 K subcooling, 2 K superheat and a compressor of 0.75 isentropic efficiency driven by a 0.80-efficiency motor; computes the refrigerant flow rate, compressor power and COP for 50 kW of cooling.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "refrigeration_cycle_basic_r134a.eescode",
+  "fluids": [
+    "R134a"
+  ],
+  "tags": [
+    "refrigeration",
+    "vapour compression",
+    "isentropic efficiency",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "arrays"
+  ],
+  "stats": {"n_equations": 47, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/refrigeration1.eescode",
+    "candidate_id": "CSX-038",
+    "authors": [
+      "Vincent Lemort (ULiège Thermodynamics Laboratory, original exercise)",
+      "S. Quoilin (CoolSolve example)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.920",
+    "language": "fr",
+    "course": "ULiège, repetition 8, exercise 1"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file (CoolSolve misc/EES_ok.zip, EES_ok/refrigeration1.EES, EES 9.920)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.00013,
+    "notes": "29/39 variables identical (<= 0.07 %); the 10 absolute enthalpies/entropies differ by constant reference-state offsets (148.15 kJ/kg on h, 795.69 J/kg-K on s_1, EES vs CoolProp R134a); all derived results (flow rate, powers, COP, temperatures, quality) agree within 0.013 %. No unit conversion needed (SI-C-Pa-J)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0001", "CSL-0013", "CSL-0019"],
+  "related_external": [
+    "CoolSolve examples/refrigeration1.eescode (same model, kept in CoolSolve as a test case)",
+    "CoolSolve misc/EES_ok.zip: EES_ok/refrigeration1.EES (original French EES file with stored solution)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-038"
+  ],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-05", "action": "added (roadmap card C-15, batch B-02)", "by": "opencode worker (muse-spark) for S. Quoilin"}
+  ]
+}

@@ -1,0 +1,66 @@
+{=============================================================================
+  Pipe pressure drop with the Colebrook-White friction factor
+  CoolSolve Library model CSL-0018
+ -----------------------------------------------------------------------------
+  Friction pressure drop of n-pentane flowing in a straight horizontal pipe
+  (inner diameter 16 mm, length 10 m, absolute roughness 1.5 micrometres,
+  mass flow rate 80 g/s). The Darcy friction factor is solved from the
+  implicit Colebrook-White equation and compared with an explicit
+  approximation (as in the original); the linear pressure gradient, the total
+  pressure drop and the dynamic pressure follow. The active operating point
+  is superheated n-pentane vapour at 1 bar (saturation + 10 K); a 10 bar
+  operating point (saturation + 50 K) is given in comments.
+
+  Inputs : fluid$, epsilon, D_i, M_dot, L, P, T (via T_sat offset)
+  Outputs: f, f_vlad, deltaP_lin, DELTAP, DELTAPbar, P_dyn
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : V. Lemort (ULiège Thermodynamics Laboratory), EES file
+           "perte de charge VL060830.EES", curated as CoolSolve example
+           pressuredrop.eescode - see README.md
+=============================================================================}
+
+"Pipe pressure drop (Colebrook-White friction factor)"
+fluid$='n-pentane'{'R123'}   "working fluid, as in the original"
+epsilon=0.0000015 [m] "absolute roughness"
+D_i=16E-3 [m] "pipe inner diameter"
+
+"n-pentane operating point"
+	"gas-phase point (commented out, as in the original)"
+{P=10E5
+T=T_sat+50}
+
+	"active point: superheated vapour at 1 bar, saturation + 10 K"
+P=1E5
+T=T_sat+10
+
+T_sat=T_sat(fluid$,P=P)   "saturation temperature at the pipe pressure [C]"
+v=volume(fluid$,P=P,T=T)   "specific volume [m^3/kg]"
+rho=1/v   "density [kg/m^3]"
+M_dot=80E-3 [kg/s]   "mass flow rate"
+
+"Pipe friction factor (Colebrook-White, implicit in f)"
+1/sqrt(f)=-2*LOG10(epsilon/(3.7*D_i)+2.51/(Re*sqrt(f))) "colebrook"
+f_vlad=(-1.8*log10((6.9/Re+(epsilon/(3.7*D_i))^1.11)))^(-2)   "explicit approximation, as in the original"
+
+"Linear pressure gradient [Pa/m]"
+deltaP_lin=f/D_i*rho*U^2/2 "[Pa/m]"
+deltaP_lin_vlad=f_vlad/D_i*rho*U^2/2 "[Pa/m]"
+U=V_dot/A_i   "mean velocity [m/s]"
+A_i=PI*D_i^2/4   "pipe cross-section [m^2]"
+V_dot=M_dot*v   "volume flow rate [m^3/s]"
+
+"Reynolds number"
+Re=D_i*U/nu
+nu=mu/rho   "kinematic viscosity [m^2/s]"
+mu=viscosity(fluid$,P=P,T=T)   "dynamic viscosity [Pa-s]"
+
+"Total pressure drop over the pipe length"
+DELTAP=deltaP_lin*L "[Pa]"
+DELTAP_vlad=deltaP_lin_vlad*L "[Pa]"
+L=10 [m]   "pipe length"
+DELTAPbar=DELTAP/1E5 "[bar]"
+DELTAP_vladbar=DELTAP_vlad/1E5 "[bar]"
+
+"Dynamic pressure"
+P_dyn=rho*U^2/2   "dynamic pressure [Pa]"
+ratio=P_dyn/DELTAP   "dynamic over friction pressure drop"

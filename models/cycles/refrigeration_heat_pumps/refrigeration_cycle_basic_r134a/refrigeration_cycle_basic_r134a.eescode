@@ -1,0 +1,95 @@
+{=============================================================================
+  Basic vapour-compression refrigeration cycle (R134a)
+  CoolSolve Library model CSL-0015
+ -----------------------------------------------------------------------------
+  A R134a refrigeration machine operating between a condensation temperature
+  of 20 °C and an evaporation temperature of -10 °C, with 6 K of subcooling
+  at the condenser outlet and 2 K of superheat at the evaporator outlet. The
+  compressor is described by an isentropic efficiency of 0.75 and its drive
+  motor by an efficiency of 0.80. For a prescribed cooling capacity of 50 kW,
+  the model determines the refrigerant mass flow rate, the compressor power
+  consumption and the COP. ULiège exercise (repetition 8, exercise 1).
+
+  Inputs : T_cond, T_ev, DELTA_T_sc, DELTA_T_oh (cycle);
+           epsilon_s_cp, eta_m (compressor and motor); Q_dot_41 (capacity)
+  Outputs: M_dot_r, W_dot_cp, COP
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège course (repetition 8, exercise 1, V. Lemort) - see README.md
+=============================================================================}
+
+"Basic refrigeration cycle (R134a): condensation at 20 °C, evaporation at
+ -10 °C, 6 K of subcooling, 2 K of superheat, compressor isentropic
+ efficiency 0.75, motor efficiency 0.80. Refrigerant mass flow rate,
+ compressor power and COP for 50 kW of cooling capacity (as in the original)"
+T_cond = 20            "condensation temperature [°C]"
+T_ev = -10             "evaporation temperature [°C]"
+DELTA_T_sc = 6         "subcooling at the condenser outlet [K]"
+DELTA_T_oh = 2         "superheat at the evaporator outlet [K]"
+epsilon_s_cp = 0.75    "compressor isentropic efficiency [-]"
+eta_m = 0.8            "drive motor efficiency [-]"
+
+"!Mass flow rate"
+"Point 1: compressor inlet"
+T_1 = T_ev + DELTA_T_oh
+P_1 = P_ev
+P_ev = PRESSURE(R134a, T=T_ev, x=1)   "saturation pressure at T_ev (phase-change plateau: any x in [0, 1] gives the same pressure) [Pa]"
+h_1 = ENTHALPY(R134a, P=P_1, T=T_1)   "compressor inlet enthalpy [J/kg]"
+
+"Point 2: compressor outlet = condenser inlet"
+P_2 = P_cd
+P_cd = PRESSURE(R134a, T=T_cond, x=1)   "saturation pressure at T_cond [Pa]"
+s_1 = ENTROPY(R134a, T=T_1, P=P_1)      "compressor inlet entropy [J/kg-K]"
+h_2_s = ENTHALPY(R134a, P=P_2, s=s_1)   "isentropic compressor outlet enthalpy [J/kg]"
+epsilon_s_cp = w_s/w                    "isentropic efficiency (definition)"
+w_s = h_2_s - h_1                       "isentropic specific compression work [J/kg]"
+w = h_2 - h_1                           "actual specific compression work; determines h_2 [J/kg]"
+T_2 = TEMPERATURE(R134a, P=P_2, h=h_2)  "compressor outlet temperature [°C]"
+
+"Point 3: condenser outlet"
+P_3 = P_cd
+T_3 = T_cond - DELTA_T_sc
+h_3 = ENTHALPY(R134a, P=P_3, T=T_3)   "condenser outlet enthalpy [J/kg]"
+
+"Point 4: evaporator inlet"
+h_4 = h_3                             "isenthalpic expansion [J/kg]"
+x_4 = QUALITY(R134a, P=P_4, h=h_4)    "vapour quality at the evaporator inlet [-]"
+P_4 = P_ev
+
+"!Mass flow rate from the prescribed cooling capacity"
+Q_dot_41 = 50E3             "prescribed cooling capacity [W]"
+Q_dot_41 = M_dot_r*w_41
+w_41 = h_1 - h_4           "specific cooling effect [J/kg]"
+
+"!Compressor power consumption"
+W_dot_12 = M_dot_r*w_12
+w_12 = h_2 - h_1           "actual specific compression work [J/kg]"
+W_dot_cp = W_dot_12/eta_m  "electrical power consumption [W]"
+
+"!COP"
+COP = Q_dot_41/W_dot_cp    "coefficient of performance [-]"
+
+"!Cycle representation in the P-h diagram"
+P[1] = P_1
+h[1] = h_1
+
+P[2] = P_2
+h[2] = h_2
+
+P[3] = P_3
+h[3] = h_3
+
+P[4] = P_4
+h[4] = h_4
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: evaporator outlet = compressor supply, 2: compressor exhaust = condenser
+ inlet, 3: condenser outlet, 4: evaporator inlet. Use the arrays h[i]/P[i] or
+ s[i]/T[i] with the "Overlay array path" option of the CoolSolve Diagram tab.}
+T[1] = T_1
+s[1] = s_1
+T[2] = T_2
+s[2] = ENTROPY(R134a, P=P_2, h=h_2)
+T[3] = T_3
+s[3] = ENTROPY(R134a, P=P_3, T=T_3)
+T[4] = TEMPERATURE(R134a, P=P_4, h=h_4)
+s[4] = ENTROPY(R134a, P=P_4, h=h_4)

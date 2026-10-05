@@ -1,0 +1,123 @@
+{=============================================================================
+  Piston compressor - parameter identification from two operating points
+  CoolSolve Library model CSL-0021
+  -----------------------------------------------------------------------------
+  A piston (reciprocating) air compressor is described by four parameters:
+    - V_s: swept volume per revolution [m^3],
+    - C: clearance factor [-],
+    - W_dot_loss_0: constant electromechanical losses [W],
+    - alpha: loss factor proportional to the isentropic power [-],
+  with a volumetric efficiency epsilon_v = 1 - C*(r_v - 1), r_v the volume
+  ratio of the isentropic compression, and a power consumption
+  W_dot = W_dot_loss_0 + (1 + alpha)*W_dot_in.
+  Two measured operating points (mass flow rate and power at two discharge
+  pressures, same suction state and speed) identify the four parameters
+  (square system); the identified parameters, imposed at their rounded
+  values, then predict the flow rate and power at two new operating points
+  (10 bar at 3000 rpm, 7 bar at 2500 rpm).
+
+  Inputs : P_su, T_su, rpm (suction state and speed);
+           P_ex_1, M_dot_1, W_dot_1, P_ex_2, M_dot_2, W_dot_2 (measured points)
+  Outputs: V_s, C, W_dot_loss_0, alpha (identified parameters);
+           M_dot_3, W_dot_3, M_dot_4, W_dot_4 (predictions)
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course "Machines et systèmes thermiques", repetition 1,
+           exercise 1 (EES file MSTh-SB-R1-Ex1.EES, solution by S. Bertagnolio;
+           exercise statement by V. Lemort) - see README.md
+=============================================================================}
+
+"Suction state and rotational speed, as in the original"
+P_su = 1E5                  "suction pressure [Pa]"
+T_su = 15                   "suction temperature [C]"
+rpm = 3000                  "rotational speed [rpm]"
+N = 3000/60                 "rotational speed [Hz]"
+
+"First measured operating point"
+P_ex_1 = 7E5                "discharge pressure [Pa]"
+M_dot_1 = 0.1                "measured mass flow rate [kg/s]"
+W_dot_1 = 32000             "measured power consumption [W]"
+
+"Second measured operating point"
+P_ex_2 = 3E5                "discharge pressure [Pa]"
+M_dot_2 = 0.11               "measured mass flow rate [kg/s]"
+W_dot_2 = 20000             "measured power consumption [W]"
+
+"!Identification of the piston compressor characteristics"
+
+V_dot_s = N*V_s              "swept volume flow rate [m^3/s]"
+
+"First operating regime"
+
+W_dot_1 = W_dot_loss_0 + (1 + alpha)*W_dot_in_1   "power consumption [W]"
+epsilon_v_1 = 1 - C*(r_v_1 - 1)                   "volumetric efficiency with clearance volume [-]"
+r_v_1 = v_su_1/v_ex_1        "volume ratio of the isentropic compression [-]"
+v_su_1 = VOLUME(Air, T=T_su, P=P_su)   "supply specific volume [m^3/kg]"
+v_ex_1 = VOLUME(Air, s=s_su, P=P_ex_1) "isentropic exhaust specific volume [m^3/kg], as in the original"
+s_su = ENTROPY(Air, T=T_su, P=P_su)    "supply specific entropy [J/kg-K]"
+
+epsilon_v_1 = V_dot_su_1/V_dot_s   "volumetric efficiency (definition) [-]"
+V_dot_su_1 = M_dot_1*v_su_1        "supply volume flow rate [m^3/s]"
+
+W_dot_in_1 = M_dot_1*(h_ex_s_1 - h_su_1)   "isentropic compression power [W]"
+h_su_1 = ENTHALPY(Air, T=T_su)             "supply specific enthalpy [J/kg], as in the original"
+h_ex_s_1 = ENTHALPY(Air, s=s_su, P=P_ex_1) "isentropic exhaust specific enthalpy [J/kg]"
+
+"Second operating regime"
+
+W_dot_2 = W_dot_loss_0 + (1 + alpha)*W_dot_in_2   "power consumption [W]"
+epsilon_v_2 = 1 - C*(r_v_2 - 1)                   "volumetric efficiency with clearance volume [-]"
+r_v_2 = v_su_2/v_ex_2        "volume ratio of the isentropic compression [-]"
+v_su_2 = v_su_1              "same suction state [m^3/kg]"
+v_ex_2 = VOLUME(Air, s=s_su, P=P_ex_2) "isentropic exhaust specific volume [m^3/kg], as in the original"
+
+epsilon_v_2 = V_dot_su_2/V_dot_s   "volumetric efficiency (definition) [-]"
+V_dot_su_2 = M_dot_2*v_su_2        "supply volume flow rate [m^3/s]"
+
+W_dot_in_2 = M_dot_2*(h_ex_s_2 - h_su_2)   "isentropic compression power [W]"
+h_su_1 = h_su_2                            "same suction state [J/kg]"
+h_ex_s_2 = ENTHALPY(Air, s=s_su, P=P_ex_2) "isentropic exhaust specific enthalpy [J/kg]"
+
+"!Prediction of the air flow rate and power consumption of this compressor"
+alpha_cp = 0.2295          "imposed loss factor [-], as in the original"
+C_cp = 0.04671             "imposed clearance factor [-], as in the original"
+V_s_cp = 0.001927          "imposed swept volume per revolution [m^3], as in the original"
+W_dot_loss_0_cp = 5570   "imposed constant losses [W], as in the original"
+"1) at rotation speed 3000 rpm and discharge pressure 10 bar"
+"New operating regime"
+N_3 = 3000/60              "rotational speed [Hz]"
+P_ex_3 = 10E5              "discharge pressure [Pa]"
+
+V_dot_s_3 = N_3*V_s_cp     "swept volume flow rate [m^3/s]"
+
+W_dot_3 = W_dot_loss_0_cp + (1 + alpha_cp)*W_dot_in_3   "predicted power consumption [W]"
+epsilon_v_3 = 1 - C_cp*(r_v_3 - 1)                     "volumetric efficiency [-]"
+r_v_3 = v_su_3/v_ex_3      "volume ratio of the isentropic compression [-]"
+v_su_3 = v_su_1            "same suction state [m^3/kg]"
+v_ex_3 = VOLUME(Air, s=s_su, P=P_ex_3) "isentropic exhaust specific volume [m^3/kg], as in the original"
+
+epsilon_v_3 = V_dot_su_3/V_dot_s_3   "volumetric efficiency (definition) [-]"
+V_dot_su_3 = M_dot_3*v_su_3          "supply volume flow rate [m^3/s]"
+
+W_dot_in_3 = M_dot_3*(h_ex_s_3 - h_su_3)   "isentropic compression power [W]"
+h_su_3 = h_su_1                            "same suction state [J/kg]"
+h_ex_s_3 = ENTHALPY(Air, s=s_su, P=P_ex_3) "isentropic exhaust specific enthalpy [J/kg]"
+
+"2) at rotation speed 2500 rpm and discharge pressure 7 bar"
+"New operating regime"
+N_4 = 2500/60              "rotational speed [Hz]"
+P_ex_4 = 7E5               "discharge pressure [Pa]"
+
+V_dot_s_4 = N_4*V_s_cp     "swept volume flow rate [m^3/s]"
+
+W_dot_4 = W_dot_loss_0_cp + (1 + alpha_cp)*W_dot_in_4   "predicted power consumption [W]"
+epsilon_v_4 = 1 - C_cp*(r_v_4 - 1)                     "volumetric efficiency [-]"
+r_v_4 = v_su_4/v_ex_4      "volume ratio of the isentropic compression [-]"
+v_su_4 = v_su_1            "same suction state [m^3/kg]"
+v_ex_4 = VOLUME(Air, s=s_su, P=P_ex_4) "isentropic exhaust specific volume [m^3/kg], as in the original"
+
+epsilon_v_4 = V_dot_su_4/V_dot_s_4   "volumetric efficiency (definition) [-]"
+V_dot_su_4 = M_dot_4*v_su_4          "supply volume flow rate [m^3/s]"
+
+W_dot_in_4 = M_dot_4*(h_ex_s_4 - h_su_4)   "isentropic compression power [W]"
+h_su_4 = h_su_1                            "same suction state [J/kg]"
+h_ex_s_4 = ENTHALPY(Air, s=s_su, P=P_ex_4) "isentropic exhaust specific enthalpy [J/kg]"
