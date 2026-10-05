@@ -1,0 +1,61 @@
+{
+  "id": "CSL-0070",
+  "name": "adiabatic_humidifier_simplified",
+  "title": "Adiabatic humidifier, simplified model (effectiveness-NTU)",
+  "summary": "Adiabatic (evaporative) humidifier on humid air: heat and moisture transfer effectiveness from an NTU whose conductance follows power laws in the air and water flow rates (laboratory identification); exit air state and fraction of the supplied water evaporated.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "adiabatic_humidifier_simplified.eescode",
+  "fluids": [
+    "AirH2O"
+  ],
+  "tags": [
+    "humidifier",
+    "adiabatic humidification",
+    "effectiveness",
+    "NTU",
+    "wet-bulb",
+    "reference model"
+  ],
+  "language_features": [
+    "humid-air properties"
+  ],
+  "stats": {
+    "n_equations": 25,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/AHU_Components/Humidifiers/Adiabatic_Humidifier_RefSim_Model_NFJL080103.zip!/Adiabatic_Humidifier_SimRef_EES_Model_NFJL080103.EES",
+    "candidate_id": "TM-0475",
+    "authors": [
+      "Jean Lebrun (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.793",
+    "language": "en",
+    "course": "ULiège model bank (Laborelec toolkit lineage), RefSim reference-simulation model, 2008-01-03; listed as IEA ECBCS Annexe 43 PR2 A10 reference model"
+  },
+  "verification": {
+    "reference": "EES stored solution in the source file (25 common variables; 5 recovered by hand-decoding variable records skipped by ees_extract.py, bug CS-BUG-EXTRACT-FMT)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.00442,
+    "notes": "25 common variables, 5 differ above rtol=0.001, maximum relative difference 4.42e-03 (humid-air property values w_su_hum, w_ex_hum, h_a_su_hum, h_a_ex_hum, eta_hum): within the 0.5 % expected between the EES and CoolProp humid-air formulations. Control-panel display variables without equations (M_dot_a, R, cp, su, AU_n, M_dot_a_n, M_dot_w_n, n, m) are not part of the comparison."
+  },
+  "missing_features": [],
+  "related": ["CSL-0066", "CSL-0016", "CSL-0028"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added",
+      "by": "GLM (opencode agent) for S. Quoilin"
+    }
+  ]
+}

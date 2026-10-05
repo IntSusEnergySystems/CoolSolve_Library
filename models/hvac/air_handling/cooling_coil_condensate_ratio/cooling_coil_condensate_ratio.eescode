@@ -1,0 +1,114 @@
+{=============================================================================
+  Condensate ratio and dry-air flow at a 7 kW cooling coil, and a
+  counter-flow recuperator with pressure drops
+  CoolSolve Library model CSL-0062
+ -----------------------------------------------------------------------------
+  Revision exercise (two questions on one heat-pump cycle, statement in an
+  accompanying course document):
+
+  Question 1 - cooling coil EV1: humid air enters at 28 °C, RH 80 %, 1 bar,
+  and leaves at 13 °C, saturated; the condensate leaves at the air
+  temperature and the refrigeration power is 7 kW. The model computes the
+  ratio of condensed water to dry-air flow and the dry-air mass flow rate by
+  two first-law methods: (1) on the humid air with the EES humid-air
+  enthalpies (the condensate enthalpy contribution is neglected, as in the
+  original), and (2) with separate dry-air, water-vapour and condensate
+  terms. The course relation h_vapour = 2500.9 + 1.82*T is computed as a
+  cross-check of the property calls (h_*_bis variables).
+
+  Question 2 - recuperator REC: counter-flow heat exchanger of
+  effectiveness 60 % between the R113 states 5 (35 °C) and 9 (62.8 °C),
+  0.1 kg/s, with 5 kPa of pressure drop on each side; computes the outlet
+  temperature T10 with the maximum-exchange formulation of the original
+  (DELTA_h_max and min on the two sides).
+
+  Inputs : T_a_su, T_a_ex, P, R_su, R_ex, Q_dot (coil);
+           T5, T9, p6, p9, m_dot, eta_HEX, dp (recuperator)
+  Outputs: ratio, m_dot_a, m_dot_a_bis2, m_dot_cond, T6, T10
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course "Thermodynamique appliquée" (MECA0002), R12
+           revision session 2022-2023 (EES file "R12 - Révisions.EES") -
+           see README.md
+=============================================================================}
+
+"!Question 1: condensate ratio and dry-air flow at the cooling coil EV1"
+T_a_su = 28                        "air at the coil supply [°C]"
+T_w_ex = T_a_ex                    "the condensate leaves at the air temperature (as in the original)"
+T_a_ex = 13                        "air at the coil exhaust [°C]"
+P = 1E5                            "ambient air pressure [Pa] (1e2 kPa in the original)"
+
+R_su = 0.8                         "relative humidity at the coil supply [-]"
+R_ex = 1                           "relative humidity at the coil exhaust [-]"
+
+omega_su = HUMRAT(AirH2O,T=T_a_su,P=P,R=0.8)  "specific humidity at the coil supply [kg water/kg dry air]"
+omega_ex = HUMRAT(AirH2O,T=T_a_ex,P=P,R=1)    "specific humidity at the coil exhaust [kg water/kg dry air]"
+
+Q_dot = -7000                      "refrigeration power [W]; negative because the humid air gives its heat to the cycle (-7 kW in the original)"
+
+{Dry-air balance: m_dot_a = m_dot_a_su = m_dot_a_ex.
+ Water balance: m_dot_w_su = m_dot_w_ex + m_dot_cond.}
+m_dot_w_su = omega_su*m_dot_a_bis2 "water vapour entering with the air [kg/s] (definition of the specific humidity)"
+m_dot_w_ex = omega_ex*m_dot_a_bis2 "water vapour leaving with the air [kg/s]"
+m_dot_w_su = m_dot_w_ex + m_dot_cond "water balance at the coil"
+ratio = (omega_su - omega_ex)*100  "ratio of condensed water to dry-air flow entering the coil [%]"
+
+"Method 1: first law on the humid air (AirH2O); the enthalpy contribution of the condensate is neglected (as in the original)"
+h_a_su = enthalpy('AirH2O',T=T_a_su,P=1E5,R=0.8)  "humid-air enthalpy at the coil supply [J/kg dry air] (P=100 kPa in the original)"
+h_a_ex = enthalpy('AirH2O',T=T_a_ex,P=1E5,R=1)    "humid-air enthalpy at the coil exhaust [J/kg dry air] (P=100 kPa in the original)"
+
+Q_dot = m_dot_a*(h_a_ex - h_a_su)  "first law, no work: gives the dry-air flow m_dot_a [W]"
+
+"Method 2: first law with the contributions of the dry air, of the water vapour and of the condensate"
+Q_dot = m_dot_a_bis2*(h_a_sec_ex - h_a_sec_su)+m_dot_cond*h_cond+m_dot_w_ex*h_water_ex-m_dot_w_su*h_water_su  "first law [W]"
+
+h_a_sec_su = enthalpy('Air_ha',T=T_a_su,P=P_air_su)  "dry-air enthalpy at the coil supply [J/kg] (the EES reference of the dry-air enthalpy scale differs from the course one; it cancels in the difference h_a_sec_ex - h_a_sec_su)"
+h_a_sec_ex = enthalpy('Air_ha',T=T_a_ex,P=P_air_ex)  "dry-air enthalpy at the coil exhaust [J/kg]"
+
+cp_air = 1005                      "specific heat of dry air [J/kg-K] (1.005 kJ/kg-K in the original)"
+h_a_sec_su_bis = cp_air*T_a_su     "dry-air enthalpy with the course relation (T in °C) [J/kg]"
+h_a_sec_ex_bis = cp_air*T_a_ex     "dry-air enthalpy with the course relation (T in °C) [J/kg]"
+
+h_cond = enthalpy(water,X=0,T=T_w_ex)        "condensate: liquid water [J/kg]"
+h_water_ex = enthalpy(water,X=1,T=T_w_ex)    "water vapour leaving, saturated (R_ex = 1) [J/kg]"
+h_water_su = enthalpy(steam,P=P_eau_su,T=T_a_su)  "water vapour entering: at its partial pressure (as in the original) [J/kg]"
+
+h_water_ex_bis = 2500.9E3+1.82E3*T_w_ex  "water-vapour enthalpy with the course relation (T in °C) [J/kg]"
+h_water_su_bis = 2500.9E3+1.82E3*T_a_su  "water-vapour enthalpy with the course relation (T in °C) [J/kg]"
+
+"Partial pressures (as in the original)"
+P = P_air_su + P_eau_su            "the total pressure is the sum of the partial pressures [Pa]"
+P = P_air_ex + P_eau_ex            "the total pressure is the sum of the partial pressures [Pa]"
+P_eau_su = R_su*p_sat_su           "course formula: water partial pressure from the relative humidity [Pa]"
+P_eau_ex = R_ex*p_sat_ex           "course formula: water partial pressure from the relative humidity [Pa]"
+
+p_sat_su = P_SAT(water,T=T_a_su)   "saturation pressure of water at the coil supply [Pa]"
+p_sat_ex = P_SAT(water,T=T_a_ex)   "saturation pressure of water at the coil exhaust [Pa]"
+
+"!Question 2: recuperator REC (counter-flow, R113), outlet temperature in 10"
+dp = 5000                          "pressure drop on each side [Pa] (5 kPa in the original)"
+eta_HEX = 0.6                      "heat-exchanger effectiveness [-]"
+p6 = 3.75E8                        "pressure at 6 [Pa] (3.75e5 kPa in the original - see README)"
+p5 = p6 + dp                       "pressure at 5 [Pa]"
+T9 = 62.8                          "temperature at 9 [°C] (given in the statement)"
+T5 = 35                            "temperature at 5 [°C] (given in the statement)"
+p9 = 0.7E5                         "pressure at 9 [Pa] (0.7e2 kPa in the original)"
+p10 = p9 - dp                      "pressure at 10 [Pa]"
+m_dot = 0.1                        "mass flow rate on both sides [kg/s]"
+
+"On the maximum heat that can be exchanged on each side: the limiting side is the first to reach the inlet temperature of the other fluid. The formulation with enthalpies (as in the original) also covers pressure drops and latent exchange, where the minimum-capacitance-flow formula would not apply."
+DELTA_h_max_1 = h_c_max_6 - h5     "maximum enthalpy rise on side 5-6 [J/kg]"
+DELTA_h_max_2 = h9 - h_f_max_10    "maximum enthalpy drop on side 9-10 [J/kg]"
+
+h5 = enthalpy(R113,p=p5,t=T5)      "state 5 [J/kg]"
+h9 = enthalpy(R113,p=p9,t=T9)      "state 9 [J/kg]"
+
+h_c_max_6 = enthalpy(R113,p=p6,t=T9)    "ideal outlet 6 at the inlet temperature of the other fluid [J/kg]"
+h_f_max_10 = enthalpy(R113,p=p10,t=T5)  "ideal outlet 10 at the inlet temperature of the other fluid [J/kg]"
+
+Q_max = min(m_dot*(h_c_max_6 - h5),m_dot*(h9 - h_f_max_10))  "maximum heat that can be exchanged [W]"
+
+Q_f = eta_HEX*Q_max                "actual heat exchanged [W]"
+h6 = Q_f/m_dot + h5                "first law, steady flow, no work [J/kg]"
+h10 = h9 - Q_f/m_dot               "first law, steady flow, no work [J/kg]"
+T6 = Temperature(R113,p=p6,h=h6)   "temperature at 6 [°C]"
+T10 = Temperature(R113,p=p10,h=h10)  "temperature at 10 (the question) [°C]"

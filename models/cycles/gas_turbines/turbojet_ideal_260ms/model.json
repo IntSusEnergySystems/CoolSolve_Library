@@ -1,0 +1,62 @@
+{
+  "id": "CSL-0051",
+  "name": "turbojet_ideal_260ms",
+  "title": "Ideal turbojet flying at 260 m/s",
+  "summary": "Air-standard jet-propulsion cycle of an ideal turbojet: isentropic diffuser, compressor (pressure ratio 10), isobaric combustor (turbine inlet 1100 °C), turbine driving only the compressor, isentropic nozzle back to ambient; exhaust velocity and propulsion efficiency.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "turbojet_ideal_260ms.eescode",
+  "fluids": [
+    "Air_ha"
+  ],
+  "tags": [
+    "jet propulsion",
+    "turbojet",
+    "Brayton cycle",
+    "nozzle",
+    "propulsion efficiency",
+    "exercise"
+  ],
+  "language_features": [
+    "array variables",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 41,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R6/R06_E04_2022.EES",
+    "candidate_id": "TM-0442",
+    "authors": [
+      "TBD (ULiège MECA0002, S. Quoilin)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège MECA0002), repetition 6, exercise 4 (2022-2023)"
+  },
+  "verification": {
+    "reference": "EES stored solution in the source file (40 variables, kPa/kJ converted by compare_solution.py --ees-units)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.431,
+    "notes": "The 12 differing variables are the absolute h[i]/s[i]: constant EES-vs-CoolProp reference-state offsets (+126.06 kJ/kg on h, -2978.2 J/(kg-K) on s). All other variables agree within 2.6e-05 (T[2]); eta_P within 2.3e-06. The 'only in CoolSolve' variable is pi_c, introduced at the import."
+  },
+  "missing_features": [],
+  "related": ["CSL-0011"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added",
+      "by": "GLM (Z.ai) for S. Quoilin"
+    }
+  ]
+}

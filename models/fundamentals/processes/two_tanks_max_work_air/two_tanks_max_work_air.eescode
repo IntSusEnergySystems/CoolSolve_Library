@@ -1,0 +1,67 @@
+{=============================================================================
+  Maximum work delivered by a heat engine between two air tanks
+  CoolSolve Library model CSL-0057
+ -----------------------------------------------------------------------------
+  Two rigid vessels, each holding 30 kg of air at 900 K and 300 K respectively,
+  are connected by a heat engine that takes heat from the hot vessel, delivers
+  it to the cold one and produces work. The model computes the maximum work
+  (reversible operation) and the common final temperature of the two vessels.
+
+  The system is the extended system (engine + both vessels); the work of the
+  engine stays inside it. Entropy balance of a closed system with no mass and no
+  work exchange: S2-S1 = S_gen, i.e. DELTA_S = 0 for a reversible process, and
+  the entropy change of the engine over one cycle is zero. Each vessel being
+  rigid (p dv = 0), T ds = du = cv dT, hence (S-S_0) = m cv ln(T/T_0).
+
+  Inputs : T_1a, T_1b (initial vessel temperatures), m_air (air mass per vessel)
+  Outputs: W_max (maximum work), T_2 (common final temperature), Q_source,
+           Q_sink (heat exchanged with each vessel), eta_max (W_max/Q_source)
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course Thermodynamique appliquée (MECA0002), repetition
+           session R10, exercise 3 (2022-2023) - see README.md
+=============================================================================}
+
+"!Initial state of the two vessels"
+T_1a = 626.85 [C]   "initial temperature of the hot vessel [°C], 900 K in the original"
+T_1b = 26.85 [C]    "initial temperature of the cold vessel [°C], 300 K in the original"
+m_air = 30 [kg]     "mass of air in each vessel [kg]"
+
+"!Entropy balance of the extended system (engine + both vessels)"
+"!S2-S1 = S_gen (= 0 for a reversible system) ==> DELTA_S = 0, isolated reversible system"
+DELTA_S_1 + DELTA_S_2 + DELTA_S_heat_engine = 0   "entropy change of the extended system [J/K]"
+DELTA_S_heat_engine = 0   "entropy change over a cycle of the engine is zero [J/K]"
+
+"!Entropy change of each vessel: m cv ln(T/T_0); the temperatures are absolute"
+"!inside the logarithm (as in the original, written in K)"
+DELTA_S_1 = m_air*cv_air*ln((T_1a+273.15)/(T_2+273.15))   "entropy change of the hot vessel [J/K]"
+DELTA_S_2 = m_air*cv_air*ln((T_1b+273.15)/(T_2+273.15))   "entropy change of the cold vessel [J/K]"
+
+"!cv of air, taken constant and evaluated at the intermediate temperature T_2"
+"!as in the original: the ambient temperature could have been used as well, which"
+"!does not really affect the results"
+cv_air = cv(Air, T=T_2)   "constant specific heat of air [J/kg-K]"
+
+"!Both vessels are stabilised at T_2 at the end of the process"
+Q_source = m_air*cv_air*(T_2-T_1a)   "heat given by the hot vessel to the engine [J], negative"
+Q_sink = m_air*cv_air*(T_2-T_1b)     "heat received by the cold vessel from the engine [J], positive"
+
+W_max = -(abs(Q_source)-abs(Q_sink))  "maximum work, as written in the original (the work delivered by the engine is the magnitude of this value) [J]"
+eta_max = W_max/Q_source               "ratio W_max/Q_source, called the second-law efficiency in the original; positive, both terms being negative [-]"
+
+"!Post-processing: magnitude of the maximum work (the engine delivers this work)"
+W_max_delivered = abs(Q_source)-abs(Q_sink)   "maximum work delivered by the engine [J]"
+
+"!Complementary explanation, as in the original:"
+"!In a purely thermal exchange between the two vessels (no losses and no heat"
+"!engine, hence no work produced) the energy balance alone would give"
+"!Q_a = m_air*cv_air*(T_1a-T2_bis) = Q_b = m_air*cv_air*(T2_bis-T_1b)"
+"!<=> T2_bis = (T_1a+T_1b)/2"
+"!The entropy change along that transformation (which is not reversible, so the"
+"!entropy changes are not equal) would follow the same relation m_air*cv_air*ln(T_1a/T2_bis),"
+"!except that T2_bis differs from T_2 (the temperature computed with the heat engine)"
+"!With the heat engine, producing work requires abs(Q_source) > abs(Q_sink), so the final"
+"!equilibrium temperature is lower than the average of the two vessels (T2_bis)"
+"!The entropy change still follows the same relation m_air*cv_air*ln(T_1a/T_2), but at"
+"!another equilibrium temperature, and it is the reversibility condition that imposes"
+"!that the entropy changes of the two vessels are equal (the engine matters little: the"
+"!aim is the maximum work when the transformation is reversible)"

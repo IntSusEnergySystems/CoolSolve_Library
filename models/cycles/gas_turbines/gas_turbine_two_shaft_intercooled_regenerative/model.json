@@ -1,0 +1,77 @@
+{
+  "id": "CSL-0050",
+  "name": "gas_turbine_two_shaft_intercooled_regenerative",
+  "title": "Land-based two-shaft gas turbine with intercooling, regeneration and reheat",
+  "summary": "Open-circuit two-shaft gas turbine (Brayton cycle) on air as a perfect gas: low-pressure compressor, water-cooled intercooler, high-pressure compressor, regenerator, main combustion chamber, high-pressure turbine driving the compressors, reheat combustion chamber and low-pressure turbine driving an alternator; computes the LP turbine shaft power and the overall efficiency.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "gas_turbine_two_shaft_intercooled_regenerative.eescode",
+  "fluids": [
+    "Air",
+    "Water"
+  ],
+  "tags": [
+    "gas turbine",
+    "two-shaft",
+    "Brayton cycle",
+    "intercooling",
+    "regeneration",
+    "reheat",
+    "combustion chamber",
+    "ideal gas",
+    "exercise"
+  ],
+  "language_features": [
+    "arrays (state points p[i], h[i], T[i], s[i])",
+    "string variables",
+    "property functions (ideal-gas air and liquid/real water)",
+    "min/abs functions"
+  ],
+  "stats": {
+    "n_equations": 93,
+    "largest_block": 20
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R6/R06_E03_2022.EES",
+    "candidate_id": "TM-0441",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory, course Thermodynamique appliquée)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège), 2022-2023, repetition 6, exercise 3"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (reference/ees_variables.csv of the extraction), compared with tools/compare_solution.py --ees-units",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.0053,
+    "notes": "60 of the 92 common variables (all those that are not an absolute enthalpy or entropy of air) agree within 5.3e-03 relative, the largest deviation being on eta_tg (0.342259 vs 0.344086); every other variable is at or below 3.6e-03. Absolute h and s of air differ by the reference-state offset of the two air models (+126.0 kJ/kg and -1.815 kJ/kg-K); enthalpy differences agree to 2.8e-03 and entropy differences to 2.3e-03. Remaining deviations: the ideal-gas models of air (EES Air vs CoolProp Air)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0011",
+    "CSL-0005",
+    "CSL-0049",
+    "CSL-0052",
+    "CSL-0059",
+    "CSL-0060"
+  ],
+  "related_external": [
+    "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R6/old/ThAp21_R05E03.py (Python/CoolProp solution of the single-shaft variant of the same exercise, repetition 5)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-53, duplicate group DG-0105: TM-0441 representative and added; TM-0438, TM-0439 and TM-0440 merged into this model)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

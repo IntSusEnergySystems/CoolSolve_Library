@@ -338,6 +338,7 @@ Decisions of the maintainer (2026-10-04), applied in the documents and tools:
 | D8 | **Inventories are published** in the repository, including `sources/thermo_models/` (they may be deleted later; keeping them in the history is fine). |
 | D9 | **Commits are made by the maintainer.** Workers and agents never commit: they leave their changes in the working tree for review. |
 | D10 | **`MODULE` and `SUBPROGRAM` are flattened** (2026-10-05). CoolSolve will not implement them in the near future (`CS-GAP-MODULE`, not planned): the equations of each module call are flattened into the main program of the library model, the module's internal variables renamed per call (`<variable>_<tag>`), the mapping logged in the header and README; the flattened file is the main model file (valid EES), status according to its verification (workflow §6). |
+| D11 | **Property calls with the (T, H) input pair are rewritten** (2026-10-05). The (T, H) input pair will not be added to CoolProp/CoolSolve (`CS-GAP-PROP-TH`, not planned): such calls are rewritten in the model itself with an equivalent (P, H) call — saturation pressure from T for a known two-phase state, or an auxiliary pressure unknown defined by `h = enthalpy(fluid, T, P)` — each rewrite logged; the rewritten file is the main model file, status according to its verification (workflow §6). |
 
 Open questions (from the `C-14` review, for the maintainer):
 
@@ -510,6 +511,7 @@ models), plus TM-0472 and the BrineProp function library (P1.9). Worker notes: `
 [ ] C-84  T-FUNC       TM-0479 (DG-0115)                → fundamentals/properties/                            — BrineProp library: secondary-refrigerant properties (needed by 7 models, P1.9) — CSL-0079
 [ ] C-85  T-IMPORT     TM-0494                          → components/boilers_burners/                         — condensing boiler reference model, five-step combustion (L3; Phase 4C) — CSL-0080
 [ ] C-86  T-IMPORT     TM-0490                          → components/heat_exchangers/                         — vertical ground-loop heat exchanger (borefield), dynamic (L3; Phase 4A) — CSL-0081
+[ ] C-88  T-RECHECK    CSL-0061, CSL-0068 (decision D11)  → (in place)                                          — rewrite the (T, H) property calls with (P, H) in the main file, drop the native/variant split, re-verify
 [ ] C-87  T-REVIEW     B-07                                                                                      — light scripted review (orchestrator)
 ```
 
@@ -550,6 +552,8 @@ Rules:
 - Never copy student names or personal data. Do not commit (git). Do not ask questions: take the most
   reasonable decision, document it in the model README, and mention it in your final message.
 - A model that cannot run is still done, as a documented blocked/failing/stub model.
+- (T, H) property input pair (decision D11): rewrite such calls with an equivalent (P, H) call in the model itself
+  (workflow §6) and log each rewrite.
 - MODULE/SUBPROGRAM (decision D10): flatten their equations into the main program, renaming the module's internal
   variables per call (`<variable>_<tag>`), and log the mapping (workflow §6).
 - Runnable variant: the rule "never rewrite valid EES code to work around a CoolSolve gap" applies to the native

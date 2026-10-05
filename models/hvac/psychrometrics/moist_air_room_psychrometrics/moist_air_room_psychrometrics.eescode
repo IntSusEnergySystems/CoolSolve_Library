@@ -1,0 +1,84 @@
+{=============================================================================
+  Moist air in a room: humidity ratio, specific enthalpy and dew point
+  CoolSolve Library model CSL-0055
+ -----------------------------------------------------------------------------
+  A room of 5 m x 5 m x 3 m contains air at 25 degC with a degree of saturation
+  (relative humidity) of 75 % at an ambient pressure of 100 kPa. The model
+  gives the partial pressure of the air, the humidity ratio and the specific
+  enthalpy of the moist air, the masses of dry air and of water vapour
+  contained in the room, and the temperature below which condensation appears
+  on the windows (dew point). As in the original, each quantity is obtained
+  twice: with the relations of the course (approximate formula, constant heat
+  capacities) and with the EES property functions.
+
+  Inputs : Vol room volume, T dry-bulb temperature, phi relative humidity,
+           p ambient pressure
+  Outputs: p_air partial pressure of the dry air, w humidity ratio,
+           h specific enthalpy of the moist air per kg of dry air,
+           m_air and m_v masses of dry air and of water vapour,
+           T_r dew-point temperature
+  Units  : SI - temperatures in degC, pressures in Pa, energies in J
+  Source : ULiege, course "Thermodynamique appliquee" (MECA0002), session R9,
+           exercise 1 - see README.md
+=============================================================================}
+
+"Data"
+fluid$ = 'AirH2O'      "moist-air fluid of the EES property functions"
+Vol = 75 [m^3]         "volume of the room"
+T = 25 [C]             "dry-bulb temperature of the air"
+phi = 0.75             "degree of saturation = relative humidity [-]"
+p = 100e3 [Pa]         "ambient pressure (100 kPa in the original)"
+
+"!Partial pressure of the air"
+"the relative humidity is the ratio of the partial pressure of the water vapour
+ to the saturation pressure of the water vapour at the temperature of the
+ mixture, so the partial pressure of the vapour follows directly"
+p_sat = p_sat(Water,T=T)   "saturation pressure of water at the air temperature [Pa]"
+p_v = phi * p_sat          "partial pressure of the water vapour [Pa]"
+"the partial pressure of the air is deduced from the total pressure and the
+ partial pressure of the vapour: the sum of the partial pressures equals the
+ total pressure (p is given above and stays at its value)"
+p = p_air + p_v            "total pressure [Pa]"
+
+"!Humidity ratio and specific enthalpy of the air"
+"the humidity ratio is computed with the approximate relation of the course
+ linking it to the partial pressure of the vapour, or with the EES function
+ HumRat"
+w_corr = 0.622 * p_v / (p-p_v)   "humidity ratio, course formula [kg water/kg dry air]"
+w_ees = HumRat(AirH2O,T=T,r=phi,P=P)  "humidity ratio, EES HumRat function [kg/kg]"
+"the two approaches give the same result (as in the original)"
+
+"the specific enthalpy is computed with the EES function enthalpy or from its
+ definition"
+h_a = enthalpy(fluid$,p=p,T=T,w=w_ees)  "specific enthalpy of the mixture per kg of dry air, three arguments (cf. the EES help) [J/kg dry air]"
+h_air = cp_air * T   "specific enthalpy of the dry air, h = 0 at 0 degC as in the course [J/kg]"
+"careful: h_air cannot be computed with the EES function enthalpy(air_ha,p=p,T=T)
+ alone, because the reference used by EES for the dry air is not the reference of
+ the course, which sets h = 0 at 0 degC (h_air = cp_air*T); the enthalpy is
+ therefore brought back to the 0 degC reference by subtracting:"
+h_air2 = enthalpy(air_ha,p=p_air,T=T) - enthalpy(air_ha,p=p_air,T=0)  "dry-air enthalpy referred to 0 degC, EES fluid air_ha [J/kg]"
+h_air3 = enthalpy(air,T=T) - enthalpy(air,T=0)  "same with the EES ideal-gas fluid Air [J/kg]"
+cp_air = 1005 [J/kg-K]   "specific heat capacity of the dry air (1.005 kJ/kg-K in the original)"
+h_v = 2500900 + 1820*T   "specific enthalpy of the vapour, course formula (2500.9 kJ/kg and 1.82 kJ/(degC-kg) in the original) [J/kg]"
+h_v2 = enthalpy(Water,T=T,p=p_v)   "specific enthalpy of the vapour, Water property function [J/kg]"
+h_aa = h_air + w_corr*h_v   "specific enthalpy of the moist air, course definition [J/kg dry air]"
+"the two approaches give almost the same result (as in the original)"
+
+"!Masses of dry air and of water vapour"
+v = volume(Air,T=T,p=p_air)      "specific volume of the dry air [m^3/kg]"
+v3 = volume(air_ha,T=T,p=p_air)  "specific volume of the dry air, EES fluid air_ha [m^3/kg]"
+m_air = Vol/v      "mass of dry air in the room [kg]"
+m_air3 = Vol/v3    "mass of dry air in the room, EES fluid air_ha [kg]"
+m_v = w_ees*m_air  "mass of water vapour in the room [kg]"
+"using the partial pressures, see the course: p_part*v = rT, i.e. the partial
+ pressure is multiplied by the specific volume Vol/m"
+p_air * Vol = m_air2 * R_air * (T+273.15)   "ideal-gas form for the dry air [kg]"
+p_v * Vol = m_v2 * R_v * (T+273.15)         "ideal-gas form for the vapour [kg]"
+R_v = 8314 / 18        "specific gas constant of the vapour (8.314 kJ/kmol-K over 18 kg/kmol in the original; alternatively R#/molarmass(Water)) [J/kg-K]"
+R_air = 287.05         "specific gas constant of the dry air (0.28705 kJ/kg-K in the original; alternatively R#/molarmass(Air)) [J/kg-K]"
+"the two approaches give almost the same result (as in the original)"
+
+"!Onset of the condensation"
+"-> the dew point is computed here with the EES function DEWPOINT: below this
+ temperature, condensation appears on the windows"
+T_r = dewpoint(fluid$,T=T,p=p,w=w_corr)   "dew-point temperature [C]"

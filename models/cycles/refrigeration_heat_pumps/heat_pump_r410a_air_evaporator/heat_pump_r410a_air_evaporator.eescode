@@ -1,0 +1,96 @@
+{=============================================================================
+  Air-source heat pump with R410A (evaporator air side, water condenser)
+  CoolSolve Library model CSL-0054
+ -----------------------------------------------------------------------------
+  An air-to-water heat pump runs on R410A: the evaporator draws heat from the
+  outdoor air (15 K air cooling, pressure drop of 0.32 bar), the condenser
+  heats a water circuit (e.g. floor heating). The model determines the
+  refrigerant flow rate from the condenser heat balance, the evaporator air
+  flow rate from the evaporator heat balance, and the compressor isentropic
+  efficiency. R410A is zeotropic: under the dome the temperature at a given
+  pressure also depends on the quality, so state temperatures are obtained
+  from (P, h) or (P, x), never from T_sat alone (as in the original).
+  Cycle states: 1 compressor inlet / evaporator outlet (saturated vapour),
+  2 condenser inlet, 3 condenser outlet, 4 evaporator inlet (after the
+  isenthalpic expansion valve).
+
+  Inputs : p_su_ev, DP_ev, T_su_cd, p_su_cd, T_ex_cd, m_dot_w_cool,
+           DELTAT_w, DELTAT_air, fluid$
+  Outputs: m_dot_R410a, m_dot_air, COP, eta_is_cp (and the state points
+           p[i], T[i], h[i], s[i], i = 1..4)
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course "Thermodynamique appliquée" (MECA0002), repetition 8,
+           exercise 2, 2022-2023 (EES file R08_E02_2022.EES) - see README.md
+=============================================================================}
+
+"!Data"
+fluid$ = 'R410A'
+p_su_ev = 800E3 [Pa]        "evaporator inlet pressure (800 kPa in the original)"
+DP_ev = 32000 [Pa]          "evaporator pressure drop (0.32*1e2 kPa in the original)"
+T_su_cd = 105 [°C]          "condenser inlet temperature"
+p_su_cd = 3000E3 [Pa]       "condenser inlet pressure (3000 kPa in the original)"
+T_ex_cd = 45 [°C]           "condenser outlet temperature"
+m_dot_w_cool = 0.1 [kg/s]   "cooling-water flow rate"
+DELTAT_w = 25 [°C]          "water temperature rise"
+DELTAT_air = -15 [°C]       "air cooling (negative by convention)"
+
+"!Solution"
+
+"The useful effect of the heat pump is the heat given by the working fluid to the
+water loop at the condenser; the condenser is a refrigerant - water exchanger whose
+water circuit can feed a floor heating system, as in the original."
+
+"The heat is extracted from the outside air at the evaporator: a refrigerant - air
+exchanger in which the air gives heat to the working fluid, as in the original."
+
+"Condenser analysis. Index 1 is used for the compressor inlet. The heat pump
+comprises, in order: 1. compressor, 2. condenser, 3. expansion valve, 4. evaporator."
+T[2] = T_su_cd
+p[2] = p_su_cd
+h[2] = enthalpy(fluid$, p=p[2], T=T[2])
+s[2] = entropy(fluid$, p=p[2], T=T[2])
+x_2 = quality(fluid$, h=h[2], p=p[2])       "state 2: superheated vapour at the condenser inlet"
+
+T[3] = T_ex_cd
+p[3] = p[2]                                 "pressure drop neglected in the condenser (as specified in the statement)"
+h[3] = enthalpy(fluid$, p=p[3], T=T[3])
+s[3] = entropy(fluid$, p=p[3], T=T[3])
+x_3 = quality(fluid$, h=h[3], p=p[3])       "state 3: subcooled liquid at the condenser outlet"
+
+Q_dot_cd = m_dot_R410a*(h[3] - h[2])        "heat lost by the R410A in the condenser -> negative"
+Q_dot_w = m_dot_w_cool*c_w*DELTAT_w         "heat taken by the water of the secondary circuit"
+c_w = 4187 [J/kg-K]                         "specific heat of liquid water (4.187 kJ/kg-K in the original)"
+
+Q_dot_cd + Q_dot_w = 0                      "condenser heat balance: what the R410A gives up is
+                                            recovered by the water; gives the R410A flow rate"
+
+"Evaporator analysis"
+p[4] = p_su_ev
+h[4] = h[3]                                 "isenthalpic expansion valve (open system, no work, adiabatic)"
+T[4] = temperature(fluid$, h=h[4], p=p[4])
+s[4] = entropy(fluid$, h=h[4], p=p[4])
+x_4 = quality(fluid$, h=h[4], p=p[4])
+
+p[1] = p[4] - DP_ev                         "pressure drop in the evaporator"
+x_1 = 1
+"No superheat being specified, the fluid leaves as saturated vapour at p = p[1]
+(as in the original): the compressor cannot admit liquid."
+
+h[1] = enthalpy(fluid$, p=p[1], x=x_1)
+s[1] = entropy(fluid$, p=p[1], x=x_1)
+T[1] = temperature(fluid$, p=p[1], x=x_1)   "T_sat is not used here because R410A is zeotropic:
+                                            under the dome T depends on the quality, not on P alone
+                                            (as in the original)"
+
+Q_dot_ev = m_dot_R410a*(h[1] - h[4])        "heat taken by the R410A in the evaporator, positive"
+Q_dot_air = m_dot_air*c_air*DELTAT_air      "heat given by the air -> negative (DELTAT_air < 0)"
+c_air = 1005 [J/kg-K]                       "specific heat of air at ambient T and p, course value
+                                            (1.005 kJ/kg-K in the original)"
+Q_dot_ev + Q_dot_air = 0                    "evaporator heat balance: gives the air flow rate"
+
+"Compressor analysis"
+W_dot_cmp = m_dot_R410a*(h[2] - h[1])       "power required by the compressor, positive"
+COP = -Q_dot_cd/W_dot_cmp                   "COP = useful effect / costly effect"
+
+h_2_is = enthalpy(fluid$, p=p[2], s=s[1])
+eta_is_cp = (h_2_is - h[1])/(h[2] - h[1])

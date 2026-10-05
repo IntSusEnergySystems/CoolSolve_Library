@@ -1,0 +1,79 @@
+{=============================================================================
+  Ideal turbojet at 260 m/s (diffuser, compressor, combustor, turbine, nozzle)
+  CoolSolve Library model CSL-0051
+ -----------------------------------------------------------------------------
+  Air-standard jet-propulsion cycle of an ideal turbojet flying at 260 m/s at
+  an altitude where the ambient air is at 35 kPa and -40 °C. The flow is
+  decelerated and compressed isentropically in the diffuser (all the kinetic
+  energy is recovered: the gas is at rest at station 2), compressed
+  isentropically by the compressor (pressure ratio 10), heated at constant
+  pressure in the combustor up to the turbine inlet temperature of 1100 °C,
+  expanded isentropically in the turbine (which only drives the compressor)
+  and in the nozzle back to ambient pressure. The exercise asks for the
+  temperature and pressure of the air at turbine exit, the exhaust velocity
+  at nozzle exit and the propulsion efficiency.
+
+  Air properties: Air_ha (real dry air, as in the original).
+
+  Inputs : T[1] = -40 °C, p[1] = 35 kPa, c[1] = 260 m/s, pi_c = 10,
+           T[4] = 1100 °C, m_dot = 45 kg/s
+  Outputs: T[5], p[5] (turbine exit), c[6] (exhaust velocity), eta_P
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège course MECA0002 "Thermodynamique appliquée", repetition 6,
+           exercise 4 (2022-2023), S. Quoilin - see README.md
+=============================================================================}
+
+"!Inputs"
+T[1]=-40 [C]        "given (as in the original) [°C]"
+p[1]=35E3 [Pa]      "given - 35 kPa in the original [Pa]"
+c[1]=260 [m/s]      "the air enters the turbojet at the flight velocity, no wind (as in the original) [m/s]"
+pi_c=10             "compressor pressure ratio (10*p[2] in the original) [-]"
+T[4]=1100 [C]       "given: turbine inlet temperature [°C]"
+m_dot=45 [kg/s]     "given: air mass flow rate [kg/s]"
+
+"!State 1-2: isentropic compression in the diffuser"
+h[1]=enthalpy(Air_ha,T=T[1],P=p[1])      "[J/kg]"
+s[1]=entropy(Air_ha,T=T[1],P=p[1])       "[J/(kg-K)]"
+s[2]=s[1]                                "isentropic"
+h[2]+0.5*c[2]^2=h[1]+0.5*c[1]^2          "steady-flow energy balance: adiabatic, no work, potential energy neglected (0.001 [kJ/J] factors in the original) [J/kg]"
+c[2]=0 [m/s]                             "ideal diffuser: all the kinetic energy is recovered (as in the original)"
+T[2]=temperature(Air_ha,h=h[2],s=s[2])   "stagnation state from (h, s) [°C]"
+p[2]=pressure(Air_ha,h=h[2],s=s[2])      "[Pa]"
+
+"!State 2-3: isentropic compression in the compressor"
+s[3]=s[2]                                "isentropic"
+p[3]=pi_c*p[2]                           "[Pa]"
+h[3]=enthalpy(Air_ha,s=s[3],P=p[3])      "[J/kg]"
+T[3]=temperature(Air_ha,s=s[3],P=p[3])   "[°C]"
+w_cp=h[3]-h[2]                           "compressor specific work: first law, adiabatic, kinetic and potential energy neglected [J/kg]"
+
+"!State 3-4: isobaric combustor"
+p[4]=p[3]
+
+"!State 4-5: isentropic expansion in the turbine"
+h[4]=enthalpy(Air_ha,T=T[4],P=p[4])      "[J/kg]"
+s[4]=entropy(Air_ha,T=T[4],P=p[4])       "[J/(kg-K)]"
+s[5]=s[4]                                "isentropic"
+w_turb=-w_cp                             "the turbine only drives the compressor (as in the original) [J/kg]"
+w_turb=h[5]-h[4]                         "first law, adiabatic, kinetic and potential energy neglected [J/kg]"
+T[5]=temperature(Air_ha,s=s[5],h=h[5])   "[°C]"
+p[5]=pressure(Air_ha,s=s[5],h=h[5])      "[Pa]"
+T_out_turb=T[5]                          "exercise output: temperature at turbine exit [°C]"
+p_out_turb=p[5]                          "exercise output: pressure at turbine exit [Pa]"
+
+"!State 5-6: isentropic expansion in the nozzle"
+s[6]=s[5]                                "isentropic"
+p[6]=p[1]                                "exhaust at the ambient pressure of the flight altitude (as in the original) [Pa]"
+h[5]+0.5*c[5]^2=h[6]+0.5*c[6]^2          "steady-flow energy balance: adiabatic, no work, potential energy neglected (0.001 [kJ/J] factors in the original) [J/kg]"
+h[6]=enthalpy(Air_ha,s=s[6],P=p[6])      "[J/kg]"
+T[6]=temperature(Air_ha,s=s[6],P=p[6])   "[°C]"
+c[5]=0 [m/s]                             "the gas enters the nozzle at rest (as in the original)"
+c_out_tuy=c[6]                           "exercise output: exhaust velocity at nozzle exit [m/s]"
+
+"!Performance"
+V_exit=c[6]                              "gas velocity at nozzle exit, relative to the aircraft [m/s]"
+V_inlet=c[1]                             "gas velocity at inlet, relative to the aircraft [m/s]"
+V_aircraft=c[1]                          "aircraft velocity [m/s]"
+W_dot_P=m_dot*(V_exit-V_inlet)*V_aircraft "thrust power as defined in the course (0.001 [kJ/J] factor in the original) [W]"
+Q_dot_in=m_dot*(h[4]-h[3])               "heat rate supplied in the combustor [W]"
+eta_P=W_dot_P/Q_dot_in                   "propulsion efficiency as defined in the course: thrust power over combustor heat rate [-]"

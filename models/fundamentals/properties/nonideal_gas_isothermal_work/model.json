@@ -1,0 +1,53 @@
+{
+  "id": "CSL-0047",
+  "name": "nonideal_gas_isothermal_work",
+  "title": "Isothermal expansion of a non-ideal gas: unit of k and boundary work",
+  "summary": "A gas obeying the equation of state v*(P + k/v^2) = R*T expands isothermally from 2 m^3 to 4 m^3; the model gives the unit of the parameter k, the final pressure and the boundary work, computed with an EES definite integral and with the closed form (the two must agree).",
+  "kind": "steady",
+  "level": 1,
+  "status": "blocked",
+  "main_file": "nonideal_gas_isothermal_work.eescode",
+  "fluids": [],
+  "tags": [
+    "equation of state",
+    "non-ideal gas",
+    "boundary work",
+    "isothermal",
+    "definite integral",
+    "dimensional analysis",
+    "exercise"
+  ],
+  "language_features": ["INTEGRAL (definite integral, fixed step)"],
+  "stats": {"n_equations": 12, "largest_block": 0},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R2/R2_E3_2022.EES",
+    "candidate_id": "TM-0399",
+    "authors": ["TBD (ULiège, course Thermodynamique appliquée MECA0002 repetition team)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège MECA0002), repetition 2, exercise 3"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (compare_solution.py --ees-units, hand conversion of the model from kPa/kJ/K to Pa/J/°C); verified on the runnable variant nonideal_gas_isothermal_work_coolsolve.eescode",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 9.02e-08,
+    "notes": "12 common variables, 0 differ (rtol=0.001); only in EES: 1 (a, a stale record of the gas constant not used by the equations); only in CoolSolve: 2 (T_K, the absolute temperature added by the unit conversion, and W_b_int, the integral of P dv_bar split out of the state equation by the variant). The 9.02e-8 deviation on W_b_EES is the quadrature error of the EES integral: recomputing EES's own trapezoidal rule with a step of 0.01 m^3/kmol gives -403297.8325 J, exactly its stored value, while CoolSolve integrates the same limits with RK4 and returns -403297.7961 J, the exact value of the closed form."
+  },
+  "missing_features": ["CS-GAP-INTEGRAL-LIMITS", "CS-BUG-INTEGRAL-FACTOR"],
+  "related": ["CSL-0010", "CSL-0044", "CSL-0059"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (card C-50, batch B-05)",
+      "by": "GLM (Z.ai) for S. Quoilin"
+    }
+  ]
+}

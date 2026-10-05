@@ -1,0 +1,107 @@
+{=============================================================================
+  Air-standard Otto cycle
+  CoolSolve Library model CSL-0049
+ -----------------------------------------------------------------------------
+  Theoretical (air-standard) Otto cycle solved as in the original exercise:
+  an ideal gas with a variable specific heat, the ratio of the specific heats
+  gamma being evaluated at the mean temperature of each of the two isentropic
+  transformations, and c_v taken as constant over each transformation. The
+  states 1 (start of compression), 2 (end of compression), 3 (end of the
+  constant-volume heat addition) and 4 (end of expansion) are given by the
+  ideal-gas law, the Laplace law p*v^gamma = constant on 1-2 and 3-4 and
+  isochoric transformations on 2-3 and 4-1.
+
+  Inputs : r_v, q, p[1], T[1] (cycle); V_d, n (engine)
+  Outputs: p_max, T_max, w_net_cycle, eta_otto, W_net, W_dot_net
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course "Thermodynamique appliquée" (MECA0002), session R5,
+           exercise 1 (EES file R05_E01_2022.EES) - see README.md
+ =============================================================================}
+
+"Inputs"
+fluid$ = 'Air'                 "working fluid: air, treated as an ideal gas (as in the original)"
+q = 800E3 [J/kg]               "heat added per unit of air in the constant-volume heating 2-3 (800 kJ/kg in the original)"
+r = 287 [J/(kg-K)]             "specific gas constant of air (0.287 kJ/(kg-K) in the original); kept for reference only, no equation of the original uses it - they use r_bis"
+r_bis = R#/molarmass(fluid$)   "specific gas constant [J/(kg-K)]: universal gas constant divided by the molar mass (as in the original, which used molarmass(Air_ha))"
+r_v = 8                        "compression ratio, which is in fact the volumetric ratio v_1/v_2 [-]"
+p[1] = 100E3 [Pa]              "pressure at the beginning of the compression (100 kPa in the original)"
+T[1] = 17 [C]                  "temperature at the beginning of the compression (17 °C, written 17 [K]+273.15 [K] in the original)"
+V_d = 1.6E-3 [m^3]             "total displacement of the engine"
+n = 4000 [rev/min]             "engine speed (4-stroke: one cycle per two revolutions)"
+
+"Here the whole cycle is solved with air as an ideal gas, as in the original"
+
+"!Solution"
+
+"Isentropic compression 1-2 : p*v^gamma = Cst ==> Laplace law"
+gamma01 = cp(fluid$, T=(T[1]+T[2])/2)/cv(fluid$, T=(T[1]+T[2])/2)  "cp and cv are approximated by evaluating them at the intermediate conditions"
+"T2 is not known: the problem is recursive. It is nevertheless solved simultaneously; had this recursive problem not been solvable, a first approximation would have been to use the inlet conditions T[1] only"
+
+v[1] = r_bis*(T[1]+273.15)/p[1]      "specific volume at state 1 from the ideal-gas law (the EES 'volume' function could have been used)"
+
+p[2]*v[2]^gamma01 = p[1]*v[1]^gamma01  "Laplace law"
+
+v[2] = v[1]/r_v               "specific volume at state 2 from the volumetric ratio"
+
+p[2] = r_bis*(T[2]+273.15)/v[2]      "pressure at state 2 from the ideal-gas law"
+
+w_12 + q_12 = cv12*(T[2]-T[1])  "first law for a closed system, giving the heat exchanged: q+w = du"
+q_12 = 0                      "isentropic evolution = reversible adiabatic (valid except in some rare steady-state cases); here the transformation is fast, no time for heat exchange = adiabatic"
+
+cv12 = cv(fluid$, T=(T[1]+T[2])/2)  "c_v is assumed constant over the transformation, which would not be judicious for large temperature variations"
+
+
+"Constant-volume heating 2-3 : v = Cst"
+
+v[3] = v[2]                   "isochoric evolution"
+w_23 = 0                      "no work exchanged, isochoric: -integral(p dv) = 0"
+q_23 = q                      "heat added, given by the statement"
+w_23 + q_23 = cv23*(T[3]-T[2])  "heat exchanged, first law for a closed system"
+p[3] = r_bis*(T[3]+273.15)/v[3]      "p_3 from the ideal-gas law"
+cv23 = cv(fluid$, T=(T[2]+T[3])/2)  "c_v is assumed constant over the transformation, which would not be judicious for large temperature variations"
+T_max = T[3]                  "the maximum pressures and temperatures of the Otto cycle are reached after the heating"
+p_max = p[3]
+
+"Isentropic expansion 3-4 : p*v^gamma = Cst ==> Laplace law"
+gamma34 = cp(fluid$, T=(T[3]+T[4])/2)/cv(fluid$, T=(T[3]+T[4])/2)  "cp and cv are approximated by evaluating them at the intermediate conditions"
+"T4 is not known: the problem is recursive. It is nevertheless solved simultaneously; had this recursive problem not been solvable, a first approximation would have been to use the inlet conditions T[3] only"
+
+
+v[4] = v[1]                   "the volume is known at state 4 (see below), since the following transformation is isochoric"
+p[4] = r_bis*(T[4]+273.15)/v[4]      "p_4 from the ideal-gas law, the specific volume at state 4 being known"
+
+p[3]*v[3]^gamma34 = p[4]*v[4]^gamma34  "Laplace law"
+
+
+
+w_34 + q_34 = cv34*(T[4]-T[3])  "heat received during the expansion, first law for a closed system"
+q_34 = 0                      "isentropic evolution = reversible adiabatic (valid except in some rare steady-state cases); here the transformation is fast, no time for heat exchange = adiabatic"
+
+cv34 = cv(fluid$, T=(T[3]+T[4])/2)  "c_v is assumed constant over the transformation, which would not be judicious for large temperature variations"
+
+
+"Constant-volume cooling 4-1 : v = Cst"
+w_41 = 0                      "no work exchanged, isochoric"
+
+w_41 + q_41 = cv41*(T[1]-T[4])  "heat exchanged, first law for a closed system"
+cv41 = cv(fluid$, T=(T[1]+T[4])/2)  "c_v is assumed constant over the transformation, which would not be judicious for large temperature variations"
+
+w_net_cycle = w_12+w_23+w_34+w_41  "sum of the work of all the steps; they already carry the correct signs (what is supplied to the system is negative)"
+w_net_cycle_bis = -(q_23+q_41)  "the work of the ideal cycle can also be seen as the difference between the heat added and the heat rejected; by conservation of energy, what is not rejected as heat is converted into work"
+"the two values are not exactly equal because the coefficients gamma, cp and cv are treated as constants"
+
+eta_otto = abs(w_net_cycle/q)
+
+"Mass of air admitted in the cylinders at each intake"
+m = V_d/v[1]
+
+W_net = m*w_net_cycle        "work done per cycle [J]; as in the original, the work is negative when it is delivered by the system"
+
+W_dot_net = W_net*n/2/60   "the swept volume of the cylinders is covered twice per Otto cycle: 2 revolutions of the engine (n in rev/min, 60 s/min) for one cycle, work in J -> power in W"
+
+
+"For information"
+s[1] = entropy('Air', T=T[1], P=p[1])
+s[2] = entropy('Air', T=T[2], P=p[2])
+s[3] = entropy('Air', T=T[3], P=p[3])
+s[4] = entropy('Air', T=T[4], P=p[4])

@@ -1,0 +1,69 @@
+{=============================================================================
+  Adiabatic mixing of room air and outdoor air (moist air)
+  CoolSolve Library model CSL-0063
+ -----------------------------------------------------------------------------
+  Air extracted from a room (state 1, known by its dry-bulb and wet-bulb
+  temperatures) is mixed adiabatically with outdoor air (state 2, known by
+  its temperature and relative humidity). The mixture (state 3) is supplied
+  to the room. Dry-air and water-vapour mass balances give the humidity
+  ratio of the mixture, and a first-law balance on the dry air gives its
+  specific enthalpy; the mixed-air temperature, dew point and relative
+  humidity follow. The states are assembled in arrays T[i], w[i] for the
+  psychrometric chart representation, as in the original.
+
+  Inputs : p, m_dot_a_3, T_1, T_h_1, T_2, phi_2, m_dot_a_2, fluid$
+  Outputs: w_3, h_a_3 (asked), T_3, T_r3, phi_3, r_q (bonus)
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course "Thermodynamique appliquée" (MECA0002), session R9,
+           exercise 2 (EES file R09_E02_2022.EES) - see README.md
+=============================================================================}
+
+"!Data"
+fluid$ = 'AirH2O'            "humid air (as in the original)"
+p = 101325                   "ambient = total pressure [Pa] (101.325 kPa in the original)"
+m_dot_a_3 = 0.639            "mixed air supplied to the room: dry-air mass flow [kg/s]"
+
+T_1 = 20                     "room air: dry-bulb temperature [°C]"
+T_h_1 = 16.2                 "room air: wet-bulb temperature [°C]"
+
+T_2 = 27                     "outdoor air: temperature [°C]"
+phi_2 = 0.9                  "outdoor air: degree of saturation (relative humidity) [-]"
+m_dot_a_2 = 50e-3            "outdoor air: dry-air mass flow [kg/s] (50 g/s in the original)"
+
+"!Solution"
+
+"Humidity ratios of the inlet streams"
+w_1 = humrat(fluid$,T=T_1,P=p,B=T_h_1)     "room air, from its wet-bulb temperature"
+w_2 = humrat(fluid$,T=T_2,P=p,R=phi_2)     "outdoor air, from its relative humidity"
+
+"Mass conservation -> humidity ratio of the mixed air (state 3)"
+m_dot_a_1 + m_dot_a_2 = m_dot_a_3          "dry-air mass balance"
+m_dot_v_1 + m_dot_v_2 = m_dot_v_3          "water-vapour mass balance"
+"Dry air and water vapour flows (definition of the humidity ratio)"
+m_dot_v_1 = w_1 * m_dot_a_1
+m_dot_v_2 = w_2 * m_dot_a_2
+m_dot_v_3 = w_3 * m_dot_a_3
+
+"First law -> specific enthalpy of the mixed air (state 3)"
+"Nota: the mixing is assumed ADIABATIC (as in the original)"
+m_dot_a_3 * h_a_3 = m_dot_a_2 * h_a_2 + m_dot_a_1 * h_a_1
+h_a_1 = enthalpy(fluid$,T=T_1,P=p,B=T_h_1)
+h_a_2 = enthalpy(fluid$,T=T_2,P=p,R=phi_2)
+
+"Bonus: temperature of the mixed air, dew point and relative humidity"
+T_3 = temperature(fluid$,P=p,h=h_a_3,w=w_3)
+T_r3 = dewpoint(fluid$,P=p,T=T_3,w=w_3)
+phi_3 = relhum(fluid$,T=T_3,P=p,w=w_3)
+"A posteriori, the mixed-air temperature (state 3) is above its dew point
+ -> no condensation during the mixing (as in the original)"
+
+"Representation in the psychrometric chart"
+T[1] = T_1
+w[1] = w_1
+T[2] = T_2
+w[2] = w_2
+T[3] = T_3
+w[3] = w_3
+
+"Recirculated flow fraction"
+r_q = 100*m_dot_a_1/m_dot_a_3   "share of the supply flow that is recirculated room air [%] (unit annotation of the original moved to the comment)"

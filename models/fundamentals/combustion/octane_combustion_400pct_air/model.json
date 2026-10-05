@@ -1,0 +1,69 @@
+{
+  "id": "CSL-0046",
+  "name": "octane_combustion_400pct_air",
+  "title": "Combustion of octane with 400 % theoretical air",
+  "summary": "Octane burned with 400 % theoretical air in steady flow: adiabatic flame temperature from the first law on the combustion reaction (formation enthalpies), fuel-air ratio and stoichiometric dosage; excess-air effect on the flame temperature.",
+  "kind": "steady",
+  "level": 1,
+  "status": "blocked",
+  "main_file": "octane_combustion_400pct_air.eescode",
+  "fluids": [
+    "CO2",
+    "H2O",
+    "O2",
+    "N2"
+  ],
+  "tags": [
+    "combustion",
+    "adiabatic flame temperature",
+    "excess air",
+    "stoichiometry",
+    "fuel-air ratio",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 35,
+    "largest_block": 5
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R11/R11_E01_2022.EES",
+    "candidate_id": "TM-0393",
+    "authors": [
+      "TBD (ULiège, course Thermodynamique appliquée MECA0002 repetition team)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège MECA0002), repetition 11, exercise 1"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (compare_solution.py --ees-units) against the runnable _coolsolve variant (the native file is blocked, see missing_features)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0",
+    "max_rel_diff": 0.00022,
+    "notes": "35 common variables, 3 differ (rtol=0.001) - all 3 are unit-annotation artifacts, hand-checked (h_H2O_*_bis stored without units in kJ/kg: 8.7e-5; TAF_K stored in K but converted by the tool: 1.5e-4). Max over all common variables 2.2e-4 on TAF (ideal-gas species data). Stale EES records x, y, mm ignored."
+  },
+  "missing_features": [
+    "CS-GAP-FLUIDS-C8H18"
+  ],
+  "related": [
+    "CSL-0005",
+    "CSL-0058"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (card C-49, batch B-05); native file blocked by CS-GAP-FLUIDS-C8H18, runnable _coolsolve variant verified",
+      "by": "GLM (Z.ai) for S. Quoilin"
+    }
+  ]
+}

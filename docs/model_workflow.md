@@ -383,6 +383,24 @@ model:
   under their new names). Other blocking gaps of the flattened file follow the
   blocked/variant rules above.
 
+**Property calls with the (T, H) input pair (decision D11).** CoolProp, hence
+CoolSolve, will not get the (T, H) input pair (`CS-GAP-PROP-TH`, not planned).
+A property call such as `quality(fluid$,H=h[4],T=T[4])` is therefore
+**rewritten in the model itself** through an equivalent input pair:
+
+- two-phase state known from the physics (e.g. after an expansion valve, in an
+  evaporator): add `P_<n> = pressure(fluid$,T=T[n],x=0)` (saturation pressure,
+  or reuse an existing pressure variable of that state) and call the property
+  with (P, H): `x[4] = quality(fluid$,P=P_4,H=h[4])`;
+- single-phase or unknown phase: add an auxiliary pressure unknown with the
+  implicit equation `h[n] = enthalpy(fluid$,T=T[n],P=P_<n>)` (with a guess in
+  `.initials`), then call the property with (P, H);
+- keep the variable names, log every rewritten call (file header + README
+  conversion log, "decision D11"), keep the file valid EES; the rewritten file
+  is the main model file (no native/variant split for this reason alone);
+  `CS-GAP-PROP-TH` is **not** listed in `missing_features`; the status follows
+  the verification against the EES reference.
+
 **Re-checks (`T-RECHECK`).** When a CoolSolve release closes gaps, filter
 `library.csv` on `missing_features`, run the native files, and update status,
 `missing_features`, README and baseline (`.sol` of the native file). Keep or

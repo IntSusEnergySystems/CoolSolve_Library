@@ -1,0 +1,187 @@
+{=============================================================================
+  Land-based two-shaft gas turbine
+  CoolSolve Library model CSL-0050
+ -----------------------------------------------------------------------------
+  Exercise of the ULiege course "Thermodynamique appliquee" (2022-2023),
+  repetition 6, exercise 3. Open-circuit gas turbine (Brayton cycle) with two
+  shafts: a low-pressure compressor, an intercooler cooled by water, a
+  high-pressure compressor, a regenerator, a main combustion chamber, a
+  high-pressure turbine driving the two compressors, a second combustion
+  chamber and a low-pressure turbine driving an alternator. The working fluid
+  is air, assumed to be a perfect gas; the composition change caused by the
+  fuel is neglected (only the flow rate and the temperature change).
+
+  Solution method as in the original: the machine is walked through from
+  station 1 to station 10; the exit state of each component is computed from
+  its entry state and the thermal and mechanical powers exchanged between the
+  components are evaluated. Each component is analysed as an open system in
+  steady state; kinetic and potential energy variations are neglected unless
+  stated otherwise.
+
+  Inputs : p_amb, T_amb, m_dot_a, pi_c, eta_is_c, TET, eta_b, eta_m, eta_is_t,
+           eta_alt, PCI, eta_ref, m_dot_ref, T_su_ref, eta_reg
+  Outputs: W_dot_t2 (power available at the shaft of the LP turbine),
+           W_dot_el, eta_tg (overall efficiency of the machine)
+  Units  : SI - temperatures in degC, pressures in Pa, energies in J
+  Source : ULiege course "Thermodynamique appliquee", 2022-2023, repetition 6,
+           exercise 3 (EES file R06_E03_2022.EES) - see README.md
+=============================================================================}
+
+"Data"
+fluid$ = 'Air'  "working fluid = air, assumed to be a perfect gas"
+p_amb = 100E3 [Pa]  "100 kPa in the original"
+T_amb = 20 [C]
+m_dot_a = 100 [kg/s]  "air flow rate"
+pi_c = 4  "pressure ratio of each compressor"
+eta_is_c = 0.83  "isentropic efficiency of the compressors"
+TET = 976.85 [C]  "turbine entry temperature (1250 K in the original)"
+eta_b = 0.98  "combustion efficiency"
+eta_m = 0.95  "mechanical efficiency"
+eta_is_t = 0.83  "isentropic efficiency of the turbines"
+eta_alt = 0.95  "alternator efficiency"
+PCI = 43.1E6 [J/kg]  "lower heating value of kerosene (43.1 MJ/kg in the original)"
+
+
+"Solution"
+
+"Conditions at the inlet of the first compressor: station 1"
+T[1] = T_amb
+p[1] = p_amb
+s[1] = entropy(fluid$,T=T[1],P=p[1])
+h[1] = enthalpy(fluid$,T=T[1])  "air being an ideal gas, one temperature is enough to get h (delta_h = cp*delta_T)"
+
+"Conditions at the exit of the first compressor: station 2"
+p[2] = p[1]*pi_c  "by definition of the pressure ratio"
+s2_is = s[1]
+h2_is = enthalpy(fluid$,s=s2_is,P=p[2])  "delta_h = cp*delta_T does not give h from the pressure or the entropy alone"
+eta_is_c = (h2_is-h[1])/(h[2]-h[1])  "isentropic efficiency of the first compressor"
+s[2] = entropy(fluid$,h=h[2],P=p[2])
+T[2] = temperature(fluid$,h=h[2])  "air being an ideal gas, one temperature is enough to get h"
+W_dot_c1 = m_dot_a*(h[2]-h[1])  "power required by the first compressor (first law, adiabatic compression)"
+
+"Intercooler between stations 2 and 3, assumed isobaric"
+p[3] = p[2]
+eta_ref = 0.9  "as in the original, a value intended for a parametric table"
+m_dot_ref = 25 [kg/s]
+T_su_ref = 20 [C]
+
+"T_ex_ref = ??"
+
+"Instead of using the limiting heat capacity rate m_dot*cp to define the
+efficiency of the heat exchanger, the enthalpies are used. Here there is no
+phase change, but in case of a phase change in the exchanger m_dot*cp could
+no longer be used to find the limiting fluid.
+
+Link illustrating the thermal efficiency of a heat exchanger:
+http://processs.free.fr/Pages/VersionWeb.php?page=4550"
+
+h_su_ref = enthalpy(Water,P=1E5,T=T_su_ref)
+Q_dot_intercooler = Q_dot_ref_max*eta_ref  "Q_dot_ref_max and Q_dot_intercooler are counted negatively for the cycle (lost by the cycle)"
+Q_dot_intercooler = m_dot_a*(h[3]-h[2])
+-Q_dot_intercooler = m_dot_ref*(h_ex_ref-h_su_ref)  "careful: at least to count Q_dot_intercooler positively for the cooling water"
+h_3_ideal = enthalpy(fluid$,T=T_su_ref)  "with an ideal exchanger the cycle air would be cooled down to the inlet temperature of the cooling water"
+h_ex_ref_ideal = enthalpy(Water,P=1E5,T=T[2])  "with an ideal exchanger the cooling water would be heated up to the inlet temperature of the air in the intercooler"
+Q_dot_ref_max = -min(abs(m_dot_ref*(h_ex_ref_ideal-h_su_ref)),abs(m_dot_a*(h_3_ideal-h[2])))  "the maximum ideal exchange is limited by one of the two fluids (hence the min function). Even in the ideal case one fluid is limiting: only one of the two can reach its maximum enthalpy (or temperature) change. The absolute values are needed to compare the two sides of the exchanger, otherwise min would always return the negative side. The minus sign is needed because Q_dot_ref_max was defined above as negative, it being applied to the cycle/air side, which loses the energy."
+a_ref = abs(m_dot_ref*(h_ex_ref_ideal-h_su_ref))  "only to show which fluid is limiting"
+a_cycle = abs(m_dot_a*(h_3_ideal-h[2]))  "only to show which fluid is limiting"
+
+"--> a_cycle < a_ref --> the cycle air is the limiting fluid"
+
+s[3] = entropy(fluid$,h=h[3],P=p[3])
+T[3] = temperature(fluid$,h=h[3])
+
+"The temperature and the quality at the outlet of the cooling water can also
+be computed for information:"
+T_ex_ref = temperature(Water,P=1E5,h=h_ex_ref)
+x_ex_ref = quality(Water,P=1E5,h=h_ex_ref)
+  "a temperature at saturation AND a quality between 0 and 1 --> two-phase flow --> there has been a latent exchange"
+"==> using h to define the limiting fluid was therefore justified. Generally a latent exchange increases the heat capacity rate of the fluid, so the fluid that does not change phase is often the limiting one, as is the case here. A very small cooling-water flow rate would have been needed for the water to be limiting."
+
+"Conditions at the exit of the second compressor: station 4"
+p[4] = p[3]*pi_c  "by definition of the pressure ratio"
+s4_is = s[3]
+h4_is = enthalpy(fluid$,s=s4_is,P=p[4])
+eta_is_c = (h4_is-h[3])/(h[4]-h[3])  "isentropic efficiency of the second compressor"
+s[4] = entropy(fluid$,h=h[4],P=p[4])
+T[4] = temperature(fluid$,h=h[4])
+W_dot_c2 = m_dot_a*(h[4]-h[3])  "power required by the second compressor"
+
+"Regenerator, assumed isobaric"
+p[5] = p[4]
+p[10] = p[9]
+
+eta_reg = 0.7  "as in the original, a value intended for a parametric table"
+
+"Instead of using the limiting heat capacity rate m_dot*cp to define the
+efficiency of the heat exchanger, the enthalpies are used. Here there is no
+phase change, but in case of a phase change in the exchanger m_dot*cp could
+no longer be used to find the limiting side.
+
+Link illustrating the thermal efficiency of a heat exchanger:
+http://processs.free.fr/Pages/VersionWeb.php?page=4550"
+
+Q_dot_reg = Q_dot_reg_max*eta_reg  "Q_dot_reg and Q_dot_reg_max are counted positively from 4 to 5 (received by the cycle)"
+Q_dot_reg = m_dot_a*(h[5]-h[4])
+-Q_dot_reg = m_dot_p2*(h[10]-h[9])  "careful: at least to count Q_dot_reg negatively from 9 to 10"
+h_5_ideal = enthalpy(fluid$,T=T[9])  "with an ideal exchanger the cycle air in 5 would be heated up to the entry temperature in 9"
+h_10_ideal = enthalpy(fluid$,T=T[4])  "with an ideal exchanger the cycle air in 10 would be cooled down to the entry temperature in 4"
+Q_dot_reg_max = min(abs(m_dot_p2*(h_10_ideal-h[9])),abs(m_dot_a*(h_5_ideal-h[4])))
+a_4_5 = abs(m_dot_a*(h_5_ideal-h[4]))  "only to show which side is limiting"
+a_9_10 = abs(m_dot_p2*(h_10_ideal-h[9]))  "only to show which side is limiting"
+
+"--> a_4_5 < a_9_10 --> the side 4 to 5 is limiting, which makes sense because the flow rate there is lower"
+
+s[5] = entropy(fluid$,h=h[5],P=p[5])
+s[10] = entropy(fluid$,h=h[10],P=p[10])
+T[5] = temperature(fluid$,h=h[5])
+T[10] = temperature(fluid$,h=h[10])
+
+"Conditions at the exit of the main combustion chamber: station 6"
+T[6] = TET  "the temperature at the turbine inlet is imposed"
+h[6] = enthalpy(fluid$,T=T[6])  "the effect of the composition change of the air across the combustion chamber is neglected: the air remains an ideal gas"
+p[6] = p[5]  "combustion chamber assumed isobaric"
+m_dot_p = m_dot_a+m_dot_f  "combustion products flow rate (air + fuel)"
+m_dot_p*h[6] = m_dot_a*h[5]+eta_b*Q_dot_b  "first law applied to the combustion chamber: only a fraction of the heat ideally released by the combustion is recovered in the combustion products"
+Q_dot_b = PCI*m_dot_f  "heat ideally released by the combustion. The flue gases are not taken into account, so the HHV must not be used (it is not known anyway)"
+s[6] = entropy(fluid$,T=T[6],P=p[6])
+
+"Conditions at the exit of the first turbine: station 7"
+eta_m*W_dot_t1+W_dot_c1+W_dot_c2 = 0  "shaft balance compressor-turbine: the first turbine delivers just enough power to drive the two compressors"
+"everything is counted positively because the chosen convention makes the turbine power negative while the compressor powers are positive"
+
+W_dot_t1 = m_dot_p*(h[7]-h[6])  "power delivered by the turbine"
+"the power balance thus determines the enthalpy drop in the turbine"
+
+eta_is_t = (h[7]-h[6])/(h7_is-h[6])  "isentropic efficiency of the first turbine"
+s7_is = s[6]
+p[7] = pressure(fluid$,h=h7_is,s=s7_is)
+s[7] = entropy(fluid$,h=h[7],P=p[7])
+T[7] = temperature(fluid$,h=h[7])
+
+"second combustion chamber, assumed isobaric"
+p[8] = p[7]
+s[8] = entropy(fluid$,h=h[8],P=p[8])
+T[8] = temperature(fluid$,h=h[8])  "as before, no change of the chemical composition of the air by the fuel addition, only the flow rate (and the temperature) increase"
+
+m_dot_p2 = m_dot_p+m_dot_f2
+Q_dot_b2 = Q_dot_b/3  "value given in the problem statement"
+"m_dot_f2 = 0 neutralises/removes the second combustion chamber: this line has to be activated and the previous one commented out"
+Q_dot_b2 = m_dot_f2*PCI
+m_dot_p2*h[8] = m_dot_p*h[7]+Q_dot_b2*eta_b
+
+"Conditions at the exit of the second turbine: station 9"
+"The power collected in the LP turbine is maximised by expanding the combustion gases as much as possible, i.e. with p_9 = p_10 = p_amb"
+p[9] = p_amb
+eta_is_t = (h[9]-h[8])/(h9_is-h[8])  "isentropic efficiency of the second turbine"
+s9_is = s[8]
+h9_is = enthalpy(fluid$,P=p[9],s=s9_is)
+s[9] = entropy(fluid$,h=h[9],P=p[9])
+T[9] = temperature(fluid$,h=h[9])
+
+W_dot_t2 = m_dot_p2*(h[9]-h[8])  "power delivered by the LP turbine --> negative by convention"
+W_dot_t2+W_dot_alt = 0  "shaft balance turbine-alternator: the LP turbine delivers its power to the alternator. No transmission efficiency is mentioned"
+W_dot_el = W_dot_alt*eta_alt  "power recovered at the alternator outlet = a fraction of the power delivered by the turbine"
+
+"Overall efficiency of the machine"
+eta_tg = W_dot_el/(Q_dot_b+Q_dot_b2)
+"The efficiency of the cycle (and the power) increase further with the presence of the regenerator (and of the second combustion chamber)"

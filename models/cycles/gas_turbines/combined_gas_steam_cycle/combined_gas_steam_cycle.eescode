@@ -1,0 +1,110 @@
+{=============================================================================
+  Combined gas-steam cycle (Brayton topping cycle + Rankine bottoming cycle)
+  CoolSolve Library model CSL-0052
+ -----------------------------------------------------------------------------
+  Exercise of the ULiege course "Thermodynamique appliquee" (2022-2023),
+  repetition 7, exercise 5. The upper cycle is a gas turbine (Brayton) cycle
+  whose exhaust gases heat the steam of a simple Rankine cycle in a heat
+  exchanger (combined gas-steam cycle). The model computes the steam-to-gas
+  flow ratio in the heat exchanger and the thermal efficiency of the combined
+  cycle.
+
+  The gas cycle is on air, assumed to be a perfect gas (as in the original,
+  which used the EES humid-air pseudo-fluid "Air_ha" with no humidity, i.e. dry
+  air); the steam cycle is on water. All the components are analysed as
+  isobaric or as isentropic machines, with a constant isentropic efficiency;
+  no pressure loss, no combustion chemistry and no flow rate are given by the
+  statement. The steam-to-gas flow ratio is obtained from the energy balance of
+  the heat exchanger and the cycle efficiency from the sum of the machine
+  powers over the heat released by the topping cycle.
+
+  Inputs : T_TGV[1], T_TGV[3], T_TGV[5], eta_is_cp, eta_is_turb,
+           P_TGV[1], P_TGV[2]/P_TGV[1], P[2], P[4], T[3], x[1]
+  Outputs: Ratio_ORC_TGV (steam flow rate / gas flow rate), n_th (thermal
+           efficiency of the combined cycle)
+  Units  : SI - temperatures in degC, pressures in Pa, energies in J
+           (converted by hand from K/kPa/kJ, original values kept in comments)
+  Source : ULiege course "Thermodynamique appliquee", 2022-2023, repetition 7,
+           exercise 5 (EES file R07_E05_2022.EES) - see README.md
+=============================================================================}
+
+"Data"
+T_TGV[1] = 26.85 [C]    "air inlet temperature of the gas cycle (300 K in the original)"
+T_TGV[3] = 1026.85 [C]  "air inlet temperature of the gas turbine (1300 K in the original)"
+T_TGV[5] = 176.85 [C]   "exhaust gas temperature at the outlet of the heat exchanger (450 K in the original)"
+eta_is_cp = 0.8         "isentropic efficiency of the gas compressor [-]"
+eta_is_turb = 0.85      "isentropic efficiency of the gas turbine [-]"
+P_TGV[1] = 1E5 [Pa]     "ambient pressure, as in the original the Brayton cycle takes in and rejects air at ambient pressure (100 kPa in the original)"
+P_TGV[2]/P_TGV[1] = 8   "compressor pressure ratio of the Brayton cycle [-]"
+P[2] = 7E6 [Pa]         "steam pressure at the turbine inlet of the Rankine cycle (7000 kPa in the original)"
+P[4] = 5E3 [Pa]         "condenser pressure of the Rankine cycle (5 kPa in the original)"
+T[3] = 500 [C]          "steam temperature at the turbine inlet of the Rankine cycle (773.15 K, i.e. 500 C, in the original)"
+x[1] = 0                "assumption of the original, in the absence of data: saturated liquid at the pump inlet, which the T-s diagram of the statement confirms"
+
+"!Pressures"
+P_TGV[5] = P_TGV[1]     "exhaust gas rejected at ambient pressure"
+P_TGV[5] = P_TGV[4]     "heat exchanger: isobaric"
+P_TGV[3] = P_TGV[2]     "boiler: isobaric"
+P[2] = P[3]             "heat exchanger: isobaric"
+P[4] = P[1]             "condenser: isobaric (as in the original)"
+
+"!1: gas turbine cycle (TGV)"
+"Stations: 1 compressor inlet, 2 compressor outlet, 3 turbine inlet,
+ 4 turbine outlet, 5 outlet of the heat exchanger (exhaust gases)."
+s_TGV[1] = entropy(Air,T=T_TGV[1],P=P_TGV[1])
+h_TGV[1] = enthalpy(Air,T=T_TGV[1],P=P_TGV[1])
+h_TGV_2_is = enthalpy(Air,s=s_TGV[1],P=P_TGV[2])   "isentropic compressor outlet state"
+eta_is_cp = (h_TGV_2_is-h_TGV[1])/(h_TGV[2]-h_TGV[1])   "by definition, as in the original"
+s_TGV[3] = entropy(Air,T=T_TGV[3],P=P_TGV[3])
+h_TGV[3] = enthalpy(Air,T=T_TGV[3],P=P_TGV[3])
+h_TGV_4_is = enthalpy(Air,s=s_TGV[3],P=P_TGV[4])   "isentropic turbine outlet state"
+eta_is_turb = (h_TGV[4]-h_TGV[3])/(h_TGV_4_is-h_TGV[3])   "by definition, as in the original"
+T_TGV[4] = temperature(Air,h=h_TGV[4],P=P_TGV[4])
+h_TGV[5] = enthalpy(Air,T=T_TGV[5],P=P_TGV[5])
+
+"!2: steam cycle"
+"Stations: 1 pump inlet, 2 pump outlet, 3 turbine inlet, 4 turbine outlet.
+ The cycle is walked through from the turbine inlet, where the most
+ information is available, as in the original."
+h[3] = enthalpy(Water,T=T[3],P=P[3])
+s[3] = entropy(Water,T=T[3],P=P[3])
+s[4] = s[3]   "isentropic turbine, as in the statement"
+h[4] = enthalpy(Water,s=s[4],P=P[4])
+h[1] = enthalpy(Water,x=x[1],P=P[1])
+s[1] = entropy(Water,x=x[1],P=P[1])
+s[2] = s[1]   "isentropic pump, as in the statement"
+h[2] = enthalpy(Water,s=s[2],P=P[2])
+
+"!Steam-to-gas flow ratio in the heat exchanger"
+"The statement gives neither a flow rate nor a power, but the ratio of the
+ flow rates follows from the enthalpies: in the heat exchanger,
+ m_dot_TGV*(h_TGV[5]-h_TGV[4]) = m_dot_ORC*(h[3]-h[2])"
+Ratio_ORC_TGV = abs((h_TGV[5]-h_TGV[4])/(h[3]-h[2]))   "steam flow rate / gas flow rate [-]"
+
+"!Thermal efficiency of the combined cycle"
+"Thermal efficiency = useful effect / costly effect. The costly effect is the
+ heat released by the topping cycle, Q_TGV_2_3 = m_dot_TGV*(h_TGV[3]-h_TGV[2]).
+ The useful effect is the sum of the two turbine powers and of the two
+ machine powers absorbed (compressor and pump):
+ m_dot_TGV*(h_TGV[4]-h_TGV[3]) + m_dot_TGV*(h_TGV[2]-h_TGV[1])
+ + m_dot_ORC*(h[4]-h[3]) + m_dot_ORC*(h[2]-h[1]).
+ The flow rates are linked by Ratio_ORC_TGV = m_dot_ORC/m_dot_TGV, so the
+ common m_dot_TGV is simplified and the efficiency is computable without any
+ flow rate, as in the original."
+n_th = abs((h_TGV[4]-h_TGV[3] + h_TGV[2]-h_TGV[1])+Ratio_ORC_TGV*(h[4]-h[3] + h[2]-h[1]))/(h_TGV[3]-h_TGV[2])   "thermal efficiency of the combined cycle [-]"
+
+{State points of the two cycles, for the thermodynamic diagrams. The gas
+ cycle: stations 1 (compressor inlet) to 5 (heat-exchanger outlet) in the
+ arrays P_TGV[i], T_TGV[i], h_TGV[i], s_TGV[i]; the steam cycle: stations 1
+ (pump inlet) to 4 (turbine outlet) in the arrays P[i], T[i], h[i], s[i],
+ x[i]. Only the steam cycle can be plotted as a diagram in CoolSolve
+ (the working fluid of the gas cycle is an ideal gas,
+ CS-FEAT-DIAGRAM-IDEAL); the missing gas state points are computed here.}
+T_TGV[2] = temperature(Air,h=h_TGV[2],P=P_TGV[2])
+s_TGV[2] = entropy(Air,h=h_TGV[2],P=P_TGV[2])
+s_TGV[4] = entropy(Air,h=h_TGV[4],P=P_TGV[4])
+s_TGV[5] = entropy(Air,T=T_TGV[5],P=P_TGV[5])
+T[1] = temperature(Water,s=s[1],P=P[1])
+T[2] = temperature(Water,h=h[2],P=P[2])
+T[4] = temperature(Water,h=h[4],P=P[4])
+x[4] = quality(Water,h=h[4],P=P[4])

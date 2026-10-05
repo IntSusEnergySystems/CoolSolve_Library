@@ -1,0 +1,91 @@
+{=============================================================================
+  Steam turbine exergy balance
+  CoolSolve Library model CSL-0045
+ -----------------------------------------------------------------------------
+  Exergy (second law) analysis of a steam turbine, as in the original problem
+  statement: steam enters a turbine at 3 MPa and 450 C at 8 kg/s and leaves it
+  at 0.2 MPa and 150 C, losing 300 kW to an ambient at 100 kPa and 25 C.
+  Changes of potential and kinetic energy are neglected.
+
+  The model computes the actual turbine power from the first law, the maximum
+  (reversible) power from an exergy balance on the extended control volume
+  (turbine + immediate environment), the second law efficiency, the exergy
+  destruction and the specific flow exergy at the turbine inlet.
+
+  Sign convention as in the original: a power delivered by the turbine is
+  negative, so W_dot_t and W_dot_rev are negative and the exergy destruction
+  X_dot_destroyed = W_dot_rev - W_dot_t is negative; the destroyed exergy and
+  the delivered powers are the absolute values of these variables.
+
+  Inputs : p_1, T_1, p_2, T_2, p_0, T_0, Q_dot_loss, m_dot
+  Outputs: W_dot_t, W_dot_rev, eta_II, X_dot_destroyed, phi_1, phi_2
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : ULiege course Thermodynamique appliquee (MECA0002), repetition
+           session 10, exercise 2 (2022-2023) - see README.md
+=============================================================================}
+
+"!Problem statement (English paraphrase of the original French statement)"
+"Steam enters a turbine at 3 MPa and 450 C with a mass flow rate of 8 kg/s. At the outlet the conditions are
+ 0.2 MPa and 150 C. The steam loses 300 kW of heat to the ambient, which is at 100 kPa and 25 C. The changes of
+ potential and kinetic energy are neglected. Determine (a) the actual power delivered by the turbine, (b) the maximum
+ possible power, (c) the second law efficiency of the turbine, (d) the exergy destruction, (e) the specific exergy of
+ the steam at the inlet conditions."
+
+"!Inputs"
+p_1 = 3E6 [Pa]  "steam inlet pressure [Pa]"
+T_1 = 450 [C]  "steam inlet temperature [C] (723.15 K in the original)"
+p_2 = 2E5 [Pa]  "steam outlet pressure [Pa] (0.2E6 Pa in the original)"
+T_2 = 150 [C]  "steam outlet temperature [C] (423.15 K in the original)"
+p_0 = 1E5 [Pa]  "ambient pressure [Pa]"
+T_0 = 25 [C]  "ambient temperature [C] (298.15 K in the original)"
+Q_dot_loss = -300E3 [W]  "heat loss rate [W], negative because it is lost by the system"
+m_dot = 8 [kg/s]  "steam mass flow rate [kg/s]"
+
+"!Properties at the two states of the turbine and at the ambient state"
+"The system is at steady state, so there is no variation of mass, energy or exergy of the system. The turbine is the
+ control volume, with one inlet and one outlet. The properties (h and s) at the inlet, at the outlet and at the
+ reference state can be computed:"
+h_1 = enthalpy(Water,P=p_1,T=T_1)  "specific enthalpy at the turbine inlet [J/kg]"
+s_1 = entropy(Water,P=p_1,T=T_1)  "specific entropy at the turbine inlet [J/(kg*K)]"
+h_2 = enthalpy(Water,P=p_2,T=T_2)  "specific enthalpy at the turbine outlet [J/kg]"
+s_2 = entropy(Water,P=p_2,T=T_2)  "specific entropy at the turbine outlet [J/(kg*K)]"
+h_0 = enthalpy(Water,P=p_0,T=T_0)  "specific enthalpy at the ambient state [J/kg]"
+s_0 = entropy(Water,P=p_0,T=T_0)  "specific entropy at the ambient state [J/(kg*K)]"
+
+"!Actual power: first law applied to the control volume"
+W_dot_t = m_dot*(h_2-h_1) - Q_dot_loss  "turbine power [W], negative because it is delivered by the system"
+
+"!Maximum (reversible) power: exergy balance on the extended control volume, i.e. the turbine and the immediate
+ environment. X_dot_in - X_dot_out - X_dot_destroyed = dX_system/dt. The system is at steady state, so
+ dX_system/dt = 0, and a reversible transformation is computed, so X_dot_destroyed = 0. The outgoing exergy is made
+ of the term related to the outlet flow and of the reversible power produced. As the extended system is considered,
+ the heat transfer with the ambient takes place at the temperature of the ambient, so no exergy is associated with
+ it. The incoming exergy is only the term related to the mass flow rate: m_dot*phi_1 = W_dot_rev + m_dot*phi_2. The
+ specific exergies of the two flows have to be computed."
+T_0_K = T_0 + 273.15 [K]  "absolute ambient temperature, used in the exergy terms [K]"
+phi_1 = (h_1-h_0) - T_0_K*(s_1-s_0)  "specific exergy of the inlet flow [J/kg]; the reference state 0 is not needed here since phi_1-phi_2 is used (the reference state cancels out for h_0 and s_0, but the reference temperature T_0 always has an influence)"
+phi_2 = (h_2-h_0) - T_0_K*(s_2-s_0)  "specific exergy of the outlet flow [J/kg]"
+W_dot_rev = m_dot*(phi_2-phi_1)  "reversible power [W], found in the course as the exergy balance of an adiabatic open system. If the 300 kW had been useful (cogeneration), the extended system would not have been considered and Q_dot_loss would have been taken into account here too. The extended (adiabatic) system is used to compute the maximum reversible work, because an ideal transformation is considered as the reference scale against which the real transformation is compared."
+
+"!Second law efficiency and exergy destruction"
+eta_II = W_dot_t/W_dot_rev  "second law efficiency of the turbine [-]"
+"Note as in the original: the alternative eta_II_bis = (h_1-h_2)/(phi_1-phi_2) would have been correct if the real
+ system were really adiabatic, i.e. if Q_dot_loss = 0."
+X_dot_destroyed = W_dot_rev-W_dot_t  "exergy destruction rate [W], the difference between the maximum recoverable power and the recovered power"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: turbine inlet, 2: turbine outlet, 3: outlet of the reversible adiabatic expansion of the inlet state to p_2
+ (isentropic state, added for the diagram only, not part of the original equations). Overlay the arrays h[i]/P[i]
+ or T[i]/s[i] in the CoolSolve Diagram tab ("Overlay array path").}
+P[1] = p_1
+h[1] = h_1
+T[1] = T_1
+s[1] = s_1
+P[2] = p_2
+h[2] = h_2
+T[2] = T_2
+s[2] = s_2
+P[3] = p_2
+h[3] = enthalpy(Water,P=p_2,s=s_1)
+T[3] = TEMPERATURE(Water,P=p_2,h=h[3])
+s[3] = s_1

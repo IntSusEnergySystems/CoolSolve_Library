@@ -1,0 +1,49 @@
+{=============================================================================
+  Rigid tank with a liquid-vapour water mixture
+  CoolSolve Library model CSL-0044
+  -----------------------------------------------------------------------------
+  A 1 m^3 rigid vessel contains 4 kg of water as a liquid-vapour equilibrium
+  mixture at a given pressure (6 bar). The model computes:
+    a. the masses of liquid and vapour (through the quality of the mixture);
+    b. the volumes occupied by the liquid and by the vapour.
+  Classic introductory exercise on saturation properties of Water.
+
+  Inputs : Vol (tank volume), m (mass of water), p (pressure)
+  Outputs: x (quality), m_l, m_v, Vol_l, Vol_v, v_l, v_v, T
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course "Thermodynamique appliquée" (MECA0002), repetition 1,
+           exercise 1 (EES file R1_E1_2022.EES) - see README.md
+=============================================================================}
+
+"!Data"
+Vol = 1.0 [m^3]                  "tank volume [m^3]"
+m = 4.0 [kg]                     "total mass of water [kg]"
+p = 600E3 [Pa]                   "600 kPa in the original [Pa]"
+
+"!a. Masses of liquid and vapour"
+
+Vol = Vol_v + Vol_l              "the volume is shared between liquid and vapour"
+m = m_v + m_l                    "likewise the mass splits into a liquid part and a vapour part"
+
+{The link between mass and volume is the specific volume, read from the
+saturation tables of Water.}
+
+v_avg = Vol/m                    "average specific volume of the mixture [m^3/kg]"
+
+x = QUALITY(Water, v=v_avg, P=p) "quality of the mixture [-]"
+
+m_v = x*m                        "vapour mass; m_l follows from m = m_v + m_l (no separate
+                                  equation needed, as in the original) [kg]"
+
+"!b. Volumes of liquid and vapour"
+
+Vol_l = v_l*m_l                  "liquid volume [m^3]"
+
+{The equation Vol_v = v_v*m_v is not needed, as in the original: Vol_v already
+ follows from Vol = Vol_v + Vol_l.}
+
+v_l = VOLUME(Water, x=0, P=p)    "specific volume of saturated liquid [m^3/kg]"
+v_v = VOLUME(Water, x=1, P=p)    "specific volume of saturated vapour [m^3/kg]"
+
+"!For information"
+T = T_SAT(Water, P=p)            "saturation temperature of water at p [°C]"

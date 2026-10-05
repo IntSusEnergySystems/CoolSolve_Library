@@ -1,0 +1,71 @@
+{=============================================================================
+  Cooling tower for the condenser water of a steam power plant
+  CoolSolve Library model CSL-0065
+ -----------------------------------------------------------------------------
+  Exercise: water from the power-plant condenser enters a cooling tower at
+  65 °C and returns to the condenser at 30 °C. Ambient air enters the tower
+  at 15 °C with 55 % relative humidity and leaves saturated at 35 °C. The
+  make-up water is added at 14 °C at ambient pressure of 1 bar. The model
+  computes the air volume flow rate through the tower, the make-up water
+  flow rate and (bonus) the heat rate given up by the condenser.
+
+  Inputs : p, T_w_su, m_dot_w_su, T_w_ex, T_a_su, phi_a_su, T_a_ex, phi_a_ex, T_w_add
+  Outputs: V_dot_a_su, m_dot_add, Q_dot_cd (and the intermediate states)
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course "Thermodynamique appliquée", repetition session R9,
+           exercise 4, 2022-2023 (EES file R09_E04_2022.EES) - see README.md
+=============================================================================}
+
+"Data"
+fluid$ = 'AirH2O'                "humid air (real-fluid properties)"
+p = 100E3                        "ambient pressure [Pa] (100 kPa in the original)"
+
+T_w_su = 65                      "water temperature coming from the condenser [°C]"
+m_dot_w_su = 2.78                "mass flow rate of water coming from the condenser [kg/s]"
+
+T_w_ex = 30                      "water temperature returning to the condenser [°C]"
+
+T_a_su = 15                      "air temperature at the tower inlet [°C]"
+phi_a_su = 55/100                "relative humidity of the air at the tower inlet [-]"
+
+T_a_ex = 35                      "air temperature at the tower outlet [°C]"
+phi_a_ex = 1                     "relative humidity of the air at the tower outlet [-]"
+
+T_w_add = 14                     "make-up water temperature [°C]"
+
+"!Solution"
+"Water mass balance (tower control volume)"
+m_dot_a_ex * w_ex + m_dot_w_ex = m_dot_a_su * w_su + m_dot_add + m_dot_w_su
+{m_dot_a_ex: air leaving at the top of the tower; m_dot_w_ex: water going back
+ to the power-plant condenser, from the mixing of the make-up water m_dot_add
+ and the water collected at the bottom of the tower; m_dot_a_su: air entering
+ at the bottom of the tower; m_dot_w_su: water leaving the condenser and
+ entering the sprays of the tower (as in the original).}
+
+m_dot_w_ex = m_dot_w_su          "the flow through the condenser must remain constant"
+w_su = humrat(fluid$, P=p, T=T_a_su, R=phi_a_su)   "inlet air humidity ratio [kg_w/kg_da]"
+w_ex = humrat(fluid$, P=p, T=T_a_ex, R=phi_a_ex)   "outlet air humidity ratio [kg_w/kg_da]"
+
+"Dry-air mass balance"
+m_dot_a_ex = m_dot_a_su          "at steady state, all the dry air entering the tower leaves it"
+
+"Energy balance on the control volume enclosing the tower"
+0 = m_dot_w_su*h_w_su + m_dot_a_su*h_a_su + m_dot_add*h_add - m_dot_w_ex*h_w_ex - m_dot_a_ex*h_a_ex
+{works because the enthalpy reference scales used for humid air and for water
+ are consistent (as in the original); would not hold as such with dry air -
+ see exercise 5 of the session (as in the original).}
+
+h_w_su = enthalpy(Water, T=T_w_su, P=120E3)   "condenser water inlet [J/kg] (120 kPa in the original)"
+h_w_ex = enthalpy(Water, T=T_w_ex, P=120E3)   "condenser water outlet [J/kg] (120 kPa in the original)"
+
+h_a_su = enthalpy(fluid$, P=p, T=T_a_su, R=phi_a_su)   "inlet moist air specific enthalpy [J/kg_dry_air]"
+h_a_ex = enthalpy(fluid$, P=p, T=T_a_ex, R=phi_a_ex)   "outlet moist air specific enthalpy [J/kg_dry_air]"
+
+h_add = enthalpy(Water, T=T_w_add, P=120E3)   "make-up water [J/kg] (120 kPa in the original)"
+
+"Air volume flow rate at the tower inlet conditions"
+V_dot_a_su = m_dot_a_su*v_a_su*3600           "air volume flow rate [m^3/h] (3600 s/h)"
+v_a_su = volume(fluid$, P=p, T=T_a_su, R=phi_a_su)   "inlet air specific volume [m^3/kg_dry_air]"
+
+"Bonus: heat rate given up by the condenser"
+Q_dot_cd = m_dot_w_su*(h_w_ex - h_w_su)       "heat rate transferred to the tower water [W]"

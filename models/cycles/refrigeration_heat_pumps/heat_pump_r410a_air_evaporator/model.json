@@ -1,0 +1,62 @@
+{
+  "id": "CSL-0054",
+  "name": "heat_pump_r410a_air_evaporator",
+  "title": "Air-source heat pump with R410A (evaporator air side)",
+  "summary": "Air-to-water heat pump on R410A with evaporator pressure drop: refrigerant flow from the condenser heat balance on the water side, evaporator air flow for a 15 K air cooling, overall COP and compressor isentropic efficiency; zeotropic temperature evaluation under the dome.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "heat_pump_r410a_air_evaporator.eescode",
+  "fluids": [
+    "R410A"
+  ],
+  "tags": [
+    "heat pump",
+    "refrigeration",
+    "air source",
+    "zeotropic fluid",
+    "evaporator pressure drop",
+    "exercise"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 41,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R8/R08_E02_2022.EES",
+    "candidate_id": "TM-0449",
+    "authors": [
+      "TBD (ULiège course MECA0002, Thermodynamique appliquée)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège MECA0002), repetition 8, exercise 2, 2022-2023"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (--ees-units) and the companion CoolProp Python solution of the same exercise (R8/old/ThAp20_R08E02.py, N. Paulus)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.00171,
+    "notes": "40 common variables, 3 differ (rtol=0.001): T[4] 1.71e-03 relative = 1.3e-5 °C absolute (near-zero denominator, EES vs CoolProp R410A properties; CoolSolve matches the CoolProp companion script exactly); x_2/x_3 quality convention (EES ±100 outside the dome, CoolSolve 0), CS-GAP-QUALITY-DOME, not blocking. Companion CoolProp script: all main results within 4e-6 relative."
+  },
+  "missing_features": [],
+  "related": ["CSL-0001", "CSL-0013", "CSL-0015", "CSL-0061"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (card C-57, batch B-05, Phase 3B)",
+      "by": "worker (opencode agent) for S. Quoilin"
+    }
+  ]
+}

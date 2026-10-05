@@ -1,0 +1,71 @@
+{
+  "id": "CSL-0058",
+  "name": "diesel_engine_excess_air_exhaust_analysis",
+  "title": "Diesel engine: excess air and useful power from exhaust-gas analysis",
+  "summary": "Combustion of diesel fuel (CH_n, n fitted from C/H mass fractions) with excess air; the excess air follows from the fuel-air ratio and the useful power from the five-box energy balance of the course, with the products brought to the exhaust temperature of 432 °C.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "diesel_engine_excess_air_exhaust_analysis.eescode",
+  "fluids": [
+    "Air",
+    "CO",
+    "CarbonDioxide",
+    "Water",
+    "Nitrogen",
+    "Oxygen"
+  ],
+  "tags": [
+    "combustion",
+    "diesel engine",
+    "exhaust gas analysis",
+    "excess air",
+    "fuel-air ratio",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 58,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R11/R11_E03_2022.EES",
+    "candidate_id": "TM-0395",
+    "authors": [
+      "TBD (ULiège, MECA0002 Thermodynamique appliquée, course of S. Quoilin)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège MECA0002), repetition 11 (combustion), exercise 3"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (58 variables, --ees-units) and the Python/CoolProp solution of the same exercise in the collection (2018-2019 repetition folder); the comparison concerns the runnable variant diesel_engine_excess_air_exhaust_analysis_coolsolve.eescode, the native file being blocked",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 1.2,
+    "notes": "Native file: 'Unknown fluid: CarbonMonoxide' (CS-GAP-FLUIDS-ALIAS), square system otherwise (58/58). Variant vs EES: 9 of 58 variables differ above rtol=0.001: absolute enthalpies on different reference states (EES real-fluid anchors vs CoolProp; real-fluid CarbonMonoxide vs ideal-gas CO; air_ha vs Air) and q_O2 at 1.78e-03 (real-fluid O2, within the 0.5 % EES-vs-CoolProp tolerance). All differences and derived results agree: e, lambda, far, Q_dot_utile within 5e-06 to 8e-05. Python/CoolProp prints e = 89.4 %, lambda = 189.4 %, Q_dot_utile = -106.9 kW, as the variant."
+  },
+  "missing_features": ["CS-GAP-FLUIDS-ALIAS"],
+  "related": ["CSL-0046", "CSL-0005"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (C-62, T-IMPORT TM-0395/DG-0096)",
+      "by": "GLM (Coding Plan) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-05",
+      "action": "correction (orchestrator review): CarbonMonoxide (EES real fluid) restored in the native file, status blocked by CS-GAP-FLUIDS-ALIAS; the CO version shipped as the runnable _coolsolve variant",
+      "by": "GLM (Coding Plan) for S. Quoilin"
+    }
+  ]
+}

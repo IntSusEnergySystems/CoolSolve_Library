@@ -1,0 +1,63 @@
+{
+  "id": "CSL-0065",
+  "name": "cooling_tower_condenser_water",
+  "title": "Cooling tower for the condenser water of a steam power plant",
+  "summary": "Level-1 mass (dry air, water) and energy balances of a direct-contact cooling tower cooling condenser water from 65 °C to 30 °C with ambient air: air volume flow rate, make-up water flow rate and condenser heat rate.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "cooling_tower_condenser_water.eescode",
+  "fluids": [
+    "AirH2O",
+    "Water"
+  ],
+  "tags": [
+    "cooling tower",
+    "evaporative",
+    "make-up water",
+    "condenser water",
+    "psychrometrics",
+    "exercise"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 24,
+    "largest_block": 3
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R9/R09_E04_2022.EES",
+    "candidate_id": "TM-0454",
+    "authors": [
+      "TBD (ULiège course Thermodynamique appliquée, S. Quoilin; repetition assistants N. Paulus and B. Dechesne per companion metadata)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège MECA0002), 2022-2023, repetition session R9, exercise 4"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file; the four asked-for unknowns are stored there as default guesses (file saved unsolved) and were verified by recomputation from the EES stored properties",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.00598,
+    "notes": "23 common variables, 8 differ (rtol=0.001); largest 5.98e-03 on w_ex (EES 10 vs CoolProp AirH2O humid-air backend, near saturation at 35 C; w_su/w_ex/h_a_su/h_a_ex within 0.3-0.6 %). Stored values 1 for m_dot_a_su/m_dot_a_ex/m_dot_add/V_dot_a_su are EES default guesses, not solution values: recomputed by hand from the stored EES properties, CoolSolve agrees within 0.40 %. Inputs, water enthalpies and Q_dot_cd exact. kPa/kJ converted by hand."
+  },
+  "missing_features": [],
+  "related": ["CSL-0030"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-69, batch B-05)",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    }
+  ]
+}

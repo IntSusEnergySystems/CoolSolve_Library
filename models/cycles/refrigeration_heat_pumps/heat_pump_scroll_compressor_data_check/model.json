@@ -1,0 +1,70 @@
+{
+  "id": "CSL-0068",
+  "name": "heat_pump_scroll_compressor_data_check",
+  "title": "Scroll-compressor heat pump on R407C: data consistency check",
+  "summary": "Vapour-compression heat-pump operating point on R407C rebuilt from the capacities and powers announced by a scroll-compressor manufacturer: mass flow rate, swept volume, compressor duties, isentropic efficiency of the compressor and global isentropic efficiency of the machine, compared with the announced data.",
+  "kind": "steady",
+  "level": 1,
+  "status": "blocked",
+  "main_file": "heat_pump_scroll_compressor_data_check.eescode",
+  "fluids": [
+    "R407C"
+  ],
+  "tags": [
+    "refrigeration",
+    "heat pump",
+    "scroll compressor",
+    "data consistency check",
+    "isentropic efficiency",
+    "volumetric efficiency",
+    "zeotropic blend",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "arrays"
+  ],
+  "stats": {"n_equations": 46, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/refrigeration3.eescode",
+    "candidate_id": "CSX-040",
+    "authors": [
+      "Vincent Lemort (ULiège Thermodynamics Laboratory, original exercise)",
+      "S. Quoilin (CoolSolve example)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.210",
+    "language": "fr",
+    "course": "ULiège, \"Machines et systèmes thermiques\", repetition session 8, exercise 5 (header VL050415, 2005-04-15)"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file (CoolSolve misc/EES_ok.zip, EES_ok/refrigeration3.EES, EES X7.210), read from its solution report EES_ok/refrigeration3.tex; for the _coolsolve variant, whose native file is blocked by CS-GAP-PROP-TH",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.0036,
+    "notes": "30 common variables, 1 differ (rtol=1e-3): P_4 (3.6e-3), a (T,H) inversion in EES vs a (P,H) inversion in the variant, inside the saturation dome. The 29 other variables agree within 9.7e-4 (rho_1). The 17 variables only in CoolSolve are the P[i]/h[i]/T[i]/s[i] array elements (T[i], s[i] added on import) and the auxiliary T_4 of the variant. The decoded binary variable records of the EES file are stale (CS-BUG-EXTRACT-STALE), so the .tex solution report is used as the reference. No unit conversion needed (SI-C-Pa-J)."
+  },
+  "missing_features": [
+    "CS-GAP-PROP-TH"
+  ],
+  "related": [
+    "CSL-0001",
+    "CSL-0015",
+    "CSL-0025",
+    "CSL-0061"
+  ],
+  "related_external": [
+    "CoolSolve examples/refrigeration3.eescode (same exercise, kept in CoolSolve as a test case; its state-4 line equates an enthalpy with a pressure and is superseded by the original here)",
+    "CoolSolve misc/EES_ok.zip: EES_ok/refrigeration3.EES (original French EES file, stored solution) and EES_ok/refrigeration3.tex (EES solution report used as verification reference)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-040"
+  ],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-05", "action": "added (roadmap card C-72, batch B-02), status blocked, runnable _coolsolve variant verified", "by": "opencode worker for S. Quoilin"}
+  ]
+}

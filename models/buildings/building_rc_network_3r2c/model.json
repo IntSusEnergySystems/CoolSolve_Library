@@ -1,0 +1,70 @@
+{
+  "id": "CSL-0042",
+  "name": "building_rc_network_3r2c",
+  "title": "3R2C building thermal network with weather lookup",
+  "summary": "Single-zone building thermal network with three thermal capacitances (indoor air, opaque facade, internal masonry walls) coupled through thermal resistances, integrated over one week of July weather read from a lookup table; ventilation is the only heat sink (free-running zone).",
+  "kind": "dynamic",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "building_rc_network_3r2c.eescode",
+  "fluids": [],
+  "tags": [
+    "building",
+    "thermal network",
+    "3R2C",
+    "lumped capacitance",
+    "transient",
+    "free-running",
+    "weather file",
+    "ventilation",
+    "exercise"
+  ],
+  "language_features": [
+    "INTEGRAL",
+    "$IntegralTable",
+    "lookup tables",
+    "functions"
+  ],
+  "stats": {
+    "n_equations": 55,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/building_rc_network.eescode",
+    "candidate_id": "CSX-006",
+    "authors": [
+      "S. Quoilin (ULiège Thermodynamics Laboratory)",
+      "TBD (author of the original EES model of the CLIM R06 repetition exercise 2)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "CLIM (Climatisation, University of Liège), repetition exercise 2"
+  },
+  "verification": {
+    "reference": "no EES stored solution exists (the model is not in CoolSolve misc/EES_ok.zip and no file of ~/Nextcloud/thermo_models uses this system); the runnable variant building_rc_network_3r2c_coolsolve.eescode was verified (1) against INTERPOLATE of the shipped weather table itself (24 sampled points, 19 differences exactly 0, max 1.07e-14 °C = double round-off) and (2) against an independent RK4 integration of the same equations (h = 15 s): max 0.0081 K on T_in (at tau = 0 s, where CoolSolve reports the initial condition exactly), 0.0002 K on T_c_wall and T_c_in",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.00092,
+    "notes": "max_rel_diff is the largest relative deviation of the CoolSolve trajectory from the independent RK4 reference after linear interpolation of the 600 s output rows; it comes from the output-interval interpolation, not from the model (the RK4 reference converges to 9.21e-4 from h = 300 s to h = 15 s). In absolute terms the two trajectories agree to 0.0081 K on T_in and 0.0002 K on both wall temperatures."
+  },
+  "missing_features": [
+    "CS-GAP-INTEGRAL-LOOKUP"
+  ],
+  "related": ["CSL-0012"],
+  "related_external": [
+    "CoolSolve examples/building_rc_network.eescode (source of the import; stays in the CoolSolve repository)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-44; native file blocked by CS-GAP-INTEGRAL-LOOKUP, verified runnable _coolsolve variant)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

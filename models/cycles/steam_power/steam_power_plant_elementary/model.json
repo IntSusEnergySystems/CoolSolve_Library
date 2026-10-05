@@ -1,0 +1,67 @@
+{
+  "id": "CSL-0053",
+  "name": "steam_power_plant_elementary",
+  "title": "Elementary steam power plant (component balances)",
+  "summary": "Steam power plant analysed component by component (pump, economiser, steam generator, turbine, condenser) from seven given state points with pressure drops, a thermal loss and significant kinetic energies: turbine power, component heat rates, cooling-water flow rate and overall cycle efficiency.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "steam_power_plant_elementary.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "rankine",
+    "steam cycle",
+    "power plant",
+    "turbine",
+    "pump",
+    "condenser",
+    "economiser",
+    "steam generator",
+    "kinetic energy",
+    "cooling water",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 88,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R3/R3_E6_2022.EES",
+    "candidate_id": "TM-0416",
+    "authors": [
+      "TBD (ULiège course MECA0002 — Thermodynamique appliquée, session R3 2022-2023; companion session sheet lists S. Quoilin and the repetiteurs N. Paulus, B. Dechesne)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège MECA0002), exercise session R3 2022-2023, exercise 6 (2017 version refers to textbook exercise 5.51)"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (compare_solution.py --ees-units)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 7.87e-06,
+    "notes": "All 74 common variables agree, 0 differ at rtol=0.001; largest rel. diff 7.87e-06 on rho_6. EES-only leftovers P, q_m hold no equation; CoolSolve-only variables are the added T[i]/s[i] diagram arrays."
+  },
+  "missing_features": [],
+  "related": ["CSL-0004"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (card C-56, batch B-05)",
+      "by": "GLM (opencode) for S. Quoilin"
+    }
+  ]
+}

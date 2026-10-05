@@ -1,0 +1,138 @@
+{=============================================================================
+  3R2C building thermal network with weather lookup
+  CoolSolve Library model CSL-0042 - runnable variant (see README.md)
+-----------------------------------------------------------------------------
+  Single-zone building thermal network with three thermal capacitances
+  (indoor air, opaque facade, internal masonry walls) coupled through
+  thermal resistances, integrated over one week (168 h) of July weather.
+  Ventilation provides the only cooling (no active HVAC), as in the original.
+
+  This variant replaces the three INTERPOLATE calls of the native file
+  building_rc_network_3r2c.eescode by an exact piecewise-linear
+  reconstruction of the same 169 rows of the weather table (see README.md
+  conversion log); CoolSolve does not provide the lookup store inside the
+  INTEGRAL time march (CS-GAP-INTEGRAL-LOOKUP). Every equation, variable
+  name and constant of the native file is otherwise unchanged, and the
+  reconstruction returns exactly the tabulated values at the knots and the
+  same linear interpolation in between (checked with INTERPOLATE itself,
+  max deviation 0).
+  The FUNCTION clamp01 uses the 3-argument inline if(cond,a,b) of CoolSolve:
+  CoolSolve-only syntax, not valid EES (EES has the 5-argument IF).
+
+  Inputs : geometry (Haut, Prof, Larg), V_dot_su_m3h, T_su, peak internal
+           gains (Q_dot_occ_max, Q_dot_light_max, Q_dot_appl_max), glazing
+           (U_glazing, A_glazing), facade and internal-wall resistances and
+           capacitances, initial temperatures, weather data of the native
+           table (inlined below, no lookup needed)
+  Outputs: indoor air temperature T_in, facade temperature T_c_wall and
+           internal-wall temperature T_c_in over tau (trajectory in the
+           $IntegralTable below), heat flows
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : CoolSolve example examples/building_rc_network.eescode, from the
+           CLIM R06 repetition exercise 2 (University of Liege), itself
+           simplified from an original EES model - see README.md
+=============================================================================}
+
+"!Geometry and ventilation (as in the original)"
+Haut = 2.7                          "room height [m]"
+Prof = 6                            "room depth [m]"
+Larg = 4                            "room width [m]"
+V_in = Larg * Prof * Haut           "room volume [m^3]"
+V_dot_su_m3h = 60                   "supply air flow rate [m^3/h]"
+V_dot_su = V_dot_su_m3h / 3600      "supply air flow rate [m^3/s]"
+rho = 1.2                           "air density [kg/m^3]"
+c_p = 1005                          "air specific heat capacity [J/kg-K]"
+T_su = 14                           "supply air temperature [C]"
+
+"!Internal gains (peak values, as in the original)"
+Q_dot_occ_max = 160                 "peak occupant heat gain [W]"
+Q_dot_light_max = 250               "peak lighting heat gain [W]"
+Q_dot_appl_max = 250                "peak appliance heat gain [W]"
+SF = 0.5                            "solar shading factor [-]"
+
+"!Integration interval (one week, 600 s output interval, as in the original)"
+tau_1 = 0                           "start of the integration interval [s]"
+tau_2 = 604800                      "end of the integration interval [s]"
+N_h = 168                           "number of hours in the week [-]"
+DELTAtau = 600                      "output interval of the trajectory table [s]"
+tau_hour = tau / 3600               "time in hours [h]"
+
+{--- Weather: exact piecewise-linear reconstruction of the 169 rows of the table
+    of the native file (tau = 0, 3600, ..., 604800 s; columns T_out [C],
+    I_dot_south [W/m^2], f_occ [-]). Each signal is the value at tau = 0 plus the
+    sum of the hourly increments weighted by clamp01(tau_hour - k), where
+    clamp01(h) = 0 for h < 0, h for 0 <= h <= 1 and 1 for h > 1: this is exactly
+    the linear interpolation (and the flat extrapolation outside the range) that
+    INTERPOLATE performs. Written as one line per day of the week. ---}
+FUNCTION clamp01(h)
+  clamp01 = if(h, if(h-1, 1, h), 0)   "clamped ramp: 0 below 0, h on [0,1], 1 above 1 [-]"
+END
+
+T_out_p1 = 25.5 + (-1.63)*clamp01(tau_hour-0) + (-1.76)*clamp01(tau_hour-1) + (-1.75)*clamp01(tau_hour-2) + (-1.64)*clamp01(tau_hour-3) + (-1.39)*clamp01(tau_hour-4) + (-1.06)*clamp01(tau_hour-5) + (-0.64)*clamp01(tau_hour-6) + (-0.19)*clamp01(tau_hour-7) + (0.29)*clamp01(tau_hour-8) + (0.76)*clamp01(tau_hour-9) + (1.16)*clamp01(tau_hour-10) + (1.5)*clamp01(tau_hour-11) + (1.74)*clamp01(tau_hour-12) + (1.86)*clamp01(tau_hour-13) + (1.86)*clamp01(tau_hour-14) + (1.73)*clamp01(tau_hour-15) + (1.5)*clamp01(tau_hour-16) + (1.16)*clamp01(tau_hour-17) + (0.74)*clamp01(tau_hour-18) + (0.28)*clamp01(tau_hour-19) + (-0.2)*clamp01(tau_hour-20) + (-0.66)*clamp01(tau_hour-21) + (-1.07)*clamp01(tau_hour-22)
+T_out_p2 = (-1.42)*clamp01(tau_hour-23) + (-1.65)*clamp01(tau_hour-24) + (-1.78)*clamp01(tau_hour-25) + (-1.78)*clamp01(tau_hour-26) + (-1.66)*clamp01(tau_hour-27) + (-1.42)*clamp01(tau_hour-28) + (-1.09)*clamp01(tau_hour-29) + (-0.68)*clamp01(tau_hour-30) + (-0.21)*clamp01(tau_hour-31) + (0.25)*clamp01(tau_hour-32) + (0.72)*clamp01(tau_hour-33) + (1.13)*clamp01(tau_hour-34) + (1.46)*clamp01(tau_hour-35) + (1.7)*clamp01(tau_hour-36) + (1.82)*clamp01(tau_hour-37) + (1.82)*clamp01(tau_hour-38) + (1.7)*clamp01(tau_hour-39) + (1.45)*clamp01(tau_hour-40) + (1.11)*clamp01(tau_hour-41) + (0.7)*clamp01(tau_hour-42) + (0.24)*clamp01(tau_hour-43) + (-0.25)*clamp01(tau_hour-44) + (-0.7)*clamp01(tau_hour-45) + (-1.13)*clamp01(tau_hour-46)
+T_out_p3 = (-1.46)*clamp01(tau_hour-47) + (-1.7)*clamp01(tau_hour-48) + (-1.83)*clamp01(tau_hour-49) + (-1.83)*clamp01(tau_hour-50) + (-1.7)*clamp01(tau_hour-51) + (-1.47)*clamp01(tau_hour-52) + (-1.14)*clamp01(tau_hour-53) + (-0.73)*clamp01(tau_hour-54) + (-0.26)*clamp01(tau_hour-55) + (0.21)*clamp01(tau_hour-56) + (0.67)*clamp01(tau_hour-57) + (1.08)*clamp01(tau_hour-58) + (1.41)*clamp01(tau_hour-59) + (1.66)*clamp01(tau_hour-60) + (1.77)*clamp01(tau_hour-61) + (1.77)*clamp01(tau_hour-62) + (1.65)*clamp01(tau_hour-63) + (1.41)*clamp01(tau_hour-64) + (1.07)*clamp01(tau_hour-65) + (0.65)*clamp01(tau_hour-66) + (0.19)*clamp01(tau_hour-67) + (-0.28)*clamp01(tau_hour-68) + (-0.75)*clamp01(tau_hour-69) + (-1.16)*clamp01(tau_hour-70)
+T_out_p4 = (-1.5)*clamp01(tau_hour-71) + (-1.74)*clamp01(tau_hour-72) + (-1.86)*clamp01(tau_hour-73) + (-1.87)*clamp01(tau_hour-74) + (-1.74)*clamp01(tau_hour-75) + (-1.5)*clamp01(tau_hour-76) + (-1.17)*clamp01(tau_hour-77) + (-0.75)*clamp01(tau_hour-78) + (-0.3)*clamp01(tau_hour-79) + (0.19)*clamp01(tau_hour-80) + (0.64)*clamp01(tau_hour-81) + (1.06)*clamp01(tau_hour-82) + (1.39)*clamp01(tau_hour-83) + (1.63)*clamp01(tau_hour-84) + (1.76)*clamp01(tau_hour-85) + (1.75)*clamp01(tau_hour-86) + (1.64)*clamp01(tau_hour-87) + (1.39)*clamp01(tau_hour-88) + (1.06)*clamp01(tau_hour-89) + (0.64)*clamp01(tau_hour-90) + (0.19)*clamp01(tau_hour-91) + (-0.29)*clamp01(tau_hour-92) + (-0.76)*clamp01(tau_hour-93) + (-1.16)*clamp01(tau_hour-94)
+T_out_p5 = (-1.5)*clamp01(tau_hour-95) + (-1.74)*clamp01(tau_hour-96) + (-1.86)*clamp01(tau_hour-97) + (-1.86)*clamp01(tau_hour-98) + (-1.73)*clamp01(tau_hour-99) + (-1.5)*clamp01(tau_hour-100) + (-1.16)*clamp01(tau_hour-101) + (-0.74)*clamp01(tau_hour-102) + (-0.28)*clamp01(tau_hour-103) + (0.2)*clamp01(tau_hour-104) + (0.66)*clamp01(tau_hour-105) + (1.07)*clamp01(tau_hour-106) + (1.42)*clamp01(tau_hour-107) + (1.65)*clamp01(tau_hour-108) + (1.78)*clamp01(tau_hour-109) + (1.78)*clamp01(tau_hour-110) + (1.66)*clamp01(tau_hour-111) + (1.42)*clamp01(tau_hour-112) + (1.09)*clamp01(tau_hour-113) + (0.68)*clamp01(tau_hour-114) + (0.21)*clamp01(tau_hour-115) + (-0.25)*clamp01(tau_hour-116) + (-0.72)*clamp01(tau_hour-117) + (-1.13)*clamp01(tau_hour-118)
+T_out_p6 = (-1.46)*clamp01(tau_hour-119) + (-1.7)*clamp01(tau_hour-120) + (-1.82)*clamp01(tau_hour-121) + (-1.82)*clamp01(tau_hour-122) + (-1.7)*clamp01(tau_hour-123) + (-1.45)*clamp01(tau_hour-124) + (-1.11)*clamp01(tau_hour-125) + (-0.7)*clamp01(tau_hour-126) + (-0.24)*clamp01(tau_hour-127) + (0.25)*clamp01(tau_hour-128) + (0.7)*clamp01(tau_hour-129) + (1.13)*clamp01(tau_hour-130) + (1.46)*clamp01(tau_hour-131) + (1.7)*clamp01(tau_hour-132) + (1.83)*clamp01(tau_hour-133) + (1.83)*clamp01(tau_hour-134) + (1.7)*clamp01(tau_hour-135) + (1.47)*clamp01(tau_hour-136) + (1.14)*clamp01(tau_hour-137) + (0.73)*clamp01(tau_hour-138) + (0.26)*clamp01(tau_hour-139) + (-0.21)*clamp01(tau_hour-140) + (-0.67)*clamp01(tau_hour-141) + (-1.08)*clamp01(tau_hour-142)
+T_out_p7 = (-1.41)*clamp01(tau_hour-143) + (-1.66)*clamp01(tau_hour-144) + (-1.77)*clamp01(tau_hour-145) + (-1.77)*clamp01(tau_hour-146) + (-1.65)*clamp01(tau_hour-147) + (-1.41)*clamp01(tau_hour-148) + (-1.07)*clamp01(tau_hour-149) + (-0.65)*clamp01(tau_hour-150) + (-0.19)*clamp01(tau_hour-151) + (0.28)*clamp01(tau_hour-152) + (0.75)*clamp01(tau_hour-153) + (1.16)*clamp01(tau_hour-154) + (1.5)*clamp01(tau_hour-155) + (1.74)*clamp01(tau_hour-156) + (1.86)*clamp01(tau_hour-157) + (1.87)*clamp01(tau_hour-158) + (1.74)*clamp01(tau_hour-159) + (1.5)*clamp01(tau_hour-160) + (1.17)*clamp01(tau_hour-161) + (0.75)*clamp01(tau_hour-162) + (0.3)*clamp01(tau_hour-163) + (-0.19)*clamp01(tau_hour-164) + (-0.64)*clamp01(tau_hour-165) + (-1.06)*clamp01(tau_hour-166)
+T_out_p8 = (-1.39)*clamp01(tau_hour-167)
+T_out = T_out_p1 + T_out_p2 + T_out_p3 + T_out_p4 + T_out_p5 + T_out_p6 + T_out_p7 + T_out_p8    "outdoor air temperature [C]"
+
+I_dot_south_p1 = (220)*clamp01(tau_hour-6) + (205)*clamp01(tau_hour-7) + (176)*clamp01(tau_hour-8) + (135.1)*clamp01(tau_hour-9) + (84.9)*clamp01(tau_hour-10) + (29)*clamp01(tau_hour-11) + (-29)*clamp01(tau_hour-12) + (-84.9)*clamp01(tau_hour-13) + (-135.1)*clamp01(tau_hour-14) + (-176)*clamp01(tau_hour-15) + (-205)*clamp01(tau_hour-16) + (-220)*clamp01(tau_hour-17)
+I_dot_south_p2 = (220)*clamp01(tau_hour-30) + (205)*clamp01(tau_hour-31) + (176)*clamp01(tau_hour-32) + (135.1)*clamp01(tau_hour-33) + (84.9)*clamp01(tau_hour-34) + (29)*clamp01(tau_hour-35) + (-29)*clamp01(tau_hour-36) + (-84.9)*clamp01(tau_hour-37) + (-135.1)*clamp01(tau_hour-38) + (-176)*clamp01(tau_hour-39) + (-205)*clamp01(tau_hour-40) + (-220)*clamp01(tau_hour-41) + (220)*clamp01(tau_hour-54) + (205)*clamp01(tau_hour-55) + (176)*clamp01(tau_hour-56) + (135.1)*clamp01(tau_hour-57) + (84.9)*clamp01(tau_hour-58) + (29)*clamp01(tau_hour-59) + (-29)*clamp01(tau_hour-60) + (-84.9)*clamp01(tau_hour-61) + (-135.1)*clamp01(tau_hour-62) + (-176)*clamp01(tau_hour-63) + (-205)*clamp01(tau_hour-64) + (-220)*clamp01(tau_hour-65)
+I_dot_south_p3 = (220)*clamp01(tau_hour-78) + (205)*clamp01(tau_hour-79) + (176)*clamp01(tau_hour-80) + (135.1)*clamp01(tau_hour-81) + (84.9)*clamp01(tau_hour-82) + (29)*clamp01(tau_hour-83) + (-29)*clamp01(tau_hour-84) + (-84.9)*clamp01(tau_hour-85) + (-135.1)*clamp01(tau_hour-86) + (-176)*clamp01(tau_hour-87) + (-205)*clamp01(tau_hour-88) + (-220)*clamp01(tau_hour-89) + (220)*clamp01(tau_hour-102) + (205)*clamp01(tau_hour-103) + (176)*clamp01(tau_hour-104) + (135.1)*clamp01(tau_hour-105) + (84.9)*clamp01(tau_hour-106) + (29)*clamp01(tau_hour-107) + (-29)*clamp01(tau_hour-108) + (-84.9)*clamp01(tau_hour-109) + (-135.1)*clamp01(tau_hour-110) + (-176)*clamp01(tau_hour-111) + (-205)*clamp01(tau_hour-112) + (-220)*clamp01(tau_hour-113)
+I_dot_south_p4 = (220)*clamp01(tau_hour-126) + (205)*clamp01(tau_hour-127) + (176)*clamp01(tau_hour-128) + (135.1)*clamp01(tau_hour-129) + (84.9)*clamp01(tau_hour-130) + (29)*clamp01(tau_hour-131) + (-29)*clamp01(tau_hour-132) + (-84.9)*clamp01(tau_hour-133) + (-135.1)*clamp01(tau_hour-134) + (-176)*clamp01(tau_hour-135) + (-205)*clamp01(tau_hour-136) + (-220)*clamp01(tau_hour-137) + (220)*clamp01(tau_hour-150) + (205)*clamp01(tau_hour-151) + (176)*clamp01(tau_hour-152) + (135.1)*clamp01(tau_hour-153) + (84.9)*clamp01(tau_hour-154) + (29)*clamp01(tau_hour-155) + (-29)*clamp01(tau_hour-156) + (-84.9)*clamp01(tau_hour-157) + (-135.1)*clamp01(tau_hour-158) + (-176)*clamp01(tau_hour-159) + (-205)*clamp01(tau_hour-160) + (-220)*clamp01(tau_hour-161)
+I_dot_south = I_dot_south_p1 + I_dot_south_p2 + I_dot_south_p3 + I_dot_south_p4    "south solar irradiance [W/m^2]"
+
+f_occ_p1 = (0.3)*clamp01(tau_hour-6) + (0.7)*clamp01(tau_hour-7) + (-0.7)*clamp01(tau_hour-18) + (-0.3)*clamp01(tau_hour-19)
+f_occ_p2 = (0.3)*clamp01(tau_hour-30) + (0.7)*clamp01(tau_hour-31) + (-0.7)*clamp01(tau_hour-42) + (-0.3)*clamp01(tau_hour-43) + (0.3)*clamp01(tau_hour-54) + (0.7)*clamp01(tau_hour-55) + (-0.7)*clamp01(tau_hour-66) + (-0.3)*clamp01(tau_hour-67) + (0.3)*clamp01(tau_hour-78) + (0.7)*clamp01(tau_hour-79) + (-0.7)*clamp01(tau_hour-90) + (-0.3)*clamp01(tau_hour-91) + (0.3)*clamp01(tau_hour-102) + (0.7)*clamp01(tau_hour-103) + (-0.7)*clamp01(tau_hour-114) + (-0.3)*clamp01(tau_hour-115)
+f_occ = f_occ_p1 + f_occ_p2    "occupancy factor [-]"
+
+"!Thermal resistances and capacitances (as in the original)"
+C_opaque = 360000                   "areal capacitance of the opaque facade [J/m^2-K]"
+R_in_1 = 0.1964                     "internal surface resistance of the opaque facade [m^2-K/W]"
+R_out_1 = 0.1149                    "external surface resistance of the opaque facade [m^2-K/W]"
+A_opaque = 6.3                      "opaque facade area [m^2]"
+U_glazing = 3                       "glazing overall heat transfer coefficient [W/m^2-K]"
+A_glazing = 4.5                     "glazing area [m^2]"
+R_glazing = 1 / U_glazing           "glazing thermal resistance [m^2-K/W]"
+h_in = 8                            "internal surface heat transfer coefficient [W/m^2-K]"
+R_w = 0.1429                        "thermal resistance of the internal masonry walls [m^2-K/W]"
+R_in = 1 / h_in + R_w / 2           "internal surface resistance of the internal walls [m^2-K/W]"
+A_InternalWalls = Haut * Prof * 2 + Haut * Larg + Prof * Larg * 2   "internal wall area [m^2]"
+C_InternalWalls = C_opaque / 2     "areal capacitance of the internal walls [J/m^2-K]"
+C_in = 5 * V_in * rho * c_p         "areal capacitance of the indoor air [J/m^2-K]"
+C_dot_su = V_dot_su * rho * c_p     "air heat capacity flow rate of the ventilation [W/K]"
+
+"!Initial temperatures (as in the original)"
+T_in_0 = 25                         "initial indoor air temperature [C]"
+T_c_in_0 = 25                       "initial internal wall temperature [C]"
+T_c_wall_0 = 25                     "initial facade temperature [C]"
+
+"!State equations (integrated)"
+T_in = T_in_0 + INTEGRAL(dT_in_dtau, tau, 0, 604800)         "indoor air temperature [C]"
+T_c_wall = T_c_wall_0 + INTEGRAL(dT_c_wall_dtau, tau, 0, 604800)  "opaque facade temperature [C]"
+T_c_in = T_c_in_0 + INTEGRAL(dT_c_in_dtau, tau, 0, 604800)   "internal wall temperature [C]"
+
+dT_in_dtau = Q_dot_capa_in / C_in                    "indoor air temperature rate [K/s]"
+dT_c_wall_dtau = Q_dot_capa_c_wall / (C_opaque * A_opaque)  "facade temperature rate [K/s]"
+dT_c_in_dtau = Q_dot_capa_c_in / (C_InternalWalls * A_InternalWalls)  "internal wall temperature rate [K/s]"
+
+"!Node balances (as in the original)"
+Q_dot_sens + H_dot_vent + (T_c_in - T_in) / (R_in / A_InternalWalls) + (T_out - T_in) / (R_glazing / A_glazing) + (T_c_wall - T_in) / (R_in_1 / A_opaque) = Q_dot_capa_in
+
+(T_in - T_c_wall) / (R_in_1 / A_opaque) + (T_out - T_c_wall) / (R_out_1 / A_opaque) = Q_dot_capa_c_wall
+
+(T_in - T_c_in) / (R_in / A_InternalWalls) = Q_dot_capa_c_in
+
+"!Heat flows"
+H_dot_vent = C_dot_su * (T_su - T_in)          "ventilation heat flow [W]"
+Q_dot_sol = A_glazing * SF * I_dot_south        "solar heat gain through the glazing [W]"
+Q_dot_light = f_occ * Q_dot_light_max           "lighting heat gain [W]"
+Q_dot_appl = f_occ * Q_dot_appl_max             "appliance heat gain [W]"
+Q_dot_occ = f_occ * Q_dot_occ_max               "occupant heat gain [W]"
+Q_dot_clim = 0                                  "active cooling power (none in this variant) [W]"
+Q_dot_sens = Q_dot_clim + Q_dot_light + Q_dot_appl + Q_dot_occ + Q_dot_sol   "total sensible heat gain [W]"
+Q_dot_in_walls = (T_c_wall - T_in) / (R_in_1 / A_opaque) + (T_c_in - T_in) / (R_in / A_InternalWalls)   "heat flow from the indoor air to the walls [W]"
+
+$IntegralTable tau:600 tau_hour T_c_in T_in T_c_wall T_out Q_dot_in_walls Q_dot_sol Q_dot_sens H_dot_vent Q_dot_capa_in Q_dot_capa_c_wall Q_dot_capa_c_in

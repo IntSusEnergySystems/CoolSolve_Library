@@ -1,0 +1,64 @@
+{
+  "id": "CSL-0060",
+  "name": "gas_turbine_reheat",
+  "title": "Gas turbine with reheat (intercooler and regenerator)",
+  "summary": "Two-shaft ideal-gas air turbine with two compression stages, water-cooled intercooler, regenerator, main combustion chamber, HP turbine driving the compressors, second (reheat) combustion chamber and LP turbine expanding to ambient pressure; computes the extra fuel consumption and the cycle efficiency with reheat.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "gas_turbine_reheat.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "gas turbine",
+    "Brayton cycle",
+    "reheat",
+    "regenerator",
+    "intercooler",
+    "polytropic efficiency",
+    "ideal gas",
+    "exercise"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 94,
+    "largest_block": 14
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R6/autres exo/THD10_R07_E4.EES",
+    "candidate_id": "TM-0435",
+    "authors": [
+      "TBD (ULiège course MECA0002; inventory suggests S. Quoilin with repetition assistants N. Paulus and B. Dechesne)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.423",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (THD10), repetition session 7, exercise 4 (2010 exercise, reused in 2022-2023)"
+  },
+  "verification": {
+    "reference": "EES stored solution in the source file (98 variables, kPa/kJ unit system converted for comparison)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.34,
+    "notes": "Maximum over all common variables as printed (3.40e-01 on s[3]) is a reference-state offset: EES ideal-gas Air and CoolProp Air do not share the h/s zero (offset ≈ 126 kJ/kg on h, ≈ 1814 J/kg-K on s). On derived results (temperature rises, powers, fuel flows, efficiency) the maximum is 9.8e-03 (eta_tg 0.3297 EES vs 0.3265 CoolSolve), explained by the different air property backends (EES ideal-gas polynomials vs CoolProp pseudo-pure Air)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0050", "CSL-0011"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added",
+      "by": "worker, batch B-05 phase 3B (roadmap §6 C-64)"
+    }
+  ]
+}

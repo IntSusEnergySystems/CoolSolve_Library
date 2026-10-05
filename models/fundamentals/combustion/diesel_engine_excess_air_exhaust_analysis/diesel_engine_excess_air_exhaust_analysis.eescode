@@ -1,0 +1,117 @@
+{=============================================================================
+  Diesel engine: excess air and useful power from exhaust-gas analysis
+  CoolSolve Library model CSL-0058
+ -----------------------------------------------------------------------------
+  Combustion of diesel fuel (assimilated to CH_n) with excess air in an
+  engine. The fuel composition is obtained from its C and H mass fractions
+  (n fitted from the analysis), the excess air from the fuel-air ratio, and
+  the "useful power" from the five-box energy balance of the original
+  exercise, with the products brought from the reference state to the exhaust
+  temperature. Exercise statement: determine the excess air and the useful
+  power of a diesel engine fed with 4 g/s of fuel and 111 g/s of air, the
+  exhaust gas leaving at 432 °C, air and fuel supplied at 25 °C.
+
+  Inputs : fuel mass flows (m_dot_e, m_dot_a), temperatures (T_su, T_ex),
+           fuel composition (z_C, z_H) and heating value (LHV_e)
+  Outputs: excess air e, stoichiometric air coefficient lambda, useful
+           power Q_dot_utile, gas mass fractions fm_*
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course Thermodynamique appliquée (MECA0002), repetition 11
+           (combustion), exercise 3 - see README.md
+  Status : blocked in CoolSolve (CS-GAP-FLUIDS-ALIAS: the EES real-fluid name
+           CarbonMonoxide is unknown to CoolSolve); the runnable variant
+           diesel_engine_excess_air_exhaust_analysis_coolsolve.eescode ships
+           beside this file, each change logged in the README
+=============================================================================}
+
+"!Data"
+z_C = 0.86 [-]    "mass fraction of C in the diesel fuel (kg of C per kg of fuel), as in the original"
+z_H = 0.14 [-]    "mass fraction of H in the diesel fuel, as in the original"
+
+T_su = 25 [C]     "supply temperature of the air and of the fuel"
+T_ex = 432 [C]    "exhaust-gas temperature"
+x_CO = 0 [-]      "mole fraction of CO in the dry exhaust gas; with its excess air the diesel burns completely, no CO (as in the original)"
+m_dot_a = 111e-3 [kg/s]   "air mass flow rate"
+m_dot_e = 4e-3 [kg/s]     "fuel mass flow rate"
+LHV_e = 42.5e6 [J/kg]     "lower heating value of the fuel (42.5e3 kJ/kg in the original)"
+c_e = 2200 [J/kg-K]       "specific heat of the liquid fuel (2.2 kJ/kg-K in the original)"
+h_fg_e = 270e3 [J/kg]     "latent heat of vaporisation of the fuel (270 kJ/kg in the original); declared but not used by the equations, as in the original"
+T_ref = 25 [C]            "reference temperature"
+p_ref = 101325 [Pa]       "reference pressure (101.325 kPa in the original)"
+HV_CO = 10.11e6 [J/kg]    "heating value of CO (10.11e3 kJ/kg in the original); unused because the combustion is complete, as in the original"
+
+"Incomplete-combustion reaction equation (as in the original)"
+"CH_n + lambda*(1+n/4) O_2 + lambda*3.76*(1+n/4) N_2 -> y CO_2 + (1-y) CO + n/2 H_2O + (1-y)/2 O_2 + (lambda-1)*(1+n/4) O_2 + lambda*3.76*(1+n/4) N_2"
+
+"!Solution"
+
+"Determine the value of n in the fuel formula C H_n"
+MM_C = 12 [kg/kmol]
+MM_H = 1 [kg/kmol]
+y_C = z_C/MM_C    "kmol of C per kg of fuel, as in the original"
+y_H = z_H/MM_H    "kmol of H per kg of fuel, as in the original"
+n = y_H/y_C       "hydrogen-to-carbon mole ratio of the fuel"
+
+"Combustion balance (five-box model, as in the original)"
+Q_dot_1 + Q_dot_2 + Q_dot_3 + Q_dot_4 + Q_dot_5 = Q_dot_utile
+
+"Q_dot_1: bring the air to the reference conditions"
+Q_dot_1 = m_dot_a * (h_a_ref - h_a_su)
+h_a_ref = enthalpy(Air,T=T_ref,P=p_ref)
+h_a_su = enthalpy(Air,T=T_su,P=p_ref)
+
+"Q_dot_2: bring the fuel to the reference conditions"
+Q_dot_2 = m_dot_e * (c_e * (T_ref - T_su) )
+
+"Q_dot_3: heat RELEASED (hence the minus sign) by the combustion reaction at reference conditions"
+Q_dot_3 = -m_dot_e * LHV_e
+
+"Q_dot_4: heat lost in the unburned fuel (CO); the CO concentration characterises the incompleteness of the combustion"
+Q_dot_4 = m_dot_CO * HV_CO
+m_dot_CO = fm_CO * m_dot_e "CO mass flow rate"
+fm_CO = (1-y) * MM_CO/MM_e "mass fraction of CO (kg of CO per kg of fuel, from the general reaction equation), as in the original"
+MM_CO = molarmass(CarbonMonoxide) "molar mass of CO (real-fluid substance, as in the original)"
+MM_e = MM_C + n*MM_H "molar mass of the fuel"
+
+"y follows from the CO concentration in the DRY exhaust gas (everything except water, from the general reaction equation; formula not given in the course, as the original notes)"
+x_CO = (1-y) / ( y + (1-y) + (1-y)/2 + e*(1+n/4) + 3.76 * (1+e)*(1+n/4) )
+
+"The excess air e follows from the relation between the fuel-air ratio and the excess air"
+far = m_dot_e/m_dot_a
+far*(1+e) = far_st
+
+far = MM_e / (lambda * (1+n/4)*(1*MM_O2+3.76*MM_N2)) "fuel mass over air mass; 1 kmol of fuel, so the fuel mass is MM_e, as in the original"
+
+"Q_dot_5: bring all the products from the reference temperature to the exhaust temperature"
+Q_dot_5 = m_dot_e * (q_CO2 + q_CO + q_H2O + q_N2 + q_O2)
+
+q_CO2 = fm_CO2 * (h_CO2_ex - h_CO2_ref)
+fm_CO2 = y * MM_CO2/MM_e "mass fraction of CO2 (kg per kg of fuel), as in the original"
+MM_CO2 = molarmass(CarbonDioxide)
+h_CO2_ex = enthalpy(CarbonDioxide,T=T_ex,P=p_ref)
+h_CO2_ref = enthalpy(CarbonDioxide,T=T_ref,P=p_ref)
+
+q_CO = fm_CO * (h_CO_ex - h_CO_ref)
+h_CO_ex = enthalpy(CarbonMonoxide,T=T_ex,P=p_ref)
+h_CO_ref = enthalpy(CarbonMonoxide,T=T_ref,P=p_ref)
+
+q_H2O = fm_H2O * (h_H2O_ex - h_H2O_ref)
+fm_H2O = n/2 * MM_H2O/MM_e "mass fraction of H2O (kg per kg of fuel), as in the original"
+MM_H2O = molarmass(water)
+h_H2O_ex = enthalpy(water,T=T_ex,P=p_ref)
+h_H2O_ref = enthalpy(water,T=T_ref,P=p_ref)
+
+q_N2 = fm_N2 * (h_N2_ex - h_N2_ref)
+fm_N2 = 3.76*(1+e)*(1+n/4) * MM_N2/MM_e "mass fraction of N2 (kg per kg of fuel), as in the original"
+MM_N2 = molarmass(nitrogen)
+h_N2_ex = enthalpy(nitrogen,T=T_ex,P=p_ref)
+h_N2_ref = enthalpy(nitrogen,T=T_ref,P=p_ref)
+
+q_O2 = fm_O2 * (h_O2_ex - h_O2_ref)
+fm_O2 = ( (1-y)/2 + e*(1+n/4)) * MM_O2/MM_e "mass fraction of O2 (kg per kg of fuel), as in the original"
+MM_O2 = molarmass(oxygen)
+h_O2_ex = enthalpy(oxygen,T=T_ex,P=p_ref)
+h_O2_ref = enthalpy(oxygen,T=T_ref,P=p_ref)
+
+"Stoichiometric air coefficient"
+lambda = (1+e)

@@ -1,0 +1,186 @@
+{=============================================================================
+  Elementary steam power plant (Rankine cycle, component balances)
+  CoolSolve Library model CSL-0053
+ -----------------------------------------------------------------------------
+  Steady-flow analysis of an elementary steam power plant, component by
+  component (pump, economiser, steam generator, turbine, condenser), each one
+  an open system at steady state with one inlet and one outlet. Mass balance
+  q_m_out = q_m_in = q_m; first law Q_dot + W_dot = q_m*(Delta h + Delta EC +
+  Delta EP) with the kinetic-energy term kept where the velocities are
+  significant (turbine exhaust, main steam line). Given the state points 1-7
+  with pressure drops between components and a thermal loss between 4-5, the
+  model computes the turbine power, the heat rates of the condenser,
+  economiser and steam generator, the cooling-water flow rate (temperature
+  rise 15 -> 25 °C) and the overall cycle efficiency. As in the original
+  exercise (statement "Exercise 6", based on a textbook exercise 5.51).
+
+  Inputs : pressures and temperatures of states 1-7, turbine exhaust quality
+           and velocity, steam mass flow rate, pump power, pipe diameters,
+           cooling-water temperature rise
+  Outputs: W_dot_turb, Q_dot_cond, Q_dot_econ, Q_dot_gen, q_m_rfd,
+           eta_rankine, state-point arrays p[i], h[i], T[i], s[i], v[i]
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège course Thermodynamique appliquée (MECA0002), exercise
+           session R3 2022-2023, exercise 6 - see README.md
+=============================================================================}
+
+"Elementary steam power plant. Compute:
+ a) the power output of the turbine
+ b) the heat transfer rate in the condenser, the economiser and the steam generator
+ c) the cooling-water flow rate in the condenser, if the cooling-water
+    temperature rises there from 15 to 25 °C"
+
+"Data (original values in kPa, kW)"
+p_1 = 6200E3  [Pa]   "6200 kPa in the original"
+p_2 = 6100E3  [Pa]   "6100 kPa in the original"
+T_2 = 45  [C]
+p_3 = 5900E3  [Pa]   "5900 kPa in the original"
+T_3 = 175  [C]
+p_4 = 5700E3  [Pa]   "5700 kPa in the original"
+T_4 = 500  [C]
+p_5 = 5500E3  [Pa]   "5500 kPa in the original"
+T_5 = 490  [C]
+p_6 = 10E3  [Pa]     "10 kPa in the original"
+x_6 = 0.92  [-]
+c_6 = 200 [m/s]
+p_7 = 9E3  [Pa]      "9 kPa in the original"
+T_7 = 40   [C]
+q_m_vap = 25 [kg/s]
+W_dot_pump = 300E3  [W]   "300 kW in the original"
+d_45 = 0.2 [m]
+d_7123 = 0.075 [m]
+DeltaT_rfd = 10 [C]
+
+"Remark: each component can be considered as an open system at steady state.
+ All components have a single inlet and a single outlet, so the mass balance
+ is q_m_out = q_m_in = q_m and the first law reads
+ Q_dot + W_dot = q_m (Delta h + Delta EC + Delta EP).
+ For each component the exercise consists in keeping the relevant terms."
+
+"a) Power output of the turbine"
+"Control volume around the turbine."
+"The turbine is assumed adiabatic (very fast transformation, and no
+ information in the statement about heat exchange with the surroundings)
+ -> Q_dot = 0"
+"The variation of potential energy is neglected with respect to the
+ variation of enthalpy. The first law for the turbine becomes:"
+W_dot_turb = q_m_vap * (h_6 - h_5 + c_6^2/2 - c_5^2/2)   "kinetic terms in J/kg as in the original (kJ/J factors removed with the unit conversion)"
+h_6 = enthalpy(water,p=p_6,x=x_6)   "at the outlet the fluid is two-phase -> arguments P and x"
+h_5 = enthalpy(water,T=T_5,p=p_5)   "at the inlet superheated steam -> arguments P and T"
+"The velocity at station 5 follows from the mass flow rate and the pipe
+ cross-section (pipe diameter):"
+q_m_vap = rho_5*c_5*A_5
+A_5 = pi*d_45^2/4
+rho_5 = 1/volume(water,T=T_5,p=p_5)
+"The power is negative from the viewpoint of the steam because it is given to
+ the outside of the control volume -> the machine produces work (as in the original)"
+
+"b) Heat transfer rate in the condenser, the economiser and the steam generator"
+
+"b.1) Condenser"
+"Control volume around the condenser."
+"No work transfer in the condenser -> W_dot = 0"
+"The variation of potential energy is neglected."
+Q_dot_cond = q_m_vap*(h_7-h_6 + c_7^2/2 - c_6^2/2)
+h_7 = enthalpy(water,p=p_7,T=T_7)
+q_m_vap = rho_7*c_7*A_7
+A_7 = pi*d_7123^2/4
+rho_7 = 1/volume(water,T=T_7,p=p_7)
+"The heat rate in the condenser is NEGATIVE from the viewpoint of the working
+ fluid because the vapour-to-liquid phase change is exothermic (as in the original)"
+
+"b.2) Economiser"
+"Control volume around the economiser."
+"No work transfer in the economiser -> W_dot = 0"
+"The variation of potential energy is neglected."
+Q_dot_econ = q_m_vap*(h_3-h_2 + c_3^2/2 - c_2^2/2)
+h_3 = enthalpy(water,p=p_3,T=T_3)
+h_2 = enthalpy(water,p=p_2,T=T_2)
+q_m_vap = rho_3*c_3*A_3
+A_3 = A_7
+rho_3 = 1/volume(water,T=T_3,p=p_3)
+q_m_vap = rho_2*c_2*A_2
+A_2 = A_7
+rho_2 = 1/volume(water,T=T_2,p=p_2)
+
+"The heat rate at the economiser is POSITIVE from the viewpoint of the
+ working fluid, which receives heat there (as in the original)."
+
+"b.3) Steam generator"
+"Control volume around the steam generator."
+"No work transfer in the steam generator -> W_dot = 0"
+"The variation of potential energy is neglected."
+Q_dot_gen = q_m_vap*(h_4-h_3 + c_4^2/2 - c_3^2/2)
+h_4 = enthalpy(water,p=p_4,T=T_4)
+q_m_vap = rho_4*c_4*A_4
+A_4 = A_5
+rho_4 = 1/volume(water,P=p_4,T=T_4)
+"The heat rate is again positive from the viewpoint of the working fluid,
+ which receives it (as in the original)"
+
+"c) Required cooling-water flow rate"
+"The cooling circuit dissipates the heat extracted from the working fluid in
+ the condenser. Power absorbed by the cooling system:"
+Q_dot_rfd = q_m_rfd*C_eau*DeltaT_rfd
+C_eau = 4184  [J/kg-K]   "4.184 kJ/kg-K in the original (liquid water)"
+C_eau_EES = specheat(Water,T=20,x=0)   "value computed by EES for comparison, as in the original"
+Q_dot_rfd = abs(Q_dot_cond)
+
+"Note: the velocities at stations 2, 3 and 7 come out below 10 m/s -> their
+ contribution could be neglected in the component balances without a large
+ error (as in the original)"
+
+"Bonus: a global balance over the cycle should reveal the importance of the
+ energy losses (thermal losses, pressure drops), as in the original."
+W_dot_pump+Q_dot_econ+Q_dot_gen+W_dot_turb+Q_dot_cond+Pertes=0
+"Pressure drops appear between 1-2, 2-3, 3-4, 4-5, 6-7 and a thermal loss
+ between 4-5 (as in the original)"
+
+"Overall efficiency = net useful power / power consumed"
+eta_rankine=-(W_dot_turb+W_dot_pump)/(Q_dot_gen+Q_dot_econ)
+"(sign correction in the numerator to obtain a positive efficiency)"
+
+"Cycle on a diagram: array variables to store the state points in a table and
+ display them on a property plot (as in the original)"
+p[1]=p_1
+p[2]=p_2
+p[3]=p_3
+p[4]=p_4
+p[5]=p_5
+p[6]=p_6
+p[7]=p_7
+h[1]=h_1
+h[2]=h_2
+h[3]=h_3
+h[4]=h_4
+h[5]=h_5
+h[6]=h_6
+h[7]=h_7
+v[1]=1/rho_1
+v[2]=1/rho_2
+v[3]=1/rho_3
+v[4]=1/rho_4
+v[5]=1/rho_5
+v[6]=1/rho_6
+v[7]=1/rho_7
+rho_1 = 1/volume(water,h=h_1,p=p_1)
+rho_6 = 1/volume(water,h=h_6,p=p_6)
+"pump outlet enthalpy h_1: first law applied to the pump, W = q_m*(h_1-h_7)"
+W_dot_pump=q_m_vap*(h_1-h_7)
+
+"State points for the thermodynamic diagrams (post-processing added for the
+ CoolSolve library; the results above are unchanged)"
+T[1]=temperature(Water,P=p[1],h=h[1])
+T[2]=temperature(Water,P=p[2],h=h[2])
+T[3]=temperature(Water,P=p[3],h=h[3])
+T[4]=temperature(Water,P=p[4],h=h[4])
+T[5]=temperature(Water,P=p[5],h=h[5])
+T[6]=temperature(Water,P=p[6],h=h[6])
+T[7]=temperature(Water,P=p[7],h=h[7])
+s[1]=entropy(Water,P=p[1],h=h[1])
+s[2]=entropy(Water,P=p[2],h=h[2])
+s[3]=entropy(Water,P=p[3],h=h[3])
+s[4]=entropy(Water,P=p[4],h=h[4])
+s[5]=entropy(Water,P=p[5],h=h[5])
+s[6]=entropy(Water,P=p[6],h=h[6])
+s[7]=entropy(Water,P=p[7],h=h[7])

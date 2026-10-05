@@ -1,0 +1,78 @@
+{=============================================================================
+  Two rigid tanks connected by a valve: change of quality of R12
+  CoolSolve Library model CSL-0048
+ -----------------------------------------------------------------------------
+  Two rigid tanks A and B of 200 L each are connected by a valve, as in the
+  original problem statement. Tank A holds R12 at 25 C with, in volume, 10 %
+  of liquid and 90 % of vapour; tank B is empty. The valve is opened and
+  saturated vapour escapes from A until the pressure of B reaches that of A;
+  the valve is then closed again. The operation is slow, so the temperature
+  stays at 25 C during the whole process. By how much has the quality in tank A
+  changed at the end of the process?
+
+  The model first computes the initial quality of tank A from its initial
+  liquid and vapour volumes. Since the operation is slow and isothermal, the
+  pressure stays at the saturation pressure of 25 C: liquid evaporates and
+  fills tank B. The distribution of the refrigerant between liquid and vapour
+  in the whole volume is obtained from two equations (total volume, total
+  mass) for two unknowns (Vol_l, Vol_v), which are then linked to the masses
+  through the specific volumes at saturation. The final quality of tank A
+  follows from the vapour volume left in A, Vol_v - Vol_B.
+
+  Inputs : Vol_A, Vol_B, T_A, f_m_l_A, f_m_v_A
+  Outputs: x_A_i, x_A_f, Deltax_A (change of quality in A, in percentage
+           points), m_l_A_f, m_v_A_f, m_A_f, m_B_f
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : ULiege course Thermodynamique appliquee (MECA0002), repetition
+           session 1, exercise 4 (2022-2023) - see README.md
+=============================================================================}
+
+"!Problem statement (English paraphrase of the original French statement)"
+"Two tanks A and B are connected by a valve. Each tank has a volume of 200 L. Tank A contains R12 at 25 C and, in
+ volume, 10 % of liquid and 90 % of vapour. Tank B is empty. The valve is then opened and saturated vapour escapes
+ from A until the pressure of B reaches that of A. The valve is then closed again. This operation takes place
+ slowly, so that the temperatures remain at 25 C during its whole duration. By how much has the quality in tank A
+ changed as a result of the process?"
+
+"!Inputs"
+Vol_A = 200e-3 [m^3]  "volume of tank A [m^3]"
+Vol_B = 200e-3 [m^3]  "volume of tank B [m^3]"
+T_A = 25.0 [C]  "temperature of the process, kept at 25 C during the whole operation [C] (298.15 K in the original)"
+f_m_l_A = 0.1  "initial liquid fraction of the volume of tank A [-] (a volume fraction in the original, as in its comment and in its use)"
+f_m_v_A = 0.9  "initial vapour fraction of the volume of tank A [-] (a volume fraction in the original, as in its comment and in its use)"
+
+"!Initial quality of the refrigerant in tank A"
+Vol_l_A = f_m_l_A*Vol_A  "volume occupied by the liquid in A [m^3]"
+Vol_v_A = f_m_v_A*Vol_A  "volume occupied by the vapour in A [m^3]"
+v_l = volume(R12,T=T_A,x=0)  "specific volume of saturated liquid R12 at T_A [m^3/kg]"
+v_v = volume(R12,T=T_A,x=1)  "specific volume of saturated vapour R12 at T_A [m^3/kg]"
+m_l_A = Vol_l_A/v_l  "mass of liquid [kg]"
+m_v_A = Vol_v_A/v_v  "mass of vapour [kg]"
+m_tot = m_l_A+m_v_A  "total mass of refrigerant [kg]"
+x_A_i = m_v_A/m_tot  "initial quality of the refrigerant in A [-]"
+
+"!Distribution of the refrigerant in each tank at the end of the operation"
+"The pressure is allowed to equilibrate before the valve is closed, so the pressure stays equal to the saturation
+ pressure at 25 C. Liquid is therefore converted into vapour to fill tank B."
+Vol_tot = Vol_A+Vol_B  "the total volume is the sum of the two tank volumes [m^3]"
+Vol_tot = Vol_l+Vol_v  "the total volume contains an unknown quantity of liquid and an unknown quantity of vapour [m^3]"
+m_tot = m_l+m_v  "the total mass is conserved and splits into vapour and liquid in unknown proportions [kg]"
+"The system of 2 equations for the 2 unknowns above gives the distribution, in mass and in volume, of the refrigerant
+ in the global volume"
+
+"!Links between volume and mass: the specific volume, by definition"
+Vol_l = m_l*v_l  "volume occupied by the liquid of the whole set [m^3]"
+Vol_v = m_v*v_v  "volume occupied by the vapour of the whole set [m^3]"
+
+"!Final state of tank A"
+"Only vapour can pass from A to B. Immediately after the valve is closed, tank B holds only vapour and all the
+ liquid stays in A"
+Vol_v_A_f = Vol_v-Vol_B  "volume of vapour in A at the end of the process [m^3]"
+dVol_A = Vol_v_A_f+Vol_l-Vol_A  "check on the total volume of A [m^3]"
+m_l_A_f = Vol_l/v_l  "mass of liquid in A in the final state [kg]"
+m_v_A_f = Vol_v_A_f/v_v  "mass of vapour in A in the final state [kg]"
+m_A_f = m_l_A_f+m_v_A_f  "total mass of refrigerant in A in the final state [kg]"
+x_A_f = m_v_A_f/m_A_f  "final quality of the refrigerant in A [-]"
+m_B_f = Vol_B/v_v  "mass of refrigerant in B [kg]"
+dm_tot = m_A_f+m_B_f-m_tot  "check on the total mass of refrigerant in A and B [kg]"
+Deltax_A = 100*(x_A_f-x_A_i)  "variation of the quality in A during the process [percentage points], dimensionless"

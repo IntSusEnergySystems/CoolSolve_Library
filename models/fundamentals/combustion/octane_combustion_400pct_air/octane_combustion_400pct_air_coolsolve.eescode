@@ -1,0 +1,84 @@
+{=============================================================================
+  Combustion of octane with 400 % theoretical air
+  CoolSolve Library model CSL-0046
+ -----------------------------------------------------------------------------
+  Octane (C8H18) at 25 °C is burned with 400 % theoretical air (lambda = 4),
+  also at 25 °C, in a steady-flow process. The first law applied to the
+  combustion reaction (adiabatic, no work): H_reactants = H_products gives
+  the adiabatic flame temperature TAF; the fuel-air ratio (dosage) and the
+  stoichiometric fuel-air ratio follow from the molar masses. The effect of
+  the excess air on TAF is a parametric study (see README.md).
+
+  Inputs : T_su, T_ref, n_C, n_H, lambda, n_f, formation enthalpies
+  Outputs: TAF, far, far_st
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course "Thermodynamique appliquée" (MECA0002), repetition 11,
+           exercise 1 (EES file R11_E01_2022.EES) - see README.md
+  Variant: runnable variant of the native file (blocked): the native EES call
+           molarmass(C8H18) is replaced by the constant 114.23 kg/kmol (the
+           value EES returns) because C8H18 is not in the CoolSolve fluid
+           registry (gap CS-GAP-FLUIDS-C8H18). Only this line differs; the
+           file uses no CoolSolve-only syntax.
+=============================================================================}
+
+"Data"
+T_su = 25                    "reactants inlet temperature [°C] (at the reference state; not used in the equations, as in the original)"
+T_ref = 25                   "reference temperature of the formation enthalpies [°C]"
+n_C = 8                      "number of carbon atoms of octane [-]"
+n_H = 18                     "number of hydrogen atoms of octane [-]"
+lambda = 4                   "theoretical-air coefficient: 400 % theoretical air [-]"
+
+"Formation enthalpies (water gaseous in the products)"
+h_0f_f = -249952E3           "formation enthalpy of octane [J/kmol] (-249952 kJ/kmol in the original)"
+h_0f_CO2 = -393522E3         "formation enthalpy of CO2 [J/kmol] (-393522 kJ/kmol in the original)"
+h_0f_H2O = -241827E3         "formation enthalpy of H2O [J/kmol] (-241827 kJ/kmol in the original)"
+
+"Combustion reaction in excess air, as in the original course notes (written for C_x H_y, here x = n_C and y = n_H):
+ C_x H_y + lambda*(x+y/4) O2 + lambda*3.76*(x+y/4) N2 -> x CO2 + y/2 H2O + (lambda-1)*(x+y/4) O2 + lambda*3.76*(x+y/4) N2"
+
+"The adiabatic flame temperature is the temperature reached by the products in an adiabatic combustion
+ without work and with negligible kinetic and potential energy variations (as in the original).
+ First principle: the reaction being adiabatic, the whole enthalpy of the reactants is found in the products"
+H_R = H_P                    "reactant enthalpy = product enthalpy [J]"
+
+"Reactant enthalpy"
+H_R = n_f*h_0f_f             "the reactants are already at the reference conditions and the formation enthalpy of pure O2 and N2 is zero [J] (n_f in kmol, h_0f_f in J/kmol)"
+MM_f = 114.23               "molar mass of octane [kg/kmol] (molarmass(C8H18) in the original, value returned by EES - C8H18 is not available in CoolSolve, see README)"
+n_f = 1                      "basis of the calculation: 1 kmol of C8H18 [kmol]"
+
+"Product enthalpy (sum over the products: formation enthalpy plus sensible enthalpy difference
+ between the flame temperature and the reference, per kmol, times the number of kmol)"
+H_P = n_CO2*(h_0f_CO2 + (h_CO2_taf - h_CO2_ref)*MM_CO2) + n_H2O*(h_0f_H2O + MM_H2O*(h_H2O_taf - h_H2O_ref)) + n_O2*MM_O2*(h_O2_taf - h_O2_ref) + n_N2*MM_N2*(h_N2_taf - h_N2_ref)   "[J]"
+
+n_CO2 = n_C                  "kmol of CO2 [kmol]"
+MM_CO2 = molarmass(carbondioxide)   "molar mass of CO2 [kg/kmol]"
+h_CO2_taf = enthalpy(CO2,T=TAF)     "ideal-gas CO2 enthalpy at TAF [J/kg] (includes the formation enthalpy)"
+h_CO2_ref = enthalpy(CO2,T=T_ref)   "ideal-gas CO2 enthalpy at the reference [J/kg]"
+
+n_H2O = n_H/2                "kmol of H2O [kmol]"
+MM_H2O = molarmass(water)    "molar mass of H2O [kg/kmol]"
+h_H2O_taf = enthalpy(H2O,T=TAF)     "ideal-gas H2O enthalpy at TAF [J/kg]"
+h_H2O_ref = enthalpy(H2O,T=T_ref)   "ideal-gas H2O enthalpy at the reference [J/kg]"
+
+p_ref = 101325               "atmospheric pressure [Pa] (101.325 kPa in the original)"
+h_H2O_taf_bis = enthalpy(water,T=TAF,p=p_ref)    "real-fluid Water enthalpy at TAF and 1 atm [J/kg], diagnostic of the original"
+h_H2O_ref_bis = enthalpy(water,T=TAF,p=p_ref)    "as in the original (both lines evaluated at T = TAF)"
+
+n_O2 = (lambda-1)*(n_C+n_H/4)     "kmol of excess O2 [kmol]"
+MM_O2 = molarmass(O2)             "molar mass of O2 [kg/kmol]"
+h_O2_taf = enthalpy(O2,T=TAF)     "ideal-gas O2 enthalpy at TAF [J/kg]"
+h_O2_ref = enthalpy(O2,T=T_ref)   "ideal-gas O2 enthalpy at the reference [J/kg]"
+
+n_N2 = 3.76*lambda*(n_C+n_H/4)    "kmol of N2 of the air [kmol]"
+MM_N2 = molarmass(N2)             "molar mass of N2 [kg/kmol]"
+h_N2_taf = enthalpy(N2,T=TAF)     "ideal-gas N2 enthalpy at TAF [J/kg]"
+h_N2_ref = enthalpy(N2,T=T_ref)   "ideal-gas N2 enthalpy at the reference [J/kg]"
+
+TAF_K = TAF + 273.15         "adiabatic flame temperature [K]"
+
+"Fuel-air ratio (dosage): mass of fuel / mass of air involved in the reaction written above"
+far = n_f*MM_f/(lambda*(n_C+n_H/4)*(MM_O2+3.76*MM_N2))     "[-] (far = far_st/lambda)"
+far_st = n_f*MM_f/((n_C+n_H/4)*(MM_O2+3.76*MM_N2))         "stoichiometric dosage (100 % theoretical air) [-]"
+
+"NB: the effect of the excess air on TAF is a parametric study in the original (parametric table and
+ graph); see README.md for the sweep reproduced with this model."

@@ -1,0 +1,73 @@
+{===========================================================================
+  Iron block quenched in a water tank (exergy destruction)
+  CoolSolve Library model CSL-0056
+ ---------------------------------------------------------------------------
+  A 5 kg iron block initially at 350 degC is quenched in an insulated rigid
+  tank containing 100 kg of water at 30 degC; the surroundings (dead state)
+  are at 20 degC and 100 kPa. The water and the block are incompressible
+  substances with constant specific heats; kinetic and potential energy
+  changes and every form of work are neglected; the tank is adiabatic and
+  any vapour formed is assumed to condense back in it.
+
+  A first law on the combined system (closed, rigid, adiabatic) gives the
+  final equilibrium temperature T_f. The exergy of the combined system is
+  then evaluated at the initial and final states, and their difference is
+  the exergy destruction (wasted work potential) of the process.
+
+  Inputs : m_b, m_w, T_b_i, T_w_i, T_0, p_0, c_b, c_w
+  Outputs: T_f, X_tot_i, X_tot_f, X_destroyed
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course Thermodynamique appliquée (MECA0002), repetition
+           session 10, exercise 1 (R10_E01_2022.EES) - see README.md
+===========================================================================}
+
+"!Problem statement (paraphrased from the original)"
+"A 5 kg block initially at 350 °C is quenched in an insulated tank containing
+100 kg of water at 30 °C. The water that vaporises during the process is
+assumed to condense back in the tank. The surroundings are at 20 °C and
+100 kPa. Determine (a) the final equilibrium temperature and (b) the wasted
+work potential of the process."
+
+"!Assumptions, as in the original"
+"1) the water and the iron block are incompressible substances; 2) constant
+specific heats (evaluated near ambient temperature) are used for both;
+3) the changes of kinetic and potential energy are nil; 4) no electrical,
+shaft or other form of work is involved; 5) the system is thermally
+insulated (adiabatic)."
+
+"!Given data"
+m_b = 5 [kg]              "mass of the iron block"
+m_w = 100 [kg]            "mass of the water"
+T_b_i = 350 [C]           "initial temperature of the block (623.15 K in the original)"
+T_w_i = 30 [C]            "initial temperature of the water (303.15 K in the original)"
+T_0 = 20 [C]              "temperature of the environment, taken as reference (293.15 K in the original)"
+p_0 = 100E3 [Pa]          "ambient pressure (100 kPa in the original); not used in the equations (rigid tank), as in the original"
+c_b = 450 [J/kg-K]        "specific heat of the iron block (0.450 kJ/kg-K in the original)"
+c_w = 4180 [J/kg-K]       "specific heat of the water (4.180 kJ/kg-K in the original)"
+
+"!First law on the combined system (closed, rigid, adiabatic): DELTAU_system = 0"
+m_b*c_b*(T_f-T_b_i) = -m_w*c_w*(T_f-T_w_i)   "the block gives its heat to the water, as in the original"
+
+"!Absolute temperatures (the exergy terms below need them)"
+T_b_i_K = T_b_i + 273.15  "initial temperature of the block [K]"
+T_w_i_K = T_w_i + 273.15  "initial temperature of the water [K]"
+T_0_K = T_0 + 273.15      "dead-state temperature [K]"
+T_f_K = T_f + 273.15      "final equilibrium temperature [K]"
+
+"!Exergy of the combined system, initial and final states"
+"As in the original: EES could compute the internal energy and entropy
+directly (also for the block, substance 'Iron'); the analytical method below
+assumes constant specific heats. For an incompressible substance, with the
+rigid tank (dV = 0), the Gibbs relation gives (s-s_0) = c*ln(T/T_0) and the
+closed-system exergy is X = m*c*((T - T_0) - T_0*ln(T/T_0))."
+X_b_i = m_b*c_b*(T_b_i_K - T_0_K - T_0_K*ln(T_b_i_K/T_0_K))   "exergy of the block, initial state [J]"
+X_w_i = m_w*c_w*(T_w_i_K - T_0_K - T_0_K*ln(T_w_i_K/T_0_K))   "exergy of the water, initial state [J]"
+X_tot_i = X_b_i + X_w_i                                        "exergy of the combined system, initial state [J]"
+X_b_f = m_b*c_b*(T_f_K - T_0_K - T_0_K*ln(T_f_K/T_0_K))       "exergy of the block, final state [J]"
+X_w_f = m_w*c_w*(T_f_K - T_0_K - T_0_K*ln(T_f_K/T_0_K))       "exergy of the water, final state [J]"
+X_tot_f = X_b_f + X_w_f                                        "exergy of the combined system, final state [J]"
+
+"!Exergy balance on the isolated system: X_in - X_out - X_destroyed = DELTAX_system"
+"No exergy enters or leaves the isolated system, so:"
+X_destroyed = X_tot_i - X_tot_f   "exergy destruction = wasted work potential [J]"
+X_destroyed_bis = m_b*c_b*(T_b_i_K-T_f_K - T_0_K*ln(T_b_i_K/T_f_K))+m_w*c_w*(T_w_i_K-T_f_K - T_0_K*ln(T_w_i_K/T_f_K))   "the same exergy destruction written directly, as in the original [J]"

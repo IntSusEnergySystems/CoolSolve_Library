@@ -1,0 +1,58 @@
+{
+  "id": "CSL-0056",
+  "name": "iron_block_quench_water_tank",
+  "title": "Iron block quenched in a water tank (exergy destruction)",
+  "summary": "Closed-system second-law exercise: a 5 kg iron block at 350 degC quenched in 100 kg of water at 30 degC in an insulated rigid tank; the first law gives the final equilibrium temperature and the exergy balance of the isolated system gives the exergy destruction (wasted work potential).",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "iron_block_quench_water_tank.eescode",
+  "fluids": [],
+  "tags": [
+    "exergy",
+    "second law",
+    "closed system",
+    "isolated system",
+    "incompressible substance",
+    "irreversibility",
+    "exercise"
+  ],
+  "language_features": [],
+  "stats": {
+    "n_equations": 21,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R10/R10_E01_2022.EES",
+    "candidate_id": "TM-0388",
+    "authors": [
+      "TBD (ULiège, course Thermodynamique appliquée; the companion course files name S. Quoilin and the repetition assistants N. Paulus and B. Dechesne)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège, MECA0002), repetition session 10, exercise 1"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (compare_solution.py --ees-units, on a copy of the reference with its KJ unit strings corrected, see CS-BUG-COMPARE-UNIT-CASE); course Python solution of the same exercise (old/ThAp21_R10E01.py) as independent check",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 4.15e-10,
+    "notes": "17 common variables, 0 differ (rtol=0.001), largest deviation 4.15e-10 (T_f); inputs exact. Python reference prints 31.7 degC and 219.02 kJ, agreeing with the model."
+  },
+  "missing_features": [],
+  "related": ["CSL-0045"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-60, batch B-05)",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "id": "CSL-0069",
+  "name": "centrifugal_compressor_design_similarity",
+  "title": "Centrifugal compressor design and similarity (air)",
+  "summary": "Design of a centrifugal turbocompressor from the flow factor and the enthalpy factor of its best-performance point (dry air, 1 bar / 20 C to 2.5 bar, 6000 m3/h): impeller diameter, rotation speed, tip speed and inlet area. A variant applies the same similarity factors to a compressor of the same type compressing methane.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "centrifugal_compressor_design_similarity.eescode",
+  "fluids": [
+    "Air",
+    "Methane"
+  ],
+  "tags": [
+    "centrifugal compressor",
+    "turbocompressor",
+    "impeller",
+    "flow factor",
+    "enthalpy factor",
+    "similarity",
+    "design",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 15,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 04/MSTH_041012_exercice_6.EES",
+    "candidate_id": "TM-0057",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory, course Machines et systèmes thermiques, repetition of 2004-10-12, exercise 4; individual author not identified)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.210",
+    "language": "fr",
+    "course": "ULiège, Machines et systèmes thermiques, repetition 4 (2004-10-12), exercise 4"
+  },
+  "verification": {
+    "reference": "EES stored solution of thermo_models TM-0057 (MSTH_041012_exercice_6.EES, EES 7.210, 15 variables, internally consistent run) for the main file, and of TM-0058 (MSTH_041012_exercice_6_suite.EES) for the methane variant; tools/compare_solution.py, no unit conversion needed (SI-C-Pa-J)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.000304,
+    "notes": "Main file: 12 of 15 comparable variables agree within 0.031 % (DELTAh_s 0.0304 %, A and U 0.015 %, N and rpm 0.023 %); the 3 remaining are the absolute enthalpies/entropy, offset by the EES-7 vs CoolProp reference states (+125.87 kJ/kg on h, -1814.9 J/kg-K on s, as for CSL-0023 and CSL-0035), all energy differences agree. Methane variant: 12 of 15 comparable variables agree within 0.0026 % (DELTAh_s 2.6e-05), same reference-state offsets on h and s. No unit conversion needed (SI-C-Pa-J). Both files need their .initials with the Newton-only default pipeline (the example's SOLVER NOTE about TrustRegion does not hold for a CLI run); see README."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0023",
+    "CSL-0035"
+  ],
+  "related_external": [
+    "CoolSolve examples/simple_centrifugal_compressor.eescode (CSX-043: same exercise, kept in CoolSolve as a test case; its 15 equations are identical to the EES original TM-0057 — see README)",
+    "thermo_models TM-0058 (MSTH_041012_exercice_6_suite.EES): second part of the exercise, shipped as the CSL-0069:methane variant",
+    "thermo_models TM-0059 / TM-0060 (MSTH_041012_exercice_7*.EES): optimal-regime laws applied to another compressor of the same session (left todo in the inventory)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-043"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-73, batch B-02)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

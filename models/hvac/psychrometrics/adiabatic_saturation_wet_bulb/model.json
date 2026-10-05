@@ -1,0 +1,72 @@
+{
+  "id": "CSL-0066",
+  "name": "adiabatic_saturation_wet_bulb",
+  "title": "Adiabatic saturation and wet-bulb temperature of moist air",
+  "summary": "Air at 25 degC dry bulb and 15 degC wet bulb at 1 atm: specific humidity, relative humidity and specific enthalpy of the moist air per kg of dry air, obtained with the adiabatic-saturation formula of the course (mass and energy balances of a wet-bulb thermometer, constant heat capacities) and cross-checked with the EES property functions HumRat, RelHum and enthalpy.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "adiabatic_saturation_wet_bulb.eescode",
+  "fluids": [
+    "AirH2O",
+    "Water",
+    "Air_ha"
+  ],
+  "tags": [
+    "psychrometrics",
+    "wet-bulb temperature",
+    "adiabatic saturation",
+    "moist air",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "string variable"
+  ],
+  "stats": {
+    "n_equations": 27,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R9/R09_E05_2022.EES",
+    "candidate_id": "TM-0455",
+    "authors": [
+      "TBD (ULiège course Thermodynamique appliquée, MECA0002 - see README 'Source and attribution')"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "ULiège Thermodynamique appliquée (MECA0002), exercise session R9 (2022-2023), exercise 5"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file R09_E05_2022.EES (EES 10.836); the three humid-air property calls were also recomputed with the CoolProp Python library (v8.0.0) and the humidity ratio compared with the ASHRAE wet-bulb relation",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.00524,
+    "notes": "Hand-converted from kPa/kJ. compare_solution.py --ees-units: 26 common variables, 2 above rtol 1e-3, largest relative deviation 5.24e-03 (omega_db_bis, EES HumRat: CoolProp moist air carries the water-enhancement factor, 0.53 % above the course formula omega_db, itself within 1.12e-04 of EES; the same effect was measured at +0.42 % on CSL-0055) and 3.08e-03 (h_db_bis, absolute moist-air enthalpy: different reference state/formulation, the course definition h_db agreeing with both at 4.46e-05). Every other variable agrees at 8.47e-04 or better. Second check: HAPropsSI('W'/'H'/'R','T',298.15,'B',288.15,'P',101325) reproduces omega_db_bis, h_db_bis and RH_db_bis exactly. Third check: the ASHRAE wet-bulb relation gives 0.00652176 kg/kg against 0.00652554 of the model (5.8e-04). The 44 variables of the EES file that are not in the model are the stale leftovers of an earlier exercise of the same file (h[1..7], p[1..7], T[1..7], s[1..7], v[1..7], x[1], x[3..7], P, cp, h_g_wb_bis2)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0055",
+    "CSL-0063",
+    "CSL-0064",
+    "CSL-0028",
+    "CSL-0062",
+    "CSL-0070"
+  ],
+  "related_external": [
+    "thermo_models: 2022-2023/R9/ex5 - demo.docx (statement of the exercise in French and derivation of the adiabatic-saturation formula)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-70, batch B-05)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

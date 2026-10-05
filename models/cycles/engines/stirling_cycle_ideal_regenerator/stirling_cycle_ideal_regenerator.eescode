@@ -1,0 +1,147 @@
+{=============================================================================
+  Ideal Stirling cycle with a perfect regenerator: work, heat and efficiency
+  CoolSolve Library model CSL-0059
+ -----------------------------------------------------------------------------
+  Theoretical Stirling cycle (two isotherms and two isochores) driven by an
+  ideal regenerator. The minimum pressure and temperature of the cycle are
+  100 kPa and 25 C, the volumetric compression ratio is 10 and the maximum
+  temperature of the cycle is 1000 C. The four transformations of the cycle are
+  analysed in terms of work and heat exchanged, the overall efficiency of the
+  machine is computed and compared with the Carnot efficiency between the
+  minimum and maximum temperatures of the cycle; the efficiency of the Stirling
+  cycle without regenerator is computed as well.
+
+  Every transformation is treated twice: with the perfect-gas model (indices
+  without suffix) and with the real-gas air property functions (indices
+  suffixed _bis, "as in the original"). The works of the two isotherms are also
+  computed with the EES definite integral of p dv over the specific volume and
+  compared with the closed form of the isothermal work.
+
+  Inputs : r_v (volumetric compression ratio), p[1] (minimum pressure),
+           T[1] (minimum temperature), T[3] (maximum temperature), fluid$
+  Outputs: p[i], T[i], v[i], s[i] (states), w_ij, q_ij (work and heat of each
+           transformation), w_net, eta_stirling (no regenerator),
+           eta_stirling_regen (with regenerator), eta_carnot and the _bis
+           equivalents computed with the real-gas air properties
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+           (the original works in K, kPa and kJ/kg: converted by hand, see
+            README.md)
+  Source : ULiege, course "Thermodynamique appliquee" (MECA0002), repetition
+           R05, exercise 3 (EES file R05_E03_2022.EES) - see README.md
+  Variant: stirling_cycle_ideal_regenerator_coolsolve.eescode - same model and
+           same results; the definite integrals are written in the canonical
+           state-equation form and their limits are inlined, because CoolSolve
+           v0.3.0 ignores a factor in front of an INTEGRAL call
+           (CS-BUG-INTEGRAL-FACTOR) and rejects symbolic integration limits
+           (CS-GAP-INTEGRAL-LIMITS). Every change is logged in README.md.
+=============================================================================}
+
+"!Data"
+fluid$ = 'Air'    "working fluid [as in the original]"
+r = 287           "specific gas constant of air [J/(kg-K)] (0.287 kJ/(kg-K) in the original); no equation of the original uses it"
+r_bis = R#/MOLARMASS(Air_ha)   "R# is the universal gas constant [J/kmol-K]"
+r_v = 10          "compression ratio / volumetric ratio [-]"
+p[1] = 100E3      "minimum pressure of the cycle [Pa] (100 kPa in the original)"
+p_bis[1] = p[1]
+T[1] = 25         "minimum temperature of the cycle [C] (25 K + 273.15 K in the original, i.e. 298.15 K)"
+T_bis[1] = T[1]
+T[3] = 1000       "maximum temperature of the cycle [C] (1273.15 K in the original)"
+T_bis[3] = T[3]
+{as in the original: the _bis variables are used for the same calculation but
+ treating air as a real gas}
+
+"!Solution"
+
+"!Isothermal compression 1-2 -> T = constant -> heat is REMOVED from the fluid during the compression"
+v[1] = r_bis*(T[1]+273.15)/p[1]   "specific volume at 1, perfect gas law [m^3/kg]"
+v_bis[1] = volume(Air_ha,T=T[1],P=p[1])   "specific volume at 1, real gas [m^3/kg]"
+
+T[2] = T[1]       "isothermal transformation"
+T_bis[2] = T[2]
+
+v[2] = v[1]/r_v   "specific volume at 2, from the volumetric ratio [m^3/kg]"
+v_bis[2] = v[2]
+
+p[2] = r_bis*(T[2]+273.15)/v[2]   "pressure at 2, perfect gas law [Pa]"
+p_bis[2] = pressure(Air_ha,T=T[2],v=v[2])   "pressure at 2, real gas [Pa]"
+
+w_12 = r_bis*(T[1]+273.15)*ln(r_v)   "work required by the compression in a closed system: -integral of p dv [J/kg]"
+p_integrale12 = pressure(Air_ha,T=T[2],v=v12)   "integrand of the real-gas compression work [Pa]"
+
+w_12_bis = -integral(p_integrale12, v12, v[1], v[2], 0.1)   "compression work, real gas: -integral of p_integrale12 dv from v[1] to v[2], step 0.1 m^3/kg [J/kg]"
+
+w_12 + q_12 = cv12*(T[2]-T[1])   "first law for a closed system to obtain the heat exchanged: q+w = du, which comes down to q_12 = -w_12 since the transformation is isothermal [J/kg]"
+cv12 = cv(fluid$,T=(T[1]+T[2])/2)   "cv is assumed constant over the whole transformation, which would not be judicious for large temperature variations [J/(kg-K)]"
+{as in the original: the internal energies u can be used instead; the result is not exactly the same because air (Air_ha) is treated as a real gas below}
+w_12_bis + q_12_bis = u[2]-u[1]   "internal energy route [J/kg]"
+u[1] = intenergy(Air_ha,T=T[1],P=p[1])   "internal energy at 1, real gas [J/kg]"
+u[2] = intenergy(Air_ha,T=T[2],P=p[2])   "internal energy at 2, real gas [J/kg]"
+
+"!Isochoric heating 2-3: v = constant"
+{note: this quantity of heat, equal to q_41 in absolute value, can be recovered with a regenerator}
+v[3] = v[2]       "isochoric transformation"
+v_bis[3] = v[3]
+w_23 = 0          "no work exchanged, isochoric transformation: -integral of p dv = 0 [J/kg]"
+w_23_bis = 0
+
+w_23 + q_23 = cv23*(T[3]-T[2])   "heat exchanged from the first law for closed systems [J/kg]"
+p[3] = r_bis*(T[3]+273.15)/v[3]   "p_3, perfect gas law [Pa]"
+p_bis[3] = pressure(Air_ha,T=T[3],v=v[3])   "p_3, real gas [Pa]"
+
+cv23 = cv(fluid$,T=(T[2]+T[3])/2)   "cv is assumed constant over the whole transformation, which would not be judicious for large temperature variations [J/(kg-K)]"
+{as in the original: the internal energies u can be used instead; the result is not exactly the same because air is treated as a real gas below}
+w_23_bis + q_23_bis = u[3]-u[2]   "internal energy route [J/kg]"
+u[3] = intenergy(Air_ha,T=T[3],v=v[3])   "internal energy at 3, real gas [J/kg]"
+
+"!Isothermal expansion 3-4: T = constant, heat is ADDED to the fluid (which would tend to cool down during the expansion) !!!"
+T[4] = T[3]       "isothermal transformation"
+T_bis[4] = T[4]
+
+p[4] = r_bis*(T[4]+273.15)/v[4]   "the specific volume at 4 is known (see below) -> p_4, perfect gas law [Pa]"
+p_bis[4] = pressure(Air_ha,T=T[4],v=v[1])   "real gas: v_1 because an isochoric cooling follows"
+
+w_34 = r_bis*(T[3]+273.15)*ln(v[3]/v[4])   "work exchanged during the isothermal expansion: -integral of p dv [J/kg]"
+p_integrale34 = pressure(Air_ha,T=T[3],v=v34)   "integrand of the real-gas expansion work [Pa]"
+
+w_34_bis = -integral(p_integrale34, v34, v[3], v[4], 0.1)   "expansion work, real gas: -integral of p_integrale34 dv from v[3] to v[4], step 0.1 m^3/kg [J/kg]"
+
+w_34 + q_34 = cv34*(T[4]-T[3])   "heat received during the expansion, from the first law for closed systems [J/kg]"
+cv34 = cv(fluid$,T=(T[3]+T[4])/2)   "cv is assumed constant over the whole transformation, which would not be judicious for large temperature variations [J/(kg-K)]"
+{as in the original: the internal energies u can be used instead; the result is not exactly the same because air is treated as a real gas below}
+w_34_bis + q_34_bis = u[4]-u[3]   "internal energy route [J/kg]"
+u[4] = intenergy(Air_ha,T=T[4],P=p[4])   "internal energy at 4, real gas [J/kg]"
+
+"!Isochoric cooling 4-1: v = constant"
+v[4] = v[1]
+v_bis[4] = v[4]
+w_41 = 0          "no work exchanged, isochoric transformation [J/kg]"
+w_41_bis = 0
+
+w_41 + q_41 = cv41*(T[1]-T[4])   "heat exchanged from the first law for closed systems [J/kg]"
+cv41 = cv(fluid$,T=(T[1]+T[4])/2)   "cv is assumed constant over the whole transformation, which would not be judicious for large temperature variations [J/(kg-K)]"
+{as in the original: the internal energies u can be used instead; the result is not exactly the same because air is treated as a real gas below}
+w_41_bis + q_41_bis = u[1]-u[4]   "internal energy route [J/kg]"
+
+"!Thermal efficiency"
+
+"!Cycle WITHOUT regenerator -> two quantities of heat must be supplied: q_23 during the isochoric heating AND q_34 during the ISOTHERMAL expansion"
+q_couteux = q_23 + q_34   "heat supplied to the cycle without regenerator [J/kg]"
+eta_stirling = w_net/q_couteux   "efficiency without regenerator [-]"
+w_net = -(w_34+w_12)   "net work = useful effect [J/kg]"
+"!Cycle WITH regenerator -> only q_34 during the isothermal expansion must be supplied. The heat q_23 received during the isochoric heating is recovered from the isochoric cooling q_41"
+q_c = q_34   "heat supplied to the cycle with regenerator [J/kg]"
+eta_stirling_regen = w_net/q_c   "efficiency with regenerator [-]"
+eta_stirling_regen_bis = -(w_34_bis+w_12_bis)/q_34_bis   "efficiency with regenerator, real gas [-]"
+
+"!Carnot efficiency: the cold source is at T_1 and the hot source at T_3"
+eta_carnot = 1-(T[1]+273.15)/(T[3]+273.15)   "Carnot efficiency between the minimum and maximum temperatures [-]"
+
+{as in the original: the theoretical Stirling cycle WITH regenerator has the same
+ efficiency as the Carnot cycle, and the efficiency of the cycle WITHOUT
+ regenerator is worth almost 55 % of the Carnot efficiency}
+
+"!For information"
+s[1] = entropy('Air',T=T[1],p=p[1])   "entropy at 1 [J/(kg-K)]"
+s[2] = entropy('Air',T=T[2],p=p[2])   "entropy at 2 [J/(kg-K)]"
+s[3] = entropy('Air',T=T[3],p=p[3])   "entropy at 3 [J/(kg-K)]"
+s[4] = entropy('Air',T=T[4],p=p[4])   "entropy at 4 [J/(kg-K)]"

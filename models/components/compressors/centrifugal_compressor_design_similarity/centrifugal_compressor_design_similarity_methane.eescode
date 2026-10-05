@@ -1,0 +1,46 @@
+{=============================================================================
+  Centrifugal compressor design and similarity (methane)
+  CoolSolve Library model CSL-0069 - variant of the main file
+ -----------------------------------------------------------------------------
+  Second part of the same exercise (ULiege, course Machines et systemes
+  thermiques, MSTH 041012 4): diameter and rotation speed of a compressor of
+  the same type, compressing 12000 m3/h of methane from 2 bar and 20 C to 3 bar.
+  The flow factor phi and the enthalpy factor psi of the nominal point are the
+  same as those of the air compressor of the main file, and the equations are
+  the same; only the fluid (methane) and the nominal point change.
+
+  Variant of centrifugal_compressor_design_similarity.eescode (see README.md):
+  this is the continuation file of the exercise, imported as a separate
+  runnable file, not a workaround of a CoolSolve gap. No equation was changed;
+  the real-fluid methane (EES: lowercase `methane`) is the approximation kept
+  active by the original, whose ideal-gas approximation (EES ideal-gas
+  substance `CH4`) is left commented out, as in the original.
+
+  Inputs : p_su, t_su, p_ex, V_dot_su (nominal point); phi, psi (flow and
+           enthalpy factors of the nominal point)
+  Outputs: D (impeller diameter), N, rpm, U (blade tip speed), A
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : ULiege course (J. Lebrun) - see README.md
+=============================================================================}
+
+"Nominal point and similarity factors of the methane compressor, as in the original"
+p_su=2E5                   "suction pressure [Pa]"
+t_su=20                    "suction temperature [C]"
+p_ex=3E5                   "discharge pressure [Pa]"
+V_dot_su=12000/3600        "suction volume flow rate [m3/s]"
+phi=0.3                    "flow factor [-]"
+psi=1.4                    "enthalpy factor [-]"
+phi=V_dot_su/(U*A)         "flow factor"
+U=pi*D*N                   "blade tip speed [m/s]"
+A=pi*D^2/4                 "impeller inlet area [m2]"
+rpm=N*60                   "rotation speed [rev/min]"
+psi=DELTAh_s/(U^2/2)       "enthalpy factor"
+DELTAh_s=h_exs-h_su        "isentropic enthalpy rise from suction to discharge [J/kg]"
+"first approximation (probably sufficient): methane is assumed to be an ideal gas: CH4;
+ second approximation: real gas - the active lines below, as in the original"
+"h_su=ENTHALPY(CH4,T=T_su)"
+h_su=ENTHALPY(methane,T=T_su, p=p_su)  "suction specific enthalpy [J/kg]"
+"h_exs=ENTHALPY(CH4,s=s_su,p=p_ex)"
+h_exs=ENTHALPY(methane,s=s_su,p=p_ex)  "isentropic discharge specific enthalpy [J/kg]"
+"s_su=ENTROPY(CH4,T=T_su,P=P_su)"
+s_su=ENTROPY(methane,T=T_su,P=P_su)     "suction specific entropy [J/kg-K]"

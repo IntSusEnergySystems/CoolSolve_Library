@@ -1,0 +1,56 @@
+{=============================================================================
+  Isothermal expansion of a non-ideal gas: unit of k and boundary work
+  CoolSolve Library model CSL-0047
+  -----------------------------------------------------------------------------
+  A gas obeying the equation of state  v*(P + k/v^2) = R*T  (molar volume v)
+  expands isothermally in a cylinder while its volume is doubled. The model
+  determines the unit of the parameter k, the final pressure and the boundary
+  work, computed (a) with the EES integral function and (b) with the closed
+  form obtained by integrating P(v) analytically; the two results must agree.
+
+  The term k/v^2 must be added to P, so k has the unit of a pressure times a
+  molar volume squared; the original states it in kPa-m^6/kmol^2 because it
+  works in kPa, this file works in Pa.
+
+  Inputs : N (amount of gas), V1 (initial volume), T (isothermal temperature),
+           k (equation-of-state parameter), the final volume ratio V2/V1
+  Outputs: v1_bar, v2_bar (molar volumes), k (unit), P (final pressure),
+           W_b_EES, W_b_hand (boundary work, isothermal expansion)
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+           (molar quantities in kmol, because the gas of the exercise has no
+            molar mass: see README.md)
+  Source : ULiège, course "Thermodynamique appliquée" (MECA0002), repetition
+           R02, exercise 3 (EES file R2_E3_2022.EES) - see README.md
+  Variant: nonideal_gas_isothermal_work_coolsolve.eescode - same model and
+           same results; the definite integral is written in the canonical
+           state-equation form and its limits are inlined, because CoolSolve
+           v0.3.0 ignores a factor in front of an INTEGRAL call
+           (CS-BUG-INTEGRAL-FACTOR) and rejects symbolic integration limits
+           (CS-GAP-INTEGRAL-LIMITS). Every change is logged in README.md.
+==============================================================================}
+
+"Data"
+N = 0.2             "amount of gas [kmol]"
+V1 = 2              "initial cylinder volume [m^3] (2000 L in the original)"
+V2 = V1*2           "final cylinder volume [m^3]: the initial volume is doubled"
+T = 76.85           "constant temperature of the expansion [°C] (350 K in the original)"
+T_K = T + 273.15    "absolute temperature, needed in R*T [K]"
+R = 8314            "molar gas constant [J/kmol-K] (8.314 kJ/kmol-K in the original)"
+
+"Molar volumes"
+v1_bar = V1/N       "initial molar volume [m^3/kmol]"
+v2_bar = V2/N       "final molar volume [m^3/kmol]"
+
+{Parameter k of the equation of state. The term k/v_bar^2 must be added to P,
+ so it must be a pressure; with v_bar a molar volume in m^3/kmol, k has the
+ unit Pa*m^6/kmol^2 (kPa*m^6/kmol^2 in the original, which works in kPa).}
+k = 1E4             "equation-of-state parameter [Pa*m^6/kmol^2] (10 kPa*m^6/kmol^2 in the original)"
+
+"Equation of state: v_bar*(P + k/v_bar^2) = R*T, with P in Pa"
+v_bar*(P + k/v_bar^2) = R*T_K   "P is the final pressure of the expansion [Pa]"
+
+"!Boundary work from the EES integral function: -integral of P dV = -N*integral of P dv_bar"
+W_b_EES = -N*integral(P, v_bar, v1_bar, v2_bar, 0.01)   "boundary work [J], integral of P dv_bar with a step of 0.01 m^3/kmol"
+
+"!Boundary work from the closed form: v_bar*(P + k/v_bar^2) = R*T  =>  P = R*T/v_bar - k/v_bar^2"
+W_b_hand = -N*(R*T_K*ln(v2_bar/v1_bar) + k*(1/v2_bar - 1/v1_bar))   "boundary work [J], integrated analytically"

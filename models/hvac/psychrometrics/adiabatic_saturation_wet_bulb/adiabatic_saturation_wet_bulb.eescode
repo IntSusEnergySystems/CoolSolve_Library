@@ -1,0 +1,91 @@
+{=============================================================================
+  Adiabatic saturation and wet-bulb temperature of moist air
+  CoolSolve Library model CSL-0066
+ -----------------------------------------------------------------------------
+  The dry-bulb and wet-bulb temperatures of the air at 1 atm are measured at
+  25 degC and 15 degC with a psychrometer. The model gives the specific
+  humidity (humidity ratio), the relative humidity and the specific enthalpy
+  of the air. As in the original, the humidity ratio is obtained with the
+  adiabatic-saturation formula derived from the mass and energy balances, and
+  every quantity is computed a second time with the EES property functions.
+
+  Inputs : T_db dry-bulb temperature, T_wb wet-bulb temperature,
+           P_amb ambient pressure
+  Outputs: omega_db specific humidity of the air, RH_db relative humidity,
+           h_db specific enthalpy per kg of dry air
+  Units  : SI - temperatures in degC, pressures in Pa, energies in J
+  Source : ULiege, course "Thermodynamique appliquee" (MECA0002), session R9,
+           exercise 5 - see README.md
+=============================================================================}
+
+"Data"
+fluid$ = 'AirH2O'   "moist-air fluid of the EES property functions"
+T_wb = 15 [C]       "wet-bulb temperature measured with the psychrometer"
+T_db = 25 [C]       "dry-bulb temperature measured with the psychrometer"
+P_amb = 101325 [Pa] "ambient pressure (101.325 kPa in the original)"
+
+"!Humidity ratio at the wet-bulb state and adiabatic saturation"
+omega_db = (cp_air*(T_wb-T_db) + omega_wb*h_fg_wb)/(h_g_db-h_f_wb)   "specific humidity of the air, adiabatic-saturation formula (as in the original) [kg water/kg dry air]"
+"Formula seen in the course on the slide of the adiabatic saturation
+ temperature, derived from the mass balances (on the water and on the dry air)
+ and from the energy balance
+  --> h_g_db = enthalpy of the water vapour at T_db
+           --> taken equal to the enthalpy of the saturated vapour at the same
+               temperature
+  --> h_f_wb = enthalpy of the liquid water at T_wb"
+
+omega_wb = 0.622*P_v_wb/(P_amb-P_v_wb)  "humidity ratio of the saturated air at the wet-bulb temperature (course relation between the specific humidity and the partial pressure of the vapour) [kg/kg]"
+
+P_v_wb = p_sat(Water,T=T_wb)   "on the wet-bulb side the air is saturated in water, so RH = 100 % = P_v_wb/P_sat: the partial pressure of the vapour is the saturation pressure (as in the original) [Pa]"
+
+"!Comparison of the error made when using the constant heat capacity"
+cp_air = 1005 [J/kg-K]   "specific heat capacity of the dry air given in the course, valid between -10 and 50 degC (1.005 kJ/kg-C in the original)"
+DELTAh_air1 = cp_air*(T_wb-T_db)                              "enthalpy difference of the dry air, constant cp [J/kg]"
+DELTAh_air2 = enthalpy(Air_ha,T=T_wb,P=P_amb) - enthalpy(Air_ha,T=T_db,P=P_amb)  "same, from the dry-air enthalpy function (without the constant-cp approximation) [J/kg]"
+
+"!Enthalpies used in the adiabatic-saturation formula"
+h_fg_wb = h_g_wb - h_f_wb   "latent heat of vapourisation at T_wb, going back up in the derivation of the formula for omega_db [J/kg]"
+"h_g_wb = enthalpy of the water vapour at T_wb --> taken equal to the enthalpy of the saturated vapour at the same temperature"
+h_f_wb = enthalpy(Water,T=T_wb,P=P_amb)   "enthalpy of the water at T_wb [J/kg]"
+
+h_g_db = 2500900 + 1820*T_db   "enthalpy of the water vapour in the air, given in the course, valid at low pressure (such as atmospheric pressure) between -10 and 50 degC, simplified by taking the enthalpy of the saturated vapour at the same temperature (2500.9 kJ/kg and 1.82 kJ/kg-C in the original) [J/kg]"
+h_g_db_bis = enthalpy(Water,T=T_db,x=1)   "same, without the simplification of the constant cp (check) [J/kg]"
+
+h_g_wb = 2500900 + 1820*T_wb   "enthalpy of the saturated water vapour at T_wb, course value (2500.9 kJ/kg and 1.82 kJ/kg-C in the original) [J/kg]"
+h_g_wb_bis = enthalpy(Water,T=T_wb,x=1)   "same, without the simplification of the constant cp (check) [J/kg]"
+
+"!Comparison with the EES property functions"
+omega_db_bis = humrat(AirH2O,T=T_db,B=T_wb,P=P_amb)   "specific humidity, EES HumRat function (check) [kg/kg]"
+
+RH_db = omega_db*P_amb/((0.622+omega_db)*P_sat_db)   "relative humidity: course relation linking it to the specific humidity [-]"
+P_sat_db = p_sat(Water,T=T_db)   "saturation pressure of water at the dry-bulb temperature [Pa]"
+
+RH_db_bis = relhum(AirH2O,T=T_db,B=T_wb,P=P_amb)   "relative humidity, EES RelHum function (check) [-]"
+P_v_db = P_sat_db*RH_db_bis   "partial pressure of the vapour, by definition of the relative humidity [Pa]"
+
+h_g_db_bis2 = enthalpy(Water,T=T_db,P=P_v_db)   "same, without the simplification that the vapour has the enthalpy of the saturated vapour at the same temperature (check) [J/kg]"
+"the same check on the wet-bulb side does not work: on that side the air is
+ saturated in water, so there is nothing more accurate than
+ h_g_wb_bis = enthalpy(Water,T=T_wb,x=1) (comment of the original)"
+
+"!Specific enthalpy of the air"
+h_db = h_a_db + omega_db*h_g_db   "specific enthalpy of the moist air, by definition (as in the original) [J/kg dry air]"
+
+h_a_db = cp_air*T_db   "enthalpy of the dry air referred to 0 degC, as in the course [J/kg]"
+h_a_db_bis = enthalpy(Air_ha,T=T_db,P=P_amb) - enthalpy(Air_ha,T=0,P=P_amb)   "same, from the dry-air enthalpy function, brought back to the 0 degC reference [J/kg]"
+"careful: EES does not use the reference h = 0 kJ/kg at 0 degC for the dry air
+ (as the course does) and therefore returns a much larger enthalpy if the
+ reference is not subtracted
+  in short, one must not write
+  h_db = enthalpy(air_ha,T=T_db,P=P_amb) + omega_db*enthalpy(water,T=T_db,X=1)
+ because the two terms use enthalpy scales based on different references.
+ To be sure of using the same references, subtract the reference of each term
+ of each fluid, as below:"
+
+h_db_bis2 = enthalpy(Air_ha,T=T_db,P=P_amb) - enthalpy(Air_ha,T=0,P=P_amb) + omega_db*(enthalpy(Water,T=T_db,x=1) - enthalpy(Water,T=0,x=0))   "specific enthalpy of the moist air with every enthalpy brought back to its 0 degC reference [J/kg dry air]"
+"the reference of the water is h = 0 at 0 degC and saturated liquid, that is
+ h = 2500.9 kJ/kg at 0 degC and saturated vapour, exactly as in the course:
+  --> the reference of the water is the same as in the course,
+     enthalpy(Water,T=0,x=0) = 0, so it is not useful in the equation above"
+
+h_db_bis = enthalpy(AirH2O,T=T_db,B=T_wb,P=P_amb)   "specific enthalpy of the moist air, EES enthalpy function (check) [J/kg dry air]"

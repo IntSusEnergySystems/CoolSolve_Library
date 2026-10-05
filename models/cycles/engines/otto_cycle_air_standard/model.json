@@ -1,0 +1,59 @@
+{
+  "id": "CSL-0049",
+  "name": "otto_cycle_air_standard",
+  "title": "Air-standard Otto cycle (ideal gas, variable specific heats)",
+  "summary": "Theoretical Otto cycle solved exactly as the original exercise: air as an ideal gas with a variable specific heat, the ratio of the specific heats gamma evaluated at the mean temperature of each isentropic transformation and c_v held constant over each transformation. It gives the four state points, the maximum pressure and temperature, the net work per unit mass, the thermal efficiency and the work and power of a multi-cylinder engine.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "otto_cycle_air_standard.eescode",
+  "fluids": ["Air"],
+  "tags": [
+    "Otto cycle",
+    "internal combustion engine",
+    "spark ignition",
+    "ideal gas",
+    "variable specific heat",
+    "Laplace law",
+    "engine power",
+    "exercise",
+    "air standard"
+  ],
+  "language_features": ["property functions", "string variables", "arrays", "R# / molarmass"],
+  "stats": {"n_equations": 45, "largest_block": 3},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R5/R05_E01_2022.EES",
+    "candidate_id": "TM-0429",
+    "authors": [
+      "TBD (ULiège course MECA0002, session sheet R5 of 2022-2023 lists the repetiteurs N. Paulus, A. Zeoli and V. Lemort)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "ULiège MECA0002 Thermodynamique appliquée, session R5 (chapter 9 part 1, internal combustion engines), exercise 1"
+  },
+  "verification": {
+    "reference": "Independent re-implementation of the same exercise in Python with CoolProp (fixed-point solution of the recursive equations, cp/cv/entropy of Air), not shipped; plus the meaningful part of the EES stored solution (the source file was saved without a complete solution: 25 of its 43 stored values are the placeholder 1, so only the inputs and the quantities EES computed by hand agree)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 2.11e-11,
+    "notes": "compare_solution.py against the Python/CoolProp reference with --rtol 1e-9: '42 common variables, 0 differ (rtol=1e-09); only in EES: 0; only in CoolSolve: 4' (the 4 are fluid$, its string copy in the .sol (CS-BUG-SOL-STRING), R# and the unused input r); largest deviation 2.11e-11 (v[2], v[3]). Against the EES stored values (--ees-units): the 18 lines marked ok (inputs, the zeros and v[1..4], m, r_bis) agree within 1.51e-05 (v[1..4], m, r_bis: EES molar mass of dry air 28.966 vs CoolProp 28.96546 kg/kmol), the inputs are identical, and s[1] = 5672.12 vs 3856.91 J/kg-K is a constant entropy reference-state offset (EES ideal-gas Air table vs CoolProp Air). The 25 remaining stored values are the placeholder 1 (T[2], T[3], T[4], p[2..4], gamma01, gamma34, cv12..cv41, w_12, w_34, q_41, eta_otto, W_net, W_dot_net, w_net_cycle, w_net_cycle_bis, p_max, T_max, s[2..4] with a K unit): the file was saved before a full solution, so they carry no information and compare_solution.py flags them all as DIFF."
+  },
+  "missing_features": [],
+  "related": ["CSL-0024", "CSL-0034", "CSL-0050", "CSL-0059"],
+  "related_external": [
+    "thermo_models TM-0430 / TM-0433 (thermodynamique appliquee session R5, exercise 2: air-standard Diesel cycle, same session and same solution method, other cycle)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-52, batch B-05)",
+      "by": "opencode worker (space-bunny-free) for S. Quoilin"
+    }
+  ]
+}

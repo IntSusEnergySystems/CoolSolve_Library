@@ -1,0 +1,79 @@
+{=============================================================================
+  Adiabatic humidifier, simplified model (effectiveness-NTU)
+  CoolSolve Library model CSL-0070
+ -----------------------------------------------------------------------------
+  Simplified model of an adiabatic (evaporative) humidifier: the air is
+  humidified at the wet-bulb temperature, described by a heat and moisture
+  transfer effectiveness expressed from an NTU based on a conductance AU
+  correlated with the air and water flow rates (power laws identified on
+  laboratory tests). Computes the exit air temperature and humidity, the
+  relative humidity, and the fraction of the supplied water that is
+  evaporated (humidifier efficiency).
+
+  Inputs : M_dot_a_hum (air flow), t_a_su_hum, RH_su_hum (supply air),
+           P_atm, M_dot_w_su_hum (supplied water flow)
+  Outputs: epsilon_hum, t_a_ex_hum, w_ex_hum, RH_ex_hum, h_a_ex_hum, eta_hum,
+           M_dot_w_ex_hum
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège model bank (Laborelec toolkit lineage), J. Lebrun - see README.md
+=============================================================================}
+
+"!Title: Simplified model for adiabatic humidification"
+"Date: 3 January 2008"
+"Authors: J. Lebrun"
+"University of Liège, Faculty of Applied Sciences, Thermodynamics Laboratory"
+"Disclaimer: as in the original - this model is freely distributed and may not be sold; the user is asked to cite its origin."
+
+"!Nomenclature (as in the original):"
+"su = supply, ex = exhaust"
+"epsilon_hum = (heat and moisture) transfer effectiveness; eta_hum = humidifier efficiency (should not be confused with epsilon_hum)."
+
+"Inputs, parameters and outputs are given in the control panel (Diagram window) of the original; the library model gives them their default-run (stored) values as equations."
+
+"!Inputs:"
+M_dot_a_hum=2.2       "air mass flow rate at humidifier supply [kg/s]"
+t_a_su_hum=25         "supply air temperature [°C]"
+RH_su_hum=0.3         "supply air relative humidity [-]"
+P_atm=99600           "atmospheric pressure [Pa]"
+M_dot_w_su_hum=0.015  "supplied water mass flow rate [kg/s]"
+
+"!Parameters:"
+AU_hum_n=1500          "conductance AU at nominal flow rates [W/K] (stored unit in the original: W/(K*m^2))"
+n_hum=0.4              "exponent of the air flow rate in the AU correlation [-]"
+m_hum=0.7              "exponent of the water flow rate in the AU correlation [-]"
+M_dot_a_hum_n=2.5      "nominal air mass flow rate [kg/s]"
+M_dot_w_su_hum_n=0.013 "nominal supplied water mass flow rate [kg/s]"
+
+"!Simulation"
+"Psychrometric properties of air at humidifier supply:"
+w_su_hum=HUMRAT(AirH2O,T=t_a_su_hum,P=P_atm,R=RH_su_hum)   "supply humidity ratio [kg_w/kg_a]"
+t_wb_su_hum=wetbulb(AIRH2O,T=t_a_su_hum,P=P_atm,w=w_su_hum) "supply wet-bulb temperature [°C]"
+h_a_su_hum=enthalpy(AIRH2O,T=t_a_su_hum,P=P_atm,w=w_su_hum) "supply humid-air specific enthalpy [J/kg]"
+"Humidifier effectiveness:"
+epsilon_hum=1-exp(-NTU_hum)                                  "transfer effectiveness [-]"
+NTU_hum=AU_hum/C_dot_min_hum                                 "number of transfer units [-]"
+C_dot_min_hum=C_dot_a_hum                                    "minimum heat-capacity rate: air side [W/K]"
+C_dot_a_hum=M_dot_a_hum*cp_a_hum                             "air heat-capacity rate [W/K]"
+cp_a_hum=cp(AIRH2O,T=t_a_su_hum,P=P_atm,w=w_su_hum)          "humid-air specific heat capacity [J/kg-K]"
+AU_hum=AU_hum_n*(M_dot_a_hum/M_dot_a_hum_n)^n_hum*(M_dot_w_su_hum/M_dot_w_su_hum_n)^m_hum "conductance AU correlated with the flow rates [W/K]"
+"Air state at humidifier exhaust:"
+t_a_ex_hum=t_a_su_hum+epsilon_hum*(t_wb_su_hum-t_a_su_hum)   "exit air temperature [°C]"
+w_ex_hum=humrat(AIRH2O,t=t_a_ex_hum,P=P_atm,b=t_wb_su_hum)   "exit humidity ratio, saturated at the wet-bulb temperature [kg_w/kg_a]"
+RH_ex_hum=relhum(AIRH2O,T=t_a_ex_hum,P=P_atm,w=w_ex_hum)     "exit relative humidity [-]"
+h_a_ex_hum=enthalpy(AIRH2O,T=t_a_ex_hum,P=P_atm,w=w_ex_hum)  "exit humid-air specific enthalpy [J/kg]"
+" Humidifier Efficiency"
+"NB: as in the original - this efficiency should not be confused with the above-defined (heat and moisture) transfer effectiveness. The humidifier efficiency is the ratio between the amount of water actually vaporized in the air and the amount of water supplied to the humidifier."
+eta_hum=(M_dot_w_su_hum-M_dot_w_ex_hum)/M_dot_w_su_hum       "humidifier efficiency [-]"
+"Mass balance:"
+M_dot_w_ex_hum=M_dot_w_su_hum-M_dot_a_hum*(w_ex_hum-w_su_hum) "non-evaporated (exhaust) water mass flow rate [kg/s]"
+
+"----------------------------------------------------------------------------------------------------"
+"Examples of characteristic values (identified on the basis of laboratory test results for two examples of humidifiers), as listed in the original:"
+"1. Centrifugal atomizing humidifier:"
+"Nominal flow rates: M_dot_a_n=2.5 kg/s, M_dot_w_n=0.013 kg/s"
+"Domain covered in laboratory tests: constant air flow rate 2.6 kg/s; water flow rate varying from 0.012 kg/s to 0.024 kg/s."
+"Results of parameter identification: AU_n=1500, n=0.771, m=0.4718"
+"2. Wetted wires humidifier:"
+"Nominal flow rates: M_dot_a_n=1.6 kg/s, M_dot_w_n=2.5 kg/s"
+"Domain covered in laboratory tests: constant water flow rate 2.5 kg/s; air flow rate varying from 1.66 kg/s to 3.3 kg/s."
+"Results of parameter identification: AU_n=7646, n=0.5, m=0"

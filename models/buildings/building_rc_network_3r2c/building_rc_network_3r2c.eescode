@@ -1,0 +1,108 @@
+{=============================================================================
+  3R2C building thermal network with weather lookup
+  CoolSolve Library model CSL-0042
+-----------------------------------------------------------------------------
+  Single-zone building thermal network with three thermal capacitances
+  (indoor air, opaque facade, internal masonry walls) coupled through
+  thermal resistances, over one week (168 h) of July weather read from the
+  companion table building_rc_network_3r2c-week.csv (outdoor temperature,
+  south solar irradiance, occupancy factor). Ventilation provides the only
+  cooling (no active HVAC), as in the original.
+
+  This file keeps the native EES syntax (INTERPOLATE inside an INTEGRAL
+  model) and does NOT run in CoolSolve yet (CS-GAP-INTEGRAL-LOOKUP: the
+  lookup store is not wired into the IntegralSolver); the runnable variant
+  building_rc_network_3r2c_coolsolve.eescode replaces the three lookups by
+  an exact piecewise-linear reconstruction of the same table and reproduces
+  the same trajectory - see README.md.
+
+  Inputs : geometry (Haut, Prof, Larg), V_dot_su_m3h, T_su, peak internal
+           gains (Q_dot_occ_max, Q_dot_light_max, Q_dot_appl_max), glazing
+           (U_glazing, A_glazing), facade and internal-wall resistances and
+           capacitances, initial temperatures, weather table 'week'
+  Outputs: indoor air temperature T_in, facade temperature T_c_wall and
+           internal-wall temperature T_c_in over tau (trajectory in the
+           $IntegralTable below), heat flows
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : CoolSolve example examples/building_rc_network.eescode, from the
+           CLIM R06 repetition exercise 2 (University of Liege), itself
+           simplified from an original EES model - see README.md
+=============================================================================}
+
+"!Geometry and ventilation (as in the original)"
+Haut = 2.7                          "room height [m]"
+Prof = 6                            "room depth [m]"
+Larg = 4                            "room width [m]"
+V_in = Larg * Prof * Haut           "room volume [m^3]"
+V_dot_su_m3h = 60                   "supply air flow rate [m^3/h]"
+V_dot_su = V_dot_su_m3h / 3600      "supply air flow rate [m^3/s]"
+rho = 1.2                           "air density [kg/m^3]"
+c_p = 1005                          "air specific heat capacity [J/kg-K]"
+T_su = 14                           "supply air temperature [C]"
+
+"!Internal gains (peak values, as in the original)"
+Q_dot_occ_max = 160                 "peak occupant heat gain [W]"
+Q_dot_light_max = 250               "peak lighting heat gain [W]"
+Q_dot_appl_max = 250                "peak appliance heat gain [W]"
+SF = 0.5                            "solar shading factor [-]"
+
+"!Integration interval (one week, 600 s output interval, as in the original)"
+tau_1 = 0                           "start of the integration interval [s]"
+tau_2 = 604800                      "end of the integration interval [s]"
+N_h = 168                           "number of hours in the week [-]"
+DELTAtau = 600                      "output interval of the trajectory table [s]"
+tau_hour = tau / 3600               "time in hours [h]"
+
+"!Weather from lookup table (July sunny week)"
+T_out = INTERPOLATE('week', 'tau', 'T_out', tau)          "outdoor air temperature [C]"
+I_dot_south = INTERPOLATE('week', 'tau', 'I_dot_south', tau)  "south solar irradiance [W/m^2]"
+f_occ = INTERPOLATE('week', 'tau', 'f_occ', tau)          "occupancy factor [-]"
+
+"!Thermal resistances and capacitances (as in the original)"
+C_opaque = 360000                   "areal capacitance of the opaque facade [J/m^2-K]"
+R_in_1 = 0.1964                     "internal surface resistance of the opaque facade [m^2-K/W]"
+R_out_1 = 0.1149                    "external surface resistance of the opaque facade [m^2-K/W]"
+A_opaque = 6.3                      "opaque facade area [m^2]"
+U_glazing = 3                       "glazing overall heat transfer coefficient [W/m^2-K]"
+A_glazing = 4.5                     "glazing area [m^2]"
+R_glazing = 1 / U_glazing           "glazing thermal resistance [m^2-K/W]"
+h_in = 8                            "internal surface heat transfer coefficient [W/m^2-K]"
+R_w = 0.1429                        "thermal resistance of the internal masonry walls [m^2-K/W]"
+R_in = 1 / h_in + R_w / 2           "internal surface resistance of the internal walls [m^2-K/W]"
+A_InternalWalls = Haut * Prof * 2 + Haut * Larg + Prof * Larg * 2   "internal wall area [m^2]"
+C_InternalWalls = C_opaque / 2     "areal capacitance of the internal walls [J/m^2-K]"
+C_in = 5 * V_in * rho * c_p         "areal capacitance of the indoor air [J/m^2-K]"
+C_dot_su = V_dot_su * rho * c_p     "air heat capacity flow rate of the ventilation [W/K]"
+
+"!Initial temperatures (as in the original)"
+T_in_0 = 25                         "initial indoor air temperature [C]"
+T_c_in_0 = 25                       "initial internal wall temperature [C]"
+T_c_wall_0 = 25                     "initial facade temperature [C]"
+
+"!State equations (integrated)"
+T_in = T_in_0 + INTEGRAL(dT_in_dtau, tau, 0, 604800)         "indoor air temperature [C]"
+T_c_wall = T_c_wall_0 + INTEGRAL(dT_c_wall_dtau, tau, 0, 604800)  "opaque facade temperature [C]"
+T_c_in = T_c_in_0 + INTEGRAL(dT_c_in_dtau, tau, 0, 604800)   "internal wall temperature [C]"
+
+dT_in_dtau = Q_dot_capa_in / C_in                    "indoor air temperature rate [K/s]"
+dT_c_wall_dtau = Q_dot_capa_c_wall / (C_opaque * A_opaque)  "facade temperature rate [K/s]"
+dT_c_in_dtau = Q_dot_capa_c_in / (C_InternalWalls * A_InternalWalls)  "internal wall temperature rate [K/s]"
+
+"!Node balances (as in the original)"
+Q_dot_sens + H_dot_vent + (T_c_in - T_in) / (R_in / A_InternalWalls) + (T_out - T_in) / (R_glazing / A_glazing) + (T_c_wall - T_in) / (R_in_1 / A_opaque) = Q_dot_capa_in
+
+(T_in - T_c_wall) / (R_in_1 / A_opaque) + (T_out - T_c_wall) / (R_out_1 / A_opaque) = Q_dot_capa_c_wall
+
+(T_in - T_c_in) / (R_in / A_InternalWalls) = Q_dot_capa_c_in
+
+"!Heat flows"
+H_dot_vent = C_dot_su * (T_su - T_in)          "ventilation heat flow [W]"
+Q_dot_sol = A_glazing * SF * I_dot_south        "solar heat gain through the glazing [W]"
+Q_dot_light = f_occ * Q_dot_light_max           "lighting heat gain [W]"
+Q_dot_appl = f_occ * Q_dot_appl_max             "appliance heat gain [W]"
+Q_dot_occ = f_occ * Q_dot_occ_max               "occupant heat gain [W]"
+Q_dot_clim = 0                                  "active cooling power (none in this variant) [W]"
+Q_dot_sens = Q_dot_clim + Q_dot_light + Q_dot_appl + Q_dot_occ + Q_dot_sol   "total sensible heat gain [W]"
+Q_dot_in_walls = (T_c_wall - T_in) / (R_in_1 / A_opaque) + (T_c_in - T_in) / (R_in / A_InternalWalls)   "heat flow from the indoor air to the walls [W]"
+
+$IntegralTable tau:600 tau_hour T_c_in T_in T_c_wall T_out Q_dot_in_walls Q_dot_sol Q_dot_sens H_dot_vent Q_dot_capa_in Q_dot_capa_c_wall Q_dot_capa_c_in

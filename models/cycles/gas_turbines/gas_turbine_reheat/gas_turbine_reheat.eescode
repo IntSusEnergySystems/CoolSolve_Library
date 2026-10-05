@@ -1,0 +1,175 @@
+{=============================================================================
+  Gas turbine with reheat (intercooler and regenerator)
+  CoolSolve Library model CSL-0060
+ -----------------------------------------------------------------------------
+  Exercise 4: a second combustion chamber (efficiency 0.98) is added between
+  the two turbine stages of the gas turbine of exercise 3 (two compression
+  stages with intercooler, regenerator, reheat). The outlet temperature of
+  this second combustion chamber is also 1250 K. Air is treated as an ideal
+  gas; compression and expansion use polytropic efficiencies.
+
+  Calculate the extra fuel consumption and the effect of the modification on
+  the cycle efficiency. The LP turbine expands to the ambient pressure, which
+  maximises the power it delivers.
+
+  Inputs : p_amb, T_amb, q_m_a, pi_c, eta_c, TET, eta_b, eta_m, eta_t,
+           eta_alt, PCI, q_v_eau, eta_ic, T_su_eau, eta_rec
+  Outputs: eta_tg (cycle efficiency), deltaq_m_e (extra fuel in %),
+           W_dot_el, q_m_e, q_m_e2
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège course "Thermodynamique appliquée" (THD10, repetition 7,
+           exercise 4) - see README.md
+=============================================================================}
+
+"Exercise 4: a 2nd combustion chamber (efficiency 0.98) is added between the
+2 turbine stages. The outlet temperature of this 2nd combustion chamber is
+also 1250 K.
+Calculate the extra fuel consumption and the effect of this modification on
+the cycle efficiency."
+
+"Data"
+fluid$ = 'Air' "working fluid = air assimilated to an ideal gas"
+p_amb = 100E3 "ambient pressure [Pa] (100 kPa in the original)"
+T_amb = 20 "ambient temperature [C]"
+q_m_a = 100 "air mass flow rate [kg/s]"
+pi_c = 4 "pressure ratio of each compressor"
+eta_c = 0.83 "polytropic efficiency of the compressors"
+TET = 1250-273 "turbine entry temperature [C] (1250 K in the original)"
+eta_b = 0.98 "combustion efficiency"
+eta_m = 0.95 "mechanical efficiency"
+eta_t  = 0.83 "POLYTROPIC efficiency of the turbines"
+eta_alt = 0.95 "efficiency of the alternator"
+PCI = 43.1E6 "lower heating value of the kerosene [J/kg] (43.1e3 kJ/kg in the original)"
+
+q_v_eau = 25e-3 "cooling-water volume flow rate [m^3/s]"
+eta_ic = 0.9 "effectiveness of the intercooler"
+T_su_eau = 20 "water temperature at the intercooler SUpply [C]"
+
+eta_rec = 0.7 "effectiveness of the regenerator"
+
+"Solution"
+"We start again from the code written to solve exercise 3, this time adding
+the second combustion chamber between stations 7 and 8."
+
+"!Calculation of the conditions at the inlet of the 1st compressor: station 1"
+T[1] = T_amb
+p[1] = p_amb
+s[1] = entropy(fluid$,t=T[1],p=p[1])
+h[1] = enthalpy(fluid$,t=T[1])
+
+"!Calculation of the conditions at the outlet of the 1st compressor: station 2"
+p[2] = p[1]*pi_c
+(T[2]+273)/(T[1]+273) = (pi_c)^((gamma_c1-1)/gamma_c1/eta_c)
+gamma_c1 = cp(fluid$,T=T[1])/cv(fluid$,T=T[1])
+s[2] = entropy(fluid$,t=T[2],p=p[2])
+h[2] = enthalpy(fluid$,t=T[2])
+
+W_dot_c1 = q_m_a * (h[2]-h[1]) "power required by the 1st compressor [W]"
+
+
+"!Calculation of the conditions at the outlet of the intercooler: station 3"
+p[3] = p[2] "intercooler assumed isobaric"
+
+"Thermal power exchanged between air and water in the intercooler"
+Q_dot_ic_max = C_dot_min_ic * (T[2] - T_su_eau) "maximum exchanged power [W]"
+C_dot_min_ic = min(C_dot_air,C_dot_eau) "minimum heat-capacity rate [W/K]"
+C_dot_air = q_m_a * cp_23 "heat-capacity rate on the air side [W/K]"
+cp_23 = cp(fluid$,T=T[2])
+C_dot_eau = q_m_eau*C_eau "heat-capacity rate on the water side [W/K]"
+C_eau = 4187 "[J/kg-K] (4.187 kJ/kg-K in the original)"
+
+Q_dot_ic_eau = eta_ic * Q_dot_ic_max "power actually taken by the cooling flow, allowing for the intercooler effectiveness [W]"
+Q_dot_ic_air + Q_dot_ic_eau = 0
+"enthalpy of the air at the intercooler outlet"
+Q_dot_ic_air = q_m_a * (h[3] - h[2])
+s[3] = entropy(fluid$,t=T[3],p=p[3])
+T[3] = temperature(fluid$,h=h[3])
+"water temperature at the intercooler outlet"
+Q_dot_ic_eau = q_m_eau*C_eau*(T_ex_eau - T_su_eau)
+q_m_eau = q_v_eau * rho_eau
+rho_eau = 1000 "water density [kg/m^3]"
+
+
+"!Calculation of the conditions at the outlet of the second compressor: station 4"
+p[4] = p[3]*pi_c
+(T[4]+273)/(T[3]+273) = (pi_c)^((gamma_c2-1)/gamma_c2/eta_c )
+gamma_c2 = cp(fluid$,T=T[3])/cv(fluid$,T=T[3])
+s[4] = entropy(fluid$,t=T[4],p=p[4])
+h[4] = enthalpy(fluid$,t=T[4])
+
+W_dot_c2 = q_m_a * (h[4]-h[3]) "power required by the 2nd compressor [W]"
+
+
+"!Calculation of the conditions at the outlet of the regenerator, AIR side: station 5
+and on the COMBUSTION PRODUCTS side: station 10 "
+p[5] = p[4] "regenerator assumed isobaric"
+
+"maximum exchanged power: at best, the regenerator can heat the air leaving
+the second compressor up to T_9"
+Q_dot_rec_max = C_dot_min_rec * (T[9] - T[4])
+C_dot_min_rec = min(C_dot_air_rec,C_dot_gaz_rec) "minimum heat-capacity rate in the regenerator [W/K]"
+C_dot_air_rec = q_m_a * cp_45 "heat-capacity rate on the air side [W/K]"
+cp_45 = cp(fluid$,T=T[4])
+C_dot_gaz_rec = q_m_p*cp_910 "heat-capacity rate on the flue-gas side [W/K]"
+cp_910 = cp(fluid$,T=T[9])
+
+Q_dot_rec = eta_rec * Q_dot_rec_max "power actually supplied to the air in the regenerator, allowing for its effectiveness [W]"
+Q_dot_rec = q_m_a * (h[5] - h[4])
+Q_dot_rec = q_m_p* (h[9] - h[10]) "temperature of the gas at the regenerator outlet"
+s[5] = entropy(fluid$,t=T[5],p=p[5])
+h[5] = enthalpy(fluid$,T=T[5])
+s[10] = entropy(fluid$,t=T[10],p=p[10])
+h[10] = enthalpy(fluid$,T=T[10])
+p[10] = p_amb
+
+"!Calculation of the conditions at the outlet of the combustion chamber: station 6"
+T[6] = TET "the turbine entry temperature is imposed"
+h[6] = enthalpy(fluid$,T=T[6])
+p[6] = p[5] "combustion chamber isobaric"
+q_m_p = q_m_a + q_m_e "flow rate of the combustion products (air + fuel) [kg/s]"
+q_m_p * h[6] = q_m_a * h[5] + eta_b * Q_dot_b "first law applied to the combustion chamber"
+Q_dot_b = PCI * q_m_e "heat released by the combustion [W]"
+s[6] = entropy(fluid$,t=T[6],p=p[6])
+
+
+"Calculation of the conditions at the outlet of the 1st turbine: station 7"
+eta_m * W_dot_t1 + W_dot_c1 + W_dot_C2 = 0 "shaft balance: the turbine provides just enough power to drive the 2 compressors"
+W_dot_t1 = q_m_p* (h[7]-h[6]) "power delivered by the turbine [W]"
+"The power balance thus determines the enthalpy drop in the turbine"
+exposant1 = eta_t * (gamma_t1-1)/ gamma_t1
+(T[7]+273) =(T[6]+273) *  (p[7]/p[6])^exposant1 "the polytropic efficiency gives the turbine outlet pressure"
+gamma_t1 = cp(fluid$,T=T[6])/cv(fluid$,T=T[6])
+h[7] = enthalpy(fluid$,t=t[7])
+s[7] = entropy(fluid$,h=h[7],p=p[7])
+
+"!Calculation of the conditions at the outlet of the secondary combustion chamber: station 8"
+T[8] = TET "the turbine entry temperature is imposed !!"
+h[8] = enthalpy(fluid$,T=T[8])
+p[8] = p[7] "combustion chamber isobaric"
+q_m_p2 = q_m_p + q_m_e2 "flow rate of the combustion products after the 2 combustions (air + fuel + fuel) [kg/s]
+Careful not to forget that fuel is injected again in this 2nd combustion chamber !!"
+q_m_p2 * h[8] = q_m_p * h[7] + eta_b * Q_dot_b2 "first law applied to the 2nd combustion chamber
+Here too, pay close attention to the flow rates entering and leaving this second combustion chamber !!"
+Q_dot_b2 = PCI * q_m_e2 "heat released by the combustion [W]"
+s[8] = entropy(fluid$,t=T[8],p=p[8])
+
+"!Calculation of the conditions at the outlet of the 2nd turbine: station 9"
+"The power collected in the LP turbine is maximised by expanding the flue gas
+as far as possible, i.e. p_9 = p_amb"
+p[9] = p_amb
+exposant2 = eta_t * (gamma_t2-1) / gamma_t2
+(T[9]+273) = (T[8]+273) * (p[9]/p[8])^exposant2 "the polytropic efficiency gives the turbine outlet temperature"
+gamma_t2 = cp(fluid$,T=T[8])/cv(fluid$,T=T[8])
+h[9] = enthalpy(fluid$,T=T[9])
+s[9] = entropy(fluid$,t=T[9],p=p[9])
+
+W_dot_t2 = q_m_p2* (h[9]-h[8]) "power delivered by the turbine [W]"
+W_dot_t2 + W_dot_alt = 0 "shaft balance: the LP turbine provides its power to the alternator"
+
+W_dot_el = W_dot_alt*eta_alt "power recovered at the alternator outlet [W]"
+
+
+"!Overall efficiency of the machine"
+eta_tg = w_dot_el / (q_dot_b+q_dot_b2)
+
+deltaq_m_e = q_m_e2/q_m_e*100 "extra fuel consumption of the reheat [%]"

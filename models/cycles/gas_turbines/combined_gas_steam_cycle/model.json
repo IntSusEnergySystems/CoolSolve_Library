@@ -1,0 +1,74 @@
+{
+  "id": "CSL-0052",
+  "name": "combined_gas_steam_cycle",
+  "title": "Combined gas-steam cycle (Brayton topping cycle, Rankine bottoming cycle)",
+  "summary": "Combined gas-steam cycle: a gas turbine (Brayton) topping cycle on ideal-gas air whose exhaust gases heat a simple Rankine cycle on water in a heat exchanger; computes the steam-to-gas flow ratio of the heat exchanger and the thermal efficiency of the combined cycle.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "combined_gas_steam_cycle.eescode",
+  "fluids": [
+    "Air",
+    "Water"
+  ],
+  "tags": [
+    "combined cycle",
+    "Brayton cycle",
+    "Rankine cycle",
+    "gas turbine",
+    "heat recovery",
+    "bottoming cycle",
+    "ideal gas",
+    "exercise"
+  ],
+  "language_features": [
+    "arrays (state points P[i], T[i], h[i], s[i], x[i] and P_TGV[i], T_TGV[i], h_TGV[i], s_TGV[i])",
+    "property functions (ideal-gas air and real water)",
+    "quality function",
+    "abs/min functions"
+  ],
+  "stats": {
+    "n_equations": 44,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R7/R07_E05_2022.EES",
+    "candidate_id": "TM-0446",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory, course Thermodynamique appliquée)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège), 2022-2023, repetition 7, exercise 5"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file R07_E05_2022.EES (44 variables), compared with tools/compare_solution.py --ees-units",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 7.4e-06,
+    "notes": "27 of the 36 common variables agree within 7.4e-06 relative (worst case h[1]); the 9 excluded variables are the absolute h and s of air, which carry the reference-state offset between the EES Air_ha and CoolProp Air models (+126.06 kJ/kg on h, -2.978 kJ/kg-K on s at 300 K and 1 bar): through their differences the air agrees to 4.9e-06. compare_solution.py prints '36 common variables, 9 differ (rtol=0.001)'. Only in EES: m_dot_TGV, m_dot_ORC, W_dot_turb_TGV, W_dot_cp_TGV, W_dot_turb_ORC, W_dot_pump_ORC, effet_utile, effet_couteux, entries of the EES variable list that appear only in the commented-out equations of the original and were removed as dead code. Only in CoolSolve: T_TGV[2], s_TGV[2], s_TGV[4], s_TGV[5], T[1], T[2], T[4], x[4], the post-processing state points added for the diagrams. The gas cycle is on the ideal-gas substance Air in place of the EES humid-air pseudo-fluid 'Air_ha', which CoolSolve cannot evaluate above 623.15 K (CS-BUG-HUMIDAIR-HIGHT)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0004",
+    "CSL-0011",
+    "CSL-0029",
+    "CSL-0050"
+  ],
+  "related_external": [
+    "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R7/V-1/ (slides ThAp20_R07.docx / R7_2020v1.pdf and Python/CoolProp solutions ThAp20_R07E01.py to E03.py of the 2020-2021 edition of the same repetition; this exercise has no Python solution in the collection)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-55, single-file candidate TM-0446, no duplicate group)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

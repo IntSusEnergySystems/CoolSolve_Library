@@ -1,0 +1,74 @@
+{
+  "id": "CSL-0055",
+  "name": "moist_air_room_psychrometrics",
+  "title": "Moist air in a room: humidity ratio, enthalpy and dew point",
+  "summary": "Room of 5 m x 5 m x 3 m filled with air at 25 C and 75 % relative humidity at 100 kPa: partial pressures, humidity ratio, specific enthalpy per kg of dry air, masses of dry air and of water vapour, and dew-point temperature of the room air; every quantity is computed both with the course relations and with the EES property functions.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "moist_air_room_psychrometrics.eescode",
+  "fluids": [
+    "AirH2O",
+    "Water",
+    "Air"
+  ],
+  "tags": [
+    "psychrometrics",
+    "humidity ratio",
+    "dew point",
+    "moist air",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "string variable"
+  ],
+  "stats": {
+    "n_equations": 28,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R9/R09_E01_2022.EES",
+    "candidate_id": "TM-0451",
+    "authors": [
+      "TBD (ULiège course Thermodynamique appliquée, MECA0002 - see README 'Source and attribution')"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "ULiège Thermodynamique appliquée (MECA0002), exercise session R9 (2022-2023), exercise 1"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file R09_E01_2022.EES (EES 10.836) and, as a second reference, the Python/CoolProp solution of the same exercise shipped with the course (2021 edition, ThAp21_R08E01.py)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.00476,
+    "notes": "Hand-converted from kPa/kJ. compare_solution.py --ees-units: 27 common variables, 7 above rtol 1e-3, largest relative deviation 4.76e-03 (m_v, following the EES HumRat function: CoolProp humid air carries the water-enhancement factor, so w_ees is 0.42 % above the course formula w_corr, itself within 3.4e-05 of EES); h_a 3.2e-03 (EES moist-air enthalpy reference/formulation), h_air3 1.8e-03 and v/m_air 3.1e-04 (EES ideal-gas Air vs CoolProp Air), T_r 3.4e-03 (dew point from w_corr instead of from phi). R_air and R_v are reported as differing by 9.99e-01 only because the tool does not convert the lowercase EES unit spelling kj/(kg-C) (new tool bug CS-BUG-COMPARE-UNIT-CASE): 0.28705 kJ/(kg-K) and 287.05 J/(kg-K) are the same value. The 31 variables of the EES file that are not in the model are the stale leftovers of an earlier exercise of the same file (h[1..6], p[1..6], T[1..6], s[1..6], v[1..6], t[5], h, a, R). Second reference: p_air, w_corr, h_a and m_air agree with the Python/CoolProp solution of the course to 4e-10 or better."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0016",
+    "CSL-0028",
+    "CSL-0062",
+    "CSL-0063",
+    "CSL-0064",
+    "CSL-0066"
+  ],
+  "related_external": [
+    "thermo_models: 2022-2023/R9/R9.zip!/R09_E01_2022.EES (TM-0551, earlier revision of the same file)",
+    "thermo_models: 2017-2018/THD10_R10.zip!/THD10_R10_E1.EES (TM-0533, 2017 version of the same exercise)",
+    "thermo_models: 2022-2023/R9/Python/ThAp21_R08E01.py (Python/CoolProp solution of the same exercise, 2021 edition, used as verification reference)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-58, batch B-05)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

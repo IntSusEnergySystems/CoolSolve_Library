@@ -1,0 +1,143 @@
+{=============================================================================
+  Piston compressor with inlet pressure drop and internal leakage
+  CoolSolve Library model CSL-0067
+ -----------------------------------------------------------------------------
+  2-litre piston compressor tested on dry air at 1500 rpm, suction 1 bar /
+  15 C, discharge 5 bar. Identified at this operating point: overall
+  volumetric and isentropic efficiencies (0.75 and 0.55; the problem-statement
+  comment of the original says 0.65 - see README), dead-volume factor
+  C = 0.07 and proportional loss factor alpha = 0.2. The suction pressure
+  drop and the internal leakage are modelled by equivalent isentropic
+  nozzles; the leakage flow mixes back into the suction flow and the
+  internal compression is isentropic, closed by the clearance-volume
+  volumetric efficiency epsilon_v_2 = 1 - C*(r_v - 1).
+
+  Inputs : rpm, P_su, T_su, P_ex, epsilon_v, epsilon_s, C, alpha,
+           V_s, A_thr_admission (closure added at import - see README)
+  Outputs: M_dot, W_dot, W_dot_in, W_dot_loss_0, P_su_1, T_su_2, M_dot_l,
+           A_thr_leakage, states of the equivalent nozzles
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MSTh course, TP 02 extra exercise (file signed "JD",
+           unidentified author) - see README.md
+=============================================================================}
+
+"!Operating conditions (test at 1500 rpm, as in the original)"
+N=rpm/60                     "rotational speed [rev/s]"
+rpm=1500                     "rotational speed [rpm]"
+P_su=1E5                     "suction pressure [Pa]"
+T_su=15                      "suction temperature [C]"
+P_ex=5E5                     "discharge pressure [Pa]"
+epsilon_v=0.75               "overall volumetric efficiency [-] (identified)"
+epsilon_s=0.55               "overall isentropic efficiency [-] (identified; the problem statement says 0.65)"
+C=0.07                       "dead-volume factor [-]"
+alpha=0.2                    "proportional loss factor [-]"
+
+"piston compressor"
+V_s=2E-3 [m^3]               "swept volume [m3]"
+
+"the inlet pressure drop and the internal leakage are accounted for"
+
+"!Overall volumetric efficiency -> M_dot"
+epsilon_v=V_dot_su/V_dot_s   "definition, as in the original [-]"
+V_dot_s=N*V_s                "swept volume flow rate [m3/s]"
+V_dot_su=M_dot*v_su          "suction volume flow rate [m3/s]"
+
+"Rem: since V_dot_s=M_dot_th*v_su, we also have epsilon_v=M_dot/M_dot_th (as in the original)"
+
+v_su=VOLUME(Air,T=T_su,P=P_su)   "suction specific volume [m3/kg]"
+
+"!Overall isentropic efficiency -> W_dot"
+epsilon_s=W_dot_s/W_dot      "definition, as in the original [-]"
+W_dot_s=M_dot*(h_ex_s-h_su)  "isentropic power [W]"
+h_ex_s=ENTHALPY(Air,s=s_su,P=P_ex)   "isentropic discharge enthalpy (global) [J/kg]"
+s_su=ENTROPY(Air,T=T_su,P=P_su)      "suction entropy [J/kg-K]"
+h_su=ENTHALPY(Air,T=T_su)            "suction enthalpy [J/kg]"
+
+W_dot=W_dot_loss_0+(1+alpha)*W_dot_in    "shaft power: constant loss + (1+alpha) x internal power [W]"
+
+"!Admission pressure drop"
+h_thr_1+C_thr_1^2/2=h_su     "admission throat: enthalpy converted to velocity [J/kg]"
+h_thr_1=ENTHALPY(Air,s=s_su,P=P_thr_1)   "throttling modelled as isentropic, as in the original [J/kg]"
+P_thr_1=max(P_crit_1,P_su_1) "throat pressure: the higher of critical and plenum pressure [Pa]"
+
+"Let us check that P_su_1 is higher than P_crit_1 (as in the original)"
+P_crit_1=(2/(gamma_1+1))^(gamma_1/(gamma_1-1))*P_su   "critical pressure of the admission nozzle [Pa]"
+"provisional value:"
+"gamma_1=1.4"
+(T_thr_1+273)/(T_su+273)=(P_thr_1/P_su)^((gamma_1-1)/gamma_1)   "isentrope relation, 273 as in the original"
+T_thr_1=TEMPERATURE(Air,h=h_thr_1)   "throat temperature [C]"
+
+h_su_1=h_su                  "throttling: no enthalpy change [J/kg]"
+
+"equivalent area"
+C_thr_1=V_dot_thr_1/A_thr_admission  "admission throat velocity [m/s]"
+V_dot_thr_1=M_dot*v_thr_1    "volume flow through the admission throat [m3/s]"
+v_thr_1=VOLUME(Air,T=T_thr_1,P=P_thr_1)  "specific volume at the admission throat [m3/kg]"
+A_thr_admission=1.9142E-4    "equivalent admission nozzle area [m2]; closure added at import, value of the original stored solution (see README)"
+
+"!Internal leakage"
+"mixing"
+M_dot*h_su_1+M_dot_l*h_ex_s_2=M_dot_in*h_su_2    "leakage flow from discharge mixed into the suction flow [W]"
+
+M_dot+M_dot_l=M_dot_in       "mass balance [kg/s]"
+
+h_thr_2+C_thr_2^2/2=h_ex_s_2 "leakage throat: enthalpy converted to velocity [J/kg]"
+h_thr_2=ENTHALPY(Air,s=s_ex_s_2,P=P_thr_2)   "expansion to the throat modelled as isentropic [J/kg]"
+s_ex_s_2=ENTROPY(Air,h=h_ex_s_2,P=P_ex)      "entropy of the internal discharge state [J/kg-K]"
+P_thr_2=max(P_crit_2,P_su_1) "throat pressure: the higher of critical and plenum pressure [Pa]"
+P_crit_2=(2/(gamma_2+1))^(gamma_2/(gamma_2-1))*P_ex   "critical pressure of the leakage nozzle [Pa]"
+"provisional value:"
+"gamma_2=1.4"
+(T_thr_2+273)/(T_ex_2+273)=(P_thr_2/P_ex)^((gamma_2-1)/gamma_2)  "isentrope relation, 273 as in the original"
+T_thr_2=TEMPERATURE(Air,h=h_thr_2)   "leakage throat temperature [C]"
+T_ex_2=TEMPERATURE(Air,h=h_ex_s_2)   "internal discharge temperature [C]"
+
+"equivalent area"
+C_thr_2=V_dot_thr_2/A_thr_leakage    "leakage throat velocity [m/s]"
+V_dot_thr_2=M_dot_l*v_thr_2  "volume flow through the leakage throat [m3/s]"
+v_thr_2=VOLUME(Air,T=T_thr_2,P=P_thr_2)  "specific volume at the leakage throat [m3/kg]"
+
+"!Internal isentropic compression"
+W_dot_in=M_dot_in*(h_ex_s_2-h_su_2)  "internal (isentropic) power [W]"
+
+h_ex_s_2=ENTHALPY(Air,s=s_su_2,P=P_ex)   "internal isentropic discharge enthalpy [J/kg]"
+s_su_2=ENTROPY(Air,h=h_su_2,P=P_su_2)    "internal suction entropy [J/kg-K]"
+
+P_su_2=P_su_1                "the mixing is isobaric at the plenum pressure [Pa]"
+T_su_2=TEMPERATURE(Air,h=h_su_2)     "internal suction temperature [C]"
+
+
+epsilon_v_2=1-C*(r_v_2-1)    "clearance-volume volumetric efficiency [-]"
+r_v_2=v_su_2/v_ex_s_2        "internal volume ratio [-]"
+v_su_2=VOLUME(Air,T=T_su_2,P=P_su_2)    "internal suction specific volume [m3/kg]"
+v_ex_s_2=VOLUME(Air,h=h_ex_s_2,P=P_ex)  "internal discharge specific volume [m3/kg]"
+
+epsilon_v_2=M_dot_in/M_dot_th_2      "consistency of the clearance-volume efficiency [-]"
+M_dot_th_2=V_dot_s/v_su_2    "theoretical internal mass flow [kg/s]"
+
+"!State points for the thermodynamic diagrams"
+P[1]=P_su     "1: suction line [Pa]"
+h[1]=h_su     "1: suction line [J/kg]"
+s[1]=s_su     "1: suction line [J/kg-K]"
+T[1]=T_su     "1: suction line [C]"
+P[2]=P_thr_1  "2: admission throat [Pa]"
+h[2]=h_thr_1  "2: admission throat [J/kg]"
+s[2]=s_su     "2: admission throat (isentropic throttle, as in the original) [J/kg-K]"
+T[2]=T_thr_1  "2: admission throat [C]"
+P[3]=P_su_2   "3: internal suction after mixing with the leak [Pa]"
+h[3]=h_su_2   "3: internal suction after mixing with the leak [J/kg]"
+s[3]=s_su_2   "3: internal suction after mixing with the leak [J/kg-K]"
+T[3]=T_su_2   "3: internal suction after mixing with the leak [C]"
+P[4]=P_ex     "4: internal isentropic discharge [Pa]"
+h[4]=h_ex_s_2 "4: internal isentropic discharge [J/kg]"
+s[4]=s_ex_s_2 "4: internal isentropic discharge [J/kg-K]"
+T[4]=T_ex_2   "4: internal isentropic discharge [C]"
+P[5]=P_thr_2  "5: leakage throat [Pa]"
+h[5]=h_thr_2  "5: leakage throat [J/kg]"
+s[5]=s_ex_s_2 "5: leakage throat (isentropic expansion) [J/kg-K]"
+T[5]=T_thr_2  "5: leakage throat [C]"
+P[6]=P_ex     "6: global isentropic discharge (reference of epsilon_s) [Pa]"
+h[6]=h_ex_s   "6: global isentropic discharge (reference of epsilon_s) [J/kg]"
+s[6]=s_su     "6: global isentropic discharge (reference of epsilon_s) [J/kg-K]"
+T[6]=T_ex_s   "6: global isentropic discharge (reference of epsilon_s) [C]"
+T_ex_s=TEMPERATURE(Air,h=h_ex_s)   "temperature of the global isentropic discharge [C]"

@@ -1,0 +1,98 @@
+{=============================================================================
+  Psychrometric mixer with condensation: room air mixed with outdoor air
+  CoolSolve Library model CSL-0064
+ -----------------------------------------------------------------------------
+  Air extracted from a room is mixed with outdoor air and the mixture is
+  injected back into the room. The data of the original exercise make the
+  mixture fall below saturation, so water condenses inside the mixer: the
+  model determines the condensate flow rate from the conservation of the
+  dry-air and water flows and from an adiabatic energy balance of the mixer.
+
+  Inputs : p ambient pressure, m_dot_a_3 dry-air flow of the mixture,
+           T_1 and T_h_1 dry-bulb and wet-bulb temperatures of the room air,
+           T_2 and phi_2 temperature and relative humidity of the outdoor air,
+           m_dot_a_2 dry-air flow of the outdoor air
+  Outputs: m_dot_cond condensate flow rate, T_3 and w_3 state of the mixture
+           (saturated, R = 1), T_r3 dew-point temperature of the mixture,
+           r_q share of recirculated air, r_cond share of condensed water
+  Units  : SI - temperatures in degC, pressures in Pa, energies in J
+  Source : ULiege, course "Thermodynamique appliquee" (MECA0002), session R9,
+           exercise 3 - see README.md
+=============================================================================}
+
+"Data"
+fluid$ = 'AirH2O'          "moist-air fluid of the EES property functions"
+p = 101325 [Pa]            "ambient pressure (101.325 kPa in the original)"
+m_dot_a_3 = 0.639 [kg/s]   "dry-air flow rate of the air injected back in the room"
+
+T_1 = 20 [C]               "dry-bulb temperature of the room air"
+T_h_1 = 19.2 [C]           "wet-bulb temperature of the room air"
+
+T_2 = 0 [C]                "temperature of the outdoor air"
+phi_2 = 0.9                "degree of saturation of the outdoor air = relative humidity [-]"
+m_dot_a_2 = 300e-3 [kg/s]  "dry-air flow rate of the outdoor air"
+
+"!Humidity ratios of the incoming streams"
+w_1 = humrat(fluid$,T=T_1,P=p,B=T_h_1)   "humidity ratio of the room air [kg water/kg dry air]"
+w_2 = humrat(fluid$,T=T_2,P=p,R=phi_2)   "humidity ratio of the outdoor air [kg water/kg dry air]"
+
+phi_1 = relhum(fluid$,T=T_1,P=p,B=T_h_1)  "relative humidity of stream 1, for information [-]"
+
+"!Conservation of the flows -> humidity ratio of the mixed air (index 3)"
+m_dot_a_1 + m_dot_a_2 = m_dot_a_3                "conservation of the dry-air flow"
+m_dot_v_1 + m_dot_v_2 = m_dot_v_3 + m_dot_cond  "conservation of the water flow: this time water condenses"
+"!Relation between air and vapour"
+m_dot_v_1 = w_1 * m_dot_a_1   "water-vapour flow of stream 1 [kg/s]"
+m_dot_v_2 = w_2 * m_dot_a_2   "water-vapour flow of stream 2 [kg/s]"
+m_dot_v_3 = w_3 * m_dot_a_3   "water-vapour flow of the mixture [kg/s]"
+
+"!Note: with an air-to-air heat exchanger (one inlet, one outlet) in which the
+ incoming moist air condenses (by cooling, for instance), the water-flow
+ conservation would read:
+   m_dot_v_su = m_dot_v_ex + m_dot_cond
+ with m_dot_v_su = w_su*m_dot_a_su and m_dot_v_ex = w_ex*m_dot_a_ex.
+ Thanks to the conservation of the dry-air flow, m_dot_a_ex = m_dot_a_su = m_dot_a,
+ the condensate flow of the heat exchanger would then simply be:
+   m_dot_cond = m_dot_a*(w_ex-w_su)"
+
+"!First law -> specific enthalpy of the mixture (index 3)"
+"!Note: the mixer is assumed to be ADIABATIC"
+m_dot_a_3 * h_a_3 + m_dot_cond*h_w = m_dot_a_2 * h_a_2 + m_dot_a_1* h_a_1  "energy balance of the mixer [W]"
+
+w_3 = humrat(fluid$,T=T_3,P=p,R=1)  "water condenses in the mixer, so the mixed air is saturated with water [kg/kg]"
+
+h_a_1 = enthalpy(fluid$,T=T_1,P=p,B=T_h_1)  "specific enthalpy of the room air, per kg of dry air [J/kg]"
+h_a_2 = enthalpy(fluid$,T=T_2,P=p,R=phi_2)  "specific enthalpy of the outdoor air, per kg of dry air [J/kg]"
+h_a_3 = enthalpy(fluid$,T=T_3,P=p,R=1)      "specific enthalpy of the mixed air, per kg of dry air [J/kg]"
+
+h_w = enthalpy(Water,T=T_3,P=p)   "specific enthalpy of the condensed water at the outlet temperature [J/kg]"
+
+"!Careful: in the first-law equation above, enthalpy terms of two different fluids
+ are added: moist air and water. This works because EES uses the same reference
+ scale for the enthalpy of the two fluids, which is not the case for the dry
+ air (EES fluids 'Air_ha' or 'Air'). Should one rather have computed the moist
+ air enthalpies from the dry-air enthalpies and the water-vapour enthalpies
+ (through the humidity ratio), the following would be the procedure:"
+
+h_a_1bis = enthalpy(Air_ha,T=T_1,P=p)-enthalpy(Air_ha,T=0,P=p)+w_1*enthalpy(Water,T=T_1,x=1)  "moist-air enthalpy, dry-air and vapour route [J/kg]"
+h_a_2bis = enthalpy(Air_ha,T=T_2,P=p)-enthalpy(Air_ha,T=0,P=p)+w_2*enthalpy(Water,T=T_2,x=1)  "moist-air enthalpy, dry-air and vapour route [J/kg]"
+h_a_3bis = enthalpy(Air_ha,T=T_3,P=p)-enthalpy(Air_ha,T=0,P=p)+w_3*enthalpy(Water,T=T_3,x=1)  "moist-air enthalpy, dry-air and vapour route [J/kg]"
+"!The term ' -enthalpy(Air_ha;T=0[C];P=p) ' brings the dry-air enthalpy 'onto the
+ same scale' (with the same reference) as the one EES uses for water. This will be
+ discussed in depth in exercise 5"
+
+"!Bonus: check that the outlet temperature is the dew point"
+T_r3 = dewpoint(fluid$,P=p,T=T_3,R=1)   "dew-point temperature of the mixed air [C]"
+
+"!Points for the psychrometric diagram"
+T[1]  = T_1   "stream 1: dry-bulb temperature [C]"
+w[1]  = w_1   "stream 1: humidity ratio [kg water/kg dry air]"
+T[2]  = T_2   "stream 2: dry-bulb temperature [C]"
+w[2]  = w_2   "stream 2: humidity ratio [kg water/kg dry air]"
+T[3]  = T_3   "mixture: dry-bulb temperature [C]"
+w[3]  = w_3   "mixture: humidity ratio [kg water/kg dry air]"
+
+"!Share of recirculated flow"
+r_q = 100*m_dot_a_1/m_dot_a_3   "share of recirculated dry air [%] (the original writes 100[%]*m_dot_a_1/m_dot_a_3; see README)"
+"!Share of condensed water per unit dry-air flow"
+r_cond = 100*m_dot_cond/m_dot_a_3   "share of condensed water per kg of dry air [%] (the original writes 100[%]*m_dot_cond/m_dot_a_3; see README)"

@@ -1,0 +1,69 @@
+{
+  "id": "CSL-0057",
+  "name": "two_tanks_max_work_air",
+  "title": "Maximum work from two air tanks at 900 K and 300 K",
+  "summary": "Two rigid vessels of 30 kg of air at 900 K and 300 K are coupled by a heat engine; the reversible (maximum work) end state is computed from the entropy balance of the extended system: both vessels end at the geometric mean temperature 519.6 K and the engine delivers 3.60 MJ.",
+  "kind": "steady",
+  "level": 1,
+  "status": "runs",
+  "main_file": "two_tanks_max_work_air.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "exergy",
+    "maximum work",
+    "reversible process",
+    "rigid tank",
+    "ideal gas",
+    "entropy balance",
+    "heat engine",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "ideal-gas substance"
+  ],
+  "stats": {
+    "n_equations": 13,
+    "largest_block": 4
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R10/R10_E03_2022.EES",
+    "candidate_id": "TM-0390",
+    "authors": [
+      "TBD (ULiège, course Thermodynamique appliquée, MECA0002)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège, MECA0002), repetition session 10 (exergy), exercise 3 (2022-2023)"
+  },
+  "verification": {
+    "reference": "Closed-form solution of the same entropy balance, computed by hand and compared with compare_solution.py (reference/analytic_reference.csv of the work folder): T_2 = sqrt(T_1a*T_1b) and W = m_air*cv_air*(sqrt(T_1a)-sqrt(T_1b))^2; the ratio eta_max also reproduces the Carnot ratio of the log-mean temperatures 1 - T_c,lm/T_h,lm. The solution stored by EES in the source file cannot be used as a reference (the file was never solved: every variable record holds its EES initial value 1), and the course folder holds no Python/CoolProp solution of this exercise (see README, Verification).",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 1.04e-15,
+    "notes": "'11 common variables, 0 differ (rtol=0.001)' against the closed-form reference, the largest deviation being the max relative error printed by the solver (1.04e-15). Two variables are excluded from the comparison: cv_air (the CoolProp ideal-gas value, not part of the closed form; it satisfies cp(Air)-cv(Air) = 287.4 J/kg-K, i.e. R_air within 0.13 %) and W_max_delivered (a post-processing output added by the import, equal to -W_max). Status 'runs' and not 'verified' because no independent numerical reference is available for this exercise."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0045",
+    "CSL-0048",
+    "CSL-0044",
+    "CSL-0003"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (card C-61, roadmap batch B-06; representative TM-0390 of the 2-file duplicate group DG-0094)",
+      "by": "Claude worker agent for S. Quoilin"
+    }
+  ]
+}

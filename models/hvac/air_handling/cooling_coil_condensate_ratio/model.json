@@ -1,0 +1,70 @@
+{
+  "id": "CSL-0062",
+  "name": "cooling_coil_condensate_ratio",
+  "title": "Condensate ratio and dry-air flow at a cooling coil, and a counter-flow recuperator",
+  "summary": "Revision exercise with two questions on one heat-pump cycle: (1) a 7 kW cooling coil that dehumidifies air from 28 C/80 % RH to 13 C saturated, solved with two first-law methods (humid-air enthalpies neglecting the condensate, or separate dry-air/vapour/condensate terms), giving the condensate-to-dry-air ratio and the dry-air flow; (2) a counter-flow R113 recuperator of effectiveness 60 % with 5 kPa pressure drops on both sides, giving the outlet temperature T10.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "cooling_coil_condensate_ratio.eescode",
+  "fluids": [
+    "AirH2O",
+    "Water",
+    "Air_ha",
+    "R113"
+  ],
+  "tags": [
+    "cooling coil",
+    "dehumidification",
+    "condensate",
+    "energy balance",
+    "psychrometrics",
+    "heat recovery",
+    "effectiveness",
+    "pressure drop",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "humid-air properties"
+  ],
+  "stats": {
+    "n_equations": 54,
+    "largest_block": 4
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R12/R12 - Révisions.EES",
+    "candidate_id": "TM-0396",
+    "authors": [
+      "TBD (ULiège course MECA0002; inventory suggests S. Quoilin with repetition assistants N. Paulus and B. Dechesne)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "ULiège Thermodynamique appliquée (MECA0002), R12 revision session 2022-2023 - exercises from the January 2022 exam"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file (54/54 variables)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.306,
+    "notes": "Hand-converted from kPa/kJ. compare_solution.py --ees-units: '54 common variables, 12 differ (rtol=0.001)'. The largest deviation, 3.06e-01 on h_a_sec_ex, is the reference-state offset of the Air_ha dry-air enthalpy (+126 kJ/kg CoolProp vs EES; no variable excluded - the difference h_a_sec_ex - h_a_sec_su = -15095 J/kg used by the model is identical in both tools). The remaining deviations are the EES-vs-CoolProp humid-air properties: omega +4.6e-03/+5.2e-03, humid-air enthalpies +3.2e-03, derived results ratio 3.9e-03, m_dot_a 3.3e-03, m_dot_a_bis2 2.5e-03, m_dot_cond 1.5e-03. All 21 recuperator (R113) variables agree within rtol=1e-3 (T10 to 2e-7), including the states at the original's p6 = 3.75e5 kPa = 375 MPa (kept as typed; see README)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0016", "CSL-0017", "CSL-0028", "CSL-0055", "CSL-0064", "CSL-0066"],
+  "related_external": [
+    "thermo_models: 2022-2023/R12/R12 - Révisions.docx (French statement of the two questions, in the collection, not copied here)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-66, batch B-05)",
+      "by": "opencode worker (t58) for S. Quoilin"
+    }
+  ]
+}

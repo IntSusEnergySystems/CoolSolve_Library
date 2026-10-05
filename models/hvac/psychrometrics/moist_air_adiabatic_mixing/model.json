@@ -1,0 +1,65 @@
+{
+  "id": "CSL-0063",
+  "name": "moist_air_adiabatic_mixing",
+  "title": "Adiabatic mixing of room air and outdoor air (moist air)",
+  "summary": "Room air (dry-bulb/wet-bulb given) mixed adiabatically with outdoor air (temperature and relative humidity given): dry-air and vapour mass balances and a first-law balance give the humidity ratio and specific enthalpy of the supply state, plus its temperature, dew point and relative humidity.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "moist_air_adiabatic_mixing.eescode",
+  "fluids": [
+    "AirH2O"
+  ],
+  "tags": [
+    "psychrometrics",
+    "adiabatic mixing",
+    "humid air",
+    "recirculation",
+    "wet-bulb temperature",
+    "exercise"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 28,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R9/R09_E02_2022.EES",
+    "candidate_id": "TM-0452",
+    "authors": [
+      "TBD (ULiège course Thermodynamique appliquée, MECA0002 - see README 'Source and attribution')"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège), exercise session R9, exercise 2"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (unit-converted) and the course's Python/CoolProp companion solution of the same exercise (ThAp21_R08E02.py)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.00457,
+    "notes": "vs EES: 26 common variables, 11 differ, max 4.57e-03 (EES vs CoolProp humid-air properties; tolerance 0.5 %; temperatures agree to 1.5e-05). vs the Python/CoolProp solution: identical to 1e-05 (same property backend)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0016", "CSL-0028", "CSL-0055", "CSL-0066"],
+  "related_external": [
+    "Python/CoolProp companion solution in the source collection: ~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R9/Python/ThAp21_R08E02.py (same exercise, used as verification reference)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (task card C-67, batch B-05)",
+      "by": "GLM worker agent for S. Quoilin"
+    }
+  ]
+}

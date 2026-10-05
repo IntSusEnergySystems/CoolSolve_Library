@@ -1,0 +1,37 @@
+{=============================================================================
+  Centrifugal compressor design and similarity (air)
+  CoolSolve Library model CSL-0069
+ -----------------------------------------------------------------------------
+  A centrifugal turbocompressor is designed for best performance at a given
+  nominal point (dry clean air, 1 bar and 20 C at the impeller inlet, 2.5 bar
+  at the discharge, 6000 m3/h). The flow factor phi and the enthalpy factor psi
+  of that point are given; the impeller diameter and the rotation speed that
+  realise them are determined. Exercise MSTH 041012 4 (ULiege, course Machines
+  et systemes thermiques). The second part of the exercise - the same
+  compressor scaled to compress methane - is the variant file
+  centrifugal_compressor_design_similarity_methane.eescode.
+
+  Inputs : p_su, t_su, p_ex, V_dot_su (nominal point); phi, psi (flow and
+           enthalpy factors of the nominal point)
+  Outputs: D (impeller diameter), N, rpm, U (blade tip speed), A
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : ULiege course (J. Lebrun) - see README.md
+=============================================================================}
+
+"Nominal point of best performance and its two similarity factors, as in the original"
+p_su=1E5                   "suction pressure [Pa]"
+t_su=20                    "suction temperature [C]"
+p_ex=2.5E5                 "discharge pressure [Pa]"
+V_dot_su=6000/3600         "suction volume flow rate [m3/s]"
+phi=0.3                    "flow factor [-]"
+psi=1.4                    "enthalpy factor [-]"
+"Determination of the optimal rotation speed N and of the impeller diameter"
+phi=V_dot_su/(U*A)         "flow factor"
+U=pi*D*N                   "blade tip speed [m/s]"
+A=pi*D^2/4                 "impeller inlet area [m2]"
+rpm=N*60                   "rotation speed [rev/min]"
+psi=DELTAh_s/(U^2/2)       "enthalpy factor"
+DELTAh_s=h_exs-h_su        "isentropic enthalpy rise from suction to discharge [J/kg]"
+h_su=ENTHALPY(Air,T=T_su)  "suction specific enthalpy [J/kg]"
+h_exs=ENTHALPY(Air,s=s_su,p=p_ex)  "isentropic discharge specific enthalpy [J/kg]"
+s_su=ENTROPY(Air,T=T_su,P=P_su)     "suction specific entropy [J/kg-K]"

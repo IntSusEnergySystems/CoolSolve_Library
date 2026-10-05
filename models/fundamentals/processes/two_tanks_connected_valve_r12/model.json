@@ -1,0 +1,67 @@
+{
+  "id": "CSL-0048",
+  "name": "two_tanks_connected_valve_r12",
+  "title": "Two rigid tanks connected by a valve: change of quality of R12",
+  "summary": "Two rigid tanks of 200 L connected by a valve: tank A holds an R12 liquid-vapour mixture at 25 C (10 % liquid and 90 % vapour in volume) and tank B is empty; opening the valve lets saturated vapour into B at constant temperature until the pressures are equal. The model gives the initial and the final quality of tank A (change of +6.67 percentage points) and the liquid/vapour distribution of the whole volume.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "two_tanks_connected_valve_r12.eescode",
+  "fluids": [
+    "R12"
+  ],
+  "tags": [
+    "rigid tank",
+    "valve",
+    "two-phase",
+    "quality",
+    "saturation",
+    "R12",
+    "mass balance",
+    "volume balance",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 27,
+    "largest_block": 4
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R1/R1_E4_2022_method_bis.EES",
+    "candidate_id": "TM-0382",
+    "authors": [
+      "TBD (ULiège, course Thermodynamique appliquée, MECA0002)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège, MECA0002), repetition session 1, exercise 4 (2022-2023)"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (27 variables, all in common with the model), converted with --ees-units; additionally the companion Python/CoolProp solution of the same exercise (course folder Python/ThAp21_R01E04.py), reproduced by hand",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 1.97e-2,
+    "notes": "'27 common variables, 12 differ (rtol=0.001)', largest relative deviation 1.97e-2 (Deltax_A). The whole deviation comes from the saturated vapour specific volume of R12 at 25 C (v_v, +1.06 % in CoolProp w.r.t. EES; v_l agrees to 8e-5); substituting the two EES property values into the model reproduces the stored EES solution to 2.09e-10 (6 differ at rtol=1e-12), so the equations are transcribed exactly. 25 C is 14 K below the critical temperature of R12 (39.4 C), where ees_import.md section 11 allows a few %. Manual unit conversion: process temperature only (K -> C); volumes, masses and all other quantities were already SI. The commit part of coolsolve_version is the one recorded by the other models of roadmap batch B-05: this checkout of the CoolSolve repository has no .git directory, so git rev-parse cannot be run."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0044",
+    "CSL-0003",
+    "CSL-0045", "CSL-0057"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (card C-51, roadmap batch B-05; representative TM-0382 of the 5-file duplicate group DG-0091)",
+      "by": "Claude worker agent for S. Quoilin"
+    }
+  ]
+}

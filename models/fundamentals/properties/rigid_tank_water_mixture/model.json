@@ -1,0 +1,57 @@
+{
+  "id": "CSL-0044",
+  "name": "rigid_tank_water_mixture",
+  "title": "Rigid tank with a liquid-vapour water mixture",
+  "summary": "A 1 m^3 rigid vessel contains 4 kg of water in liquid-vapour equilibrium at 6 bar: quality of the mixture from the average specific volume, masses and volumes of the liquid and vapour phases, saturation temperature.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "rigid_tank_water_mixture.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "properties",
+    "saturation",
+    "quality",
+    "rigid tank",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {"n_equations": 12, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R1/R1_E1_2022.EES",
+    "candidate_id": "TM-0378",
+    "authors": [
+      "TBD (ULiège, course Thermodynamique appliquée MECA0002 repetition team)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège MECA0002), repetition 1, exercise 1"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (compare_solution.py --ees-units); companion CoolProp Python solution of the same exercise (ThAp21_R01E01.py) consistent with the results",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0",
+    "max_rel_diff": 0.0,
+    "notes": "12 common variables, 0 differ (rtol=0.001); the EES file also stores a variable V (stale record of the tank volume under an older name), not part of the model."
+  },
+  "missing_features": [],
+  "related": ["CSL-0003", "CSL-0047", "CSL-0048", "CSL-0057"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (card C-47, batch B-05)",
+      "by": "GLM (Z.ai) for S. Quoilin"
+    }
+  ]
+}

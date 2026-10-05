@@ -1,0 +1,70 @@
+{
+  "id": "CSL-0067",
+  "name": "piston_compressor_suction_drop_leakage",
+  "title": "Piston compressor with inlet pressure drop and internal leakage",
+  "summary": "Two-litre piston air compressor tested at 1500 rpm between 1 bar / 15 C suction and 5 bar discharge with identified overall efficiencies (0.75 / 0.55), dead-volume factor and proportional loss factor: the suction pressure drop and the internal leakage are modelled by equivalent isentropic nozzles whose areas are solved, the leak mixes back into the suction flow and the internal isentropic compression is closed by the clearance-volume volumetric efficiency; meant to be swept over speed.",
+  "kind": "steady",
+  "level": 2,
+  "status": "runs",
+  "main_file": "piston_compressor_suction_drop_leakage.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "piston compressor",
+    "inlet pressure drop",
+    "internal leakage",
+    "volumetric efficiency",
+    "clearance volume",
+    "equivalent nozzle",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "max() builtin"
+  ],
+  "stats": {
+    "n_equations": 80,
+    "largest_block": 11
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 02/Exercice combiné perte de charge - fuite.EES",
+    "candidate_id": "TM-0019",
+    "authors": [
+      "TBD (ULiège MSTh course, exercise signed \"JD\")"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège, Machines et systèmes thermiques, repetition 2, TP 02 (extra exercise)"
+  },
+  "verification": {
+    "reference": "EES stored solution of TM-0019 (EES 7.458, 55 variables)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 1.26,
+    "notes": "compare_solution.py: 55 common variables, 38 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 25 (state-point arrays added at import). Deviations explained in the README: (1) stored W_dot_loss_0 is stale, contradicts the original's own W_dot equation (recomputed +6276 W); (2) the leakage/mixing loop has one root under CoolProp Air (M_dot_l=-0.01317) and the EES 7.458 point (M_dot_l=-0.00921) is another root of the same equations under the EES-7 air formulation - admission branch agrees within 2.8e-03; (3) constant reference-state offset on absolute h (+125.9 kJ/kg) and s (-1.8 kJ/kg-K). Status runs."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0020",
+    "CSL-0021"
+  ],
+  "related_external": [
+    "CoolSolve examples/internal_combustion_engine.eescode (CSX-025, simplified variant of the same exercise: imposed 10% leak, M_dot=1 basis, no clearance/loss block; misnamed file; kept in CoolSolve as a test case)"
+  ],
+  "supersedes": [
+    "thermo_models:TM-0019"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (task C-71: import of the CoolSolve example CSX-025 with its EES original TM-0019; the model follows the EES original, closure A_thr_admission added)",
+      "by": "opencode worker (t63) for S. Quoilin"
+    }
+  ]
+}

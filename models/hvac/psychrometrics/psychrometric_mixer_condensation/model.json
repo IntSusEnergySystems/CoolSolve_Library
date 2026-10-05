@@ -1,0 +1,70 @@
+{
+  "id": "CSL-0064",
+  "name": "psychrometric_mixer_condensation",
+  "title": "Psychrometric mixer with condensation: room air mixed with outdoor air",
+  "summary": "Room air (20 degC dry bulb, 19.2 degC wet bulb) mixed adiabatically with outdoor air (0 degC, 90 % relative humidity, 300 g/s of dry air) at 101 325 Pa; the mixture falls below saturation, so the balances of the dry air, of the water (with a condensate term) and of the energy give the temperature of the saturated mixture and the condensate flow rate.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "psychrometric_mixer_condensation.eescode",
+  "fluids": [
+    "AirH2O",
+    "Air_ha",
+    "Water"
+  ],
+  "tags": [
+    "psychrometrics",
+    "moist air",
+    "mixing",
+    "condensation",
+    "condensate",
+    "humidity ratio",
+    "air handling",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "string variable",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 34,
+    "largest_block": 6
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R9/R09_E03_2022.EES",
+    "candidate_id": "TM-0453",
+    "authors": [
+      "TBD (ULiège course Thermodynamique appliquée, MECA0002 - see README 'Source and attribution')"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "ULiège Thermodynamique appliquée (MECA0002), exercise session R9 (2022-2023), exercise 3"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file R09_E03_2022.EES (EES 10.836), restricted to the variables it had actually solved, and an independent recomputation of the two balances with the psychrometric relations of the course (Python/CoolProp script, not shipped)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.00438,
+    "notes": "Hand-converted from kPa/kJ (only p = 101.325 kPa -> 101325 Pa; T=0[C] -> T=0 removes the CS-GAP-UNIT-NAMEDARG line, 100[%] -> 100 with the unit in the comment removes the CS-GAP-UNIT-SUBEXPR line). compare_solution.py --ees-units: 32 common variables, 20 above rtol 1e-3, but the stored solution of the file is a partly solved state: the 11 outlet-state variables (T_3, T[3], w_3, w[3], h_a_3, h_a_3bis, h_w, m_dot_v_3, m_dot_cond, r_cond, T_r3) store a user-typed guess that satisfies neither the equations nor the energy balance (42.8 kW against 21.1 kW), and are excluded. On the 21 remaining variables the largest deviation is 4.38e-03 (w_1, m_dot_v_1), the humid-air property difference between EES 10.836 and CoolProp documented for CSL-0055 (CoolProp humid air carries the water-enhancement factor); m_dot_a_1, p, T_1, T_2, T_h_1, phi_2, r_q agree to 5e-11 and phi_1 to 1.4e-05. The 22 variables only present in the EES record are the leftovers of an earlier exercise of the same file. Independent recomputation: T_3 = 11.5468 degC and m_dot_cond = 0.2226 g/s with the course relations, 11.5483 degC and 0.2260 g/s with the EES stored inlet properties (7.7e-04 / 2.3e-03 from CoolSolve); recomputing with the CoolProp humid-air code path reproduces the CoolSolve solution to all printed digits."
+  },
+  "missing_features": [],
+  "related": ["CSL-0055", "CSL-0062", "CSL-0016", "CSL-0030", "CSL-0066"],
+  "related_external": [
+    "thermo_models: 2022-2023/R9/R09_E02_2022.EES (TM-0452, same exercise without condensation, same equations with other inlet data)",
+    "thermo_models: 2022-2023/R9/Python/ThAp21_R08E02.py (Python/CoolProp solution of the same exercise without condensation, 2021 edition)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-68, batch B-06)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}
