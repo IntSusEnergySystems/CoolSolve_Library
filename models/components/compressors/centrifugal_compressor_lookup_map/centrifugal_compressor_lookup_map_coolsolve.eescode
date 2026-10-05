@@ -1,0 +1,58 @@
+{=============================================================================
+  Centrifugal compressor with a lookup-table performance map (air)
+  CoolSolve Library model CSL-0035
+ -----------------------------------------------------------------------------
+  Constant-speed centrifugal air compressor characterised by a measured
+  performance map: the reduced mass flow rate M_dot*sqrt(T1)/p1 and the
+  isentropic efficiency are read by interpolation from a three-point
+  lookup table as functions of the pressure ratio. From the map values the
+  model gives the air mass flow rate and the absorbed power.
+
+  Original problem statement (translated): for a constant-speed centrifugal
+  air compressor the following performance map data is available
+  (temperatures in K, pressures in bar):
+      p2/p1    M*sqrt(T1)/p1    eta_s
+      5.0      32.9             0.86
+      4.7      33.8             0.79
+      4.5      34.3             0.77
+  Determine the variation of the air flow rate and of the power absorbed by
+  this compressor for: inlet pressure 0.9 bar, discharge pressure variable
+  from 4.3 to 4.8 bar, inlet temperature constant at 20 °C.
+
+  Inputs : p_su, t_su, p_ex
+  Outputs: M_dot, W_dot
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MSTh course (J. Lebrun, V. Lemort, S. Bertagnolio) - see README.md
+  Variant: runnable variant of the blocked native file. Only change forced by
+           the gaps: the two native-form INTERPOLATE calls are rewritten with
+           CoolSolve's positional form (CoolSolve-only syntax, not valid EES);
+           everything else is identical to the native file. Each change is
+           logged in the README conversion log. Note: CoolSolve clamps
+           INTERPOLATE outside the table range where EES extrapolates
+           linearly (CS-GAP-INTERP-EXTRAP) - results agree with EES only for
+           4.5 <= r_p <= 5.0, and at the nodes elsewhere.
+=============================================================================}
+
+"!Problem data (as in the original exercise statement)"
+p_su = 0.9E5         "suction pressure [Pa] (0.9 bar in the original)"
+t_su = 20            "suction temperature [°C] (constant)"
+p_ex = 4.5E5         "discharge pressure [Pa] (4.5 bar; commented out in the original: given by the parametric table, sweep 4.3 to 5.4 bar)"
+
+"!Performance map (lookup table 'lookup 1', companion CSV)"
+p_su_bar = p_su*1E-5   "suction pressure in bar, the pressure unit of the performance map [bar]"
+p_ex_bar = p_ex*1E-5   "discharge pressure in bar, the pressure unit of the performance map [bar]"
+r_p = p_ex_bar/p_su_bar    "compression ratio p2/p1 [-]"
+epsilon_s = INTERPOLATE('lookup_1','r_p','epsilon_s', r_p)   "isentropic efficiency read from the map [-] (CoolSolve positional form)"
+M_r = INTERPOLATE('lookup_1','r_p','M_r', r_p)   "reduced mass flow rate read from the map [kg/s-K^0.5/bar] (CoolSolve positional form)"
+
+"!Isentropic compression and absorbed power"
+M_r = M_dot*sqrt(t_su+273)/p_su_bar   "reduced mass flow rate [kg/s-K^0.5/bar] (as in the original, p1 in bar)"
+w_s = h_exs - h_su    "isentropic specific compression work [J/kg]"
+h_su = enthalpy(Air, t=t_su)    "suction enthalpy [J/kg]"
+s_su = entropy(Air, t=t_su, p=p_su)    "suction entropy [J/kg-K]"
+h_exs = enthalpy(Air, p=p_ex, s=s_su)    "isentropic discharge enthalpy [J/kg]"
+W_dot = M_dot*w_s/epsilon_s    "power absorbed by the compressor [W]"
+
+"!Alternative solution without the map, as commented in the original"
+"epsilon_s=0.79
+M_r=33"

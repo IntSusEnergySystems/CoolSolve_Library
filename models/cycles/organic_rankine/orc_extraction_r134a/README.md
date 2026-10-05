@@ -303,9 +303,11 @@ test case; this curated model supersedes it in the library.
   counterpart of the screw/scroll-type expander modelled here.
 - CoolSolve examples `orc_extraction.eescode` (`CSX-030`, same model, kept in
   CoolSolve as a test case, superseded here) and `expander_module.eescode`
-  (`CSX-019`, blocked by `CS-GAP-MODULE`): a *single-stage* semi-empirical scroll
-  expander with internal leakage and heat transfer to the ambient — the same
-  machine type, a different level of detail.
+  (`CSX-019`, a *single-stage* semi-empirical scroll expander with internal
+  leakage and heat transfer to the ambient — the same machine type, a different
+  level of detail), superseded by `CSL-0037` *scroll_expander_semi_empirical*
+  (the EES `MODULE` of the example flattened into the main program, decision
+  D10).
 - `~/Nextcloud/thermo_models/modeles/cycle a extraction.EES` (`TM-0267`): the
   2010 copy of the same EES file (identical equations), recorded as a duplicate
   of this model.

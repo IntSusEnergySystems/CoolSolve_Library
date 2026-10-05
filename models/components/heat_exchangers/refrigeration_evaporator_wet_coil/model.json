@@ -1,0 +1,72 @@
+{
+  "id": "CSL-0031",
+  "name": "refrigeration_evaporator_wet_coil",
+  "title": "Refrigeration evaporator with moist air, wet regime",
+  "summary": "Air-cooled R134a evaporator of a refrigeration circuit running in the wet regime (condensation on the coil): imposed evaporating and condensing temperatures with superheat, subcooling and isenthalpic expansion on the refrigerant side, imposed air inlet and outlet states on the air side, and a 25 kW duty from which the two flow rates, the fictitious air-side capacity rate and the coil conductance are determined.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "refrigeration_evaporator_wet_coil.eescode",
+  "fluids": [
+    "R134a",
+    "AirH2O"
+  ],
+  "tags": [
+    "heat exchanger",
+    "evaporator",
+    "refrigeration",
+    "moist air",
+    "wet regime",
+    "condensation",
+    "effectiveness-NTU",
+    "air-cooled",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 45,
+    "largest_block": 2
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/evaporator.eescode",
+    "candidate_id": "CSX-015",
+    "authors": [
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)",
+      "S. Quoilin (CoolSolve example)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh exercise session (repetition 5, exercise 2)"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file (~/Nextcloud/thermo_models/... TP 05/MSTh-SB-R5-Ex2.EES, EES 7.458); the 11 variables cleared (-9999) in that solution are cross-checked against the design values quoted in the original",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.000988,
+    "notes": "compare_solution.py (rtol=0.001): 22 common variables, 2 differ (h_1, h_3). Those two are absolute R134a enthalpies carrying a constant reference-state offset (+148.10 and +148.12 kJ/kg, EES default vs CoolProp IIR); their difference, the evaporator duty enthalpy drop, agrees within 0.017 %. The 20 other variables agree within 9.9e-4 (w_su). The 11 variables cleared (-9999) in the EES stored solution agree within 0.18 % (NTU_f) of the design values quoted in the original. No unit conversion needed (SI-C-Pa-J)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0015", "CSL-0016", "CSL-0017", "CSL-0008"],
+  "related_external": [
+    "CoolSolve examples/evaporator.eescode (same model, kept in CoolSolve as a test case)",
+    "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 05/MSTh-SB-R5-Ex2.EES (original French EES file with stored solution)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-015"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-32, batch B-03)",
+      "by": "opencode worker (space-bunny-free) for S. Quoilin"
+    }
+  ]
+}

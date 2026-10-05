@@ -1,0 +1,97 @@
+{=============================================================================
+  Refrigeration evaporator with moist air, wet regime
+  CoolSolve Library model CSL-0031
+  -----------------------------------------------------------------------------
+  Air-cooling evaporator of a refrigeration circuit (R134a), working in the wet
+  regime (moist air, condensation on the coil). Imposed on the refrigerant
+  side: evaporating and condensing temperatures, superheating at the
+  evaporator outlet and subcooling at the condenser outlet, with an isenthalpic
+  expansion between them. Imposed on the air side: supply and outlet dry-bulb
+  temperatures and relative humidities, and a 25 kW evaporator duty, from
+  which the two air flow rates and the coil conductance are determined.
+
+  Inputs : T_ev, T_cd, DELTAT_oh, DELTAT_sc (refrigerant side);
+           P_atm, T_a_su, RH_su, T_a_ex, RH_ex (air side); Q_dot_ev
+  Outputs: M_dot_a, M_dot_r (air and refrigerant flow rates), AU_f (coil
+           conductance), C_dot_a_f, cp_a_f, epsilon_ev_f, NTU_f, M_dot_cd
+           (condensate flow rate), P_ev, P_cd
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MSTh exercise (SB solution) and CoolSolve example
+           evaporator - see README.md
+=============================================================================}
+
+"!Refrigerant-side conditions (as in the original)"
+T_cd = 50                "condensing temperature [C]"
+T_ev = 3                 "evaporating temperature [C]"
+DELTAT_sc = 4            "subcooling at the condenser outlet [K]"
+DELTAT_oh = 5            "superheating at the evaporator outlet [K]"
+
+"!Air-side conditions (as in the original)"
+P_atm = 1E5              "atmospheric pressure [Pa]"
+P_a_su = P_atm           "supply air pressure [Pa]"
+T_a_su = 35              "supply air dry-bulb temperature [C]"
+RH_su = 0.5              "supply air relative humidity [-]"
+T_a_ex = 10              "outlet air dry-bulb temperature [C]"
+RH_ex = 0.95             "outlet air relative humidity [-]"
+
+"!Evaporator duty (as in the original)"
+Q_dot_ev = 25000         "evaporator duty [W]"
+
+"Parameters determined by the design, quoted in the original (commented out
+ there, so not solved here): AU_f = 1900 W/K, M_dot_a = 0.4761 kg/s,
+ M_dot_r = 0.1815 kg/s - the model computes these three (see README)"
+
+"!Refrigerant side"
+P_ev = PRESSURE(R134a,T=T_ev,x=0.5)      "evaporating pressure [Pa]"
+P_cd = PRESSURE(R134a,T=T_cd,x=0.5)      "condensing pressure [Pa]"
+Q_dot_ev = M_dot_r*(h_1-h_4)             "evaporator duty [W]"
+h_1 = ENTHALPY(R134a,T=T_ev+DELTAT_oh,x=1)  "enthalpy at the evaporator outlet [J/kg]"
+h_4 = h_3                                "enthalpy after the isenthalpic expansion [J/kg]"
+h_3 = ENTHALPY(R134a,T=T_cd-DELTAT_sc,x=0) "enthalpy at the condenser outlet [J/kg]"
+
+"!Air side"
+"!Wet regime"
+Q_dot_ev = M_dot_a*(h_a_su-h_a_ex)-M_dot_cd*cp_w*T_cd_w   "duty with the condensate enthalpy [W]"
+h_a_su = ENTHALPY(AirH2O,T=T_a_su,P=P_a_su,R=RH_su)  "supply air enthalpy [J/kg dry air]"
+h_a_ex = ENTHALPY(AirH2O,T=T_a_ex,P=P_a_su,w=w_ex)   "outlet air enthalpy [J/kg dry air]"
+M_dot_cd = M_dot_a*(w_su-w_ex)          "condensate flow rate [kg/s]"
+"alternative closure of the outlet humidity ratio (commented out in the original):"
+"RH_ex=RELHUM(AirH2O,T=T_a_ex,P=P_a_su,w=w_ex)"
+w_ex = HUMRAT(AirH2O,T=T_a_ex,P=P_a_su,R=RH_ex)       "outlet air humidity ratio [kg/kg dry air]"
+"or (outlet humidity ratio from the imposed RH_ex instead, as in the original):"
+w_su = HUMRAT(AirH2O,T=T_a_su,P=P_a_su,R=RH_su)       "supply air humidity ratio [kg/kg dry air]"
+cp_w = 4187                              "condensate specific heat [J/kg-K]"
+T_cd_w = T_a_ex                          "condensate temperature [C]"
+
+"!Wet-regime performance"
+Q_dot_ev = C_dot_a_f*(T_wb_su-T_wb_ex)  "duty from the wet-bulb temperature drop [W]"
+C_dot_a_f = M_dot_a*cp_a_f              "air-side capacity rate [W/K]"
+T_wb_su = WETBULB(AirH2O,T=T_a_su,P=P_a_su,R=RH_su)  "supply air wet-bulb temperature [C]"
+T_wb_ex = WETBULB(AirH2O,T=T_a_ex,P=P_a_su,w=w_ex)   "outlet air wet-bulb temperature [C]"
+
+"!Effectiveness (as in the original)"
+Q_dot_ev = epsilon_ev_f*C_dot_min*(T_wb_su-T_ev)     "effectiveness definition [W]"
+C_dot_min = C_dot_a_f                    "minimum capacity rate [W/K]"
+epsilon_ev_f = 1-exp(-NTU_f)            "effectiveness [-]"
+NTU_f = AU_f/C_dot_a_f                  "number of transfer units [-]"
+
+"!Note (as in the original): the exercise only converges in one direction,
+ large numerical instability in the calculation of RH_ex"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on
+ the results). State 1 is the superheated outlet, state 3 the subcooled liquid
+ at the condenser pressure and state 4 the two-phase inlet after the
+ isenthalpic expansion. Use the arrays h[i]/P[i] or s[i]/T[i] with the array
+ overlay option of the CoolSolve Diagram tab."
+P[1] = P_ev
+h[1] = h_1
+T[1] = T_ev+DELTAT_oh
+s[1] = ENTROPY(R134a,T=T_ev+DELTAT_oh,P=P_ev)
+P[3] = P_cd
+h[3] = h_3
+T[3] = T_cd-DELTAT_sc
+s[3] = ENTROPY(R134a,T=T_cd-DELTAT_sc,x=0)
+P[4] = P_ev
+h[4] = h_4
+T[4] = TEMPERATURE(R134a,h=h_4,P=P_ev)
+s[4] = ENTROPY(R134a,h=h_4,P=P_ev)

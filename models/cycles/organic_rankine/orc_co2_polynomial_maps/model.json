@@ -1,0 +1,64 @@
+{
+  "id": "CSL-0038",
+  "name": "orc_co2_polynomial_maps",
+  "title": "Supercritical CO2 ORC with polynomial compressor and turbine performance maps",
+  "summary": "Closed supercritical CO2 (R744) vapour power cycle (cooler, compressor, recuperator, solar air-CO2 heater, turbine, three lossy pipes) in which the compressor and the turbine are described by polynomial fits of their performance maps and run at an imposed speed of 75000 rpm; the maps close the cycle (mass flow rate and turbine exhaust pressure are unknowns): 2.27 kg/s of CO2, 94 kW net, 22.1 % cycle efficiency.",
+  "kind": "steady",
+  "level": 3,
+  "status": "runs",
+  "main_file": "orc_co2_polynomial_maps.eescode",
+  "fluids": [
+    "R744",
+    "Water"
+  ],
+  "tags": [
+    "organic Rankine cycle",
+    "supercritical CO2",
+    "transcritical",
+    "performance map",
+    "polynomial correlation",
+    "recuperated cycle",
+    "solar thermal",
+    "turbomachinery map"
+  ],
+  "language_features": [
+    "property functions",
+    "arrays",
+    "display comments"
+  ],
+  "stats": {"n_equations": 144, "largest_block": 28},
+  "origin": {
+    "type": "research",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/orc_co2.eescode",
+    "candidate_id": "CSX-028",
+    "authors": [
+      "S. Quoilin (ULiège Thermodynamics Laboratory) — probable, to be confirmed by the maintainer"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "no EES original is known: the example is not in CoolSolve misc/EES_ok.zip and the ULiège collection has no transcritical CO2 exercise"
+  },
+  "verification": {
+    "reference": "No independent reference exists (no EES original). Reproduction of the converged solution stored in ~/git/CoolSolve/examples/orc_co2.initials, plus the energy balance of the cycle and physical-range checks (see README)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 1.48e-07,
+    "notes": "compare_solution.py vs examples/orc_co2.initials: \"140 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 5\" (the 5 extra variables are the post-processing outputs added by the library model). With --rtol 1e-12 the largest relative deviation is 1.48e-07 on NTU (12-digit round-off of the stored values). Cycle energy balance variable balance = -5.4e-10 W on 426 kW. eta_s 0.624, eta_t 0.882, cooler effectiveness 0.626; all pressures above the CO2 critical pressure (7.377 MPa). The shipped .initials is required: without it the 28-variable block is singular (SingularJacobian, block 77)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0019", "CSL-0036", "CSL-0040"],
+  "related_external": [
+    "CoolSolve examples/orc_co2.eescode (the example this model was imported from, kept in CoolSolve as a test case, with its orc_co2.initials)",
+    "CoolSolve examples/orc_co2.initials_ok_but_linsearchfail, examples/orc_co2.residuals_ok_but_singular_jacobian (solver experiments kept in CoolSolve, not imported)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-028"
+  ],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-05", "action": "added (roadmap card C-40, batch B-02); import from the CoolSolve example, no EES original; status runs", "by": "opencode worker (muse-spark) for S. Quoilin"}
+  ]
+}

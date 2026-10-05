@@ -336,6 +336,31 @@ rewritten around a gap, and:
   whatever the status of the model; blocked native files are skipped. A variant
   without `.sol` is not tested: always commit its `.sol`.
 
+**`MODULE` and `SUBPROGRAM` (decision D10).** CoolSolve will not implement
+`MODULE`/`SUBPROGRAM` in the near future (`CS-GAP-MODULE`, not planned). Their
+equations are therefore **flattened into the main program** of the library
+model:
+
+- each `CALL` of a module/subprogram is replaced by a copy of its equations in
+  which the formal inputs and outputs are replaced by the actual arguments of
+  the call;
+- the internal variables of the module are **renamed per call** with a suffix
+  `<variable>_<tag>` (`tag` = short name of the component, or `1`, `2`, … for
+  repeated calls; arrays `X[i]` → `X_<tag>[i]`); check that no renamed variable
+  collides with an existing one;
+- the flattened file is the main model file `<name>.eescode` and stays valid
+  EES; no file with the `MODULE` block and no `_coolsolve` variant are made for
+  this reason alone (the source is referenced as usual). `FUNCTION`s and
+  `PROCEDURE`s are kept as they are;
+- the file header and the README conversion log give the mapping (call → tag,
+  formal → actual arguments, renamed variables); `language_features` records
+  `MODULE flattened` (or `SUBPROGRAM flattened`); `CS-GAP-MODULE` is **not**
+  listed in `missing_features`;
+- the status follows the verification against the EES reference (`verified`
+  when it matches, the stored EES values of the module variables being compared
+  under their new names). Other blocking gaps of the flattened file follow the
+  blocked/variant rules above.
+
 **Re-checks (`T-RECHECK`).** When a CoolSolve release closes gaps, filter
 `library.csv` on `missing_features`, run the native files, and update status,
 `missing_features`, README and baseline (`.sol` of the native file). Keep or

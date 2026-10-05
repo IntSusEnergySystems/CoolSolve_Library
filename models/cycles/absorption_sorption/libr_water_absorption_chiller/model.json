@@ -1,0 +1,67 @@
+{
+  "id": "CSL-0043",
+  "name": "libr_water_absorption_chiller",
+  "title": "LiBr-water absorption chiller cycle with a solution heat exchanger",
+  "summary": "Single-effect LiBr-H2O absorption chiller at one operating point: solution concentrations from the EES built-in X_LIBR/H_LIBR routines, mass and LiBr conservation for the weak/rich solution flow rates, generator energy balance for the driving heat and the COP, 75 % solution heat exchanger.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "libr_water_absorption_chiller.eescode",
+  "fluids": [
+    "Water",
+    "LiBr-H2O solution"
+  ],
+  "tags": [
+    "absorption",
+    "LiBr-water",
+    "chiller",
+    "solution heat exchanger",
+    "COP",
+    "exercise"
+  ],
+  "language_features": [
+    "EES built-in LiBr solution routines X_LIBR and H_LIBR",
+    "property functions (Water)"
+  ],
+  "stats": {
+    "n_equations": 46,
+    "largest_block": 3
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 11/MSTH-SB-R11-EX2.EES",
+    "candidate_id": "TM-0167",
+    "authors": [
+      "TBD (ULiège MSTh course: J. Lebrun, V. Lemort, S. Bertagnolio)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "Machines et systèmes thermiques (ULiège), repetition 11 (LiBr-H2O absorption chiller), exercise 2"
+  },
+  "verification": {
+    "reference": "EES stored solution of the original file TM-0167 (30/30 variables), reported in the README as the target for the re-check; the model does not solve in CoolSolve, so no comparison was made",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": null,
+    "notes": "Blocked, not verified. coolsolve ./libr_water_absorption_chiller.eescode -> Block 16 failed: Unknown or unsupported function: X_LIBR with 3 arguments (gap CS-GAP-FLUIDS-ABS, already registered for the CoolSolve example water_libr). The system is square (46 equations / 46 variables, largest block 3); the water-side property calls are supported."
+  },
+  "missing_features": [
+    "CS-GAP-FLUIDS-ABS"
+  ],
+  "related": [],
+  "related_external": [
+    "CoolSolve examples/water_libr.eescode (verbatim transcription of the same original, kept as test case for CS-GAP-FLUIDS-ABS)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-45: CoolSolve example CSX-046 and its EES original TM-0167 added; TM-0164/0165/0166/0168/0169/0170 and TM-0466/0467/0468 merged as described variants of the same exercise)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

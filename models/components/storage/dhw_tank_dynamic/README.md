@@ -186,5 +186,7 @@ Source file (EES X10.836, comments in French), collection of S. Quoilin:
 
 ## Related models
 
-None yet in the library. Other dynamic storage models of the collection
-(`TM-0095`, `TM-0104`, borefield `TM-0490`) are planned in roadmap Phase 4A.
+- `CSL-0041` *ice_storage_tank_discharge_phase_change*: ice-storage discharge
+  with phase change (MSTh R6 Ex4), same `INTEGRAL`/`$IntegralTable` pattern,
+  blocked by the same gaps, with its own runnable variant; the DG-0023 copies
+  of the exercise (TM-0092/TM-0095/TM-0123) are recorded as its duplicates.

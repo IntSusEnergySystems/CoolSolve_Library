@@ -175,6 +175,9 @@ the CoolSolve repository as a test case.
 - `CSL-0020` (dry-air screw compressor with internal leakage): same fluid
   (`Air`) with the same EES-7-vs-CoolProp reference-state offset on `h`
   and `s`.
+- `CSL-0035` (centrifugal compressor with a lookup-table performance map):
+  same course and repetition (MSTh TP 04), map-based off-design counterpart
+  of this design model.
 - CoolSolve example `turbocompressor.eescode` (CSX-044): same exercise,
   kept in CoolSolve as a test case (imposed-`r_p_i` transcription — see
   *Conversion log*).

@@ -1,0 +1,93 @@
+{
+ "id": "CSL-0040",
+ "name": "orc_biomass_chp",
+ "title": "Biomass-boiler ORC (R123) with scroll expanders and a split condenser",
+ "summary": "Organic Rankine cycle on R123 heated by a biomass boiler and coupled, through the feed-water loop, to a condenser split in two parts (water cooled then air cooled). The evaporator (liquid/two-phase/vapour zones), the scroll expander (5 machines in parallel, semi-empirical with leakage and wall heat transfer) and the biomass burner (adiabatic combustion, flue-gas and water-to-ambient heat exchangers) are component sub-models, written as EES MODULE/SUBPROGRAM blocks in the original and flattened into the main program here (decision D10): 73.2 kW net, first-law efficiency 0.108 (EES reference solution).",
+ "kind": "steady",
+ "level": 4,
+ "status": "blocked",
+ "main_file": "orc_biomass_chp.eescode",
+ "fluids": [
+  "R123",
+  "Water",
+  "AirH2O",
+  "Air",
+  "CO2",
+  "H2O",
+  "O2",
+  "N2"
+ ],
+ "tags": [
+  "organic Rankine cycle",
+  "biomass",
+  "cogeneration",
+  "scroll expander",
+  "split condenser",
+  "feed-water loop",
+  "stoichiometric combustion",
+  "plant model"
+ ],
+ "language_features": [
+  "MODULE flattened",
+  "SUBPROGRAM flattened",
+  "$if directives",
+  "PROCEDURE",
+  "FUNCTION",
+  "arrays",
+  "lookup tables",
+  "string variables",
+  "ideal-gas mixture properties",
+  "display comments"
+ ],
+ "stats": {
+  "n_equations": 443,
+  "largest_block": null
+ },
+ "origin": {
+  "type": "research",
+  "source": "coolsolve_examples",
+  "source_path": "~/git/CoolSolve/examples/orc_complex.eescode",
+  "candidate_id": "CSX-029",
+  "authors": [
+   "S. Quoilin (ULiège Thermodynamics Laboratory) — probable, to be confirmed by the maintainer (EES licence stamp: Jean Lebrun lab licence, initials 'sylvain')"
+  ],
+  "url": "",
+  "license": "MIT",
+  "ees_version": "9.920",
+  "language": "en",
+  "course": "EES original EES_ok/orc_complex.EES in ~/git/CoolSolve/misc/EES_ok.zip (inventory CSX-029 is the CoolSolve example, equation-identical to the original apart from a parse-error banner and one dropped comment line); sources/thermo_models has no row for this exercise"
+ },
+ "verification": {
+  "reference": "EES solution report EES_ok/orc_complex.tex shipped in ~/git/CoolSolve/misc/EES_ok.zip (main-program variables of the stored run) — used as the target a runnable variant would reproduce; the model itself does not solve, so no comparison was made",
+  "date": "2026-10-05",
+  "coolsolve_version": "0.3.0@536d427",
+  "max_rel_diff": null,
+  "notes": "Blocked, not verified. coolsolve ./orc_biomass_chp.eescode -> \"Parse failed: Line 479, 480, 481, 555, 556, 558: Could not parse line\" (the C%/H%/O% variable names, CS-GAP-NAME-SYMBOL). With only those six names replaced, coolsolve -d reports Equations: 443, Variables: 432, System square: No, because the $if/$else directives are parsed and ignored (CS-GAP-IF-DIRECTIVE). The variable records decoded from the binary .EES are stale for the module-internal variables (CS-BUG-EXTRACT-STALE: P_r_su1_exp = 1.016e6 against P_r_su_exp = 1.461e6 and r_p_su_exp = 0.99997), so they were not used as reference and no .initials is shipped. EES reference values: eta_I 0.108, eta_global 0.88, W_dot_el_net 72320 W, Q_dot_ev 672320 W, Q_dot_cd 600000 W, Q_dot_u_boil 672301 W, epsilon_s_exp 0.828, M_dot_r_exp_tot 3.259 kg/s, n_exp 17.5, t_r_ex_exp 92.27 C, p_ev 1.461e6 Pa, p_cd 3.065e5 Pa."
+ },
+ "missing_features": [
+  "CS-GAP-IF-DIRECTIVE",
+  "CS-GAP-NAME-SYMBOL",
+  "CS-GAP-LKT"
+ ],
+ "related": [
+  "CSL-0037",
+  "CSL-0036",
+  "CSL-0019",
+  "CSL-0038"
+ ],
+ "related_external": [
+  "CoolSolve examples/orc_complex.eescode (the example this model was imported from, kept in CoolSolve as a parser test case, with its orc_complex.initials)",
+  "CoolSolve misc/EES_ok.zip: EES_ok/orc_complex.EES (EES 9.920, the original), EES_ok/orc_complex.tex (solution report), EES_ok/orc_complex.residuals, orc_complex_P1.jpg (boiler) and _P2.jpg (condenser) plot windows"
+ ],
+ "supersedes": [
+  "coolsolve_examples:CSX-029"
+ ],
+ "previous_paths": [],
+ "history": [
+  {
+   "date": "2026-10-05",
+   "action": "added (roadmap card C-42, batch B-04); faithful import with MODULE/SUBPROGRAM flattening (decision D10); status blocked",
+   "by": "opencode worker for S. Quoilin"
+  }
+ ]
+}

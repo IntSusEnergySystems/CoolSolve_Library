@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0039",
+  "name": "high_temp_heat_pump_pcm_storage",
+  "title": "High-temperature heat pump with PCM storage (Zorlu geothermal plant case study)",
+  "summary": "High-temperature vapour-compression heat pump on cyclopentane studied for the Zorlu geothermal plant: geothermal brine evaporator with production pump, internal heat exchanger, water condenser delivering 7 MW at 141 °C to a phase-change-material storage; the evaporating and condensing pressures follow from pinch constraints evaluated zone by zone (superheat / two-phase / subcooling) in two PROCEDUREs, and a PCM sizing block gives the storage volume and discharge power.",
+  "kind": "steady",
+  "level": 3,
+  "status": "runs",
+  "main_file": "high_temp_heat_pump_pcm_storage.eescode",
+  "fluids": [
+    "CycloPentane",
+    "Water"
+  ],
+  "tags": [
+    "high-temperature heat pump",
+    "phase change material",
+    "thermal energy storage",
+    "geothermal",
+    "case study",
+    "pinch point",
+    "internal heat exchanger",
+    "recuperator",
+    "district heating"
+  ],
+  "language_features": [
+    "property functions",
+    "procedures",
+    "CALL with several outputs",
+    "IF/THEN/ELSE (nested, in procedures)",
+    "min (4 arguments)",
+    "arrays"
+  ],
+  "stats": {"n_equations": 151, "largest_block": 63},
+  "origin": {
+    "type": "research",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/zorlu_heat_pump.eescode",
+    "candidate_id": "CSX-047",
+    "authors": [
+      "TBD (author of the original EES model of the Zorlu plant, not identified)",
+      "S. Quoilin (CoolSolve translation)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "no EES original is known: the example is not in CoolSolve misc/EES_ok.zip and the ULiège collection has no Zorlu/PCM exercise (searched 'zorlu', 'PCM', 'cyclopentane')"
+  },
+  "verification": {
+    "reference": "No independent reference exists (no EES original, searched CoolSolve misc/EES_ok.zip and ~/Nextcloud/thermo_models). Reproduction of the converged solution stored in ~/git/CoolSolve/examples/zorlu_heat_pump.initials, plus the cycle energy balance and pinch-point checks (see README)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 1.85e-10,
+    "notes": "compare_solution.py vs examples/zorlu_heat_pump.initials: \"114 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 37\" (the 37 extra variables are the state-point arrays P[i]/h[i]/T[i]/s[i], the balance check and the solved string variables added by the library model). With --rtol 1e-12 the largest relative deviation is 1.85e-10 on W_dot_sf_pp (round-off of the stored values). The shipped .initials (converged solution of the pinch formulation) is required: most solver configurations fail without it (CoolSolve examples/solver_robustness_report.md)."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [
+    "CoolSolve examples/zorlu_heat_pump.eescode (the example this model was imported from, kept in CoolSolve as a test case, with its zorlu_heat_pump.initials)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-047"
+  ],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-05", "action": "added (roadmap card C-41, batch B-04); import from the CoolSolve example, no EES original; status runs", "by": "opencode worker (glm) for S. Quoilin"}
+  ]
+}

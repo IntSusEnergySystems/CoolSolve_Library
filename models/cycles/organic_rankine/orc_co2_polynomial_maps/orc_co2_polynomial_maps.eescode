@@ -1,0 +1,252 @@
+{=============================================================================
+  Supercritical CO2 ORC with polynomial compressor and turbine performance maps
+  CoolSolve Library model CSL-0038
+ -----------------------------------------------------------------------------
+  Closed CO2 cycle (CO2 = R744) of the "supercritical/transcritical Organic
+  Rankine Cycle" family: a constant-pressure cooler (9-1, water cooled), a
+  compressor (1-2), a recuperator heated by the turbine exhaust (2-3 and 8-9),
+  a solar air-CO2 heater (4-5), a turbine (6-7) and three pipes with pressure
+  and temperature losses (3-4, 5-6, 7-8).
+
+  The compressor and the turbine are not modelled with a physical correlation
+  but with the polynomial fits of their performance maps, as in the original:
+    - compressor: eta_s and the speed are polynomial functions (coefficients
+      p00..p50 for eta_s, k00..k02 for the speed) of two map coordinates, md
+      (mass flow) and Dh (isentropic enthalpy rise);
+    - turbine: the same structure (coefficients t00..t03 for the speed,
+      e00..e05 for eta_t) with the map coordinate Dh_turb.
+  The speed is imposed (75000 rpm), so the maps close the cycle: the mass flow
+  rate m_dot and the turbine exhaust pressure are unknowns of the system, as in
+  the original.
+
+  All pressures are above the critical pressure of CO2 (7.377 MPa), so the
+  working fluid never crosses a phase boundary in the modelled state points.
+
+  Inputs : p_su, T_su, RPM, DELTAT_loss[3], DELTAT_loss[5], DELTAT_loss[7],
+           DELTAT_sun, DELTAT_cool, m_dot_H2O, T_H2O_in, xsi, the polynomial
+           coefficients of the three maps
+  Outputs: m_dot, W_dot, W_dot_t, W_dot_net, Q_dot_cool, Q_dot_sun, eta_cycle,
+           eta_s, eta_t, r_p, epsilon and the states 1..10
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : CoolSolve example examples/orc_co2.eescode (ULiège Thermodynamics
+           Laboratory) - no EES original of this model is known - see README.md
+=============================================================================}
+
+"!Polynomial coefficients of the compressor efficiency map (p00..p50)"
+p00=74.1;
+p01=-48.85;
+p02=16.43;
+p03=0.01193;
+p04=0.04961;
+p05=0.002922;
+p10=11.5;
+p11=5.76;
+p12=-6.184;
+p13=0.03933;
+p14=-0.01717;
+p20=-2.579;
+p21=2.234;
+p22=0.5891;
+p23=0.01292;
+p30=-0.203;
+p31=-0.322;
+p32=-0.02502;
+p40=0.04759;
+p41=0.01318;
+p50=-0.00205;
+
+"!Polynomial coefficients of the compressor speed map (k00..k02)"
+k00 =       28.32  ;
+k10 =     -0.4254  ;
+k01 =       12.96  ;
+k20 =      0.2893 ;
+k11 =     -0.6651  ;
+k02 =    -0.05955;
+
+"!Polynomial coefficients of the turbine speed map (t00..t03)"
+t00 =       174.9;
+t10 =      -158.2 ;
+t01 =       13.32  ;
+t20 =       45.27  ;
+t11 =      -3.034  ;
+t02 =     -0.1202  ;
+t30 =      -4.875  ;
+t21 =      0.5697 ;
+t12 =    -0.02777  ;
+t03 =    0.001934;
+
+"!Polynomial coefficients of the turbine efficiency map (e00..e05)"
+e00 =       57.65  ;
+e10 =       27.84 ;
+e01 =      -27.13 ;
+e20 =       23.77 ;
+e11 =       10.79  ;
+e02 =      0.8045 ;
+e30 =      -22.78  ;
+e21 =       1.824  ;
+e12 =     -0.8106  ;
+e03 =     0.01739  ;
+e40 =       5.788  ;
+e31 =      -1.027  ;
+e22 =     0.1345  ;
+e13 =    0.009117  ;
+e04 =  -0.0009196  ;
+e50 =     -0.6498  ;
+e41 =      0.2459  ;
+e32 =     -0.05374  ;
+e23 =    0.006088  ;
+e14 =  -0.0004917  ;
+e05 =   2.018e-05  ;
+
+"!Cycle data"
+p_su = 76.8765E5      "CO2 pressure at the compressor supply [Pa]"
+T_su = 32.22          "CO2 temperature at the compressor supply [°C]"
+RPM = 75000           "imposed speed of the compressor and of the turbine [rpm]"
+                     "as in the original: the discharge pressure P_ex is not
+                      imposed, the maps give it from the speed (the original
+                      commented out P_ex = 140E5)"
+xsi = 0.97            "pressure-loss factor of the pipes: P_next = xsi*P [-]"
+
+"!Compressor: state 1-2"
+T[1]=T_su                                        "compressor supply [°C]"
+P[1]=P_su                                        "compressor supply [Pa]"
+s[1]=Entropy(R744,T=T[1],P=P[1])                 "compressor supply entropy [J/(kg*K)]"
+h[1]=Enthalpy(R744,T=T[1],P=P[1])                "compressor supply enthalpy [J/kg]"
+
+s_is=s[1]                                        "isentropic compression [-]"
+P_is=P_ex                                        "compressor exhaust pressure [Pa]"
+h_is=Enthalpy(R744,s=s_is,P=P_is)                "isentropic exhaust enthalpy [J/kg]"
+
+eta_s=(h_is-h[1])/(h[2]-h[1])                    "polytropic efficiency, definition of the map [-]"
+Dh=DELTAh/1055.056*0.45359237                    "enthalpy-rise map coordinate (constants as in the original) [-]"
+md=m_dot/0.45359237                              "mass-flow map coordinate (constant as in the original) [-]"
+
+eta_s=1/100*(p00 + p10*md + p01*Dh + p20*md^2 + p11*md*Dh + p02*Dh^2 + p30*md^3 +  p21*md^2*Dh + p12*md*Dh^2 + p03*Dh^3 + p40*md^4 + p31*md^3*Dh  + p22*md^2*Dh^2 + p13*md*Dh^3 + p04*Dh^4 + p50*md^5 + p41*md^4*Dh  + p32*md^3*Dh^2 + p23*md^2*Dh^3 + p14*md*Dh^4 + p05*Dh^5)
+                                                "isentropic efficiency given by the compressor map [-]"
+
+P[2]=P_ex                                        "compressor exhaust pressure [Pa]"
+s[2]=Entropy(R744,h=h[2],P=P[2])                 "compressor exhaust entropy [J/(kg*K)]"
+T[2]=Temperature(R744,h=h[2],s=s[2])             "compressor exhaust temperature [°C]"
+DELTAh=h[2]-h[1]                                 "compressor enthalpy rise [J/kg]"
+
+RPM=1000*(k00 + k10*md + k01*Dh + k20*md^2 + k11*Dh*md + k02*Dh^2)
+                                                "compressor speed given by its map [rpm]"
+                                                "as in the original: the same variable RPM is
+                                                 used for the turbine map, the two machines
+                                                 run at the imposed speed of 75000 rpm"
+omega=RPM/60*2*pi                                "compressor angular speed [rad/s]"
+
+"!Compressor power"
+W_dot=(h[2]-h[1])*m_dot                          "compressor power [W]"
+
+"!Pressure ratio"
+r_p=P[2]/P[1]                                    "compressor pressure ratio [-]"
+
+"!Recuperator: state 2-3 (cold side) and 8-9 (hot side), CO2-CO2 counterflow"
+P[3]=P[2]                                        "state 3 pressure [Pa]"
+h[3]-h[2]=h[8]-h[9]                              "heat given by the 8-9 exchanger = heat received by the 2-3 exchanger [J/kg]"
+s[3]=Entropy(R744,T=T[3],P=P[3])                 "state 3 entropy [J/(kg*K)]"
+h[3]=Enthalpy(R744,T=T[3],P=P[3])                "state 3 enthalpy [J/kg]"
+
+"!Pipe 3-4: heat (and pressure?) losses in pipe"
+DELTAT_loss[3]=2                                 "temperature loss in the pipe 3-4 [K]"
+P[4]=xsi*P[3]                                    "state 4 pressure [Pa]"
+T[4]=T[3]-DELTAT_loss[3]                         "state 4 temperature [°C]"
+
+"!Solar heater: state 4-5 (air-CO2 exchanger)"
+"Air flow rate constant, but T varies"           "as in the original
+                                                   the air flow rate of the heater is constant
+                                                   and its temperature varies"
+P[5]=P[4]                                        "state 5 pressure [Pa]"
+DELTAT_sun=150                                   "temperature rise of the CO2 in the heater [K]"
+T[5]-T[4]=DELTAT_sun                             "state 5 temperature [°C]"
+s[4]=Entropy(R744,T=T[4],P=P[4])                 "state 4 entropy [J/(kg*K)]"
+s[5]=Entropy(R744,T=T[5],P=P[5])                 "state 5 entropy [J/(kg*K)]"
+h[4]=Enthalpy(R744,T=T[4],P=P[4])                "state 4 enthalpy [J/kg]"
+h[5]=Enthalpy(R744,T=T[5],P=P[5])                "state 5 enthalpy [J/kg]"
+
+"!Pipe 5-6: same losses as 3-4"
+P[6]=xsi*P[5]                                    "state 6 pressure [Pa]"
+T[6]-T[5]=DELTAT_loss[5]                         "temperature loss in the pipe 5-6 [K]"
+DELTAT_loss[5]=2                                 "temperature loss in the pipe 5-6 [K]"
+
+"!Turbine: state 6-7"
+Dh_turb=DELTAh_turb/1055.056*0.45359237          "turbine enthalpy-rise map coordinate (constants as in the original) [-]"
+
+RPM=1000*(t00 + t10*md + t01*Dh_turb + t20*md^2 + t11*md*Dh_turb + t02*Dh_turb^2 + t30*md^3 + t21*md^2*Dh_turb + t12*md*Dh_turb^2 + t03*Dh_turb^3);
+                                                "turbine speed given by its map [rpm]"
+
+eta_t=1/100*(e00 + e10*md + e01*Dh_turb + e20*md^2 + e11*md*Dh_turb + e02*Dh_turb^2 + e30*md^3 + e21*md^2*Dh_turb + e12*md*Dh_turb^2 + e03*Dh_turb^3 + e40*md^4 + e31*md^3*Dh_turb + e22*md^2*Dh_turb^2 + e13*md*Dh_turb^3 + e04*Dh_turb^4 + e50*md^5 + e41*md^4*Dh_turb + e32*md^3*Dh_turb^2 + e23*md^2*Dh_turb^3 + e14*md*Dh_turb^4 + e05*Dh_turb^5)
+                                                "isentropic efficiency given by the turbine map [-]"
+
+eta_t=(h[6]-h[7])/(h[6]-h_is_t)                 "isentropic efficiency, definition of the map [-]"
+DELTAh_turb=h[6]-h[7]                            "turbine enthalpy drop [J/kg]"
+h_is_t=Enthalpy(R744,P=P[7],s=s[6])             "isentropic turbine exhaust enthalpy [J/kg]"
+
+h[6]=Enthalpy(R744,T=T[6],P=P[6])                "state 6 enthalpy [J/kg]"
+s[6]=Entropy(R744,T=T[6],P=P[6])                 "state 6 entropy [J/(kg*K)]"
+h[7]=Enthalpy(R744,T=T[7],P=P[7])                "state 7 enthalpy [J/kg]"
+s[7]=Entropy(R744,T=T[7],P=P[7])                 "state 7 entropy [J/(kg*K)]"
+
+"!Turbine power"
+W_dot_t=DELTAh_turb*m_dot                        "turbine power [W]"
+
+"!Pipe 7-8: same losses as 3-4"
+P[8]=xsi*P[7]                                    "state 8 pressure [Pa]"
+T[8]-T[7]=DELTAT_loss[7]                         "temperature loss in the pipe 7-8 [K]"
+DELTAT_loss[7]=2                                 "temperature loss in the pipe 7-8 [K]"
+
+"!Recuperator hot side: state 8-9 (see section 2-3)"
+"cf section 2-3"                                 "as in the original"
+P[9]=P[8]                                        "state 9 pressure [Pa]"
+s[8]=Entropy(R744,T=T[8],P=P[8])                 "state 8 entropy [J/(kg*K)]"
+s[9]=Entropy(R744,T=T[9],P=P[9])                 "state 9 entropy [J/(kg*K)]"
+h[8]=Enthalpy(R744,T=T[8],P=P[8])                "state 8 enthalpy [J/kg]"
+h[9]=Enthalpy(R744,T=T[9],P=P[9])                "state 9 enthalpy [J/kg]"
+
+"!Cooler: state 9-1"
+"HEX (CO2-H2O) counterflow"                      "as in the original"
+P[1]=P[9]                                        "cooler at constant CO2 pressure [Pa]"
+T[9]-T[1]=DELTAT_cool                            "temperature drop of the CO2 in the cooler [K]"
+DELTAT_cool=25                                   "temperature drop of the CO2 in the cooler [K]"
+
+"!Cooler model (effectiveness-NTU, counterflow)"
+m_dot_H2O=3                                      "water flow rate of the cooling water [kg/s]"
+T_H2O_in=15                                      "water inlet temperature [°C]"
+T_w=T_H2O_in                                     "water temperature used for cp_w [°C]"
+P_w=101325                                       "water pressure used for cp_w [Pa]"
+cp_w=Cp(Water,T=T_w,P=P_w)                       "water specific heat [J/(kg*K)]"
+cp_CO2=(h[1]-h[9])/(T[1]-T[9])                   "mean specific heat of the CO2 over the cooler [J/(kg*K)]"
+C_dot_hot=m_dot*cp_CO2                           "CO2 capacity rate [W/K]"
+C_dot_cold=m_dot_H2O*cp_w                        "cooling water capacity rate [W/K]"
+C_dot_min=min(C_dot_hot,C_dot_cold)              "minimum capacity rate [W/K]"
+C_dot_max=max(C_dot_hot,C_dot_cold)              "maximum capacity rate [W/K]"
+C_r=C_dot_min/C_dot_max                          "capacity rate ratio [-]"
+NTU=AU/C_dot_min                                 "number of transfer units [-]"
+epsilon=(1-exp(-NTU*(1+C_r)))/(1-C_r*exp(-NTU*(1+C_r)))
+                                                "counterflow effectiveness [-]"
+Q_dot_cool=m_dot*(h[9]-h[1])                    "cooling power, energy balance of the CO2 side [W]"
+Q_dot_cool=epsilon*C_dot_min*(T[9]-T_H2O_in)    "cooling power, effectiveness-NTU model [W]: closes the model and gives the conductance AU"
+
+"!Cycle closure (dummy step 10 to close the cycle)"
+s[10]=s[1]                                       "state 10 = state 1, dummy state to close the loop [J/(kg*K)]"
+h[10]=h[1]                                       "state 10 = state 1, dummy state to close the loop [J/kg]"
+T[10]=T[1]                                       "state 10 = state 1, dummy state to close the loop [°C]"
+P[10]=P[1]                                       "state 10 = state 1, dummy state to close the loop [Pa]"
+
+"!Cycle results (post-processing, no effect on the other results)"
+W_dot_net=W_dot_t-W_dot                          "net power of the cycle [W]"
+Q_dot_sun=m_dot*(h[5]-h[4])                      "heat received from the solar heater [W]"
+Q_dot_pipe=m_dot*((h[4]-h[3])+(h[6]-h[5])+(h[8]-h[7]))
+                                                "heat received by the CO2 in the three pipes (as in the original, the pipes 5-6 and 7-8 heat it and the pipe 3-4 cools it: see README) [W]"
+eta_cycle=W_dot_net/(Q_dot_sun+Q_dot_pipe)       "cycle efficiency (net power over the heat received from the solar heater and from the surroundings through the pipes) [-]"
+balance=Q_dot_sun+Q_dot_pipe+W_dot-Q_dot_cool-W_dot_t
+                                                "energy balance of the cycle: must be 0 [W]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: cooler outlet = compressor supply, 2: compressor exhaust, 3: recuperator cold
+ side outlet, 4: solar heater inlet, 5: solar heater outlet, 6: turbine inlet,
+ 7: turbine exhaust, 8: recuperator hot side inlet, 9: cooler inlet,
+ 10: dummy closing state. The states are already stored in the arrays
+ P[i], h[i], T[i], s[i]: use them with the "Overlay array path" option of the
+ CoolSolve Diagram tab (P-h diagram: X = h, Y = P).}

@@ -1,0 +1,78 @@
+{
+  "id": "CSL-0041",
+  "name": "ice_storage_tank_discharge_phase_change",
+  "title": "Ice storage tank discharge with phase change",
+  "summary": "Discharge of a 120 m3 water/ice storage tank through a glycol heat exchanger over 50 000 s: the specific internal energy of the contents is integrated in time (INTEGRAL) and 5-argument IF logic tracks the ice fraction and the tank temperature through subcooled ice, melting at 0 C and liquid warming.",
+  "kind": "dynamic",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "ice_storage_tank_discharge_phase_change.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "ice storage",
+    "thermal storage",
+    "phase change",
+    "latent heat",
+    "melting",
+    "storage tank",
+    "dynamic",
+    "time integration",
+    "exercise"
+  ],
+  "language_features": [
+    "INTEGRAL",
+    "$IntegralTable",
+    "if (EES 5-argument)",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 39,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 06/SB/MSTh-SB-R6-Ex4.EES",
+    "candidate_id": "TM-0104",
+    "authors": [
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "Machines et systèmes thermiques (ULiège), repetition 6, exercise 4"
+  },
+  "verification": {
+    "reference": "EES stored solution of the sibling copy of the same exercise (thermo_models TM-0095, MSTH051024exercice4.EES: same physics, AU = 1 MW/K, P = 1 bar, complete 27-value stored solution); the runnable variant was re-run with those inputs and compared; closed-form check of the two discharge phases for the shipped inputs (the stored solution of TM-0104 itself is cleared: 16/40 values, inputs and constants only)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.00526,
+    "notes": "Variant (re-run with the TM-0095 inputs) vs EES: 19 common variables, 18 within 6.4e-8; printed maximum 5.26e-3 on u_dot (excluded: final-time derivative ~1e-6 J/(kg s), proportional to 5-T_w ~ 4.3e-7, cancellation-limited); states agree to 2.6e-10 (u), 3.5e-10 (T_w, t_melt). Shipped inputs: trajectory matches the closed-form solution (melt complete at 30 460 s; final u 20 934.2 J/kg, T_w 4.9998 C)."
+  },
+  "missing_features": [
+    "CS-GAP-IF5",
+    "CS-GAP-INTEGRAL-LIMITS",
+    "CS-BUG-WATER-NEAR-FREEZING",
+    "CS-BUG-INTEGRAL-TABLE-SEP",
+    "CS-BUG-INTEGRAL-MAXSTEPS",
+    "CS-BUG-INTEGRAL-TABLE-CASE"
+  ],
+  "related": ["CSL-0009"],
+  "related_external": [
+    "CoolSolve examples/ice_storage_tank.eescode (CoolSolve transcription of the same exercise, CSX-023, kept in CoolSolve as a test case)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-023"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-43, batch B-02)",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    }
+  ]
+}

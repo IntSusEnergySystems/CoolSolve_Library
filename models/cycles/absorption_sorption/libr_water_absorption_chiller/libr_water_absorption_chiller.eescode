@@ -1,0 +1,93 @@
+{=============================================================================
+  LiBr-water absorption chiller cycle with a solution heat exchanger
+  CoolSolve Library model CSL-0043
+ -----------------------------------------------------------------------------
+  Single-effect LiBr-H2O absorption chiller at one operating point: water is
+  the refrigerant, a lithium-bromide solution the absorbent. Mass and LiBr
+  conservation give the weak/rich solution flow rates from the equilibrium
+  concentrations solved with the EES built-in LiBr routines X_LIBR and
+  H_LIBR (concentrations in mass %, specific enthalpies in kJ/kg), an
+  energy balance around the generator gives the driving heat and the COP.
+  Exercise of the ULiege course "Machines et systemes thermiques"
+  (repetition 11, exercise 2): COP of the simple cycle once a 75 % effective
+  solution heat exchanger is added between absorber and generator.
+
+  BLOCKED in CoolSolve: X_LIBR/H_LIBR are not implemented (gap
+  CS-GAP-FLUIDS-ABS, already registered for the CoolSolve example
+  water_libr). The file is kept in native EES syntax.
+
+  Inputs : T_ev, T_abs, T_cd, T_gen [C], DELTAT_oh, DELTAT_sc [K],
+           M_dot_w [kg/s], epsilon_HEX [-]
+  Outputs: x_abs, x_gen (mass %), solution flow rates [kg/s], Q_dot_ev,
+           Q_dot_cd, Q_dot_gen, Q_dot_HEX [W], COP [-]
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : MSTh-SB-R11-EX2.EES, ULiege MSTh course - see README.md
+=============================================================================}
+
+"!Given data (as in the original)"
+T_ev = 5          "evaporation temperature [C]"
+DELTAT_oh = 0      "superheating at the evaporator outlet [K] (kept from the original, unused)"
+T_abs = 40         "absorber temperature [C]"
+T_cd = 45          "condensation temperature [C]"
+DELTAT_sc = 0      "subcooling at the condenser outlet [K] (kept from the original, unused)"
+T_gen = 130        "generator temperature [C]"
+P_ev = PRESSURE(Water,T=T_ev,x=0.5)     "saturation pressure at T_ev [Pa]"
+P_cd = PRESSURE(Water,T=T_cd,x=0.5)     "saturation pressure at T_cd [Pa]"
+"assumption: refrigerant (water) mass flow rate M_dot_w = 1"
+M_dot_w = 1        "kg/s"
+
+"!Evaporator"
+Q_dot_ev = M_dot_w*(h_w_ev_ex - h_w_ev_su)    "cooling capacity [W]"
+h_w_ev_su = h_w_cd_ex                          "isenthalpic expansion (as in the original)"
+h_w_ev_ex = ENTHALPY(Water,T=T_ev,x=1)         "saturated vapour at T_ev [J/kg]"
+
+"!Condenser"
+h_w_cd_ex = ENTHALPY(Water,T=T_cd,x=0)         "saturated liquid at T_cd [J/kg]"
+Q_dot_cd = M_dot_w*(h_w_cd_su - h_w_cd_ex)     "condenser heat rate [W]"
+
+"!Generator"
+"flow rate conservation"
+M_dot_weak = M_dot_w + M_dot_rich              "weak solution flow rate [kg/s]"
+"energy balance"
+M_dot_weak*h_weak_gen_su + Q_dot_gen = M_dot_w*h_w_gen_ex + M_dot_rich*h_rich_gen_ex
+h_w_gen_ex = h_w_cd_su
+h_w_gen_ex = ENTHALPY(Water,T=T_gen,P=P_cd)    "superheated vapour leaving the generator [J/kg]"
+"solution flow rates and concentrations (X_LIBR returns the concentration in mass %,
+ so M_dot_libr comes out on a 100 kg/s scale, as in the original; it does not enter
+ the energy balances)"
+M_dot_libr = x_abs*M_dot_weak                  "LiBr flow rate carried by the weak solution [kg/s x %]"
+M_dot_libr = x_gen*M_dot_rich                  "LiBr flow rate carried by the rich solution [kg/s x %]"
+x_abs = X_LIBR('SI',T_abs,P_ev/1000)           "weak solution concentration at absorber saturation [mass %] (as in the original)"
+x_gen = X_LIBR('SI',T_gen,P_cd/1000)           "rich solution concentration at generator saturation [mass %] (as in the original)"
+"LiBr solution enthalpies (H_LIBR returns kJ/kg)"
+h_weak_abs_ex = H_LIBR('SI',T_abs,x_abs)*1000  "weak solution leaving the absorber [J/kg]"
+h_rich_gen_ex = H_LIBR('SI',T_gen,x_gen)*1000  "rich solution leaving the generator [J/kg]"
+
+"!Solution heat recovery exchanger"
+Q_dot_HEX = epsilon_HEX*M_dot_rich*(h_rich_gen_ex - h_rich_abs_su_min)   "rich side [W]"
+h_rich_abs_su_min = H_LIBR('SI',T_abs,x_gen)*1000                        "rich solution at absorber temperature [J/kg]"
+epsilon_HEX = 0.75                                "heat exchanger effectiveness [-] (as in the original)"
+Q_dot_HEX = M_dot_weak*(h_weak_gen_su - h_weak_abs_ex)                   "weak side [W]"
+Q_dot_HEX = M_dot_rich*(h_rich_gen_ex - h_rich_abs_su)                   "rich side with the actual inlet state [W]"
+
+"!Cycle performance"
+COP = Q_dot_ev/Q_dot_gen                     "coefficient of performance [-]"
+
+"!State points for the thermodynamic diagrams (water loop; post-processing added
+ by the library, results unchanged; not exercised until CS-GAP-FLUIDS-ABS is closed)"
+P[1] = P_ev                                  "1: evaporator outlet [Pa]"
+T[1] = T_ev                                  "[C]"
+h[1] = h_w_ev_ex                             "[J/kg]"
+s[1] = ENTROPY(Water,T=T_ev,x=1)             "[J/kg-K]"
+P[2] = P_cd                                  "2: generator outlet, superheated vapour [Pa]"
+T[2] = T_gen                                 "[C]"
+h[2] = h_w_gen_ex                            "[J/kg]"
+s[2] = ENTROPY(Water,P=P_cd,T=T_gen)         "[J/kg-K]"
+P[3] = P_cd                                  "3: condenser outlet, saturated liquid [Pa]"
+T[3] = T_cd                                  "[C]"
+h[3] = h_w_cd_ex                             "[J/kg]"
+s[3] = ENTROPY(Water,T=T_cd,x=0)             "[J/kg-K]"
+P[4] = P_ev                                  "4: evaporator inlet, after the expansion valve [Pa]"
+T[4] = T_ev                                  "[C]"
+h[4] = h_w_ev_su                             "[J/kg]"
+s[4] = ENTROPY(Water,P=P_ev,h=h_w_ev_su)     "[J/kg-K]"

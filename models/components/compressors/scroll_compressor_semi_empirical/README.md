@@ -224,3 +224,6 @@ Source files (collection of S. Quoilin):
 - CoolSolve example `scroll_compressor.eescode` (`CSX-042`): simplified
   version of this model (stays in the CoolSolve repository as a test case);
   LaboThapPy has a Python implementation of the same model family.
+- `CSL-0037` *scroll_expander_semi_empirical*: the expander counterpart of
+  this model (same semi-empirical methodology: supply losses, leakage,
+  mechanical losses, global isentropic effectiveness).

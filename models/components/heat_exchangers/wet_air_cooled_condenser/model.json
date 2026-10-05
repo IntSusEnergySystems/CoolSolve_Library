@@ -1,0 +1,67 @@
+{
+  "id": "CSL-0032",
+  "name": "wet_air_cooled_condenser",
+  "title": "Wet air-cooled condenser (spray evaporative cooling)",
+  "summary": "Air-cooled condenser operating in wet regime (spray evaporation): air side treated as a fictitious dry fluid on wet-bulb temperatures with an effectiveness-NTU closure; given the duty and the air inlet/outlet states, determines AU_f, the fictitious capacity rate, the air flow rate and the spray/condensate water flow.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "wet_air_cooled_condenser.eescode",
+  "fluids": [
+    "AirH2O"
+  ],
+  "tags": [
+    "heat exchanger",
+    "condenser",
+    "wet regime",
+    "spray evaporative cooling",
+    "effectiveness-NTU",
+    "psychrometrics",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 27,
+    "largest_block": 2
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 05/MSTh-SB-R5-Ex3.EES",
+    "candidate_id": "TM-0079",
+    "authors": [
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "Machines et systèmes thermiques (ULiège), repetition 5, exercise 3"
+  },
+  "verification": {
+    "reference": "Solution stored in the original EES file (15 variables with stored values); the values stated in the original comments (M_dot_a = 0.7398 kg/s, C_dot_a_f = 3322 W/K, NTU_f = 0.532) match the EES last-solution guesses",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0",
+    "max_rel_diff": 0.00074,
+    "notes": "15/15 common variables, 0 differ (rtol=0.001); max rel diff 7.4e-4 on w_ex (CoolProp humid-air formulation vs EES psychrometrics). Inputs and all stored variables agree. No unit conversion needed (SI-C-Pa-J)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0008", "CSL-0030"],
+  "related_external": [
+    "CoolSolve examples/condenser_wet.eescode (verbatim transcription of the original, kept in CoolSolve as a test case)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-009"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-33, batch B-02)",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    }
+  ]
+}

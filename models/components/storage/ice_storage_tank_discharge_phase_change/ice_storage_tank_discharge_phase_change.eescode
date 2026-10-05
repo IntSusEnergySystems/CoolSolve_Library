@@ -1,0 +1,92 @@
+{=============================================================================
+   Ice storage tank discharge with phase change (120 m3 water/ice tank)
+   CoolSolve Library model CSL-0041
+  -----------------------------------------------------------------------------
+   A 120 m3 water/ice thermal energy storage tank is discharged through a
+   glycol-water heat exchanger: glycol enters at 5 °C, 90 kg/s, overall
+   heat-transfer coefficient AU = 0.5 MW/K, no heat loss to the ambient.
+   The specific internal energy u of the water/ice contents is integrated
+   over time (INTEGRAL); the phase-change logic tracks the ice fraction and
+   the tank temperature: subcooled ice below -0.01 °C, melting at 0 °C,
+   liquid water warming above 0 °C. Initial state: all ice at -0.01 °C.
+
+   This file keeps the native EES syntax of the original solution, including
+   the 5-argument IF(A,B,X,Y,Z) intrinsics, the symbolic integration limits
+   tau_1, tau_2, the comma-separated $IntegralTable and the near-freezing
+   Water property calls -> it does NOT run in CoolSolve v0.3.0 (blocked by
+   CS-GAP-IF5, CS-GAP-INTEGRAL-LIMITS and CS-BUG-WATER-NEAR-FREEZING, also
+   CS-BUG-INTEGRAL-TABLE-SEP and CS-BUG-INTEGRAL-MAXSTEPS, see README.md).
+   The runnable transcription is
+   ice_storage_tank_discharge_phase_change_coolsolve.eescode.
+
+   Inputs : V_sto, M_dot, AU, T_su, c_p (tank and glycol loop); P;
+            t_ice_0, t_liq_0, u_liq_0, c_ice, c_liq (phase-change data);
+            tau_1, tau_2 (integration interval)
+   Outputs: u(tau) trajectory, x_ice, t_w, Q_dot_br_sto, DELTAu, t_melt,
+            v, t_ice, t_liq ($IntegralTable columns)
+   Units  : SI - temperatures in °C, pressures in Pa, energies in J
+   Source : ULiège, course "Machines et systèmes thermiques", repetition 6,
+            exercise 4, solution by S. Bertagnolio (EES file
+            MSTh-SB-R6-Ex4.EES) - see README.md
+ =============================================================================}
+
+"Tank and glycol loop data"
+V_sto = 120                     "storage tank volume [m^3]"
+M_dot = 90                      "glycol mass flow rate [kg/s]"
+AU = 5E5                        "overall heat-transfer coefficient of the exchanger [W/K]"
+T_su = 5                        "glycol inlet temperature [°C]"
+c_p = 3800                      "specific heat of the glycol [J/kg-K]"
+
+M = V_sto*1000                  "water/ice mass in the tank (water density 1000 kg/m^3) [kg]"
+
+"!Energy balance, as in the original"
+Q_dot_env_sto + H_dot_br_sto = U_dot_sto   "first law on the tank contents [W]"
+Q_dot_env_sto = 0                "no heat loss to the ambient"
+U_dot_sto = M*u_dot              "rate of change of the tank internal energy [W]"
+H_dot_br_sto = Q_dot_br_sto      "heat transferred to the glycol loop [W]"
+
+"!Heat transfer to the glycol loop (effectiveness-NTU, cold side constant)"
+Q_dot_br_sto = epsilon*M_dot*c_p*(T_su - T_w)   "discharge heat rate [W]"
+epsilon = 1 - exp(-NTU)          "exchanger effectiveness [-]"
+NTU = AU/C_dot                   "number of transfer units [-]"
+C_dot = M_dot*c_p                "glycol heat capacity rate [W/K]"
+
+"!Integration of the internal energy per kg of water:"
+DELTAu = INTEGRAL(u_dot, tau, tau_1, tau_2)   "change of u since tau_1 [J/kg]"
+tau_1 = 0                        "start of the integration [s]"
+tau_2 = 50000                    "end of the integration [s]"
+DELTAu = u - u_1                 "same change, through the state variable u [J/kg]"
+u_1 = u_ice_0                    "initial state: all ice at t_ice_0 [J/kg]"
+u_ice_0 = INTENERGY(Water, T=-0.01, P=P)      "internal energy of ice at t_ice_0 [J/kg]"
+P = 101325                       "tank pressure (atmospheric) [Pa]"
+
+"!Phase-change temperatures (EES 5-argument IF: IF(A,B,X,Y,Z) returns X if
+ A<B, Y if A=B and Z if A>B)"
+t_ice_0 = -0.01                  "initial (subcooled ice) temperature [°C]"
+t_liq_0 = 0                      "temperature of the liquid at u_liq_0 [°C]"
+u_liq_0 = 0                      "internal energy of the liquid at the melting point [J/kg]"
+c_ice = 2200                     "specific heat of ice [J/kg-K]"
+c_liq = 4187                     "specific heat of liquid water [J/kg-K]"
+t_w = IF(u, u_ice_0, t_ice_0, 0, t_melt)      "tank temperature: t_ice_0 below u_ice_0, 0 °C while melting, t_melt above"
+t_ice = t_ice_0 + (u - u_ice_0)/c_ice   "ice temperature when subcooled (below -0.01 °C), as in the original"
+t_melt = IF(u, 0, t_liq_0, t_liq_0, t_liq)    "temperature after the melting point: t_liq_0 at u = 0, then t_liq"
+t_liq = t_liq_0 + (u - u_liq_0)/c_liq   "liquid temperature once all the ice is melted (u above 0), as in the original"
+
+"!Total internal energy increase of the tank:"
+DELTAU_sto = M*DELTAu            "energy stored over the integration interval [J]"
+
+"!Ice fraction (quality), as in the original:"
+x_ice = IF(u, u_ice_0, 1, 1, x_melt)   "ice fraction: 1 below u_ice_0, x_melt above"
+x_melt = IF(u, 0, x_two_phase, 0, 0)   "ice fraction while the ice melts"
+x_two_phase = (u - u_liq_0)/(u_ice_0 - u_liq_0)   "linear ice fraction between u_ice_0 and u_liq_0 [-]"
+
+"!Specific volume of the water/ice mixture:"
+v = x_ice*v_ice + (1 - x_ice)*v_liq    "mixture specific volume [m^3/kg]"
+v_ice = VOLUME(Water, T=T_ice_ref, P=P)     "specific volume of ice at T_ice_ref [m^3/kg]"
+t_ice_ref = min(t_ice_0, t_ice)  "reference temperature for v_ice [°C]"
+v_liq = VOLUME(Water, T=T_liq_ref, P=P)     "specific volume of the liquid at T_liq_ref [m^3/kg]"
+t_liq_ref = max(t_liq_0, t_liq)  "reference temperature for v_liq [°C]"
+
+$IntegralTable tau:10,  x_ice, u, t_w, Q_dot_br_sto, DELTAu, t_melt, v, t_ice, t_liq
+{Trajectory every 10 s from 0 to 50 000 s. EES accepts commas as column
+ separators; CoolSolve needs spaces (CS-BUG-INTEGRAL-TABLE-SEP).}

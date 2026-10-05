@@ -1,0 +1,107 @@
+{=============================================================================
+   Ice storage tank discharge with phase change (120 m3 water/ice tank)
+   CoolSolve Library model CSL-0041 - runnable variant of
+   ice_storage_tank_discharge_phase_change
+  -----------------------------------------------------------------------------
+   Same model, same inputs, same physics and same 10-s tabulation step as
+   ice_storage_tank_discharge_phase_change.eescode, transcribed in the
+   CoolSolve v0.3.0 dialect because the native EES constructs below are
+   blocked (see the README of CSL-0041):
+     - the symbolic integration limits tau_1, tau_2 are replaced by their
+       literal values 0 and 50000 (CS-GAP-INTEGRAL-LIMITS);
+     - the four EES 5-argument IF(A,B,X,Y,Z) intrinsics are replaced by the
+       3-argument if(cond, a, b) (true when cond > 0), comparing u with the
+       threshold (u - u_ice_0); the u = u_ice_0 point of the trajectory
+       returns t_ice_0 where EES returns 0 (single grid point, no effect on
+       the trajectory) (CS-GAP-IF5; CoolSolve-only syntax, not valid EES);
+     - the three Water property calls at or below 0 °C return NaN in
+       CoolProp and are replaced by constants: u_ice_0 keeps the value EES
+       stored for the same call in the sibling solution of the same
+       exercise (MSTH051024exercice4.EES, P = 1 bar: -333451.5211 J/kg),
+       v_ice and v_liq take the values of ice (916.7 kg/m^3) and liquid
+       water at 0 °C; the original calls are kept in comments
+       (CS-BUG-WATER-NEAR-FREEZING);
+     - the $IntegralTable columns are space-separated instead of comma-
+       separated (CS-BUG-INTEGRAL-TABLE-SEP), and the t_w column is written
+       T_w, the casing of the first occurrence of the variable in the file:
+       the column matching is case-sensitive and a t_w column stays silently
+       empty otherwise (CS-BUG-INTEGRAL-TABLE-CASE).
+   Solve time is a few seconds (5000 steps of 10 s); the trajectory is
+   written to ice_storage_tank_discharge_phase_change_coolsolve-integral.csv
+   (coolsolve.conf raises integralMaxSteps, CS-BUG-INTEGRAL-MAXSTEPS).
+
+   Verified against the EES stored solution of the sibling copy of the same
+   exercise (AU = 1 MW/K, P = 1 bar) and against the closed-form solution of
+   the two discharge phases (see README.md).
+ =============================================================================}
+
+"Tank and glycol loop data"
+V_sto = 120                     "storage tank volume [m^3]"
+M_dot = 90                      "glycol mass flow rate [kg/s]"
+AU = 5E5                        "overall heat-transfer coefficient of the exchanger [W/K]"
+T_su = 5                        "glycol inlet temperature [°C]"
+c_p = 3800                      "specific heat of the glycol [J/kg-K]"
+
+M = V_sto*1000                  "water/ice mass in the tank (water density 1000 kg/m^3) [kg]"
+
+"!Energy balance, as in the original"
+Q_dot_env_sto + H_dot_br_sto = U_dot_sto   "first law on the tank contents [W]"
+Q_dot_env_sto = 0                "no heat loss to the ambient"
+U_dot_sto = M*u_dot              "rate of change of the tank internal energy [W]"
+H_dot_br_sto = Q_dot_br_sto      "heat transferred to the glycol loop [W]"
+
+"!Heat transfer to the glycol loop (effectiveness-NTU, cold side constant)"
+Q_dot_br_sto = epsilon*M_dot*c_p*(T_su - T_w)   "discharge heat rate [W]"
+epsilon = 1 - exp(-NTU)          "exchanger effectiveness [-]"
+NTU = AU/C_dot                   "number of transfer units [-]"
+C_dot = M_dot*c_p                "glycol heat capacity rate [W/K]"
+
+"!Integration of the internal energy per kg of water:"
+{Original: DELTAu = INTEGRAL(u_dot, tau, tau_1, tau_2) with tau_1 = 0,
+ tau_2 = 50000; literal limits (CS-GAP-INTEGRAL-LIMITS).}
+DELTAu = INTEGRAL(u_dot, tau, 0, 50000)   "change of u between 0 and 50 000 s [J/kg]"
+DELTAu = u - u_1                 "same change, through the state variable u [J/kg]"
+u_1 = u_ice_0                    "initial state: all ice at t_ice_0 [J/kg]"
+{Original: u_ice_0 = INTENERGY(Water, T=-0.01, P=P); CoolProp cannot evaluate
+ Water at or below 0 °C (CS-BUG-WATER-NEAR-FREEZING). Constant set to the
+ value EES stored for this call in the sibling solution of the same exercise
+ (MSTH051024exercice4.EES, P = 1 bar: -333451.5211 J/kg).}
+u_ice_0 = -333451.5              "internal energy of ice at t_ice_0 [J/kg]"
+P = 101325                       "tank pressure (atmospheric) [Pa]"
+
+"!Phase-change temperatures (3-argument if(cond, a, b): a if cond > 0, else b;
+ CoolSolve-only syntax, not valid EES - CS-GAP-IF5)"
+t_ice_0 = -0.01                  "initial (subcooled ice) temperature [°C]"
+t_liq_0 = 0                      "temperature of the liquid at u_liq_0 [°C]"
+u_liq_0 = 0                      "internal energy of the liquid at the melting point [J/kg]"
+c_ice = 2200                     "specific heat of ice [J/kg-K]"
+c_liq = 4187                     "specific heat of liquid water [J/kg-K]"
+t_w = if(u - u_ice_0, t_melt, t_ice_0)     "tank temperature: t_ice_0 below u_ice_0, t_melt above (EES returns 0 at u = u_ice_0)"
+t_ice = t_ice_0 + (u - u_ice_0)/c_ice   "ice temperature when subcooled (below -0.01 °C), as in the original"
+t_melt = if(u, t_liq, t_liq_0)   "temperature after the melting point: t_liq_0 at u <= 0, then t_liq"
+t_liq = t_liq_0 + (u - u_liq_0)/c_liq   "liquid temperature once all the ice is melted (u above 0), as in the original"
+
+"!Total internal energy increase of the tank:"
+DELTAU_sto = M*DELTAu            "energy stored over the integration interval [J]"
+
+"!Ice fraction (quality), as in the original:"
+x_ice = if(u - u_ice_0, x_melt, 1)   "ice fraction: 1 below u_ice_0, x_melt above"
+x_melt = if(u, 0, x_two_phase)   "ice fraction while the ice melts"
+x_two_phase = (u - u_liq_0)/(u_ice_0 - u_liq_0)   "linear ice fraction between u_ice_0 and u_liq_0 [-]"
+
+"!Specific volume of the water/ice mixture:"
+v = x_ice*v_ice + (1 - x_ice)*v_liq    "mixture specific volume [m^3/kg]"
+{Original: v_ice = VOLUME(Water, T=T_ice_ref, P=P) with T_ice_ref =
+ min(t_ice_0, t_ice), and v_liq = VOLUME(Water, T=T_liq_ref, P=P) with
+ T_liq_ref = max(t_liq_0, t_liq); CoolProp cannot evaluate Water at or below
+ 0 °C (CS-BUG-WATER-NEAR-FREEZING). Constants: ice at 0 °C (density
+ 916.7 kg/m^3) and liquid water at 0 °C.}
+v_ice = 0.001091                 "specific volume of ice at 0 °C [m^3/kg]"
+v_liq = 0.001000                 "specific volume of liquid water at 0 °C [m^3/kg]"
+
+$IntegralTable tau:10 x_ice u T_w Q_dot_br_sto DELTAu t_melt v t_ice t_liq
+{Trajectory every 10 s from 0 to 50 000 s, written to
+ ice_storage_tank_discharge_phase_change_coolsolve-integral.csv; plot it in
+ the CoolSolve GUI Integral tab. T_w (capital, as in the Q_dot equation
+ above): the column matching is case-sensitive
+ (CS-BUG-INTEGRAL-TABLE-CASE).}

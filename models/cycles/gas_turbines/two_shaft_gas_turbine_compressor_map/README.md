@@ -342,3 +342,5 @@ run*).
   `gamma` function used by this model, copied into the runnable variant.
 - `CSL-0006` (*boiler_mean_specific_heat*): another user of the same combustion
   library, on a heating boiler.
+- `CSL-0035` (*centrifugal_compressor_lookup_map*): another map-based
+  compressor model blocked by the same native `INTERPOLATE` gap.

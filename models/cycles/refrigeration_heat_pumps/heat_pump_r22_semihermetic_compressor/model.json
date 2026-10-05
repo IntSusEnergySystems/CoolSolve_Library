@@ -1,0 +1,80 @@
+{
+  "id": "CSL-0033",
+  "name": "heat_pump_r22_semihermetic_compressor",
+  "title": "R22 heat pump with a semi-hermetic compressor model",
+  "summary": "R22 heat pump whose semi-hermetic (enclosed) reciprocating compressor is described by a clearance-factor volumetric efficiency and a loss model whose electromechanical losses reheat the incoming fresh charge; the evaporator and the condenser are semi-isothermal (epsilon-NTU) exchangers against water flow rates, and the model closes on the saturation pressures of the evaporator and condenser temperatures to give the COP, the heating capacity, the compressor power and the refrigerant flow rate.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "heat_pump_r22_semihermetic_compressor.eescode",
+  "fluids": [
+    "R22",
+    "Water"
+  ],
+  "tags": [
+    "heat pump",
+    "semi-hermetic compressor",
+    "reciprocating compressor",
+    "volumetric efficiency",
+    "clearance volume",
+    "electromechanical losses",
+    "reheat",
+    "semi-isothermal heat exchanger",
+    "effectiveness-NTU",
+    "water circuit",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 75,
+    "largest_block": 39
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "coolsolve_examples + thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 10/MSTH-SB-R10-EX1.EES",
+    "candidate_id": "CSX-020 (+EES original TM-0154)",
+    "authors": [
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory, EES solution)",
+      "S. Quoilin (CoolSolve example heat_pump_MSTh_SB_R10)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh course (J. Lebrun, V. Lemort, S. Bertagnolio), repetition TP 10, exercise 1"
+  },
+  "verification": {
+    "reference": "Solution stored in the EES original TM-0154 (MSTH-SB-R10-EX1.EES, EES 7.458, 55 stored variables), compared with tools/compare_solution.py",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.0066,
+    "notes": "compare_solution.py (rtol = 0.001): '55 common variables, 19 differ', largest deviation 6.6e-03 on T_ev (4.388 EES vs 4.359 °C CoolSolve); all 19 deviations follow from the R22 properties of EES 7.458 vs CoolProp (P_ev 573.2 vs 572.5 kPa, h_3 260.4 vs 259.2 kJ/kg) and the water cp at ~12.8 °C (4184.9 vs 4191.0 J/kg-K): COP 3.2955 vs 3.3107 (4.6e-03), Q_dot_ev 56790.8 vs 57053.2 W (4.6e-03). The run needs the shipped .initials (the EES guesses): without them the largest block fails to converge (MaxIterations)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0001",
+    "CSL-0022",
+    "CSL-0025"
+  ],
+  "related_external": [
+    "CoolSolve examples/heat_pump_MSTh_SB_R10.eescode (CSX-020: this model is its curated version; the example stays in the CoolSolve repository)",
+    "thermo_models TM-0159/TM-0160 (R10 - SB - EX 1 - questions.EES, R10 - SB - Ex 1.EES): the questions file and its copy of the same exercise, with the discussion of the two condenser closures, a constant water specific heat (4187 J/kg-K) and the global isentropic efficiency",
+    "thermo_models TM-0152 (MSTh R10 Ex 1.EES): statement version of the same exercise, different compressor closure and variable names",
+    "thermo_models TM-0153/TM-0155/TM-0156 (R10 Ex3) and TM-0157 (R10 Ex4, R22/R407C comparison): the other exercises of the same repetition, still todo"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-020"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (T-IMPORT card C-34, verified against the EES stored solution of the original TM-0154)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

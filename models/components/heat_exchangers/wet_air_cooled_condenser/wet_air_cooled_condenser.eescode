@@ -1,0 +1,70 @@
+{=============================================================================
+  Wet air-cooled condenser (spray evaporative cooling)
+  CoolSolve Library model CSL-0032
+ -----------------------------------------------------------------------------
+  An air-cooled condenser operating in wet regime (spray evaporation
+  cooling), as in the original exercise: given the condenser duty and the
+  inlet/outlet air conditions, determine the overall heat transfer
+  coefficient (AU_f), the fictitious-fluid heat capacity rate, the air mass
+  flow rate and the spray/condensate water flow rate. The air side is
+  treated with a fictitious dry fluid whose temperatures are the wet-bulb
+  temperatures, and the water balance on the air gives the spray flow.
+
+  Inputs : Q_dot_cd, T_a_su, RH_su, T_a_ex, RH_ex, T_cd, P_su
+  Outputs: AU_f, C_dot_a_f, M_dot_a, M_dot_cd, T_wb_su, T_wb_ex, epsilon_cd_f
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège course Machines et systèmes thermiques, repetition 5
+           exercise 3 (SB solution) - see README.md
+=============================================================================}
+
+"Assumed constant parameters, as in the original"
+"epsilon_c = 1 [-] (contact effectiveness; enters only the commented-out alternative below)"
+
+"Given data"
+Q_dot_cd = 35000          "condenser heat duty [W]"
+T_a_su = 25               "air supply (inlet) temperature [C]"
+P_su = 101325             "air supply pressure [Pa]"
+RH_su = 0.6               "air supply relative humidity [-]"
+T_a_ex = 30               "air exhaust (outlet) temperature [C]"
+RH_ex = 1                 "air exhaust relative humidity (saturated) [-]"
+T_cd = 45                 "condensing temperature [C]"
+
+"Fictitious dry fluid on the wet-bulb temperatures, as in the original"
+Q_dot_cd = C_dot_a_f*(T_wb_ex - T_wb_su)             "duty from the fictitious-fluid heat capacity rate [W]"
+T_wb_ex = WETBULB(AirH2O,T=T_a_ex,P=P_su,R=RH_ex)    "air exhaust wet-bulb temperature [C]"
+T_wb_su = WETBULB(AirH2O,T=T_a_su,P=P_su,R=RH_su)    "air supply wet-bulb temperature [C]"
+
+Q_dot_cd = epsilon_cd_f*C_dot_a_f*(T_cd - T_wb_su)   "effectiveness relation of the fictitious exchanger [W]"
+epsilon_cd_f = 1-exp(-NTU_f)                          "effectiveness of the fictitious exchanger [-]"
+NTU_f = AU_f/C_dot_a_f                                "number of transfer units of the fictitious exchanger [-]"
+
+"Air mass flow rate computation, as in the original"
+Q_dot_cd = M_dot_a*(h_a_ex - h_a_su) - M_dot_cd*cp_w*T_w_cd    "air-side energy balance with the spray-water term subtracted [W]"
+T_w_cd = T_cd                                          "spray/condensate water temperature [C]"
+cp_w = 4187                                            "specific heat of liquid water [J/kg-K] (as in the original)"
+M_dot_cd = M_dot_a*(w_su - w_ex)                       "spray/condensate water flow rate from the humidity balance [kg/s]"
+w_su = HUMRAT(AIRH2O,T=T_a_su,P=P_su,R=RH_su)          "supply air humidity ratio [kg/kg dry air]"
+w_ex = HUMRAT(AIRH2O,T=T_a_ex,P=P_su,R=RH_ex)          "exhaust air humidity ratio [kg/kg dry air]"
+h_a_su = ENTHALPY(AirH2O,T=T_a_su,P=P_su,R=RH_su)      "supply moist-air specific enthalpy [J/kg]"
+h_a_ex = ENTHALPY(AirH2O,T=T_a_ex,P=P_su,R=RH_ex)      "exhaust moist-air specific enthalpy [J/kg]"
+
+"Alternative mass-transfer closure kept commented out, as in the original"
+{h_a_su-h_a_ex=epsilon_c*(h_a_su-h_c)
+w_su-w_ex=epsilon_c*(w_su-w_c)
+w_c=HUMRAT(AIRH2O,T=T_c,P=P_su,R=1)
+T_c=TEMPERATURE(AIRH2O,h=h_c,P=P_su,R=1)}
+"epsilon_c=1-exp(-NTU_f)"
+
+"Remark: LMTD formulation kept commented out, as in the original"
+{Q_dot_cd=AU_f*DELTAT_log
+DELTAT_log=(DELTAT_g-DELTAT_d)/ln(DELTAT_g/DELTAT_d)
+DELTAT_g=T_cd-T_wb_su
+DELTAT_d=T_cd-T_wb_ex}
+
+"State points (1 supply, 2 exhaust) for post-processing"
+T[1] = T_a_su
+T[2] = T_a_ex
+w[1] = w_su
+w[2] = w_ex
+h[1] = h_a_su
+h[2] = h_a_ex

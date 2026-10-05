@@ -1,0 +1,161 @@
+{=============================================================================
+  Scroll expander semi-empirical model
+  CoolSolve Library model CSL-0037
+ -----------------------------------------------------------------------------
+  Semi-empirical model of a scroll expander (positive-displacement), originally
+  written as an EES MODULE named 'expander' and called once from the main
+  program. Following library decision D10 (CoolSolve does not support
+  MODULE/SUBPROGRAM, CS-GAP-MODULE), the module equations are flattened into
+  the main program below; the single CALL was replaced by this copy.
+
+  The model computes, from the geometrical and loss parameters of the machine
+  and the supply state: the throttling pressure drop and wall heat transfer at
+  the supply, an isentropic expansion down to the adapted pressure followed by
+  an isochoric expansion to the exhaust pressure, the leakage flow through the
+  choking area, the mixing of the leakage with the exhaust flow, the wall heat
+  transfer at the exhaust, the mechanical losses and the global isentropic
+  effectiveness. The exhaust state is calculated and compared with the imposed
+  one through h_r_ex_exp.
+
+  MODULE flattening mapping (decision D10, one call, module internals already
+  carried the '_exp' suffix and are kept unchanged):
+    module 'expander' formal -> actual argument of the CALL
+      M_dot_r_nom -> M_dot_r_exp_n
+      d_thr_su    -> d_su
+      t_amb       -> t_amb_exp  (formal argument not used in the module body)
+      all other formal arguments have the same name as the actual argument
+    the main-program equation 'V_s_exp=V_s_cp/r_v_in' was identical to the
+    first module equation and is kept once (in EES the two variables were
+    distinct: module-local vs main program).
+
+  Inputs : p_r_su_exp, t_r_su_exp, p_r_ex_exp, N_rot_exp, t_amb_exp,
+           fluid$, and the expander parameters A_leak, d_su, AU_su_exp_n,
+           AU_ex_exp_n, AU_amb_exp, T_m, M_dot_r_exp_n, r_v_in, V_s_cp
+  Outputs: M_dot_r_exp, W_dot_sh_exp, epsilon_s_exp, t_r_ex_exp, states
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. Quoilin (ULiège), EES file expander_module.EES (2008) - see
+           README.md. Comments are translated from the original.
+=============================================================================}
+
+" Expander characteristics (as in the original)"
+V_s_exp=V_s_cp/r_v_in                     "swept volume [m3]"
+
+" Supply expander"
+t_r_sat_su_exp=T_sat(fluid$,P=P_r_su_exp) "saturation temperature at supply pressure [C]"
+DELTAT_oh_su_exp=T_r_su_exp-T_r_sat_su_exp "superheating at supply [K]"
+r_p_exp=P_r_su_exp/P_r_ex_exp             "pressure ratio [-]"
+h_r_su_exp=enthalpy(fluid$,P=P_r_su_exp,T=t_r_su_exp) "supply enthalpy [J/kg]"
+s_r_su_exp=entropy(fluid$,P=P_r_su_exp,T=t_r_su_exp) "supply entropy [J/kg-K]"
+v_r_su_exp=volume(fluid$,P=P_r_su_exp,T=t_r_su_exp) "supply specific volume [m3/kg]"
+
+"2.3 Supply pressure drop (as in the original)"
+A_thr_su=PI*d_su^2/4                      "supply throat cross-section [m2] (d_thr_su in the module)"
+h_r_su_exp=h_thr_su+C_thr_su^2/2          "as in the original [J/kg]"
+V_dot_thr_su=A_thr_su*C_thr_su            "as in the original [m3/s]"
+M_dot_r_exp=V_dot_thr_su/v_r_su_exp       "mass flow rate through the supply throat [kg/s]"
+
+"Incompressible fluid hypothesis (as in the original):"
+DELTAP_r_su_exp = C_thr_su^2/(v_r_su_exp*2) "supply pressure drop [Pa]"
+
+P_r_su1_exp=P_r_su_exp- DELTAP_r_su_exp   "pressure after the supply pressure drop [Pa]"
+
+" supply cooling down"
+C_dot_su_exp=M_dot_r_exp*cp_r_su_exp      "supply heat-capacity rate [W/K]"
+cp_r_su_exp=CP(fluid$,P=P_r_su1_exp,T=t_r_su_exp) "supply cp [J/kg-K]"
+NTU_su_exp=AU_su_exp/C_dot_su_exp         "supply NTU [-]"
+AU_su_exp=AU_su_exp_n*(M_dot_r_exp/M_dot_r_exp_n)^0.6 "supply heat-transfer conductance, part-load law [W/K]"
+epsilon_su_exp=1-exp(-NTU_su_exp)         "supply effectiveness [-]"
+Q_dot_r_wall_su_exp=epsilon_su_exp*C_dot_su_exp*(t_r_su_exp-t_wall_exp) "heat transferred to the fluid at the supply [W]"
+Q_dot_r_wall_su_exp=C_dot_su_exp*(t_r_su_exp-t_r_su1_exp) "as in the original [W]"
+h_r_su1_exp=enthalpy(fluid$,P=P_r_su1_exp,T=t_r_su1_exp) "enthalpy after supply cooling [J/kg]"
+s_r_su1_exp=entropy(fluid$,P=P_r_su1_exp,T=t_r_su1_exp) "entropy after supply cooling [J/kg-K]"
+v_r_su1_exp=volume(fluid$,P=P_r_su1_exp,T=t_r_su1_exp) "specific volume after supply cooling [m3/kg]"
+
+" isentropic expansion up to the adapted pressure"
+r_v_in=v_r_in_exp/v_r_su1_exp             "built-in volume ratio [-]"
+P_r_in_exp=pressure(fluid$,v=v_r_in_exp,s=s_r_su1_exp) "adapted pressure [Pa]"
+h_r_in_exp=enthalpy(fluid$,v=v_r_in_exp,P=P_r_in_exp) "enthalpy at the adapted pressure [J/kg]"
+w_exp_1=h_r_su1_exp-h_r_in_exp            "specific work of the isentropic expansion [J/kg]"
+r_p_in=P_r_su1_exp/P_r_in_exp             "pressure ratio of the isentropic expansion [-]"
+
+" isochoric expansion from adapted pressure to exhaust pressure (as in the original)"
+w_exp_2=v_r_in_exp*(P_r_in_exp-P_r_ex_exp) "specific work of the isochoric expansion [J/kg]"
+
+"2.6 total work"
+w_in_exp=w_exp_1+w_exp_2                  "total specific work [J/kg]"
+w_in_exp=h_r_su1_exp-h_r_ex2_exp          "as in the original [J/kg]"
+
+" Power"
+W_dot_in_exp=M_dot_r_in_exp*w_in_exp      "fluid (indicated) power [W]"
+
+" leakage flow rate"
+h_r_su1_exp=h_r_thr+C_thr^2/2             "as in the original [J/kg]"
+P_r_su1_exp*v_r_su1_exp^gamma_r=P_r_thr*v_r_thr^gamma_r "isentropic relation (as in the original) [-]"
+r=8314/MM_r                               "gas constant of the fluid [J/kg-K]"
+MM_r=molarmass(fluid$)                    "molar mass [kg/kmol]"
+P_r_crit=P_r_su1_exp*(2/(gamma_r+1))^(gamma_r/(gamma_r-1)) "critical pressure [Pa]"
+P_r_thr=P_r_crit                          "throat pressure [Pa]"
+h_r_thr=enthalpy(fluid$,P=P_r_thr,s=s_r_su1_exp) "throat enthalpy [J/kg]"
+t_r_thr=temperature(fluid$,h=h_r_thr,P=P_r_thr) "throat temperature [C]"
+C_thr_bis=sqrt(gamma_r*r*(t_r_thr+273))   "as in the original [m/s]"
+t_r_thr_bis=t_r_su1_exp*2/(gamma_r+1)     "as in the original [C]"
+M_dot_r_leak_exp=A_leak*C_thr/v_r_thr     "leakage mass flow rate [kg/s]"
+v_r_thr=volume(fluid$,P=P_r_thr,h=h_r_thr) "throat specific volume (as in the original, h and not T) [m3/kg]"
+
+" Mass flow rate"
+V_dot_s_exp=N_rot_exp/60*V_s_exp          "swept volume flow rate [m3/s]"
+M_dot_r_in_exp=V_dot_s_exp/v_r_su1_exp    "mass flow rate at the expander inlet [kg/s]"
+M_dot_r_exp=M_dot_r_in_exp+M_dot_r_leak_exp "total mass flow rate [kg/s]"
+
+"2.10 Mixing with leakage at exhaust"
+M_dot_r_in_exp*h_r_ex2_exp+M_dot_r_leak_exp*h_r_su1_exp=M_dot_r_exp*h_r_ex1_exp "mixing energy balance [W]"
+h_r_ex1_exp=enthalpy(fluid$,T=t_r_ex1_exp,P=P_r_ex_exp) "enthalpy after mixing [J/kg]"
+
+" Exhaust cooling down"
+cp_r_ex_exp=CP(fluid$,P=P_r_ex_exp,T=t_r_ex1_exp) "exhaust cp [J/kg-K]"
+C_dot_ex_exp=M_dot_r_exp*cp_r_ex_exp      "exhaust heat-capacity rate [W/K]"
+NTU_ex_exp=AU_ex_exp/C_dot_ex_exp         "exhaust NTU [-]"
+AU_ex_exp=AU_ex_exp_n*(M_dot_r_exp/M_dot_r_exp_n)^0.6 "exhaust heat-transfer conductance, part-load law [W/K]"
+epsilon_ex_exp=1-exp(-NTU_ex_exp)         "exhaust effectiveness [-]"
+Q_dot_r_wall_ex_exp=epsilon_ex_exp*C_dot_ex_exp*(t_r_ex1_exp-t_wall_exp) "heat transferred to the fluid at the exhaust [W]"
+Q_dot_r_wall_ex_exp=C_dot_ex_exp*(t_r_ex1_exp-t_r_ex_exp) "as in the original [W]"
+
+" Calculated exhaust expander"
+h_r_ex_exp=enthalpy(fluid$,P=P_r_ex_exp,T=t_r_ex_exp) "calculated exhaust enthalpy [J/kg]"
+
+" Power"
+W_dot_sh_exp=W_dot_in_exp-W_dot_loss_exp  "shaft power [W]"
+W_dot_loss_exp=2*PI*N_rot_exp/60*T_m      "mechanical losses [W]"
+
+" Heat balance over the expander"
+Q_dot_exp_amb=AU_amb_exp*(t_wall_exp-t_amb_exp) "heat loss to the ambient [W]"
+Q_dot_r_wall_su_exp+Q_dot_r_wall_ex_exp+W_dot_loss_exp-Q_dot_exp_amb=0 "as in the original [W]"
+
+" Global isentropic effectiveness"
+W_dot_sh_exp_s=M_dot_r_exp*w_in_exp_s     "isentropic shaft power [W]"
+w_in_exp_s=h_r_su_exp-h_r_ex_exp_s        "isentropic specific work [J/kg]"
+h_r_ex_exp_s=enthalpy(fluid$,P=P_r_ex_exp,s=s_r_su_exp) "isentropic exhaust enthalpy [J/kg]"
+epsilon_s_exp=W_dot_sh_exp/W_dot_sh_exp_s "global isentropic effectiveness [-]"
+
+" Main program (as in the original)"
+V_s_cp=V_s_cp_cm3/1000000                 "as in the original [m3]"
+V_s_exp=V_s_exp_cm3/1000000               "as in the original [m3]"
+
+" Imposed inputs (default run of the original)"
+p_r_su_exp = 9.6e5                        "supply pressure [Pa]"
+T_r_su_exp = 170                          "supply temperature [C]"
+p_r_ex_exp = 1.3e5                        "exhaust pressure [Pa]"
+N_rot_exp = 2500                          "rotational speed [1/min]"
+T_amb_exp = 20                            "ambient temperature [C]"
+fluid$='r123'                             "working fluid"
+
+" Expander parameters (semi-empirical constants)"
+AU_amb_exp=8.266                          "ambient heat-transfer conductance [W/K]"
+AU_ex_exp_n=34.5                          "nominal exhaust conductance [W/K]"
+AU_su_exp_n=20.69                         "nominal supply conductance [W/K]"
+A_leak=0.0000032*sqrt(2)                  "leakage area [m2]"
+d_su=0.005749                             "supply throat diameter, d_thr_su in the module [m]"
+T_m=0.5323                                "constant used in the loss term [N·m]"
+V_s_cp=0.000148                           "as in the original [m3]"
+r_v_in=4.05                               "built-in volume ratio [-]"
+M_dot_r_exp_n=0.12                        "nominal mass flow rate [kg/s]"

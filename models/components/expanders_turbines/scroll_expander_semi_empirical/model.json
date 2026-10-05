@@ -1,0 +1,70 @@
+{
+  "id": "CSL-0037",
+  "name": "scroll_expander_semi_empirical",
+  "title": "Scroll expander semi-empirical model",
+  "summary": "Semi-empirical positive-displacement (scroll) expander: supply throttling and wall heat transfer, isentropic expansion to the built-in (adapted) pressure followed by an isochoric expansion to the exhaust pressure, leakage flow, exhaust wall heat transfer, mechanical losses and global isentropic effectiveness. Originally written as an EES MODULE; the equations are flattened into the main program (library decision D10).",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "scroll_expander_semi_empirical.eescode",
+  "fluids": [
+    "R123"
+  ],
+  "tags": [
+    "expander",
+    "scroll expander",
+    "semi-empirical",
+    "leakage",
+    "adapted pressure",
+    "isochoric expansion",
+    "ORC component",
+    "part load"
+  ],
+  "language_features": [
+    "MODULE flattened",
+    "string variables",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 82,
+    "largest_block": 40
+  },
+  "origin": {
+    "type": "research",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/expander_module.eescode",
+    "candidate_id": "CSX-019",
+    "authors": [
+      "Sylvain Quoilin (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.920",
+    "language": "en",
+    "course": "ULiège laboratory component model (2008), reused in ORC cycle models"
+  },
+  "verification": {
+    "reference": "EES solution report shipped with the original file (CoolSolve misc/EES_ok.zip, EES_ok/expander_module.tex, main-program variables). The variable records decoded from the binary .EES are stale (mixed older runs) and were not used; see gap CS-BUG-EXTRACT-STALE",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.0191,
+    "notes": "21 common variables: the 17 fixed inputs agree exactly; 4 computed outputs differ: M_dot_r_exp 0.12 %, epsilon_s_exp 0.20 %, W_dot_sh_exp 1.36 %, t_r_ex_exp 1.91 % (EES report values rounded to 4-5 significant digits), attributed to R123 property differences between EES 9.920 and CoolProp (ees_import.md §11, older EES fluid models: up to a few %)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0007", "CSL-0036", "CSL-0040"],
+  "related_external": [
+    "CoolSolve examples/expander_module.eescode (equation-identical transcription of the original, kept in CoolSolve as a test case)",
+    "CoolSolve misc/EES_ok.zip: EES_ok/expander_module.EES with its residuals window dump and LaTeX solution report (verification reference)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-019"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-39, batch B-02; first application of decision D10, MODULE flattened)",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    }
+  ]
+}

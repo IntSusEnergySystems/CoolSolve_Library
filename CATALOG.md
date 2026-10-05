@@ -4,7 +4,7 @@
 
 | Models | Verified | Runs | Blocked / failing | Documented only |
 |---:|---:|---:|---:|---:|
-| 32 | 26 | 1 | 5 | 0 |
+| 42 | 30 | 3 | 9 | 0 |
 
 ## Fundamentals
 
@@ -30,26 +30,36 @@
 | `CSL-0021` | [Piston compressor - parameter identification from two operating points](models/components/compressors/piston_compressor_identification/README.md) | Compressors | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0022` | [Refrigeration compressor - parameter identification from two operating points](models/components/compressors/refrigeration_compressor_identification/README.md) | Compressors | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0023` | [Centrifugal turbocompressor performance (air)](models/components/compressors/centrifugal_turbocompressor_performance/README.md) | Compressors | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0035` | [Centrifugal compressor with a lookup-table performance map (air)](models/components/compressors/centrifugal_compressor_lookup_map/README.md) | Compressors | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0037` | [Scroll expander semi-empirical model](models/components/expanders_turbines/scroll_expander_semi_empirical/README.md) | Expanders and turbines | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0002` | [Counterflow heat exchanger - oil cooled by water (effectiveness-NTU)](models/components/heat_exchangers/counterflow_hx_oil_water/README.md) | Heat exchangers | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0008` | [Air-cooled condenser, three-zone parametric model](models/components/heat_exchangers/condenser_three_zones/README.md) | Heat exchangers | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0014` | [Heat exchanger with an imposed pinch (three zones)](models/components/heat_exchangers/hx_constant_pinch/README.md) | Heat exchangers | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0026` | [Crossflow heat exchanger - hot gas heating water (effectiveness-NTU)](models/components/heat_exchangers/crossflow_hx_hot_gas_water/README.md) | Heat exchangers | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0027` | [1-2 shell-and-tube steam condenser (effectiveness-NTU)](models/components/heat_exchangers/shell_and_tube_steam_condenser/README.md) | Heat exchangers | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0031` | [Refrigeration evaporator with moist air, wet regime](models/components/heat_exchangers/refrigeration_evaporator_wet_coil/README.md) | Heat exchangers | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0032` | [Wet air-cooled condenser (spray evaporative cooling)](models/components/heat_exchangers/wet_air_cooled_condenser/README.md) | Heat exchangers | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0009` | [Domestic hot-water storage tank: dynamic temperature evolution](models/components/storage/dhw_tank_dynamic/README.md) | Storage | 🟢 Level 1 · Introductory | ⏱️ Dynamic | ⛔ Blocked |
+| `CSL-0041` | [Ice storage tank discharge with phase change](models/components/storage/ice_storage_tank_discharge_phase_change/README.md) | Storage | 🔵 Level 2 · Intermediate | ⏱️ Dynamic | ⛔ Blocked |
 
 ## Cycles and machines
 
 | ID | Model | Category | Level | Kind | Status |
 |---|---|---|---|---|---|
+| `CSL-0043` | [LiBr-water absorption chiller cycle with a solution heat exchanger](models/cycles/absorption_sorption/libr_water_absorption_chiller/README.md) | Absorption and sorption | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0024` | [Single-cylinder engine with Weibe combustion (crank-angle dynamic)](models/cycles/engines/single_cylinder_engine_weibe/README.md) | Engines | 🟠 Level 3 · Advanced | ⏱️ Dynamic | ☑️ Runs |
 | `CSL-0034` | [Full-power operating point of a 4-stroke gas engine (combustion products with cpbar)](models/cycles/engines/gas_engine_full_power_cpbar/README.md) | Engines | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0011` | [Two-shaft gas turbine with a compressor map and two expanders](models/cycles/gas_turbines/two_shaft_gas_turbine_compressor_map/README.md) | Gas turbines and gas cycles | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0019` | [Simple ORC with imposed component performance (R245fa)](models/cycles/organic_rankine/orc_simple_r245fa/README.md) | Organic Rankine cycles | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0036` | [ORC with two-stage expander and intermediate extraction (R134a)](models/cycles/organic_rankine/orc_extraction_r134a/README.md) | Organic Rankine cycles | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0038` | [Supercritical CO2 ORC with polynomial compressor and turbine performance maps](models/cycles/organic_rankine/orc_co2_polynomial_maps/README.md) | Organic Rankine cycles | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ☑️ Runs |
+| `CSL-0040` | [Biomass-boiler ORC (R123) with scroll expanders and a split condenser](models/cycles/organic_rankine/orc_biomass_chp/README.md) | Organic Rankine cycles | 🔴 Level 4 · Research | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0001` | [Refrigeration cycle with a simple compressor model](models/cycles/refrigeration_heat_pumps/refrigeration_cycle_simple_compressor/README.md) | Refrigeration and heat pumps | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0013` | [Basic heat pump (TESPy tutorial)](models/cycles/refrigeration_heat_pumps/heat_pump_basic_tespy/README.md) | Refrigeration and heat pumps | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0015` | [Basic vapour-compression refrigeration cycle (R134a)](models/cycles/refrigeration_heat_pumps/refrigeration_cycle_basic_r134a/README.md) | Refrigeration and heat pumps | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0025` | [R22 heat pump cycle delivering 30 kW](models/cycles/refrigeration_heat_pumps/heat_pump_cycle_r22_30kw/README.md) | Refrigeration and heat pumps | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0033` | [R22 heat pump with a semi-hermetic compressor model](models/cycles/refrigeration_heat_pumps/heat_pump_r22_semihermetic_compressor/README.md) | Refrigeration and heat pumps | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0039` | [High-temperature heat pump with PCM storage (Zorlu geothermal plant case study)](models/cycles/refrigeration_heat_pumps/high_temp_heat_pump_pcm_storage/README.md) | Refrigeration and heat pumps | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ☑️ Runs |
 | `CSL-0004` | [Rankine cycle of a 60 MW steam power plant](models/cycles/steam_power/rankine_cycle_60mw/README.md) | Steam power cycles | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0029` | [Steam Rankine cycle with regenerative extraction](models/cycles/steam_power/rankine_cycle_regenerative_extraction/README.md) | Steam power cycles | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 
