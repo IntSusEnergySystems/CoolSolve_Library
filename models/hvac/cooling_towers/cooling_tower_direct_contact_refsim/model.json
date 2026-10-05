@@ -1,0 +1,73 @@
+{
+  "id": "CSL-0076",
+  "name": "cooling_tower_direct_contact_refsim",
+  "title": "Direct-contact cooling tower, reference simulation model",
+  "summary": "Reference simulation model of a direct-contact (evaporative) cooling tower from the ULiège model bank: a counter-flow exchanger between the water and the air leaving the tower saturated, the air side described by a fictitious fluid defined at the wet-bulb temperature (the same theory as the wet cooling coil); the dry heat transfer coefficient, the air-side pressure drop and the fan over-pressure are referred to the nominal conditions and both flow rates and the fan speed act on them.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "cooling_tower_direct_contact_refsim.eescode",
+  "fluids": [
+    "AirH2O"
+  ],
+  "tags": [
+    "cooling tower",
+    "direct contact",
+    "evaporative cooling",
+    "wet bulb",
+    "fictitious fluid",
+    "Merckel",
+    "counter-flow",
+    "air side pressure drop",
+    "fan",
+    "water consumption",
+    "reference model"
+  ],
+  "language_features": [
+    "humid-air properties",
+    "min/max"
+  ],
+  "stats": {
+    "n_equations": 54,
+    "largest_block": 12
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/Heat_and_Cool_Production_Systems/Cooling_Towers/CoolingTower_RefSim_model_CASJL080104.zip!/CoolingTower_RefSim_EES_model_CASJL080104.EES",
+    "candidate_id": "TM-0489",
+    "authors": [
+      "Cleide Da Silva (ULiège Thermodynamics Laboratory)",
+      "Jean Lebrun (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.793",
+    "language": "en",
+    "course": "ULiège model bank (Laborelec toolkit lineage), direct contact cooling tower reference simulation model, 4 January 2008; IEA A43 PR2 A16 reference cooling tower model (printed documentation of the same model: 'IEA A43 PR2 A16 Reference cooling tower EES model CASJL PhAJL080108.pdf' in the same folder)"
+  },
+  "verification": {
+    "reference": "EES stored solution in the source file (64 decoded variable records; 54 variables of the model) and the 'Example of solution' listing printed in the equations window of the source file",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.00451,
+    "notes": "54 common variables, 13 differ above rtol=0.001, maximum relative difference 4.51e-03 (W_su_ct: 0.0100042 against 0.00995912 kg/kg). All 13 differences are the humid-air properties of EES 7.793 against CoolProp (h_a_su_ct 1.78e-03, W_ex_ct 4.31e-03), as in the other humid-air models of the library (CSL-0070 4.4e-03, CSL-0074 4.8e-03); the 41 algebraic results (water and air flow rates, areas, air velocity, pressure drop, NTU, effectiveness, powers, consumption) agree to better than 1e-3 relative, and 23 of them exactly (bit-identical). Ten decoded EES variables are not variables of the model: Q_dot_n_ct, M_dot_a_n_ct_default, M_dot_w_n_ct_default and AU_dry_n_ct_default (the ASHRAE primary toolkit sizing relations, display strings in the source, kept as documentation in the .eescode), a_ct, b_ct, c_ct, d_ct (executable lines of the source that feed no equation, removed as dead code and quoted in the comment block) and m, E (two records that EES does not list among its own 'Variables in Main'). No variable excluded from the comparison."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0074",
+    "CSL-0030",
+    "CSL-0065",
+    "CSL-0077"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added",
+      "by": "opencode worker (t73) for S. Quoilin"
+    }
+  ]
+}

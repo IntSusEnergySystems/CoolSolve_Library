@@ -1,0 +1,225 @@
+{=============================================================================
+  Air-cooled water chiller reference model (reference simulation model)
+  CoolSolve Library model CSL-0077
+ -----------------------------------------------------------------------------
+  Air-water chiller of the ULiège model bank: one (or several) rotary
+  compressors, modelled in four steps between the evaporator exhaust and the
+  condenser supply:
+    (i)   heating-up of the supply gas (su -> su1);
+    (ii)  isentropic compression (su1 -> in);
+    (iii) compression at constant volume up to the discharge pressure
+          (in -> ex1), the opening of the compression chamber;
+    (iv)  cooling-down of the discharge gas (ex1 -> ex).
+  The condenser rejects its heat to the ambient air through three thermal
+  resistances in series (air, metal, refrigerant) and the fan is controlled so
+  as to hold an almost constant condensing temperature. The evaporator cools
+  the water through the same three-resistance representation.
+
+  Inputs : X_cp, t_w_su_ev, M_dot_w_ev, t_a_su_cd, RH_su_cd, P_a,
+           DELTAt_oh_ex_ev, DELTAt_sc_ex_cd
+  Outputs: Q_dot_ev, W_dot_cp, W_dot_fan, W_dot, Q_dot_cd, COP, t_w_ex_ev
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège model bank (Laborelec toolkit lineage), air-cooled water
+           chiller reference simulation model, 4 January 2008 (EES file
+           AirCooledChiller_RefSim_EES_Model_VTJL080104.EES) - see README.md
+=============================================================================}
+
+fluid$ = 'R22'                       "refrigerant [-]"
+
+"Inputs of the control panel (8 inputs, at the operating point stored by EES)"
+X_cp = 1                             "compressor part load, as the swept volume fraction [-]"
+t_w_su_ev = 12.2                     "water supply temperature at the evaporator [C]"
+M_dot_w_ev = 1.51                    "water flow rate at the evaporator [kg/s]"
+t_a_su_cd = 35                       "air supply temperature at the condenser [C]"
+RH_su_cd = 0.5                       "relative humidity of the supply air [-]"
+P_a = 101325                         "atmospheric pressure [Pa]"
+DELTAt_oh_ex_ev = 5                  "superheating of the refrigerant at the evaporator exhaust [K]"
+DELTAt_sc_ex_cd = 5                  "subcooling of the refrigerant at the condenser exhaust [K]"
+
+"Parameters of the control panel (21 parameters)"
+alpha_cp = 0.32                      "electromechanical loss factor [-]"
+AU_amb_cp = 100                      "heat transfer coefficient compressor-ambient [W/K]"
+AU_ex_cp = 100                       "heat transfer coefficient at the compressor exhaust [W/K]"
+AU_su_cp = 158                       "heat transfer coefficient at the compressor supply [W/K]"
+gain = 0.1                           "gain of the condensing-temperature controller [1/K]"
+M_dot_a_cd_n = 5                     "nominal air flow rate at the condenser [kg/s]"
+M_dot_cd_n = 0.22                    "nominal refrigerant flow rate at the condenser [kg/s]"
+M_dot_ev_n = 0.22                    "nominal refrigerant flow rate at the evaporator [kg/s]"
+M_dot_w_ev_n = 1.511                 "nominal water flow rate at the evaporator [kg/s]"
+R_a_cd_n = 0.0000994                 "nominal air-side thermal resistance of the condenser [K/W]"
+R_m_cd = 0.00001                     "metal thermal resistance of the condenser [K/W]"
+R_m_ev = 0.00001                     "metal thermal resistance of the evaporator [K/W]"
+R_r_cd_n = 0.00008946                "nominal refrigerant thermal resistance of the condenser [K/W]"
+R_r_ev_n = 0.00008438                "nominal refrigerant thermal resistance of the evaporator [K/W]"
+r_v_in_cp = 3.2                      "volume ratio of the isentropic compression step [-]"
+R_w_ev_n = 0.00009215                "nominal water thermal resistance of the evaporator [K/W]"
+t_cd_set = 35                        "condensing-temperature set point of the fan control [C]"
+V_dot_s_cp_max = 0.0056              "maximum swept volume flow rate of the compressor [m^3/s]"
+W_dot_fan_n = 1500                   "nominal electrical power of the condenser fans [W]"
+W_dot_loss0_cp = 632.5               "constant electromechanical losses of the compressor [W]"
+
+"Compressor model: heat transfer at the supply, at the exhaust and to the ambient."
+"The pressure drops during the suction and the discharge are neglected, as well as"
+"any lubricant circulation. All the heat transfers of the compressor (to the suction"
+"gas, the electromechanical losses, the hot discharge gas and the ambient) are"
+"represented by a fictitious wall of uniform temperature t_w_cp."
+
+"Refrigerant state at the compressor supply:"
+t_su_cp = t_ex_ev                    "compressor supply temperature [C]"
+p_su_cp = p_ev                       "compressor supply pressure [Pa]"
+h_su_cp = h_ex_ev                    "compressor supply enthalpy [J/kg]"
+s_su_cp = entropy(fluid$,T=t_su_cp,P=p_su_cp)              "[J/kg-K]"
+v_su_cp = volume(fluid$,T=t_su_cp,P=p_su_cp)                "[m^3/kg]"
+
+"First step, supply heating-up (su -> su1): heat transfer to the supply gas"
+h_su1_cp - h_su_cp = Q_dot_su_cp / M_dot_cp                 "[J/kg]"
+Q_dot_su_cp = epsilon_su_cp*C_dot_su_cp*( t_w_cp - t_su_cp )   "heat transfer to the supply gas [W]"
+epsilon_su_cp = 1 - exp(-NTU_su_cp)     "effectiveness of the supply heat transfer [-]"
+NTU_su_cp = AU_su_cp / C_dot_su_cp      "NTU of the supply heat transfer [-]"
+C_dot_su_cp = M_dot_cp * c_p_su_cp      "capacity flow rate at the supply [W/K]"
+c_p_su_cp = specheat(fluid$,T=t_su_cp,P=p_su_cp)             "specific heat at the supply [J/kg-K]"
+p_su1_cp = p_su_cp                      "pressure after the supply heating-up [Pa]"
+t_su1_cp = temperature( fluid$, h=h_su1_cp, p=p_su1_cp )     "temperature after the supply heating-up [C]"
+v_su1_cp = volume( fluid$, t = t_su1_cp , p = p_su1_cp )     "specific volume after the supply heating-up [m^3/kg]"
+s_su1_cp = entropy( fluid$, t = t_su1_cp , p = p_su1_cp )    "entropy after the supply heating-up [J/kg-K]"
+
+"Fictitious wall energy balance:"
+W_dot_loss_cp - Q_dot_su_cp - Q_dot_ex_cp + Q_dot_amb_cp = 0   "[W]"
+Q_dot_amb_cp = AU_amb_cp * ( t_amb_cp - t_w_cp )   "heat transfer from the ambient to the compressor [W]"
+t_amb_cp = t_a_su_cd                    "ambient temperature seen by the compressor [C]"
+
+"Suction and volumetric effectiveness:"
+M_dot_cp = V_dot_s_cp/v_su1_cp          "refrigerant mass flow rate [kg/s]"
+epsilon_v_cp = v_su_cp/v_su1_cp         "volumetric effectiveness [-]"
+
+"Second and third steps, isentropic and isochoric compression."
+"Both compression steps are adiabatic (su1 -> ex1), so the discharge enthalpy is"
+"computed as the sum of the two works. The first compression is adiabatic and"
+"reversible, hence isentropic, up to the adapted pressure; the second one is"
+"adiabatic but not reversible and at constant volume (opening of the compression"
+"chamber to the discharge plenum)."
+h_ex1_cp = h_su1_cp + w_in_cp           "enthalpy at the end of the compression steps [J/kg]"
+w_in_cp = w_in1_cp + w_in2_cp           "total specific compression work [J/kg]"
+w_in1_cp = h_in_cp - h_su1_cp           "specific work of the isentropic step [J/kg]"
+h_in_cp = enthalpy(fluid$,s=s_su1_cp,v=v_in_cp)             "enthalpy at the adapted pressure [J/kg]"
+v_in_cp = v_su1_cp/r_v_in_cp            "specific volume at the end of the isentropic step [m^3/kg]"
+w_in2_cp = v_in_cp * (p_ex1_cp - p_in_cp)                   "specific work of the isochoric step [J/kg]"
+p_ex1_cp = p_ex_cp                      "pressure at the end of the isochoric step [Pa]"
+p_ex_cp = p_cd                          "compressor discharge pressure [Pa]"
+r_p = p_ex_cp/p_su_cp                   "pressure ratio [-]"
+p_in_cp = pressure(fluid$,s=s_su1_cp,v=v_in_cp)             "pressure at the end of the isentropic step [Pa]"
+W_dot_in_cp = M_dot_cp * w_in_cp         "adiabatic compression power [W]"
+
+"Electrical power, made of the compression power and of the losses:"
+W_dot_cp = W_dot_in_cp + W_dot_loss_cp   "electrical power of the compressor [W]"
+W_dot_loss_cp = W_dot_loss0_cp + alpha_cp*W_dot_in_cp     "electromechanical losses [W]"
+
+"Global isentropic effectiveness:"
+w_cp = W_dot_cp / M_dot_cp               "specific electrical power of the compressor [J/kg]"
+epsilon_s_cp = w_s_cp / w_cp              "global isentropic effectiveness [-]"
+w_s_cp = h_exs_cp - h_su_cp              "specific isentropic compression work [J/kg]"
+h_exs_cp = enthalpy( fluid$ , p = p_ex_cp , s = s_su_cp )  "isentropic discharge enthalpy [J/kg]"
+
+"Fourth step, exhaust cooling-down (ex1 -> ex): same set of equations as for the supply"
+t_ex1_cp = temperature(fluid$,h=h_ex1_cp,p=p_ex1_cp)       "temperature before the exhaust cooling [C]"
+h_ex_cp - h_ex1_cp = Q_dot_ex_cp / M_dot_cp                 "[J/kg]"
+Q_dot_ex_cp = epsilon_ex_cp*C_dot_ex_cp*( t_w_cp - t_ex1_cp )   "heat transfer from the discharge gas [W]"
+epsilon_ex_cp = 1 - exp(-NTU_ex_cp)    "effectiveness of the exhaust heat transfer [-]"
+NTU_ex_cp = AU_ex_cp / C_dot_ex_cp      "NTU of the exhaust heat transfer [-]"
+C_dot_ex_cp = M_dot_cp * c_p_ex1_cp     "capacity flow rate at the exhaust [W/K]"
+c_p_ex1_cp = specheat(fluid$,T=t_ex1_cp,P =p_ex1_cp)       "specific heat before the exhaust cooling [J/kg-K]"
+t_ex_cp = temperature(fluid$,h=h_ex_cp,p=p_ex_cp)           "compressor exhaust temperature [C]"
+
+"Ideal part-load control (without performance penalty): as if varying the compressor"
+"swept volume (actually using several scroll compressors in cascade):"
+V_dot_s_cp = V_dot_s_cp_max*X_cp         "swept volume flow rate of the compressor [m^3/s]"
+
+"Air-cooled condenser."
+
+"Refrigerant state at the condenser supply:"
+h_su_cd = h_ex_cp                       "condenser supply enthalpy [J/kg]"
+p_su_cd = p_cd                          "condenser supply pressure [Pa]"
+p_cd = P_sat(fluid$,T=t_cd)             "condensing pressure (saturation pressure at t_cd) [Pa]"
+
+"Heat transfer of the condenser:"
+t_cd = t_a_su_cd + Q_dot_cd/(epsilon_cd * C_dot_a_cd)    "condensing temperature [C]"
+M_dot_cd = M_dot_cp                     "refrigerant flow rate at the condenser [kg/s]"
+epsilon_cd = 1 - exp( -NTU_cd )         "effectiveness of the condenser [-]"
+NTU_cd = AU_cd / C_dot_a_cd             "NTU of the condenser [-]"
+
+"Definition of the thermal resistances (3 resistances in series: air, metal and refrigerant):"
+1 / AU_cd = R_a_cd + R_m_cd + R_r_cd    "conductance of the condenser [W/K]"
+C_dot_a_cd = M_dot_a_cd * c_p_a_su_cd   "capacity flow rate of the air [W/K]"
+c_p_a_su_cd = specheat(AirH2O,T=t_a_su_cd,P=P_a,R=RH_su_cd)     "specific heat of the supply air [J/kg-K]"
+R_a_cd = R_a_cd_n *  (M_dot_a_cd_n / M_dot_a_cd)^0.6          "air-side thermal resistance [K/W]"
+R_r_cd = R_r_cd_n * (M_dot_cd_n/M_dot_cd)^0.8                 "refrigerant thermal resistance [K/W]"
+
+"Energy balance on the refrigerant side:"
+M_dot_cd = Q_dot_cd/(h_su_cd - h_ex_cd)   "refrigerant flow rate at the condenser [kg/s]"
+
+"Refrigerant state at the condenser exhaust:"
+h_ex_cd = enthalpy(fluid$,p=p_ex_cd,t=t_ex_cd)     "condenser exhaust enthalpy [J/kg]"
+p_ex_cd = p_cd                              "condenser exhaust pressure (pressure drop neglected) [Pa]"
+t_ex_cd = t_cd - DELTAt_sc_ex_cd            "condenser exhaust temperature [C]"
+
+"Hypothetical fan control: the air volume flow rate follows the condensing temperature"
+X_cd = min(1, max(0, gain*(t_cd-t_cd_set)))     "fraction of the nominal air flow rate [-]"
+V_dot_a_cd = V_dot_a_cd_min + X_cd*(V_dot_a_cd_n-V_dot_a_cd_min)   "air volume flow rate [m^3/s]"
+V_dot_a_cd_min = 0.2*V_dot_a_cd_n              "minimum air volume flow rate [m^3/s]"
+M_dot_a_cd = V_dot_a_cd/v_a_su_cd             "air flow rate [kg/s]"
+v_a_su_cd = volume(AirH2O,T=t_a_su_cd,P=P_a,R=RH_su_cd)            "specific volume of the supply air [m^3/kg]"
+
+"Water-supplied evaporator."
+
+"Refrigerant state at the evaporator supply:"
+h_su_ev = h_ex_cd                       "evaporator supply enthalpy (isenthalpic expansion) [J/kg]"
+p_ev = P_sat(fluid$,T=t_ev)             "evaporating pressure (saturation pressure at t_ev) [Pa]"
+
+"Heat transfer of the evaporator:"
+t_ev = t_w_su_ev - Q_dot_ev/(epsilon_ev * C_dot_w_ev)     "evaporating temperature [C]"
+M_dot_ev = M_dot_cp                     "refrigerant flow rate at the evaporator [kg/s]"
+epsilon_ev = 1 - exp( -NTU_ev )         "effectiveness of the evaporator [-]"
+NTU_ev = AU_ev / C_dot_w_ev             "NTU of the evaporator [-]"
+
+"Definition of the thermal resistances (3 resistances in series: water, metal and refrigerant):"
+1 / AU_ev = R_w_ev + R_m_ev + R_r_ev    "conductance of the evaporator [W/K]"
+C_dot_w_ev = M_dot_w_ev * c_w           "capacity flow rate of the water [W/K]"
+c_w = 4187                              "specific heat of the water [J/kg-K]"
+R_w_ev = R_w_ev_n *  (M_dot_w_ev_n / M_dot_w_ev)^0.8          "water-side thermal resistance [K/W]"
+R_r_ev = R_r_ev_n * (M_dot_ev_n/M_dot_ev)^0.8                 "refrigerant thermal resistance [K/W]"
+
+"Energy balance on the refrigerant side:"
+M_dot_ev = Q_dot_ev/(h_ex_ev - h_su_ev)   "refrigerant flow rate at the evaporator [kg/s]"
+
+"Refrigerant and water states at the evaporator exhausts:"
+h_ex_ev = enthalpy(fluid$,T=t_ex_ev,p=p_ev)       "refrigerant enthalpy at the evaporator exhaust [J/kg]"
+t_ex_ev = t_ev + DELTAt_oh_ex_ev         "refrigerant temperature at the evaporator exhaust [C]"
+t_w_ex_ev = t_w_su_ev + Q_dot_ev/C_dot_w_ev        "water temperature at the evaporator exhaust [C]"
+
+"Global consumption of the chiller:"
+COP_cp = Q_dot_ev/W_dot_cp                "COP of the compressor alone [-]"
+COP = Q_dot_ev/W_dot                     "COP of the chiller (compressor + fans) [-]"
+W_dot = W_dot_cp + W_dot_fan             "global electrical power of the chiller [W]"
+W_dot_fan = W_dot_fan_n*(V_dot_a_cd/V_dot_a_cd_n)^2     "electrical power of the fans [W]"
+M_dot_a_cd_n = V_dot_a_cd_n/v_a_su_cd_n   "nominal air flow rate at the condenser [kg/s]"
+v_a_su_cd_n = (1/1.2)                    "nominal specific volume of the air [m^3/kg]"
+
+"State points for the thermodynamic diagrams (CoolSolve *Diagram* tab, *Array overlay*)"
+"i = 1 evaporator exhaust (compressor supply), 2 compressor exhaust (condenser"
+"supply), 3 condenser exhaust (expansion valve supply), 4 evaporator supply."
+P[1] = p_ev                             "state 1 pressure [Pa]"
+h[1] = h_ex_ev                          "state 1 enthalpy [J/kg]"
+T[1] = t_ex_ev                          "state 1 temperature [C]"
+s[1] = entropy(fluid$,T=t_ex_ev,P=p_ev)                "state 1 entropy [J/kg-K]"
+P[2] = p_cd                             "state 2 pressure [Pa]"
+h[2] = h_ex_cp                          "state 2 enthalpy [J/kg]"
+T[2] = t_ex_cp                          "state 2 temperature [C]"
+s[2] = entropy(fluid$,T=t_ex_cp,P=p_cd)                 "state 2 entropy [J/kg-K]"
+P[3] = p_cd                             "state 3 pressure [Pa]"
+h[3] = h_ex_cd                          "state 3 enthalpy [J/kg]"
+T[3] = t_ex_cd                          "state 3 temperature [C]"
+s[3] = entropy(fluid$,T=t_ex_cd,P=p_cd)                 "state 3 entropy [J/kg-K]"
+P[4] = p_ev                             "state 4 pressure [Pa]"
+h[4] = h_su_ev                          "state 4 enthalpy [J/kg]"
+T[4] = t_ev                             "state 4 temperature [C]"
+s[4] = entropy(fluid$,P=p_ev,H=h_su_ev)                 "state 4 entropy (two-phase state: (P,H) input pair) [J/kg-K]"

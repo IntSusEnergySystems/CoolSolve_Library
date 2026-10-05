@@ -363,6 +363,7 @@ Open questions (from the `C-14` review, for the maintainer):
 | CoolSolve examples | [inventory](sources/coolsolve_examples/inventory.csv) | [README](sources/coolsolve_examples/README.md) | 39 of 45 tested examples solve; 19 have their EES original in `CoolSolve/misc/EES_ok.zip` |
 | LaboThapPy | [inventory](sources/labothappy/inventory.csv) | [README](sources/labothappy/README.md) | Components (constant-efficiency, semi-empirical, ε-NTU, moving boundary), correlation libraries, cycles; few reference results |
 | TESPy | [inventory](sources/tespy/inventory.csv) | [README](sources/tespy/README.md) | Component equations with doctests, validated plants (CGAM, SEGS vs Ebsilon, sCO2 state table) |
+| ThermoCycle | [inventory](sources/thermocycle/inventory.csv) | [README](sources/thermocycle/README.md) | Modelica, 665 files: 441 infrastructure and 123 dynamic models excluded; 7 steady candidates (solar receiver and collector fits, expander/pump maps, flow-boiling and in-cylinder correlations); no stored reference results |
 
 ---
 
@@ -500,20 +501,85 @@ models), plus TM-0472 and the BrineProp function library (P1.9). Worker notes: `
 
 ```
 [x] C-75  T-IMPORT     TM-0475                          → hvac/air_handling/                                  — adiabatic humidifier, simplified model (L1) — CSL-0070
-[ ] C-76  T-IMPORT     TM-0251                          → components/pumps_fans/                              — centrifugal fan RefSim model (L1) — CSL-0071
-[ ] C-77  T-IMPORT     TM-0487                          → components/pumps_fans/                              — centrifugal brine pump RefSim model (L1) — CSL-0072
-[ ] C-78  T-IMPORT     TM-0472                          → hvac/air_handling/                                  — cooling coil with control, simplified model (L1) — CSL-0073
-[ ] C-79  T-IMPORT     TM-0471                          → hvac/air_handling/                                  — cooling coil RefSim model, dry and wet regimes (L2), link CSL-0017 — CSL-0074
-[ ] C-80  T-IMPORT     TM-0255                          → components/instrumentation/                         — ISO 5167 orifice plate flow-rate procedure (L2) — CSL-0075
-[ ] C-81  T-IMPORT     TM-0489                          → hvac/cooling_towers/                                — direct-contact cooling tower reference model (L2) — CSL-0076
-[ ] C-82  T-IMPORT     TM-0488                          → cycles/refrigeration_heat_pumps/                    — air-cooled water chiller reference model (L2) — CSL-0077
+[x] C-76  T-IMPORT     TM-0251                          → components/pumps_fans/                              — centrifugal fan RefSim model (L1) — CSL-0071
+[x] C-77  T-IMPORT     TM-0487                          → components/pumps_fans/                              — centrifugal brine pump RefSim model (L1) — CSL-0072
+[x] C-78  T-IMPORT     TM-0472                          → hvac/air_handling/                                  — cooling coil with control, simplified model (L1) — CSL-0073
+[x] C-79  T-IMPORT     TM-0471                          → hvac/air_handling/                                  — cooling coil RefSim model, dry and wet regimes (L2), link CSL-0017 — CSL-0074
+[x] C-80  T-IMPORT     TM-0255                          → components/instrumentation/                         — ISO 5167 orifice plate flow-rate procedure (L2) — CSL-0075
+[x] C-81  T-IMPORT     TM-0489                          → hvac/cooling_towers/                                — direct-contact cooling tower reference model (L2) — CSL-0076
+[x] C-82  T-IMPORT     TM-0488                          → cycles/refrigeration_heat_pumps/                    — air-cooled water chiller reference model (L2) — CSL-0077
 [ ] C-83  T-IMPORT     TM-0495                          → cycles/refrigeration_heat_pumps/                    — brine-to-water heat pump reference model (L2) — CSL-0078
-[ ] C-84  T-FUNC       TM-0479 (DG-0115)                → fundamentals/properties/                            — BrineProp library: secondary-refrigerant properties (needed by 7 models, P1.9) — CSL-0079
+[x] C-84  T-FUNC       TM-0479 (DG-0115)                → fundamentals/properties/                            — BrineProp library: secondary-refrigerant properties (needed by 7 models, P1.9) — CSL-0079
 [ ] C-85  T-IMPORT     TM-0494                          → components/boilers_burners/                         — condensing boiler reference model, five-step combustion (L3; Phase 4C) — CSL-0080
 [ ] C-86  T-IMPORT     TM-0490                          → components/heat_exchangers/                         — vertical ground-loop heat exchanger (borefield), dynamic (L3; Phase 4A) — CSL-0081
-[ ] C-88  T-RECHECK    CSL-0061, CSL-0068 (decision D11)  → (in place)                                          — rewrite the (T, H) property calls with (P, H) in the main file, drop the native/variant split, re-verify
+[x] C-88  T-RECHECK    CSL-0061, CSL-0068 (decision D11)  → (in place)                                          — rewrite the (T, H) property calls with (P, H) in the main file, drop the native/variant split, re-verify
 [ ] C-87  T-REVIEW     B-07                                                                                      — light scripted review (orchestrator)
 ```
+
+### B-08 — ThermoCycle translations (Phase 3E-like) ☐
+
+Prepared 2026-10-05 from the ThermoCycle triage (`sources/thermocycle/`, Claude Sonnet): dynamic models and
+infrastructure excluded; the five steady-state cards that bring something new. No reference results are stored in the
+repository: verification from the papers, a Python/CoolProp re-evaluation and energy balances. Source defects to
+correct and document are listed in `sources/thermocycle/README.md` §8. Worker notes: `~/llm/scripts/csl/b08_extra.txt`.
+
+```
+[ ] C-89  T-TRANSLATE  THC-001  → renewables/solar_thermal/parabolic_trough_receiver_forristal    — steady 1D radial receiver balance (glass, vacuum annulus, wind, sky); verify vs NREL/TP-550-34169, PTR70 heat-loss test, energy-balance closure — CSL-0082
+[ ] C-90  T-FUNC       THC-002  → renewables/solar_thermal/parabolic_trough_loss_correlations     — Schott PTR70, Sopogy, Soltigua efficiency fits (with LTP-050/LTP-020); verify vs NREL report, datasheets, C-89 — CSL-0083
+[ ] C-91  T-FUNC       THC-003  → components/expanders_turbines/orc_expander_pump_empirical_maps  — isentropic-efficiency and filling-factor maps (hermetic scroll, open-drive scroll, screw) and pump curves, small ORC demo; verify by Python/CoolProp re-evaluation — CSL-0084
+[~] C-92  T-FUNC       THC-004  → heat_transfer/convection/flow_boiling_htc_shah_gungor_cooper    — Shah 1982, Gungor-Winterton, Cooper (after LTP-034/035); verify vs the original papers, Python/CoolProp — CSL-0085  **superseded by C-107** (ht HT-012 is more complete; C-107 adds Shah 1982 / Gungor-Winterton / Cooper from THC-004 if ht lacks them)
+[ ] C-93  T-FUNC       THC-005  → heat_transfer/convection/in_cylinder_htc_correlations           — Annand, Woschni, Adair, Destoop, Irimescu, Kornhauser (low priority; DTU copyright of the source package to check); verify vs papers, Python — CSL-0086
+[ ] C-94  T-REVIEW     B-08                                                                                      — light scripted review (orchestrator)
+```
+
+### B-09 — Heat-transfer and pressure-drop correlations from `ht` (Caleb Bell) ☐
+
+Maintainer request (2026-10-05): import all the correlations of the Python library
+[`ht`](https://github.com/CalebBell/ht) (C. Bell, MIT; local clone `~/git/ht`, commit `85e0ee6`) — convection,
+boiling, condensation, heat-exchanger relations, pressure drop… Rules:
+
+- each correlation becomes an EES `FUNCTION` (or `PROCEDURE`), called as an example from the main program of the
+  library file where it is implemented (the file solves and is regression-tested);
+- correlations that are very similar or describe the same physical process share one `.eescode` file (one card per
+  file/family);
+- **cite both** the original paper/book of the correlation and the `ht` library (version, module, function) from
+  which the equations were taken (comment block of each function, README, `model.json`);
+- verification against the `ht` doctests / Python functions.
+
+The exploration of `ht` is itself a worker card (C-95) that writes `sources/ht/` (README + inventory, one row per
+family); the translation cards C-96…C-119 come from its result (2026-10-05: 24 families, 222 functions; 23 selectors and 27 table/helper functions excluded). Pipe friction factors and two-phase pressure drop are **not** in `ht` — they live in the companion library [`fluids`](https://github.com/CalebBell/fluids) (not cloned); `ht` only provides the shell-side (HT-017) and air-cooler (HT-013) pressure drops. Worker notes: `~/llm/scripts/csl/b09_triage.txt`,
+`~/llm/scripts/csl/b09_extra.txt`.
+
+```
+[x] C-95  T-TRIAGE     ht (CalebBell)                     → sources/ht/                                            — list and group the correlations of ht into families (one future .eescode file each); 24 families / 222 functions → C-96…C-119
+[ ] C-96  T-FUNC       HT-001   → heat_transfer/convection/internal_turbulent_nusselt            — turbulent and turbulent-entry internal Nu (Dittus-Boelter … Bhatti-Shah, Gnielinski) (23 functions, wave1); verify vs ht doctests + Python — CSL-0087
+[ ] C-97  T-FUNC       HT-002   → heat_transfer/convection/nucleate_boiling_and_chf              — pool nucleate boiling heat flux (9) + critical heat flux (Zuber, Serth-HEDH, HEDH-Montinsky) (12 functions, wave1); verify vs ht doctests + Python — CSL-0088
+[ ] C-98  T-FUNC       HT-003   → heat_transfer/convection/condensation_film                     — film condensation: Nusselt plate, Boyko-Kruzhilin, Akers-Deans-Crosser, kinetic correction, Cavallini, Shah (6 functions, wave1); verify vs ht doctests + Python — CSL-0089
+[ ] C-99  T-FUNC       HT-004   → components/heat_exchangers/hx_effectiveness_ntu                — Cmin/Cmax/Cr, NTU↔UA, eps(NTU, Cr) and NTU(eps, Cr) for counterflow, parallel, crossflow, boiler/condenser (8 functions, wave1); verify vs ht doctests + Python — CSL-0090
+[ ] C-100 T-FUNC       HT-005   → heat_transfer/convection/internal_laminar_and_curved_nu        — laminar (T_wall and q_wall), thermal entry region, rectangular duct, spiral/helical curved ducts (10 functions, high); verify vs ht doctests + Python — CSL-0091
+[ ] C-101 T-FUNC       HT-006   → heat_transfer/convection/free_conv_cylinders                   — 10 vertical-cylinder + 3 horizontal-cylinder free-convection correlations (13 functions, high); verify vs ht doctests + Python — CSL-0092
+[ ] C-102 T-FUNC       HT-007   → heat_transfer/convection/free_conv_plates_and_sphere           — Churchill-Chu vertical plate, McAdams/VDI/Rohsenow horizontal plate, Churchill sphere (5 functions, high); verify vs ht doctests + Python — CSL-0093
+[ ] C-103 T-FUNC       HT-008   → heat_transfer/convection/external_crossflow_cylinder           — single-cylinder crossflow (Zukauskas … Whitaker, Perkins-Leppert) (8 functions, high); verify vs ht doctests + Python — CSL-0094
+[ ] C-104 T-FUNC       HT-009   → heat_transfer/convection/tube_bank_nusselt                     — tube-bank Nu and row/angle correction factors (Grimison, Zukauskas, ESDU 73031, HEDH) (7 functions, high); verify vs ht doctests + Python — CSL-0095
+[ ] C-105 T-FUNC       HT-010   → components/heat_exchangers/plate_hx_heat_transfer              — plate HX single-phase Nu (Kumar, Martin, Muley-Manglik, Khan-Khan) + 5 plate two-phase boiling correlations (9 functions, high); verify vs ht doctests + Python — CSL-0096
+[ ] C-106 T-FUNC       HT-011   → heat_transfer/convection/two_phase_nonboiling_in_tube          — in-tube two-phase non-boiling HTC (Groothuis-Hendal, Martin-Sims, Hughmark, Aggour …) (9 functions, high); verify vs ht doctests + Python — CSL-0097
+[ ] C-107 T-FUNC       HT-012   → heat_transfer/convection/flow_boiling_in_tubes                 — flow and film boiling in tubes (Lazarek-Black, Li-Wu, Thome, Chen, Liu-Winterton …) (8 functions, high); verify vs ht doctests + Python — CSL-0098 (also covers THC-004, see C-92)
+[ ] C-108 T-FUNC       HT-013   → heat_transfer/convection/air_cooler_air_side                   — finned-bundle air-side HTC and dP (Briggs-Young, ESDU low/high fin, Ganguli-VDI) + 2 air-cooler noise correlations (8 functions, high); verify vs ht doctests + Python — CSL-0099
+[ ] C-109 T-FUNC       HT-014   → heat_transfer/convection/free_conv_enclosed_and_jackets        — enclosed plates, critical Rayleigh numbers, helical coils in tanks, vessel jackets (12 functions, medium); verify vs ht doctests + Python — CSL-0100
+[ ] C-110 T-FUNC       HT-015   → heat_transfer/convection/external_forced_conv_plates           — laminar/turbulent forced convection over a flat plate (4 functions, medium); verify vs ht doctests + Python — CSL-0101
+[ ] C-111 T-FUNC       HT-016   → components/heat_exchangers/hx_temperature_effectiveness_pntu   — P-NTU temperature effectiveness: TEMA E/G/H/J, plate, air cooler + the inverse NTU(P) relations (15 functions, medium); verify vs ht doctests + Python — CSL-0102
+[ ] C-112 T-FUNC       HT-017   → heat_transfer/pressure_drop/tube_bank_dp_bell_delaware         — shell-side dP (Kern, Zukauskas) + Bell-Delaware Jc, Jl, Jb, Js, Jr (7 functions, medium); verify vs ht doctests + Python — CSL-0103
+[ ] C-113 T-FUNC       HT-018   → heat_transfer/convection/supercritical_internal_nu             — near-supercritical internal convection (McAdams, Jackson, Swenson, Kitoh, Petukhov …) (18 functions, medium); verify vs ht doctests + Python — CSL-0104
+[ ] C-114 T-FUNC       HT-019   → components/heat_exchangers/lmtd_and_f_correction               — LMTD, Fakheri F correction, air-cooler Ft (3 functions, medium); verify vs ht doctests + Python — CSL-0105
+[ ] C-115 T-FUNC       HT-020   → heat_transfer/conduction/conduction_resistances_and_shapes     — cylindrical/plane-wall resistance, 6 shape factors, R-value conversions (14 functions, medium); verify vs ht doctests + Python — CSL-0106
+[ ] C-116 T-FUNC       HT-021   → heat_transfer/radiation/radiation_heat_flux                    — blackbody spectral radiance, radiant heat flux with back-radiation, grey transmittance (3 functions, medium); verify vs ht doctests + Python — CSL-0107
+[ ] C-117 T-FUNC       HT-022   → heat_transfer/convection/packed_bed_nusselt                    — packed-bed forced convection (4 functions, low); verify vs ht doctests + Python — CSL-0108
+[ ] C-118 T-FUNC       HT-023   → heat_transfer/convection/fin_efficiency_and_wall_factors       — circular-fin efficiency, wall correction factors for Nu and for frictional dP (3 functions, low); verify vs ht doctests + Python — CSL-0109
+[ ] C-119 T-FUNC       HT-024   → components/heat_exchangers/shell_and_tube_sizing               — tube counts, bundle diameters, TEMA clearances, baffle thickness, unsupported length (13 functions, low); verify vs ht doctests + Python — CSL-0110
+[ ] C-120 T-REVIEW     B-09                                                                                      — light scripted review (orchestrator)
+```
+
+
 
 
 
@@ -678,3 +744,13 @@ and adds the log line in §8.
 | 2026-10-05 | C-73 `CSL-0069` | Added *centrifugal_compressor_design_similarity* (air design and methane similarity variant) — verified vs the EES stored solutions; CSX-043 imported (the example’s solve failure resolved); worker space-bunny |
 | 2026-10-05 | C-74 review B-06 (light) | Scripted checks: build_index 69 models 0 errors, backlog_stats clean, regression 72/72 targets OK (CSL-0009:coolsolve skipped). B-06 (14 cards, glm-5.3-flash and space-bunny): 9 verified, 2 runs, 3 blocked with verified variants (new gaps CS-GAP-FLUIDS-ALIAS, CS-GAP-INTEGRAL-MULTIVAR, CS-GAP-PROP-TH); one worker substitution (CarbonMonoxide → CO in a native file) caught and corrected; the CoolSolve examples are now all triaged except CSX-033 (Phase 4C) |
 | 2026-10-05 | C-75 `CSL-0070` | Added *adiabatic_humidifier_simplified* (model data bank) — verified vs the EES stored solution of TM-0475 (max 4.4e-3, humid-air properties); new tool bug CS-BUG-EXTRACT-FMT-BYTE (ees_extract.py drops EES 7.x variable records); worker glm-5.3-flash |
+| 2026-10-05 | C-76 `CSL-0071` | Added *centrifugal_fan_reference_model* (model data bank RefSim) — verified vs the EES stored solution of TM-0251 (max 1.2e-2 on the moist-air cp); worker space-bunny |
+| 2026-10-05 | C-88 `CSL-0061`, `CSL-0068` | Decision D11 applied: the (T, H) property calls rewritten with (P, H) in the main files (CSL-0061: saturation pressure of state 4; CSL-0068: auxiliary pressure unknown, the R407C glide forbids the saturation pressure), `_coolsolve` variants deleted; both **verified** (max 7.5e-4 and 3.6e-3); worker space-bunny |
+| 2026-10-05 | C-78 `CSL-0073` | Added *cooling_coil_with_control_simplified* (model data bank) — native file **blocked** (CS-GAP-IF5); runnable `_coolsolve` variant (5-argument IF → 3-argument) verified vs the EES stored solution of TM-0472 (max 2.7e-2 on the latent duty, a small difference of two large terms); worker space-bunny |
+| 2026-10-05 | C-77 `CSL-0072` | Added *centrifugal_brine_pump_refsim* (model data bank) — native file **blocked** by its copy of the ULiège `Brineprop.lib` (new gaps CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE, CS-GAP-CALL-EXPR-OUT, CS-GAP-STRING-ARRAY, CS-GAP-LOOKUP-PROC); runnable `_coolsolve` variant verified vs the EES stored solution of TM-0487; worker glm-5.3-flash |
+| 2026-10-05 | C-79 `CSL-0074` | Added *cooling_coil_refsim* (model data bank cooling-coil reference model, dry and wet regimes) — native file **blocked** (new gaps CS-GAP-NAME-PIPE for names such as `K|star`, CS-GAP-IFSTR for the string conditional `IF$`); runnable `_coolsolve` variant verified vs the EES stored solution of TM-0471; worker space-bunny |
+| 2026-10-05 | C-81 `CSL-0076` | Added *cooling_tower_direct_contact_refsim* (model data bank) — verified vs the EES stored solution of TM-0489 (max 4.5e-3, humid-air properties); new bug CS-BUG-MULTILINE-COMMENT-START (a comment opened by a `"` at the end of a line); worker space-bunny |
+| 2026-10-05 | C-80 `CSL-0075` | Added *iso5167_orifice_plate_flow_rate* (model data bank) — native file **blocked** (new rows CS-GAP-ISIDEALGAS, CS-BUG-HUMIDAIR-PROPS — humid-air density silently 1E4 kg/m³ —, CS-BUG-STRING-CASE); runnable `_coolsolve` variant verified vs the EES stored solution of TM-0255; worker glm-5.3-flash |
+| 2026-10-05 | C-82 `CSL-0077` | Added *aircooled_chiller_refsim* (model data bank air-cooled water chiller) — verified vs the EES printed solution of TM-0488 (max 6.2e-3); worker space-bunny |
+| 2026-10-05 | C-84 `CSL-0079` | Added *brineprop_secondary_refrigerants* (BrineProp secondary-refrigerant property functions) — native file blocked, verified `_coolsolve` variant (max 4.8e-10); back-links to the refsim pump and cooling coil; worker space-bunny |
+| 2026-10-05 | C-95 `sources/ht/` | Triage of `ht` 1.2.0 @ 85e0ee6 (MIT): 272 public functions → 222 to translate in 24 families HT-001…HT-024 (cards C-96…C-119, CSL-0087…0110); pipe/two-phase dP is in `fluids`, not `ht`; C-92 (THC-004) folded into C-107; worker space-bunny (7 min) |

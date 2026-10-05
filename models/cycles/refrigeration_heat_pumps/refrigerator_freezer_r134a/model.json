@@ -5,7 +5,7 @@
   "summary": "Sizing of a domestic fridge-freezer on R134a delivering 1.5 kW of refrigeration at two evaporation temperatures (3 °C for the fridge compartment, -20 °C for the freezer) with one high and two low pressures: computes the compressor outlet temperature, the refrigerant flow rate, the compressor power, the condenser duty and the volumetric flow rates entering the two expansion valves.",
   "kind": "steady",
   "level": 1,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "refrigerator_freezer_r134a.eescode",
   "fluids": [
     "R134a"
@@ -41,15 +41,13 @@
     "course": "ULiège, Thermodynamique appliquée (MECA0002), repetition session 8, exercise 3"
   },
   "verification": {
-    "reference": "Solution stored in the source EES file (converted from its kPa/kJ unit system), for the _coolsolve variant; independently cross-checked with the Python/CoolProp solution of the same exercise of the 2020 session (~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R8/old/ThAp20_R08E03.py)",
+    "reference": "Solution stored in the source EES file (converted from its kPa/kJ unit system); independently cross-checked with the Python/CoolProp solution of the same exercise of the 2020 session (~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R8/old/ThAp20_R08E03.py)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
     "max_rel_diff": 0.00075,
-    "notes": "_coolsolve variant vs EES: 55 common variables, 17 differ (rtol=1e-3). 15 absolute enthalpies/entropies differ by constant EES-vs-CoolProp R134a reference-state offsets (+148.15 kJ/kg on h, +795.65 J/kg-K on s); V_dot_3/V_dot_5 are reported in m3/s instead of L/s (factor 1000, same numbers). Largest relative deviation over all the other variables: 7.5e-4 (v[5]), within the 0.5 % property tolerance. P and Pertes (in the EES variable records but in no equation) are not part of the model."
+    "notes": "Main file vs EES: 55 common variables, 17 differ (rtol=1e-3). 15 absolute enthalpies/entropies differ by constant EES-vs-CoolProp R134a reference-state offsets (+148.15 kJ/kg on h, +795.65 J/kg-K on s); V_dot_3/V_dot_5 are reported in m3/s instead of L/s (factor 1000, same numbers). Largest relative deviation over all the other variables: 7.5e-4 (v[5]), within the 0.5 % property tolerance. P and Pertes (in the EES variable records but in no equation) are not part of the model."
   },
-  "missing_features": [
-    "CS-GAP-PROP-TH"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0001", "CSL-0015", "CSL-0054", "CSL-0068"
   ],
@@ -59,6 +57,7 @@
   "supersedes": [],
   "previous_paths": [],
   "history": [
-    {"date": "2026-10-05", "action": "added (roadmap card C-65, batch B-05), status blocked, runnable _coolsolve variant verified", "by": "opencode worker for S. Quoilin"}
+    {"date": "2026-10-05", "action": "added (roadmap card C-65, batch B-05), status blocked, runnable _coolsolve variant verified", "by": "opencode worker for S. Quoilin"},
+    {"date": "2026-10-05", "action": "re-check (roadmap card C-88): the three (T,H) property calls of state 4 rewritten with (P,H) in the main file (decision D11), _coolsolve variant deleted, status verified, CS-GAP-PROP-TH removed from missing_features", "by": "opencode worker for S. Quoilin"}
   ]
 }

@@ -24,10 +24,25 @@
 
   Inputs : T_ev, T_cd, DELTA_T_oh, DELTA_T_sc, Q_dot_cd, Q_dot_ev, W_dot_el
   Outputs: COP, M_dot, V_dot, V_dot_m3h, W_dot, W_dot_s, eta_el, epsilon_s_cp,
-           epsilon_s_cp_glob, T_2, P_4, P[i], h[i], T[i], s[i]
+           epsilon_s_cp_glob, T_2, T_4, P_4, P[i], h[i], T[i], s[i]
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
   Source : ULiège, "Machines et systèmes thermiques", repetition session 8,
            exercise 5 (header VL050415) - see README.md
+  Decision D11: the pressure of state 4 is obtained with the (P, H) input pair
+           instead of the (T, H) pair of the original
+           P_4 = PRESSURE(R407C,T=T_ev,h=h_4), which CoolProp does not support
+           (CS-GAP-PROP-TH, not planned): P_4 becomes an auxiliary pressure
+           unknown, and the pair (P, H) is used in
+           T_4 = temperature(R407C,P=P_4,H=h_4) combined with T_4 = T_ev (two
+           equations, one new variable T_4, whose value 0 °C is fixed by the
+           second line). The saturation pressure at T_ev is *not* used instead:
+           R407C is a zeotropic blend, so that pressure is not unique (CoolProp
+           returns 460.7 kPa for PRESSURE(R407C,T=T_ev,x=1), the value of P_1,
+           and 567.9 kPa for x=0), while EES returns 531.9 kPa for the state of
+           enthalpy h_4 at T_ev: taking P_4 = P_1 would be wrong by 13 %.
+           No other equation, no variable name and no input value is changed;
+           the file is still valid EES (no CoolSolve-only syntax).
+           See the README conversion log.
 =============================================================================}
 
 "!Manufacturer data"
@@ -69,7 +84,8 @@ P_3 = PRESSURE(R407C,T=T_cd,x=0) "pressure at the condensation temperature, satu
 "!Evaporator inlet"
 h_4 = h_3                       "enthalpy at the evaporator inlet, unchanged from the condenser outlet [J/kg]"
 h_1 = enthalpy(R407C,P=P_1,T=T_1) "enthalpy at the compressor inlet [J/kg]"
-P_4 = PRESSURE(R407C,T=T_ev,h=h_4) "pressure of the state of enthalpy h_4 at T_ev [Pa]"
+T_4 = T_ev                      "temperature of state 4 (the state of enthalpy h_4 at the evaporation temperature) [°C]"
+T_4 = temperature(R407C,P=P_4,H=h_4) "pressure of state 4 with the (P,H) pair (input pair P,H: decision D11, replaces the (T,H) call PRESSURE(R407C,T=T_ev,h=h_4) of the original; P_4 is an unknown, T_4 = 0 °C by the previous line)"
 Q_dot_ev{_bis} = M_dot*(h_1-h_4)  "refrigerating capacity [W]"
 
 "!Displacement (swept volume) calculation"

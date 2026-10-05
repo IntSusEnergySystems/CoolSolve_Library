@@ -1,0 +1,200 @@
+{=============================================================================
+{Variant: runnable variant of the blocked native file (see README.md, conversion log). Changes, all forced by a CoolSolve gap and logged there: (1) the variables K|star_r_n and K|star_r of the original are renamed Kstar_r_n and Kstar_r (CS-GAP-NAME-PIPE); (2) the four CALL BRINEPROP(...) library calls are replaced by the four brine properties stored by EES for the default operating point (CS-GAP-INCLUDE / CS-GAP-LKT); (3) the five EES 5-argument IF(A,B,X,Y,Z) calls are replaced by the 3-argument CoolSolve if(A-B,X,Z) form (CS-GAP-IF5); (4) the string output WetHumide$, written with the EES intrinsic IF$ in the original, is removed: CoolSolve does not implement IF$ and the string feeds no equation. No other equation, name or value changes.}
+  Cooling coil RefSim model (dry and wet regimes, one zone)
+  CoolSolve Library model CSL-0074
+ -----------------------------------------------------------------------------
+  The cooling coil is treated as a one-zone counter-flow heat exchanger. The
+  fully dry and the fully wet regimes are described simultaneously and the
+  regime to be considered is the one leading to the maximal cooling coil
+  capacity (Braun et al., 1989). The heat transfer coefficient AU is
+  calculated by considering three resistances in series: the convective
+  resistance on the air side, the conduction resistance of the metal and the
+  convective resistance on the refrigerant side. When the coil works in the
+  wet regime, the air is replaced by a fictitious perfect gas, whose enthalpy
+  is fully defined by the actual wet bulb temperature (Lebrun et al., 1990).
+  To determine the air state at the coil outlet in the wet regime, a
+  fictitious semi-isothermal heat exchanger is defined, according to the ASHRAE
+  classical procedure (ASHRAE 2000). One of the two fluids supplying this
+  exchanger is the air; the other one is a fictitious fluid of infinite
+  capacity flow rate, whose uniform temperature is supposed to correspond to
+  the average temperature of the external surface of the coil, also called
+  contact temperature.
+
+  The refrigerant side is a secondary refrigerant (ethylene glycol or
+  propylene glycol solution) whose properties are given by the BrineProp
+  library procedure of the laboratory, called here with CALL.
+
+  Inputs : t_a_su_coil, RH_su_coil, P_atm, M_dot_a_coil, M_dot_r_coil,
+           t_r_su_coil (supply air and refrigerant, diagram window),
+           R_a_coil_n, R_m_coil, R_r_coil_n, M_dot_a_coil_n, M_dot_r_coil_n,
+           conc_r, K|star_r_n (parameters, diagram window)
+  Outputs: Q_dot_coil, Q_dot_sens_coil, Q_dot_lat_coil, t_a_ex_coil,
+           t_wb_ex_coil, M_dot_w_coil, t_r_ex_coil, SHR, WetHumide$
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège model bank (Laborelec toolkit lineage), cooling coil RefSim
+           model, 18 March 2008, V. Lemort and J. Lebrun - see README.md
+=============================================================================}
+
+"!Nomenclature (as in the original)"
+"AU           Global heat transfer coefficient [W/K]"
+"C_dot        Capacity flow rate [W/K]"
+"conc_r       Concentration of propylene or ethylene glycol [%]"
+"c_p          Specific heat [J/kg-K]"
+"h            Specific enthalpy [J/kg]"
+"Kstar       Thermal properties coefficient [(m.s)^(m-1).J/kg^m/K]"
+"M_dot        Mass flow rate [kg/s]"
+"NTU          Number of transfer units [-]"
+"p            Pressure [Pa]"
+"Q_dot        Thermal power [W]"
+"R            Thermal resistance [K/W]"
+"refrigerant  Nature of the refrigerant (string variable)"
+"RH           Relative humidity [-]"
+"SHR          Sensible heat ratio [-]"
+"t            Temperature [°C]"
+"v            Specific volume [m^3/kg]"
+"W            Specific humidity [kg water/kg dry air]"
+"DELTAt       Temperature difference [K]"
+"epsilon      Efficiency [-]"
+"mu           Dynamic viscosity [Pa.s]"
+"omega        Capacity flow rate ratio [-]"
+"rho          Density [kg/m^3]"
+
+"!References (as in the original)"
+"[1] ASHRAE. 2000. 2000 ASHRAE handbook-HVAC Systems and Equipment, Chapter 21. Atlanta: American Society of Heating, Refrigerating and Air-Conditioning Engineers, Inc."
+"[2] Braun, J.E., S.A. Klein, and J. Mitchell. 1989. Effectiveness Models for Cooling Towers and Cooling Coils. ASHRAE Transaction 95(2):164-173."
+"[3] Incropera, F., P., D., P., DeWitt (2002) Fundamentals of Heat and Mass Transfer, Fifth Edition, John Wiley & Sons"
+"[4] Lebrun, J., X. Ding, J.-P. Eppe, and M. Wasacz. 1990. Cooling Coil Models to be used in Transient and/or Wet Regimes. Theoretical Analysis and Experimental Validation. Proceedings of SSB 1990. Liège:405-441."
+
+"!Disclaimer of the original: the accuracy or reliability of the information is not guaranteed or warranted in any way; the model is freely distributed and may not be sold or distributed for commercial purpose; the user is asked to cite his sources and the origin of the model."
+
+"!1. INPUTS (entered in the diagram window of the original)"
+t_a_su_coil = 30        "supply air dry bulb temperature [°C]"
+RH_su_coil = 0.5        "supply air relative humidity [-]"
+P_atm = 98000           "atmospheric pressure [Pa] (value stored by EES)"
+M_dot_a_coil = 1.8      "air mass flow rate [kg/s]"
+M_dot_r_coil = 1.7      "refrigerant mass flow rate [kg/s]"
+t_r_su_coil = 6         "refrigerant supply temperature [°C]"
+
+"!2. PARAMETERS (entered in the diagram window of the original)"
+Kstar_r_n = 106         "nominal thermal properties coefficient [(m.s)^(m-1).J/kg^m/K]"
+refrigerant$ = 'EG'     "nature of the secondary refrigerant: 'EG' or 'PG'"
+conc_r = 35             "concentration of the secondary refrigerant [%]"
+R_a_coil_n = 0.0001319  "nominal air-side thermal resistance [K/W]"
+R_r_coil_n = 0.0001199  "nominal refrigerant-side thermal resistance [K/W]"
+R_m_coil = 6.596E-06    "thermal resistance of the metal [K/W]"
+M_dot_a_coil_n = 1.803  "nominal air mass flow rate [kg/s]"
+M_dot_r_coil_n = 1.866  "nominal refrigerant mass flow rate [kg/s]"
+
+"!3. OUTPUTS (commented out in the original, listed here for reference)"
+"Q_dot_coil       cooling coil total capacity [W]"
+"Q_dot_sens_coil  cooling coil sensible capacity [W]"
+"Q_dot_lat_coil   cooling coil latent capacity [W]"
+"t_r_ex_coil      temperature of the refrigerant at the exhaust of the coil [°C]"
+"t_a_ex_coil      dry bulb temperature of the air at the exhaust of the coil [°C]"
+"t_wb_ex_coil     wet bulb temperature of the air at the exhaust of the coil [°C]"
+"M_dot_w_coil     condensate flow rate [kg/s]"
+
+"!4. EQUATIONS"
+
+"4.1. Supply status"
+t_wb_su_coil = wetbulb(AIRH2O,T=t_a_su_coil,P=P_atm,R=RH_su_coil)
+t_dp_su_coil = dewpoint(AIRH2O,T=t_a_su_coil,P=P_atm,w=W_su_coil)
+h_a_su_coil = enthalpy(AIRH2O,T=t_a_su_coil,P=P_atm,R = RH_su_coil)
+c_p_a_coil = specheat(AIRH2O,T=t_a_su_coil,P=P_atm,R=RH_su_coil)
+W_su_coil = humrat(AIRH2O,T=t_a_su_coil,P=P_atm,R=RH_su_coil)
+v_a_su_coil = volume(AIRH2O,T=t_a_su_coil,P=P_atm,R=RH_su_coil)
+
+"4.2. Definition of thermal resistances:"
+R_a_coil = R_a_coil_n*(M_dot_a_coil_n / M_dot_a_coil)^0.6  "laminar flow between flat plates"
+R_r_coil = R_r_coil_n*Kstar_r_n/Kstar_r*(M_dot_r_coil_n / M_dot_r_coil)^0.8  "turbulent flow in circular tube"
+m = 0.8   "exponent in the Dittus Boelter relationship, giving the Nusselt number as a function of Reynolds and Prandtl numbers (Incropera and DeWitt, 2002)"
+n = 0.3   "idem"
+Kstar_r = mu_r_coil^(n-m)*k_r_coil^(1-n)*c_p_r_coil^n  "variation of refrigerant side resistance with refrigerant properties"
+rho_r_coil = 1051.354719      "BrineProp 'Density' of the secondary refrigerant [kg/m^3]"
+c_p_r_coil = 3576.11699        "BrineProp 'SpecHeat' of the secondary refrigerant [J/kg-K]"
+mu_r_coil = 0.003951911085    "BrineProp 'DynVisc' of the secondary refrigerant [Pa.s]"
+k_r_coil = 0.4326901231       "BrineProp 'thermalc' of the secondary refrigerant [W/m-K]"
+
+"4.3. Dry regime description"
+
+"4.3.1. Capacity in dry regime"
+1/AU_coil_dry = R_a_coil + R_m_coil + R_r_coil
+NTU_coil_dry = AU_coil_dry / C_dot_min_coil_dry
+epsilon_coil_dry*(1 - omega_coil_dry*exp(-NTU_coil_dry*(1 - omega_coil_dry))) = (1 - exp(-NTU_coil_dry*(1 - omega_coil_dry)))
+Q_dot_coil_dry = epsilon_coil_dry*C_dot_min_coil_dry*(t_a_su_coil - t_r_su_coil)
+C_dot_min_coil_dry = min(C_dot_a_coil, C_dot_r_coil)
+omega_coil_dry = C_dot_min_coil_dry / C_dot_max_coil_dry
+C_dot_max_coil_dry = max(C_dot_a_coil, C_dot_r_coil)
+
+"4.3.2. Air side"
+C_dot_a_coil = M_dot_a_coil*c_p_a_coil
+Q_dot_coil_dry = C_dot_a_coil*(t_a_su_coil - t_a_ex_coil_dry)
+W_ex_coil_dry = W_su_coil
+t_dp_ex_coil_dry = dewpoint(AIRH2O,T=t_a_ex_coil_dry,P=P_atm,w=W_ex_coil_dry)
+(t_c_ex_coil_dry - t_r_su_coil)/(R_r_coil + R_m_coil) = (t_a_ex_coil_dry - t_r_su_coil)/(R_a_coil + R_m_coil + R_r_coil)
+DELTA_t_cond = t_dp_ex_coil_dry - t_c_ex_coil_dry  "condensation may occur only if this term is positive"
+
+"4.3.2. Refrigerant side"
+C_dot_r_coil = M_dot_r_coil*c_p_r_coil
+
+"4.4. Wet regime description"
+
+"4.4.1. Capacity in wet regime"
+R_af_coil = R_a_coil*c_p_a_coil / c_p_af_coil
+1/AU_coil_wet = R_af_coil + R_m_coil + R_r_coil
+NTU_coil_wet = AU_coil_wet / C_dot_min_coil_wet
+C_dot_max_coil_wet = max(C_dot_af_coil, C_dot_r_coil)
+C_dot_min_coil_wet = min(C_dot_af_coil, C_dot_r_coil)
+omega_coil_wet = C_dot_min_coil_wet / C_dot_max_coil_wet
+epsilon_coil_wet*(1 - omega_coil_wet*exp(-NTU_coil_wet*(1 - omega_coil_wet))) = (1 - exp(-NTU_coil_wet*(1 - omega_coil_wet)))
+Q_dot_coil_wet = epsilon_coil_wet*C_dot_min_coil_wet*(t_wb_su_coil - t_r_su_coil)
+
+"4.4.2. Air side:"
+
+"4.4.2.1. Capacity"
+Q_dot_coil_wet = M_dot_a_coil*((h_a_su_coil - h_a_ex_coil_wet) - (W_su_coil - W_ex_coil_wet)*c_w_coil*t_w_coil)
+
+"4.4.2.2. Definition of fictitious air"
+Q_dot_coil_wet = C_dot_af_coil*(t_wb_su_coil - t_wb_ex_coil_wet)
+C_dot_af_coil = M_dot_a_coil*c_p_af_coil  "according to Merckel theory and assuming that Lewis = 1"
+
+"4.4.2.3. Calculation of exhaust state"
+h_a_su_coil - h_a_ex_coil_wet = epsilon_c_coil_wet*(h_a_su_coil - h_c_coil_wet)  "fictitious isothermal contact surface:"
+W_su_coil - W_ex_coil_wet = epsilon_c_coil_wet*(W_su_coil - W_c_coil_wet)  "to calculate W_ex_coil_wet"
+epsilon_c_coil_wet = 1 - exp(-NTU_c_coil_wet)  "contact effectiveness"
+NTU_c_coil_wet = 1/(R_a_coil*C_dot_a_coil)
+h_a_ex_coil_wet = enthalpy(AIRH2O,T=t_a_ex_coil_wet,P=P_atm,R = RH_ex_coil_wet)
+W_ex_coil_wet = humrat(AIRH2O,T=t_a_ex_coil_wet,P=P_atm,R = RH_ex_coil_wet)
+t_wb_ex_coil_wet = wetbulb(AIRH2O,T=t_a_ex_coil_wet,P=P_atm,w=W_ex_coil_wet)
+h_c_coil_wet = enthalpy(AIRH2O,T=t_c_coil_wet,P=P_atm,R = 1)
+W_c_coil_wet = humrat(AIRH2O,T=t_c_coil_wet,P=P_atm,R = 1)
+M_dot_w_coil_wet = M_dot_a_coil*(W_su_coil - W_ex_coil_wet)
+
+"4.4.2.4. Condensate properties:"
+c_w_coil = 4187  "specific heat of the condensate [J/kg-K]"
+t_w_coil = t_c_coil_wet  "temperature of the condensate [°C]"
+
+"4.5. Cooling coil capacity"
+
+"4.5.1. Total cooling capacity"
+Q_dot_coil = if(Q_dot_coil_wet-Q_dot_coil_dry, Q_dot_coil_wet,Q_dot_coil_dry)
+Q_dot_sens_coil = C_dot_a_coil*(t_a_su_coil-t_a_ex_coil)
+Q_dot_lat_coil = Q_dot_coil-Q_dot_sens_coil
+
+"4.6. Global heat transfer coefficient"
+AU_coil = if(Q_dot_coil_wet-Q_dot_coil_dry,AU_coil_wet,AU_coil_dry)
+
+"4.5.2. Condensate flow rate:"
+M_dot_w_coil = if(Q_dot_coil_wet-Q_dot_coil_dry,M_dot_w_coil_wet,0)
+
+"4.6. Exhaust air state:"
+t_a_ex_coil = if(Q_dot_coil_wet-Q_dot_coil_dry,t_a_ex_coil_wet,t_a_ex_coil_dry)
+W_ex_coil = if(Q_dot_coil_wet-Q_dot_coil_dry,W_ex_coil_wet,W_ex_coil_dry)
+RH_ex_coil = relhum(AIRH2O,T=t_a_ex_coil,P=P_atm,w=W_ex_coil)
+v_a_ex_coil = volume(AIRH2O,T=t_a_ex_coil,P=P_atm,w=W_ex_coil)
+
+"4.7. Exhaust refrigerant state"
+Q_dot_coil = C_dot_r_coil*(t_r_ex_coil-t_r_su_coil)
+
+"SHR"
+SHR = Q_dot_sens_coil/Q_dot_coil

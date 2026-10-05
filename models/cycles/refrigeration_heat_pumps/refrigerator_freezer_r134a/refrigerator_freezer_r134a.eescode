@@ -29,6 +29,15 @@
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
   Source : ULiège, course "Thermodynamique appliquée" (MECA0002), repetition
            session 8, exercise 3 (EES file R08_E03_2022.EES) - see README.md
+  Decision D11: the three property calls of state 4 (x[4], s[4], v[4]) are written
+           with the (P, H) input pair instead of the (T, H) pair of the original
+           (T[4] known from the isobaric evaporator, h[4] known from the
+           isenthalpic valve), which CoolProp does not support
+           (CS-GAP-PROP-TH, not planned). State 4 lies in the saturation dome at
+           T_fridge, so the saturation pressure at the same temperature,
+           p[4] = P_sat(fluid$,T=T[4]) (previous line), identifies the same state.
+           No equation, no variable name and no input value is changed otherwise;
+           the file is still valid EES. See the README conversion log.
 =============================================================================}
 
 "!Data"
@@ -74,9 +83,9 @@ h[4] = h[3]  "isenthalpic expansion valve (first law, open system, no work and n
 T[4] = T_fridge "temperature [°C]"
 p[4] = P_sat(fluid$,T=T[4])  "pressure [Pa] (326.2 kPa in the original): isobaric evaporator, pure fluid (the pressure depends on the temperature under the saturation dome)"
 
-x[4] = quality(fluid$,H=h[4],T=T[4])  "quality [-]"
-s[4] = entropy(fluid$,H=h[4],T=T[4])  "specific entropy [J/kg-K]"
-v[4] = volume(fluid$,H=h[4],T=T[4])   "specific volume [m^3/kg]"
+x[4] = quality(fluid$,P=p[4],H=h[4])  "quality [-] (input pair P,H instead of T,H: decision D11, see the header)"
+s[4] = entropy(fluid$,P=p[4],H=h[4])  "specific entropy [J/kg-K] (input pair P,H: decision D11)"
+v[4] = volume(fluid$,P=p[4],H=h[4])    "specific volume [m^3/kg] (input pair P,H: decision D11)"
 
 "!State 5: first evaporator outlet"
 "!State 5 is set by the power ratio between the fridge compartment and the freezer:"

@@ -1,0 +1,75 @@
+{
+  "id": "CSL-0077",
+  "name": "aircooled_chiller_refsim",
+  "title": "Air-cooled water chiller, reference simulation model",
+  "summary": "Reference simulation model of an air-cooled water chiller of the ULiège model bank: a scroll compressor described in four steps (suction heating-up, isentropic compression, isochoric compression, discharge cooling-down) with all its heat transfers represented by a fictitious wall of uniform temperature, an air-cooled condenser whose fan is controlled on the condensing temperature, and a water-supplied evaporator, both heat exchangers being described by three thermal resistances in series referred to their nominal flows.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "aircooled_chiller_refsim.eescode",
+  "fluids": [
+    "R22",
+    "AirH2O"
+  ],
+  "tags": [
+    "chiller",
+    "air-cooled condenser",
+    "scroll compressor",
+    "compressor heat transfer",
+    "fictitious wall",
+    "isochoric compression",
+    "fan control",
+    "condensing temperature control",
+    "part load",
+    "cascade of compressors",
+    "thermal resistances",
+    "reference model"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "min/max"
+  ],
+  "stats": {
+    "n_equations": 133,
+    "largest_block": 62
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/Heat_and_Cool_Production_Systems/Cool_Production_by_vapor_Compression/AirCooledChiller_RefSim_Model_VTJL080104.zip!/AirCooledChiller_RefSim_EES_Model_VTJL080104.EES",
+    "candidate_id": "TM-0488",
+    "authors": [
+      "Vlad Teodorese (ULiège Thermodynamics Laboratory)",
+      "Jean Lebrun (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.793",
+    "language": "en",
+    "course": "ULiège model bank (Laborelec toolkit lineage), air-cooled water chiller reference simulation model, 4 January 2008; IEA A43 PR2 A15 reference model (printed documentation of the same model: 'IEA A43 PR2 A15 Reference air-water chiller EES model VTJL PhAJL080108.pdf' in the same folder)"
+  },
+  "verification": {
+    "reference": "Solution printed by EES in the equations window of the source file ('Example of solution: Variables in Main', 117 variables); the Variable Information records of the file are cleared (-9999: the model was last prepared, not run), so no stored solution is available",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.00616,
+    "notes": "116 common variables, 11 differ above rtol=0.001, maximum relative difference 6.16e-03 (C_dot_su_cp: 89.63 against 89.0779 W/K). The 11 differences all belong to the compressor heat-transfer block (c_p_su_cp 5.97e-03, NTU_su_cp 6.05e-03, Q_dot_su_cp 3.28e-03, t_su1_cp 2.57e-03, epsilon_su_cp 2.29e-03, Q_dot_ex_cp 2.62e-03, w_in2_cp 2.60e-03, NTU_ex_cp 1.12e-03, Q_dot_amb_cp 1.16e-03) or to the evaporating temperature (1.02e-03): they follow from the specific heat of R22 at the suction, 0.6 % apart between EES 7.793 and CoolProp. All the results of the cycle (powers, flows, COP, water and refrigerant temperatures, conductances, effectivenesses) agree to better than 1e-3, the printed EES values being rounded to 4 significant digits. No variable excluded from the comparison; the 17 variables only in the CoolSolve solution are the state points of the diagrams added for the GUI and the string variable fluid$."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0076",
+    "CSL-0074",
+    "CSL-0001"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added",
+      "by": "opencode worker (t74) for S. Quoilin"
+    }
+  ]
+}

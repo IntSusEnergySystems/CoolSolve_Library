@@ -1,0 +1,74 @@
+{
+  "id": "CSL-0075",
+  "name": "iso5167_orifice_plate_flow_rate",
+  "title": "ISO 5167 orifice plate (diaphragm) flow-rate calculation",
+  "summary": "ISO 5167-1980 flow-rate procedure for a diaphragm (orifice plate with corner tappings): fluid properties at the upstream state (humid air supported), Stolz discharge coefficient and expansibility factor; the default operating point is written inversely and solves the bore diameter from an imposed mass flow rate.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "iso5167_orifice_plate_flow_rate.eescode",
+  "fluids": [
+    "AirH2O"
+  ],
+  "tags": [
+    "orifice plate",
+    "diaphragm",
+    "ISO 5167",
+    "flow metering",
+    "flow measurement",
+    "instrumentation",
+    "corner tappings",
+    "Stolz discharge coefficient",
+    "humid air"
+  ],
+  "language_features": [
+    "string variables",
+    "procedure calls",
+    "MODULE flattened",
+    "5-argument if",
+    "isidealgas",
+    "humid-air properties"
+  ],
+  "stats": {
+    "n_equations": 34,
+    "largest_block": 6
+  },
+  "origin": {
+    "type": "industry",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/EES_Functions/iso5167/ISO5167 flow rate calculation - diaphragm.EES",
+    "candidate_id": "TM-0255",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory model bank, Laborelec toolkit lineage)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.793",
+    "language": "fr",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file: only the inputs and the solved bore diameter Di_dph = 0.01702816341 are consistent with the current operating point (the other stored values are stale, see README); compared with the runnable variant",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 1.8e-4,
+    "notes": "Variant iso5167_orifice_plate_flow_rate_coolsolve vs EES stored Di_dph: 0.01702515 vs 0.01702816341 (rel. diff 1.8e-4); compare_solution.py: 7 common variables, 0 differ (rtol=0.001). Independent psychrometric hand check of the humid-air state within 0.1 %."
+  },
+  "missing_features": [
+    "CS-GAP-IF5",
+    "CS-GAP-ISIDEALGAS",
+    "CS-BUG-STRING-CASE",
+    "CS-BUG-HUMIDAIR-PROPS"
+  ],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (card C-80, T-IMPORT; runnable variant verified, native file blocked)",
+      "by": "worker for S. Quoilin"
+    }
+  ]
+}

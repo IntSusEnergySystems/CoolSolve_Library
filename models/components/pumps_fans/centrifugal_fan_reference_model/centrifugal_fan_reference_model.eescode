@@ -1,0 +1,97 @@
+{=============================================================================
+  Centrifugal fan reference model (dimensionless factors)
+  CoolSolve Library model CSL-0071
+ -----------------------------------------------------------------------------
+  Reference simulation of a centrifugal fan transporting humid air. The fan is
+  described by its geometry (impeller diameter, exhaust area), its rotation
+  speed and the operating point imposed at the fan inlet (pressure,
+  temperature, relative humidity, mass flow rate). The model returns the
+  dimensionless factors of the fan and the operating point of the outlet:
+
+    - flow factor      phi   = V_dot/(A*U)
+    - pressure factor  psi   = DELTAP_total/(U^2/(2*v))
+    - isentropic effectiveness epsilon_s = W_dot_s/W_dot_shaft
+    - power factor     lambda = phi*psi/epsilon_s
+
+  The flow, pressure and power factors are fitted by two cubic polynomials in
+  the pressure factor psi (alpha_i and beta_i), as in the original model.
+
+  Air properties (specific volume v and specific heat c_p of the humid air)
+  are taken from CoolProp's humid-air model at the fan supply state.
+
+  Inputs : P_su, T_su, RH_su, rpm, M_dot (fan supply and rotation speed)
+           A_ex, D, alpha_0..alpha_3, beta_0..beta_3 (fan data and fits)
+  Outputs: V_dot_mh, phi, psi, DELTAP_stat, DELTAP_total, C_ex, epsilon_s,
+           W_dot_shaft, W_dot_s, C_dot, lambda
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège Thermodynamics Laboratory, model data bank, "FAN REFERENCE
+           MODEL" (2008-03-18), V. Teodorese, A. Rodriguez, reviewed by
+           J. Lebrun; reference: ASHRAE (2004) HVAC Systems and Equipment
+           Handbook - see README.md
+=============================================================================}
+
+"!Fan supply (input air state)"
+P_su = 101325          "supply air pressure [Pa]"
+T_su = 80              "supply air temperature [°C]"
+RH_su = 0.5            "supply air relative humidity [-]"
+M_dot = 2.7            "air mass flow rate [kg/s]"
+rpm = 4500             "fan rotation speed [min^-1]"
+
+"!Fan data (geometry)"
+D = 0.323              "impeller diameter [m]"
+A_ex = 0.161           "average exhaust area [m^2]"
+
+"!Coefficients of the flow-pressure characteristic fit, as in the original"
+alpha_0 = 0.7733       "Phi vs Psi polynomial coefficients [-]"
+alpha_1 = -0.389
+alpha_2 = 0.4471
+alpha_3 = -0.6178
+
+"!Coefficients of the power characteristic fit, as in the original"
+beta_0 = 0.408         "Lamda vs Psi polynomial coefficients [-]"
+beta_1 = 0.357
+beta_2 = -0.07773
+beta_3 = -0.3671
+
+"!Air properties at the fan supply"
+v = VOLUME(AirH2O, T=T_su, P=P_su, R=RH_su)  "specific volume of the humid air [m^3/kg dry air]"
+c_p = SPECHEAT(AirH2O, T=T_su, P=P_su, R=RH_su)  "specific heat of the humid air [J/(kg dry air K)]"
+
+"!Flow factor and reference area"
+phi = V_dot/(A*U)      "flow factor [-]"
+A = pi*D^2/4           "reference area of the flow factor [-]"
+
+"!Peripheral speed and rotation speed"
+U = pi*D*N             "peripheral speed [m/s]"
+N = rpm/60             "rotation speed [s^-1]"
+
+"!Pressure factor"
+psi = DELTAP_total/P_dynam_periph   "pressure factor [-]"
+DELTAP_total = DELTAP_stat + P_dynam_ex  "total pressure difference [Pa]"
+
+"!Exhaust dynamic pressure"
+P_dynam_ex = C_ex^2/(2*v)   "exhaust dynamic pressure [Pa]"
+C_ex = V_dot/A_ex            "exhaust speed [m/s]"
+
+"!Peripheral dynamic pressure"
+P_dynam_periph = U^2/(2*v)  "peripheral dynamic pressure [Pa]"
+
+"!Mass flow rate and volume flow rate"
+M_dot = V_dot/v             "air mass flow rate [kg/s]"
+V_dot_mh = V_dot*3600       "volume flow rate [m^3/h]"
+
+"!Fan isentropic power"
+W_dot_s = V_dot*DELTAP_total  "fan isentropic power [W]"
+
+"!Isentropic effectiveness"
+epsilon_s = W_dot_s/W_dot_shaft  "isentropic effectiveness [-]"
+
+"!Power factor"
+lambda = (phi*psi)/epsilon_s     "power factor [-]"
+
+"!Thermal capacity flow rate"
+C_dot = M_dot*c_p          "thermal capacity flow rate [W/K]"
+
+"!Flow-pressure and power characteristics (polynomial fits in psi, as in the original)"
+phi = alpha_0 + alpha_1*psi + alpha_2*psi^2 + alpha_3*psi^3
+lambda = beta_0 + beta_1*psi + beta_2*psi^2 + beta_3*psi^3

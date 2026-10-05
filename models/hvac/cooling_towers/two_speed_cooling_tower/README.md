@@ -173,6 +173,11 @@ Sources (not copied into the library):
   of water at 35 °C, 60 kg/s of air at 25 °C and 70 % RH), without the fan
   power; it is not imported separately.
 
+- `CSL-0076` *cooling_tower_direct_contact_refsim*: another cooling tower of
+  the library, from the ULiège model bank: a direct-contact tower whose heat
+  transfer coefficient, air-side pressure drop and fan characteristic are
+  referred to the nominal conditions (both flow rates and the fan speed act on
+  them).
 - `CSL-0064` *psychrometric_mixer_condensation*: adiabatic mixing of room
   and outdoor air with condensation in the mixer (same humid-air property
   offsets).

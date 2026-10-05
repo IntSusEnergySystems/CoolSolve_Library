@@ -1,0 +1,288 @@
+{=============================================================================
+  Centrifugal brine pump reference simulation model (RefSim)
+  CoolSolve Library model CSL-0072
+ -----------------------------------------------------------------------------
+  Reference simulation model of a single-stage centrifugal pump conveying a
+  brine (water/antifreeze mixture) through a hydraulic network. The pump is
+  described by dimensionless characteristics: cubic polynomials in the flow
+  factor phi give the pressure factor psi and the power factor Lambda; the
+  isentropic (hydraulic) efficiency follows as phi*psi/Lambda. The brine
+  density and specific heat come from the BrineProp library procedures
+  (cubic polynomials in temperature and antifreeze concentration, Brine1/
+  Brine2 coefficient tables), so the temperature rise across the pump is
+  computed from the shaft power.
+
+  Inputs : rpm_pump, V_dot_pump_m3h, P_su_pump, T_su_pump, X_brine, brine$
+  Outputs: phi_pump, psi_pump, Lambda_pump, epsilon_s_pump, M_dot_pump,
+           DELTAP_pump, W_dot_shaft_pump, p_ex_pump, t_ex_pump
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège model bank "Model data bank", 2008-02-18, author
+           Vincent Lemort (with V. Teodorese, J. Lebrun) - see README.md
+
+  Status: BLOCKED in CoolSolve (native file kept in valid EES): the
+  BRINEPROP procedure copied below uses the EES "ELSE IF" chains closed by
+  repeated "ENDIF" keywords (CS-GAP-ELSEIF-CHAIN), the intrinsic string
+  function Uppercase$ (CS-GAP-UPPERCASE) and an expression as CALL output
+  argument (CS-GAP-CALL-EXPR-OUT). A faithful runnable variant is shipped as
+  centrifugal_brine_pump_refsim_coolsolve.eescode; each change is logged in
+  the README.
+=============================================================================}
+
+{--- Library procedure copied from the BrineProp library (Brineprop.lib of
+     the ULiège model bank, inventory candidate TM-0479, tables Brine1/
+     Brine2): EES loads it implicitly from the USERLIB folder. Copied
+     unchanged except for the removal of the dead code after END (this is
+     the standard workaround of CS-GAP-INCLUDE / CS-FEAT-IMPORT). ---}
+
+Procedure BRINEPROP(Pr$,Fl$,Conc,Temp:output)
+
+IF (Fl$='EG') AND (Conc<0) THEN
+	Call ERROR('Concentration must be equal to or larger than 0.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='EG') AND (Conc>56.1) THEN
+	Call ERROR('Concentration must be equal to or smaller than 56.1%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='PG') AND (Conc<15.2) THEN
+	Call ERROR('Concentration must be equal to or larger than 15.2%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='PG') AND (Conc>57.0) THEN
+	Call ERROR('Concentration must be equal to or smaller than 57.0%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='EA') AND (Conc<11.1) THEN
+	Call ERROR('Concentration must be equal to or larger than 11.1%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='EA') AND (Conc>60.1) THEN
+	Call ERROR('Concentration must be equal or smaller than 60.1%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='MA') AND (Conc<7.8) THEN
+	Call ERROR('Concentration must be equal to or larger than 7.8%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='MA') AND (Conc>44.3) THEN
+	Call ERROR('Concentration must be equal to or smaller than 44.3%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='GL') AND (Conc<19.5) THEN
+	Call ERROR('Concentration must be equal to or larger than 19.5%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='GL') AND (Conc>63.0) THEN
+	Call ERROR('Concentration must be equal to or smaller than 63.0%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='NH3') AND (Conc<7.8) THEN
+	Call ERROR('Concentration must be equal to or larger than 7.8%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='NH3') AND (Conc>23.6) THEN
+	Call ERROR('Concentration must be equal to or smaller than 23.6%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='K2CO3') AND (Conc<13.3) THEN
+	Call ERROR('Concentration must be equal to or larger than 13.3%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='K2CO3') AND (Conc>39.0) THEN
+	Call ERROR('Concentration must be equal to or smaller than 39.0%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='CaCl2') AND (Conc<9.0) THEN
+	Call ERROR('Concentration must be equal to or larger than 9.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='CaCl2') AND (Conc>29.4) THEN
+	Call ERROR('Concentration must be equal to or smaller than 29.4%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='MgCl2') AND (Conc<7.2) THEN
+	Call ERROR('Concentration must be equal to or larger than 7.2%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='MgCl2') AND (Conc>20.5) THEN
+	Call ERROR('Concentration must be equal to or smaller than 20.5%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='NaCl') AND (Conc<7.9) THEN
+	Call ERROR('Concentration must be equal to or larger than 7.9%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='NaCl') AND (Conc>22.6) THEN
+	Call ERROR('Concentration must be equal to or smaller than 22.6%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='KAc') AND (Conc<11.0) THEN
+	Call ERROR('Concentration must be equal to or larger than 11.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='KAc') AND (Conc>41.0) THEN
+	Call ERROR('Concentration must be equal to or smaller than 41.0%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF
+
+"Sets property parameter"
+Pro=0
+Freeze=1;Density=2;SpecHeat=3;ThermalC=4;DynVisc=5
+U$[Freeze]='C'; U$[Density]='kg/m^3'; U$[SpecHeat]='kJ/kg-K'; U$[ThermalC]='W/m-K'; U$[DynVisc]='milliPa-s'
+Pr$=Uppercase$(Pr$)
+IF (Pr$='FREEZE') THEN Pro:=Freeze ELSE
+	IF (Pr$='DENSITY') THEN Pro:=Density ELSE
+		IF (Pr$='SPECHEAT') THEN Pro:=SpecHeat ELSE
+			IF (Pr$='THERMALC') THEN Pro:=ThermalC ELSE
+				IF (Pr$='DYNVISC') THEN Pro:=DynVisc
+ENDIF;ENDIF;ENDIF;ENDIF;ENDIF
+
+UO$=''
+{IF (Pro=Freeze) THEN UO$='C' ELSE
+	IF (Pro=Density) THEN UO$='kg/m^3' ELSE
+		IF (Pro=SpecHeat) THEN UO$='kJ/kg-K' ELSE
+			IF (Pro=ThermalC) THEN UO$='W/m-K' ELSE
+				IF (Pro=DynVisc) THEN UO$='milliPa-s'
+ENDIF;ENDIF;ENDIF;ENDIF;ENDIF}
+
+
+if (Pro=0) then Call ERROR('Unrecognized property indicator:  note that the first parameter must be Freeze, Density, SpecHeat, ThermalC or DynVisc and it must be surrounded with single quotes.' )
+Pr:=Pro
+UO$=U$[Pro]
+
+"Sets fluid parameter"
+EG=1;PG=2;EA=3;MA=4;GL=5;NH3=6;K2CO3=7;CaCl2=8;MgCl2=9;NaCl=10;KAc=11
+IF (Fl$='EG') THEN Flu:=EG ELSE
+	IF (Fl$='PG') THEN Flu:=PG ELSE
+		IF (Fl$='EA') THEN Flu:=EA ELSE
+			IF (Fl$='MA') THEN Flu:=MA ELSE
+				IF (Fl$='GL') THEN Flu:=GL ELSE
+					IF (Fl$='NH3') THEN Flu:=NH3 ELSE
+						IF (Fl$='K2CO3') THEN Flu:=K2CO3 ELSE
+							 IF (Fl$='CaCl2') THEN Flu:=CaCl2 ELSE
+								IF (Fl$='MgCl2') THEN Flu:=MgCl2 ELSE
+									IF (Fl$='NaCl') THEN Flu:=NaCl ELSE
+										IF (Fl$='KAc') THEN Flu:=KAc
+ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF
+Fl:=Flu
+
+"Coefficients"
+k=0
+repeat
+k=k+1
+Row[k]=k+(Fl-1)*18
+c[k]=lookup('Brine1',Row[k],Pr)
+until (k>=18)
+
+"Mean values"
+xm=lookup('Brine2',Fl,1)
+ym=lookup('Brine2',Fl,2)
+x=Conc-xm
+y=Temp-ym
+
+"Equation, f(temp,conc)"
+Funkt=c[1]+(c[2]*y)+(c[3]*y^2)+(c[4]*y^3)+(c[5]*x)+(c[6]*x*y)+(c[7]*x*y^2)+(c[8]*x*y^3)+(c[9]*x^2)+(c[10]*x^2*y)+(c[11]*x^2*y^2)+(c[12]*x^2*y^3)+(c[13]*x^3)+(c[14]*x^3*y)+(c[15]*x^3*y^2)+(c[16]*x^4)+(c[17]*x^4*y)+(c[18]*x^5)
+
+"Conditions
+Mode=mu   =>  output = exp(f)
+Mode<>mu =>  output = f
+"
+IF (Pr=5) THEN
+output=exp(Funkt)
+ELSE
+IF (Pr=3) THEN
+output=Funkt/1000
+ELSE
+output=Funkt
+ENDIF;ENDIF;ENDIF
+END
+
+{--- End of the library procedure copied from Brineprop.lib (TM-0479) ---}
+
+"!Title: CENTRIFUGAL PUMP SIMULATION MODEL"
+
+"Date : 2008 February 18"
+"Authors: Vincent Lemort"
+"University of Liège
+Faculty of Applied Sciences
+thermodynamics Laboratory
+Campus of Sart-tilman, B49 (P33)
+B-4000 LIEGE (BELGIUM)"
+"Contact: vincent.lemort@ulg.ac.be"
+"website : www.labothap.ulg.ac.be"
+"!Short Description :"
+"this model describes a centrifugal pump"
+
+"!Nomenclature :"
+"A						Cross section area, m^2"
+"D						Impeller diameter, m"
+"h						Specific enthalpy, J/kg"
+"M_dot				Mass flow rate	, kg/s"
+"N						Rotational speed, Hz"
+"P						Pressure, Pa"
+"rpm					Rotational speed, rpm"
+"t						Temperature, C"
+"U						Peripheral speed, m"
+"v						Specific volume, m^3/kg"
+"V_dot				Volume flow rate, m^3/s"
+"W_dot				Power (electrical, mechanical), W"
+"X_brine				Percentage of antifreeze in the brine, %"
+
+"Greek symbols"
+"alpha			Coefficient,-"
+"beta				Coefficient,-"
+"DELTAP		Pressure increase, Pa"
+"epsilon			Efficiency,-"
+"Lamda			Power factor,-"
+"phi				Flow factor,-"
+"psi				Pressure factor,-"
+
+"Subscripts"
+"dynam			Dynamic"
+"m3h				Cubic meters per hour"
+"s					Isentropic"
+"su				Supply"
+
+"!References :"
+
+"!Disclaimer"
+"the accuracy or reliability of information presented in this model is not guaranteed or warranted in any way. Every use of this model, for commercial purpose or not, incurs liability of the user only. this model is freely distributed and may not be sold or distributed for commercial purpose. the user is asked to cite his sources and the origin of this model."
+"!Help us improving this model : any feedback comment is very welcome"
+
+
+"!*************************************************** MODEL ***************************************************"
+
+"!1. INPUTS (set in the diagram window of the original; values of the stored reference run)"
+rpm_pump=1300 "[1/min]"
+V_dot_pump_m3h=1 "[m^3/h]"
+P_su_pump=100000 "[Pa]"
+T_su_pump=25 "[C]"
+X_brine=25 [%] "50 in the original equations; the stored reference run used 25 %"
+brine$='EG'  "ethylene glycol; not in the extracted equations - identified from the stored solution (see README)"
+
+"!2. PARAMETERS (panel of the original; values from the stored EES solution)"
+D_pump=0.1333 "[m] (impeller diameter)"
+alpha_0_pump=1.18 "[-]"
+alpha_1_pump=-1.466 "[-]"
+alpha_2_pump=-614 "[-]"
+alpha_3_pump=-6002 "[-]"
+beta_0_pump=0.01585 "[-]"
+beta_1_pump=0.2436 "[-]"
+beta_2_pump=69.42 "[-]"
+beta_3_pump=-2098 "[-]"
+
+"!3. OUTPUTS"
+
+"phi_pump, psi_pump, lambda_pump, epsilon_s_pump, M_dot_pump, DELTAp_pump,  W_dot_shaft_pump, p_ex_pump, t_ex_pump"
+
+
+"!4. EQUATIONS"
+"!4.1 Flow factor calculation:"
+phi_pump=V_dot_pump/(A_pump*U_pump)
+	"with"
+V_dot_pump=V_dot_pump_m3h/3600 "[m^3/s]"
+A_pump=pi*D_pump^2/4 "[m^2] (reference area)"
+U_pump=pi*D_pump*N_pump "[m/s] (peripheral speed)"
+N_pump=rpm_pump/60 "[1/s] (rotation speed)"
+"!4.2. Pressure factor calculation:"
+psi_pump=alpha_0_pump + alpha_1_pump*phi_pump +alpha_2_pump*phi_pump^2 + alpha_3_pump*phi_pump^3
+DELTAP_pump=psi_pump*P_dynam_periph_pump "[Pa] (Pressure increase)"
+	"with"
+P_dynam_periph_pump=U_pump^2/(2*v_pump) "[Pa] (peripheral dynamic pressure)"
+CALL BRINEPROP('Density',brine$,X_brine,t_su_pump:rho_pump)
+v_pump=1/rho_pump "[m^3/kg]"
+
+"!4.3. Power factor calculation:"
+Lambda_pump=beta_0_pump + beta_1_pump*phi_pump + beta_2_pump*phi_pump^2 + beta_3_pump*phi_pump^3
+
+"!4.4. Shaft power calculation:"
+W_dot_shaft_pump=W_dot_s_pump/epsilon_s_pump "[W]"
+	"with"
+W_dot_s_pump=V_dot_pump*DELTAP_pump "[W] (isentropic power)"
+epsilon_s_pump=phi_pump*psi_pump/lambda_pump
+
+"!4.5. Brine state at pump exhaust (section titled water in the original):"
+	"!4.5.1. Pressure:"
+p_ex_pump=p_su_pump+ DELTAP_pump "[Pa]"
+	"!4.5.2. Temperature:"
+CALL BRINEPROP('Specheat',brine$,X_brine,t_su_pump:c_p_pump/1000)
+c_p_pump*(t_ex_pump-t_su_pump)=W_dot_shaft_pump/M_dot_pump
+M_dot_pump=V_dot_pump/v_pump "[kg/s]"

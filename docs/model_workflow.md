@@ -316,6 +316,10 @@ For LaboThapPy, TESPy and other Python/Modelica/paper models (see
 
 ---
 
+**Correlations taken from a library** (e.g. `ht`, LaboThapPy, ThermoCycle): cite both the original
+paper/book of the correlation and the library (version, module, function) from which the equations were taken,
+in the function's comment block, the README and `model.json`.
+
 ## 6. CoolSolve gaps, blocked models and re-checks
 
 **Registering a gap or bug (`T-GAP`).** Read the CoolSolve register

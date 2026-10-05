@@ -183,3 +183,6 @@ model and also stays `todo`.
 - `CSL-0064` *psychrometric_mixer_condensation*: adiabatic mixing of room
   and outdoor air with condensation in the mixer (same humid-air property
   offsets).
+- `CSL-0073` *cooling_coil_with_control_simplified*: the same
+  contact-factor closure in a simplified coil model with a control law on the
+  exhaust air temperature (ULiège model bank).

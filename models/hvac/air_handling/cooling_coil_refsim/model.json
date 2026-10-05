@@ -1,0 +1,86 @@
+{
+  "id": "CSL-0074",
+  "name": "cooling_coil_refsim",
+  "title": "Cooling coil RefSim model, dry and wet regimes (one zone)",
+  "summary": "Reference simulation model of a cooling and dehumidifying coil from the ULiège model bank: a one-zone counter-flow exchanger in which the fully dry and the fully wet regimes are described simultaneously and the regime of largest capacity is kept (Braun hypothesis); AU is the series of the air-side, metal and refrigerant-side resistances, the wet regime uses a fictitious perfect gas at the wet-bulb temperature and a fictitious semi-isothermal contact surface, and the secondary refrigerant properties come from the BrineProp library.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "cooling_coil_refsim.eescode",
+  "fluids": [
+    "AirH2O"
+  ],
+  "tags": [
+    "cooling coil",
+    "air handling",
+    "dehumidification",
+    "dry regime",
+    "wet regime",
+    "wet bulb",
+    "contact temperature",
+    "Braun hypothesis",
+    "fictitious perfect gas",
+    "secondary refrigerant",
+    "brine",
+    "ethylene glycol",
+    "reference model"
+  ],
+  "language_features": [
+    "IF with 5 arguments",
+    "IF$ (string conditional)",
+    "library procedure call (Brineprop)",
+    "min/max",
+    "humid-air properties"
+  ],
+  "stats": {
+    "n_equations": 77,
+    "largest_block": 19
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/AHU_Components/Cooling_Coil/COOLINGCOIL_REFSIM_MODEL_VL080318.zip!/CoolingCoil_RefSim_EES_Model_VL080318.EES",
+    "candidate_id": "TM-0471",
+    "authors": [
+      "Vincent Lemort (ULiège Thermodynamics Laboratory)",
+      "Jean Lebrun (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en",
+    "course": "ULiège model bank (Laborelec toolkit lineage), cooling coil reference simulation model, 2008-01-16; published as Lemort, Cuevas, Lebrun, Teodorese, ASHRAE Transactions 114(1), 2008"
+  },
+  "verification": {
+    "reference": "EES stored solution in the source file (87 decoded variables) against the runnable variant cooling_coil_refsim_coolsolve.eescode; the native file cannot be solved (CS-GAP-NAME-PIPE, CS-GAP-INCLUDE, CS-GAP-IF5, CS-GAP-IFSTR)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.781,
+    "notes": "74 common variables, 21 differ above rtol=0.001, maximum relative difference 7.81e-01 (DELTA_t_cond, 10.107 K against 2.218 K). Cause: the stored EES value of t_dp_ex_coil_dry (4.28e-01) is stale and inconsistent with the equation W_ex_coil_dry = W_su_coil of the file itself (it equals t_a_ex_coil_dry exactly, while the dew point of W_su_coil = 0.0137708 kg/kg at 98000 Pa is 18.4 °C, the value stored for the identical supply call t_dp_su_coil = 18.442 °C); DELTA_t_cond is its only user. The 19 remaining deviations (1.2e-03 to 4.8e-03) come from the EES and CoolProp humid-air formulations (W_su_coil 4.64e-03, h_a_su_coil 2.14e-03, W_c_coil_wet and W_ex_coil 4.79e-03), as in the other humid-air models of the library (CSL-0070 4.4e-03, CSL-0016 5.1e-03). The algebraic results are reproduced to 7.9e-04 or better (resistances exact, epsilon_c_coil_wet 9.4e-06, RH_ex_coil 6.8e-06, t_a_ex_coil_dry 1.0e-04). No variable excluded; three variables only the variant has (the renamed Kstar_r, Kstar_r_n and the string input refrigerant$), one decoded EES variable (LAT) is not a variable of the model."
+  },
+  "missing_features": [
+    "CS-GAP-NAME-PIPE",
+    "CS-GAP-INCLUDE",
+    "CS-GAP-IF5",
+    "CS-GAP-IFSTR"
+  ],
+  "related": [
+    "CSL-0017",
+    "CSL-0073",
+    "CSL-0062",
+    "CSL-0070",
+    "CSL-0076",
+    "CSL-0077",
+    "CSL-0079"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added",
+      "by": "opencode worker (t71) for S. Quoilin"
+    }
+  ]
+}

@@ -218,3 +218,11 @@ are different systems and stay `todo` for their own cards.
 - `CSL-0062` *cooling_coil_condensate_ratio*: exam revision exercise on a
   cooling coil treated with global first-law balances (two methods, with and
   without the condensate term) instead of the coil-resistance detail.
+- `CSL-0073` *cooling_coil_with_control_simplified*: the same cooling coil of
+  the ULiège model bank at the simplified level of detail (contact
+  temperature driven by a control law on the exhaust air temperature, no
+  refrigerant side).
+- `CSL-0074` *cooling_coil_refsim*: the same cooling coil of the ULiège model
+  bank at the reference-simulation level of detail (one zone, dry and wet
+  regimes described simultaneously, secondary refrigerant side with the
+  BrineProp correlations).

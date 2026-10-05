@@ -128,6 +128,7 @@ and procedure defined in the library (used to find reusable building blocks).
 | CoolSolve examples | 47 models of the CoolSolve test suite (they stay in CoolSolve and are classified here) — MIT | [sources/coolsolve_examples](sources/coolsolve_examples/) |
 | [LaboThapPy](https://github.com/PyLaboThap/LaboThapPy) | 74 candidates: Python components, correlations and cycles of the ULiège/UCLouvain/UMONS thermodynamics labs — Apache-2.0 | [sources/labothappy](sources/labothappy/) |
 | [TESPy](https://github.com/oemof/tespy) | 52 candidates: component equations, tutorials and validated example plants (CGAM, SEGS, sCO2…) — MIT | [sources/tespy](sources/tespy/) |
+| [ThermoCycle](https://github.com/thermocycle/Thermocycle-library) | Modelica library of the ULiège Thermodynamics Laboratory (665 files, mostly dynamic): 7 steady-state candidates kept — solar collector receiver and loss correlations, empirical expander/pump maps, flow-boiling and in-cylinder heat-transfer correlations — MIT | [sources/thermocycle](sources/thermocycle/) |
 
 Source files are not copied into the library: each model references its
 source by path, URL or library name, and credits the authors of the original

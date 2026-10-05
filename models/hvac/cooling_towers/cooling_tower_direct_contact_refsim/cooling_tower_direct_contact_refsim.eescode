@@ -1,0 +1,168 @@
+{=============================================================================
+  Direct-contact cooling tower (reference simulation model)
+  CoolSolve Library model CSL-0076
+ -----------------------------------------------------------------------------
+  The cooling tower is described as a counter-flow heat exchanger between the
+  water and the air. The air leaving the tower is saturated, and the air side is
+  modelled with a fictitious fluid whose enthalpy is defined by the wet bulb
+  temperature (the same theory as the wet cooling coil). The influence of the
+  water and air flow rates on the dry heat transfer coefficient is accounted
+  for by a power law referred to the nominal conditions, the air-side pressure
+  drop is computed from the air velocity in the free area (the part of the
+  total area that is not occupied by the falling water) and the fan over-
+  pressure is proportional to the square of the fan speed. The model is
+  characterised by its heat transfer coefficient, air-side pressure drop, water
+  fall speed and fan efficiency in nominal conditions.
+
+  Inputs : M_dot_w_ct, t_w_su_ct, t_a_su_ct, RH_su_ct, P_atm, rpm_FAN_ct
+           (water flow rate and water and air supply conditions, fan speed)
+  Outputs: t_w_ex_ct, approach, range, Q_dot_ct, W_dot_FAN_ct,
+           M_dot_w_ct_consumed
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège model bank (Laborelec toolkit lineage), direct contact
+           cooling tower reference simulation model, 4 January 2008,
+           C. Da Silva and J. Lebrun - see README.md
+=============================================================================}
+
+"!Nomenclature (as in the original)"
+"approach              difference between the outlet water temperature and the supply wet bulb temperature [K]"
+"AU                   global heat transfer coefficient [W/K]"
+"A_a                  air side free area [m^2]"
+"A_w                  water side free area [m^2]"
+"C_a                  air velocity in the air side free area [m/s]"
+"C_dot                capacity flow rate [W/K]"
+"C_w                  water fall speed [m/s]"
+"c_p                  specific heat [J/kg-K]"
+"c_p_af               specific heat of the fictitious fluid [J/kg-K]"
+"c_w                  specific heat of the water [J/kg-K]"
+"DELTAp               air side pressure drop [Pa]"
+"epsilon_f            heat exchanger effectiveness [-]"
+"eta_ct               efficiency of the water consumption calculation [-]"
+"eta_FAN              fan efficiency [-]"
+"h                    specific enthalpy [J/kg]"
+"M_dot                mass flow rate [kg/s]"
+"m_ct, n_ct           exponents of the dry heat transfer coefficient law [-]"
+"NTU_f                number of transfer units [-]"
+"P_atm                atmospheric pressure [Pa]"
+"Q_dot                thermal power [W]"
+"range                difference between the inlet and outlet water temperatures [K]"
+"RH_su                relative humidity [-]"
+"rpm_FAN              fan speed [min^-1]"
+"t                    temperature [°C]"
+"t_wb                 wet bulb temperature [°C]"
+"v                    specific volume [m^3/kg]"
+"W                    specific humidity [kg water/kg dry air]"
+"omega_f              capacity flow rate ratio [-]"
+
+"!Disclaimer of the original: the accuracy or reliability of the information is not
+! guaranteed or warranted in any way; the model is freely distributed and may not
+! be sold; the user is asked to cite his sources and the origin of this model."
+
+"!1. INPUTS (entered in the control panel of the original)"
+M_dot_w_ct = 13        "water mass flow rate [kg/s]"
+t_w_su_ct = 35         "water supply temperature [°C]"
+t_a_su_ct = 25.13      "air supply dry bulb temperature [°C]"
+RH_su_ct = 0.5         "air supply relative humidity [-]"
+P_atm = 101325         "atmospheric pressure [Pa]"
+rpm_FAN_ct = 2000      "fan speed [min^-1]"
+
+"!2. PARAMETERS (entered in the control panel of the original)"
+AU_dry_n_ct = 10000    "nominal dry heat transfer coefficient [W/K]"
+C_w_ct = 0.5           "supposed to be constant water fall speed [m/s]"
+DELTAp_n_ct = 400      "nominal air side pressure drop [Pa]"
+eta_ct = 0.95          "efficiency of the water consumption calculation [-]"
+eta_FAN_ct = 0.65      "fan efficiency [-]"
+m_ct = 0.1             "exponent of the water flow rate in the AU law [-]"
+M_dot_a_n_ct = 8.5     "nominal air mass flow rate [kg/s]"
+M_dot_w_n_ct = 12      "nominal water mass flow rate [kg/s]"
+n_ct = 0.6             "exponent of the air flow rate in the AU law [-]"
+rpm_FAN_n_ct = 2000    "nominal fan speed [min^-1]"
+
+"!3. OUTPUTS (commented out in the original, listed here for reference)"
+"t_w_ex_ct             water temperature at the exhaust of the tower [°C]"
+"Q_dot_ct              cooling power [W]"
+"W_dot_FAN_ct          electrical power of the fan [W]"
+"range, approach       reference variables used by practitioners [K]"
+"M_dot_w_ct_consumed   water consumption [kg/s]"
+
+"!4. CONSTANTS"
+c_w = 4187             "specific heat of the water [J/kg-K]"
+v_w = 0.001            "specific volume of the water [m^3/kg]"
+v_a_n_ct = 0.83        "nominal air specific volume [m^3/kg]"
+
+"!5. EQUATIONS"
+
+"5.1. Supply status of the air"
+h_a_su_ct = enthalpy(AIRH2O,T=t_a_su_ct,P=P_atm,R=RH_su_ct)   "supply air specific enthalpy [J/kg]"
+t_wb_su_ct = wetbulb(AIRH2O,T=t_a_su_ct,P=P_atm,R=RH_su_ct)   "supply wet bulb temperature [°C]"
+c_p_a_ct = specheat(AIRH2O,T=t_a_su_ct,P=P_atm,R=RH_su_ct)     "supply air specific heat [J/kg-K]"
+v_a_ct = volume(AIRH2O,T=t_a_su_ct,P=P_atm,R=RH_su_ct)        "supply air specific volume [m^3/kg]"
+W_su_ct = humrat(AIRH2O,T=t_a_su_ct,R=RH_su_ct,P=P_atm)       "supply air specific humidity [kg/kg]"
+
+"5.2. Air side energy balance (the air is saturated at the exhaust of the tower)"
+Q_dot_ct = M_dot_a_ct*(h_a_ex_ct - h_a_su_ct)                  "cooling power [W]"
+t_a_ex_ct = temperature(AIRH2O,h=h_a_ex_ct,P=P_atm,R=1)       "exhaust air dry bulb temperature [°C]"
+t_wb_ex_ct = t_a_ex_ct                                        "exhaust wet bulb temperature [°C]"
+
+"with reference to a fictitious capacity flow rate:"
+c_p_af_ct = (h_a_ex_ct - h_a_su_ct)/(t_wb_ex_ct - t_wb_su_ct) "specific heat of the fictitious fluid [J/kg-K]"
+C_dot_af_ct = M_dot_a_ct*c_p_af_ct                            "fictitious capacity flow rate [W/K]"
+
+"5.3. Water side energy balance"
+Q_dot_ct = C_dot_w_ct*(t_w_su_ct - t_w_ex_ct)                 "cooling power [W]"
+C_dot_w_ct = M_dot_w_ct*c_w                                   "water capacity flow rate [W/K]"
+
+"5.4. Heat exchanger effectiveness (counter-flow arrangement)"
+Q_dot_ct = epsilon_f_ct*C_dot_min_f_ct*(t_w_su_ct - t_wb_su_ct)  "cooling power [W]"
+C_dot_min_f_ct = min(C_dot_w_ct, C_dot_af_ct)                 "minimum capacity flow rate [W/K]"
+C_dot_max_f_ct = max(C_dot_w_ct, C_dot_af_ct)                 "maximum capacity flow rate [W/K]"
+epsilon_f_ct = (1 - exp(-NTU_f_ct*(1 - omega_f_ct)))/(1 - omega_f_ct*exp(-NTU_f_ct*(1 - omega_f_ct)))  "effectiveness [-]"
+NTU_f_ct = AU_f_ct/C_dot_min_f_ct                             "number of transfer units [-]"
+omega_f_ct = C_dot_min_f_ct/C_dot_max_f_ct                    "capacity flow rate ratio [-]"
+
+"According to Merckel's theory, the fictitious 'wet' heat transfer coefficient is"
+"related to its 'dry' value as follows:"
+AU_f_ct = AU_dry_ct*c_p_af_ct/c_p_a_ct                        "global heat transfer coefficient [W/K]"
+
+"5.5. Reference variables used by practitioners"
+approach = t_w_ex_ct - t_wb_su_ct                             "approach [K]"
+range = t_w_su_ct - t_w_ex_ct                                 "range [K]"
+
+"Combined influences of both water and air flow rates on the global heat transfer coefficient:"
+AU_dry_ct = AU_dry_n_ct*(M_dot_w_ct/M_dot_w_n_ct)^m_ct*(M_dot_a_ct/M_dot_a_n_ct)^n_ct  "dry heat transfer coefficient [W/K]"
+
+"5.6. Air side pressure drop"
+DELTAp_ct = C_a_ct^2/(2*v_a_ct)                               "air side pressure drop [Pa]"
+
+"5.7. Nominal conditions"
+DELTAp_n_ct = C_a_n_ct^2/(2*v_a_n_ct)                         "nominal air side pressure drop [Pa]"
+C_a_n_ct = M_dot_a_n_ct*v_a_n_ct/A_a_n_ct                     "nominal air velocity [m/s]"
+A_a_n_ct = A_a_0_ct - A_w_n_ct                                "nominal air side free area [m^2]"
+A_w_n_ct = M_dot_w_n_ct*v_w/C_w_ct                            "nominal water side free area [m^2]"
+
+"5.8. Fan characteristic (the head of a centrifugal fan with forward oriented
+! blades is almost independent of the air flow rate)"
+DELTAp_ct = DELTAp_n_ct*(rpm_FAN_ct/rpm_FAN_n_ct)^2           "air side pressure drop [Pa]"
+
+"5.9. Air and water side free areas (the air side free area is supposed to be a"
+" part of the total area, the other part being occupied by the water)"
+A_a_ct = A_a_0_ct - A_w_ct                                    "air side free area [m^2]"
+A_w_ct = M_dot_w_ct*v_w/C_w_ct                                "water side free area [m^2]"
+C_a_ct = M_dot_a_ct*v_a_ct/A_a_ct                             "air velocity [m/s]"
+
+"5.10. Fan power"
+W_dot_FAN_ct = V_dot_a_ct*DELTAp_ct/eta_FAN_ct                "electrical power of the fan [W]"
+V_dot_a_ct = M_dot_a_ct*v_a_ct                                "air volumetric flow rate [m^3/s]"
+
+"5.11. Water consumption"
+M_dot_w_ct_consumed = M_dot_a_ct*(W_ex_ct - W_su_ct)/eta_ct   "water consumption [kg/s]"
+W_ex_ct = humrat(AIRH2O,T=t_a_ex_ct,R=1,P=P_atm)              "exhaust air specific humidity [kg/kg]"
+
+"!6. DEFAULT VALUES TAKEN IN THE ASHRAE PRIMARY TOOLKIT (documentation of the"
+"! original; these relations size the nominal conditions from a nominal cooling"
+"! power Q_dot_n_ct and are not part of the model equations)"
+"M_dot_a_n_ct_default = a_ct*Q_dot_n_ct + b_ct       (centrifugal fan: a_ct = 27.5E-3 [kg/J], b_ct = 2.6 [kg/s])"
+"M_dot_a_n_ct_default = a_ct*Q_dot_n_ct + b_ct       (axial fan:      a_ct = 26.5E-3 [kg/J], b_ct = 11.7 [kg/s])"
+"M_dot_w_n_ct_default = 42.7E-3*Q_dot_n_ct"
+"AU_dry_n_ct_default = c_ct*Q_dot_n_ct + d_ct        (centrifugal fan: c_ct = 70E-3 [K^-1], d_ct = -61E3 [W/K])"
+"AU_dry_n_ct_default = c_ct*Q_dot_n_ct + d_ct        (axial fan:      c_ct = 67.7E-3 [K^-1], d_ct = -10.6E3 [W/K])"

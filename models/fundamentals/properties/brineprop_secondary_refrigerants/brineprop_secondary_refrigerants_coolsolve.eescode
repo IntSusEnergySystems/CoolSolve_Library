@@ -1,0 +1,245 @@
+{=============================================================================
+  BrineProp: thermophysical properties of aqueous secondary refrigerants
+  (function library) - runnable variant
+  CoolSolve Library model CSL-0079 (variant of
+  brineprop_secondary_refrigerants.eescode)
+ -----------------------------------------------------------------------------
+  Faithful runnable transcription of the native file, which CoolSolve cannot
+  parse (the native file is kept in valid EES, see its header). This variant
+  changes ONLY what the registered gaps force; it is valid EES and uses no
+  CoolSolve-only syntax:
+
+  1. CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE and CS-GAP-STRING-ARRAY break the
+     procedure BRINEPROP (ELSE IF ladders closed by ENDIF;ENDIF groups,
+     Uppercase$, and the read of the unit string UO$=U$[Pro]). It is split in
+     two parts:
+     - a selector PROCEDURE BRINEPROP_SELECT(Conc,Fl$:Fl_brine) with the 22
+       concentration range checks and the 11-branch solution ladder, rewritten
+       as sequential single-line IF statements (the conditions are mutually
+       exclusive, so the behaviour is unchanged; kept in a procedure because
+       IF statements are procedure-only in EES). The property selection needs
+       no selector here: each call site of the demonstration program carries
+       its own property tag. The string array U$ and the unit string UO$,
+       which carry unit labels only and feed no equation, are dropped, as is
+       the Uppercase$ normalisation of the property name (the call sites write
+       the literals 'Freeze', 'Density', 'SpecHeat', 'ThermalC' and 'DynVisc',
+       so they are compared directly). An explicit Call ERROR for an
+       unrecognized solution name is added (Fl_brine=0), the error the original
+       raises only through the failed lookup.
+     - the property evaluation FLATTENED into the main program, one block per
+       CALL of the demonstration program (library decision D10 style), because
+       CS-GAP-LOOKUP-PROC rejects LOOKUP inside a procedure. The polynomial,
+       the tables ('Brine1', 'Brine2'), the row indexing
+       Row[k]=k+(Fl-1)*18, the mean values xm/ym and the output scaling
+       (output=Funkt, output=Funkt/1000 for the specific heat,
+       output=exp(Funkt) for the viscosity) are kept exactly as in the
+       original; the procedure-internal variables are renamed per call
+       (<variable>_<tag>), the REPEAT loop becoming a DUPLICATE loop (loops are
+       procedure-only in EES as well):
+         CALL BRINEPROP('Freeze'  ,brine_1$,X_brine_1,T_brine_1:T_freeze_1)     -> _fz_1
+         CALL BRINEPROP('Density',brine_1$,X_brine_1,T_brine_1:rho_brine_1)     -> _rho_1
+         CALL BRINEPROP('SpecHeat',brine_1$,X_brine_1,T_brine_1:c_p_brine_1_kJ) -> _cp_1
+         CALL BRINEPROP('ThermalC',brine_1$,X_brine_1,T_brine_1:k_brine_1)      -> _tc_1
+         CALL BRINEPROP('DynVisc',brine_1$,X_brine_1,T_brine_1:mu_brine_1_mPa_s)-> _mu_1
+         and the same five calls with brine_2$/X_brine_2/T_brine_2 -> _fz_2 ...
+  2. CS-GAP-LKT: the binary EES lookup files Brine1.lkt and Brine2.lkt of the
+     library are shipped as the companion tables
+     brineprop_secondary_refrigerants_coolsolve-Brine1.csv and -Brine2.csv,
+     which hold the same decoded values as the companion tables of the native
+     file.
+
+  Everything else - variable names, equations, defaults, units - is as in the
+  native file.
+=============================================================================}
+
+{--- Selector part of BRINEPROP: the 22 concentration range checks and the
+     11-branch solution ladder, kept in a procedure because IF statements are
+     procedure-only in EES. Rewritten as sequential single-line IF statements
+     with mutually exclusive conditions (see the header of this variant). ---}
+
+Procedure BRINEPROP_SELECT(Conc,Fl$:Fl_brine)
+
+IF (Fl$='EG') AND (Conc<0) THEN Call ERROR('Concentration must be equal to or larger than 0.0%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='EG') AND (Conc>56.1) THEN Call ERROR('Concentration must be equal to or smaller than 56.1%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='PG') AND (Conc<15.2) THEN Call ERROR('Concentration must be equal to or larger than 15.2%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='PG') AND (Conc>57.0) THEN Call ERROR('Concentration must be equal to or smaller than 57.0%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='EA') AND (Conc<11.1) THEN Call ERROR('Concentration must be equal to or larger than 11.1%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='EA') AND (Conc>60.1) THEN Call ERROR('Concentration must be equal or smaller than 60.1%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='MA') AND (Conc<7.8) THEN Call ERROR('Concentration must be equal to or larger than 7.8%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='MA') AND (Conc>44.3) THEN Call ERROR('Concentration must be equal or smaller than 44.3%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='GL') AND (Conc<19.5) THEN Call ERROR('Concentration must be equal to or larger than 19.5%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='GL') AND (Conc>63.0) THEN Call ERROR('Concentration must be equal or smaller than 63.0%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='NH3') AND (Conc<7.8) THEN Call ERROR('Concentration must be equal to or larger than 7.8%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='NH3') AND (Conc>23.6) THEN Call ERROR('Concentration must be equal or smaller than 23.6%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='K2CO3') AND (Conc<13.3) THEN Call ERROR('Concentration must be equal to or larger than 13.3%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='K2CO3') AND (Conc>39.0) THEN Call ERROR('Concentration must be equal or smaller than 39.0%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='CaCl2') AND (Conc<9.0) THEN Call ERROR('Concentration must be equal to or larger than 9.0%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='CaCl2') AND (Conc>29.4) THEN Call ERROR('Concentration must be equal or smaller than 29.4%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='MgCl2') AND (Conc<7.2) THEN Call ERROR('Concentration must be equal to or larger than 7.2%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='MgCl2') AND (Conc>20.5) THEN Call ERROR('Concentration must be equal or smaller than 20.5%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='NaCl') AND (Conc<7.9) THEN Call ERROR('Concentration must be equal to or larger than 7.9%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='NaCl') AND (Conc>22.6) THEN Call ERROR('Concentration must be equal or smaller than 22.6%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='KAc') AND (Conc<11.0) THEN Call ERROR('Concentration must be equal to or larger than 11.0%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='KAc') AND (Conc>41.0) THEN Call ERROR('Concentration must be equal or smaller than 41.0%. Try setting the upper or lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+Fl_brine=0
+IF (Fl$='EG') THEN Fl_brine=1
+IF (Fl$='PG') THEN Fl_brine=2
+IF (Fl$='EA') THEN Fl_brine=3
+IF (Fl$='MA') THEN Fl_brine=4
+IF (Fl$='GL') THEN Fl_brine=5
+IF (Fl$='NH3') THEN Fl_brine=6
+IF (Fl$='K2CO3') THEN Fl_brine=7
+IF (Fl$='CaCl2') THEN Fl_brine=8
+IF (Fl$='MgCl2') THEN Fl_brine=9
+IF (Fl$='NaCl') THEN Fl_brine=10
+IF (Fl$='KAc') THEN Fl_brine=11
+IF (Fl_brine=0) THEN Call ERROR('Unrecognized solution name: the BrineProp library knows EG, PG, EA, MA, GL, NH3, K2CO3, CaCl2, MgCl2, NaCl and KAc.')
+END
+
+"!Demonstration case 1: propylene glycol 50 % at 65 °C (the example block of the original library)"
+brine_1$='PG'
+X_brine_1=50 [%] "as in the example block of the original"
+T_brine_1=65 [C] "the original example block writes 65 [K]; BRINEPROP takes °C"
+CALL BRINEPROP_SELECT(X_brine_1,brine_1$:Fl_brine_1)
+
+"!  CALL BRINEPROP('Freeze',brine_1$,X_brine_1,T_brine_1:T_freeze_1) of the native file, flattened:"
+Pr_fz_1=1 "property indicator the procedure sets for this call"
+DUPLICATE k_fz_1=1,18
+  Row_fz_1[k_fz_1]=k_fz_1+(Fl_brine_1-1)*18
+  c_fz_1[k_fz_1]=lookup('Brine1',Row_fz_1[k_fz_1],Pr_fz_1)
+END
+xm_fz_1=lookup('Brine2',Fl_brine_1,1)
+ym_fz_1=lookup('Brine2',Fl_brine_1,2)
+x_fz_1=X_brine_1-xm_fz_1  "[%] deviation of the concentration from the mean value of the solution"
+y_fz_1=T_brine_1-ym_fz_1  "[K] deviation of the temperature from the mean value of the solution"
+Funkt_fz_1=c_fz_1[1]+(c_fz_1[2]*y_fz_1)+(c_fz_1[3]*y_fz_1^2)+(c_fz_1[4]*y_fz_1^3)+(c_fz_1[5]*x_fz_1)+(c_fz_1[6]*x_fz_1*y_fz_1)+(c_fz_1[7]*x_fz_1*y_fz_1^2)+(c_fz_1[8]*x_fz_1*y_fz_1^3)+(c_fz_1[9]*x_fz_1^2)+(c_fz_1[10]*x_fz_1^2*y_fz_1)+(c_fz_1[11]*x_fz_1^2*y_fz_1^2)+(c_fz_1[12]*x_fz_1^2*y_fz_1^3)+(c_fz_1[13]*x_fz_1^3)+(c_fz_1[14]*x_fz_1^3*y_fz_1)+(c_fz_1[15]*x_fz_1^3*y_fz_1^2)+(c_fz_1[16]*x_fz_1^4)+(c_fz_1[17]*x_fz_1^4*y_fz_1)+(c_fz_1[18]*x_fz_1^5)  "[as in the original]"
+T_freeze_1=Funkt_fz_1  "freezing point of the solution [°C]"
+
+"!  CALL BRINEPROP('Density',brine_1$,X_brine_1,T_brine_1:rho_brine_1) of the native file, flattened:"
+Pr_rho_1=2 "property indicator the procedure sets for this call"
+DUPLICATE k_rho_1=1,18
+  Row_rho_1[k_rho_1]=k_rho_1+(Fl_brine_1-1)*18
+  c_rho_1[k_rho_1]=lookup('Brine1',Row_rho_1[k_rho_1],Pr_rho_1)
+END
+xm_rho_1=lookup('Brine2',Fl_brine_1,1)
+ym_rho_1=lookup('Brine2',Fl_brine_1,2)
+x_rho_1=X_brine_1-xm_rho_1  "[%] deviation of the concentration from the mean value of the solution"
+y_rho_1=T_brine_1-ym_rho_1  "[K] deviation of the temperature from the mean value of the solution"
+Funkt_rho_1=c_rho_1[1]+(c_rho_1[2]*y_rho_1)+(c_rho_1[3]*y_rho_1^2)+(c_rho_1[4]*y_rho_1^3)+(c_rho_1[5]*x_rho_1)+(c_rho_1[6]*x_rho_1*y_rho_1)+(c_rho_1[7]*x_rho_1*y_rho_1^2)+(c_rho_1[8]*x_rho_1*y_rho_1^3)+(c_rho_1[9]*x_rho_1^2)+(c_rho_1[10]*x_rho_1^2*y_rho_1)+(c_rho_1[11]*x_rho_1^2*y_rho_1^2)+(c_rho_1[12]*x_rho_1^2*y_rho_1^3)+(c_rho_1[13]*x_rho_1^3)+(c_rho_1[14]*x_rho_1^3*y_rho_1)+(c_rho_1[15]*x_rho_1^3*y_rho_1^2)+(c_rho_1[16]*x_rho_1^4)+(c_rho_1[17]*x_rho_1^4*y_rho_1)+(c_rho_1[18]*x_rho_1^5)  "[as in the original]"
+rho_brine_1=Funkt_rho_1  "density of the solution [kg/m^3]"
+
+"!  CALL BRINEPROP('SpecHeat',brine_1$,X_brine_1,T_brine_1:c_p_brine_1_kJ) of the native file, flattened:"
+Pr_cp_1=3 "property indicator the procedure sets for this call"
+DUPLICATE k_cp_1=1,18
+  Row_cp_1[k_cp_1]=k_cp_1+(Fl_brine_1-1)*18
+  c_cp_1[k_cp_1]=lookup('Brine1',Row_cp_1[k_cp_1],Pr_cp_1)
+END
+xm_cp_1=lookup('Brine2',Fl_brine_1,1)
+ym_cp_1=lookup('Brine2',Fl_brine_1,2)
+x_cp_1=X_brine_1-xm_cp_1  "[%] deviation of the concentration from the mean value of the solution"
+y_cp_1=T_brine_1-ym_cp_1  "[K] deviation of the temperature from the mean value of the solution"
+Funkt_cp_1=c_cp_1[1]+(c_cp_1[2]*y_cp_1)+(c_cp_1[3]*y_cp_1^2)+(c_cp_1[4]*y_cp_1^3)+(c_cp_1[5]*x_cp_1)+(c_cp_1[6]*x_cp_1*y_cp_1)+(c_cp_1[7]*x_cp_1*y_cp_1^2)+(c_cp_1[8]*x_cp_1*y_cp_1^3)+(c_cp_1[9]*x_cp_1^2)+(c_cp_1[10]*x_cp_1^2*y_cp_1)+(c_cp_1[11]*x_cp_1^2*y_cp_1^2)+(c_cp_1[12]*x_cp_1^2*y_cp_1^3)+(c_cp_1[13]*x_cp_1^3)+(c_cp_1[14]*x_cp_1^3*y_cp_1)+(c_cp_1[15]*x_cp_1^3*y_cp_1^2)+(c_cp_1[16]*x_cp_1^4)+(c_cp_1[17]*x_cp_1^4*y_cp_1)+(c_cp_1[18]*x_cp_1^5)  "[as in the original]"
+c_p_brine_1_kJ=Funkt_cp_1/1000  "specific heat of the solution [kJ/kg-K]"
+
+"!  CALL BRINEPROP('ThermalC',brine_1$,X_brine_1,T_brine_1:k_brine_1) of the native file, flattened:"
+Pr_tc_1=4 "property indicator the procedure sets for this call"
+DUPLICATE k_tc_1=1,18
+  Row_tc_1[k_tc_1]=k_tc_1+(Fl_brine_1-1)*18
+  c_tc_1[k_tc_1]=lookup('Brine1',Row_tc_1[k_tc_1],Pr_tc_1)
+END
+xm_tc_1=lookup('Brine2',Fl_brine_1,1)
+ym_tc_1=lookup('Brine2',Fl_brine_1,2)
+x_tc_1=X_brine_1-xm_tc_1  "[%] deviation of the concentration from the mean value of the solution"
+y_tc_1=T_brine_1-ym_tc_1  "[K] deviation of the temperature from the mean value of the solution"
+Funkt_tc_1=c_tc_1[1]+(c_tc_1[2]*y_tc_1)+(c_tc_1[3]*y_tc_1^2)+(c_tc_1[4]*y_tc_1^3)+(c_tc_1[5]*x_tc_1)+(c_tc_1[6]*x_tc_1*y_tc_1)+(c_tc_1[7]*x_tc_1*y_tc_1^2)+(c_tc_1[8]*x_tc_1*y_tc_1^3)+(c_tc_1[9]*x_tc_1^2)+(c_tc_1[10]*x_tc_1^2*y_tc_1)+(c_tc_1[11]*x_tc_1^2*y_tc_1^2)+(c_tc_1[12]*x_tc_1^2*y_tc_1^3)+(c_tc_1[13]*x_tc_1^3)+(c_tc_1[14]*x_tc_1^3*y_tc_1)+(c_tc_1[15]*x_tc_1^3*y_tc_1^2)+(c_tc_1[16]*x_tc_1^4)+(c_tc_1[17]*x_tc_1^4*y_tc_1)+(c_tc_1[18]*x_tc_1^5)  "[as in the original]"
+k_brine_1=Funkt_tc_1  "thermal conductivity of the solution [W/m-K]"
+
+"!  CALL BRINEPROP('DynVisc',brine_1$,X_brine_1,T_brine_1:mu_brine_1_mPa_s) of the native file, flattened:"
+Pr_mu_1=5 "property indicator the procedure sets for this call"
+DUPLICATE k_mu_1=1,18
+  Row_mu_1[k_mu_1]=k_mu_1+(Fl_brine_1-1)*18
+  c_mu_1[k_mu_1]=lookup('Brine1',Row_mu_1[k_mu_1],Pr_mu_1)
+END
+xm_mu_1=lookup('Brine2',Fl_brine_1,1)
+ym_mu_1=lookup('Brine2',Fl_brine_1,2)
+x_mu_1=X_brine_1-xm_mu_1  "[%] deviation of the concentration from the mean value of the solution"
+y_mu_1=T_brine_1-ym_mu_1  "[K] deviation of the temperature from the mean value of the solution"
+Funkt_mu_1=c_mu_1[1]+(c_mu_1[2]*y_mu_1)+(c_mu_1[3]*y_mu_1^2)+(c_mu_1[4]*y_mu_1^3)+(c_mu_1[5]*x_mu_1)+(c_mu_1[6]*x_mu_1*y_mu_1)+(c_mu_1[7]*x_mu_1*y_mu_1^2)+(c_mu_1[8]*x_mu_1*y_mu_1^3)+(c_mu_1[9]*x_mu_1^2)+(c_mu_1[10]*x_mu_1^2*y_mu_1)+(c_mu_1[11]*x_mu_1^2*y_mu_1^2)+(c_mu_1[12]*x_mu_1^2*y_mu_1^3)+(c_mu_1[13]*x_mu_1^3)+(c_mu_1[14]*x_mu_1^3*y_mu_1)+(c_mu_1[15]*x_mu_1^3*y_mu_1^2)+(c_mu_1[16]*x_mu_1^4)+(c_mu_1[17]*x_mu_1^4*y_mu_1)+(c_mu_1[18]*x_mu_1^5)  "[as in the original]"
+mu_brine_1_mPa_s=exp(Funkt_mu_1)  "dynamic viscosity of the solution [milliPa-s]"
+
+"!Demonstration case 2: ethylene glycol 25 % at the temperature stored by the glycol run-around loop reference model of the same library (inventory TM-0476)"
+brine_2$='EG'
+X_brine_2=25 [%] "as in the stored solution of TM-0476"
+T_brine_2=6.324036551 [C] "t_gw_m of the stored solution of TM-0476"
+CALL BRINEPROP_SELECT(X_brine_2,brine_2$:Fl_brine_2)
+
+"!  CALL BRINEPROP('Freeze',brine_2$,X_brine_2,T_brine_2:T_freeze_2) of the native file, flattened:"
+Pr_fz_2=1 "property indicator the procedure sets for this call"
+DUPLICATE k_fz_2=1,18
+  Row_fz_2[k_fz_2]=k_fz_2+(Fl_brine_2-1)*18
+  c_fz_2[k_fz_2]=lookup('Brine1',Row_fz_2[k_fz_2],Pr_fz_2)
+END
+xm_fz_2=lookup('Brine2',Fl_brine_2,1)
+ym_fz_2=lookup('Brine2',Fl_brine_2,2)
+x_fz_2=X_brine_2-xm_fz_2  "[%] deviation of the concentration from the mean value of the solution"
+y_fz_2=T_brine_2-ym_fz_2  "[K] deviation of the temperature from the mean value of the solution"
+Funkt_fz_2=c_fz_2[1]+(c_fz_2[2]*y_fz_2)+(c_fz_2[3]*y_fz_2^2)+(c_fz_2[4]*y_fz_2^3)+(c_fz_2[5]*x_fz_2)+(c_fz_2[6]*x_fz_2*y_fz_2)+(c_fz_2[7]*x_fz_2*y_fz_2^2)+(c_fz_2[8]*x_fz_2*y_fz_2^3)+(c_fz_2[9]*x_fz_2^2)+(c_fz_2[10]*x_fz_2^2*y_fz_2)+(c_fz_2[11]*x_fz_2^2*y_fz_2^2)+(c_fz_2[12]*x_fz_2^2*y_fz_2^3)+(c_fz_2[13]*x_fz_2^3)+(c_fz_2[14]*x_fz_2^3*y_fz_2)+(c_fz_2[15]*x_fz_2^3*y_fz_2^2)+(c_fz_2[16]*x_fz_2^4)+(c_fz_2[17]*x_fz_2^4*y_fz_2)+(c_fz_2[18]*x_fz_2^5)  "[as in the original]"
+T_freeze_2=Funkt_fz_2  "freezing point of the solution [°C]"
+
+"!  CALL BRINEPROP('Density',brine_2$,X_brine_2,T_brine_2:rho_brine_2) of the native file, flattened:"
+Pr_rho_2=2 "property indicator the procedure sets for this call"
+DUPLICATE k_rho_2=1,18
+  Row_rho_2[k_rho_2]=k_rho_2+(Fl_brine_2-1)*18
+  c_rho_2[k_rho_2]=lookup('Brine1',Row_rho_2[k_rho_2],Pr_rho_2)
+END
+xm_rho_2=lookup('Brine2',Fl_brine_2,1)
+ym_rho_2=lookup('Brine2',Fl_brine_2,2)
+x_rho_2=X_brine_2-xm_rho_2  "[%] deviation of the concentration from the mean value of the solution"
+y_rho_2=T_brine_2-ym_rho_2  "[K] deviation of the temperature from the mean value of the solution"
+Funkt_rho_2=c_rho_2[1]+(c_rho_2[2]*y_rho_2)+(c_rho_2[3]*y_rho_2^2)+(c_rho_2[4]*y_rho_2^3)+(c_rho_2[5]*x_rho_2)+(c_rho_2[6]*x_rho_2*y_rho_2)+(c_rho_2[7]*x_rho_2*y_rho_2^2)+(c_rho_2[8]*x_rho_2*y_rho_2^3)+(c_rho_2[9]*x_rho_2^2)+(c_rho_2[10]*x_rho_2^2*y_rho_2)+(c_rho_2[11]*x_rho_2^2*y_rho_2^2)+(c_rho_2[12]*x_rho_2^2*y_rho_2^3)+(c_rho_2[13]*x_rho_2^3)+(c_rho_2[14]*x_rho_2^3*y_rho_2)+(c_rho_2[15]*x_rho_2^3*y_rho_2^2)+(c_rho_2[16]*x_rho_2^4)+(c_rho_2[17]*x_rho_2^4*y_rho_2)+(c_rho_2[18]*x_rho_2^5)  "[as in the original]"
+rho_brine_2=Funkt_rho_2  "density of the solution [kg/m^3]"
+
+"!  CALL BRINEPROP('SpecHeat',brine_2$,X_brine_2,T_brine_2:c_p_brine_2_kJ) of the native file, flattened:"
+Pr_cp_2=3 "property indicator the procedure sets for this call"
+DUPLICATE k_cp_2=1,18
+  Row_cp_2[k_cp_2]=k_cp_2+(Fl_brine_2-1)*18
+  c_cp_2[k_cp_2]=lookup('Brine1',Row_cp_2[k_cp_2],Pr_cp_2)
+END
+xm_cp_2=lookup('Brine2',Fl_brine_2,1)
+ym_cp_2=lookup('Brine2',Fl_brine_2,2)
+x_cp_2=X_brine_2-xm_cp_2  "[%] deviation of the concentration from the mean value of the solution"
+y_cp_2=T_brine_2-ym_cp_2  "[K] deviation of the temperature from the mean value of the solution"
+Funkt_cp_2=c_cp_2[1]+(c_cp_2[2]*y_cp_2)+(c_cp_2[3]*y_cp_2^2)+(c_cp_2[4]*y_cp_2^3)+(c_cp_2[5]*x_cp_2)+(c_cp_2[6]*x_cp_2*y_cp_2)+(c_cp_2[7]*x_cp_2*y_cp_2^2)+(c_cp_2[8]*x_cp_2*y_cp_2^3)+(c_cp_2[9]*x_cp_2^2)+(c_cp_2[10]*x_cp_2^2*y_cp_2)+(c_cp_2[11]*x_cp_2^2*y_cp_2^2)+(c_cp_2[12]*x_cp_2^2*y_cp_2^3)+(c_cp_2[13]*x_cp_2^3)+(c_cp_2[14]*x_cp_2^3*y_cp_2)+(c_cp_2[15]*x_cp_2^3*y_cp_2^2)+(c_cp_2[16]*x_cp_2^4)+(c_cp_2[17]*x_cp_2^4*y_cp_2)+(c_cp_2[18]*x_cp_2^5)  "[as in the original]"
+c_p_brine_2_kJ=Funkt_cp_2/1000  "specific heat of the solution [kJ/kg-K]"
+
+"!  CALL BRINEPROP('ThermalC',brine_2$,X_brine_2,T_brine_2:k_brine_2) of the native file, flattened:"
+Pr_tc_2=4 "property indicator the procedure sets for this call"
+DUPLICATE k_tc_2=1,18
+  Row_tc_2[k_tc_2]=k_tc_2+(Fl_brine_2-1)*18
+  c_tc_2[k_tc_2]=lookup('Brine1',Row_tc_2[k_tc_2],Pr_tc_2)
+END
+xm_tc_2=lookup('Brine2',Fl_brine_2,1)
+ym_tc_2=lookup('Brine2',Fl_brine_2,2)
+x_tc_2=X_brine_2-xm_tc_2  "[%] deviation of the concentration from the mean value of the solution"
+y_tc_2=T_brine_2-ym_tc_2  "[K] deviation of the temperature from the mean value of the solution"
+Funkt_tc_2=c_tc_2[1]+(c_tc_2[2]*y_tc_2)+(c_tc_2[3]*y_tc_2^2)+(c_tc_2[4]*y_tc_2^3)+(c_tc_2[5]*x_tc_2)+(c_tc_2[6]*x_tc_2*y_tc_2)+(c_tc_2[7]*x_tc_2*y_tc_2^2)+(c_tc_2[8]*x_tc_2*y_tc_2^3)+(c_tc_2[9]*x_tc_2^2)+(c_tc_2[10]*x_tc_2^2*y_tc_2)+(c_tc_2[11]*x_tc_2^2*y_tc_2^2)+(c_tc_2[12]*x_tc_2^2*y_tc_2^3)+(c_tc_2[13]*x_tc_2^3)+(c_tc_2[14]*x_tc_2^3*y_tc_2)+(c_tc_2[15]*x_tc_2^3*y_tc_2^2)+(c_tc_2[16]*x_tc_2^4)+(c_tc_2[17]*x_tc_2^4*y_tc_2)+(c_tc_2[18]*x_tc_2^5)  "[as in the original]"
+k_brine_2=Funkt_tc_2  "thermal conductivity of the solution [W/m-K]"
+
+"!  CALL BRINEPROP('DynVisc',brine_2$,X_brine_2,T_brine_2:mu_brine_2_mPa_s) of the native file, flattened:"
+Pr_mu_2=5 "property indicator the procedure sets for this call"
+DUPLICATE k_mu_2=1,18
+  Row_mu_2[k_mu_2]=k_mu_2+(Fl_brine_2-1)*18
+  c_mu_2[k_mu_2]=lookup('Brine1',Row_mu_2[k_mu_2],Pr_mu_2)
+END
+xm_mu_2=lookup('Brine2',Fl_brine_2,1)
+ym_mu_2=lookup('Brine2',Fl_brine_2,2)
+x_mu_2=X_brine_2-xm_mu_2  "[%] deviation of the concentration from the mean value of the solution"
+y_mu_2=T_brine_2-ym_mu_2  "[K] deviation of the temperature from the mean value of the solution"
+Funkt_mu_2=c_mu_2[1]+(c_mu_2[2]*y_mu_2)+(c_mu_2[3]*y_mu_2^2)+(c_mu_2[4]*y_mu_2^3)+(c_mu_2[5]*x_mu_2)+(c_mu_2[6]*x_mu_2*y_mu_2)+(c_mu_2[7]*x_mu_2*y_mu_2^2)+(c_mu_2[8]*x_mu_2*y_mu_2^3)+(c_mu_2[9]*x_mu_2^2)+(c_mu_2[10]*x_mu_2^2*y_mu_2)+(c_mu_2[11]*x_mu_2^2*y_mu_2^2)+(c_mu_2[12]*x_mu_2^2*y_mu_2^3)+(c_mu_2[13]*x_mu_2^3)+(c_mu_2[14]*x_mu_2^3*y_mu_2)+(c_mu_2[15]*x_mu_2^3*y_mu_2^2)+(c_mu_2[16]*x_mu_2^4)+(c_mu_2[17]*x_mu_2^4*y_mu_2)+(c_mu_2[18]*x_mu_2^5)  "[as in the original]"
+mu_brine_2_mPa_s=exp(Funkt_mu_2)  "dynamic viscosity of the solution [milliPa-s]"
+
+"!SI versions of the two properties that the stored solution of the glycol
+!run-around loop model holds (that model calls the library the same way, see
+!the conversion log of the README)"
+c_p_brine_2=c_p_brine_2_kJ*1000 "[J/kg-K]"
+mu_brine_2=mu_brine_2_mPa_s/1000 "[Pa/s]"

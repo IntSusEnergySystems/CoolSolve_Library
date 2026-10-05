@@ -1,0 +1,182 @@
+{=============================================================================
+  Centrifugal brine pump reference simulation model (RefSim) - runnable variant
+  CoolSolve Library model CSL-0072 (variant of centrifugal_brine_pump_refsim.eescode)
+ -----------------------------------------------------------------------------
+  Faithful runnable transcription of the native file, which CoolSolve cannot
+  parse/evaluate (native file kept in valid EES, see its header). This variant
+  changes ONLY what the registered gaps force:
+
+  1. CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE, CS-GAP-STRING-ARRAY and
+     CS-GAP-LOOKUP-PROC all break the BRINEPROP procedure (ELSE IF ladders
+     and ENDIF;ENDIF groups, Uppercase$, string-array reads, LOOKUP inside a
+     procedure). It is split in two:
+     - a selector PROCEDURE BRINEPROP_SELECT(Conc,Fl$:Fl_brine) holding
+       the 22 concentration range checks and the 11-branch fluid ladder,
+       rewritten as sequential single-line IF statements (conditions
+       mutually exclusive, behaviour unchanged; property selection is not
+       needed here: the two call sites select the property by their tag);
+     - the property evaluation FLATTENED into the main program (library
+       decision D10 style) for the two properties this model uses:
+         CALL BRINEPROP('Density',brine$,X_brine,t_su_pump:rho_pump)
+           -> block tagged _d  (Pr = 2: Density,  Fl = 1: EG)
+         CALL BRINEPROP('Specheat',brine$,X_brine,t_su_pump:c_p_pump/1000)
+           -> block tagged _cp (Pr = 3: SpecHeat, Fl = 1: EG)
+       The polynomial, the tables ('Brine1', 'Brine2'), the row indexing
+       Row[k]=k+(Fl-1)*18 and the output scaling (output=Funkt for Density,
+       output=Funkt/1000 for SpecHeat) are kept exactly as in the original;
+       the procedure-internal variables are renamed per call (<variable>_d,
+       <variable>_cp).
+  2. CS-GAP-CALL-EXPR-OUT: the expression output of the original call
+     (:c_p_pump/1000) becomes the auxiliary variable c_p_pump_kJ followed
+     by c_p_pump = c_p_pump_kJ*1000 (same value).
+
+  Everything else - variable names, equations, defaults, units - is as in
+  the native file. The companion tables of this variant
+  (centrifugal_brine_pump_refsim_coolsolve-Brine1/Brine2.csv) hold the same
+  decoded values as the native ones.
+=============================================================================}
+
+"!Title: CENTRIFUGAL PUMP SIMULATION MODEL"
+
+"Date : 2008 February 18"
+"Authors: Vincent Lemort"
+"University of Liège"
+"!Short Description :"
+"this model describes a centrifugal pump"
+
+"!1. INPUTS (set in the diagram window of the original; values of the stored reference run)"
+rpm_pump=1300 "[1/min]"
+V_dot_pump_m3h=1 "[m^3/h]"
+P_su_pump=100000 "[Pa]"
+T_su_pump=25 "[C]"
+X_brine=25 [%] "50 in the original equations; the stored reference run used 25 %"
+brine$='EG'  "ethylene glycol; not in the extracted equations - identified from the stored solution (see README)"
+
+"!2. PARAMETERS (panel of the original; values from the stored EES solution)"
+D_pump=0.1333 "[m] (impeller diameter)"
+alpha_0_pump=1.18 "[-]"
+alpha_1_pump=-1.466 "[-]"
+alpha_2_pump=-614 "[-]"
+alpha_3_pump=-6002 "[-]"
+beta_0_pump=0.01585 "[-]"
+beta_1_pump=0.2436 "[-]"
+beta_2_pump=69.42 "[-]"
+beta_3_pump=-2098 "[-]"
+
+{Selector part of BRINEPROP: range checks and fluid number (no lookup here,
+ so it stays a procedure; the ELSE IF ladders are rewritten as sequential
+ single-line IF statements with mutually exclusive conditions)}
+
+Procedure BRINEPROP_SELECT(Conc,Fl$:Fl_brine)
+
+IF (Fl$='EG') AND (Conc<0) THEN Call ERROR('Concentration must be equal to or larger than 0.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='EG') AND (Conc>56.1) THEN Call ERROR('Concentration must be equal to or smaller than 56.1%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='PG') AND (Conc<15.2) THEN Call ERROR('Concentration must be equal to or larger than 15.2%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='PG') AND (Conc>57.0) THEN Call ERROR('Concentration must be equal to or smaller than 57.0%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='EA') AND (Conc<11.1) THEN Call ERROR('Concentration must be equal to or larger than 11.1%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='EA') AND (Conc>60.1) THEN Call ERROR('Concentration must be equal or smaller than 60.1%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='MA') AND (Conc<7.8) THEN Call ERROR('Concentration must be equal to or larger than 7.8%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='MA') AND (Conc>44.3) THEN Call ERROR('Concentration must be equal to or smaller than 44.3%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='GL') AND (Conc<19.5) THEN Call ERROR('Concentration must be equal to or larger than 19.5%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='GL') AND (Conc>63.0) THEN Call ERROR('Concentration must be equal to or smaller than 63.0%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='NH3') AND (Conc<7.8) THEN Call ERROR('Concentration must be equal to or larger than 7.8%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='NH3') AND (Conc>23.6) THEN Call ERROR('Concentration must be equal to or smaller than 23.6%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='K2CO3') AND (Conc<13.3) THEN Call ERROR('Concentration must be equal to or larger than 13.3%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='K2CO3') AND (Conc>39.0) THEN Call ERROR('Concentration must be equal to or smaller than 39.0%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='CaCl2') AND (Conc<9.0) THEN Call ERROR('Concentration must be equal to or larger than 9.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='CaCl2') AND (Conc>29.4) THEN Call ERROR('Concentration must be equal to or smaller than 29.4%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='MgCl2') AND (Conc<7.2) THEN Call ERROR('Concentration must be equal to or larger than 7.2%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='MgCl2') AND (Conc>20.5) THEN Call ERROR('Concentration must be equal to or smaller than 20.5%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='NaCl') AND (Conc<7.9) THEN Call ERROR('Concentration must be equal to or larger than 7.9%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='NaCl') AND (Conc>22.6) THEN Call ERROR('Concentration must be equal to or smaller than 22.6%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='KAc') AND (Conc<11.0) THEN Call ERROR('Concentration must be equal to or larger than 11.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='KAc') AND (Conc>41.0) THEN Call ERROR('Concentration must be equal to or smaller than 41.0%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+
+"Fluid parameter of the original ELSE IF ladder, as sequential IF statements"
+EG=1;PG=2;EA=3;MA=4;GL=5;NH3=6;K2CO3=7;CaCl2=8;MgCl2=9;NaCl=10;KAc=11
+Fl_brine=0
+IF (Fl$='EG') THEN Fl_brine:=EG
+IF (Fl$='PG') THEN Fl_brine:=PG
+IF (Fl$='EA') THEN Fl_brine:=EA
+IF (Fl$='MA') THEN Fl_brine:=MA
+IF (Fl$='GL') THEN Fl_brine:=GL
+IF (Fl$='NH3') THEN Fl_brine:=NH3
+IF (Fl$='K2CO3') THEN Fl_brine:=K2CO3
+IF (Fl$='CaCl2') THEN Fl_brine:=CaCl2
+IF (Fl$='MgCl2') THEN Fl_brine:=MgCl2
+IF (Fl$='NaCl') THEN Fl_brine:=NaCl
+IF (Fl$='KAc') THEN Fl_brine:=KAc
+IF (Fl_brine=0) THEN Call ERROR('Unrecognized fluid name: the BrineProp library knows EG, PG, EA, MA, GL, NH3, K2CO3, CaCl2, MgCl2, NaCl and KAc.')
+END
+
+"{--- end of the selector procedure ---}"
+
+CALL BRINEPROP_SELECT(X_brine,brine$:Fl_brine)
+
+"Density call, tag _d (Pr = 2: Density as in the original)"
+Pr_d=2
+DUPLICATE k_d=1,18
+Row_d[k_d]=k_d+(Fl_brine-1)*18
+c_d[k_d]=lookup('Brine1',Row_d[k_d],Pr_d)
+END
+xm_d=lookup('Brine2',Fl_brine,1)
+ym_d=lookup('Brine2',Fl_brine,2)
+x_d=X_brine-xm_d
+y_d=t_su_pump-ym_d
+Funkt_d=c_d[1]+(c_d[2]*y_d)+(c_d[3]*y_d^2)+(c_d[4]*y_d^3)+(c_d[5]*x_d)+(c_d[6]*x_d*y_d)+(c_d[7]*x_d*y_d^2)+(c_d[8]*x_d*y_d^3)+(c_d[9]*x_d^2)+(c_d[10]*x_d^2*y_d)+(c_d[11]*x_d^2*y_d^2)+(c_d[12]*x_d^2*y_d^3)+(c_d[13]*x_d^3)+(c_d[14]*x_d^3*y_d)+(c_d[15]*x_d^3*y_d^2)+(c_d[16]*x_d^4)+(c_d[17]*x_d^4*y_d)+(c_d[18]*x_d^5)
+"output scaling of the original: Pr=2 -> output=Funkt"
+rho_pump=Funkt_d "[kg/m^3]"
+
+"{--- end of the Density call ---}"
+
+"!4. EQUATIONS"
+"!4.1 Flow factor calculation:"
+phi_pump=V_dot_pump/(A_pump*U_pump)
+	"with"
+V_dot_pump=V_dot_pump_m3h/3600 "[m^3/s]"
+A_pump=pi*D_pump^2/4 "[m^2] (reference area)"
+U_pump=pi*D_pump*N_pump "[m/s] (peripheral speed)"
+N_pump=rpm_pump/60 "[1/s] (rotation speed)"
+"!4.2. Pressure factor calculation:"
+psi_pump=alpha_0_pump + alpha_1_pump*phi_pump +alpha_2_pump*phi_pump^2 + alpha_3_pump*phi_pump^3
+DELTAP_pump=psi_pump*P_dynam_periph_pump "[Pa] (Pressure increase)"
+	"with"
+P_dynam_periph_pump=U_pump^2/(2*v_pump) "[Pa] (peripheral dynamic pressure)"
+v_pump=1/rho_pump "[m^3/kg]"
+
+"!4.3. Power factor calculation:"
+Lambda_pump=beta_0_pump + beta_1_pump*phi_pump + beta_2_pump*phi_pump^2 + beta_3_pump*phi_pump^3
+
+"!4.4. Shaft power calculation:"
+W_dot_shaft_pump=W_dot_s_pump/epsilon_s_pump "[W]"
+	"with"
+W_dot_s_pump=V_dot_pump*DELTAP_pump "[W] (isentropic power)"
+epsilon_s_pump=phi_pump*psi_pump/lambda_pump
+
+"!4.5. Brine state at pump exhaust (section titled water in the original):"
+	"!4.5.1. Pressure:"
+p_ex_pump=p_su_pump+ DELTAP_pump "[Pa]"
+	"!4.5.2. Temperature:"
+
+{BRINEPROP('Specheat',brine$,X_brine,t_su_pump:c_p_pump/1000), flattened (see header);
+ the selector above (checks, fluid number) serves this call as well}
+
+"Specific heat call, tag _cp (Pr = 3: SpecHeat as in the original)"
+Pr_cp=3
+DUPLICATE k_cp=1,18
+Row_cp[k_cp]=k_cp+(Fl_brine-1)*18
+c_cp[k_cp]=lookup('Brine1',Row_cp[k_cp],Pr_cp)
+END
+xm_cp=lookup('Brine2',Fl_brine,1)
+ym_cp=lookup('Brine2',Fl_brine,2)
+x_cp=X_brine-xm_cp
+y_cp=t_su_pump-ym_cp
+Funkt_cp=c_cp[1]+(c_cp[2]*y_cp)+(c_cp[3]*y_cp^2)+(c_cp[4]*y_cp^3)+(c_cp[5]*x_cp)+(c_cp[6]*x_cp*y_cp)+(c_cp[7]*x_cp*y_cp^2)+(c_cp[8]*x_cp*y_cp^3)+(c_cp[9]*x_cp^2)+(c_cp[10]*x_cp^2*y_cp)+(c_cp[11]*x_cp^2*y_cp^2)+(c_cp[12]*x_cp^2*y_cp^3)+(c_cp[13]*x_cp^3)+(c_cp[14]*x_cp^3*y_cp)+(c_cp[15]*x_cp^3*y_cp^2)+(c_cp[16]*x_cp^4)+(c_cp[17]*x_cp^4*y_cp)+(c_cp[18]*x_cp^5)
+"output scaling of the original: Pr=3 -> output=Funkt/1000 (CS-GAP-CALL-EXPR-OUT: the original passed the expression c_p_pump/1000 as CALL output)"
+c_p_pump_kJ=Funkt_cp/1000 "[kJ/kg-K]"
+c_p_pump=c_p_pump_kJ*1000 "[J/kg-K]"
+
+"{--- end of the SpecHeat call ---}"
+
+c_p_pump*(t_ex_pump-t_su_pump)=W_dot_shaft_pump/M_dot_pump
+M_dot_pump=V_dot_pump/v_pump "[kg/s]"

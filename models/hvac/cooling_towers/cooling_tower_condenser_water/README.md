@@ -161,3 +161,6 @@ was found in the source folder.
 - `CSL-0030` *two_speed_cooling_tower*: the same equipment at level 2
   (ε-NTU rating on a fictitious fluid, two-speed fan, part load); here a
   level-1 mass/energy balance exercise on one operating point.
+- `CSL-0076` *cooling_tower_direct_contact_refsim*: the direct-contact tower of
+  the ULiège model bank (ε-NTU on a fictitious fluid, air-side pressure drop
+  and fan law referred to the nominal conditions).

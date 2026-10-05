@@ -5,7 +5,7 @@
   "summary": "Vapour-compression heat-pump operating point on R407C rebuilt from the capacities and powers announced by a scroll-compressor manufacturer: mass flow rate, swept volume, compressor duties, isentropic efficiency of the compressor and global isentropic efficiency of the machine, compared with the announced data.",
   "kind": "steady",
   "level": 1,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "heat_pump_scroll_compressor_data_check.eescode",
   "fluids": [
     "R407C"
@@ -24,7 +24,7 @@
     "property functions",
     "arrays"
   ],
-  "stats": {"n_equations": 46, "largest_block": 1},
+  "stats": {"n_equations": 47, "largest_block": 1},
   "origin": {
     "type": "teaching",
     "source": "coolsolve_examples",
@@ -41,15 +41,13 @@
     "course": "ULiège, \"Machines et systèmes thermiques\", repetition session 8, exercise 5 (header VL050415, 2005-04-15)"
   },
   "verification": {
-    "reference": "Solution stored in the original EES file (CoolSolve misc/EES_ok.zip, EES_ok/refrigeration3.EES, EES X7.210), read from its solution report EES_ok/refrigeration3.tex; for the _coolsolve variant, whose native file is blocked by CS-GAP-PROP-TH",
+    "reference": "Solution stored in the original EES file (CoolSolve misc/EES_ok.zip, EES_ok/refrigeration3.EES, EES X7.210), read from its solution report EES_ok/refrigeration3.tex",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
     "max_rel_diff": 0.0036,
-    "notes": "30 common variables, 1 differ (rtol=1e-3): P_4 (3.6e-3), a (T,H) inversion in EES vs a (P,H) inversion in the variant, inside the saturation dome. The 29 other variables agree within 9.7e-4 (rho_1). The 17 variables only in CoolSolve are the P[i]/h[i]/T[i]/s[i] array elements (T[i], s[i] added on import) and the auxiliary T_4 of the variant. The decoded binary variable records of the EES file are stale (CS-BUG-EXTRACT-STALE), so the .tex solution report is used as the reference. No unit conversion needed (SI-C-Pa-J)."
+    "notes": "30 common variables, 1 differ (rtol=1e-3): P_4 (3.6e-3), a (T,H) inversion in EES vs the (P,H) inversion of decision D11, inside the saturation dome. The 29 other variables agree within 9.7e-4 (rho_1). The 17 variables only in CoolSolve are the P[i]/h[i]/T[i]/s[i] array elements (T[i], s[i] added on import) and the auxiliary T_4 added by decision D11. The decoded binary variable records of the EES file are stale (CS-BUG-EXTRACT-STALE), so the .tex solution report is used as the reference. No unit conversion needed (SI-C-Pa-J)."
   },
-  "missing_features": [
-    "CS-GAP-PROP-TH"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0001",
     "CSL-0015",
@@ -65,6 +63,7 @@
   ],
   "previous_paths": [],
   "history": [
-    {"date": "2026-10-05", "action": "added (roadmap card C-72, batch B-02), status blocked, runnable _coolsolve variant verified", "by": "opencode worker for S. Quoilin"}
+    {"date": "2026-10-05", "action": "added (roadmap card C-72, batch B-02), status blocked, runnable _coolsolve variant verified", "by": "opencode worker for S. Quoilin"},
+    {"date": "2026-10-05", "action": "re-check (roadmap card C-88): the (T,H) call for the pressure of state 4 rewritten with an auxiliary pressure unknown and the (P,H) pair in the main file (decision D11), _coolsolve variant deleted, status verified, CS-GAP-PROP-TH removed from missing_features", "by": "opencode worker for S. Quoilin"}
   ]
 }

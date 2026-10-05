@@ -1,0 +1,82 @@
+{
+  "id": "CSL-0079",
+  "name": "brineprop_secondary_refrigerants",
+  "title": "BrineProp: thermophysical properties of aqueous secondary refrigerants (function library)",
+  "summary": "Single EES procedure BRINEPROP of the ULiège BrineProp library: freezing point, density, specific heat, thermal conductivity and dynamic viscosity of eleven aqueous secondary refrigerants (EG, PG, EA, MA, GL, NH3, K2CO3, CaCl2, MgCl2, NaCl, KAc) as a function of mass concentration and temperature, from an 18-term polynomial read in two coefficient lookup tables.",
+  "kind": "function",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "brineprop_secondary_refrigerants.eescode",
+  "fluids": [
+    "aqueous solutions EG, PG, EA, MA, GL, NH3, K2CO3, CaCl2, MgCl2, NaCl, KAc (secondary refrigerants)"
+  ],
+  "tags": [
+    "secondary refrigerant",
+    "brine",
+    "glycol",
+    "density",
+    "specific heat",
+    "thermal conductivity",
+    "dynamic viscosity",
+    "freezing point",
+    "empirical correlation",
+    "function library",
+    "model bank"
+  ],
+  "language_features": [
+    "procedure with string arguments",
+    "IF/THEN/ELSE ladders closed by ENDIF;ENDIF groups",
+    "Uppercase$ string function",
+    "string arrays",
+    "REPEAT loop",
+    "lookup tables read inside a procedure",
+    "CALL ERROR"
+  ],
+  "stats": {
+    "n_equations": 440,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/AHU_Components/Recovery_Systems/GLYCOLRECOVERYLOOP_REFSIM_EES_MODEL_SB080116.zip!/UserLib/BrineProp/Brineprop.lib",
+    "candidate_id": "TM-0479",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory; the EES help file of the library credits its 1997 edition and refers to IIR thermo-physical data but names no person; the inventory attributes the library to the laboratory, J. Lebrun et al.)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.793 (compiled library stamp $SB1); lookup tables W4.631",
+    "language": "en",
+    "course": "ULiège model bank (Laborelec toolkit lineage), Model data bank / AHU_Components, 1997"
+  },
+  "verification": {
+    "reference": "EES stored solution of the glycol run-around loop reference model of the same library (GLYCOLRECOVERYLOOP_RefSim_EES_Model_SB080116.EES, EES 7.888, inventory TM-0476): BRINEPROP for ethylene glycol 25 % at t_gw_m = 6.324036551 °C stores rho_gw, c_p_gw and mu_gw; concerns the runnable variant brineprop_secondary_refrigerants_coolsolve.eescode (the native file is blocked)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 4.77e-10,
+    "notes": "3 common variables, 0 differ (rtol=0.001); maximum relative difference 4.77e-10 (rho_brine_2), from the 80-bit to 64-bit rounding of the hand-decoded Brine1/Brine2 coefficient tables (c_p_brine_2 7.88e-13, mu_brine_2 4.38e-11). No reference variable excluded; the 437 CoolSolve-only variables are the internal variables of the ten flattened property blocks, the selector outputs and the five case-1 properties (a .lib file stores no solution of its own, so the reference holds only the three properties the glycol model stores). The same decode reproduces the CSL-0072 reference point (EG 25 % at 25 °C) to 2.9e-09 (rho) and 6.2e-09 (c_p). The native file does not parse (CS-GAP-ELSEIF-CHAIN)."
+  },
+  "missing_features": [
+    "CS-GAP-ELSEIF-CHAIN",
+    "CS-GAP-UPPERCASE",
+    "CS-GAP-STRING-ARRAY",
+    "CS-GAP-LOOKUP-PROC"
+  ],
+  "related": [
+    "CSL-0072",
+    "CSL-0074"
+  ],
+  "related_external": [
+    "glycol run-around loop reference model of the same library (GLYCOLRECOVERYLOOP_RefSim_EES_Model_SB080116.EES, inventory TM-0476): EES reference values for this model"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-84, T-FUNC of TM-0479; blocked native file, verified runnable _coolsolve variant)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

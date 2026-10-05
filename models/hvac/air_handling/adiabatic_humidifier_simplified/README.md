@@ -180,3 +180,9 @@ component is in the collection.
   (cooling and dehumidifying coil) in air handling.
 - `CSL-0028` *air_handling_unit_moist_air*: full air handling unit on
   `AirH2O`.
+- `CSL-0073` *cooling_coil_with_control_simplified*: simplified model of
+  another air-handling component of the same ULiège model bank (cooling coil
+  with a control law on the exhaust air temperature).
+- `CSL-0074` *cooling_coil_refsim*: reference-simulation model of another
+  air-handling component of the same ULiège model bank (cooling coil, dry and
+  wet regimes).

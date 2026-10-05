@@ -1,0 +1,76 @@
+{
+  "id": "CSL-0072",
+  "name": "centrifugal_brine_pump_refsim",
+  "title": "Centrifugal brine pump reference simulation model (RefSim)",
+  "summary": "Reference simulation of a centrifugal pump on a hydraulic network: dimensionless characteristic curves (cubic psi(phi) and Lambda(phi) polynomials) with brine properties from the ULiège BrineProp library; computes pressure rise, shaft power, efficiency and exhaust state.",
+  "kind": "steady",
+  "level": 1,
+  "status": "blocked",
+  "main_file": "centrifugal_brine_pump_refsim.eescode",
+  "fluids": ["brine EG (BrineProp)"],
+  "tags": [
+    "pump",
+    "centrifugal pump",
+    "dimensionless characteristics",
+    "brine",
+    "secondary refrigerant",
+    "hydraulic network",
+    "reference model",
+    "model bank"
+  ],
+  "language_features": [
+    "user-library procedure BRINEPROP (implicit library, copied in the file; string arguments, IF ladders)",
+    "string arrays",
+    "lookup tables in procedures",
+    "expression as CALL output argument"
+  ],
+  "stats": {
+    "n_equations": 119,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/Distribution_Systems/Pumps/Centrifugal_Brine_Pump_Refsim_Model_VTJLVL080219.zip!/Centrifugal_Brine_Pump_RefSim_EES_Model_VTJLVL080219.EES",
+    "candidate_id": "TM-0487",
+    "authors": [
+      "Vincent Lemort",
+      "Vlad Teodorese",
+      "Jean Lebrun"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en",
+    "course": "ULiège model bank (Laborelec toolkit lineage), Model data bank, 2008-02-18"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (44 variables); concerns the runnable variant centrifugal_brine_pump_refsim_coolsolve.eescode (the native file is blocked)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 6.4e-08,
+    "notes": "32 common variables, 0 differ (rtol=0.001); max relative deviation 6.4e-08 (DELTAP_pump, W_dot_shaft_pump), from the 80-bit to 64-bit rounding of the hand-decoded Brine1/Brine2 coefficient tables. The native file does not parse (CS-GAP-ELSEIF-CHAIN)."
+  },
+  "missing_features": [
+    "CS-GAP-ELSEIF-CHAIN",
+    "CS-GAP-UPPERCASE",
+    "CS-GAP-CALL-EXPR-OUT",
+    "CS-GAP-STRING-ARRAY",
+    "CS-GAP-LOOKUP-PROC"
+  ],
+  "related": [
+    "CSL-0079"
+  ],
+  "related_external": [
+    "BrineProp library of the ULiège model bank (Brineprop.lib, Brine1.lkt, Brine2.lkt; inventory candidate TM-0479)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-77, T-IMPORT of TM-0487)",
+      "by": "GLM (zai-coding-plan) for S. Quoilin"
+    }
+  ]
+}

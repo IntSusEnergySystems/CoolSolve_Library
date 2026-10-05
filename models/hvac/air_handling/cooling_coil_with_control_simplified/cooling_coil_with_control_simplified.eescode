@@ -1,0 +1,110 @@
+{=============================================================================
+  Cooling coil with control, simplified model
+  CoolSolve Library model CSL-0073
+ -----------------------------------------------------------------------------
+  Simplified model of a cooling and dehumidifying coil of an air handling
+  unit: the refrigerant side is not modelled and the coil is represented by a
+  contact temperature (fraction of the approach between the supply air and the
+  minimum contact temperature, given by the contact-factor effectiveness
+  epsilon_c). The contact temperature is set by a PI-like control law driven by
+  the deviation of the exhaust air temperature from its set point, bounded
+  between 0 and 1. Computes the exhaust air temperature and humidity ratio,
+  the total, sensible and latent cooling powers and the sensible heat ratio.
+
+  The minimum contact temperature is the dry-regime value when the supply air
+  dew point is below 0 degC (no condensation on the coil, as in the original)
+  and the wet-regime value otherwise.
+
+  Inputs : t_a_ex_coolingcoil_set, t_a_su_coolingcoil, W_su_coolingcoil,
+           t_w_su_coolingcoil, M_dot_a_coolingcoil, P_atm
+  Outputs: t_a_ex_coolingcoil, t_c_coolingcoil, W_ex_coolingcoil,
+           Q_dot_coolingcoil, Q_dot_sensible_coolingcoil,
+           Q_dot_latent_coolingcoil, SHR_coolingcoil
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège model bank (Laborelec toolkit lineage), V. Lemort, J. Lebrun -
+           see README.md
+  Variant: cooling_coil_with_control_simplified_coolsolve.eescode replaces the
+           EES 5-argument IF of the minimum contact temperature by the
+           3-argument IF of CoolSolve (CS-GAP-IF5); nothing else is changed.
+=============================================================================}
+
+"!Title: cooling coil with control, simplified model"
+"Date: 2008 January 16"
+"Authors: Vincent Lemort, Jean Lebrun"
+"University of Liège, Faculty of Applied Sciences, Thermodynamics Laboratory, Campus de Sart Tilman, B49 (P33), B-4000 Liège (Belgium)"
+"Contact: vincent.lemort@ulg.ac.be"
+"Website (as in the original): www.labothap.ulg.ac.be"
+"Disclaimer: as in the original - the accuracy or the reliability of the information is not guaranteed in any way; this model is freely distributed and may not be sold or distributed for commercial purpose; the user is asked to cite his sources and the origin of this model."
+
+"!Short description (as in the original):"
+"The simplification of the reference model proposed here consists in not taking into account what happens on the refrigerant side. This is done by assuming that the cooling coil exiting air temperature is controlled by its contact temperature (in place of the refrigerant flow rate) [1]."
+
+"!Nomenclature (as in the original):"
+"c_p     specific heat capacity [J/kg-K];   h  specific enthalpy [J/kg]"
+"M_dot   mass flow rate [kg/s];            p  pressure [Pa]"
+"Q_dot   thermal power [W];                t  temperature [°C]"
+"W       specific humidity (humidity ratio) [kg water/kg dry air];  X  control variable [-]"
+"epsilon_a_coolingcoil: air-side (heat and moisture transfer) effectiveness in the dry and wet regimes [-]"
+"epsilon_c_coolingcoil: contact-factor effectiveness of the coil [-]"
+"epsilon = efficiency [-]"
+"Subscripts: a = air, atm = atmospheric, c = contact, dp = dew point, ex = exhaust, set = set point, su = supply, w = water, wb = wet bulb"
+
+"!Reference:"
+"[1] Lemort, V., C. Cuevas, J. Lebrun, and I.V. Teodorese. 2008. Development of Simple Cooling Coil Models for Simulation of HVAC Systems. ASHRAE Transaction 114(1)."
+
+"!Inputs and parameters: in the original they are entered in the control panel (Diagram window) - the equations window only lists them as comment lines. The library model gives them their stored (default-run) values as equations."
+
+"! 1. Inputs"
+t_a_ex_coolingcoil_set=14.61   "set point of the exhaust air temperature [°C]"
+P_atm=101325                    "atmospheric pressure [Pa]"
+M_dot_a_coolingcoil=1.757       "air mass flow rate at the coil supply [kg/s]"
+t_a_su_coolingcoil=28           "supply air temperature [°C]"
+W_su_coolingcoil=0.01183        "supply air humidity ratio [kg_w/kg_a]"
+t_w_su_coolingcoil=6            "water (refrigerant) temperature entering the coil [°C]"
+
+"! 2. Parameters"
+epsilon_a_coolingcoil_dry=0.8148 "air-side effectiveness, dry regime [-]"
+epsilon_a_coolingcoil_wet=0.539  "air-side effectiveness, wet regime [-]"
+C_coolingcoil_control=10         "gain of the exhaust air temperature control [-]"
+epsilon_c_coolingcoil=0.9714     "contact-factor effectiveness of the coil [-]"
+c_p_g=1840 [J/(kg*K)]            "specific heat capacity of water vapour [J/(kg*K)]"
+h_fg0=2.501E6 [J/kg]             "latent heat of vaporization of water at 0 degC [J/kg]"
+c_p_a=1020 [J/(kg*K)]            "specific heat capacity of dry air [J/(kg*K)]"
+
+"! 3. Outputs (as in the original): t_a_ex_coolingcoil, t_c_cooling_coil, W_ex_coolingcoil, Q_dot_coolingcoil, Q_dot_sensible_coolingcoil, Q_dot_latent_coolingcoil"
+
+"! 4. Equations"
+
+"! 4.1 Minimum contact temperature"
+t_c_coolingcoil_mindry=t_a_su_coolingcoil-(epsilon_a_coolingcoil_dry/epsilon_c_coolingcoil)*(t_a_su_coolingcoil-t_w_su_coolingcoil) "minimum contact temperature in the dry regime [°C]"
+t_c_coolingcoil_minwet=t_wb_su_coolingcoil-(epsilon_a_coolingcoil_wet/epsilon_c_coolingcoil)*(t_wb_su_coolingcoil-t_w_su_coolingcoil) "minimum contact temperature in the wet regime [°C]"
+t_wb_su_coolingcoil=wetbulb(airH2O,P=P_atm,W=W_su_coolingcoil,T=t_a_su_coolingcoil) "supply air wet-bulb temperature [°C]"
+t_dp_su_coolingcoil=dewpoint(airH2O,P=P_atm,W=W_su_coolingcoil,T=t_a_su_coolingcoil) "supply air dew-point temperature [°C]"
+t_c_coolingcoil_min=IF(t_dp_su_coolingcoil, t_c_coolingcoil_minwet, t_c_coolingcoil_mindry, t_c_coolingcoil_mindry, t_c_coolingcoil_minwet) "minimum contact temperature [°C]"
+
+"! 4.2 Contact temperature"
+t_c_coolingcoil=t_a_su_coolingcoil-X_coolingcoil_control*(t_a_su_coolingcoil-t_c_coolingcoil_min) "contact temperature of the coil [°C]"
+X_coolingcoil_control_1=C_coolingcoil_control*(t_a_ex_coolingcoil-t_a_ex_coolingcoil_set) "control signal before saturation [-]"
+X_coolingcoil_control_2=min(X_coolingcoil_control_1, 1) "control signal saturated at 1 [-]"
+X_coolingcoil_control=max(X_coolingcoil_control_2, 0) "control variable of the contact temperature, between 0 and 1 [-]"
+
+"! 4.3 Outlet air temperature"
+t_a_ex_coolingcoil=t_a_su_coolingcoil-epsilon_c_coolingcoil*(t_a_su_coolingcoil-t_c_coolingcoil) "outlet (exhaust) air temperature [°C]"
+
+"! 4.4 Outlet air specific humidity"
+W_ex_coolingcoil=min(W_su_coolingcoil,W_ex_coolingcoil_wet) "outlet air humidity ratio, never above the supply value [kg_w/kg_a]"
+W_ex_coolingcoil_wet = W_su_coolingcoil - epsilon_c_coolingcoil*( W_su_coolingcoil - W_c_coolingcoil) "outlet air humidity ratio in the wet regime [kg_w/kg_a]"
+W_c_coolingcoil=humrat(airH2O,P=P_atm,T=t_c_coolingcoil,R=1) "humidity ratio of the air in contact with the coil (saturated at the contact temperature) [kg_w/kg_a]"
+
+"! 4.5 Outlet air specific enthalpy"
+h_a_ex_coolingcoil=enthalpy(airH2O,P=P_atm,W=W_ex_coolingcoil,T=t_a_ex_coolingcoil) "outlet air specific enthalpy [J/kg_da]"
+h_a_su_coolingcoil=enthalpy(airH2O,P=P_atm,W=W_su_coolingcoil,T=t_a_su_coolingcoil) "supply air specific enthalpy [J/kg_da]"
+
+"! 4.6 Cooling coil capacity"
+Q_dot_coolingcoil=M_dot_a_coolingcoil*(h_a_su_coolingcoil-h_a_ex_coolingcoil) "total cooling power of the coil [W]"
+Q_dot_sensible_coolingcoil=M_dot_a_coolingcoil*c_p_a_coil*(t_a_su_coolingcoil-t_a_ex_coolingcoil) "sensible cooling power of the coil [W]"
+c_p_a_coil = specheat(airH2O,T=t_a_su_coolingcoil ,P=P_atm ,w=W_su_coolingcoil) "specific heat capacity of the supply air [J/(kg-K)]"
+h_a_ex_coolingcoil_sensible=c_p_a*t_a_ex_coolingcoil+W_su_coolingcoil*(c_p_g*t_a_ex_coolingcoil+h_fg0) "outlet air specific enthalpy from c_p_a and c_p_g [J/kg_da]"
+Q_dot_latent_coolingcoil=(Q_dot_coolingcoil-Q_dot_sensible_coolingcoil) "latent cooling power of the coil [W]"
+
+SHR_coolingcoil=Q_dot_sensible_coolingcoil/(Q_dot_coolingcoil+0.00001) "sensible heat ratio of the coil [-]"

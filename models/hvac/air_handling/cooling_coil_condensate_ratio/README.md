@@ -183,6 +183,9 @@ Word file `R12 - Révisions.docx`), collection of S. Quoilin:
   humid-air offsets (+0.5 % on the humidity ratios).
 - `CSL-0017` *chilled_water_cooling_coil*: chilled-water cooling coil with
   dry and wet regimes, condensate flow computed.
+- `CSL-0074` *cooling_coil_refsim*: cooling coil of the ULiège model bank with
+  dry and wet regimes computed simultaneously and a secondary refrigerant side,
+  from which the condensate flow rate is obtained.
 - `CSL-0028` *air_handling_unit_moist_air*: air handling unit on `AirH2O`
   with cooling coil, post-heating and condensate.
 - `CSL-0055` *moist_air_room_psychrometrics*: psychrometric quantities of a

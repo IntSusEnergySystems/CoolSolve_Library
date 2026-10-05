@@ -161,3 +161,7 @@ Source file (EES 7.458, comments in French), collection of S. Quoilin:
 - `CSL-0061` *refrigerator_freezer_r134a*: same fluid family (R134a) and
   same course; a fridge-freezer cycle with two evaporators and two expansion
   valves, sized from a required refrigeration capacity.
+- `CSL-0077` *aircooled_chiller_refsim*: the same compressor concept
+  (volumetric efficiency, constant losses, refrigerant heat transfers
+  represented by a fictitious wall) in a full air-cooled water chiller of the
+  ULiège model bank.

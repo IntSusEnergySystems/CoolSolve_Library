@@ -4,7 +4,7 @@
 
 | Models | Verified | Runs | Blocked / failing | Documented only |
 |---:|---:|---:|---:|---:|
-| 70 | 49 | 5 | 16 | 0 |
+| 78 | 54 | 5 | 19 | 0 |
 
 ## Fundamentals
 
@@ -20,6 +20,7 @@
 | `CSL-0003` | [Evaporation of liquid methane in a tank](models/fundamentals/properties/methane_tank_evaporation/README.md) | Properties | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0044` | [Rigid tank with a liquid-vapour water mixture](models/fundamentals/properties/rigid_tank_water_mixture/README.md) | Properties | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0047` | [Isothermal expansion of a non-ideal gas: unit of k and boundary work](models/fundamentals/properties/nonideal_gas_isothermal_work/README.md) | Properties | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0079` | [BrineProp: thermophysical properties of aqueous secondary refrigerants (function library)](models/fundamentals/properties/brineprop_secondary_refrigerants/README.md) | Properties | 🔵 Level 2 · Intermediate | 🧩 Function library | ⛔ Blocked |
 
 ## Heat transfer
 
@@ -49,6 +50,9 @@
 | `CSL-0027` | [1-2 shell-and-tube steam condenser (effectiveness-NTU)](models/components/heat_exchangers/shell_and_tube_steam_condenser/README.md) | Heat exchangers | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0031` | [Refrigeration evaporator with moist air, wet regime](models/components/heat_exchangers/refrigeration_evaporator_wet_coil/README.md) | Heat exchangers | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0032` | [Wet air-cooled condenser (spray evaporative cooling)](models/components/heat_exchangers/wet_air_cooled_condenser/README.md) | Heat exchangers | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0075` | [ISO 5167 orifice plate (diaphragm) flow-rate calculation](models/components/instrumentation/iso5167_orifice_plate_flow_rate/README.md) | Instrumentation and flow metering | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0071` | [Centrifugal fan reference model (dimensionless factors)](models/components/pumps_fans/centrifugal_fan_reference_model/README.md) | Pumps and fans | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0072` | [Centrifugal brine pump reference simulation model (RefSim)](models/components/pumps_fans/centrifugal_brine_pump_refsim/README.md) | Pumps and fans | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0009` | [Domestic hot-water storage tank: dynamic temperature evolution](models/components/storage/dhw_tank_dynamic/README.md) | Storage | 🟢 Level 1 · Introductory | ⏱️ Dynamic | ⛔ Blocked |
 | `CSL-0041` | [Ice storage tank discharge with phase change](models/components/storage/ice_storage_tank_discharge_phase_change/README.md) | Storage | 🔵 Level 2 · Intermediate | ⏱️ Dynamic | ⛔ Blocked |
 
@@ -77,8 +81,9 @@
 | `CSL-0033` | [R22 heat pump with a semi-hermetic compressor model](models/cycles/refrigeration_heat_pumps/heat_pump_r22_semihermetic_compressor/README.md) | Refrigeration and heat pumps | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0039` | [High-temperature heat pump with PCM storage (Zorlu geothermal plant case study)](models/cycles/refrigeration_heat_pumps/high_temp_heat_pump_pcm_storage/README.md) | Refrigeration and heat pumps | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ☑️ Runs |
 | `CSL-0054` | [Air-source heat pump with R410A (evaporator air side)](models/cycles/refrigeration_heat_pumps/heat_pump_r410a_air_evaporator/README.md) | Refrigeration and heat pumps | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
-| `CSL-0061` | [Domestic refrigerator-freezer on R134a with two evaporators](models/cycles/refrigeration_heat_pumps/refrigerator_freezer_r134a/README.md) | Refrigeration and heat pumps | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ⛔ Blocked |
-| `CSL-0068` | [Scroll-compressor heat pump on R407C: data consistency check](models/cycles/refrigeration_heat_pumps/heat_pump_scroll_compressor_data_check/README.md) | Refrigeration and heat pumps | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0061` | [Domestic refrigerator-freezer on R134a with two evaporators](models/cycles/refrigeration_heat_pumps/refrigerator_freezer_r134a/README.md) | Refrigeration and heat pumps | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0068` | [Scroll-compressor heat pump on R407C: data consistency check](models/cycles/refrigeration_heat_pumps/heat_pump_scroll_compressor_data_check/README.md) | Refrigeration and heat pumps | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0077` | [Air-cooled water chiller, reference simulation model](models/cycles/refrigeration_heat_pumps/aircooled_chiller_refsim/README.md) | Refrigeration and heat pumps | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0004` | [Rankine cycle of a 60 MW steam power plant](models/cycles/steam_power/rankine_cycle_60mw/README.md) | Steam power cycles | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0029` | [Steam Rankine cycle with regenerative extraction](models/cycles/steam_power/rankine_cycle_regenerative_extraction/README.md) | Steam power cycles | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0053` | [Elementary steam power plant (component balances)](models/cycles/steam_power/steam_power_plant_elementary/README.md) | Steam power cycles | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
@@ -91,8 +96,11 @@
 | `CSL-0028` | [Air handling unit with moist-air conditioning](models/hvac/air_handling/air_handling_unit_moist_air/README.md) | Air handling | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0062` | [Condensate ratio and dry-air flow at a cooling coil, and a counter-flow recuperator](models/hvac/air_handling/cooling_coil_condensate_ratio/README.md) | Air handling | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0070` | [Adiabatic humidifier, simplified model (effectiveness-NTU)](models/hvac/air_handling/adiabatic_humidifier_simplified/README.md) | Air handling | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0073` | [Cooling coil with control, simplified model (contact temperature)](models/hvac/air_handling/cooling_coil_with_control_simplified/README.md) | Air handling | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0074` | [Cooling coil RefSim model, dry and wet regimes (one zone)](models/hvac/air_handling/cooling_coil_refsim/README.md) | Air handling | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0030` | [Two-speed cooling tower (regimes and mean fan power vs water set-point)](models/hvac/cooling_towers/two_speed_cooling_tower/README.md) | Cooling towers and evaporative equipment | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0065` | [Cooling tower for the condenser water of a steam power plant](models/hvac/cooling_towers/cooling_tower_condenser_water/README.md) | Cooling towers and evaporative equipment | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0076` | [Direct-contact cooling tower, reference simulation model](models/hvac/cooling_towers/cooling_tower_direct_contact_refsim/README.md) | Cooling towers and evaporative equipment | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0016` | [Moist-air cooling coil with contact factor](models/hvac/psychrometrics/moist_air_cooling_coil_contact_factor/README.md) | Psychrometrics | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0055` | [Moist air in a room: humidity ratio, enthalpy and dew point](models/hvac/psychrometrics/moist_air_room_psychrometrics/README.md) | Psychrometrics | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0063` | [Adiabatic mixing of room air and outdoor air (moist air)](models/hvac/psychrometrics/moist_air_adiabatic_mixing/README.md) | Psychrometrics | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |

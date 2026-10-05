@@ -1,9 +1,12 @@
 function,type,signature,model_id,path
+BRINEPROP,PROCEDURE,"(Pr$,Fl$,Conc,Temp:output)",CSL-0072,models/components/pumps_fans/centrifugal_brine_pump_refsim/centrifugal_brine_pump_refsim.eescode
+BRINEPROP,PROCEDURE,"(Pr$,Fl$,Conc,Temp:output)",CSL-0079,models/fundamentals/properties/brineprop_secondary_refrigerants/brineprop_secondary_refrigerants.eescode
 cond,PROCEDURE,"(fluid$,T_r_su_cd,M_dot_r_cd,DELTAT_r_ex_cd,Q_dot_cd1,T_w_ex_cd,T_w_su_cd,T_a_su_cd2,T_a_ex_cd2,p_r_cd:pinch_cd,h_r_ex_cd_v,t_r_ex_cd_v,h_r_ex_cd_tp,t_r_ex_cd_tp,T_r_ex_cd,h_r_ex_cd,M_dot_w_cd1,M_dot_a_cd2)",CSL-0040,models/cycles/organic_rankine/orc_biomass_chp/orc_biomass_chp.eescode
 cp_g,FUNCTION,"(T_p1,T_p2,m,n,p,e)",CSL-0040,models/cycles/organic_rankine/orc_biomass_chp/orc_biomass_chp.eescode
 cpbar,PROCEDURE,"(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)",CSL-0006,models/components/boilers_burners/boiler_mean_specific_heat/boiler_mean_specific_heat.eescode
 cpbar,PROCEDURE,"(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)",CSL-0034,models/cycles/engines/gas_engine_full_power_cpbar/gas_engine_full_power_cpbar.eescode
 cpbar,PROCEDURE,"(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)",CSL-0005,models/fundamentals/combustion/cpbar_combustion_products/cpbar_combustion_products.eescode
+fluidprop,PROCEDURE,"(Fluid$,Temp, Pres,Rh:Rho,Mu,Gamma)",CSL-0075,models/components/instrumentation/iso5167_orifice_plate_flow_rate/iso5167_orifice_plate_flow_rate.eescode
 gamma,FUNCTION,"(m,n,f,T_p1,T_p2)",CSL-0005,models/fundamentals/combustion/cpbar_combustion_products/cpbar_combustion_products.eescode
 mmprod,FUNCTION,"(m,n,f)",CSL-0005,models/fundamentals/combustion/cpbar_combustion_products/cpbar_combustion_products.eescode
 pump,PROCEDURE,"(fluid$,epsilon_pp,h_r_su_pp,t_r_su_pp,p_r_su_pp,p_r_ex_pp,M_dot_r_pp:W_dot_pp,T_r_ex_pp,h_r_ex_pp)",CSL-0040,models/cycles/organic_rankine/orc_biomass_chp/orc_biomass_chp.eescode
@@ -12,5 +15,6 @@ q_dot_pinch_fun_ev,PROCEDURE,"(m_dot_c, h_c_in, h_c_x0, h_c_x1, h_c_out, T_c_in,
 single_phase_HX,PROCEDURE,"(cf$,hf$,t_cf_su,t_cf_ex,P_cf_su,P_cf_ex,P_hf_su,P_hf_ex,t_hf_su,t_hf_ex,M_dot_hf,M_dot_cf,alpha,C_cf,C_hf,n_cf,n_hf:Q_dot,epsilon,NTU,AU)",CSL-0008,models/components/heat_exchangers/condenser_three_zones/condenser_three_zones.eescode
 therminol66,PROCEDURE,"(T_oil66:rho_oil66,cp_oil66,k_oil66,nu_oil66)",CSL-0019,models/cycles/organic_rankine/orc_simple_r245fa/orc_simple_r245fa.eescode
 two_phase_CD,PROCEDURE,"(cf$,R$,t_cf_su,t_cf_ex,t_cd,M_dot_r,M_dot_cf,alpha,C_cf,C_r,n_cf,n_r:Q_dot,epsilon,NTU,AU)",CSL-0008,models/components/heat_exchangers/condenser_three_zones/condenser_three_zones.eescode
+warning_error,PROCEDURE,"(var1_in,var2_in,var3_in, var4_in:var1_out,var2_out,var3_out,var4_out)",CSL-0075,models/components/instrumentation/iso5167_orifice_plate_flow_rate/iso5167_orifice_plate_flow_rate.eescode
 weibe,PROCEDURE,"(theta, theta_s, theta_d : x_b, x_dot_b)",CSL-0024,models/cycles/engines/single_cylinder_engine_weibe/single_cylinder_engine_weibe.eescode
 write,FUNCTION,"(eta_I,W_dot_el_net,eta_global,i)",CSL-0040,models/cycles/organic_rankine/orc_biomass_chp/orc_biomass_chp.eescode

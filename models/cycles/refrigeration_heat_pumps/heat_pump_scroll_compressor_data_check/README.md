@@ -1,6 +1,6 @@
 # Scroll-compressor heat pump on R407C — data consistency check
 
-⛔ **Blocked** &nbsp;|&nbsp; 🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; `CSL-0068`
+✅ **Verified** &nbsp;|&nbsp; 🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; `CSL-0068`
 
 A manufacturer of scroll compressors for heat pumps announces the performance
 of one operating point of its machine on R407C. The model rebuilds that
@@ -13,11 +13,11 @@ exercise.
 |---|---|
 | **Category** | Cycles and machines › Refrigeration and heat pumps |
 | **Fluids** | R407C (zeotropic blend, CoolProp mixture properties) |
-| **Size** | 46 equations in the native file (47 in the `_coolsolve` variant), all explicit (largest block: 1) |
+| **Size** | 47 equations, all explicit (largest block: 1): the 38 of the original (its own solution report also numbers 38), the 8 state-point entries `T[i]`, `s[i]` added for the diagram and the one `T_4` of decision D11 |
 | **Source** | ULiège — *Machines et systèmes thermiques*, repetition session 8, exercise 5 (header `VL050415`) — CoolSolve example `refrigeration3` + original EES file |
 | **Authors** | Vincent Lemort (ULiège Thermodynamics Laboratory, original exercise, 2005-04-15); S. Quoilin (CoolSolve example) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file **blocked** (`CS-GAP-PROP-TH`); the runnable `_coolsolve` variant is **verified** (see *Verification*) |
+| **CoolSolve** | v0.3.0 — **verified** against the stored EES solution (see *Verification*) |
 
 ## Problem statement
 
@@ -51,8 +51,10 @@ inlet = compressor outlet, **3** condenser outlet, **4** evaporator inlet.
 - **State 3**: saturation pressure at `T_cd` (`x = 0`) and the temperature
   `T_3 = T_cd - DELTA_T_sc`; `h_3` is the enthalpy of that compressed liquid.
 - **State 4**: the enthalpy is unchanged from the condenser outlet (`h_4 = h_3`,
-  as in the original) and the temperature is the evaporation temperature, so
-  `P_4 = PRESSURE(R407C,T=T_ev,h=h_4)` gives the pressure of that state.
+  as in the original) and the temperature is the evaporation temperature, so the
+  pressure of that state is `P_4`, written in the model with the **(P, H)** input
+  pair — `T_4 = TEMPERATURE(R407C,P=P_4,H=h_4)` together with `T_4 = T_ev` — where
+  the original uses the (T, H) pair (decision D11, see *Conversion log*).
 - **Flow rate and duties**: the refrigerating capacity closes the evaporator
   balance $\dot Q_{ev} = \dot m (h_1-h_4)$, which — with $\dot Q_{ev}$ given —
   gives the **mass flow rate** $\dot m$ the announced capacities imply; the
@@ -85,12 +87,8 @@ asks.
 
 ## How to run
 
-The native file `heat_pump_scroll_compressor_data_check.eescode` cannot run in
-CoolSolve (`CS-GAP-PROP-TH`). The runnable transcription is
-`heat_pump_scroll_compressor_data_check_coolsolve.eescode`:
-
 ```bash
-coolsolve ./heat_pump_scroll_compressor_data_check_coolsolve.eescode
+coolsolve ./heat_pump_scroll_compressor_data_check.eescode
 ```
 
 The system is fully explicit (47 blocks of 1 equation); no guess values are
@@ -98,8 +96,7 @@ needed.
 
 ## Results
 
-CoolSolve (`_coolsolve` variant) and the solution stored by EES in the original
-file:
+CoolSolve and the solution stored by EES in the original file:
 
 | Quantity | CoolSolve (SI) | EES stored | rel. diff |
 |---|---:|---:|---:|
@@ -144,7 +141,7 @@ cycle on the P‑h or T‑s diagram (CoolSolve *Diagram* tab, fluid R407C,
 
 ## Verification
 
-`tools/compare_solution.py heat_pump_scroll_compressor_data_check_coolsolve.sol
+`tools/compare_solution.py heat_pump_scroll_compressor_data_check.sol
 <ees reference>` — the reference is the solution stored by EES in the original
 file, read from its solution report `EES_ok/refrigeration3.tex`:
 
@@ -155,11 +152,11 @@ The 17 CoolSolve-only variables are the 17 outputs the import adds or the EES
 report does not tabulate: the array elements `P[i]`, `h[i]`, `T[i]`, `s[i]`
 (EES stores `P[i]` and `h[i]` but does not list them in the report; `T[i]` and
 `s[i]` are added by the library, see *Conversion log*) and the auxiliary
-temperature `T_4` of the `_coolsolve` variant.
+temperature `T_4` added by decision D11.
 
 One variable exceeds the 0.1 % tolerance: `P_4`, at **3.6·10⁻³**. It is
 obtained in EES by inverting the property model on the **(T, H)** pair and in the
-variant by inverting it on the **(P, H)** pair, and the state lies inside the
+model by inverting it on the **(P, H)** pair, and the state lies inside the
 saturation dome of R407C at 0 °C (quality ≈ 0.335), where the two inversions and
 the R407C data of EES 9.x and of CoolProp differ slightly. No other result
 depends on `P_4`: it feeds only the array `P[4]`/`s[4]` (the diagram point).
@@ -240,19 +237,33 @@ statement with the values of the manufacturer and the equations that check them.
   `s[i] = entropy(R407C,P=P[i],h=h[i])` for states 2 and 4 (the (P, H) pair) and
   `entropy(R407C,P=P_3,T=T_3)` for state 3. Re-solving with them changes no
   other result (identical values to the last digit).
-- **Blocked native file** (`CS-GAP-PROP-TH`): CoolSolve, through CoolProp, does
-  not support the **(T, H)** input pair, which the original uses for
-  `P_4 = PRESSURE(R407C,T=T_ev,h=h_4)` — the state is known by its temperature
-  and its enthalpy. The native file keeps the original line, in valid EES.
-- **Runnable variant** `heat_pump_scroll_compressor_data_check_coolsolve.eescode`:
-  the single change is the pressure of state 4, obtained with the **(P, H)**
-  pair instead of (T, H):
-  `T_4 = TEMPERATURE(R407C,P=P_4,h=h_4)` together with `T_4 = T_ev` (two
-  equations, one new variable, whose value 0 °C is fixed by the second line).
-  Every other equation, variable name and input value is unchanged, and the file
-  is still **valid EES** (no CoolSolve-only syntax). It is verified against the
-  same EES reference (see *Verification*).
-- **Level**: score 1 on the scale of `taxonomy.md` §3 (46 equations → 0,
+- **(T, H) property call, decision D11** (2026-10-05, roadmap card C-88): the
+  original obtains the pressure of state 4 with the **(T, H)** input pair,
+  `P_4 = PRESSURE(R407C,T=T_ev,h=h_4)`, which CoolProp does not support
+  (`CS-GAP-PROP-TH`, not planned). Following workflow §6 ("Property calls with
+  the (T, H) input pair", decision D11), the call is rewritten **in the model
+  itself** with the (P, H) pair: `P_4` becomes an auxiliary pressure unknown
+  (it is also kept, it feeds the diagram point `P[4]`) fixed by the implicit
+  equation pair `T_4 = TEMPERATURE(R407C,P=P_4,h=h_4)` (the property call, now
+  with (P, H)) and `T_4 = T_ev` — two equations, one new variable `T_4`, whose
+  value 0 °C is fixed by the second line, as prescribed for the "unknown phase"
+  case. The same idiom (a value assignment followed by an equation for the same
+  variable) is used by `eta_is_cp` in `CSL-0061` and by the EES original
+  `CoolSolve misc/EES_ok.zip: EES_ok/refrigeration1.EES`, so the file is still
+  **valid EES** (no CoolSolve-only syntax).
+  The saturation pressure at `T_ev` was *not* used instead: R407C is a
+  zeotropic blend, so that pressure is not unique — CoolProp returns 460.7 kPa
+  for `PRESSURE(R407C,T=T_ev,x=1)` (the value of `P_1`) and 567.9 kPa for
+  `x=0` — while EES returns 531.9 kPa for the state of enthalpy `h_4` at
+  `T_ev`, so `P_4 = P_1` would be wrong by 13 %. Every other equation, variable
+  name and input value is unchanged, the values are identical to those of the
+  deleted runnable variant, and no native/variant split is kept for this reason
+  alone:
+  `heat_pump_scroll_compressor_data_check_coolsolve.eescode` (and its `.sol`,
+  `.initials`) has been deleted and this file is the single model file.
+  `CS-GAP-PROP-TH` is no longer a blocking gap and is not listed in
+  `missing_features`.
+- **Level**: score 1 on the scale of `taxonomy.md` §3 (47 equations → 0,
   largest block 1 → 0, arrays → 1) gives **level 1**; kept at level 1 (the card
   guessed L2): every equation is explicit, there is no implicit loop, no
   correlation and no iteration — an introductory exercise, like `CSL-0001` and
@@ -260,15 +271,16 @@ statement with the values of the manufacturer and the equations that check them.
 
 ## Limitations and CoolSolve gaps
 
-- `CS-GAP-PROP-TH`: CoolSolve (through CoolProp) rejects the **(T, H)** input
-  pair of a property call (*"CoolProp does not support T,H as input pair. Use
-  P,H or T,S instead"*), while EES evaluates it (stored `P_4` = 531 903 Pa). It
-  blocks the native file, in one line; the `_coolsolve` variant identifies the
-  same state with the (P, H) pair. The native file is otherwise sound: run
-  unmodified (`coolsolve -d`) it reports 46 equations, 46 variables and
-  `System square: Yes` (the same count as the EES solution report, 38, plus the
-  eight state-point entries added on import), and the only failing block is
-  block 27, the one holding `P_4`.
+- `CS-GAP-PROP-TH` (not blocking): CoolSolve, through CoolProp, rejects the
+  **(T, H)** input pair of a property call (*"CoolProp does not support T,H as
+  input pair. Use P,H or T,S instead"*), while EES evaluates it (stored `P_4` =
+  531 903 Pa). The model rewrites that one call with the (P, H) pair, which
+  identifies the same state (decision D11, see the conversion log), so the gap
+  does not block the file; it would still be needed by anyone wanting the
+  original (T, H) form. The system is sound: run unmodified (`coolsolve -d`) it
+  reports 47 equations, 47 variables and `System square: Yes` (the 38 equations
+  of the EES solution report, the eight state-point entries added on import and
+  the one variable `T_4` of decision D11).
 - **No pressure drops, no heat transfer**: the model checks data, it does not
   predict the machine. The evaporator and condenser are isobaric by
   construction (saturation pressures from `T_ev` and `T_cd`), the compressor has
@@ -297,8 +309,8 @@ statement with the values of the manufacturer and the equations that check them.
   of the isentropic efficiency), from the CoolSolve example `refrigeration1`.
 - `CSL-0025` *heat_pump_cycle_r22_30kw*: the other heat-pump exercise of that
   session (R22, 30 kW), from the CoolSolve example `refrigeration2`.
-- `CSL-0061` *refrigerator_freezer_r134a*: a two-evaporator fridge-freezer
-  blocked by the same gap `CS-GAP-PROP-TH`, with the same (P, H) workaround in
-  its `_coolsolve` variant.
+- `CSL-0061` *refrigerator_freezer_r134a*: a two-evaporator fridge-freezer whose
+  three (T, H) property calls of the first evaporator inlet were rewritten with
+  the (P, H) pair by the same decision D11.
 - `CSL-0001` *refrigeration_cycle_simple_compressor*: R134a / R22 / propane
   cycle with a reciprocating-compressor model (clearance volume).

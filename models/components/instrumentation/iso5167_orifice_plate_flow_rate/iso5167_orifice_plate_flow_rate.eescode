@@ -1,0 +1,127 @@
+{=============================================================================
+  ISO 5167 orifice plate (diaphragm) flow-rate calculation
+  CoolSolve Library model CSL-0075 - native file (blocked in CoolSolve)
+ -----------------------------------------------------------------------------
+  Mass flow rate of a fluid through a diaphragm (orifice plate with corner
+  tappings) from the measured pressure drop, following the ISO 5167-1980
+  procedure (Stolz discharge coefficient, expansibility factor); fluid
+  properties are evaluated at the upstream state by a procedure taken from
+  the ULiège model bank (any fluid; humid air per kg of dry air for AirH2O).
+  The default operating point is written inversely, as in the original: the
+  mass flow rate is imposed and the diaphragm bore diameter Di_dph is solved.
+  The original flags out-of-range inputs (bore, pipe diameter, beta,
+  Reynolds) with CALL WARNING branches; none is taken at the default
+  operating point.
+
+  Inputs : fluid$, t_a_su_dph, P_a_su_dph, RH_su_dph, DELTAP_dph, De_dph,
+           l1_dph, l2_dph, M_dot_a_dph
+  Outputs: Di_dph (bore diameter), Re_D_dph, C_D_dph, epsilon_dph
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+           (unit system of the original file, unchanged)
+  Source : ULiège Thermodynamics Laboratory model bank (Laborelec toolkit
+           lineage) - see README.md
+  Status : BLOCKED in CoolSolve (native EES syntax kept): the 5-argument
+           intrinsic if(A,B,X,Y,Z) (CS-GAP-IF5) and isidealgas(Fluid$)
+           (CS-GAP-ISIDEALGAS) are unsupported; see the README for the
+           runnable variant and the full list.
+  Module : the MODULE flowrate of the original is flattened into the main
+           program (CoolSolve Library decision D10, CS-GAP-MODULE not
+           planned). One call:
+             call flowrate(fluid$,t_a_su_dph,p_a_su_dph,RH_su_dph,
+                           DELTAP_dph,De_dph,Di_dph,l1_dph,l2_dph,M_dot_a_dph)
+           - formal arguments replaced by the actual ones, in particular
+             d1_dph -> l1_dph and d2_dph -> l2_dph;
+           - module-internal variables already carry the _dph tag of the
+             single call and are kept, except coef -> coef_dph, and the
+             internal L1_dph, L2_dph renamed L1_ratio_dph, L2_ratio_dph
+             (collision with the caller's l1_dph, l2_dph: EES names are
+             case-insensitive).
+=============================================================================}
+
+" Flow rate calculation procedure according to the ISO 5167-1980 standard for a diaphragm (as in the original)"
+
+" Fluid properties, whatever the fluid (procedure of the original):"
+
+PROCEDURE fluidprop(Fluid$,Temp, Pres,Rh:Rho,Mu,Gamma)
+if (Fluid$ <> 'AirH2O') THEN
+Rho = density(Fluid$,T=Temp,P=Pres)
+A=isidealgas(Fluid$)
+IF A = 1 THEN
+Mu= viscosity(Fluid$,T=Temp)
+Gamma = cp(Fluid$,T=Temp)/cv(Fluid$,T=Temp)
+ELSE
+Mu= viscosity(Fluid$,T=Temp, P=Pres)
+Gamma = cp(Fluid$,T=Temp,P=Pres)/cv(Fluid$,T=Temp,P=Pres)
+ENDIF
+ELSE
+w = HumRat(Fluid$,T=Temp,P=Pres, R=Rh)
+Rho = density(Fluid$,T=Temp,P=Pres,R=Rh)*(1+w)
+Mu= viscosity(Fluid$,T=Temp,P=Pres,R=Rh)
+Gamma = cp(Fluid$,T=Temp,P=Pres,R=Rh)/cv(Fluid$,T=Temp,P=Pres,R=Rh)
+ENDIF
+END
+
+" Tolerances for corner pressure tappings (as in the original): "
+
+procedure warning_error(var1_in,var2_in,var3_in, var4_in:var1_out,var2_out,var3_out,var4_out)
+
+if(var1_in < 0.0125) then call warning(' Di_dph must be above 0.0125.  A value of  xxxE4 was supplied',var1_in)
+if(var2_in< 0.050) or (var2_in  > 1) then call warning(' De_dph  must be between 0.050 and 1.  A value of  xxxE4 was supplied',var2_in)
+if(var3_in < 0.23) or (var3_in > 0.8) then call warning(' beta_dph  must be between 0.23 and 0.8.  A value of  xxxE4 was supplied',var3_in)
+if ((var4_in  < 5000) or (var4_in  >1E8 )) and ((var3_in >= 0.23) and (var3_in <=0.45))  then call warning(' Re_D_dph  must be between 5000 and 1E8.  A value of  xxxE4 was supplied',var4_in)
+if ((var4_in  < 1E4) or (var4_in  >1E8 )) and ((var3_in > 0.45) and (var3_in <=0.77))  then call warning(' Re_D_dph  must be between 10000 and 1E8.  A value of  xxxE4 was supplied',var4_in)
+if ((var4_in  < 20000) or (var4_in  >1E8 )) and ((var3_in > 0.77) and (var3_in <=0.8))  then call warning(' Re_D_dph  must be between 20000 and 1E8.  A value of  xxxE4 was supplied',var4_in)
+
+var1_out := var1_in
+var2_out := var2_in
+var3_out := var3_in
+var4_out := var4_in
+
+end
+
+"! ################################## Main program #################################################"
+
+"inputs:"
+fluid$ = 'airh2o'            "fluid of the default operating point (EES: spelling-insensitive)"
+t_a_su_dph=50                "upstream temperature [°C]"
+P_a_su_dph=8E5 [Pa]          "upstream absolute pressure (8E5 in the original) [Pa]"
+RH_su_dph=1                  "relative humidity at the upstream state [-]"
+DELTAP_dph=0.5E5 [Pa]        "measured pressure drop across the diaphragm (0.5E5 in the original) [Pa]"
+
+De_dph=0.050                 "m"    "pipe diameter (diamètre de la conduite)"
+{Di_dph=0.018}               "m"    "bore diameter of the diaphragm (diamètre du diaphragme): design input of the original, commented out there - the model solves Di_dph from the imposed flow rate"
+l1_dph=0.0                   "m"    "upstream tapping distance from the upstream face of the diaphragm: De +- 0.1 De for D-tappings, 0 for corner tappings (as in the original)"
+l2_dph=0.0                   "m"    "downstream tapping distance from the downstream face: De/2 +- 0.02 De (as in the original)"
+
+M_dot_a_dph = 0.125          "imposed mass flow rate [kg/s] (equation added at the end of the original main program)"
+
+"Module flowrate flattened (one call; mapping in the header)"
+call fluidprop(fluid$,t_a_su_dph, p_a_su_dph,RH_su_dph:rho_a_su_dph,mu_dph,Gamma_dph)   "Gas properties"
+
+A_De_dph= (pi*De_dph^2)/4                    "pipe cross-section [m^2]"
+A_di_dph= (pi*Di_dph^2)/4                    "bore cross-section [m^2]"
+
+vit_dph=(V_dot_dph)/A_De_dph                 "mean velocity in the pipe [m/s]"
+vit_dph_int=(V_dot_dph)/A_di_dph             "mean velocity in the bore [m/s]"
+M_dot_a_dph=V_dot_dph*rho_a_su_dph           "mass flow rate from the volume flow rate [kg/s]"
+V_dot_mh_dph=V_dot_dph*3600                  "volume flow rate [m^3/h]"
+Re_D_dph=G_dph*De_dph/mu_dph                 "pipe Reynolds number [-]"
+G_dph=M_dot_a_dph/A_De_dph                   "mass flux [kg/m^2-s]"
+
+E_dph=(1-beta_dph^4)^(-0.5)                  "velocity of approach factor [-]"
+beta_dph =Di_dph/De_dph                      "diameter ratio [-]"
+m_dph=beta_dph^2                             "area ratio (as in the original) [-]"
+
+coef_dph = if(L1_ratio_dph,0.039/0.09,0.09,0.039,0.039)   "Stolz coefficient of the L1 term (5-argument if of the original; coef in the module) [-]"
+C_D_dph=0.5959+0.0312*beta_dph^2.1-0.184*beta_dph^8+0.0029*beta_dph^2.5*(10^6/Re_D_dph)^0.75+coef_dph*L1_ratio_dph*beta_dph^4*(1-beta_dph^4)^(-1)-0.03371*L2_ratio_dph*beta_dph^3   "discharge coefficient, Stolz equation [-]"
+
+L1_ratio_dph=l1_dph/De_dph                   "upstream tapping distance ratio (d1_dph of the module = l1_dph) [-]"
+L2_ratio_dph=l2_dph/De_dph                   "downstream tapping distance ratio (d2_dph of the module = l2_dph) [-]"
+
+epsilon_dph= 1 - (0.41 + 0.35 * beta_dph^4) * DELTAp_dph / (gamma_dph * p_a_su_dph)   "expansibility factor [-]"
+
+M_dot_a_dph=E_dph*C_D_dph*epsilon_dph*A_di_dph*sqrt(2*DELTAP_dph*rho_a_su_dph)   "ISO 5167 mass flow rate (débit massique) [kg/s]"
+nu_dph=E_dph*C_D_dph                         "as in the original [-]"
+
+"Verification of the variables (as in the original):"
+call warning_error(Di_dph,De_dph,beta_dph, Re_D_dph:var1_out,var2_out,var3_out,var4_out)

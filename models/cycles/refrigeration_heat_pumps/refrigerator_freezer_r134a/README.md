@@ -1,6 +1,6 @@
 # Domestic refrigerator-freezer on R134a (two evaporators)
 
-⛔ **Blocked** &nbsp;|&nbsp; 🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; `CSL-0061`
+✅ **Verified** &nbsp;|&nbsp; 🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; `CSL-0061`
 
 Sizing of a domestic fridge-freezer running on R134a: 1.5 kW of refrigeration
 delivered at **two** evaporation temperatures (+3 °C for the fridge compartment
@@ -17,7 +17,7 @@ intermediate pressure level.
 | **Source** | ULiège — course *Thermodynamique appliquée* (MECA0002), repetition session 8, exercise 3 (EES file `R08_E03_2022.EES`) |
 | **Authors** | N. Paulus, B. Dechesne (repetition assistants) and S. Quoilin (course) — see *Source and attribution* |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file **blocked** (`CS-GAP-PROP-TH`); the runnable `_coolsolve` variant is **verified** (see *Verification*) |
+| **CoolSolve** | v0.3.0 — **verified** against the stored EES solution (see *Verification*) |
 
 ## Problem statement
 
@@ -77,17 +77,13 @@ States (as numbered in the original): 1 compressor inlet, 2 condenser inlet,
 
 ## How to run
 
-The native file `refrigerator_freezer_r134a.eescode` cannot run in CoolSolve
-(`CS-GAP-PROP-TH`). The runnable transcription is
-`refrigerator_freezer_r134a_coolsolve.eescode`:
-
 ```bash
-coolsolve ./refrigerator_freezer_r134a_coolsolve.eescode
+coolsolve ./refrigerator_freezer_r134a.eescode
 ```
 
 ## Results
 
-CoolSolve (`_coolsolve` variant) and the solution stored by EES in the source
+CoolSolve (main file) and the solution stored by EES in the source
 file:
 
 | Quantity | CoolSolve (SI) | EES stored | Agreement |
@@ -123,7 +119,7 @@ state 1 closes the loop) give the cycle on the P‑h or T‑s diagram (CoolSolve
 
 ## Verification
 
-`tools/compare_solution.py refrigerator_freezer_r134a_coolsolve.sol
+`tools/compare_solution.py refrigerator_freezer_r134a.sol
 reference/ees_variables.csv --ees-units` (reference: solution stored by EES in
 the source file, converted from its kPa/kJ unit system):
 
@@ -143,7 +139,8 @@ The 17 differences are explained:
 - Excluded from the agreement statement above: the two variables only EES
   reports, `P` and `Pertes`. They appear in the EES variable records but in
   **none** of the equations of the file (leftovers of an earlier version of the
-  exercise); they were not imported.
+  exercise); they were not imported. The single variable only CoolSolve reports
+  is the string variable `fluid$`.
 
 Maximum relative deviation over all the other variables: **7.5·10⁻⁴** (`v[5]`),
 i.e. well inside the 0.5 % tolerance for real-fluid properties with a different
@@ -214,17 +211,25 @@ S. Quoilin:
   = 0.75, then `epsilon_s_cp = w_s/w`), whose stored solution satisfies both
   equations (`w_s`/`w` = 0.75). CoolSolve also treats the first assignment as the
   fixed value and solves the block for `h[2]`, and the model converges.
-- **Runnable variant** `refrigerator_freezer_r134a_coolsolve.eescode`: the native
-  file is blocked by `CS-GAP-PROP-TH` (CoolProp does not support the (T, H)
-  input pair, which the original uses for the three property calls of state 4:
-  `x[4]`, `s[4]`, `v[4]`). The variant changes **only** the input pair of those
-  three calls, from `H=h[4],T=T[4]` to `P=p[4],H=h[4]`, `p[4]` being the
-  saturation pressure at the same temperature (`p[4] = P_sat(fluid$,T=T[4])`,
-  already computed on the previous line): same state, same properties. Every
-  variable name, input value and other equation is unchanged, and the variant is
-  still valid EES (no CoolSolve-only syntax). It is verified against the same
-  EES reference (see *Verification*). Not needed in the variant: any change to
-  the `eta_is_cp` line (an earlier attempt inverted it for `h[2]`), which was
+- **(T, H) property calls, decision D11** (2026-10-05, roadmap card C-88): the
+  original evaluates the three properties of state 4 (first evaporator inlet)
+  with the **(T, H)** input pair — `x[4]`, `s[4]`, `v[4]` — the temperature being
+  known from the isobaric evaporator and the enthalpy from the isenthalpic valve.
+  CoolProp does not support that pair (`CS-GAP-PROP-TH`, not planned), so in the
+  **model itself** the three calls now use the **(P, H)** pair,
+  `x[4] = quality(fluid$,P=p[4],H=h[4])`, `s[4] = entropy(fluid$,P=p[4],H=h[4])`,
+  `v[4] = volume(fluid$,P=p[4],H=h[4])`: state 4 lies in the saturation dome at
+  `T_fridge`, so the saturation pressure at the same temperature,
+  `p[4] = P_sat(fluid$,T=T[4])` (already computed on the previous line), fixes the
+  same state. This is the rewrite prescribed by workflow §6 ("Property calls with
+  the (T, H) input pair", decision D11): no native/variant split for this reason
+  alone, so the runnable variant `refrigerator_freezer_r134a_coolsolve.eescode`
+  (and its `.sol`, `.initials`) has been deleted and this file is the single model
+  file. Every variable name, input value and other equation is unchanged, the file
+  is still valid EES (no CoolSolve-only syntax), and the values are bit-identical
+  to those of the deleted variant. `CS-GAP-PROP-TH` is no longer a blocking gap
+  and is not listed in `missing_features`. Not needed either: any change to the
+  `eta_is_cp` line (an earlier attempt inverted it for `h[2]`), which was
   reverted.
 - **Diagram support**: none needed. The original already computes every state as
   an array (`p[i]`, `h[i]`, `T[i]`, `s[i]`, `v[i]`, `x[i]`, i = 1…6) and repeats
@@ -238,14 +243,14 @@ S. Quoilin:
 
 ## Limitations and CoolSolve gaps
 
-- `CS-GAP-PROP-TH`: CoolSolve (through CoolProp) rejects the **(T, H)** input
-  pair of a property call (*"CoolProp does not support T,H as input pair. Use
-  P,H or T,S instead"*). The original evaluates the three properties of state 4
-  (first evaporator inlet) that way — the temperature is known from the
-  isobaric evaporator and the enthalpy from the isenthalpic valve — and EES
-  computes them (stored `x[4]` = 0.22906, `s[4]` = 381.82 J/kg·K,
-  `v[4]` = 0.0149007 m³/kg). This blocks the native file; the `_coolsolve`
-  variant uses the (P, H) pair, which identifies the same state.
+- `CS-GAP-PROP-TH` (not blocking): CoolSolve, through CoolProp, rejects the
+  **(T, H)** input pair of a property call (*"CoolProp does not support T,H as
+  input pair. Use P,H or T,S instead"*). The original uses it for the three
+  properties of state 4 (first evaporator inlet) and EES computes them (stored
+  `x[4]` = 0.22906, `s[4]` = 381.82 J/kg·K, `v[4]` = 0.0149007 m³/kg). The model
+  rewrites those three calls with the (P, H) pair, which identifies the same
+  state (decision D11, see the conversion log), so the gap does not block the
+  file; it would still be needed by anyone wanting the original (T, H) form.
 - The compressor inlet is assumed to be **saturated vapour** and the condenser
   outlet **saturated liquid** (assumptions of the original; the statement gives
   no superheat and no subcooling). Real appliances have 2–5 K of superheat at

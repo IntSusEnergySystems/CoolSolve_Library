@@ -1,0 +1,120 @@
+{=============================================================================
+  ISO 5167 orifice plate (diaphragm) flow-rate calculation
+  CoolSolve Library model CSL-0075 - runnable variant of a blocked native file
+ -----------------------------------------------------------------------------
+  Mass flow rate of a fluid through a diaphragm (orifice plate with corner
+  tappings) from the measured pressure drop, following the ISO 5167-1980
+  procedure (Stolz discharge coefficient, expansibility factor); fluid
+  properties are evaluated at the upstream state. The default operating point
+  is written inversely, as in the original: the mass flow rate is imposed and
+  the diaphragm bore diameter Di_dph is solved. The original also flags
+  out-of-range inputs (bore, pipe diameter, beta, Reynolds) with CALL
+  WARNING branches; none is taken at the default operating point.
+
+  Inputs : fluid$, t_a_su_dph, P_a_su_dph, RH_su_dph, DELTAP_dph, De_dph,
+           l1_dph, l2_dph, M_dot_a_dph
+  Outputs: Di_dph (bore diameter), Re_D_dph, C_D_dph, epsilon_dph
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège Thermodynamics Laboratory model bank (Laborelec toolkit
+           lineage) - see README.md
+  Variant: runnable transcription of the blocked native file
+           iso5167_orifice_plate_flow_rate.eescode; NOT valid EES as a whole.
+           Changes, each forced by a registered gap and logged in the README
+           conversion log:
+           1. the 5-argument intrinsic if(A,B,X,Y,Z) is rewritten with the
+              3-argument form if(B-A, X, Z), exactly equivalent here because
+              the A=B and A>B branches of the original both return 0.039
+              (CS-GAP-IF5);
+           2. isidealgas(Fluid$) is unsupported (CS-GAP-ISIDEALGAS): the
+              ideal-gas special case of the fluid-property procedure is
+              dropped, viscosity/cp/cv are always called with (T=, P=);
+              for the default fluid (AirH2O) the branch used was already the
+              (T=, P=, R=) one;
+           3. density(AirH2O, ..., R=) returns the fallback value 1E4 in
+              CoolSolve (CS-BUG-HUMIDAIR-PROPS): the EES-equivalent
+              1/volume(AirH2O, ...) per kg of dry air is used, times (1+w)
+              as in the original;
+           4. cv(AirH2O, ...) returns cp in CoolSolve (CS-BUG-HUMIDAIR-PROPS):
+              cv is computed as cp - R_mix of the ideal-gas mixture, as in
+              EES for AirH2O;
+           5. the six CALL WARNING statements of PROCEDURE warning_error are
+              replaced by comments with the same validity ranges: CoolSolve
+              raises "Unknown procedure: warning" during the Newton
+              evaluation of a procedure whose arguments are unknowns, even
+              when no branch is taken at the solution (CS-GAP-CALL-WARNING);
+           6. fluid$ = 'airh2o' in the original is written 'AirH2O' (same
+              fluid in EES): CoolSolve compares strings case-sensitively
+              (CS-BUG-STRING-CASE), so the lowercase spelling of the original
+              misses the AirH2O branch of fluidprop.
+=============================================================================}
+
+PROCEDURE fluidprop(Fluid$,Temp, Pres,Rh:Rho,Mu,Gamma)
+if (Fluid$ <> 'AirH2O') THEN
+Rho = density(Fluid$,T=Temp,P=Pres)
+Mu= viscosity(Fluid$,T=Temp, P=Pres)
+Gamma = cp(Fluid$,T=Temp,P=Pres)/cv(Fluid$,T=Temp,P=Pres)
+ELSE
+w = HumRat(Fluid$,T=Temp,P=Pres, R=Rh)
+Rho = (1+w)/volume(Fluid$,T=Temp,P=Pres,R=Rh)   "density = 1/volume per kg of dry air (CS-BUG-HUMIDAIR-PROPS), times (1+w) as in the original [kg/m^3]"
+Mu= viscosity(Fluid$,T=Temp,P=Pres,R=Rh)
+R_mix_dph=(287.055+w*461.495)/(1+w)   "gas constant of the humid-air mixture [J/kg-K]"
+Gamma = cp(Fluid$,T=Temp,P=Pres,R=Rh)/(cp(Fluid$,T=Temp,P=Pres,R=Rh)-R_mix_dph)   "cv = cp - R_mix as in EES for AirH2O (CS-BUG-HUMIDAIR-PROPS) [-]"
+ENDIF
+END
+
+procedure warning_error(var1_in,var2_in,var3_in, var4_in:var1_out,var2_out,var3_out,var4_out)
+"Validity ranges checked by the original with CALL WARNING (comments in this variant, CS-GAP-CALL-WARNING):"
+"{ Di_dph must be above 0.0125 }"
+"{ De_dph must be between 0.050 and 1 }"
+"{ beta_dph must be between 0.23 and 0.8 }"
+"{ Re_D_dph must be between 5000 and 1E8 for 0.23 <= beta_dph <= 0.45, between 1E4 and 1E8 for 0.45 < beta_dph <= 0.77, and between 2E4 and 1E8 for 0.77 < beta_dph <= 0.8 }"
+var1_out := var1_in
+var2_out := var2_in
+var3_out := var3_in
+var4_out := var4_in
+end
+
+"!Main program (inputs)"
+fluid$ = 'AirH2O'            "saturated humid air at the default operating point ('airh2o' in the original: same fluid in EES, canonical casing here because CoolSolve compares strings case-sensitively)"
+t_a_su_dph=50                "upstream temperature [°C]"
+P_a_su_dph=8E5               "upstream absolute pressure [Pa]"
+RH_su_dph=1                  "relative humidity at the upstream state [-]"
+DELTAP_dph=0.5E5             "measured pressure drop across the diaphragm [Pa] (0.5E5 in the original)"
+
+De_dph=0.050                 "pipe diameter [m]"
+{Di_dph=0.018}               "bore diameter [m]: design input of the original, commented out there - the model solves Di_dph from the imposed flow rate"
+l1_dph=0.0                   "upstream tapping distance from the upstream face: 0 for corner tappings [m]"
+l2_dph=0.0                   "downstream tapping distance from the downstream face: 0 for corner tappings [m]"
+M_dot_a_dph = 0.125          "imposed mass flow rate [kg/s] (equation added at the end of the original main program)"
+
+"!Module flowrate flattened (one call; decision D10)"
+"Formal arguments d1_dph, d2_dph of the module replaced by the actual arguments l1_dph, l2_dph of its call;"
+"module-internal coef_dph (coef in the module), L1_ratio_dph and L2_ratio_dph (L1_dph, L2_dph in the module) renamed to avoid the collision of L1_dph/L2_dph with the caller's l1_dph/l2_dph (EES names are case-insensitive)."
+call fluidprop(fluid$,t_a_su_dph, p_a_su_dph,RH_su_dph:rho_a_su_dph,mu_dph,Gamma_dph)
+
+A_De_dph= (pi*De_dph^2)/4                    "pipe cross-section [m^2]"
+A_di_dph= (pi*Di_dph^2)/4                    "bore cross-section [m^2]"
+
+vit_dph=(V_dot_dph)/A_De_dph                 "mean velocity in the pipe [m/s]"
+vit_dph_int=(V_dot_dph)/A_di_dph             "mean velocity in the bore [m/s]"
+M_dot_a_dph=V_dot_dph*rho_a_su_dph           "mass flow rate from the volume flow rate [kg/s]"
+V_dot_mh_dph=V_dot_dph*3600                  "volume flow rate [m^3/h]"
+Re_D_dph=G_dph*De_dph/mu_dph                 "pipe Reynolds number [-]"
+G_dph=M_dot_a_dph/A_De_dph                   "mass flux [kg/m^2-s]"
+
+E_dph=(1-beta_dph^4)^(-0.5)                  "velocity of approach factor [-]"
+beta_dph =Di_dph/De_dph                      "diameter ratio [-]"
+m_dph=beta_dph^2                             "area ratio (as in the original) [-]"
+
+coef_dph = if(0.039/0.09 - L1_ratio_dph, 0.09, 0.039)   "Stolz coefficient of the L1 term; 5-argument if of the original rewritten (CS-GAP-IF5, see header) [-]"
+C_D_dph=0.5959+0.0312*beta_dph^2.1-0.184*beta_dph^8+0.0029*beta_dph^2.5*(10^6/Re_D_dph)^0.75+coef_dph*L1_ratio_dph*beta_dph^4*(1-beta_dph^4)^(-1)-0.03371*L2_ratio_dph*beta_dph^3   "discharge coefficient, Stolz equation [-]"
+
+L1_ratio_dph=l1_dph/De_dph                   "upstream tapping distance ratio [-]"
+L2_ratio_dph=l2_dph/De_dph                   "downstream tapping distance ratio [-]"
+
+epsilon_dph= 1 - (0.41 + 0.35 * beta_dph^4) * DELTAp_dph / (gamma_dph * p_a_su_dph)   "expansibility factor [-]"
+
+M_dot_a_dph=E_dph*C_D_dph*epsilon_dph*A_di_dph*sqrt(2*DELTAP_dph*rho_a_su_dph)   "ISO 5167 mass flow rate [kg/s]"
+nu_dph=E_dph*C_D_dph                         "as in the original [-]"
+
+call warning_error(Di_dph,De_dph,beta_dph, Re_D_dph:var1_out,var2_out,var3_out,var4_out)
