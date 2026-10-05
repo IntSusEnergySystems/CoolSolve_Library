@@ -206,3 +206,5 @@ Source file (Python, comments in English), local snapshot of S. Quoilin:
 - See also the CoolSolve examples `refrigeration1.eescode` (R134a basic
   refrigeration cycle) and `refrigeration2.eescode` (R22 heat pump) of the
   `G-refrig` group.
+- `CSL-0054` *heat_pump_r410a_air_evaporator*: air/water heat pump on the
+  zeotropic R410A, with the evaporator pressure drop and air-side heat balance.

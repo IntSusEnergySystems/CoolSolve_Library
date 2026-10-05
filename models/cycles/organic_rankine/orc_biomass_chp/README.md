@@ -14,8 +14,10 @@ blocks into the main program (library decision D10; CoolSolve does not implement
 `MODULE`/`SUBPROGRAM`, `CS-GAP-MODULE`) and keeps the EES `PROCEDURE`s
 `pump`, `cond` and the `FUNCTION`s `write`, `cp_g`.
 
-The model does **not** run in CoolSolve: three registered gaps block the native
-file (see *Blocked features*). The file is a faithful import and stays valid EES.
+The model does **not** run in CoolSolve: two registered gaps block the native
+file (see *Blocked features*). The file stays valid EES; the flattening of the
+sub-models has known deviations, found at the C-46 review (see *Known deviations
+of the flattening*).
 
 | | |
 |---|---|
@@ -160,22 +162,30 @@ Two properties of the reference material must be known before importing:
 
 ## Blocked features
 
-`model.json` `missing_features` lists all the registered gaps that block the
-native file:
+`model.json` `missing_features` lists the registered gaps that block the native
+file (`CS-GAP-LKT`, listed by the import, was removed at the C-46 review: see
+*Not blocking, but noted*):
 
 | Gap | What it blocks here | Evidence |
 |---|---|---|
-| `CS-GAP-IF-DIRECTIVE` | The main program selects blocks with `$if <string>$='…' / $else / $endif`. CoolSolve parses the directives and **keeps all branches**, so the system is **not square**: `coolsolve -d` on the file (with only the `%` names replaced) reports *Equations: 443, Variables: 432, System square: No*. | Reproducer already registered; the 13 equations of the duplicated `$if` branches are the difference. |
+| `CS-GAP-IF-DIRECTIVE` | The main program selects blocks with `$if <string>$='…' / $else / $endif` (nine switches, listed under *Runnable variant*). CoolSolve parses the directives and **keeps all branches**, so the system is **not square**: `coolsolve -d` on the file (with only the `%` names replaced) reports *Equations: 443, Variables: 432, System square: No*. | Reproducer already registered. C-46 check: with the nine switches resolved for the stored run in a scratch copy, 363 equations and 392 variables remain — the discarded branches carry 80 equations and 40 variables, so the unresolved file has 11 more equations than unknowns. |
 | `CS-GAP-NAME-SYMBOL` | The fuel mass fractions `C%`, `H%`, `O%` do not parse: *\"Parse failed: Line 479, 480, 481, 555, 556, 558: Could not parse line\"*, exit code 1, no `.sol`. These six lines are the whole main-program definition of the fuel composition and of the molar fractions `m`, `n`, `p` of the burner. | New gap, registered 2026-10-05 with the minimal reproducer `name_symbol.eescode` and the EES file that uses the names. |
-| `CS-GAP-LKT` | The `write()` function stores three results per run in row `i` of the lookup table `results`. `ees_extract.py` reports: *\"Lookup table 'results' is used but was not found in the file: it was probably loaded from an external .lkt/.csv/.txt file\"*. The external file is **not shipped** with the example nor with `misc/EES_ok.zip`, so the table cannot be reproduced; the write is an output sink with no feedback on the solution. | `reference/ees_extract_report.md` (work folder). |
 
 Not blocking, but noted:
 
+- `CS-GAP-LKT` — the function `write()` stores three results per run in row `i`
+  of the lookup table `results` (`lookup('results',i,1) = …` inside a
+  `FUNCTION`). `ees_extract.py` reports that the table is not in the file (it
+  is not in `misc/EES_ok.zip` either). CoolSolve parses and solves a function of
+  that form even when no table exists (C-46: an 8-line model with the same
+  `write` function and no table file gives *SUCCESS*; whether the write is
+  honoured was not examined), so this gap is not what blocks the file. The
+  write is an output sink with no feedback on the solution.
 - `CS-GAP-MODULE` — `MODULE`/`SUBPROGRAM` are **not** in `missing_features`: the
   three blocks are flattened (decision D10), so the native file does not use
   them.
 - `CS-GAP-PROC-COMMENT` — the comment strings `"<=inputs outputs=>"` inside the
-  argument lists of `procedure pump` and `procedure cond` were **removed**
+  argument lists of `procedure pump` and of the `call`s were **removed**
   (comments only, an allowed edit, and the workaround registered for this gap);
   this is not a blocking gap.
 - `CS-GAP-BOUNDS` — EES used lower/upper bounds on several variables; CoolSolve
@@ -195,27 +205,76 @@ Not blocking, but noted:
   different EES air names; CoolSolve warns that `'air'` means moist air and
   suggests `AirH2O`. A runnable variant should use `Air`.
 
-## Why no runnable variant is shipped
+## Known deviations of the flattening (C-46 review)
 
-A faithful transcription exists (the changes are listed below and in the
-conversion log) but it could not be built and verified within the card's time
-budget; a variant is only shipped with its `.sol` baseline and its comparison
-against the EES reference (library workflow §6). The changes it would need:
+Decision D10 replaces every formal argument of a block by its actual argument.
+For six formals that the block also assigns itself (a result, or an input
+redefined inside) the import **renamed** the formal as an internal variable
+instead, and did not write the link `formal = actual` that EES generates (the
+`.residuals` file of the original lists these links, e.g.
+`evaporator\1.pinch_ev=pinch_ev`). The equations of the blocks are those of the
+original (the normalised comparison with the extraction shows only the
+renamings of the conversion log); the links are missing:
 
-1. resolve the ten `$if` switches for the stored run listed above;
-2. rename `C%`, `H%`, `O%` (the only reason the file does not parse);
-3. give values to the **free constants** the model relies on — EES holds them
-   in its variable list without an equation: the `expanderType$='Open'`
-   parameter set (`r_v_in_1 = 4.1`, `AU_su_exp_n_1 = 21.2 W/K`,
-   `AU_ex_exp_n_1 = 34.2 W/K`, `AU_amb_exp_1 = 6.4 W/K`,
-   `M_dot_r_exp_n_1 = 0.12 kg/s`, `d_su_1 = 5.91 mm`, `A_leak_mm2_1 = 4.858 mm²`,
-   `alpha_1 = 0`, `W_dot_loss_0_1 = 0`, `N_rot_exp_1 = 3000 1/min`,
-   `V_s_cp_cm3_1 = 148 cm³` and the `_2` set), plus `Q_dot_tot_boil = 763 970 W`,
-   `Q_dot_cd1`, `T_sf_ex_cd1 = 60 °C`, `T_sf_su_cd1 = 40 °C`, `M_dot_a`, `gamma_r`
-   and the leakage area `A_leak` of the expander module;
-4. drop or replace the three `write`/`lookup('results',…)` output cells
-   (CoolSolve has no write-into-lookup-table);
-5. map `air` / `air_ha` to `Air`.
+| Block | Formal → flattened name | Missing link |
+|---|---|---|
+| `expander` | `A_leak_mm2` → `A_leak_exp_mm2` | `A_leak_exp_mm2 = A_leak_mm2` (the leakage area `A_leak_exp` is otherwise not tied to the input `A_leak_mm2_1`) |
+| `evaporator` | `pinch_ev` → `Pinch_ev_ev` | `Pinch_ev_ev = pinch_ev` (the EES diagram input `pinch_ev = 10` has to be written on `Pinch_ev_ev`) |
+| `biomass_burner` | `Q_dot_3` (actual `-Q_dot_tot_boil`) → `Q_dot_3_boil` | `Q_dot_3_boil = -Q_dot_tot_boil` (`Q_dot_tot_boil`, used by `eta_global`, is otherwise defined by no equation) |
+| `biomass_burner` | `T_w_ex_boil` → `T_w_ex_boil_boil` | `T_w_ex_boil_boil = T_w_ex_boil` (the burner water outlet is not tied to `T_w_ex_boil = T_sf_su_ev` of the main program) |
+| `biomass_burner` | `m`, `n`, `p` → `m_boil`, `n_boil`, `p_boil` | `m_boil = m`, `n_boil = n`, `p_boil = p` (the main-program `m`, `n`, `p` are used only by the optional blocks, off in the stored run) |
+| `biomass_burner` | `Q_dot_gw` → `Q_dot_gw_boil` | `Q_dot_gw_boil = Q_dot_gw` (the main-program `Q_dot_gw` is used nowhere else) |
+
+Evidence: in a scratch copy with the switches of the stored run resolved and the
+diagram inputs of EES added (next section) the file has 391 variables and 388
+equations; adding the first, third and fourth links makes it **square (391 ×
+391)** (the second link is absorbed by writing the pinch input on
+`Pinch_ev_ev`). The library file is **not repaired** (review rule: equations are
+not changed at a review); the repair is to replace the six renamed formals by
+their actual arguments, in the card of the runnable variant. The comment block
+at the top of the `.eescode` points here.
+
+## Runnable variant: not shipped, feasible (C-46 review)
+
+A runnable `_coolsolve` variant was not built within the card. The review
+checked, in a scratch copy (nothing shipped), that it is structurally feasible:
+
+1. resolve the nine `$if` switches for the stored run: `pressuredrop$='no'`,
+   `unadaptedVolumeRatio$='no'`, `heatTransfer$='no'`, `mechanicalLosses$='no'`,
+   `economiser$='no'`, `overheater$='no'`, `regenerator$='no'`,
+   `water_overheater$='no'`, `expanderType$='Open'` (the strings of the flattened
+   expander, renamed `*_exp$`, keep their module-local values `'yes'` /
+   `'hermetic'`: they are local to the module in EES);
+2. rename `C%`, `H%`, `O%`;
+3. add the **diagram inputs** of EES. The model has no equation for them because
+   EES holds them in its Diagram window (the `"! in diagram"` comments);
+   `EES_ok/orc_complex.residuals` flags them `D`: 52 equations in all (11 strings,
+   41 numbers). For the stored run the resolved file uses `fluid$='R123'`,
+   `fluidev$='water'` and 24 numbers: `T_sf_su_ev=150`, `T_amb_exp=20`,
+   `DELTAT_sc_ex_cd=5`, `DELTAT_oh_ex_ev=10`, `epsilon_s_pp=0.6`,
+   `DELTAT_sf_ev=10`, `pinch_ev=10` (on `Pinch_ev_ev`), `pinch_cd=5`,
+   `r_v_in_1=4.1`, `AU_amb_exp_1=6.4`, `AU_su_exp_n_1=21.2`,
+   `AU_ex_exp_n_1=34.2`, `d_su_1=0.00591`, `M_dot_r_exp_n_1=0.12`,
+   `A_leak_mm2_1=4.858`, `N_rot_exp_1=3000`, `V_s_cp_cm3_1=148`, `eta_gen=0.8`,
+   `T_w_ex_wo=60` (`t_w_ex_wo` of EES), `T_sf_su_cd1=40`, `Q_dot_cd2=0`,
+   `Q_dot_cd=600000`, `T_a_su_cd2=20`, `T_a_ex_cd2=35`. The other diagram values
+   (the `_2` hermetic set, `T_m`, `epsilon_reg`, `epsilon_wo`, `epsilon_oh`,
+   `epsilon_econ`) belong to branches that are off. `n_exp = 17.5`,
+   `Q_dot_tot_boil`, `M_dot_f_kgh`, `Q_dot_cd1`, `T_sf_ex_cd1`, `gamma_r` and the
+   leakage area `A_leak` are **results** of the stored run, not inputs (the list
+   of free constants given by the import was wrong on these);
+4. add the missing links (or repair the flattening: *Known deviations*);
+5. drop `written = write(...)` and the function `write` (output sink; `i = 4`
+   only feeds it);
+6. map `air` / `air_ha` to `Air`.
+
+Result of the scratch test: **391 equations, 391 variables, square, largest block
+116**. It does **not converge** from the decoded stored values (stale for the
+module variables, `CS-BUG-EXTRACT-STALE`): Newton stops by line-search failure and
+TrustRegion at 500 iterations in the 116-variable block (initial residual
+7·10⁶). Curated initial values built from the main-program values of the
+solution report (and a simplified-model bootstrap, `docs/debugging_models.md`)
+are the remaining work.
 
 ## How to run
 
@@ -268,8 +327,9 @@ the electrical output added.
   records, unit system already `SI MASS DEG PA C J`, licence and display tags
   removed, no embedded lookup or parametric table). Comments translated to
   English, standard header added, `$UnitSystem` directive removed. **No equation
-  was changed**; only variable names were renamed where a flattening forced it
-  (below).
+  was changed** apart from the variable renamings of the flattening (below; their
+  consequence, six missing formal-actual links, is described in *Known
+  deviations of the flattening*).
 - **MODULE / SUBPROGRAM flattening (decision D10).** Three blocks, one `CALL`
   each; all their internal variables already carried a per-component suffix,
   which serves as the per-call tag, and were kept unchanged unless they collided
@@ -288,6 +348,11 @@ the electrical output added.
   error) and from the matching `call pump(...)` of the main program, for
   consistency (comments only, an allowed edit; the `procedure cond` signature has
   none).
+- **C-46 review — `procedure cond` header restored.** The import had dropped
+  `:pinch_cd` from the header (18 arguments and no colon, against 19 and a colon
+  in the `call`): CoolSolve answered *\"Procedure cond expected 18 inputs, got
+  10\"* in the scratch test. Restored as in the original (the equations of the
+  procedure were not touched).
 - **Unit system**: the original is already `SI MASS DEG PA C J`; no conversion
   was needed. Note that `C%`, `H%`, `O%` are **mass fractions in percent**
   (they are divided by the atomic masses in `m_boil=C%/MM_C`), not percentages
@@ -304,8 +369,9 @@ the electrical output added.
   ≥ 3 coupled components (burner, evaporator, 5 expanders, 2 condensers, pump) →
   1, semi-empirical calibration (expander leakage/choking, burner stoichiometry,
   part-load `AU` laws) → 1, needs curated guesses → 1: **total 8 → level 4**. The
-  exact block size could not be measured: `coolsolve -d` stops at the
-  not-square system (see *Blocked features*).
+  block size of the native file could not be measured (`coolsolve -d` stops at the
+  not-square system); in the review's scratch copy with the stored-run switches
+  and inputs it is 116.
 - **Trajectory / sweep claims**: the model has no sweep or trajectory; the only
   numerical claim in this README is the EES solution report table, copied from
   `EES_ok/orc_complex.tex`.

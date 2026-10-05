@@ -6,18 +6,19 @@
   Steady-state model of the whole engine at its nominal point, as in the
   original exercise (ULiege MSTh repetition, TP 08, exercise 4 of 2005-11-14):
 
-  - intake: the charge (air + fuel vapour) is compressed from state 2 to state 3
-    along an isentropic path (s_2), the mean piston speed C_3 gives the
-    volumetric flow of the cylinder A_3*C_3, and the intake manifold pressure
-    P_2 is reduced by the throttle (introduced by the exercise to reduce the
-    power);
+  - states 1 to 5 (as in the original): the charge flow rate is fixed by the
+    displaced volume flow V_dot_4 = i*N_rot*ncVs; from state 2 an isentropic
+    path (s_2) to the pressure P_3 = p_4, with the kinetic-energy balance
+    c_p_2*(t_2 - t_3) = C_3^2/2 and V_dot_3 = A_3*C_3, closes the intake
+    pressure P_2; the original introduces an intake pressure loss ('throttle
+    of the carburettor') that brings the shaft power to zero;
   - combustion: an energy balance between the reactants (air and methane
     brought to the reference temperature 25 C) and the combustion products,
     whose mean specific heat is given by the cpbar routine of the ULiege
     combustion library between 25 C and t_6 (adiabatic flame temperature);
-  - expansion: isentropic work extraction W_dot_sh on the products between
-    t_6 and t_7, the mean specific heat of the products between t_6 and t_7
-    being computed by cpbar again;
+  - expansion: W_dot_sh = M_dot_g*c_p_g_67*(t_6 - t_7) between t_6 and t_7, the
+    mean specific heat of the products between t_6 and t_7 being computed by
+    cpbar again (W_dot_sh = 0 imposed: t_7 = t_6);
   - cooling: the products are cooled by the engine jacket (eps-NTU, AU_gw) down
     to t_8, and the cooling water rejects Q_dot_gw and Q_dot_wa to the
     environment (eps-NTU, AU_wa).
@@ -28,15 +29,15 @@
 
   Inputs : AU_gw, AU_wa        conductance products of the jacket and of the
                                water-to-environment exchanger [W/K]
-           A_3, ncVs, i, rpm   cylinder area [m^2], displacement [m^3],
-                               revolutions per working cycle [-], speed [rpm]
+           A_3, ncVs, i, rpm   area A_3 [m^2], displacement ncVs [m^3],
+                               working cycles per revolution [-], speed [rpm]
            eta_in_act, T_m     actual indicated efficiency [-], torque [N.m]
            f, LHV, m, n        fuel-air ratio [kg/kg], lower heating value
                                [J/kg], CmHn formula of the fuel [-]
            t_a, p              ambient air temperature [C], pressure [Pa]
-           P_2                  intake pressure after the throttle [Pa]
            M_dot_w, t_w_su     cooling water flow [kg/s] and supply temp. [C]
-  Outputs: t_6, t_7, t_8       flame, exhaust and jacket-out temperatures [C]
+  Outputs: P_2                 intake pressure after the throttle [Pa] (solved)
+           t_6, t_7, t_8       flame, exhaust and jacket-out temperatures [C]
            M_dot_a, M_dot_f     air and fuel mass flow rates [kg/s]
            Q_dot_1..Q_dot_5     combustion-side heat terms [W]
            Q_dot_gw, Q_dot_wa   cooling-side powers [W]
@@ -173,10 +174,10 @@ END
 "Engine data"
 AU_gw=83.8    "jacket conductance product (gas to cooling water) [W/K]"
 AU_wa=127.4   "water-to-environment conductance product [W/K]"
-A_3=0.002072  "cylinder area [m^2]"
+A_3=0.002072  "area A_3 of the original, in V_dot_3 = A_3*C_3 [m^2]"
 eta_in_act=0.3277  "actual indicated efficiency (from its name) [-]"
 T_m=39.79     "mean torque [N.m]"
-i=1/2         "revolutions per working cycle, i.e. four-stroke [-]"
+i=1/2         "working cycles per revolution (1/2: four-stroke) [-]"
 ncVs=5E-3     "engine displacement volume [m^3]"
 f=0.055       "fuel-air ratio [kg of fuel/kg of air]"
 t_a=20        "ambient air temperature [C]"
@@ -209,23 +210,23 @@ p_1=p         "air pressure before the throttle [Pa]"
 t_2=t_1       "air temperature after the throttle [C] (the fuel is assumed to be
  at the same temperature as the air, as in the original)"
 
-"Intake and compression (states 2 -> 3)"
+"States 1 to 5 (intake pressure loss, kinetic-energy balance)"
 M_dot_g=M_dot_a+M_dot_f   "mass flow rate of the charge [kg/s]"
 M_dot_f=f*M_dot_a         "fuel mass flow rate [kg/s]"
 M_dot_g=V_dot_4/v_4       "charge mass flow rate from the swept volume [kg/s]"
 V_dot_4=i*N_rot*ncVs      "volumetric flow rate of the engine [m^3/s]"
-p_4=PRESSURE(Air,v=v_4,t=t_4)   "pressure at the end of the compression stroke [Pa]"
-t_4=t_2       "temperature at the end of the compression stroke [C]"
+p_4=PRESSURE(Air,v=v_4,t=t_4)   "pressure from v_4 and t_4 [Pa]"
+t_4=t_2       "temperature at state 4 [C]"
 p_3=p_4
-M_dot_g=V_dot_3/v_3       "charge mass flow rate from the mean piston speed [kg/s]"
-V_dot_3=A_3*C_3           "volumetric flow rate of the cylinder [m^3/s]"
+M_dot_g=V_dot_3/v_3       "charge mass flow rate from V_dot_3 [kg/s]"
+V_dot_3=A_3*C_3           "volumetric flow rate at state 3 [m^3/s]"
 v_3=VOLUME(Air,s=s_2,P=P_3)     "specific volume at state 3 [m^3/kg]"
 s_2=ENTROPY(Air,T=T_2,P=P_2)    "specific entropy of the charge at state 2 [J/kg-K]"
-c_p_2*(t_2-t_3)=C_3^2/2  "enthalpy drop of the charge = kinetic energy [J/kg]"
+c_p_2*(t_2-t_3)=C_3^2/2  "enthalpy drop between states 2 and 3 = C_3^2/2 [J/kg]"
 c_p_2=CP(Air,T=T_2)       "specific heat of the charge [J/kg-K]"
-"C_3 is the mean piston speed [m/s]; it is determined by the equality of the two
- volumetric flows V_dot_3 = A_3*C_3 and V_dot_4 = i*N_rot*ncVs, as in the original"
-T_3=TEMPERATURE(Air,s=s_2,P=P_3) "temperature after the isentropic compression [C]"
+"C_3 is the velocity at state 3 [m/s] of the kinetic-energy balance below; it follows
+ from the equality of the two volumetric flows V_dot_3 = A_3*C_3 and V_dot_4 = i*N_rot*ncVs"
+T_3=TEMPERATURE(Air,s=s_2,P=P_3) "temperature at state 3, isentropic path from state 2 [C]"
 T_5=T_4
 p_5=p_4
 
@@ -243,7 +244,7 @@ Q_dot_1+Q_dot_2+Q_dot_3+Q_dot_4+Q_dot_5=0
 CALL cpbar(m,n,f,25,t_6:c_p_g_6,Q_4_6,x_6,e_min_6,e_6)  "mean c_p of the products
  between 25 C and t_6 [J/kg-K]"
 
-"Expansion (isentropic work extraction on the products)"
+"Expansion (shaft power from the enthalpy drop of the products)"
 M_dot_g*c_p_g_67*(t_6-t_7)=W_dot_sh   "shaft power extracted [W]"
 CALL cpbar(m,n,f,T_6,t_7:c_p_g_67,Q_4_67,x_67,e_min_67,e_67)  "mean c_p of the
  products between t_6 and t_7 [J/kg-K]"

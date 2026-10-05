@@ -113,8 +113,11 @@ The extrapolation group is confirmed by hand: applying EES's linear
 extrapolation of the last two map nodes to the CoolSolve solution reproduces
 the stored values — `epsilon_s` = 0.86 + (6−5)·(0.86−0.79)/(5.0−4.7) =
 1.093333 (stored 1.093333333), `M_r` = 32.9 − 3.0·(6−5) = 29.9 (stored
-29.9), `M_dot` = 29.9·0.9/sqrt(293.15) = 1.57210 (stored 1.57209899),
-`W_dot` = 1.57210·196 636/1.093333 = 282 702 W (stored 282 742.25, 1.4e-4).
+29.9), `M_dot` = 29.9·0.9/sqrt(293) = 1.572099 (stored 1.57209899: the
+equation uses `sqrt(t_su+273)` as in the original), `W_dot` =
+1.572099·196 824/1.093333 = 283 013 W with the CoolSolve `w_s` (stored
+282 742.25; the 9.6e-4 difference is the EES-vs-CoolProp `w_s` deviation —
+with the EES `w_s` = 196 636 J/kg the product gives 282 742.25 exactly).
 So the model, the data and the unit conversion are correct; the only
 deviation is the clamping behaviour. Within the map range (4.5 ≤ r_p ≤ 5.0)
 the variant interpolates exactly (checked at r_p = 4.85: `epsilon_s` =
@@ -187,11 +190,11 @@ model follows the EES original.
   reference (see *Verification*). Known residual deviation: outside
   4.5 ≤ r_p ≤ 5.0 the variant clamps where EES extrapolates
   (`CS-GAP-INTERP-EXTRAP`).
-- **2026-10-05 — note on `sqrt(t_su+273)`**: the stored `M_dot`
-  (1.57209899 kg/s at `M_r` = 29.9) matches `sqrt(293.15)` to 7 digits and
-  `sqrt(293)` only to 5, i.e. the stored run predates a small edit of the
-  file (273.15 → 273) or vice versa. The equation is kept exactly as in the
-  file; impact on `M_dot` ≤ 0.03 %.
+- **2026-10-05 — note on `sqrt(t_su+273)`**: the equation is kept exactly as
+  in the file (273, not 273.15). The stored `M_dot` (1.572098986 kg/s at
+  `M_r` = 29.9) reproduces `29.9·0.9/sqrt(293)` to 10 digits (C-38 check:
+  `sqrt(293.15)` would give 1.57170, 0.026 % lower), so the stored run uses
+  the same equation as the file.
 - **Level** (taxonomy.md §3): 14 equations (0) + largest block 1 (0) + no
   functions/arrays (0) + no multi-zone (0) + semi-empirical performance-map
   component (1) + no curated guesses needed (0) = score 1 → level 1, moved
@@ -224,3 +227,7 @@ model follows the EES original.
 - CoolSolve example `turbocompressor_interpolate.eescode` (CSX-045): same
   exercise, kept in CoolSolve as a test case (differs from the EES original:
   `p_ex` imposed at 4.5 bar, map data in comments only).
+- `CSL-0069` (centrifugal compressor design and similarity, air): same
+  component and same course and repetition (MSTh TP 04), sized from the flow
+  and enthalpy factors of its best-performance point rather than from a
+  measured map.

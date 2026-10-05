@@ -184,3 +184,7 @@ the CoolSolve repository as a test case.
 - `thermo_models` TM-0066 (`MSTh-SB-R4-Ex3.EES`, SB impeller + adiabatic
   diffuser on air): same physics, different exercise — candidate for a
   future related model (left `todo`).
+- `CSL-0069` (centrifugal compressor design and similarity, air): same
+  course and repetition (MSTh TP 04, exercise 4), same compressor sized from
+  the flow and enthalpy factors of its best-performance point instead of its
+  off-design performance.

@@ -52,7 +52,7 @@ and the COP, and the PCM storage volume and discharge power.
   `t_charge` = 4 and `t_discharge` = 2 are **hours in the original** (the
   example feeds the bare values into the SI equations, so the storage results
   carry the original time convention: `E_PCM` = 2.8·10⁷ reads J but is
-  2.8·10⁷ W·h = 28 MWh, `Vol_PCM` = 311 m³ for `E_density_PCM` = 9·10⁴ J·h/m³
+  2.8·10⁷ W·h = 28 MWh, `Vol_PCM` = 311 m³ for `E_density_PCM` = 9·10⁴ W·h/m³
   ≡ 90 kWh/m³). The heat-pump results are unaffected.
 
 | Inputs | Value | Outputs | Value |

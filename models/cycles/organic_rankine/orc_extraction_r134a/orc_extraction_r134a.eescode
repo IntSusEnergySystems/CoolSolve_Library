@@ -10,12 +10,17 @@
   pressure. The mass flow follows from the expander displaced volume per
   revolution V_s_exp and the speed N; the extracted vapour is mixed with the
   expander exhaust (mixing chamber) and cooled in the internal heat
-  exchanger (recuperator) before the boiler.
+  exchanger (recuperator) before the boiler. As in the original, the
+  expander power W_dot_exp = 5000 W and the pump isentropic efficiency
+  epsilon_s_pp = 0.5 are specified: V_s_exp, x_ext and the pump work are
+  results of the system (see README).
 
-  Inputs : fluid$, T_ev, T_cd, V_s_exp, N, DELTAT_f_su_exp, r_v_in, r_v_in_2,
-           x_ext, DELTAT_f_ex_cd, w_pp, epsilon_hex, DELTAT_ex_hex_h
-  Outputs: W_dot_exp, W_dot_pp, Q_dot_ev, Q_dot_cd, eta, P_int, T_int,
-           epsilon_s_exp, epsilon_s_pp
+  Inputs : fluid$, T_ev, T_cd, W_dot_exp, N, DELTAT_f_su_exp, r_v_in, r_v_in_2,
+           DELTAT_f_ex_cd, epsilon_s_pp, epsilon_hex, DELTAT_ex_hex_h
+  Outputs: V_s_exp, x_ext, W_dot_pp, Q_dot_ev, Q_dot_cd, eta, P_int, T_int,
+           epsilon_s_exp
+  Guesses: the shipped .initials is required (without it the solver stops on a
+           singular block)
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
   Source : ULiège Thermodynamics Laboratory, modeles/cycle a extraction.EES
            (EES 7.991/9.920) - see README.md
@@ -36,7 +41,9 @@ T_int = temperature(fluid$,P=P_int,x=0.5)   "intermediate saturation temperature
 
 "!1. EXPANDER"
 "1.0 Parameters"
-V_s_exp = 2.114557056E-5   "expander displaced volume per revolution [m^3] (value stored by EES; the input line of the original is commented out)"
+"V_s_exp = 100e-6 [cm^3] is commented out in the original: the displaced volume per
+ revolution V_s_exp [m^3] is not an input, it follows from W_dot_exp = 5000 W below"
+W_dot_exp = 5000   "specified expander power [W]"
 N = 3000   "expander speed [tr/min]"
 DELTAT_f_su_exp = 5   "superheating of the vapour at the expander inlet [K]"
 r_v_in = 3   "overall inlet volume ratio of the expansion [-]"
@@ -74,7 +81,9 @@ h_f_in1_bis_exp = u_f_in1_exp+P_f_in1_exp*v_f_in1_exp   "same enthalpy from u + 
 w_in_1_exp = h_f_su1_exp-h_f_in1_exp   "isentropic specific work of the first expansion [J/kg]"
 
 "1.5. Extraction: in1=>in2 (the extracted vapour leaves at the enthalpy of state in1)"
-x_ext = 0.1321470819   "fraction of the flow extracted after the first expansion [-] (value stored by EES, the input line of the original is commented out; the commented alternatives of the original were x_ext = 0.2 and x_ext = 0.01)"
+"x_ext [-], the fraction of the flow extracted after the first expansion, is not an
+ input: it follows from the internal heat exchanger (5.4 to 5.6). The original
+ comments out x_ext = 0.2 and x_ext = 0.01 as alternatives."
 M_dot_f_ext = x_ext*M_dot_f_ev   "extracted mass flow rate [kg/s]"
 M_dot_f_cd = "(1-x_ext)*"M_dot_f_ev   "mass flow rate reaching the condenser [kg/s]"
 M_dot_f_in_exp*u_f_in1_exp-M_dot_f_ext*h_f_in1_exp = (M_dot_f_in_exp-M_dot_f_ext)*u_f_in2_exp   "energy balance of the extraction chamber"
@@ -97,7 +106,7 @@ w_in_4_exp = v_f_in3_exp*(P_f_in3_exp-P_f_ex_exp)   "specific work of the consta
 
 "!1.8. Expansion power"
 W_dot_in_exp = M_dot_f_in_exp*(w_in_1_exp+w_in_2_exp)+(M_dot_f_in_exp-M_dot_f_ext)*(w_in_3_exp+w_in_4_exp)   "expander power [W]"
-W_dot_exp = W_dot_in_exp   "expander power [W] (the original also had 'W_dot_exp=5000' before this equation; EES keeps the last assignment)"
+W_dot_exp = W_dot_in_exp   "expander power [W] (second equation on W_dot_exp, as in the original: with W_dot_exp = 5000 in 1.0 it sizes V_s_exp)"
 
 "!1.9. Exhaust state"
 h_f_ex_exp = h_f_in3_exp-w_in_4_exp   "expander exhaust enthalpy [J/kg]"
@@ -139,8 +148,7 @@ Q_dot_cd = M_dot_f_cd*(h_f_su_cd-h_f_ex_cd)   "condenser heat rejection [W]"
 
 "!4. PUMP"
 "4.0. Parameters"
-"epsilon_s_pp = 0.5 of the original is reported below, as a check on the pump
- work (see 4.2)."
+epsilon_s_pp = 0.5   "pump isentropic efficiency [-]"
 
 "4.1. Connections"
 h_f_su_pp = h_f_ex_cd   "pump inlet enthalpy [J/kg]"
@@ -151,15 +159,10 @@ s_f_su_pp = entropy(fluid$,P=P_cd,h=h_f_su_pp)   "pump inlet entropy [J/(kg K)]"
 x_f_su_pp = quality(fluid$,P=P_cd,h=h_f_su_pp)   "quality at the pump inlet [-]"
 
 "4.2. Compression power"
-"The original imposes epsilon_s_pp = 0.5 in the parameter list above and lets
- EES determine the pump outlet enthalpy from its variable dialog. The specific
- work w_pp of the stored solution (4086.16 J/kg = w_pp_s/0.5) is used here as the
- input, because it does not depend on the reference state of the fluid."
-w_pp = 4086.162629   "specific pump work [J/kg] (value stored by EES)"
-h_f_ex_pp = h_f_su_pp+w_pp   "pump outlet enthalpy [J/kg] (original: h_f_ex_pp-h_f_su_pp)"
 h_f_ex_pp_s = enthalpy(fluid$,P=P_ev,s=s_f_su_pp)   "isentropic pump outlet enthalpy [J/kg]"
 w_pp_s = h_f_ex_pp_s-h_f_su_pp   "isentropic specific pump work [J/kg]"
-epsilon_s_pp = w_pp_s/w_pp   "pump isentropic efficiency (the original imposes 0.5) [-]"
+epsilon_s_pp = w_pp_s/w_pp   "pump isentropic efficiency [-]"
+w_pp = h_f_ex_pp-h_f_su_pp   "specific pump work [J/kg]"
 W_dot_pp = M_dot_f_ev*w_pp   "pump power [W]"
 
 "4.3. Exhaust conditions"
@@ -169,7 +172,7 @@ x_f_ex_pp = quality(fluid$,P=P_ev,h=h_f_ex_pp)   "quality at the pump outlet [-]
 
 "!5. INTERNAL HEAT EXCHANGER"
 "5.1. Parameters"
-epsilon_hex = 0.9   "internal heat exchanger effectiveness [-] (value imposed by the original, not used: the duty is set by the heat balances below)"
+epsilon_hex = 0.9   "internal heat exchanger effectiveness [-]"
 DELTAT_ex_hex_h = 5   "temperature drop of the extracted vapour in the internal heat exchanger [K]"
 
 "5.2. Connections"
@@ -181,23 +184,19 @@ T_f_int_exp = temperature(fluid$,P=P_int,h=h_f_in1_exp)   "temperature of the ex
 x_f_int_exp = quality(fluid$,P=P_int,h=h_f_in1_exp)   "quality of the extracted vapour [-] ('ok vapor' in the original)"
 s_f_int_exp = s_f_su_exp   "entropy of the extracted vapour [J/(kg K)]"
 
-"5.4. Heat balance on the hot side"
-Q_dot_hex = M_dot_f_ext*(h_f_int_exp-h_f_ex_hex_h)   "internal heat exchanger duty [W]"
+"5.4. Thermal power (effectiveness)"
+Q_dot_hex = epsilon_hex*C_dot_f_hex*(T_int-T_f_su_hex)   "internal heat exchanger duty from its effectiveness [W]"
+C_dot_f_hex = M_dot_f_ev*c_f_ex_pp   "heat capacity rate of the working fluid [W/K]"
+c_f_ex_pp = CP(fluid$,P=P_ev,T=T_f_ex_pp)   "specific heat capacity of the superheated vapour [J/(kg K)]"
+
+"5.5. Heat balance on the hot side"
+Q_dot_hex = M_dot_f_ext*(h_f_int_exp-h_f_ex_hex_h)   "internal heat exchanger duty from the extracted vapour [W]"
 h_f_ex_hex_h = enthalpy(fluid$,P=P_int,T=T_f_ex_hex_h)   "enthalpy of the extracted vapour at the hot-side outlet [J/kg]"
 T_f_ex_hex_h = T_int-DELTAT_ex_hex_h   "hot-side outlet temperature [°C]"
 
-"5.5. Heat balance on the cold side: the same duty. The original writes
-      Q_dot_hex = M_dot_f_ev*(h_f_ex_hex-h_f_ex_pp); the equation is solved for
-      the outlet enthalpy here (EES left h_f_ex_hex free in its variable
-      dialog), which is the same statement."
-h_f_ex_hex = h_f_ex_pp+Q_dot_hex/M_dot_f_ev   "cold-side outlet enthalpy [J/kg]"
+"5.6. Heat balance on the cold side"
+Q_dot_hex = M_dot_f_ev*(h_f_ex_hex-h_f_ex_pp)   "internal heat exchanger duty from the working fluid [W]"
 T_f_ex_hex = temperature(fluid$,P=P_ev,h=h_f_ex_hex)   "cold-side outlet temperature [°C]"
-
-"5.6. Heat capacity rate of the working fluid (as in the original). The
-      approximate duty epsilon_hex*C_dot_f_hex*(T_int-T_f_su_hex) of the
-      original (marked '0' there) is not used: the duty comes from the balances."
-C_dot_f_hex = M_dot_f_ev*c_f_ex_pp   "heat capacity rate of the working fluid [W/K]"
-c_f_ex_pp = CP(fluid$,P=P_ev,T=T_f_ex_pp)   "specific heat capacity of the superheated vapour [J/(kg K)]"
 
 "!6. BOILER"
 "6.1. Inputs and connections"

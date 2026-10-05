@@ -18,7 +18,7 @@ exercise of the same session as `CSL-0002` (counterflow) and `CSL-0026`
 | **Fluids** | Water (CoolProp properties); condensing steam at imposed temperature |
 | **Size** | 35 equations (largest block: 3) |
 | **Source** | ULiège exercise session (répétition 12, exercise 4) — CoolSolve example `exchangers3` + original EES file |
-| **Authors** | Vincent Lemort (ULiège Thermodynamics Laboratory, original exercise, 2017); S. Quoilin (CoolSolve example) |
+| **Authors** | Vincent Lemort (ULiège Thermodynamics Laboratory, original exercise, 2005); S. Quoilin (CoolSolve example) |
 | **License** | MIT |
 | **CoolSolve** | v0.3.0 — runs; import verified against the solution stored in the original EES file |
 
@@ -114,7 +114,7 @@ within the property tolerance of CoolSolve `docs/ees_import.md` §11
 
 Original exercise (in French) by **Vincent Lemort** (ULiège Thermodynamics
 Laboratory), header `VL050517` — exercise session (*répétition*) 12,
-exercise 4; the exact course could not be identified from the file.
+exercise 4 (the header `VL050517` reads 2005-05-17); the exact course could not be identified from the file.
 The model was rewritten in English as the CoolSolve example
 `examples/exchangers3.eescode` by S. Quoilin; this library model is the
 curated version of that example, which remains in the CoolSolve repository

@@ -166,5 +166,20 @@ model and also stays `todo`.
 - `CSL-0017` *chilled_water_cooling_coil*: the NTU-based chilled-water coil
   at the next level of detail; it uses the same contact-factor (bypass)
   outlet method.
+- `CSL-0055` *moist_air_room_psychrometrics*: humid-air properties of a room
+  (humidity ratio, enthalpy, dew point), the psychrometric basis of this
+  cooling-coil model; same EES-vs-CoolProp humid-air offsets.
 - CoolSolve example `humidair2` (air handling unit, companion exercise of
   the same group), not yet in the library.
+- `CSL-0062` *cooling_coil_condensate_ratio*: 7 kW cooling-and-dehumidifying
+  coil solved with two first-law methods (with/without the condensate
+  enthalpy term), same humid-air property offsets.
+- `CSL-0063` *moist_air_adiabatic_mixing*: adiabatic mixing of room and
+  outdoor air (psychrometrics, same course and collection).
+- `CSL-0070` *adiabatic_humidifier_simplified*: the same
+  effectiveness-type closure (about the wet-bulb state) for the opposite
+  air-handling process (humidification).
+
+- `CSL-0064` *psychrometric_mixer_condensation*: adiabatic mixing of room
+  and outdoor air with condensation in the mixer (same humid-air property
+  offsets).

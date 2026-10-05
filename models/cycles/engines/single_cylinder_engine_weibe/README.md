@@ -311,3 +311,7 @@ Sources (not copied into the library):
   exercises on the 5 L gas engine (`TM-0121`, `TM-0136`, inventory
   `thermo_models`, still `todo`) are steady-state gas-engine models of the same course
   family (not a counterpart of this crank-angle model: other physics).
+- **CSL-0049** `otto_cycle_air_standard`: the air-standard counterpart of
+  this spark-ignition engine — the same four-stroke cycle solved as a
+  steady ideal-gas model (Laplace law, constant c_v over each
+  transformation) instead of a crank-angle trajectory.

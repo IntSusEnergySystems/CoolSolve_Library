@@ -155,3 +155,9 @@ Source file (EES 7.458, comments in French), collection of S. Quoilin:
   series (repetition 1, exercise 2) on R22, identification of a
   clearance-volume/loss-factor compressor model from two points.
 - See also the CoolSolve example `compressor_refrigeration_simple.eescode`.
+- `CSL-0054` *heat_pump_r410a_air_evaporator*: same category; heat pump on
+  the zeotropic R410A with an air-side evaporator balance (the useful effect is
+  here at the condenser).
+- `CSL-0061` *refrigerator_freezer_r134a*: same fluid family (R134a) and
+  same course; a fridge-freezer cycle with two evaporators and two expansion
+  valves, sized from a required refrigeration capacity.

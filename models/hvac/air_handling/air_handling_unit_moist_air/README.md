@@ -124,7 +124,9 @@ psychrometrics formulation difference as in `CSL-0016` (humidity ratios
 0.25–0.46 % high in CoolSolve). The specific volume `v_a_su` is 0.96 % high
 in CoolSolve (checked against the ideal-gas value 0.8514 m³/kg at the same
 state, which CoolSolve reproduces: the EES psychrometric formulation gives a
-lower volume); it propagates directly to the dry-air flow (−0.96 %) and to
+lower volume — unexplained: at the C-38 review the EES `volume(AirH2O, …, R=…)`
+of `CSL-0030` agrees with CoolProp within 0.04 %, so the difference may come
+from the (T, P, w) input pair; to be checked in EES); it propagates directly to the dry-air flow (−0.96 %) and to
 the flow-proportional duties (`Q_dot_pc` −1.11 %, `Q_dot_batt` −0.56 %,
 `M_dot_w_cond` −0.38 %). The dry-air absolute enthalpies `h_su_air` /
 `h_ex_bat_air` differ by a reference-state offset (EES refers ideal-gas
@@ -218,5 +220,16 @@ unit). All `thermo_models` rows therefore stay `todo` for their own cards.
   the same session (contact factor on a single coil, per kg of dry air).
 - `CSL-0017` *chilled_water_cooling_coil*: the coil at the next level of
   detail (NTU-based, dry and wet regimes).
+- `CSL-0055` *moist_air_room_psychrometrics*: humid-air properties of a room
+  (humidity ratio, enthalpy, dew point) — the psychrometric relations this
+  model starts from.
 - See also the CoolSolve example `humidair2.eescode` (same exercise, kept in
   CoolSolve as a test case).
+- `CSL-0062` *cooling_coil_condensate_ratio*: cooling coil with condensate
+  flow on `AirH2O`, at the level of global first-law balances (two methods).
+- `CSL-0063` *moist_air_adiabatic_mixing*: adiabatic mixing of room and
+  outdoor air, the first step of an air-handling chain.
+- `CSL-0066` *adiabatic_saturation_wet_bulb*: moist-air properties of
+  `AirH2O` obtained from dry-bulb and wet-bulb readings (same functions).
+- `CSL-0070` *adiabatic_humidifier_simplified*: humidifier component on
+  `AirH2O` (effectiveness-NTU), one stage of an air-handling chain.

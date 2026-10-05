@@ -155,3 +155,6 @@ as a test case.
   identification method on R22 (repetition 1, exercise 2).
 - CoolSolve example `piston_compressor.eescode` (CSX-034): same model,
   kept in CoolSolve as a test case.
+- `CSL-0067` (piston compressor with inlet pressure drop and internal
+  leakage): same course (repetition 2) and machine type, modelled by
+  equivalent nozzles for the suction pressure drop and the internal leak.

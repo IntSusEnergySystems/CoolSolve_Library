@@ -25,10 +25,14 @@
            README.md for the conversion log.
   Status : BLOCKED in CoolSolve (see README "Blocked features"): the $if/$else
            compile-time directives of the original are parsed and ignored
-           (CS-GAP-IF-DIRECTIVE), the variable names C%, H%, O% do not parse
-           (CS-GAP-NAME-SYMBOL) and the results lookup table of the original is an
-           external file that is not shipped with the model (CS-GAP-LKT).
-           The file below is a faithful import and stays valid EES.
+           (CS-GAP-IF-DIRECTIVE) and the variable names C%, H%, O% do not parse
+           (CS-GAP-NAME-SYMBOL). The file stays valid EES.
+  Flattening note (C-46 review): the formals A_leak_mm2 and pinch_ev of the
+           expander/evaporator and Q_dot_3, T_w_ex_boil, m, n, p, Q_dot_gw of the
+           burner were renamed (A_leak_exp_mm2, Pinch_ev_ev, Q_dot_3_boil,
+           T_w_ex_boil_boil, m_boil, n_boil, p_boil, Q_dot_gw_boil) without the
+           link formal = actual of the original: see README "Known deviations of
+           the flattening".
 =============================================================================}
 
 
@@ -356,7 +360,7 @@ H_dot_sf_ev[4]=H_dot_sf_ev[3]-Q_dot_ev_l
 "=============================================================================================================================="
 $bookmark condenser_model
 
-procedure cond(fluid$,T_r_su_cd,M_dot_r_cd,DELTAT_r_ex_cd,Q_dot_cd1,T_w_ex_cd,T_w_su_cd,T_a_su_cd2,T_a_ex_cd2,p_r_cd,h_r_ex_cd_v,t_r_ex_cd_v,h_r_ex_cd_tp,t_r_ex_cd_tp,T_r_ex_cd,h_r_ex_cd,M_dot_w_cd1,M_dot_a_cd2)
+procedure cond(fluid$,T_r_su_cd,M_dot_r_cd,DELTAT_r_ex_cd,Q_dot_cd1,T_w_ex_cd,T_w_su_cd,T_a_su_cd2,T_a_ex_cd2,p_r_cd:pinch_cd,h_r_ex_cd_v,t_r_ex_cd_v,h_r_ex_cd_tp,t_r_ex_cd_tp,T_r_ex_cd,h_r_ex_cd,M_dot_w_cd1,M_dot_a_cd2)
 c_w = 4180
 
 "3 zones description, refrigerant side :"

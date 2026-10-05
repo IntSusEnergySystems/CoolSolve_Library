@@ -174,3 +174,9 @@ solution of 40 variables, no tables).
   category family (vapour cycle, imposed component performance).
 - CoolSolve example `refrigeration1.eescode` (same exercise, kept in
   CoolSolve as a test case).
+- `CSL-0054` (Air-source heat pump with R410A): same category; heat-pump
+  variant of the cycle analysis with an air-side evaporator balance and
+  evaporator pressure drop.
+- `CSL-0061` *refrigerator_freezer_r134a*: another R134a cycle of the same
+  ULiège course; a fridge-freezer with two evaporators (two low pressures) and
+  two expansion valves, sized from a required capacity.

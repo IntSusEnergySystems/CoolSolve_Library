@@ -232,4 +232,6 @@ recorded as `duplicate`).
 
 ## Related models
 
-None yet in the library (first `buildings/` model).
+- `CSL-0042` *3R2C building thermal network with weather lookup*: the other
+  `buildings/` model, from the same CLIM course; also a blocked native file
+  with a verified runnable `_coolsolve` variant.

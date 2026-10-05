@@ -216,4 +216,10 @@ Source file (plain-text EES library, comments in French):
   (`CS-FEAT-IMPORT`) is available.
 - `CSL-0011` *two_shaft_gas_turbine_compressor_map*: calls `cpbar` and `gamma`
   (copied in its runnable variants).
+- `CSL-0046` *octane_combustion_400pct_air*: combustion exercise of the same
+  course (species formation enthalpies and ideal-gas enthalpies, no `cpbar`).
 - Engine models of the collection also call `cpbar`/`gamma`.
+- `CSL-0050` *gas_turbine_two_shaft_intercooled_regenerative*: gas turbine of the
+  same course, combustion chamber of the air assumed unchanged (no `cpbar`).
+- `CSL-0058` *diesel_engine_excess_air_exhaust_analysis*: exhaust-gas analysis
+  of a diesel engine (real-fluid product enthalpies, no `cpbar`).

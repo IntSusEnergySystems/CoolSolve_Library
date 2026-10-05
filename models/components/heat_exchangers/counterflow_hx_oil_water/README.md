@@ -15,7 +15,7 @@ the library for the ε-NTU sizing/rating of a heat exchanger.
 | **Fluids** | Water (CoolProp properties); oil with constant c = 2100 J/(kg·K) |
 | **Size** | 20 equations, all explicit (largest block: 1) |
 | **Source** | ULiège exercise session (répétition 12, exercise 1) — CoolSolve example `exchangers1` + original EES file |
-| **Authors** | Vincent Lemort (ULiège Thermodynamics Laboratory, original exercise, 2017); S. Quoilin (CoolSolve example) |
+| **Authors** | Vincent Lemort (ULiège Thermodynamics Laboratory, original exercise, 2005); S. Quoilin (CoolSolve example) |
 | **License** | MIT |
 | **CoolSolve** | v0.3.0 — runs; import verified against the solution stored in the original EES file |
 
@@ -99,7 +99,7 @@ CoolSolve `docs/ees_import.md` §11.
 
 Original exercise (in French) by **Vincent Lemort** (ULiège Thermodynamics
 Laboratory), header `VL050517` — exercise session (*répétition*) 12,
-exercise 1, 2017; the exact course could not be identified from the file.
+exercise 1, 2005 (the header `VL050517` reads 2005-05-17); the exact course could not be identified from the file.
 The model was rewritten in English as the CoolSolve example
 `examples/exchangers1.eescode` by S. Quoilin; this library model supersedes
 that example, which remains in the CoolSolve repository as a test case.

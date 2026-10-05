@@ -21,7 +21,7 @@ second, independent use of `cpbar` next to the boiler of **CSL-0006**.
 | **Source** | ULiège MSTh repetition, TP 08, exercise 4 of 2005-11-14 (`~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 08/MSTH051114 EXERCICE 4.EES`, EES X7.458); imported from the CoolSolve example `examples/internal_combustion_engine_cpbar.eescode` (CSX-026) |
 | **Authors** | ULiège MSTh course (J. Lebrun, V. Lemort, S. Bertagnolio); the CoolSolve example is by S. Quoilin |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0+fix/library-gaps — verified against the stored EES solution of the original (69 variables, 3 above rtol = 0.001) |
+| **CoolSolve** | 0.3.0@536d427 — verified against the stored EES solution of the original (69 variables, 3 above rtol = 0.001) |
 
 ## Problem statement
 
@@ -44,15 +44,17 @@ temperature of the exhaust and of the cooling water, and the power terms.
 
 All the equations of the original are kept; nothing was added or removed.
 
-* **Intake / compression (states 2 → 3).** The charge flow rate is given twice:
-  by the displaced volume, `V_dot_4 = i·N_rot·ncVs`, and by the mean piston
-  speed, `V_dot_3 = A_3·C_3`. The pressure after the throttle is therefore not
-  an input: it is the pressure `P_2` that closes the isentropic path
+* **States 1 to 5 (intake pressure loss).** The charge flow rate is given twice:
+  by the displaced volume, `V_dot_4 = i·N_rot·ncVs`, and through the area `A_3`
+  at the velocity `C_3`, `V_dot_3 = A_3·C_3`. The pressure after the throttle is
+  therefore not an input: it is the pressure `P_2` that closes the isentropic path
   `s_2 = ENTROPY(Air, T_2, P_2)`, `v_3 = VOLUME(Air, s_2, P_3)`,
   `T_3 = TEMPERATURE(Air, s_2, P_3)` together with the kinetic-energy balance
   `c_p_2·(t_2 − t_3) = C_3²/2`. In the original this pressure comes from a
   parametric table; here it is solved for (it comes out at 17 945.5 Pa, i.e.
-  17 945.38 Pa in the stored solution).
+  17 945.38 Pa in the stored solution). At this point `P_3` is only ≈ 10 Pa
+  below `P_2` and `t_3` 0.05 K below `t_2`: state 3 is an acceleration of the
+  charge (`C_3` = 10 m/s), not a compression.
 * **Combustion.** Energy balance of the reactants (air and methane brought to the
   25 °C reference) and of the products, `Q_dot_1 + … + Q_dot_5 = 0`, with
   `Q_dot_5 = M_dot_g·c_p_g_6·(t_6 − 25)`: the mean specific heat of the products
@@ -128,7 +130,7 @@ temperature at the entry of the water-to-environment exchanger).
 ## Verification
 
 Reference: the stored solution of the EES original (`reference/ees_variables.csv`
-produced by `tools/ees_extract.py`, 69 variables, run with `W_dot_sh = 0` and
+produced by `tools/ees_extract.py` in the temporary work folder, not shipped; 69 variables, run with `W_dot_sh = 0` and
 `P_2 = 17 945.38 Pa`), compared with
 
 ```bash
@@ -143,12 +145,15 @@ which reports
 
 * 66 of the 69 variables agree within rtol = 0.001. The results of the exercise
   agree to ≤ 8.7·10⁻⁴ relative (`P_2`, `p_3`, `p_4`, `p_5`, `v_3`, `v_4`,
-  `V_dot_3`, `t_3`, `Q_dot_gw`, `Q_dot_wa`, `t_w_ex_1`, `t_w_ex`, `W_dot_in_act`,
-  `W_dot_p`, `W_dot_m`, `C_3`, `Q_dot_1`, `Q_dot_3`, `Q_dot_5` and the jacket
-  ε-NTU terms are at ≤ 3·10⁻⁷); the worst of them is `c_p_g_78` and the cooling
-  quantities derived from it at 8.7·10⁻⁴, and `t_6 = t_7` at 8.4·10⁻⁴ — the
-  degenerate point discussed above, where CoolSolve stops 1.2·10⁻³ K below the
-  EES value (`c_p_2`, `c_p_6`, `c_p_67`, `c_p_g_6` follow, ≤ 8.6·10⁻⁴).
+  `V_dot_3`, `t_3`, `t_8`, `Q_dot_gw`, `Q_dot_wa`, `t_w_ex_1`, `t_w_ex`,
+  `W_dot_in_act`, `W_dot_p`, `W_dot_m`, `C_3`, `M_dot_a`, `Q_dot_3`, `Q_dot_5` and
+  the jacket ε-NTU terms are at ≤ 6.2·10⁻⁶, checked at C-38; `Q_dot_1`, `c_p_a`
+  and `c_p_2` at 4.4–4.9·10⁻⁴); the worst of them is `c_p_g_78` and the cooling
+  quantities derived from it at 8.7·10⁻⁴, and `t_6 = t_7` at 8.4·10⁻⁴ (1.7 K below the EES value at 1963.1 °C): it
+  follows `c_p_g_6`, the mean specific heat of the products between 25 °C and
+  `t_6` (+8.6·10⁻⁴, EES vs CoolSolve ideal-gas enthalpies of the species), since
+  `c_p_g_6·(t_6 − 25)` is fixed by the combustor energy balance — not an effect of
+  the degenerate point `t_7 = t_6`, which only concerns `c_p_g_67`.
 * The three deviations:
   * `c_f` = `CP(CH4, 20 °C)`: 2220.6 vs 2241.7 J/kg·K (0.94 %) — EES treats CH4
     as an ideal gas, CoolSolve uses the CoolProp (real-gas) heat capacity;
@@ -238,6 +243,18 @@ which reports
 * No gap blocks this model: the native file runs as it is in the EES original
   (with the `cpbar` calls transcribed to `CALL`, see the conversion log).
   `missing_features` is empty.
+* **`cpbar` called with `CALL` (C-38 review).** The original calls `cpbar(...)`
+  in function position; the library ships the five-output `PROCEDURE` of
+  CSL-0005, which EES calls with `CALL` and which CoolSolve refuses in function
+  position ("cannot be called as a function"). The transcription changes no
+  equation and the `CALL` form is valid EES, so it is kept as the main file
+  (not a `_coolsolve` variant): it is not a rewrite around a CoolSolve gap,
+  because it is not established that EES accepts a multi-output `PROCEDURE` in
+  function position — the 2005 exercise probably used an older one-output
+  `cpbar`. The question stays in the maintainer's pending list (unverified
+  suggestion `CS-GAP-PROC-MULTIOUT`, not registered); if EES turns out to accept
+  the function form with the V2 procedure, the native file should be restored to
+  it and the `CALL` form moved to a `_coolsolve` variant.
 * The degenerate point `W_dot_sh = 0` (see `coolsolve.conf`) is a property of the
   exercise, not a CoolSolve limitation: EES stores `t_6 = t_7` exactly as well.
 * The engine is not a cycle model: no thermodynamic diagram can be overlaid
@@ -263,3 +280,6 @@ which reports
 * **CSL-0024** `single_cylinder_engine_weibe`: the crank-angle dynamic
   counterpart of this exercise (combustion with a Weibe law instead of `cpbar`,
   no cooling circuit).
+* **CSL-0049** `otto_cycle_air_standard`: the air-standard Otto cycle of
+  the same engine family, solved as a steady ideal-gas model (no cooling
+  circuit, no combustion products).

@@ -46,7 +46,7 @@
   "verification": {
     "reference": "LaboThapPy COND_CO2 example run in a throw-away venv (CoolProp 8.0.0, solved: True, pinch residual 5e-10 K) plus a clean re-run driving the original system_cond with an independent brentq (agrees to 1e-7)",
     "date": "2026-10-05",
-    "coolsolve_version": "main 2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
     "max_rel_diff": 0.028,
     "notes": "State enthalpies <= 0.3 % (subcooled outlet 1.7 %), P_sat 0.33 %, zone duties sh/tp <= 1.6 %, pinch exact. Q_dot 2.8 % off: LaboThapPy evaluates h 0.1 K below saturation with BICUBIC tables (dh 5607 J/kg, implies cp 56 kJ/kgK) vs HEOS 608 J/kg (cp 6.0 kJ/kgK, used by CoolSolve) - artifact of the original backend, translation faithful. LaboThapPy fluid name CO2 maps to EES R744 (bare CO2 is the ideal-gas species in EES)."
   },

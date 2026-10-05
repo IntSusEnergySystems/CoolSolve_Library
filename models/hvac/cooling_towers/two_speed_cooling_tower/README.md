@@ -168,5 +168,14 @@ Sources (not copied into the library):
 - `CSL-0016` *moist_air_cooling_coil_contact_factor* and `CSL-0017`
   *chilled_water_cooling_coil*: other humid-air (AirH2O) component models.
 - CoolSolve example `cooling_tower2` (single-speed fan tower, candidate
-  CSX-012) is a companion exercise of the same course, not covered by this
-  card.
+  CSX-012, recorded as a duplicate at the C-46 review): its equations are the
+  nominal-speed regime block of this model (same inputs: AU = 90 kW/K, 50 kg/s
+  of water at 35 °C, 60 kg/s of air at 25 °C and 70 % RH), without the fan
+  power; it is not imported separately.
+
+- `CSL-0064` *psychrometric_mixer_condensation*: adiabatic mixing of room
+  and outdoor air with condensation in the mixer (same humid-air property
+  offsets).
+- `CSL-0065` *cooling_tower_condenser_water*: level-1 exercise on the same
+  equipment (total mass/energy balance on humid air, air flow and make-up
+  water for one operating point), without the ε-NTU rating nor the fan.

@@ -161,3 +161,7 @@ case.
 - CoolSolve example `air_screw_compressor_simple.eescode` (CSX-003): same
   model with `N = rpm/60` and `rpm` as the sweep variable (parametric study
   on the speed) — merged here as a documented variant, no separate file.
+- `CSL-0067` (piston compressor with inlet pressure drop and internal
+  leakage): same course (repetition 2), same equivalent-nozzle leakage
+  physics on dry air; there the file's own leakage-consistency loop gives a
+  backward leak and the admission-area closure is added at import.

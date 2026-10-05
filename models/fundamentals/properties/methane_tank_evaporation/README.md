@@ -135,4 +135,15 @@ exercise).
 
 ## Related models
 
-None yet in the library.
+- `CSL-0044` *rigid_tank_water_mixture*: sibling exercise of the same
+  repetition session (R1, exercise 1): liquid-vapour equilibrium of water in
+  a rigid tank, quality from the average specific volume.
+- `CSL-0045` *steam_turbine_exergy_balance*: same course and session family
+  (*Thermodynamique appliquée*), a real-fluid exercise imported the same way
+  (manual °C/Pa/J conversion, EES stored solution as reference).
+- `CSL-0048` *two_tanks_connected_valve_r12*: same course and session family
+  (*Thermodynamique appliquée*, repetition R1, exercise 4), the same rigid-tank
+  / two-phase quality physics on R12.
+- `CSL-0057` *two_tanks_max_work_air*: rigid vessels and ideal-gas air in the
+  same course (*Thermodynamique appliquée*, MECA0002), maximum work from two
+  tanks coupled by a heat engine.

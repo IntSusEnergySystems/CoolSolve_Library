@@ -20,7 +20,7 @@ water-cooled coil) and the moist-air counterpart of `CSL-0016`.
 | **Fluids** | R134a (CoolProp properties), AirH2O (moist air) |
 | **Size** | 45 equations (largest block: 2) |
 | **Source** | ULiège MSTh exercise (répétition 5, exercise 2, SB solution) — CoolSolve example `evaporator` + original EES file |
-| **Authors** | Stéphane Bertagnolio (ULiège Thermodynamics Laboratory, original exercise, 2017); S. Quoilin (CoolSolve example) |
+| **Authors** | Stéphane Bertagnolio (ULiège Thermodynamics Laboratory, original exercise); S. Quoilin (CoolSolve example) |
 | **License** | MIT |
 | **CoolSolve** | v0.3.0@536d427 — runs (no `.initials` needed); import verified against the solution stored in the original EES file |
 
@@ -181,8 +181,8 @@ file.
 
 Original exercise (in French, header `MSTh - SB - R5 - Exercice 2`) solved by
 **Stéphane Bertagnolio** (ULiège Thermodynamics Laboratory, `SB` initials —
-see `docs/model_workflow.md` §3) — MSTh répétition 5, exercise 2, file dated
-2017. The model was rewritten in English as the CoolSolve example
+see `docs/model_workflow.md` §3) — MSTh répétition 5, exercise 2 (the file of the
+collection is dated 2017-05-30; the date of the exercise is unknown). The model was rewritten in English as the CoolSolve example
 `examples/evaporator.eescode` by S. Quoilin; this library model follows the
 EES original (faithful import), which remains the reference; the example
 stays in the CoolSolve repository as a test case.

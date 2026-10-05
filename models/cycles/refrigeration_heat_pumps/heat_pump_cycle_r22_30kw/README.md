@@ -200,5 +200,8 @@ and storage date): no `thermo_models` row is decided on by this card.
   compressor model with a three-fluid comparison (R22, R134a, propane).
 - `CSL-0013` (Heat pump basic TESPy): same category; TESPy tutorial heat
   pump translated to CoolSolve.
+- `CSL-0033` *heat_pump_r22_semihermetic_compressor*: an R22 heat pump of the
+  same family with a semi-hermetic reciprocating compressor model (clearance-factor
+  volumetric efficiency, loss model) instead of a constant isentropic efficiency.
 - CoolSolve example `refrigeration2.eescode` (same exercise, kept in
   CoolSolve as a test case).

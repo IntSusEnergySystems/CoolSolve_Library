@@ -344,3 +344,17 @@ run*).
   library, on a heating boiler.
 - `CSL-0035` (*centrifugal_compressor_lookup_map*): another map-based
   compressor model blocked by the same native `INTERPOLATE` gap.
+- `CSL-0050` (*gas_turbine_two_shaft_intercooled_regenerative*): the same
+  machine concept (two independent shafts, the HP turbine driving the
+  compressors) with a constant compressor pressure ratio, intercooling,
+  regeneration and a reheat combustion chamber.
+- `CSL-0051` (*turbojet_ideal_260ms*): ideal turbojet of the same course
+  (repetition 6), fully explicit and verified — the non-ideal counterpart of
+  this gas-turbine family.
+
+- `CSL-0052` (*combined_gas_steam_cycle*): the same gas cycle on ideal-gas
+  air with a constant compressor pressure ratio, but topping a Rankine
+  bottoming cycle heated by the exhaust gases.
+- `CSL-0060` (*gas_turbine_reheat*): the same intercooled + regenerative
+  architecture on ideal-gas air, with the reheat combustion chamber between the
+  turbine stages and the LP expansion to ambient pressure.

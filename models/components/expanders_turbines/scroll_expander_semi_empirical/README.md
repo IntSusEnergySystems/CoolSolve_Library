@@ -76,7 +76,7 @@ TrustRegion to the solver pipeline because Newton alone fails on the
 Reference: the LaTeX **solution report** (`EES_ok/expander_module.tex`) and
 residuals window dump (`EES_ok/expander_module.residuals`) shipped in CoolSolve
 `misc/EES_ok.zip` next to the original `.EES` — all 103 equation residuals are
-0 at that solution. The **variable records decoded from the binary `.EES` by
+below 1.1·10⁻¹² (relative) at that solution. The **variable records decoded from the binary `.EES` by
 `ees_extract.py` are stale** for this file (they mix at least two older runs:
 `r_p_exp = 3.33` instead of 7.38, `C_dot_su_exp = inf`) and were **not** used;
 reported as tool bug `CS-BUG-EXTRACT-STALE`.
@@ -131,7 +131,12 @@ Source files (MIT, collection of S. Quoilin):
   equation (in EES they act on two distinct variables, module-local and main);
   it is kept once. `$bookmark expander_model` (an EES GUI navigation tag) and
   the `module`/`call`/`end` lines were removed. The flattened file is valid
-  EES. Unit system already SI-C-Pa-J; comments translated to English; standard
+  EES. *C-46 check:* a normalised line comparison of the file with the
+  extraction of the original (formals replaced, `$` directives and
+  module/call/end lines ignored) shows no other difference; the 20
+  formal-actual link equations that EES generates (`expander\1.M_dot_r_nom=
+  M_dot_r_exp_n`, … in `EES_ok/expander_module.residuals`) are absorbed by the
+  replacement of the formals. Unit system already SI-C-Pa-J; comments translated to English; standard
   header added.
 - **Level justification** (taxonomy §3): equations 82 (50–300 → 1), largest
   algebraic block 40 (> 30 → 2), semi-empirical physics → 1, needs curated

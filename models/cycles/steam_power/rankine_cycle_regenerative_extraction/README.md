@@ -168,3 +168,6 @@ is the CoolSolve example derived from it).
   efficiency) — different level of detail (no regeneration), linked both ways.
 - See also the CoolSolve example `rankine2.eescode` (CSX-037): same EES
   origin, solved at 14 bar (header announces 25 bar).
+
+- `CSL-0052` *combined_gas_steam_cycle*: the same steam cycle of the
+  repetition used as the bottoming cycle of a combined gas-steam cycle.

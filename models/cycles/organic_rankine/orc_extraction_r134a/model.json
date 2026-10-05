@@ -2,7 +2,7 @@
   "id": "CSL-0036",
   "name": "orc_extraction_r134a",
   "title": "ORC with two-stage expander and intermediate extraction (R134a)",
-  "summary": "R134a Organic Rankine Cycle (T_ev = 90 °C, T_cd = 30 °C) whose screw/scroll-type expander is described stage by stage: isentropic first expansion, extraction of 13 % of the flow at an intermediate pressure, isentropic second expansion and constant-volume discharge; the extracted vapour is mixed with the exhaust and cools the pumped liquid in an internal heat exchanger. Determines the pressures, all state points, a 4.99 kW expander power, 35.6 kW boiler duty and a cycle efficiency of 11.7 %.",
+  "summary": "R134a Organic Rankine Cycle (T_ev = 90 °C, T_cd = 30 °C) whose screw/scroll-type expander is described stage by stage: isentropic first expansion, extraction of a fraction of the flow at an intermediate pressure, isentropic second expansion and constant-volume discharge; the extracted vapour is mixed with the exhaust and cools the pumped liquid in an internal heat exchanger. For a specified 5 kW expander power it determines the displaced volume (21.2 cm3), the extracted fraction (13.2 %), the pressures, all state points, a 35.6 kW boiler duty and a cycle efficiency of 11.7 %.",
   "kind": "steady",
   "level": 3,
   "status": "verified",
@@ -25,7 +25,10 @@
     "string variables",
     "min/max functions"
   ],
-  "stats": {"n_equations": 163, "largest_block": 1},
+  "stats": {
+    "n_equations": 163,
+    "largest_block": 21
+  },
   "origin": {
     "type": "research",
     "source": "coolsolve_examples",
@@ -42,12 +45,19 @@
   "verification": {
     "reference": "Solution stored in the original EES file (CoolSolve misc/EES_ok.zip, EES_ok/orc_extraction.EES, EES 9.920, 132 stored variables); the equations of that file are byte-identical to ~/Nextcloud/thermo_models/modeles/cycle a extraction.EES (EES 7.991)",
     "date": "2026-10-05",
-    "coolsolve_version": "main 2026-10-05",
-    "max_rel_diff": 0.002,
-    "notes": "132 common variables: 52 agree within 0.1 %. The 52 h/u/s variables differ by a constant reference-state offset (+148.19 kJ/kg, +795.79 J/(kg K): EES default R134a reference vs CoolProp IIR); after removing it they agree within 0.09 %. Remaining deviations 0.1-0.2 % (R134a equation of state): specific volumes +0.21 %, mass flow -0.21 %, Q_dot_ev -0.16 %, Q_dot_cd -0.17 %, W_dot_exp -0.12 %, W_dot_pp -0.20 %, eta +0.06 %. EES quality() outside the dome: -100/100 sentinels vs 0 in CoolSolve (diagnostic only). The original is over-determined (5 variables defined twice or three times, 2 never defined): the free inputs were restored with the stored values and the redundant definitions removed without changing any equation of the physics."
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.00262,
+    "notes": "compare_solution.py prints '132 common variables, 72 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 31'. The largest printed difference over all common variables is 1.00e+00 (res and the three quality sentinels x_f_su_pp, x_f_ex_pp, x_f_int_exp: EES stores -100/100 for quality() outside the dome and a res of 1.1e-4 W, CoolSolve 0 and -1.1e-11); max_rel_diff 0.00262 is the maximum printed after excluding those four variables and the 52 h/u/s variables, which differ by a constant reference-state offset (+148.19 kJ/kg on h and u, +795.80 J/(kg K) on s: EES default R134a reference vs CoolProp IIR) and agree within 7.5e-4 (h, u) and 6.7e-4 (s) after removing it. The 16 physical variables between 1.1e-3 and 2.6e-3 (largest M_dot_f_ext 2.62e-3; Q_dot_hex 2.0e-3, W_dot_pp 1.8e-3, x_ext 1.7e-3, V_s_exp 1.15e-3) are the R134a equation-of-state differences (specific volume +0.21 %) propagated through the sizing; the other 60 agree within 1e-3. All 133 equations of the original are unchanged (W_dot_exp = 5000, epsilon_s_pp = 0.5 and the three Q_dot_hex statements determine V_s_exp, x_ext and the recuperator outlet); a worker's earlier rearranged specification (V_s_exp, x_ext, w_pp imposed from the stored solution) was reverted after review C-38. The shipped .initials is required (from default guesses the block of 21 stops on a singular Jacobian); 21 iterations with it."
   },
   "missing_features": [],
-  "related": ["CSL-0004", "CSL-0007", "CSL-0019", "CSL-0037", "CSL-0040"],
+  "related": [
+    "CSL-0004",
+    "CSL-0007",
+    "CSL-0019",
+    "CSL-0037",
+    "CSL-0040",
+    "CSL-0038"
+  ],
   "related_external": [
     "CoolSolve examples/orc_extraction.eescode (same model, kept in CoolSolve as a test case)",
     "CoolSolve misc/EES_ok.zip: EES_ok/orc_extraction.EES (original EES file with the stored solution, used as reference)",
@@ -58,6 +68,15 @@
   ],
   "previous_paths": [],
   "history": [
-    {"date": "2026-10-05", "action": "added (roadmap card C-37, batch B-03)", "by": "opencode worker for S. Quoilin"}
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-37, batch B-03)",
+      "by": "opencode worker for S. Quoilin"
+    },
+    {
+      "date": "2026-10-05",
+      "action": "original equations restored (a worker's rearranged specification reverted after review C-38); .initials trimmed, .sol regenerated, README rewritten",
+      "by": "Claude Sonnet (review C-38)"
+    }
   ]
 }

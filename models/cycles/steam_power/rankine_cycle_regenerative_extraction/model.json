@@ -44,12 +44,12 @@
   "verification": {
     "reference": "EES stored solution of EES_ok/rankine2.EES (44 variables, 25 bar extraction run)",
     "date": "2026-10-05",
-    "coolsolve_version": "0.3.0",
+    "coolsolve_version": "0.3.0@536d427",
     "max_rel_diff": 5.5e-04,
     "notes": "All 44 common variables agree within the default rtol=0.001 of compare_solution.py (0 differ); largest deviation 5.5e-4 on M_dot_steam_s (EES 7.2 vs CoolProp water properties). The 29 CoolSolve-only variables are the 28 diagram state-array elements plus P_2b (not stored by EES)."
   },
   "missing_features": [],
-  "related": ["CSL-0004"],
+  "related": ["CSL-0004", "CSL-0052"],
   "related_external": [
     "CoolSolve examples/rankine2.eescode (CSX-037): same EES origin, solved at 14 bar while its header announces 25 bar; stays in CoolSolve as a test case"
   ],

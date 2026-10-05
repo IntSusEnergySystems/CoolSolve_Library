@@ -109,11 +109,11 @@ inputs (temporary copy, `coolsolve` v0.3.0) and compared with
 `compare_solution.py`:
 
 - **19 common variables, 18 agree within 6.4·10⁻⁸**; the printed maximum is
-  **5.26·10⁻³ on `u_dot`**, excluded: at the final time `u_dot` =
+  **5.23·10⁻³ on `u_dot`** (re-run at the C-46 review), excluded: at the final time `u_dot` =
   ε·Ċ·(5−T_w)/M ≈ 1.2·10⁻⁶ J/(kg·s) is proportional to 5 − T_w ≈ 4.3·10⁻⁷, a
   cancellation-limited residual of the last integration step — the states
-  themselves agree to 2.6·10⁻¹⁰ on `u`, 3.5·10⁻¹⁰ on `T_w` and `t_melt`,
-  6.4·10⁻⁸ on `u_ice_0`/`u_1` (rounding of the −333 451.5 constant), 6·10⁻⁸
+  themselves agree to 2.5·10⁻¹⁰ on `u`, 3.5·10⁻¹⁰ on `T_w` and `t_melt`,
+  6.33·10⁻⁸ on `u_ice_0`/`u_1` (rounding of the −333 451.5 constant), 6·10⁻⁸
   on `DELTAu`; ε, NTU, `x_melt` exact.
 - This also verifies the phase-change `IF` logic and the `INTEGRAL`
   transcription against EES (EES evaluates `u_ice_0` on its Water substance,

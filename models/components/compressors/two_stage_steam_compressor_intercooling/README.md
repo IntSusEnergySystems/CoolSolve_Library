@@ -201,3 +201,7 @@ conversion log).
 
 None yet in the library. `CSL-0001` (refrigeration cycle with a simple
 compressor) covers single-stage compressor laws on refrigerants.
+
+- `CSL-0047` *nonideal_gas_isothermal_work*: another `INTEGRAL` model of the
+  same course, blocked by the same two IDs; its runnable variant applies the
+  same two workarounds to a definite integral of P(v).

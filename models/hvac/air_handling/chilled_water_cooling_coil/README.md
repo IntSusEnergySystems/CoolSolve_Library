@@ -215,3 +215,6 @@ are different systems and stay `todo` for their own cards.
 - `CSL-0016` (Moist-air cooling coil with contact factor): the contact-factor
   (bypass) outlet method used here, as a standalone level-1 model on imposed
   outlet temperature.
+- `CSL-0062` *cooling_coil_condensate_ratio*: exam revision exercise on a
+  cooling coil treated with global first-law balances (two methods, with and
+  without the condensate term) instead of the coil-resistance detail.

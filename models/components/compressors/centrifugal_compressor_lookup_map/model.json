@@ -45,13 +45,13 @@
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
     "max_rel_diff": 0.000955,
-    "notes": "Concerns the runnable variant. p_su, p_ex, r_p, t_su exact; w_s 9.55e-04 (largest comparable deviation; EES 7 vs CoolProp Air, within the 0.5 % tolerance); h_su, h_exs and s_su are left out of the comparison (constant EES-7-vs-CoolProp Air reference-state offsets: +125.87 kJ/kg on h, -1814.8 J/kg-K on s). epsilon_s, M_r, M_dot and W_dot differ at r_p = 6 only because EES extrapolates the map linearly where CoolSolve clamps (CS-GAP-INTERP-EXTRAP): applying the extrapolation by hand reproduces all four stored values (epsilon_s 1.093333, M_r 29.9, M_dot 1.57210 rel 3e-7, W_dot 282702 rel 1.4e-4). The 127x2 parametric table of the original is not usable as reference (lost .lkt, values inconsistent with the published map - see README)."
+    "notes": "Concerns the runnable variant. p_su, p_ex, r_p, t_su exact; w_s 9.55e-04 (largest comparable deviation; EES 7 vs CoolProp Air, within the 0.5 % tolerance); h_su, h_exs and s_su are left out of the comparison (constant EES-7-vs-CoolProp Air reference-state offsets: +125.87 kJ/kg on h, -1814.8 J/kg-K on s). epsilon_s, M_r, M_dot and W_dot differ at r_p = 6 only because EES extrapolates the map linearly where CoolSolve clamps (CS-GAP-INTERP-EXTRAP): applying the extrapolation by hand reproduces all four stored values (epsilon_s 1.093333, M_r 29.9, M_dot 1.572099 rel 1e-10, W_dot 283013 with the CoolSolve w_s, rel 9.6e-4 = the w_s deviation; 282742.25 exactly with the EES w_s). The 127x2 parametric table of the original is not usable as reference (lost .lkt, values inconsistent with the published map - see README)."
   },
   "missing_features": [
     "CS-GAP-INTERP-EES",
     "CS-GAP-INTERP-EXTRAP"
   ],
-  "related": ["CSL-0011", "CSL-0023"],
+  "related": ["CSL-0011", "CSL-0023", "CSL-0069"],
   "related_external": [
     "CoolSolve examples/turbocompressor_interpolate.eescode (CSX-045: same exercise, kept in CoolSolve as a test case; p_ex imposed at 4.5 bar and map data only in comments, see README)"
   ],

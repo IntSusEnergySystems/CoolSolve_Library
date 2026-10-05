@@ -105,6 +105,9 @@ that contains a comma between double quotes** — an unquoted comma shifts
 reports such rows as errors). Edit the cells by line surgery (the last cells of
 the line); never rewrite an inventory with a csv writer: `thermo_models` rows
 carry extra trailing columns and a rewrite changes the quoting of other rows.
+`parked` is reserved for **publication issues** (licence, personal data,
+third-party content that may not be published): a candidate that is merely a
+different exercise, or not yet processed, stays `todo` (a note is welcome).
 
 **CoolSolve examples** (`coolsolve_examples`; the example stays in the CoolSolve
 repository) follow the C-01 pattern: the row of the file the model is imported
@@ -168,6 +171,10 @@ existing library). `tools/build_index.py` rejects source files and
    | VL | Vincent Lemort |
    | others | to be confirmed by the maintainer before use |
 
+   A header such as `VL050517` is initials + `YYMMDD` (here 2005-05-17); the
+   date of the file in the collection (often 2017, the date of a copy) is not
+   the date of the exercise.
+
 3. **Faithful run** (in the work folder): complete what EES provided
    implicitly (parametric-table inputs → default run; external lookup files →
    CSV; library functions → copied block), solve, and **verify against the EES
@@ -179,7 +186,15 @@ existing library). `tools/build_index.py` rejects source files and
    If it does not converge: CoolSolve `docs/debugging_models.md` (debug folder,
    simplified model for initials, *Try Harder*/`coolsolve.conf`). Time-box the
    effort; if it still fails, set `failing` with the diagnosis, or `blocked` if
-   a CoolSolve gap is the cause (§6). Keep EES syntax in the native file
+   a CoolSolve gap is the cause (§6). **Before declaring an EES model over- or
+   under-determined (C-37, `CSL-0036`), solve the extraction unmodified** (NUL
+   byte and `$UnitSystem` line removed, `.initials` from the stored solution)
+   and read the `System square` line of the statistics: when it is square the
+   model is faithful as it stands, and variables that look like free inputs
+   (`V_s_exp`, `x_ext`…) are outputs of design equations (`W_dot = 5000` sizing
+   a displacement, `epsilon_s = 0.5` fixing a work). Never replace equations of
+   the original by values taken from the stored solution: stored values of
+   unknowns belong in `.initials`. Keep EES syntax in the native file
    (principle: CoolSolve must read native EES); a faithful runnable variant of a
    blocked file is shipped separately (§6). **Quote tolerances exactly as
    `compare_solution.py` prints them** (README, `verification.max_rel_diff`: the
@@ -199,7 +214,14 @@ existing library). `tools/build_index.py` rejects source files and
    of dead code. Keep variable names unless they are misleading. **Comments do
    not invent physical meaning**: paraphrase the original's own comments or
    write "as in the original"; give every dimensional quantity its SI unit
-   (`[-]` only for dimensionless ones). Fluid names follow §9. If the model
+   (`[-]` only for dimensionless ones); check a physical word against the
+   numbers (a state called "compression" must show a pressure rise, C-35).
+   A library `PROCEDURE` that the original calls in function position
+   (`c_p = cpbar(...)`) and that the library ships with several outputs is
+   transcribed with `CALL`: the form is valid EES and no equation changes, so it
+   is not a `_coolsolve` variant — say so in the conversion log (`CSL-0034`;
+   whether EES accepts the function form with a multi-output procedure is an open
+   suggestion, `CS-GAP-PROC-MULTIOUT`, not registered). Fluid names follow §9. If the model
    is a cycle or a component on a real fluid, make it **diagram-ready**: add at
    the end a block of post-processing equations giving the state points as
    arrays `P[i]`, `h[i]`, `T[i]`, `s[i]` (pattern: `CSL-0001`, block *State

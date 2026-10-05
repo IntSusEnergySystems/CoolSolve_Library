@@ -15,23 +15,25 @@ in [docs/taxonomy.md](docs/taxonomy.md).
 
 | Library | Count |
 |---|---:|
-| Models (B-01 + B-02 reviewed; B-03 cards merged so far included, C-25 review 2026-10-05) | 30 |
-| … verified / runs / modified | 24 / 1 / 0 |
-| … blocked / failing / documented only | 5 / 0 / 0 |
-| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md)) | 35 (21 gaps, 12 bugs, 2 doc issues) |
+| Models (B-01 + B-02 + B-03 reviewed, C-38 review 2026-10-05; the B-04 models merged so far are not counted) | 36 |
+| … verified / runs / modified | 29 / 1 / 0 |
+| … blocked / failing / documented only | 6 / 0 / 0 |
+| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md)) | 40 (23 gaps, 15 bugs, 2 doc issues) — recounted at C-38 from the register, incl. the 4 rows registered by B-04 so far |
 | … closed | 9 (3 gaps, 5 bugs, 1 doc issue) — CoolSolve `main` 2026-10-05 |
 
 | Backlog (source inventories) | Candidates | Distinct | todo | added | merged | discarded | parked |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| ULiège collection `thermo_models` | 552 | 341 | 441 | 16 | 7 (+46 duplicates) | 42 | 0 |
-| CoolSolve examples | 47 | 47 | 21 | 17 | 9 | 0 | 0 |
+| ULiège collection `thermo_models` | 552 | 341 | 409 | 25 | 19 (+57 duplicates) | 42 | 0 |
+| CoolSolve examples | 47 | 47 | 8 | 31 | 8 | 0 | 0 |
 | LaboThapPy | 74 | 74 | 73 | 1 | 0 | 0 | 0 |
 | TESPy | 52 | 52 | 51 | 1 | 0 | 0 | 0 |
 
 The tables count inventory **rows**, not models: a model imported from a
 CoolSolve example and from its EES original in `thermo_models` has two `added`
-rows (`CSL-0017`, `0018`, `0020`–`0023`; workflow §2). Regression at the `C-25`
-review: 34 targets (24 model main files + 10 variants), 0 failure.
+rows (`CSL-0017`, `0018`, `0020`–`0023`, `0030`–`0035`, `0041`, `0043`; workflow §2).
+Backlog rows count the B-04 cards merged so far. Regression at the `C-38` review:
+47 targets (34 model main files + 13 variants, B-04 models merged so far
+included), 0 failure.
 
 Priorities of the candidates (wave1 / high / medium / low / skip):
 `thermo_models` 38 / 37 / 142 / 241 / 94 · CoolSolve examples 12 / 24 / 7 / 0 / 3 ·
@@ -43,7 +45,7 @@ Refresh with `python3 tools/build_index.py` (models) and
 ### Where to resume (handover, 2026-10-05, 15:30)
 
 - **State:** B-01 (`C-01`…`C-14`) and B-02 (`C-15`…`C-25`) are closed by their
-  review cards; B-03 (`C-26`…`C-37`) is done except its review `C-38`; B-04
+  review cards; B-03 (`C-26`…`C-37`) is closed by its review `C-38` (2026-10-05); B-04
   (`C-39`…`C-45`, the last CoolSolve examples) is in progress, then its review
   `C-46` closes Phase 3A. Next: B-05, the first Phase 3B batch (ULiège
   collection, *thermodynamique appliquée* first). 41 models at 15:30.
@@ -67,12 +69,14 @@ Refresh with `python3 tools/build_index.py` (models) and
   `CS-BUG-INTEGRAL-MAXSTEPS`), `CSL-0010` (`CS-GAP-INTEGRAL-LIMITS`,
   `CS-BUG-INTEGRAL-FACTOR`), `CSL-0011` (`CS-GAP-INTERP-EES`,
   `CS-GAP-INCLUDE`), `CSL-0012` (`CS-GAP-IF-DIRECTIVE`, `CS-GAP-LOOKUPROW`,
-  `CS-BUG-LOOKUP-STRING`). After a CoolSolve release: `T-RECHECK` (workflow §6).
+  `CS-BUG-LOOKUP-STRING`), `CSL-0028` (`CS-GAP-PSYCHRO-SAT`), `CSL-0035`
+  (`CS-GAP-INTERP-EES`, `CS-GAP-INTERP-EXTRAP`); those of B-04 are listed by its
+  review. After a CoolSolve release: `T-RECHECK` (workflow §6).
 - **Regression:** `python3 tools/test_models.py --coolsolve ../CoolSolve/build/coolsolve`
   solves the main file of every runnable model **and every variant that has a
   `.sol` next to it**, reported as `CSL-xxxx:variant` — so the runnable
   variants of the blocked models (`CSL-0009`…`0012`) and the variants of
-  verified ones are covered (30 targets at C-14: 21 main files + 9 variants; 34 at C-25: 24 + 10; all OK). It takes
+  verified ones are covered (30 targets at C-14: 21 main files + 9 variants; 34 at C-25: 24 + 10; 47 at C-38: 34 + 13; all OK). It takes
   about 4 min, 3 of them for `CSL-0009:coolsolve` (18 000 integration steps):
   `--no-variants` or `--exclude CSL-0009:coolsolve` for a quick run.
 - **Decisions of the C-14 review** (workflow updated): (1) variants get a
@@ -88,6 +92,12 @@ Refresh with `python3 tools/build_index.py` (models) and
   the files — same course, choose one policy); figures to make
   (`build_index.py` lists them); the pending list of unverified gap suggestions
   (Phase 5); the taxonomy recommendations at M1 (P6.2).
+- **Open items of the C-38 review (B-03):** (`CSL-0036`, rearranged by its
+  worker, was reworked to the original equations after the review, see §8.) `CSL-0034`: whether EES accepts a
+  multi-output `PROCEDURE` in function position (`cpbar`) stays an unverified
+  suggestion. `CSL-0028`: the EES `volume(AirH2O,…,w=…)` of `humidair2.EES` is
+  0.96 % below the ideal-gas value (unexplained, to check in EES). Authors still
+  `TBD` for `CSL-0035` too.
 - **How the batches were executed:** one card per worker, one worker at a time
   in B-01, then parallel lanes (see *Lanes*; the orchestrator merges, ticks the
   cards and writes §8; review cards by Claude Sonnet agents), by an
@@ -111,7 +121,11 @@ Refresh with `python3 tools/build_index.py` (models) and
 - **Cards are grouped in batches** of 5–15 cards, prepared by the manager from
   the inventories (`python3 tools/backlog_stats.py --next <source> 10`) and
   listed in §6. Each batch ends with a review card: run the checks, read the
-  diffs, update §1, refine this roadmap, the workflow and the templates.
+  diffs, update §1, refine this roadmap, the workflow and the templates. Since
+  B-04 (maintainer decision) the review card is a light scripted check by the
+  orchestrator (`build_index`, `backlog_stats`, `test_models`, inventory
+  decisions, worker final messages); a deep review by a Claude Sonnet agent is
+  used only for an obvious problem or to compare two workers on the same card.
 - **Per-candidate progress lives in the inventories** (`sources/*/inventory.csv`,
   columns `decision` and `library_id`), not in this file. The roadmap keeps
   phases, batches and decisions; the inventories keep the hundreds of
@@ -413,7 +427,7 @@ CSX-029, CSX-047 (level 3–4), CSX-046 (LiBr-water).
 [x] C-35  T-IMPORT     CSX-026 (+EES original)          → cycles/engines/                                     — internal combustion engine cycle with cpbar (L2), uses CSL-0005 cpbar — CSL-0034
 [x] C-36  T-IMPORT     CSX-045 (+EES original)          → components/compressors/                             — centrifugal compressor with lookup-table map (L2), after C-23 (CSL-0023) — CSL-0035
 [x] C-37  T-IMPORT     CSX-030 (+EES original)          → cycles/organic_rankine/                             — ORC with two-stage expander and extraction, R134a (L3) — CSL-0036
-[ ] C-38  T-REVIEW     B-03                                                                                      — checks, diffs, §1, workflow; plan B-04 (remaining examples: dynamic, L3–L4, absorption)
+[x] C-38  T-REVIEW     B-03                                                                                      — checks, diffs, §1, workflow; plan B-04 (remaining examples: dynamic, L3–L4, absorption)
 ```
 
 ### B-04 — CoolSolve examples, last batch (Phase 3A) ☐
@@ -427,9 +441,9 @@ same notes as B-02. C-39 is the first application of decision D10 (MODULE flatte
 [x] C-41  T-IMPORT     CSX-047 (+EES original)          → cycles/refrigeration_heat_pumps/                    — Zorlu geothermal plant, heat pump with PCM storage (L3) — CSL-0039
 [x] C-42  T-IMPORT     CSX-029 (+EES original)          → cycles/organic_rankine/                             — complex ORC with procedures and lookup tables (L4; provide curated initials) — CSL-0040
 [x] C-43  T-IMPORT     CSX-023 (+EES original)          → components/storage/                                 — ice storage tank discharge with phase change (dynamic, L2) — CSL-0041
-[ ] C-44  T-IMPORT     CSX-006 (+EES original)          → buildings/                                          — 3R2C building thermal network, weather lookup (dynamic, CS-GAP-INTEGRAL-LOOKUP) (L2) — CSL-0042
+[x] C-44  T-IMPORT     CSX-006 (+EES original)          → buildings/                                          — 3R2C building thermal network, weather lookup (dynamic, CS-GAP-INTEGRAL-LOOKUP) (L2) — CSL-0042
 [x] C-45  T-IMPORT     CSX-046 (+EES original)          → cycles/absorption_sorption/                         — LiBr-water absorption properties exercise (L2) — CSL-0043
-[ ] C-46  T-REVIEW     B-04                                                                                      — checks, diffs, §1; close Phase 3A (all CoolSolve examples triaged); plan Phase 3B
+[x] C-46  T-REVIEW     B-04                                                                                      — checks, diffs, §1; close Phase 3A (all CoolSolve examples triaged); plan Phase 3B
 ```
 
 ### B-05 — ULiège collection, *thermodynamique appliquée* (Phase 3B) ☐
@@ -440,20 +454,66 @@ the course's Python/CoolProp solutions are extra verification references (P6.5).
 `~/llm/scripts/csl/b05_extra.txt` (maintainer set-up).
 
 ```
-[ ] C-47  T-IMPORT     TM-0378 (DG-0088)                → fundamentals/properties/                            — rigid tank with a liquid-vapour water mixture (L1, kPa) — CSL-0044
-[ ] C-48  T-IMPORT     TM-0389 (DG-0093)                → fundamentals/processes/                             — steam turbine exergy balance (L1) — CSL-0045
-[ ] C-49  T-IMPORT     TM-0393 (DG-0095)                → fundamentals/combustion/                            — octane combustion with 400 % theoretical air (L1, kPa) — CSL-0046
-[ ] C-50  T-IMPORT     TM-0399 (DG-0097)                → fundamentals/properties/                            — non-ideal gas v(P+k/v²)=RT, isothermal work (L1, molar units) — CSL-0047
-[ ] C-51  T-IMPORT     TM-0382 (DG-0091)                → fundamentals/processes/                             — two R12 tanks connected by a valve (L1, kPa) — CSL-0048
-[ ] C-52  T-IMPORT     TM-0429 (DG-0102)                → cycles/engines/                                     — air-standard Otto cycle (L2, kPa) — CSL-0049
-[ ] C-53  T-IMPORT     TM-0441 (DG-0105)                → cycles/gas_turbines/                                — land-based two-shaft gas turbine (L2, kPa), link CSL-0011 — CSL-0050
-[ ] C-54  T-IMPORT     TM-0442                          → cycles/gas_turbines/                                — ideal turbojet at 260 m/s (L1, kPa) — CSL-0051
-[ ] C-55  T-IMPORT     TM-0446                          → cycles/gas_turbines/                                — combined gas-steam cycle (L2, kPa) — CSL-0052
-[ ] C-56  T-IMPORT     TM-0416 (DG-0084)                → cycles/steam_power/                                 — elementary steam power plant (L2, kPa), link CSL-0004 — CSL-0053
-[ ] C-57  T-IMPORT     TM-0449 (DG-0109)                → cycles/refrigeration_heat_pumps/                    — R410A heat pump with evaporator air side (L2, kPa) — CSL-0054
-[ ] C-58  T-IMPORT     TM-0451 (DG-0111)                → hvac/psychrometrics/                                — moist air in a room: humidity ratio, dew point (L1, kPa) — CSL-0055
-[ ] C-59  T-REVIEW     B-05                                                                                      — checks, diffs, §1, unit conversions, use of the Python references; plan B-06
+[x] C-47  T-IMPORT     TM-0378 (DG-0088)                → fundamentals/properties/                            — rigid tank with a liquid-vapour water mixture (L1, kPa) — CSL-0044
+[x] C-48  T-IMPORT     TM-0389 (DG-0093)                → fundamentals/processes/                             — steam turbine exergy balance (L1) — CSL-0045
+[x] C-49  T-IMPORT     TM-0393 (DG-0095)                → fundamentals/combustion/                            — octane combustion with 400 % theoretical air (L1, kPa) — CSL-0046
+[x] C-50  T-IMPORT     TM-0399 (DG-0097)                → fundamentals/properties/                            — non-ideal gas v(P+k/v²)=RT, isothermal work (L1, molar units) — CSL-0047
+[x] C-51  T-IMPORT     TM-0382 (DG-0091)                → fundamentals/processes/                             — two R12 tanks connected by a valve (L1, kPa) — CSL-0048
+[x] C-52  T-IMPORT     TM-0429 (DG-0102)                → cycles/engines/                                     — air-standard Otto cycle (L2, kPa) — CSL-0049
+[x] C-53  T-IMPORT     TM-0441 (DG-0105)                → cycles/gas_turbines/                                — land-based two-shaft gas turbine (L2, kPa), link CSL-0011 — CSL-0050
+[x] C-54  T-IMPORT     TM-0442                          → cycles/gas_turbines/                                — ideal turbojet at 260 m/s (L1, kPa) — CSL-0051
+[x] C-55  T-IMPORT     TM-0446                          → cycles/gas_turbines/                                — combined gas-steam cycle (L2, kPa) — CSL-0052
+[x] C-56  T-IMPORT     TM-0416 (DG-0084)                → cycles/steam_power/                                 — elementary steam power plant (L2, kPa), link CSL-0004 — CSL-0053
+[x] C-57  T-IMPORT     TM-0449 (DG-0109)                → cycles/refrigeration_heat_pumps/                    — R410A heat pump with evaporator air side (L2, kPa) — CSL-0054
+[x] C-58  T-IMPORT     TM-0451 (DG-0111)                → hvac/psychrometrics/                                — moist air in a room: humidity ratio, dew point (L1, kPa) — CSL-0055
+[x] C-59  T-REVIEW     B-05                                                                                      — checks, diffs, §1, unit conversions, use of the Python references; plan B-06
 ```
+
+### B-06 — *thermodynamique appliquée* (high) and the last CoolSolve examples (Phase 3B/3A) ☐
+
+Prepared 2026-10-05: the high-priority candidates left in *thermodynamique appliquée* (notes as B-05) and
+three CoolSolve examples left `todo` by C-46 (notes as B-02; CSX-033 `orc_solar_complex` goes to Phase 4C).
+
+```
+[x] C-60  T-IMPORT     TM-0388 (DG-0092)                → fundamentals/processes/                             — hot iron block quenched in a water tank (L1, kPa) — CSL-0056
+[x] C-61  T-IMPORT     TM-0390 (DG-0094)                → fundamentals/processes/                             — maximum work from two air tanks at 900 K and 300 K (L1, kPa) — CSL-0057
+[x] C-62  T-IMPORT     TM-0395 (DG-0096)                → fundamentals/combustion/                            — diesel engine excess air from exhaust gas analysis (L2, kPa) — CSL-0058
+[x] C-63  T-IMPORT     TM-0431 (DG-0103)                → cycles/engines/                                     — ideal Stirling cycle with regenerator, INTEGRAL (L2, kPa) — CSL-0059
+[x] C-64  T-IMPORT     TM-0435 (DG-0104)                → cycles/gas_turbines/                                — gas turbine with reheat (L2, kPa) — CSL-0060
+[x] C-65  T-IMPORT     TM-0450 (DG-0110)                → cycles/refrigeration_heat_pumps/                    — domestic refrigerator-freezer, R134a (L2, kPa) — CSL-0061
+[x] C-66  T-IMPORT     TM-0396                          → hvac/air_handling/                                  — condensate ratio and dry-air flow at a 7 kW cooling coil (L2, kPa) — CSL-0062
+[x] C-67  T-IMPORT     TM-0452 (DG-0112)                → hvac/psychrometrics/                                — mixing of room and outdoor air, conditioning process (L1, kPa) — CSL-0063
+[x] C-68  T-IMPORT     TM-0453                          → hvac/psychrometrics/                                — mixing with condensation in the mixer (L1, kPa) — CSL-0064
+[x] C-69  T-IMPORT     TM-0454                          → hvac/cooling_towers/                                — cooling tower for condenser water (L1, kPa), link CSL-0030 — CSL-0065
+[x] C-70  T-IMPORT     TM-0455                          → hvac/psychrometrics/                                — adiabatic saturation and wet-bulb temperature (L1, kPa) — CSL-0066
+[x] C-71  T-IMPORT     CSX-025 (+EES original)          → components/compressors/                             — piston compressor with inlet pressure drop and internal leak (L2) — CSL-0067
+[x] C-72  T-IMPORT     CSX-040 (+EES original)          → cycles/refrigeration_heat_pumps/                    — scroll compressor heat pump, data consistency check (L2) — CSL-0068
+[x] C-73  T-IMPORT     CSX-043 (+EES original)          → components/compressors/                             — centrifugal compressor design and similarity (L2; the example fails to solve: debug) — CSL-0069
+[x] C-74  T-REVIEW     B-06                                                                                      — light scripted review (orchestrator)
+```
+
+### B-07 — ULiège model data bank (Phase 3B) ☐
+
+Prepared 2026-10-05: the wave1 candidates of `Model data bank` (reference RefSim/ParamID component
+models), plus TM-0472 and the BrineProp function library (P1.9). Worker notes: `~/llm/scripts/csl/b07_extra.txt`.
+
+```
+[x] C-75  T-IMPORT     TM-0475                          → hvac/air_handling/                                  — adiabatic humidifier, simplified model (L1) — CSL-0070
+[ ] C-76  T-IMPORT     TM-0251                          → components/pumps_fans/                              — centrifugal fan RefSim model (L1) — CSL-0071
+[ ] C-77  T-IMPORT     TM-0487                          → components/pumps_fans/                              — centrifugal brine pump RefSim model (L1) — CSL-0072
+[ ] C-78  T-IMPORT     TM-0472                          → hvac/air_handling/                                  — cooling coil with control, simplified model (L1) — CSL-0073
+[ ] C-79  T-IMPORT     TM-0471                          → hvac/air_handling/                                  — cooling coil RefSim model, dry and wet regimes (L2), link CSL-0017 — CSL-0074
+[ ] C-80  T-IMPORT     TM-0255                          → components/instrumentation/                         — ISO 5167 orifice plate flow-rate procedure (L2) — CSL-0075
+[ ] C-81  T-IMPORT     TM-0489                          → hvac/cooling_towers/                                — direct-contact cooling tower reference model (L2) — CSL-0076
+[ ] C-82  T-IMPORT     TM-0488                          → cycles/refrigeration_heat_pumps/                    — air-cooled water chiller reference model (L2) — CSL-0077
+[ ] C-83  T-IMPORT     TM-0495                          → cycles/refrigeration_heat_pumps/                    — brine-to-water heat pump reference model (L2) — CSL-0078
+[ ] C-84  T-FUNC       TM-0479 (DG-0115)                → fundamentals/properties/                            — BrineProp library: secondary-refrigerant properties (needed by 7 models, P1.9) — CSL-0079
+[ ] C-85  T-IMPORT     TM-0494                          → components/boilers_burners/                         — condensing boiler reference model, five-step combustion (L3; Phase 4C) — CSL-0080
+[ ] C-86  T-IMPORT     TM-0490                          → components/heat_exchangers/                         — vertical ground-loop heat exchanger (borefield), dynamic (L3; Phase 4A) — CSL-0081
+[ ] C-87  T-REVIEW     B-07                                                                                      — light scripted review (orchestrator)
+```
+
+
 
 
 
@@ -581,3 +641,36 @@ and adds the log line in §8.
 | 2026-10-05 | C-42 `CSL-0040` | Added *orc_biomass_chp* (biomass-boiler ORC on R123 with 5 scroll expanders, level 4) — **blocked** (CS-GAP-IF-DIRECTIVE, CS-GAP-LKT, new CS-GAP-NAME-SYMBOL for names such as `C%`); MODULEs `expander`/`evaporator` and SUBPROGRAM `biomass_burner` flattened (D10); no runnable variant yet (recipe documented); CSX-029 imported; worker space-bunny |
 | 2026-10-05 | C-43 `CSL-0041` | Added *ice_storage_tank_discharge_phase_change* (dynamic, level 2) — native file **blocked** (CS-GAP-IF5, CS-GAP-INTEGRAL-LIMITS, CS-BUG-INTEGRAL-TABLE-SEP, CS-BUG-INTEGRAL-MAXSTEPS and two new bugs: CS-BUG-WATER-NEAR-FREEZING, CS-BUG-INTEGRAL-TABLE-CASE); runnable `_coolsolve` variant verified vs the TM-0095 stored solution (18/19 ≤ 6.4e-8) and a closed-form check; TM-0104 and CSX-023 imported, TM-0092/95/123 duplicates; worker glm-5.3-flash |
 | 2026-10-05 | C-45 `CSL-0043` | Added *libr_water_absorption_chiller* (LiBr-water chiller with solution heat exchanger, level 2) — **blocked** (CS-GAP-FLUIDS-ABS); no runnable variant (no LiBr property correlation available in CoolSolve); the TM-0167 stored solution (30/30) kept as re-check reference; CSX-046 and TM-0167 imported, 8 rows merged, TM-0170 duplicate; worker glm-5.3-flash |
+| 2026-10-05 | C-44 `CSL-0042` | Added *building_rc_network_3r2c* (3R2C building thermal network with weather lookup, dynamic, level 2) — native file **blocked** (CS-GAP-INTEGRAL-LOOKUP); no EES original exists; runnable `_coolsolve` variant verified against an independent RK4 integration (max 0.008 K) and the weather table; CSX-006 imported; worker space-bunny |
+| 2026-10-05 | C-47 `CSL-0044` | Added *rigid_tank_water_mixture* — hand-converted from kPa/kJ, verified vs the EES stored solution of TM-0378 (12/12 ≤ 1e-3) and the course’s CoolProp solution; DG-0088 triaged (TM-0383/0540 duplicates, TM-0506 merged); worker glm-5.3-flash |
+| 2026-10-05 | C-48 `CSL-0045` | Added *steam_turbine_exergy_balance* — hand-converted, verified vs the EES stored solution of TM-0389 (20/20, max 4.1e-10); DG-0093 triaged; worker space-bunny |
+| 2026-10-05 | C-38 review B-03 | Review of CSL-0025…0036: regression 47/47, 11 of 12 models faithful to the EES original; CSL-0036 rearranged on a wrong “over-determined” diagnosis (rework requested); CSL-0034 comments and tolerances corrected; register rows CS-GAP-PSYCHRO-SAT, CS-GAP-INTERP-EXTRAP, CS-BUG-EXTRACT-NUL confirmed and completed; CSX-017 added, TM-0090/91 back to todo, version strings and back-links fixed; workflow updated; reviewer Claude Sonnet |
+| 2026-10-05 | Rework `CSL-0036` | Original equations of orc_extraction.EES restored (W_dot_exp = 5000, epsilon_s_pp = 0.5, three Q_dot_hex statements; the worker’s rearranged specification reverted after review C-38); verified vs the EES stored solution (132 variables; max 2.62e-3 after reference-state offsets and quality sentinels); `.initials` required; README and model.json rewritten; Claude Sonnet |
+| 2026-10-05 | C-50 `CSL-0047` | Added *nonideal_gas_isothermal_work* (v(P+k/v²)=RT, molar units) — native file **blocked** (CS-GAP-INTEGRAL-LIMITS, CS-BUG-INTEGRAL-FACTOR); runnable `_coolsolve` variant verified vs the EES stored solution of TM-0399 (12/12, max 9.0e-8, EES trapezoidal rule vs RK4); TM-0405 duplicate; worker space-bunny |
+| 2026-10-05 | C-51 `CSL-0048` | Added *two_tanks_connected_valve_r12* — hand-converted, verified vs the EES stored solution of TM-0382 (27 common variables, max 1.97e-2 on a quality difference from the R12 saturated vapour volume, CoolProp +1.06 % vs EES; with the EES volumes 2.1e-10); new gap CS-GAP-UNIT-SUBEXPR (unit annotation on a sub-expression, 35 collection files); DG-0091 triaged; worker space-bunny |
+| 2026-10-05 | C-46 review B-04 (light) | Scripted checks by the orchestrator: build_index 47 models 0 errors, backlog_stats clean, regression 49/49 targets OK (CSL-0009:coolsolve skipped); Phase 3A: 43 of 47 CoolSolve examples triaged, the 4 left (CSX-025, CSX-033, CSX-040, CSX-043: distinct exercises, reasons in notes) go to B-06; deep review stopped by maintainer decision (Sonnet reviews only for obvious problems or worker comparisons) |
+| 2026-10-05 | C-52 `CSL-0049` | Added *otto_cycle_air_standard* — hand-converted from kPa/K/kJ, verified vs an independent Python/CoolProp re-implementation (42 variables, max 2.1e-11) and the meaningful part of the EES stored solution (18 values ≤ 1.5e-5); DG-0102 triaged; worker space-bunny |
+| 2026-10-05 | C-49 `CSL-0046` | Added *octane_combustion_400pct_air* — native file **blocked** by new gap CS-GAP-FLUIDS-C8H18 (octane and heavier ideal-gas substances missing); runnable `_coolsolve` variant verified vs the EES stored solution of TM-0393; DG-0095 triaged; worker glm-5.3-flash (interrupted 2 h by the z.ai quota) |
+| 2026-10-05 | C-53 `CSL-0050` | Added *gas_turbine_two_shaft_intercooled_regenerative* (land-based two-shaft gas turbine) — hand-converted, verified vs the EES stored solution of TM-0441; new gap CS-GAP-UNIT-NAMEDARG (unit annotation on a named argument of a property call, 19 collection files); DG-0105 triaged; worker space-bunny |
+| 2026-10-05 | C-54 `CSL-0051` | Added *turbojet_ideal_260ms* (ideal turbojet, repetition 6) — hand-converted, verified vs the EES stored solution of TM-0442; worker glm-5.3-flash |
+| 2026-10-05 | C-56 `CSL-0053` | Added *steam_power_plant_elementary* (pump, boiler, turbine, condenser) — hand-converted, verified vs the EES stored solution of TM-0416 (74 variables, max 7.9e-6); DG-0084 triaged; worker glm-5.3-flash |
+| 2026-10-05 | C-55 `CSL-0052` | Added *combined_gas_steam_cycle* (Brayton topping and Rankine bottoming cycle) — hand-converted from K/kPa/kJ, verified vs the EES stored solution of TM-0446 (27/36 ≤ 7.4e-6; the 9 others are air h/s reference offsets whose differences agree to 4.9e-6); worker space-bunny |
+| 2026-10-05 | C-57 `CSL-0054` | Added *heat_pump_r410a_air_evaporator* — hand-converted, verified vs the EES stored solution of TM-0449 and the course’s CoolProp solution; new gap CS-GAP-QUALITY-DOME (EES QUALITY returns 100/−100 outside the dome, CoolSolve 0; confirms the C-19 suggestion); DG-0109 triaged; worker glm-5.3-flash |
+| 2026-10-05 | C-58 `CSL-0055` | Added *moist_air_room_psychrometrics* — hand-converted, verified vs the EES stored solution of TM-0451 and the course’s Python solution; new tool bug CS-BUG-COMPARE-UNIT-CASE (compare_solution.py misses lower-case EES unit names); DG-0111 triaged; worker space-bunny |
+| 2026-10-05 | C-59 review B-05 (light) | Scripted checks: build_index 55 models 0 errors, backlog_stats clean, regression 57/57 targets OK (CSL-0009:coolsolve skipped). B-05 (12 cards, glm-5.3-flash and space-bunny): 9 verified, 3 blocked with verified variants; new register rows CS-GAP-FLUIDS-C8H18, CS-GAP-UNIT-SUBEXPR, CS-GAP-UNIT-NAMEDARG, CS-GAP-QUALITY-DOME, CS-BUG-COMPARE-UNIT-CASE |
+| 2026-10-05 | C-60 `CSL-0056` | Added *iron_block_quench_water_tank* — hand-converted, verified vs the EES stored solution of TM-0388; DG-0092 triaged; the compare_solution.py unit-case bug it found duplicated CS-BUG-COMPARE-UNIT-CASE (merged into that row); worker glm-5.3-flash |
+| 2026-10-05 | C-61 `CSL-0057` | Added *two_tanks_max_work_air* (maximum work from two air tanks) — status **runs**: hand-converted from K/kJ (absolute temperatures kept in the logarithms), checked against the closed-form solution; DG-0094 triaged; worker space-bunny |
+| 2026-10-05 | C-62 `CSL-0058` | Added *diesel_engine_excess_air_exhaust_analysis* — native file **blocked** by new gap CS-GAP-FLUIDS-ALIAS (EES real-fluid name `CarbonMonoxide` unknown to CoolSolve); runnable `_coolsolve` variant (ideal-gas `CO`, only enthalpy differences enter) verified vs the EES stored solution of TM-0395; TM-0394 merged; worker glm-5.3-flash (first version had substituted `CO` in the native file: corrected after orchestrator check) |
+| 2026-10-05 | C-63 `CSL-0059` | Added *stirling_cycle_ideal_regenerator* — native file **blocked** by new gap CS-GAP-INTEGRAL-MULTIVAR (several INTEGRAL calls with different integration variables in one model); runnable `_coolsolve` variant verified vs the EES stored solution of TM-0431; DG-0103 triaged; worker space-bunny |
+| 2026-10-05 | C-64 `CSL-0060` | Added *gas_turbine_reheat* — hand-converted, verified vs the EES stored solution of TM-0435; DG-0104 triaged (3 variants merged); worker glm-5.3-flash |
+| 2026-10-05 | C-66 `CSL-0062` | Added *cooling_coil_condensate_ratio* (7 kW cooling coil, revision question) — hand-converted, verified vs the EES stored solution of TM-0396; worker glm-5.3-flash |
+| 2026-10-05 | C-65 `CSL-0061` | Added *refrigerator_freezer_r134a* (domestic refrigerator-freezer) — native file **blocked** by new gap CS-GAP-PROP-TH (property calls with the (T, H) input pair); runnable `_coolsolve` variant verified vs the EES stored solution of TM-0450; DG-0110 triaged; worker space-bunny |
+| 2026-10-05 | C-67 `CSL-0063` | Added *moist_air_adiabatic_mixing* (room and outdoor air, conditioning) — hand-converted, verified vs the EES stored solution of TM-0452; TM-0552 duplicate; worker glm-5.3-flash |
+| 2026-10-05 | C-68 `CSL-0064` | Added *psychrometric_mixer_condensation* (mixing of room and outdoor air with condensation) — hand-converted, verified vs the EES stored solution of TM-0453; worker space-bunny |
+| 2026-10-05 | C-69 `CSL-0065` | Added *cooling_tower_condenser_water* — hand-converted, verified vs the EES stored solution of TM-0454; TM-0536 merged; worker glm-5.3-flash |
+| 2026-10-05 | C-70 `CSL-0066` | Added *adiabatic_saturation_wet_bulb* — hand-converted, verified vs the EES stored solution of TM-0455 (max 5.2e-3 on the humidity ratio, EES vs CoolProp humid air); worker space-bunny |
+| 2026-10-05 | C-72 `CSL-0068` | Added *heat_pump_scroll_compressor_data_check* (R407C scroll compressor data consistency) — native file **blocked** (CS-GAP-PROP-TH); runnable `_coolsolve` variant verified vs the EES solution report of EES_ok; CSX-040 imported; worker space-bunny |
+| 2026-10-05 | C-71 `CSL-0067` | Added *piston_compressor_suction_drop_leakage* — status **runs** (curated CoolSolve example CSX-025, checked against its stored solution); worker glm-5.3-flash |
+| 2026-10-05 | C-73 `CSL-0069` | Added *centrifugal_compressor_design_similarity* (air design and methane similarity variant) — verified vs the EES stored solutions; CSX-043 imported (the example’s solve failure resolved); worker space-bunny |
+| 2026-10-05 | C-74 review B-06 (light) | Scripted checks: build_index 69 models 0 errors, backlog_stats clean, regression 72/72 targets OK (CSL-0009:coolsolve skipped). B-06 (14 cards, glm-5.3-flash and space-bunny): 9 verified, 2 runs, 3 blocked with verified variants (new gaps CS-GAP-FLUIDS-ALIAS, CS-GAP-INTEGRAL-MULTIVAR, CS-GAP-PROP-TH); one worker substitution (CarbonMonoxide → CO in a native file) caught and corrected; the CoolSolve examples are now all triaged except CSX-033 (Phase 4C) |
+| 2026-10-05 | C-75 `CSL-0070` | Added *adiabatic_humidifier_simplified* (model data bank) — verified vs the EES stored solution of TM-0475 (max 4.4e-3, humid-air properties); new tool bug CS-BUG-EXTRACT-FMT-BYTE (ees_extract.py drops EES 7.x variable records); worker glm-5.3-flash |

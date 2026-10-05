@@ -171,4 +171,12 @@ collection of S. Quoilin:
 
 - `CSL-0019` *orc_simple_r245fa*: same category family (vapour power cycle
   with an organic working fluid and imposed component performance).
+- `CSL-0045` *steam_turbine_exergy_balance*: the same steam turbine physics
+  alone, with an exergy (second-law) balance instead of a whole cycle.
+- `CSL-0053` *steam_power_plant_elementary*: component-by-component balances
+  of an elementary plant on seven given state points (pressure drops,
+  thermal loss, kinetic energies) instead of component efficiencies.
 - CoolSolve example `rankine1.eescode` (CSX-036), superseded by this model.
+
+- `CSL-0052` *combined_gas_steam_cycle*: the Rankine cycle of the same
+  repetition used as the bottoming cycle of a combined gas-steam cycle.

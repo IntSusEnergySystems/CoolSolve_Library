@@ -15,7 +15,7 @@ the companion exercise of `CSL-0002` for the crossflow arrangement.
 | **Fluids** | Water (CoolProp properties); hot gas with constant c = 1000 J/(kg·K) |
 | **Size** | 29 equations (largest block: 4) |
 | **Source** | ULiège exercise session (répétition 12, exercise 3) — CoolSolve example `exchangers2` + original EES file |
-| **Authors** | Vincent Lemort (ULiège Thermodynamics Laboratory, original exercise, 2017); S. Quoilin (CoolSolve example) |
+| **Authors** | Vincent Lemort (ULiège Thermodynamics Laboratory, original exercise, 2005); S. Quoilin (CoolSolve example) |
 | **License** | MIT |
 | **CoolSolve** | v0.3.0 — runs; import verified against the solution stored in the original EES file |
 
@@ -114,7 +114,7 @@ it by subtraction (0.10 % on −312 °C, i.e. 0.3 K).
 
 Original exercise (in French) by **Vincent Lemort** (ULiège Thermodynamics
 Laboratory), header `VL050517` — exercise session (*répétition*) 12,
-exercise 3, 2017; the exact course could not be identified from the file.
+exercise 3, 2005 (the header `VL050517` reads 2005-05-17); the exact course could not be identified from the file.
 The model was rewritten in English as the CoolSolve example
 `examples/exchangers2.eescode` by S. Quoilin; this library model is the
 curated version of that example, which remains in the CoolSolve repository
@@ -184,5 +184,5 @@ exchanger titles): only the `CSX-017` row is decided on by this card.
   for the counterflow arrangement (oil cooled by water).
 - `CSL-0008` *condenser_three_zones*: three-zone ε-NTU model of an air-cooled
   condenser, each zone with its own effectiveness law.
-- See also the CoolSolve example `exchangers3.eescode` (shell-and-tube steam
-  condenser), the third exercise of the same session.
+- `CSL-0027` *shell_and_tube_steam_condenser*: the next exercise of the same
+  session (1-2 shell-and-tube steam condenser, ε-NTU rating).
