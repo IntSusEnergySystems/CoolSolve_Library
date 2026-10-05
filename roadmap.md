@@ -7,7 +7,7 @@ each tested and marked done. *How* each step is executed is described in
 [docs/model_workflow.md](docs/model_workflow.md); the classification rules are
 in [docs/taxonomy.md](docs/taxonomy.md).
 
-*Last update: 2026-10-04.*
+*Last update: 2026-10-05.*
 
 ---
 
@@ -15,24 +15,52 @@ in [docs/taxonomy.md](docs/taxonomy.md).
 
 | Library | Count |
 |---|---:|
-| Models | 1 |
-| … verified / runs / modified | 1 / 0 / 0 |
-| … blocked / failing / documented only | 0 / 0 / 0 |
-| CoolSolve gaps and bugs registered (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md)) | 21 (14 gaps, 5 bugs, 2 doc issues) |
+| Models | 10 |
+| … verified / runs / modified | 8 / 0 / 0 |
+| … blocked / failing / documented only | 2 / 0 / 0 |
+| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md)) | 27 (18 gaps, 8 bugs, 1 doc issue) |
+| … closed | 9 (3 gaps, 5 bugs, 1 doc issue) — CoolSolve `main` 2026-10-05 |
 
 | Backlog (source inventories) | Candidates | Distinct | todo | added | merged | discarded | parked |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| ULiège collection `thermo_models` | 552 | 341 | 510 | 0 | 0 | 42 | 0 |
-| CoolSolve examples | 47 | 47 | 46 | 0 | 1 | 0 | 0 |
+| ULiège collection `thermo_models` | 552 | 341 | 494 | 8 | 3 (+5 duplicates) | 42 | 0 |
+| CoolSolve examples | 47 | 47 | 39 | 2 | 6 | 0 | 0 |
 | LaboThapPy | 74 | 74 | 74 | 0 | 0 | 0 | 0 |
 | TESPy | 52 | 52 | 52 | 0 | 0 | 0 | 0 |
 
 Priorities of the candidates (wave1 / high / medium / low / skip):
-`thermo_models` 38 / 37 / 132 / 251 / 94 · CoolSolve examples 12 / 24 / 7 / 0 / 3 ·
+`thermo_models` 38 / 37 / 142 / 241 / 94 · CoolSolve examples 12 / 24 / 7 / 0 / 3 ·
 LaboThapPy 9 / 8 / 17 / 26 / 14 · TESPy 8 / 8 / 23 / 13 / 0.
 
 Refresh with `python3 tools/build_index.py` (models) and
 `python3 tools/backlog_stats.py` (candidates).
+
+### Where to resume (handover, 2026-10-05)
+
+- **Next card: B-01 `C-10`** (§6), then `C-11` … `C-13`, then the review
+  card `C-14`. C-01 … C-09 are done (models `CSL-0002` … `CSL-0010`).
+- **Repository state:** C-01 … C-09 and the removal of the `$UnitSystem`
+  lines are committed (`d102799`, `0c2597f`); `work/` is empty; no worker is
+  running.
+- **CoolSolve:** use the `main` build `../CoolSolve/build/coolsolve`
+  (contains the B-01 fixes, branch `fix/library-gaps`). The gaps that still
+  block `CSL-0009` and `CSL-0010` are listed in Phase 5; after they are fixed,
+  run a `T-RECHECK` of both.
+- **Items for the C-14 review:** (1) `CSL-0009` and `CSL-0010` are `blocked`
+  but ship a verified runnable variant (`*_coolsolve.eescode`) that
+  `test_models.py` skips — decide how variants get a regression baseline;
+  (2) CoolSolve `tools/ees_extract.py` still writes a `$UnitSystem` line
+  (the workflow now deletes it; consider dropping it in the tool and turning
+  `CS-GAP-UNITSYSTEM` into an error); (3) inventory decoding false positive
+  found in C-08 (the "761×2 table" of TM-0413 was not the integral table;
+  the real one was recovered from the plot objects).
+- **How B-01 was executed:** one card per worker, one worker at a time, by
+  an orchestrating Claude Code session dispatching to opencode/GLM-5.3
+  workers (maintainer's local set-up: skill `~/llm/skill-opencode-orchestrator.md`,
+  helpers `~/llm/scripts/csl/`). A card takes 5–20 min; the z.ai plan
+  allows ≈ 1 h of work per 5-hour window, the supervisor pauses and resumes
+  automatically. Any worker (person or agent) can instead take the next card
+  with the prompt of §7.
 
 ---
 
@@ -83,7 +111,7 @@ Types: `T-TRIAGE`, `T-IMPORT`, `T-FUNC`, `T-TRANSLATE`, `T-MERGE`, `T-RECHECK`,
 |---|---|---|
 | 0 | Foundations: repository, taxonomy, templates, tooling, EES import methodology, pilot model | ✅ done |
 | 1 | Source inventories and triage set-up | 🔄 in progress |
-| 2 | Pilot wave B-01: one card per type of case; adjust the workflow (milestone M1 ≈ 15 models) | ☐ next |
+| 2 | Pilot wave B-01: one card per type of case; adjust the workflow (milestone M1 ≈ 15 models) | 🔄 in progress (9/14 cards) |
 | 3 | Production waves, source by source and category by category (M2 = 100, M3 = 300 models) | ☐ |
 | 4 | Advanced tracks: dynamic, optimisation/identification, research-grade models | ☐ |
 | 5 | CoolSolve integration (browser, import of functions, gap closure) | ☐ (CoolSolve side) |
@@ -112,7 +140,7 @@ Types: `T-TRIAGE`, `T-IMPORT`, `T-FUNC`, `T-TRANSLATE`, `T-MERGE`, `T-RECHECK`,
 - [ ] P1.8 Cross-source map (`T-TRIAGE`): CoolSolve examples ↔ their EES originals (`CoolSolve/misc/EES_ok.zip`) ↔ `thermo_models` groups (e.g. `rankine1` ↔ DG-0106/`TM-0443`, `scroll_compressor` ↔ `TM-0481`, `condenser_3zones` ↔ `TM-0266`, `cpbar` ↔ `TM-0253`) ↔ LaboThapPy/TESPy overlaps (semi-empirical scroll machines, ε-NTU exchangers, heat pumps, ORC)
 - [ ] P1.9 Function backlog (`T-FUNC` cards): `cpbar` (TM-0253, CSX-013), `BrineProp`/`BrineProp2` (TM-0479/0480, needed by 7 models), EES library pipe procedures (`Colebrook`), LaboThapPy correlation families (void fraction, plate HX, parabolic-trough losses, R1233zd(E) conductivity), TESPy ε-NTU relations
 
-### Phase 2 — Pilot wave ☐
+### Phase 2 — Pilot wave 🔄
 
 Run the full workflow once on each type of case (CoolSolve example + EES
 original, unit conversion, merge of a family, function library, copied
@@ -166,9 +194,13 @@ library model or `.eescode` file with `$INCLUDE library:<name>`
 (2) imports, (3) library regression in CI, CLI, *Export for EES*.
 
 Gaps and bugs to close first for the library: quick wins
-`CS-BUG-LOOKUP-PATH`, `CS-BUG-INTERP-DESC`, `CS-DOC-TRIG`; then native EES
-`INTERPOLATE` (`CS-GAP-INTERP-EES`), a warning on non-default `$UnitSystem`
-(`CS-GAP-UNITSYSTEM`), unquoted unit names (`CS-GAP-CONVERT-UNQUOTED`),
+`CS-BUG-LOOKUP-PATH`, `CS-BUG-INTERP-DESC`, `CS-DOC-TRIG` (✅ fixed 2026-10-05,
+with the B-01 bugs); then the dynamic-model gaps found in B-01 (`CS-GAP-IF5`,
+`CS-GAP-INTEGRAL-LIMITS`, `CS-BUG-INTEGRAL-TABLE-SEP`,
+`CS-BUG-INTEGRAL-MAXSTEPS`, `CS-BUG-INTEGRAL-FACTOR`; they block `CSL-0009`
+and `CSL-0010`); then native EES
+`INTERPOLATE` (`CS-GAP-INTERP-EES`), an error on non-default `$UnitSystem`
+(`CS-GAP-UNITSYSTEM`; library models carry no `$UnitSystem` line), unquoted unit names (`CS-GAP-CONVERT-UNQUOTED`),
 comments in procedure argument lists (`CS-GAP-PROC-COMMENT`). After each
 CoolSolve release: `T-RECHECK` of the blocked models; once `$INCLUDE` exists,
 replace the copied function blocks of library models by `$INCLUDE` lines
@@ -223,7 +255,7 @@ Open questions: none at the moment.
 
 ## 6. Batches
 
-### B-01 — Pilot wave (Phase 2) ☐
+### B-01 — Pilot wave (Phase 2) 🔄
 
 
 ```
@@ -236,7 +268,7 @@ Open questions: none at the moment.
 [x] C-07  T-IMPORT     CSX-008 + TM-0266 group          → components/heat_exchangers/condenser_three_zones           — level 3, procedures, initials, EES RAD setting
 [x] C-08  T-IMPORT     TM-0413                            → components/storage/dhw_tank_dynamic                        — dynamic (INTEGRAL), 761-row time series as reference
 [x] C-09  T-IMPORT     TM-0101 (fallback TM-0422)       → components/compressors/…                                    — optimisation (EES Min/Max) imported at the optimum
-[ ] C-10  T-IMPORT     TM-0150 (DG-0032)               → cycles/gas_turbines/two_shaft_gas_turbine_compressor_map   — blocked case (CS-GAP-INTERP-EES, CS-GAP-INCLUDE), ees_import.md Example 2
+[ ] C-10  T-IMPORT     TM-0150 (DG-0032)               → cycles/gas_turbines/two_shaft_gas_turbine_compressor_map   — blocked case (CS-GAP-INTERP-EES, CS-GAP-INCLUDE), ees_import.md Example 2 — NEXT: two attempts interrupted (usage limit), nothing kept; restart from scratch; CS-BUG-LOOKUP-PATH/INTERP-DESC now fixed
 [ ] C-11  T-IMPORT     TM-0326                            → buildings/thermal_comfort_pmv_ppd                          — embedded lookup table (74×2)
 [ ] C-12  T-TRANSLATE  TSP-035                            → cycles/refrigeration_heat_pumps/heat_pump_basic_tespy      — TESPy tutorial, verified against its results
 [ ] C-13  T-TRANSLATE  LTP-013                            → components/heat_exchangers/hx_constant_pinch               — LaboThapPy component
@@ -251,29 +283,41 @@ To be prepared after B-01 (`python3 tools/backlog_stats.py --next coolsolve_exam
 
 ## 7. Dispatching a batch to agents
 
-Prompt skeleton for a worker agent (one card per agent, two agents at most in
-parallel, on different categories):
+Prompt for a worker agent (one card per agent, one agent at a time unless the
+cards touch different categories and inventories). Refined during B-01:
 
 ```
 You are a worker of the CoolSolve Library (/home/sylvain/svn/CoolSolve_Library).
 Read docs/model_workflow.md (procedure + definition of done), docs/taxonomy.md,
-and CoolSolve docs/ees_import.md (../CoolSolve). Execute this task card:
+the finished model models/cycles/refrigeration_heat_pumps/refrigeration_cycle_simple_compressor/
+as an example, and CoolSolve docs/ees_import.md (../CoolSolve). Execute this task card:
   <card line from roadmap §6>
-Use the CoolSolve build ../CoolSolve/build/coolsolve. Do not modify other models,
-the taxonomy or the CoolSolve sources. Report a CoolSolve gap in
-../CoolSolve/docs/model_library_support.md only with a minimal reproducer.
-Never copy source files into the library (reference them by ~/ path, URL or
-library name; work in work/<name>/ and delete it at the end). Convert other
-unit systems by hand (ees_import.md §6). Never copy student names or personal
-data. Do not commit. When done, reply with:
-model ID, folder, status, one-line log entry for roadmap §8, gaps reported,
-open questions.
+<card-specific notes: where the sources are, which group to triage, expected outcome>
+Rules:
+- Use ../CoolSolve/build/coolsolve and the CoolSolve tools tools/ees_extract.py
+  and tools/compare_solution.py.
+- Do not modify other models, the taxonomy, roadmap.md or the CoolSolve sources.
+  Report a CoolSolve gap in ../CoolSolve/docs/model_library_support.md only with a
+  minimal reproducer; do not re-report registered gaps, reference their IDs.
+- Never copy source files into the library (reference them by ~/ path, URL or
+  library name); work in work/<name>/ and delete it at the end. Convert other unit
+  systems by hand (ees_import.md §6); no $UnitSystem line in library files.
+- Edit inventory CSV rows minimally (only decision/library_id of your rows). Never
+  run git checkout/reset/stash or revert files you did not create. Do not commit.
+- Never copy student names or personal data. Do not ask questions: take the most
+  reasonable decision and document it in the README.
+- A model that cannot run is still done, as a documented blocked/failing/stub model.
+- Bookkeeping: set decision/library_id in sources/*/inventory.csv; run
+  python3 tools/build_index.py (0 errors) and
+  python3 tools/test_models.py <ID> --coolsolve ../CoolSolve/build/coolsolve.
+Final message (short): model ID, folder, status, one-line log entry for roadmap §8,
+gaps reported, decisions taken / open questions.
 ```
 
-The manager then runs `python3 tools/build_index.py`,
+The manager then checks the folder (README, `model.json`, `.eescode`, `.sol`),
+runs `python3 tools/build_index.py` and
 `python3 tools/test_models.py <ID> --coolsolve ../CoolSolve/build/coolsolve`,
-reviews the diff, updates the inventory decision, ticks the card and adds the
-log line.
+ticks the card in §6 and adds the log line in §8.
 
 ---
 
@@ -292,9 +336,7 @@ log line.
 | 2026-10-05 | C-05 `CSL-0006` | Added *boiler_mean_specific_heat* — **blocked** by the CSL-0005 bugs (CS-BUG-IF-IGNORED/MOLARMASS/SINGLE-INPUT-PAIR); `cpbar` copied from CSL-0005; physics verified vs EES TM-0492 (57/57 ≤ 0.1 %); CSX-005 merged as the on/off variant |
 | 2026-10-05 | C-06 `CSL-0007` | Added *scroll_compressor_semi_empirical* — verified vs EES stored solution; CSX-042 and its EES original merged as converted variant, TM-0481 added |
 | 2026-10-05 | C-07 `CSL-0008` | Added *condenser_three_zones* — level 3, verified vs EES stored solutions of the 3 originals (duties ≤ 0.23 %; RAD setting without trig: no conversion); DG-0060 merged (TM-0264/65 variants, TM-0258/59/60 duplicates), CSX-008 superseded; curated `.initials` required and shipped |
-| 2026-10-05 | C-07 `CSL-0008` | Added *condenser_three_zones* (level 3) — verified vs EES; group DG-0060 triaged, CSX-008 merged |
 | 2026-10-05 | C-08 `CSL-0009` | Added *dhw_tank_dynamic* (first dynamic model, level 1) — native file **blocked** (CS-GAP-IF5, CS-GAP-INTEGRAL-LIMITS); runnable variant verified against the EES integral table recovered from the plot objects (18 001 points, ≤ 6.1e-5); new gaps CS-GAP-IF5, CS-GAP-INTEGRAL-LIMITS; bugs CS-BUG-INTEGRAL-TABLE-SEP, CS-BUG-INTEGRAL-MAXSTEPS reported |
-| 2026-10-05 | C-08 `CSL-0009` | Added *dhw_tank_dynamic* (first dynamic model) — native file **blocked** (CS-GAP-IF5, CS-GAP-INTEGRAL-LIMITS); runnable variant verified vs the EES integral table recovered from the plot objects (18 001 points, ≤ 6.1e-5); bugs CS-BUG-INTEGRAL-TABLE-SEP, CS-BUG-INTEGRAL-MAXSTEPS reported |
 | 2026-10-05 | C-09 `CSL-0010` | Added *two_stage_steam_compressor_intercooling* (optimisation, imported at the EES optimum) — native file **blocked**, transcription verified vs EES; bug CS-BUG-INTEGRAL-FACTOR reported |
 | 2026-10-05 | T-RECHECK `CSL-0005`, `CSL-0006` | CoolSolve branch `fix/library-gaps` merged in CoolSolve main (CS-BUG-IF-IGNORED, CS-BUG-MOLARMASS, CS-BUG-SINGLE-INPUT-PAIR, CS-GAP-UNITSYSTEM-FUNC, CS-GAP-FORMATION-ENTHALPY, CS-GAP-MULTILINE-COMMENT, CS-BUG-LOOKUP-PATH, CS-BUG-INTERP-DESC, CS-DOC-TRIG fixed) — both models now **verified**; library regression 8/8 OK |
 | 2026-10-05 | Convention | No `$UnitSystem` directive in library models (CoolSolve has a single unit system): removed from all `.eescode` files and the header template; workflow §3/§8/§9 updated; regression 8/8 OK |
