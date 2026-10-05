@@ -1,0 +1,72 @@
+{
+  "id": "CSL-0007",
+  "name": "scroll_compressor_semi_empirical",
+  "title": "Semi-empirical hermetic scroll compressor in a refrigeration cycle",
+  "summary": "Reference model of Winandy, Saavedra & Lebrun (2002) as implemented by V. Lemort: six-step compression path (supply drop, heating-up, isentropic compression to the adapted pressure, isochoric compression, exhaust cooling, exhaust drop) with internal leakage, fictitious-wall heat transfers and electromechanical losses; parameters identified on a Copeland ZR72KC-TFD catalogue, refrigerant cycle reduced to an evaporator and a condenser at imposed saturation temperatures. A simplified variant without leakage (converted from the EES original in bar/kJ units) is included.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "scroll_compressor_semi_empirical.eescode",
+  "fluids": [
+    "R22"
+  ],
+  "tags": [
+    "scroll compressor",
+    "semi-empirical",
+    "reference model",
+    "parameter identification",
+    "refrigeration",
+    "part load",
+    "internal leakage",
+    "built-in volume ratio"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "max() builtin"
+  ],
+  "stats": {
+    "n_equations": 149,
+    "largest_block": 46
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/Compressors/SCROLLCOMPRESSOR_REFSIM_MODEL_VL080228.zip!/scrollCompressor_RefSim_EES_Model_VL080228.EES",
+    "candidate_id": "TM-0481",
+    "authors": [
+      "Vincent Lemort (ULiège Thermodynamics Laboratory); model of Winandy, Saavedra & Lebrun (2002)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (last run: t_ev = 7 °C, t_cd = 45 °C, R22); simplified variant against the EES stored solution of CoolSolve misc/EES_ok.zip:scroll_compressor.EES (t_ev = 30 °C, t_cd = 40 °C), converted to SI",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0",
+    "max_rel_diff": 0.0147,
+    "notes": "Main model: all key outputs (M_dot_r, W_dot_cp, Q_dot_ev, Q_dot_cd, t_ex_cp, t_w_cp, efficiencies) within 0.1%; largest deviation 1.5% on the small derived quantity w_in2_cp (EES 7.9 vs CoolProp R22 properties). Variant: key outputs within 0.1% after hand conversion bar/kJ -> Pa/J; deviations only on intentionally converted cells (C_sd_cp, DELTAp_su1_cp)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0001 (refrigeration cycle with a simple compressor model): same component at a constant-efficiency level of detail"
+  ],
+  "related_external": [
+    "CoolSolve examples/scroll_compressor.eescode (CSX-042): simplified version of this model; its bar/kJ parameter values left unconverted make it converge to a spurious solution (see README) - covered here by the variant file",
+    "CoolSolve misc/EES_ok.zip:EES_ok/scroll_compressor.EES: EES original of the example (bar/kJ), reference of the variant",
+    "LaboThapPy (github.com/squoilin/LaboThapPy) semi-empirical scroll compressor: Python implementation of the same model family"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-042"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (task C-06: merge of TM-0481, CSX-042 and EES_ok/scroll_compressor.EES)",
+      "by": "worker agent for S. Quoilin"
+    }
+  ]
+}

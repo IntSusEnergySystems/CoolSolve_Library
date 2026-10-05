@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0008",
+  "name": "condenser_three_zones",
+  "title": "Air-cooled condenser, three-zone parametric model",
+  "summary": "Semi-empirical three-zone model (desuperheating, condensation, subcooling) of an air-cooled R134a condenser with epsilon-NTU laws and flow-rate-fitted conductances; ships the combined crossflow/counterflow configuration plus purely counterflow and purely crossflow variants.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "condenser_three_zones.eescode",
+  "fluids": [
+    "R134a",
+    "Air"
+  ],
+  "tags": [
+    "condenser",
+    "air-cooled",
+    "heat exchanger",
+    "three-zone",
+    "epsilon-NTU",
+    "semi-empirical",
+    "off-design"
+  ],
+  "language_features": [
+    "procedures",
+    "string variables",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 124,
+    "largest_block": 63
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/Condenser_3_zones/Condenser three zones parametric model model (combined crossflow-counterflow) - CC080108-1.EES",
+    "candidate_id": "TM-0266",
+    "authors": [
+      "Cristian Cuevas (Universidad de Concepción)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.793",
+    "language": "en"
+  },
+  "verification": {
+    "reference": "EES stored solutions of the three original configuration files (TM-0266 combined, TM-0264 counterflow, TM-0265 crossflow)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0",
+    "max_rel_diff": 0.009,
+    "notes": "Zone duties and total duty within 0.25 %, AU and NTU within 0.5 %, air pressure drop 0.87 % (EES vs CoolProp dry-air viscosity 1.7 %). Absolute enthalpies differ by the constant reference-state offsets (+148.15 kJ/kg R134a, +125.99 kJ/kg air); enthalpy differences agree within 5e-5."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [
+    "CoolSolve examples/condenser_3zones.eescode (same model, crossflow configuration, SI conversion of the original)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-008"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap C-07; TM-0266 group merged as variants)",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    }
+  ]
+}

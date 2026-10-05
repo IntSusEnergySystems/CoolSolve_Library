@@ -4,10 +4,29 @@
 
 | Models | Verified | Runs | Blocked / failing | Documented only |
 |---:|---:|---:|---:|---:|
-| 1 | 1 | 0 | 0 | 0 |
+| 10 | 8 | 0 | 2 | 0 |
+
+## Fundamentals
+
+| ID | Model | Category | Level | Kind | Status |
+|---|---|---|---|---|---|
+| `CSL-0005` | [cpbar: mean specific heat of CmHn combustion products (function library)](models/fundamentals/combustion/cpbar_combustion_products/README.md) | Combustion | 🔵 Level 2 · Intermediate | 🧩 Function library | ✅ Verified |
+| `CSL-0003` | [Evaporation of liquid methane in a tank](models/fundamentals/properties/methane_tank_evaporation/README.md) | Properties | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
+
+## Components
+
+| ID | Model | Category | Level | Kind | Status |
+|---|---|---|---|---|---|
+| `CSL-0006` | [Fuel-oil boiler modelled with the mean specific heat of the flue gases (cpbar)](models/components/boilers_burners/boiler_mean_specific_heat/README.md) | Boilers and burners | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0007` | [Semi-empirical hermetic scroll compressor in a refrigeration cycle](models/components/compressors/scroll_compressor_semi_empirical/README.md) | Compressors | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0010` | [Two-stage compression of superheated steam with intercooling at the optimal intermediate pressure](models/components/compressors/two_stage_steam_compressor_intercooling/README.md) | Compressors | 🟢 Level 1 · Introductory | 🎯 Optimisation | ⛔ Blocked |
+| `CSL-0002` | [Counterflow heat exchanger - oil cooled by water (effectiveness-NTU)](models/components/heat_exchangers/counterflow_hx_oil_water/README.md) | Heat exchangers | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0008` | [Air-cooled condenser, three-zone parametric model](models/components/heat_exchangers/condenser_three_zones/README.md) | Heat exchangers | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0009` | [Domestic hot-water storage tank: dynamic temperature evolution](models/components/storage/dhw_tank_dynamic/README.md) | Storage | 🟢 Level 1 · Introductory | ⏱️ Dynamic | ⛔ Blocked |
 
 ## Cycles and machines
 
 | ID | Model | Category | Level | Kind | Status |
 |---|---|---|---|---|---|
 | `CSL-0001` | [Refrigeration cycle with a simple compressor model](models/cycles/refrigeration_heat_pumps/refrigeration_cycle_simple_compressor/README.md) | Refrigeration and heat pumps | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0004` | [Rankine cycle of a 60 MW steam power plant](models/cycles/steam_power/rankine_cycle_60mw/README.md) | Steam power cycles | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |

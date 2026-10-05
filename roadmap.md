@@ -227,15 +227,15 @@ Open questions: none at the moment.
 
 
 ```
-[ ] C-01  T-IMPORT     CSX-016 + EES_ok/exchangers1.EES   → components/heat_exchangers/counterflow_hx_oil_water        — CoolSolve example + EES original (L1)
-[ ] C-02  T-IMPORT     TM-0380                            → fundamentals/properties/methane_tank_evaporation           — K/kPa/kJ + decimal comma (tested in ees_import.md, Example 3)
-[ ] C-03  T-TRIAGE+IMPORT DG-0106 (TM-0443) + CSX-036 + EES_ok/rankine1.EES → cycles/steam_power/rankine_cycle_60mw     — merge of one exercise in several versions/unit systems
-[ ] C-04  T-FUNC       TM-0253 + CSX-013                → fundamentals/combustion/cpbar_combustion_products          — function library from a .LIB
-[ ] C-05  T-IMPORT     CSX-004 (+CSX-005, TM-0492)      → components/boilers_burners/boiler_mean_specific_heat       — model using copied library functions (after C-04)
-[ ] C-06  T-IMPORT     CSX-042 + EES_ok/scroll_compressor.EES + TM-0481 → components/compressors/scroll_compressor_semi_empirical — semi-empirical reference model
-[ ] C-07  T-IMPORT     CSX-008 + TM-0266 group          → components/heat_exchangers/condenser_three_zones           — level 3, procedures, initials, EES RAD setting
-[ ] C-08  T-IMPORT     TM-0413                            → components/storage/dhw_tank_dynamic                        — dynamic (INTEGRAL), 761-row time series as reference
-[ ] C-09  T-IMPORT     TM-0101 (fallback TM-0422)       → components/compressors/…                                    — optimisation (EES Min/Max) imported at the optimum
+[x] C-01  T-IMPORT     CSX-016 + EES_ok/exchangers1.EES   → components/heat_exchangers/counterflow_hx_oil_water        — CoolSolve example + EES original (L1)
+[x] C-02  T-IMPORT     TM-0380                            → fundamentals/properties/methane_tank_evaporation           — K/kPa/kJ + decimal comma (tested in ees_import.md, Example 3)
+[x] C-03  T-TRIAGE+IMPORT DG-0106 (TM-0443) + CSX-036 + EES_ok/rankine1.EES → cycles/steam_power/rankine_cycle_60mw     — merge of one exercise in several versions/unit systems
+[x] C-04  T-FUNC       TM-0253 + CSX-013                → fundamentals/combustion/cpbar_combustion_products          — function library from a .LIB
+[x] C-05  T-IMPORT     CSX-004 (+CSX-005, TM-0492)      → components/boilers_burners/boiler_mean_specific_heat       — model using copied library functions (after C-04)
+[x] C-06  T-IMPORT     CSX-042 + EES_ok/scroll_compressor.EES + TM-0481 → components/compressors/scroll_compressor_semi_empirical — semi-empirical reference model
+[x] C-07  T-IMPORT     CSX-008 + TM-0266 group          → components/heat_exchangers/condenser_three_zones           — level 3, procedures, initials, EES RAD setting
+[x] C-08  T-IMPORT     TM-0413                            → components/storage/dhw_tank_dynamic                        — dynamic (INTEGRAL), 761-row time series as reference
+[x] C-09  T-IMPORT     TM-0101 (fallback TM-0422)       → components/compressors/…                                    — optimisation (EES Min/Max) imported at the optimum
 [ ] C-10  T-IMPORT     TM-0150 (DG-0032)               → cycles/gas_turbines/two_shaft_gas_turbine_compressor_map   — blocked case (CS-GAP-INTERP-EES, CS-GAP-INCLUDE), ees_import.md Example 2
 [ ] C-11  T-IMPORT     TM-0326                            → buildings/thermal_comfort_pmv_ppd                          — embedded lookup table (74×2)
 [ ] C-12  T-TRANSLATE  TSP-035                            → cycles/refrigeration_heat_pumps/heat_pump_basic_tespy      — TESPy tutorial, verified against its results
@@ -285,3 +285,15 @@ log line.
 | 2026-10-04 | `CSL-0001` | Added *refrigeration_cycle_simple_compressor* — verified (faithful import vs EES ≤ 1.4 %), original corrected (superheated suction state); CoolSolve example `compressor_refrigeration_simple` merged |
 | 2026-10-04 | P1.1–P1.6 | Inventories of the four sources (725 candidates), enrichment and sanitisation of `thermo_models`, taxonomy v0.2 |
 | 2026-10-04 | P0.8, P1.7 | Maintainer decisions D1–D6 applied: source files and extraction data removed from `CSL-0001` and forbidden by `build_index.py`; licences set to `own`; exam rules; manual unit-conversion procedure; figure step tested on `CSL-0001` (P-h diagram of the R22 cycle with the state arrays, PNG export) |
+| 2026-10-04 | C-01 `CSL-0002` | Added *counterflow_hx_oil_water* — verified vs the EES stored solution of `EES_ok/exchangers1.EES` (20/20 variables ≤ 0.03 %); CoolSolve example CSX-016 merged |
+| 2026-10-04 | C-02 `CSL-0003` | Added *methane_tank_evaporation* — hand-converted from K/kPa/kJ and decimal comma, verified vs EES stored solution (≤ 3e-5 relative) |
+| 2026-10-04 | C-03 `CSL-0004` | Added *rankine_cycle_60mw* — verified vs EES stored solution (40/40 ≤ 2e-5, hand kPa/kJ→Pa/J conversion); DG-0106 merged (TM-0519/TM-0547 duplicates, CSX-036 superseded); new gap CS-GAP-MULTILINE-COMMENT |
+| 2026-10-04 | C-04 `CSL-0005` | Added *cpbar_combustion_products* — function library kept in native EES, **blocked**: matches EES ≤ 0.24 % only with workarounds; gaps CS-BUG-IF-IGNORED, CS-BUG-MOLARMASS, CS-BUG-SINGLE-INPUT-PAIR, CS-GAP-FORMATION-ENTHALPY, CS-GAP-UNITSYSTEM-FUNC reported |
+| 2026-10-05 | C-05 `CSL-0006` | Added *boiler_mean_specific_heat* — **blocked** by the CSL-0005 bugs (CS-BUG-IF-IGNORED/MOLARMASS/SINGLE-INPUT-PAIR); `cpbar` copied from CSL-0005; physics verified vs EES TM-0492 (57/57 ≤ 0.1 %); CSX-005 merged as the on/off variant |
+| 2026-10-05 | C-06 `CSL-0007` | Added *scroll_compressor_semi_empirical* — verified vs EES stored solution; CSX-042 and its EES original merged as converted variant, TM-0481 added |
+| 2026-10-05 | C-07 `CSL-0008` | Added *condenser_three_zones* — level 3, verified vs EES stored solutions of the 3 originals (duties ≤ 0.23 %; RAD setting without trig: no conversion); DG-0060 merged (TM-0264/65 variants, TM-0258/59/60 duplicates), CSX-008 superseded; curated `.initials` required and shipped |
+| 2026-10-05 | C-07 `CSL-0008` | Added *condenser_three_zones* (level 3) — verified vs EES; group DG-0060 triaged, CSX-008 merged |
+| 2026-10-05 | C-08 `CSL-0009` | Added *dhw_tank_dynamic* (first dynamic model, level 1) — native file **blocked** (CS-GAP-IF5, CS-GAP-INTEGRAL-LIMITS); runnable variant verified against the EES integral table recovered from the plot objects (18 001 points, ≤ 6.1e-5); new gaps CS-GAP-IF5, CS-GAP-INTEGRAL-LIMITS; bugs CS-BUG-INTEGRAL-TABLE-SEP, CS-BUG-INTEGRAL-MAXSTEPS reported |
+| 2026-10-05 | C-08 `CSL-0009` | Added *dhw_tank_dynamic* (first dynamic model) — native file **blocked** (CS-GAP-IF5, CS-GAP-INTEGRAL-LIMITS); runnable variant verified vs the EES integral table recovered from the plot objects (18 001 points, ≤ 6.1e-5); bugs CS-BUG-INTEGRAL-TABLE-SEP, CS-BUG-INTEGRAL-MAXSTEPS reported |
+| 2026-10-05 | C-09 `CSL-0010` | Added *two_stage_steam_compressor_intercooling* (optimisation, imported at the EES optimum) — native file **blocked**, transcription verified vs EES; bug CS-BUG-INTEGRAL-FACTOR reported |
+| 2026-10-05 | T-RECHECK `CSL-0005`, `CSL-0006` | CoolSolve branch `fix/library-gaps` merged in CoolSolve main (CS-BUG-IF-IGNORED, CS-BUG-MOLARMASS, CS-BUG-SINGLE-INPUT-PAIR, CS-GAP-UNITSYSTEM-FUNC, CS-GAP-FORMATION-ENTHALPY, CS-GAP-MULTILINE-COMMENT, CS-BUG-LOOKUP-PATH, CS-BUG-INTERP-DESC, CS-DOC-TRIG fixed) — both models now **verified**; library regression 8/8 OK |

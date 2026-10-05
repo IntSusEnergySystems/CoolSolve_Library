@@ -1,0 +1,135 @@
+$UnitSystem SI MASS DEG PA C J
+
+{=============================================================================
+  Two-stage compression of superheated steam with intercooling
+  CoolSolve Library model CSL-0010
+  -----------------------------------------------------------------------------
+  Superheated steam (100 K above saturation at the supply pressure) is
+  compressed from 100 kPa to 625 kPa at 0.15 kg/s. The model compares the
+  power of
+    1. a single-stage isentropic (adiabatic) compressor;
+    2. a two-stage isentropic compressor with intermediate cooling back to
+       the supply temperature. The intermediate pressure follows the rule of
+       equal pressure ratios across the stages (Cengel & Boles), which
+       minimises the total work for ideal gases: this is the optimisation
+       variable of the model (objective, bounds and optimum in README.md,
+       gap CS-GAP-OPTIM);
+    3. a single-stage isothermal compressor: W = m_dot*INTEGRAL(v dP);
+    4. a pump (water as an incompressible liquid).
+  The heat rejected in the intercooler and during the isothermal compression
+  is also computed. Kinetic and potential energy changes are neglected.
+
+  NOTE: this file is the faithful EES import (comments translated, units
+  converted by hand from kPa/kJ to Pa/J). It does NOT run in CoolSolve
+  v0.3.0: the INTEGRAL limits are variables (CS-GAP-INTEGRAL-LIMITS) and the
+  factor multiplying an INTEGRAL call is silently ignored
+  (CS-BUG-INTEGRAL-FACTOR). The runnable transcription (same physics) is
+  two_stage_steam_compressor_intercooling_coolsolve.eescode.
+
+  Inputs : m_dot, p_in, p_out (the 100 K superheat is part of the statement)
+  Outputs: W_dot_mono, W_dot_bi_etage, p_int, Saving_Wcp,
+           Q_dot_intercooler, W_dot_isoT, Q_dot_cp_isoT1/2, W_pump,
+           W_pump_bis, W_pump_bis2
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course "Thermodynamique appliquée" (MECA0002), repetition
+           R04, exercise 2 (EES file R04_E2_2022.EES) - see README.md
+==============================================================================}
+
+"Operating point"
+m_dot = 0.15            "steam mass flow rate [kg/s]"
+p_in = 100E3            "supply pressure [Pa] (100 kPa in the original)"
+p_out = 625E3           "discharge pressure [Pa] (625 kPa in the original)"
+
+"Supply state: superheated steam"
+T_in = t_sat(Water, P=p_in) + 100     "supply temperature [°C]; 100 K superheat in the original"
+s_in = entropy(Water, P=p_in, T=T_in)   "supply entropy, needed for the isentropic processes [J/kg-K]"
+h_in = enthalpy(Water, P=p_in, T=T_in)  "supply enthalpy [J/kg]"
+
+{NB: a reversible adiabatic process is isentropic; an isentropic process is
+ not necessarily adiabatic. Kinetic and potential energy changes are neglected
+ (no data, and small for these applications).}
+
+"!Case 1: single-stage isentropic (adiabatic) compressor"
+h_out = enthalpy(Water, P=p_out, s=s_in)   "discharge state, isentropic [J/kg]"
+W_dot_mono = m_dot*(h_out - h_in)          "first law, Q = 0 (adiabatic) [W]"
+
+"!Case 2: two-stage isentropic compressor with intercooling"
+"Intermediate pressure (between the stages): equal pressure ratios"
+p_int/p_in = p_out/p_int
+{Cengel & Boles, Thermodynamics - An Engineering Approach, 8th ed.: "to
+ minimize compression work during a two-stage compression, the pressure ratio
+ across each stage of the compressor must be the same. When this condition is
+ satisfied, the compression work at each stage becomes identical" - exact for
+ polytropic compressions of ideal gases with constant specific heats. For real
+ steam the equal-ratio pressure is a near-optimum (see README.md).}
+h_out_cp1 = enthalpy(Water, P=p_int, s=s_in)     "stage 1 discharge, isentropic [J/kg]"
+W_dot_cp1 = m_dot*(h_out_cp1 - h_in)             "stage 1 power, adiabatic [W]"
+T_out_cp1 = temperature(Water, P=p_int, s=s_in)  "intermediate temperature, for information [°C]"
+
+T_in_cp2 = T_in       "the intercooler returns the steam to the supply temperature"
+s_in_cp2 = entropy(Water, P=p_int, T=T_in_cp2)    "stage 2 supply entropy [J/kg-K]"
+h_in_cp2 = enthalpy(Water, P=p_int, T=T_in_cp2)   "stage 2 supply enthalpy [J/kg]"
+h_out_cp2 = enthalpy(Water, P=p_out, s=s_in_cp2)  "stage 2 discharge, isentropic [J/kg]"
+W_dot_cp2 = m_dot*(h_out_cp2 - h_in_cp2)   "stage 2 power; slightly different from W_dot_cp1 because steam is not an ideal gas [W]"
+W_dot_bi_etage = W_dot_cp1 + W_dot_cp2     "total power of the two-stage compressor [W]"
+
+"Heat rejected in the intercooler"
+Q_dot_intercooler = m_dot*(h_in_cp2 - h_out_cp1)   "first law, no work; negative: rejected by the steam [W]"
+
+"Relative work saving of the two-stage compressor with intercooling"
+Saving_Wcp = 100*(W_dot_bi_etage - W_dot_mono)/W_dot_mono   "[%]"
+
+"!Case 3: single-stage isothermal compressor"
+"W = INTEGRAL(v dP), see the course"
+v_isoT = volume(Water, P=p, T=T_in)     "specific volume along the isotherm T_in [m^3/kg]"
+W_dot_isoT = m_dot*integral(v_isoT, P, p_in, p_out, 1000)  "isothermal power [W]; last term = integration step, 1000 Pa (1 kPa in the original)"
+{The isothermal work is the minimum compression work: continuous cooling keeps
+ the specific volume small. A "sub-cooled compression" (discharge colder than
+ the supply) would lower the work further but is not a standard case.}
+
+"Heat exchanged in the isothermal compressor"
+"Method 1: dQ = T dS (Clausius)"
+s_out_cp_isoT = entropy(Water, P=p_out, T=T_in)    "discharge entropy on the isotherm [J/kg-K]"
+Q_dot_cp_isoT1 = m_dot*(T_in + 273.15)*(s_out_cp_isoT - s_in)   "absolute temperature in K [W]"
+"Method 2: first law  Q + W = m_dot*(h_out - h_in)"
+h_out_cp_isoT = enthalpy(Water, P=p_out, T=T_in)   "isothermal discharge enthalpy [J/kg]"
+Q_dot_cp_isoT2 = m_dot*(h_out_cp_isoT - h_in) - W_dot_isoT   "[W]"
+
+"!Case 4: pump (liquid water, incompressible)"
+"W = INTEGRAL(v dP), see the course"
+v_pump = volume(Water, x=0, P=p_in)   "saturated-liquid specific volume; the mean value over the compression would give the same result (nearly incompressible) [m^3/kg]"
+W_pump = m_dot*v_pump*(p_out - p_in)  "pump power [W]; about 1000 times smaller than the gas cases: minimising the specific volume minimises the compression work"
+
+"Check that liquid water is incompressible: isentropic adiabatic compression of the saturated liquid, computed in two ways (integral of v dP and enthalpy difference)"
+s_pump_in = entropy(Water, P=p_in, x=0)      "saturated-liquid entropy [J/kg-K]"
+v_liq = volume(Water, P=p, s=s_pump_in)      "specific volume of the compressed liquid [m^3/kg] (v_gaz in the original: misleading name, it is a liquid)"
+W_pump_bis = m_dot*integral(v_liq, P, p_in, p_out, 1000)   "step 1000 Pa (1 kPa in the original) [W]"
+h_pump_in = enthalpy(Water, P=p_in, x=0)     "saturated-liquid enthalpy [J/kg]"
+h_pump_out = enthalpy(Water, P=p_out, s=s_pump_in)   "after isentropic compression of the liquid [J/kg]"
+W_pump_bis2 = m_dot*(h_pump_out - h_pump_in) "[W]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: compressor supply, 2: stage-1 discharge, 3: intercooler outlet (stage-2
+ supply), 4: stage-2 discharge, 5: single-stage isentropic discharge. Overlay
+ the arrays h[i]/P[i] or T[i]/s[i] in the CoolSolve Diagram tab ("Overlay
+ array path").}
+P[1] = p_in
+h[1] = h_in
+T[1] = T_in
+s[1] = s_in
+P[2] = p_int
+h[2] = h_out_cp1
+T[2] = T_out_cp1
+s[2] = s_in
+P[3] = p_int
+h[3] = h_in_cp2
+T[3] = T_in_cp2
+s[3] = s_in_cp2
+P[4] = p_out
+h[4] = h_out_cp2
+T[4] = TEMPERATURE(Water, P=p_out, s=s_in_cp2)
+s[4] = s_in_cp2
+P[5] = p_out
+h[5] = h_out
+T[5] = TEMPERATURE(Water, P=p_out, s=s_in)
+s[5] = s_in

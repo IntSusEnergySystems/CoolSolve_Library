@@ -1,0 +1,72 @@
+{
+  "id": "CSL-0010",
+  "name": "two_stage_steam_compressor_intercooling",
+  "title": "Two-stage compression of superheated steam with intercooling at the optimal intermediate pressure",
+  "summary": "Superheated steam (0.15 kg/s, 100 kPa to 625 kPa, 100 K superheat) is compressed by a two-stage isentropic compressor with intercooling back to the supply temperature, the intermediate pressure being set by the rule of equal stage pressure ratios (the work-minimising choice for ideal gases, Cengel & Boles). The model compares the powers of the single-stage isentropic, two-stage and isothermal (INTEGRAL of v dP) compressors and of a liquid pump, and computes the heats rejected in the intercooler and by the isothermal compression.",
+  "kind": "optimization",
+  "level": 1,
+  "status": "blocked",
+  "main_file": "two_stage_steam_compressor_intercooling.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "compressor",
+    "two-stage",
+    "intercooling",
+    "intermediate pressure",
+    "optimal pressure ratio",
+    "isothermal compression",
+    "pump",
+    "steam",
+    "exercise"
+  ],
+  "language_features": [
+    "INTEGRAL (definite integral, fixed step)",
+    "property functions",
+    "array variables"
+  ],
+  "stats": {
+    "n_equations": 56,
+    "largest_block": 2
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R4/R04_E2_2022.EES",
+    "candidate_id": "TM-0422",
+    "authors": [
+      "N. Paulus",
+      "B. Dechesne",
+      "S. Quoilin (course MECA0002)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquee (ULiege MECA0002), repetition session R04, exercise 2"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (35 variables), converted with --ees-units (kPa/kJ to Pa/J hand conversion of the model)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0",
+    "max_rel_diff": 4.2e-06,
+    "notes": "Runnable variant two_stage_steam_compressor_intercooling_coolsolve.eescode vs EES: 34/34 common variables agree (max 4.2e-6; same water formulation), v_gaz renamed v_liq. Optimisation documented and checked: sweep of p_int confirms the equal-ratio intermediate pressure (250 kPa) within 1 kPa / 0.001 % of the true minimum-work optimum of real steam (~251 kPa)."
+  },
+  "missing_features": [
+    "CS-GAP-OPTIM",
+    "CS-GAP-INTEGRAL-LIMITS",
+    "CS-BUG-INTEGRAL-FACTOR"
+  ],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap C-09, fallback candidate TM-0422; first optimization-kind model, shipped at the EES optimum)",
+      "by": "opencode (GLM) for S. Quoilin"
+    }
+  ]
+}

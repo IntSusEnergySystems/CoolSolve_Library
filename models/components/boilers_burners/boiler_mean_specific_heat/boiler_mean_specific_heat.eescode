@@ -1,0 +1,221 @@
+$UnitSystem SI MASS DEG PA C J
+
+{=============================================================================
+   Boiler modelled with the mean specific heat of the flue gases (cpbar)
+   CoolSolve Library model CSL-0006
+  -----------------------------------------------------------------------------
+   Fuel-oil heating boiler seen as two heat exchangers in series:
+   - a gas-to-water exchanger (AU_1) between the adiabatic combustion
+     products and the water circuit, modelled with the eps-NTU method;
+   - a water-to-environment exchanger (AU_2) standing for the envelope
+     losses.
+   The combustion products enter the gas side at the adiabatic flame
+   temperature T_p_ad, computed from a combustor energy balance in which
+   the products are described by their mean specific heat c_bar_p between
+   the reference temperature (25 C) and T_p_ad (routine cpbar of the ULiege
+   combustion library, called twice: c_bar_p for the flame temperature and
+   cp_p_hex for the gas entering the heat exchanger).
+
+   Inputs : AU_1, AU_2          gas-water and water-envelope conductances [W/K]
+           y_c, y_h             carbon / hydrogen mass fractions of the fuel [-]
+           c_f, LHV             fuel specific heat [J/kg-K], lower heating value [J/kg]
+           M_dot_f, f           fuel flow [kg/s] and fuel-air ratio [-]
+           T_a_su, T_f_su, T_env air, fuel and environment temperatures [C]
+           T_w_su, M_dot_w      water supply temperature [C] and flow [kg/s]
+   Outputs: T_p_ad              adiabatic flame temperature [C]
+           T_gas_ex             flue gas exit temperature [C]
+           Q_dot_u, Q_dot_c     useful and consumed power [W]
+           eta                  boiler efficiency [-]
+   Units  : SI - temperatures in C, pressures in Pa, energies in J
+   Source : CoolSolve example boiler_cpbar.eescode (CSX-004, S. Quoilin),
+            derived from the EES model-bank reference model of J. Lebrun &
+            S. Bertagnolio (2008, TM-0492) - see README.md
+   Status : VERIFIED against the EES stored solution of the reference model
+            (CoolSolve branch fix/library-gaps). CoolSolve v0.3.0 fails on the
+            cpbar CALLs (CS-BUG-IF-IGNORED, CS-BUG-MOLARMASS,
+            CS-BUG-SINGLE-INPUT-PAIR in the copied procedure). Solve with the
+            shipped .initials (guess values): the unknown flame temperature
+            sits inside the cpbar CALLs. See README.md.
+ =============================================================================}
+
+{--- Library functions copied from CSL-0005 (cpbar_combustion_products) ---
+  Copied verbatim (P. Ngendakumana, ULiege 2003) until
+  $INCLUDE library:cpbar_combustion_products is available (CS-FEAT-IMPORT).
+  Only the cpbar PROCEDURE is needed by this model.}
+
+PROCEDURE cpbar(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)
+
+{CPBAR procedure returns cp_bar (J/kg.K) of the combustion products of a CmHn
+hydrocarbon between two temperatures. The inputs are : the type of fuel (m and n),
+the fuel-air ratio (f) and  the two temperatures (T_p1 and T_p2) in °C.
+
+In the case of incomplete combustion (negative excess air value), the procedure
+returns also : the energy losses by CO (Q_4 in J/kg of fuel), the fraction (x) of C
+atoms oxidized into CO2 and the mininum excess air (e_min) to get x>0.
+
+Simplified air is used. In the case of incomplete combustion, it is also assumed that
+there is no O2 in the combustion products.
+
+Moreover, the procedure returns the specific heat for pure air if f=0 (whatever m and n).
+
+When using this procedure, don't forget to set mass basis calculation in the unit system
+settings.}
+
+"Check of the units setting"
+IF (unitsystem('K')=1)  THEN CALL error('Please, set °C for temperature units!')
+If (unitsystem('Molar')=1)  then CALL error('Please, set Mass basis!')
+
+"Default values (in the case of complete combustion)"
+Q_4 = 0
+x = 1
+e_min = 0
+e = 0
+
+"Composition of simplified air"
+x_air_N2 = 0.79 ; x_air_O2= 0.21
+
+"Universal gas constant"
+R_u = 8314 "J/kmol.K"
+
+"Molar masses of the species"
+MM_CO = molarmass(CO) ; MM_N2 = molarmass(N2) ; MM_O2 = molarmass(O2)
+MM_CO2 = molarmass(CO2) ; MM_H2O = molarmass(H2O)
+
+IF (f>0) Then "combustion products (not pure air)"
+
+"f  stoichiometric, excess air and f"
+parfuel = m+n/4
+MM_f = 12*m+1*n
+f_st = MM_f/(parfuel*(MM_O2+(x_air_N2/x_air_O2)*MM_N2))
+e = (f_st/f)-1
+
+IF (f>f_st) Then "air deficiency"
+
+"Stoichiometric combustion : CmHn+(m+n/4)*(O2+(79/21)*N2"
+e_min = -m/(2*parfuel) "to ensure x>0"
+f_max = f_st/(1+e_min)
+
+"Assumption : enough air to oxidize H to H2O and no O2 in the flue gases"
+"Hence : CmHn+(m+n/4)*(O2+(79/21)*N2)*(1+e) = a*CO2+b*CO+c*H2O+g*N2"
+g = parfuel*(1+e)*(79/21)
+c = n/2
+x=2*(e*parfuel+m/2)/m
+a = m*x "x is the fraction of the C atoms oxidized into CO2"
+b = m*(1-x)
+"Molar fractions of the constituents"
+nkmoltot = a+ b + c +g
+x_CO2 = a/nkmoltot
+x_CO = b/nkmoltot
+x_H2O = c/nkmoltot
+x_N2 = g/nkmoltot
+mmprod = x_CO2*MM_CO2+x_CO*MM_CO+x_H2O*MM_H2O+x_N2*MM_N2
+"!Mean c_p of combustion products"
+h_CO2 = (enthalpy(CO2,T=T_p1)-enthalpy(CO2,T=T_p2))*MM_CO2
+h_CO = (enthalpy(CO,T=T_p1)-enthalpy(CO,T=T_p2))*MM_CO
+h_H2O =(enthalpy(H2O,T=T_p1)-enthalpy(H2O,T=T_p2))*MM_H2O
+h_N2 = (enthalpy(N2,T=T_p1)-enthalpy(N2,T=T_p2))*MM_N2
+c_bar_p = ((x_CO2*h_CO2+x_CO*h_CO+x_H2O*h_H2O+x_N2*h_N2)/mmprod)/(T_p1-T_p2)
+
+"Unburned-CO losses per kmol of fuel"
+T_ref = 25
+LHV_CO_mol = enthalpy(CO,T=T_ref)*MM_CO+0.5*enthalpy(O2,T=T_ref)*MM_O2-ENTHALPY(CO2,T=T_ref)*MM_CO2
+LHV_CO_mas = LHV_CO_mol/MM_CO
+Q_4 = LHV_CO_mol*b
+
+ELSE
+
+"Molar fractions of the constituents"
+nkmoltot = m+ n/2 + parfuel*(e+(1+e)*(x_air_N2/x_air_O2))
+x_CO2 = m/nkmoltot
+x_H2O = (n/2)/nkmoltot
+x_O2 = parfuel*e/nkmoltot
+x_N2 = parfuel*(1+e)*(x_air_N2/x_air_O2)/nkmoltot
+
+"Molar mass of combustion products"
+MM_prod = x_CO2*MM_CO2+x_H2O*MM_H2O+x_O2*MM_O2+x_N2*MM_N2
+
+"Enthalpy and mean specific heat of combustion products [per kg of products]"
+hp_1 = (enthalpy(CO2,T=T_p1)-enthalpy(CO2, T=T_p2))*MM_CO2
+hp_2 = (enthalpy(H2O,T=T_p1)-enthalpy(H2O, T=T_p2))*MM_H2O
+hp_3 = (enthalpy(O2,T=T_p1)-enthalpy(O2, T=T_p2))*MM_O2
+hp_4 = (enthalpy(N2,T=T_p1)-enthalpy(N2, T=T_p2))*MM_N2
+hp = (x_CO2*hp_1+x_H2O*hp_2+x_O2*hp_3+x_N2*hp_4)/MM_prod
+c_bar_p  = hp/(T_p1-T_p2)
+
+ENDIF
+
+ELSE
+
+"Pure air case"
+MM_a = x_air_O2*MM_O2+x_air_N2*MM_N2
+ha_1 = (enthalpy(O2,T=T_p1)-enthalpy(O2, T=T_p2))*MM_O2
+ha_2 = (enthalpy(N2,T=T_p1)-enthalpy(N2, T=T_p2))*MM_N2
+ha = (x_air_O2*ha_1+x_air_N2*ha_2)/MM_a
+c_bar_p  = ha/(T_p1-T_p2)
+ENDIF
+
+END
+
+{--- End of the library functions copied from CSL-0005 ---}
+
+"Boiler data"
+
+AU_1=34     "gas-to-water overall heat transfer coefficient [W/K]"
+AU_2=7      "water-to-envelope overall heat transfer coefficient [W/K]"
+
+y_c=0.869   "carbon mass fraction of the fuel oil"
+y_h=1-y_c
+c_f=1800    "specific heat of fuel [J/kg.K]"
+LHV=4.3E7   "lower heating value [J/kg]"
+M_dot_f=0.0006  "fuel mass flow rate [kg/s]"
+f=0.062     "fuel-air ratio [kg of fuel / kg of air]"
+T_a_su=20   "air supply temperature [C]"
+T_f_su=20   "fuel supply temperature [C]"
+T_env=20    "environment temperature [C]"
+
+T_w_su=60   "boiler water return temperature [C]"
+M_dot_w=0.28    "water mass flow rate [kg/s]"
+
+"Fuel oil CmHn equivalent to the mass fractions y_c, y_h:
+ for 1 kg of fuel: y_c kg of C and y_h kg of H,
+ i.e. y_c/12 kmol of C and y_h/1 kmol of H,
+ i.e. for 1 mol of C: y_h*12/y_c mol of H."
+m=1
+n=y_h*12/y_c
+
+"Adiabatic flame temperature"
+M_dot_f*LHV+M_dot_a*cp_a*(T_a_su-T_ref)+M_dot_f*c_f*(T_f_su-T_ref)=M_dot_p*cp_p*(T_p_ad-T_ref)
+M_dot_a=M_dot_f/f
+T_ref=25    "reference temperature of the combustor balance [C]"
+cp_a=CP(air,T=T_a_su)    "air specific heat [J/kg-K]"
+CALL cpbar(m,n,f,T_p_ad,T_ref:cp_p,Q_41,x_1,e_min_1,e_1)   "mean c_p of the products [J/kg-K]"
+M_dot_p=M_dot_a+M_dot_f
+
+"Gas-to-water heat exchanger (eps-NTU)"
+
+T_gas_su=T_p_ad
+C_dot_p=M_dot_p*cp_p_hex
+CALL cpbar(m,n,f,T_gas_su,T_gas_ex:cp_p_hex,Q_42,x_2,e_min_2,e_2)  "mean c_p over the exchanger [J/kg-K]"
+C_dot_w=M_dot_w*cp_w
+cp_w=4186    "water specific heat [J/kg-K]"
+C_dot_min_1=MIN(C_dot_p,C_dot_w)
+C_dot_max_1=MAX(C_dot_p,C_dot_w)
+omega_1=C_dot_min_1/C_dot_max_1
+epsilon_1=(1-exp(-NTU_1*(1-omega_1)))/(1-omega_1*exp(-NTU_1*(1-omega_1)))
+NTU_1=AU_1/C_dot_min_1
+
+Q_dot_1=epsilon_1*C_dot_min_1*(T_gas_su-T_w_su)
+Q_dot_1=C_dot_w*(T_w_ex_1-T_w_su)   "compute T_w_ex_1"
+Q_dot_1=C_dot_p*(T_gas_su-T_gas_ex) "compute flue gas exit temperature T_gas_ex"
+
+"Envelope heat loss (water-to-environment exchanger)"
+NTU_2=AU_2/C_dot_w
+epsilon_2=1-exp(-NTU_2)
+Q_dot_2=epsilon_2*C_dot_w*(T_w_ex_1-T_env)
+Q_dot_2=C_dot_w*(T_w_ex_1-T_w_ex)   "compute T_w_ex"
+
+"Boiler efficiency"
+
+Q_dot_u=Q_dot_1-Q_dot_2    "useful power [W]"
+Q_dot_c=M_dot_f*LHV        "consumed power [W]"
+eta=Q_dot_u/Q_dot_c        "boiler efficiency [-]"

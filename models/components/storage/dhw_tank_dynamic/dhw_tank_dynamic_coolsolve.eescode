@@ -1,0 +1,63 @@
+$UnitSystem SI MASS DEG PA C J
+
+{=============================================================================
+   Domestic hot-water storage tank (500 L): dynamic temperature evolution
+   CoolSolve Library model CSL-0009 - runnable variant of dhw_tank_dynamic
+  -----------------------------------------------------------------------------
+   Same model, same inputs, same physics and same 1-s integration step as
+   dhw_tank_dynamic.eescode, transcribed in the CoolSolve v0.3.0 dialect
+   because two native EES constructs are blocked (see the README of CSL-0009):
+     - the 5-argument IF(A,B,X,Y,Z) schedules are replaced by the 3-argument
+       if(cond, a, b) with the condition shifted by half a step
+       (if(3600.5-tau, 10000, 0) is true for tau <= 3600 on the 1-s grid,
+       exactly what IF(tau,3600,10000,10000,0) returns; CS-GAP-IF5);
+     - the symbolic integration limits tau_1, tau_2 are replaced by their
+       literal values 0 and 18000 (CS-GAP-INTEGRAL-LIMITS);
+     - the $IntegralTable columns are space-separated instead of ';'
+       (CS-BUG-INTEGRAL-TABLE-SEP).
+   Solve time is about 80 s (18 000 RK4 steps of 1 s); the trajectory is
+   written to dhw_tank_dynamic_coolsolve-integral.csv.
+
+   Verified against the integral table stored by EES: 18 001 points,
+   max. relative deviation 6.1e-5 (see README.md).
+ =============================================================================}
+
+"Temperatures"
+T_tank_0 = 60 [C]     "initial tank temperature [C]"
+T_in_tank = 12 [C]    "city (make-up) water temperature [C]"
+T_amb = 20 [C]        "ambient temperature [C]"
+
+"Atmospheric pressure (about 1 bar) and constant water cp"
+P_atm = 100000 [Pa]           "atmospheric pressure [Pa]"
+cp_w = 4186 [J/(kg·C)]        "specific heat of the water [J/kg-K]"
+cp_tank = 4186 [J/(kg·C)]     "specific heat of the tank content [J/kg-K]"
+
+"Tank geometry and mass"
+Vol_tank = 0.5 [m^3]                        "tank volume [m^3]"
+v_tank = volume(Water, T=T_tank_0, P=P_atm) "specific volume of water at the initial state [m^3/kg]"
+M_tank = Vol_tank/v_tank                    "mass of water in the tank [kg]"
+
+"Heater schedule: 10 kW between tau = 0 and 3600 s, then off"
+Q_dot_res = if(3600.5-tau, 10000, 0)   "heater power [W]; true for tau <= 3600 s (1-s grid)"
+
+"Tap-draw schedule: 0.05 kg/s from tau = 7200 s to tau = 14400 s"
+M_dot_in_tank1 = if(tau-7199.5, 0.05, 0)          "draw rate after 7200 s [kg/s]"
+M_dot_in_tank = if(14400.5-tau, M_dot_in_tank1, 0) "draw rate [kg/s]; true for tau <= 14400 s (1-s grid)"
+
+"Draw power (no stratification: the drawn water leaves at T_tank)"
+Q_dot_tap = -M_dot_in_tank*cp_w*(T_tank-T_in_tank)   "enthalpy flow of the make-up water [W] (negative)"
+
+"Ambient losses of the tank"
+AU_amb = 20 [W/C]                     "global heat-exchange coefficient tank-ambient [W/K]"
+Q_dot_amb = -AU_amb*(T_tank-T_amb)    "ambient losses [W] (negative)"
+
+"Tank balance: transient first law Q + W - m_dot*Deltah = dU/dt"
+dU\dtau = Q_dot_res + Q_dot_tap + Q_dot_amb    "rate of change of the tank internal energy [W]"
+
+"Integration of the tank power over time to follow its temperature"
+DELTAu = integral(dU\dtau, tau, 0, 18000, 1)      "energy change since tau = 0 [J]; 0 to 5 h, 1-s step"
+DELTAu = M_tank*cp_tank*(T_tank-T_tank_0)         "same energy change, through the tank temperature [J]"
+
+$IntegralTable tau:1 dU\dtau Q_dot_tap Q_dot_amb Q_dot_res M_dot_in_tank T_tank
+{Trajectory written every 1 s to dhw_tank_dynamic_coolsolve-integral.csv
+ (18 001 rows); plot it in the CoolSolve GUI Integral tab.}

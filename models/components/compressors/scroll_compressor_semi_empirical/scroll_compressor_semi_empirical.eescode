@@ -1,0 +1,256 @@
+$UnitSystem SI MASS DEG PA C J
+
+{=============================================================================
+  Semi-empirical model of a hermetic scroll compressor in a refrigeration cycle
+  CoolSolve Library model CSL-0007
+  -----------------------------------------------------------------------------
+  Reference model of Winandy, Saavedra & Lebrun (2002): the refrigerant path
+  through the compressor is decomposed into six steps,
+    su -> su1  supply pressure drop (fixed-area nozzle),
+    su1 -> su2 heating-up in a fictitious exchanger of wall temperature t_w,
+    su2 -> in  isentropic compression up to the adapted pressure (internal
+               built-in volume ratio r_v_in),
+    in  -> ex2 isochoric compression/re-expansion up to the exhaust pressure,
+    ex2 -> ex1 cooling-down in the same fictitious exchanger,
+    ex1 -> ex  exhaust pressure drop,
+  plus an internal leakage flow from ex2 back to su1. The electromechanical
+  losses are a constant term plus a term proportional to the internal power.
+  A wall heat balance closes the model. The refrigerant cycle around the
+  compressor is reduced to an evaporator and a condenser at imposed saturation
+  temperatures (manufacturer rating conditions).
+
+  Inputs : fluid$, t_ev, t_cd, t_amb, DELTAt_oh_ev, DELTAt_sc_cd
+  Params : V_dot_s_cp_m3h, N_rot, r_v_in_cp, A_leak_cp, d_su, d_ex, corr,
+           AU_su_cp_n, AU_ex_cp_n, AU_amb_cp, W_dot_loss0_cp, alpha_cp,
+           M_dot_r_cp_n (identified on a Copeland ZR72KC-TFD catalogue)
+  Outputs: M_dot_r, W_dot_cp, t_ex_cp, Q_dot_ev, Q_dot_cd, epsilon_v_cp,
+           epsilon_s_cp, t_w_cp
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : V. Lemort (ULiège Thermodynamics Laboratory), 2008 - see README.md
+ =============================================================================}
+
+{Reference:
+ [1] Winandy E., Saavedra O. J., Lebrun J. (2002): Experimental analysis and
+     simplified modelling of a hermetic scroll refrigeration compressor.
+     Applied Thermal Engineering 22, 107-120.}
+
+{Nomenclature (main symbols):
+ A area [m2]; AU heat conductance [W/K]; c_p specific heat [J/kg-K];
+ corr swept-volume correction [-]; d diameter [m]; h specific enthalpy [J/kg];
+ M_dot mass flow rate [kg/s]; NTU number of transfer units [-];
+ N_rot rotational speed [tr/min]; p pressure [Pa]; Q_dot heat flow rate [W];
+ r_p pressure ratio [-]; r_v_in internal built-in volume ratio [-];
+ s specific entropy [J/kg-K]; t temperature [°C]; v specific volume [m3/kg];
+ V_dot_s swept volume flow rate [m3/s]; W_dot electrical power [W].
+ Subscripts: amb ambient, cd condenser, cp compressor, ev evaporator,
+ ex exhaust, in internal/adapted, leak leakage, loss electromechanical losses,
+ n nominal, oh overheating, r refrigerant, s isentropic, sc subcooling,
+ su supply. Greek: alpha loss proportionality factor [-];
+ DELTAt temperature difference [K]; epsilon effectiveness/efficiency [-];
+ gamma isentropic exponent [-].}
+
+{Disclaimer of the original file: this model is freely distributed and may not
+ be sold or distributed for commercial purpose; the user is asked to cite the
+ sources and the origin of this model.}
+
+"!1. INPUTS"
+t_ev = 7                     "evaporating temperature [°C] (-25 °C in the documented identification)"
+t_cd = 45                    "condensing temperature [°C] (20 °C in the documented identification)"
+t_amb = 25                   "ambient temperature [°C]"
+DELTAt_oh_ev = 5             "superheating at the evaporator outlet [K]"
+DELTAt_sc_cd = 5             "subcooling at the condenser outlet [K]"
+fluid$ = 'R22'               "refrigerant"
+
+"!2. PARAMETERS (identified on Copeland catalogue data, ZR72KC-TFD)"
+V_dot_s_cp_m3h = 20.52       "swept volume flow rate [m3/h] (17.06 m3/h in the documented identification)"
+N_rot = 3500                 "rotational speed [tr/min]"
+r_v_in_cp = 2.55             "internal built-in volume ratio [-] (2.85 in the documented identification)"
+A_leak_cp = 4.5e-7           "internal leakage flow area [m2] (3.888e-7 m2 in an older identification)"
+d_su = 0.1                   "unused parameter of the original file (no supply nozzle in this version) [-]"
+d_ex = 0.0075                "exhaust nozzle diameter [m] (0.0052 m in the documented identification)"
+corr = 0.0314                "swept-volume correction factor [-] (0.04 in the documented identification)"
+AU_su_cp_n = 18              "supply-side conductance at nominal flow [W/K] (24.16 W/K in the documented identification)"
+AU_ex_cp_n = 35              "exhaust-side conductance at nominal flow [W/K] (13.47 W/K in the documented identification)"
+AU_amb_cp = 10               "ambient-loss conductance [W/K] (5.382 W/K in the documented identification)"
+W_dot_loss0_cp = 242         "constant electromechanical losses [W] (118 W in the documented identification)"
+alpha_cp = 0.2               "loss factor proportional to the internal power [-] (0.2152 in the documented identification)"
+M_dot_r_cp_n = 0.091         "nominal mass flow rate (reference of the AU scaling) [kg/s]"
+C = 0.292                    "unused parameter of the original file [-]"
+
+"!3. OUTPUTS"
+{Main results: M_dot_r, W_dot_cp, t_ex_cp, Q_dot_ev, Q_dot_cd,
+ epsilon_v_cp, epsilon_s_cp, t_w_cp.}
+
+"!4. EQUATIONS"
+
+"4.1. Supply state: su"
+DELTAt_oh_su_cp = DELTAt_oh_ev          "superheating transferred to the compressor supply [K]"
+t_sat_su_cp = temperature(fluid$,P=P_ev,x=1)   "saturation temperature at the evaporator outlet [°C]"
+t_su_cp = t_sat_su_cp+DELTAt_oh_su_cp   "compressor supply temperature [°C]"
+P_su_cp = P_ev                          "compressor supply pressure [Pa]"
+h_su_cp = ENTHALPY(fluid$,t=t_su_cp,P=P_su_cp)
+s_su_cp = ENTROPY(fluid$,t=t_su_cp,P=P_su_cp)
+v_su_cp = VOLUME(fluid$,t=t_su_cp,P=P_su_cp)
+
+"4.2. Supply heating-up: su => su1 (fictitious exchanger, wall temperature t_w)"
+c_p_su_cp = specheat(fluid$,t=t_su_cp,P=p_su_cp)
+C_dot_su_cp = M_dot_r * c_p_su_cp       "capacity flow rate [W/K]"
+AU_su_cp = AU_su_cp_n*(M_dot_r/M_dot_r_cp_n)^0.8   "supply conductance, scaled with the flow rate [W/K]"
+NTU_su_cp = AU_su_cp / C_dot_su_cp
+epsilon_su_cp = 1 - exp(-NTU_su_cp)     "effectiveness of the constant-wall-temperature exchanger [-]"
+Q_dot_su_cp = epsilon_su_cp*C_dot_su_cp*( t_w_cp - t_su_cp )  "heat flow to the suction gas [W]"
+h_su1_cp = h_su_cp + Q_dot_su_cp / M_dot_r
+p_su1_cp = p_su_cp                      "no supply pressure drop (kept general through d_su)"
+t_su1_cp = temperature( fluid$, h=h_su1_cp, p=p_su1_cp )
+DELTAt_su_cp = t_su1_cp-t_su_cp         "supply heating-up [K]"
+v_su1_cp = volume( fluid$, t = t_su1_cp , p = p_su1_cp )
+s_su1_cp = entropy( fluid$, t = t_su1_cp , p = p_su1_cp )
+
+"4.3. Mixing with the internal leakage: su1 => su2"
+M_dot_s_cp = M_dot_r + M_dot_leak_cp    "compressed mass flow rate [kg/s]"
+M_dot_s_cp*h_su2_cp = M_dot_r*h_su1_cp + M_dot_leak_cp*h_ex2_cp   "mixing balance"
+p_su2_cp = p_su1_cp
+
+"4.4. Flow rate calculation: su2"
+M_dot_s_cp = V_dot_s_cp*(1+corr)/v_su2_cp   "swept volume flow rate corrected by corr"
+v_su2_cp = volume(fluid$,P=p_su2_cp,h=h_su2_cp)
+s_su2_cp = entropy(fluid$,P=p_su2_cp,h=h_su2_cp)
+V_dot_s_cp_m3h = V_dot_s_cp*3600        "[m3/h]"
+V_dot_s_cp = V_s_cp*N_rot/60            "swept volume flow rate [m3/s]"
+
+"4.5. Isentropic compression up to the adapted pressure: su2 => in"
+s_in_cp = s_su2_cp                      "isentropic compression"
+v_in_cp = v_su2_cp/r_v_in_cp            "definition of the internal built-in volume ratio"
+h_in_cp = enthalpy(fluid$,s=s_in_cp,v=v_in_cp)
+w_in1_cp = h_in_cp-h_su2_cp             "specific work of the isentropic part [J/kg]"
+p_in_cp = PRESSURE(fluid$,s=s_in_cp,v=v_in_cp)   "adapted pressure [Pa]"
+
+"4.6. Isochoric compression/re-expansion: in => ex2"
+w_in2_cp_v = v_in_cp * (p_ex2_cp-p_in_cp)        "isochoric part of the internal work [J/kg]"
+w_in2_cp_s = h_ex2_cp_s - h_in_cp                "same work evaluated on the isentropic path (alternative, not used)"
+h_ex2_cp_s = enthalpy(fluid$,s=s_in_cp,p=p_ex2_cp)
+w_in2_cp = w_in2_cp_v                   "Winandy's model: constant-volume evolution"
+
+"4.7. Total internal work and electrical power"
+w_in_cp = w_in1_cp + w_in2_cp           "specific internal work [J/kg]"
+W_dot_in_cp = M_dot_s_cp * w_in_cp      "internal (gas) power [W]"
+h_ex2_cp = h_su2_cp + w_in_cp           "both compression steps are adiabatic"
+v_ex2_cp = volume(fluid$,P=P_ex2_cp,h=h_ex2_cp)
+W_dot_cp = W_dot_in_cp + W_dot_loss_cp  "electrical power [W]"
+W_dot_loss_cp = W_dot_loss0_cp + alpha_cp*W_dot_in_cp   "constant + proportional electromechanical losses [W]"
+
+"4.8. Internal leakage: ex2 => su1 (isentropic nozzle)"
+s_ex2_cp = entropy(fluid$,P=P_ex2_cp,h=h_ex2_cp)
+s_thr_cp = s_ex2_cp                     "isentropic flow to the throat"
+V_dot_leak_cp = A_leak_cp*C_thr_cp      "leakage volume flow rate [m3/s]"
+h_ex2_cp = h_thr_cp + 1/2*C_thr_cp^2    "conservation of total enthalpy"
+h_thr_cp = enthalpy(fluid$,P=P_thr_cp,s=s_thr_cp)
+M_dot_leak_cp = V_dot_leak_cp/v_thr_cp
+v_thr_cp = volume(fluid$,P=P_thr_cp,s=s_thr_cp)
+P_thr_cp = max(P_thr_crit,P_su2_cp)     "throat pressure: critical value when the flow is choked [Pa]"
+P_thr_crit = P_ex1_cp*(2/(gamma_leak_cp+1))^(gamma_leak_cp/(gamma_leak_cp-1))
+P_ex2_cp*v_ex2_cp^gamma_leak_cp = P_thr_cp*v_thr_cp^gamma_leak_cp   "polytropic expansion ex2 => thr"
+
+"4.9. Exhaust cooling-down: ex2 => ex1"
+p_ex2_cp = p_ex1_cp                     "pressure drop described hereafter"
+t_ex2_cp = temperature(fluid$,h=h_ex2_cp,p=p_ex2_cp)
+AU_ex_cp = AU_ex_cp_n*(M_dot_r/M_dot_r_cp_n)^0.8    "exhaust conductance, scaled with the flow rate [W/K]"
+c_p_ex2_cp = specheat(fluid$,t=t_ex2_cp,P =p_ex2_cp)
+C_dot_ex_cp = M_dot_r * c_p_ex2_cp      "capacity flow rate [W/K]"
+NTU_ex_cp = AU_ex_cp / C_dot_ex_cp
+epsilon_ex_cp = 1 - exp(-NTU_ex_cp)
+Q_dot_ex_cp = epsilon_ex_cp*C_dot_ex_cp*( t_w_cp - t_ex2_cp )  "heat flow from the discharge gas [W]"
+h_ex1_cp = h_ex2_cp + Q_dot_ex_cp / M_dot_r
+t_ex1_cp = temperature(fluid$,h=h_ex1_cp,p=p_ex1_cp)
+DELTAt_ex_cp = t_ex1_cp-t_ex2_cp        "exhaust cooling-down [K]"
+
+"4.10. Exhaust pressure drop: ex1 => ex"
+v_ex1_cp = volume(fluid$,h=h_ex1_cp,p=p_ex1_cp)
+s_ex1_cp = entropy(fluid$,h=h_ex1_cp,p=p_ex1_cp)
+h_ex1_cp = h_thr_ex_cp + C_thr_ex_cp^2/2        "conservation of total enthalpy"
+h_thr_ex_cp = enthalpy(fluid$,P=P_thr_ex_cp,s=s_ex1_cp)
+v_thr_ex_cp = volume(fluid$,P=P_thr_ex_cp,s=s_ex1_cp)
+V_dot_ex_cp = C_thr_ex_cp*A_ex
+P_thr_ex_cp = max(P_thr_ex_crit,p_ex_cp)
+P_thr_ex_crit = p_ex1_cp*(2/(gamma_ex_cp+1))^(gamma_ex_cp/(gamma_ex_cp-1))
+P_ex1_cp*v_ex1_cp^gamma_ex_cp = P_thr_ex_cp*v_thr_ex_cp^gamma_ex_cp   "polytropic expansion ex1 => thr_ex"
+M_dot_r_bis = V_dot_ex_cp/v_thr_ex_cp   "compressible-flow alternative for the exhaust drop (not used)"
+(M_dot_r/A_ex)^2/2*v_ex1_cp = (P_ex1_cp-P_ex_cp)   "incompressible-flow equation used in the original model"
+A_ex = pi*d_ex^2/4                      "exhaust nozzle area [m2]"
+t_ex_cp = temperature(fluid$,h=h_ex_cp,p=p_ex_cp)
+r_p_ex = p_ex_cp/p_ex1_cp
+h_ex_cp = h_ex1_cp                      "isenthalpic exhaust pressure drop"
+
+"4.11. Fictitious envelope heat balance"
+0 = W_dot_loss_cp - Q_dot_su_cp - Q_dot_ex_cp - Q_dot_amb_cp   "wall heat balance [W]"
+Q_dot_amb_cp = AU_amb_cp * ( t_w_cp-t_amb )   "heat exchange with the ambient [W]"
+
+"4.12. Volumetric effectiveness"
+epsilon_v_cp = v_su_cp/v_su1_cp         "heating-up effect on the induced volume flow [-]"
+
+"4.13. Global isentropic effectiveness"
+h_exs_cp = enthalpy( fluid$ , p = p_ex_cp , s = s_su_cp )
+w_s_cp = h_exs_cp-h_su_cp               "isentropic specific work from su to ex [J/kg]"
+w_cp = W_dot_cp / M_dot_r               "specific electrical work [J/kg]"
+epsilon_s_cp = w_s_cp / w_cp
+
+"4.14. Pressure ratio"
+r_p_cp = P_ex_cp/P_su_cp
+
+"!5. Refrigerant cycle around the compressor"
+
+"5.1. Evaporator"
+h_su_ev = h_ex_cd                       "isenthalpic expansion"
+h_ex_ev = h_su_cp                       "evaporator outlet = compressor supply"
+t_sat_ex_ev = TEMPERATURE(fluid$,P=P_ev,x=1)
+t_su_ev = TEMPERATURE(fluid$,P=P_ev,h=h_su_ev)
+p_ev = pressure(fluid$,t=t_ev,x=0.5)    "in the catalogue data, the evaporating temperature is defined at x=0.5"
+Q_dot_ev = M_dot_r*(h_ex_ev-h_su_ev)    "cooling capacity [W]"
+
+"5.2. Condenser"
+DELTAt_oh_su_cd = t_ex_cp-t_sat_su_cd   "superheating at the condenser inlet [K]"
+t_sat_su_cd = temperature(fluid$,P=P_cd,x=1)
+t_sat_ex_cd = temperature(fluid$,P=P_cd,x=0)
+p_cd = pressure(fluid$,t=t_cd,x=0.5)    "in the catalogue data, the condensing temperature is defined at x=0.5"
+h_su_cd = h_ex_cp                       "condenser inlet = compressor exhaust"
+t_ex_cd = t_sat_ex_cd-DELTAt_sc_cd      "condenser outlet temperature [°C]"
+h_ex_cd = enthalpy(fluid$,t=t_ex_cd,p=P_cd)
+Q_dot_cd = M_dot_r*(h_su_cd-h_ex_cd)    "condensing capacity [W]"
+
+P_ex_cp = P_cd                          "compressor exhaust = condensing pressure (P_ev = p_ev: case-insensitive)"
+
+"!6. State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: compressor supply (evaporator outlet); 2: after heating-up and leakage
+ mixing; 3: adapted state (end of the isentropic compression); 4: end of the
+ isochoric compression; 5: after exhaust cooling-down (before the exhaust
+ pressure drop); 6: compressor exhaust (condenser inlet); 7: condenser outlet
+ (evaporator inlet). Use h[i]/P[i] or s[i]/T[i] with the "Overlay array path"
+ option of the CoolSolve Diagram tab.}
+P[1] = P_su_cp
+h[1] = h_su_cp
+T[1] = t_su_cp
+s[1] = s_su_cp
+P[2] = p_su2_cp
+h[2] = h_su2_cp
+T[2] = temperature(fluid$,h=h_su2_cp,p=p_su2_cp)
+s[2] = s_su2_cp
+P[3] = p_in_cp
+h[3] = h_in_cp
+T[3] = temperature(fluid$,s=s_in_cp,v=v_in_cp)
+s[3] = s_in_cp
+P[4] = p_ex2_cp
+h[4] = h_ex2_cp
+T[4] = t_ex2_cp
+s[4] = s_ex2_cp
+P[5] = p_ex1_cp
+h[5] = h_ex1_cp
+T[5] = t_ex1_cp
+s[5] = s_ex1_cp
+P[6] = p_ex_cp
+h[6] = h_ex_cp
+T[6] = t_ex_cp
+s[6] = entropy(fluid$,h=h_ex_cp,p=p_ex_cp)
+P[7] = P_cd
+h[7] = h_ex_cd
+T[7] = t_ex_cd
+s[7] = ENTROPY(fluid$,t=t_ex_cd,p=P_cd)

@@ -1,0 +1,90 @@
+$UnitSystem SI MASS DEG PA C J
+
+{=============================================================================
+   Boiler with on/off burner control (runnable variant of CSL-0006)
+  -----------------------------------------------------------------------------
+   For the boiler of the base case (water inlet temperature 70 C, set-point
+   outlet temperature 80 C), computes the burner on-time fraction theta and
+   the mean boiler efficiency eta_set of the on/off regulation.
+
+   Same eps-NTU boiler equations as boiler_mean_specific_heat.eescode, with
+   the parameters of the identified model (AU_1 = 75.29 W/K, AU_2 = 11.64 W/K)
+   and the mean specific heats of the combustion products replaced by the
+   constants cp_p = cp_p_hex = 1300 J/kg-K, as in the CoolSolve example
+   boiler_cpbar2.eescode (CSX-005) from which this variant is imported:
+   this is what makes it runnable in CoolSolve v0.3.0 (the cpbar library
+   calls of the main model are blocked, see the README of CSL-0006).
+
+   Status: runs in CoolSolve v0.3.0 - reproduces the stored solution of the
+   example (48/48 variables identical): theta = 0.514, eta = 0.884,
+   eta_set = 0.875.
+ =============================================================================}
+
+"Set-point and on/off regulation"
+T_w_ex_set=80   "set-point water outlet temperature [C]"
+T_w_ex_set=theta*T_w_ex_on+(1-theta)*T_w_ex_off   "mean outlet temperature; theta = burner on-time fraction"
+
+AU_1=75.29
+AU_2=11.64
+M_dot_a=0.02153
+M_dot_f=0.001292
+M_dot_w=0.5972
+
+y_c=0.869 "carbon mass fraction"
+y_h=1-y_c
+c_f=1800 "[J/kg.K]" "specific heat of fuel"
+LHV=4.3E7 "[J/kg]"
+T_a_su=25
+T_f_su=25
+T_env=25
+
+T_w_su=70 "boiler water return temperature [C]"
+
+"Fuel oil CmHn equivalent to the mass fractions y_c, y_h"
+m=1
+n=y_h*12/y_c
+
+"Adiabatic flame temperature"
+M_dot_f*LHV+M_dot_a*cp_a*(T_a_su-T_ref)+M_dot_f*c_f*(T_f_su-T_ref)=M_dot_p*cp_p*(T_p_ad-T_ref)
+M_dot_a=M_dot_f/f
+T_ref=25
+cp_a=CP(air,T=T_a_su)
+cp_p = 1300   "J/kg-K; constant replacement of cpbar (see header)"
+M_dot_p=M_dot_a+M_dot_f
+
+"Gas-to-water heat exchanger (eps-NTU)"
+
+T_gas_su=T_p_ad
+C_dot_p=M_dot_p*cp_p_hex
+cp_p_hex = 1300   "J/kg-K; constant replacement of cpbar (see header)"
+C_dot_w=M_dot_w*cp_w
+cp_w=4186
+C_dot_min_1=MIN(C_dot_p,C_dot_w)
+C_dot_max_1=MAX(C_dot_p,C_dot_w)
+omega_1=C_dot_min_1/C_dot_max_1
+epsilon_1=(1-exp(-NTU_1*(1-omega_1)))/(1-omega_1*exp(-NTU_1*(1-omega_1)))
+NTU_1=AU_1/C_dot_min_1
+
+Q_dot_1=epsilon_1*C_dot_min_1*(T_gas_su-T_w_su)
+Q_dot_1=C_dot_w*(T_w_ex_1-T_w_su) "compute T_w_ex_1"
+Q_dot_1=C_dot_p*(T_gas_su-T_gas_ex) "compute flue gas exit temperature T_gas_ex"
+
+"Envelope heat loss (side 2) - burner ON"
+NTU_2=AU_2/C_dot_w
+epsilon_2=1-exp(-NTU_2)
+Q_dot_2_on=epsilon_2*C_dot_w*(T_w_ex_1-T_env)
+Q_dot_2_on=C_dot_w*(T_w_ex_1-T_w_ex_on) "compute T_w_ex when burner is ON"
+
+Q_dot_u=Q_dot_1-Q_dot_2_on
+Q_dot_c=M_dot_f*LHV
+eta=Q_dot_u/Q_dot_c
+
+"Envelope heat loss (side 2) - burner OFF (water kept circulating)"
+
+Q_dot_2_off=epsilon_2*C_dot_w*(T_w_su-T_env)
+Q_dot_2_off=C_dot_w*(T_w_su-T_w_ex_off)
+
+"Mean efficiency over the on/off cycles"
+Q_dot_u_set=C_dot_w*(T_w_ex_set-T_w_su)
+Q_dot_c_set=theta*Q_dot_c
+eta_set=Q_dot_u_set/Q_dot_c_set

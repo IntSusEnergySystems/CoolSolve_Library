@@ -1,0 +1,86 @@
+{
+  "id": "CSL-0006",
+  "name": "boiler_mean_specific_heat",
+  "title": "Fuel-oil boiler modelled with the mean specific heat of the flue gases (cpbar)",
+  "summary": "Fuel-oil heating boiler represented as a combustor (adiabatic flame temperature from the mean specific heat of the combustion products, routine cpbar of the ULiege combustion library) followed by a gas-to-water eps-NTU exchanger and an envelope-loss term; computes the boiler efficiency.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "boiler_mean_specific_heat.eescode",
+  "fluids": [
+    "Air",
+    "CO2",
+    "H2O",
+    "N2",
+    "O2"
+  ],
+  "tags": [
+    "boiler",
+    "combustion",
+    "fuel oil",
+    "mean specific heat",
+    "flue gas",
+    "eps-NTU",
+    "adiabatic flame temperature",
+    "on/off control",
+    "exercise"
+  ],
+  "language_features": [
+    "procedures",
+    "CALL",
+    "IF/THEN/ELSE",
+    "copied library functions",
+    "single-input property calls",
+    "UNITSYSTEM / CALL ERROR"
+  ],
+  "stats": {
+    "n_equations": 49,
+    "largest_block": 13
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "coolsolve_examples + thermo_models",
+    "source_path": "~/svn/CoolSolve/examples/boiler_cpbar.eescode",
+    "candidate_id": "CSX-004",
+    "authors": [
+      "Sylvain Quoilin (ULiege Thermodynamics Laboratory, CoolSolve example)",
+      "Jean Lebrun (ULiege Thermodynamics Laboratory, EES reference model)",
+      "Stéphane Bertagnolio (ULiege Thermodynamics Laboratory, EES reference model)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en",
+    "course": "ULiege model bank, Heat Production by Combustion (reference model of 2008-01-10)"
+  },
+  "verification": {
+    "reference": "EES stored solution (62 variables, 42 with a counterpart) of the reference model TM-0492 (inputs of the stored run applied to this model); independent Python/CoolProp computation at the shipped inputs; stored solution of the CoolSolve example for the constant-cp variant (48/48)",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0+fix/library-gaps@fbdb6a7",
+    "max_rel_diff": 0.00076,
+    "notes": "42 EES variables within 0.08 % (t_adiab 0.07 %, c_p_p 0.08 %, eta 0.02 %); independent CoolProp at the shipped inputs: T_p_ad 1974.46 vs 1974.48 C, c_p_p 1285.02 vs 1285.01 J/kg-K. Requires the CoolSolve fixes of branch fix/library-gaps (v0.3.0 fails with SingularJacobian) and the shipped .initials (default guesses do not converge)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0005"
+  ],
+  "related_external": [
+    "thermo_models CLASSICAL_ONOFF_BOILER_SIMULATION_REFERENCE_EES_MODEL_SBJL080212.EES (TM-0492: EES original, reference model of the ULiege model bank; its stored solution is the verification reference)",
+    "CoolSolve examples/boiler_cpbar.eescode (CSX-004: base of this import, cpbar disabled)",
+    "CoolSolve examples/boiler_cpbar2.eescode (CSX-005: on/off variant, imported as boiler_mean_specific_heat_onoff.eescode)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (T-IMPORT card C-05, blocked; cpbar calls restored, procedure copied from CSL-0005)",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-05",
+      "action": "re-checked with CoolSolve fix/library-gaps (T-RECHECK): blocked -> verified; unit-system guards of the copied cpbar active, .initials and .sol baseline added",
+      "by": "CoolSolve developer agent (Claude) for S. Quoilin"
+    }
+  ]
+}

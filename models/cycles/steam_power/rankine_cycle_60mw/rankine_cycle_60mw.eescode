@@ -1,0 +1,87 @@
+$UnitSystem SI MASS DEG PA C J
+
+{=============================================================================
+  Rankine cycle of a 60 MW steam power plant
+  CoolSolve Library model CSL-0004
+ -----------------------------------------------------------------------------
+  In a 60 MW steam power plant, steam enters the turbine at 70 bar and 500 °C.
+  The condenser pressure is 0.2 bar, the boiler pressure drop is 4 bar, the
+  boiler efficiency is 90 %, the turbine isentropic efficiency is 85 %, the
+  alternator efficiency 95 %, the pump isentropic efficiency 85 % with a motor
+  efficiency of 94 %, and the cooling-water temperature rise in the condenser
+  is limited to 10 K. The model computes the steam flow rate, the boiler power,
+  the cooling-water flow rate, the cycle efficiency, the back-work ratio and
+  the condenser-to-boiler heat ratio. State points are stored in arrays
+  T[i], p[i], h[i], s[i] (i = 1..4) for the thermodynamic diagrams.
+
+  Inputs : fluid$, T[3], p[3], p[4], DELTAp_ch, eta_ch, DELTAT_eau,
+           eta_is_t, eta_alt, eta_is_p, eta_mot, W_dot_el
+  Outputs: m_dot_vap, Q_dot_ch, m_dot_eau, eta_rankine, bwr, rapport_Q
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+           (converted by hand from kPa/kJ/kW, original values kept in comments)
+  Source : ULiège course "Thermodynamique appliquée", exercise session R07
+           (2022 version; 2017 original THD10_R06_E1) - see README.md
+=============================================================================}
+
+"Data"
+fluid$ = 'water'              "working fluid = water"
+T[3] = 500 [°C]    "steam temperature at the turbine inlet"
+p[3] = 7000e3 [Pa] "steam pressure at the turbine inlet (70 bar; 7000 kPa in the original)"
+p[4] = 20e3 [Pa]   "water-cooled condenser pressure (0.2 bar; 20 kPa in the original)"
+DELTAp_ch = 400e3 [Pa] "boiler pressure drop (4 bar; 400 kPa in the original)"
+eta_ch = 0.9                   "boiler overall efficiency [-]"
+DELTAT_eau = 10 [°C] "maximum cooling-water temperature rise in the condenser"
+eta_is_t = 0.85                "turbine isentropic efficiency [-]"
+eta_alt = 0.95                 "alternator efficiency [-]"
+eta_is_p = 0.85                "pump isentropic efficiency [-]"
+eta_mot = 0.94                 "efficiency of the electric motors driving the pumps [-]"
+W_dot_el = -60e6 [W] "net electrical power generated (negative: delivered by the system; -60e3 kW in the original)"
+
+"!Solution"
+"Changes in kinetic and potential energy are neglected for every component;
+each component is analysed as a steady-flow device."
+
+"!Turbine"
+h[3] = enthalpy(fluid$,t=T[3],p=p[3])   "turbine inlet state known from (T, p)"
+s[3] = entropy(fluid$,t=T[3],p=p[3])
+eta_is_t = (h[4] - h[3])/(h_4_is - h[3])   "isentropic efficiency: gives the turbine outlet enthalpy"
+h_4_is = enthalpy(fluid$,s=s[3],p=p[4])    "isentropic turbine outlet state"
+T[4] = temperature(fluid$,h=h[4],p=p[4])
+s[4] = entropy(fluid$,x=x_4,p=p[4])
+x_4 = quality(fluid$,h=h[4],p=p[4])
+W_dot_t = m_dot_vap*(h[4] - h[3])   "turbine shaft power (first law, adiabatic turbine); negative: delivered by the cycle"
+W_dot_el = eta_alt*W_dot_t   "electrical power sent to the grid, smaller in magnitude than the shaft power: alternator losses modelled by its efficiency"
+
+"!Pump"
+x_1 = 0 "assumption: saturated liquid at the pump inlet"
+p[1] = p[4]   "condenser assumed isobaric"
+s[1] = entropy(fluid$,p=p[1],x=x_1)
+T[1] = temperature(fluid$,s=s[1],p=p[1])
+h[1] = enthalpy(fluid$,p=p[1],x=x_1)
+p[2] = p[3] + DELTAp_ch   "boiler inlet pressure = turbine inlet pressure + boiler pressure drop"
+eta_is_p*(h[2] - h[1]) = h_2_is - h[1]   "pump isentropic efficiency: gives the pump outlet enthalpy"
+h_2_is = enthalpy(fluid$,s=s[1],p=p[2])
+s[2] = entropy(fluid$,p=p[2],h=h[2])
+T[2] = temperature(fluid$,h=h[2],p=p[2])
+W_dot_pump = m_dot_vap*(h[2] - h[1])   "power supplied to the fluid by the pump (first law, adiabatic); positive"
+W_dot_pump_el = W_dot_pump/eta_mot   "electrical power consumed by the pump motor, larger than the mechanical power: motor losses modelled by its efficiency"
+
+"!Boiler / steam generator"
+Q_dot_ch*eta_ch = m_dot_vap*(h[3]-h[2])   "first law, no work; Q_dot_ch is the heat released by the combustion, only part of it is transferred to the steam (boiler efficiency)"
+
+"!Condenser"
+Q_dot_cond = m_dot_vap*(h[1] - h[4])   "heat given up by the working fluid in the condenser; negative"
+Q_dot_rfd = abs(Q_dot_cond)   "heat carried away by the cooling water"
+Q_dot_rfd = m_dot_eau*C_eau*DELTAT_eau
+C_eau = 4184 [J/kg-K] "specific heat of liquid water (4.184 kJ/kg-K in the original)"
+
+"!Efficiencies"
+eta_rankine = abs(W_dot_el + W_dot_pump_el)/Q_dot_ch*100 "[%] cycle efficiency = useful effect (net electrical power, alternator output minus pump motor consumption) / costly effect (boiler heat release)"
+bwr = abs(W_Dot_pump_el/W_dot_el)*100 "[%] back-work ratio = pump power / turbine electrical power; of the order of 1 % because pumping takes place in the liquid phase while the expansion takes place in the vapour phase - one reason why steam (Rankine) cycles worked long before gas (Brayton) cycles"
+rapport_Q = abs(Q_dot_cond/Q_dot_ch)*100 "[%] condenser heat / boiler heat"
+
+{State points for the thermodynamic diagrams (native arrays of the original
+ model, no post-processing needed): 1 = condenser outlet / pump inlet,
+ 2 = pump outlet / boiler inlet, 3 = boiler outlet / turbine inlet,
+ 4 = turbine outlet / condenser inlet. Use the arrays h[i]/p[i] or s[i]/T[i]
+ with the "Overlay array path" option of the CoolSolve Diagram tab.}

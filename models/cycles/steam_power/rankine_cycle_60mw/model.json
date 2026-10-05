@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0004",
+  "name": "rankine_cycle_60mw",
+  "title": "Rankine cycle of a 60 MW steam power plant",
+  "summary": "Simple Rankine cycle of a 60 MW steam plant (70 bar, 500 °C, 0.2 bar condenser): steam flow rate, boiler power, cooling-water flow rate, cycle efficiency, back-work ratio; state points as arrays for the diagrams.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "rankine_cycle_60mw.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "rankine",
+    "steam cycle",
+    "power plant",
+    "turbine",
+    "feed pump",
+    "condenser",
+    "exercise"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "state arrays"
+  ],
+  "stats": {
+    "n_equations": 41,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R7/R07_E01_2022.EES",
+    "candidate_id": "TM-0443",
+    "authors": [
+      "TBD"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquee (ULiege, MECA0002), exercise session R07, exercise 1; 2017 original THD10_R06_E1"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file R07_E01_2022.EES (44 variables)",
+    "date": "2026-10-04",
+    "coolsolve_version": "0.3.0",
+    "max_rel_diff": 1.7e-05,
+    "notes": "All 40 common variables agree within 2e-5 relative after the manual kPa/kJ/kW -> Pa/J/W conversion (compare_solution.py --ees-units); m, n, R, W_dot_alt are leftover variables of the EES file, absent from the equations. The 2017 version (TM-0519) and the zipped copy (TM-0547) are duplicates; the CoolSolve example rankine1 (CSX-036) is the same exercise with a 0.1 bar condenser."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [
+    "CoolSolve examples/rankine1.eescode (CSX-036): same exercise in SI units with a 0.1 bar condenser"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-036"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-04",
+      "action": "added (task C-03: merge of duplicate group DG-0106, TM-0519/TM-0547 duplicates, CSX-036 superseded)",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    }
+  ]
+}

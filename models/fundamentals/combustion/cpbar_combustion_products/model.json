@@ -1,0 +1,83 @@
+{
+  "id": "CSL-0005",
+  "name": "cpbar_combustion_products",
+  "title": "cpbar: mean specific heat of CmHn combustion products (function library)",
+  "summary": "Three EES routines of the ULiege combustion library (cpbar, gamma, mmprod) returning the mean specific heat, the specific-heat ratio and the molar mass of the combustion products of a CmHn fuel in simplified air, between two temperatures, for complete combustion, incomplete combustion (with unburned-CO losses) or pure air.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "cpbar_combustion_products.eescode",
+  "fluids": [
+    "CO2",
+    "CO",
+    "H2O",
+    "N2",
+    "O2"
+  ],
+  "tags": [
+    "combustion",
+    "mean specific heat",
+    "flue gas",
+    "fuel-air ratio",
+    "excess air",
+    "incomplete combustion",
+    "unburned CO losses",
+    "function library"
+  ],
+  "language_features": [
+    "procedures",
+    "functions",
+    "IF/THEN/ELSE",
+    "single-input property calls",
+    "UNITSYSTEM / CALL ERROR"
+  ],
+  "stats": {
+    "n_equations": 30,
+    "largest_block": 5
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/EES_Functions/cpbar/COMBCMHN_PNG_2003/CombCmHn_SI_PNG2003_V2.LIB",
+    "candidate_id": "TM-0253",
+    "authors": [
+      "P. Ngendakumana (ULiege Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "fr",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solution of the companion test file CombCmHn_SI_PNG2003_V2_test.EES (TM-0254, EES 7.966): incomplete-combustion cpbar call (f = 0.07) and pure-air gamma/mmprod; independent Python/CoolProp ideal-gas re-computation for the complete-combustion, pure-air and f = 0.08 cases",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0+fix/library-gaps@fbdb6a7",
+    "max_rel_diff": 0.0022,
+    "notes": "All 7 EES values within 0.22 % (c_bar_p 0.22 %, gamma 0.07 %, Q_4/e 0.05 %, x 0.004 %, e_min exact); the other regimes within 0.12 % of an independent computation. Requires the CoolSolve fixes of branch fix/library-gaps; CoolSolve v0.3.0 gives wrong results."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0006"
+  ],
+  "related_external": [
+    "CoolSolve examples/cpbar.eescode (CSX-013: earlier conversion of the same .LIB, same defects)",
+    "thermo_models CombCmHn_SI_PNG2003_V2_test.EES (TM-0254: companion EES test file, reference values)"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-013"
+  ],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-04",
+      "action": "added (T-FUNC card C-04, blocked)",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-05",
+      "action": "re-checked with CoolSolve fix/library-gaps (T-RECHECK): blocked -> verified; unit-system guards and pure-air cpbar call restored, .sol baseline added",
+      "by": "CoolSolve developer agent (Claude) for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+$UnitSystem SI MASS DEG PA C J
+
+{=============================================================================
+  Counterflow heat exchanger - oil cooled by water (effectiveness-NTU)
+  CoolSolve Library model CSL-0002
+  -----------------------------------------------------------------------------
+  A counterflow heat exchanger (area 12.5 m2) cools an oil of constant specific
+  heat c = 2100 J/(kg.K) entering at 100 °C, using water entering at 20 °C
+  and 1 bar. Mass flow rates: oil 2 kg/s, water 0.48 kg/s. The overall heat
+  transfer coefficient is U = 400 W/(m2.K) and pressure drops are neglected.
+  The effectiveness-NTU method for counterflow gives the effectiveness, the
+  transferred power and the outlet temperatures of both fluids.
+
+  Inputs : A, U, c_oil, M_dot_oil, T_oil_su (oil side);
+           M_dot_w, T_w_su, P_w_su (water side)
+  Outputs: epsilon, NTU, omega, Q_dot, T_oil_ex, T_w_ex
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège exercise session (repetition 12, exercise 1), V. Lemort;
+           CoolSolve example exchangers1 - see README.md
+ =============================================================================}
+
+"Exchanger data and inlet states"
+A=12.5               "heat transfer area [m^2]"
+c_oil=2100           "specific heat of the oil [J/kg-K] (annotated J/g-K in the original: typo)"
+T_oil_su=100         "oil inlet temperature [°C]"
+P_w_su=1E5           "water inlet pressure [Pa] (1 bar in the original)"
+T_w_su=20            "water inlet temperature [°C]"
+M_dot_oil=2          "oil mass flow rate [kg/s]"
+M_dot_w=0.48         "water mass flow rate [kg/s]"
+U=400                "overall heat transfer coefficient [W/m^2-K]"
+
+"Water specific heat at the inlet state"
+c_w=CP(Water,T=T_w_su,P=P_w_su)   "[J/kg-K]"
+
+"Capacity flow rates"
+C_dot_oil=M_dot_oil*c_oil   "oil capacity rate [W/K]"
+C_dot_w=M_dot_w*c_w         "water capacity rate [W/K]"
+C_dot_min=min(C_dot_oil,C_dot_w)
+C_dot_max=max(C_dot_oil,C_dot_w)
+omega=C_dot_min/C_dot_max   "capacity rate ratio [-]"
+
+"Number of transfer units"
+AU=A*U                      "overall conductance [W/K]"
+NTU=AU/C_dot_min            "number of transfer units [-]"
+
+"Heat exchanger effectiveness (counterflow)"
+epsilon=(1-exp(-NTU*(1-omega)))/(1-omega*exp(-NTU*(1-omega)))
+
+"Energy balance"
+Q_dot=epsilon*C_dot_min*(T_oil_su-T_w_su)   "transferred power [W]"
+Q_dot=C_dot_w*(T_w_ex-T_w_su)               "water-side energy balance"
+Q_dot=C_dot_oil*(T_oil_su-T_oil_ex)         "oil-side energy balance"

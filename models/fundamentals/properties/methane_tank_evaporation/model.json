@@ -1,0 +1,62 @@
+{
+  "id": "CSL-0003",
+  "name": "methane_tank_evaporation",
+  "title": "Evaporation of liquid methane in a tank",
+  "summary": "Liquid methane at 500 kPa in a tank evaporates due to heat input (level drop of 30 mm per hour); the model computes the evaporated mass and the volumetric flow rate of the gas leaving a heater at 500 kPa and 275 K.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "methane_tank_evaporation.eescode",
+  "fluids": [
+    "Methane"
+  ],
+  "tags": [
+    "tank",
+    "evaporation",
+    "liquefied gas",
+    "methane",
+    "specific volume",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "array variables"
+  ],
+  "stats": {
+    "n_equations": 24,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R1/R1_E3_2022.EES",
+    "candidate_id": "TM-0380",
+    "authors": [
+      "TBD"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège, MECA0002), repetition session 1, exercise 3"
+  },
+  "verification": {
+    "reference": "EES stored solution (12 variables) of the source file, converted with --ees-units",
+    "date": "2026-10-04",
+    "coolsolve_version": "0.3.0",
+    "max_rel_diff": 2.6e-05,
+    "notes": "All 12 original variables agree; largest deviation 2.6e-5 (vapour specific volume), both tools using the reference equation of state of methane. Same import as CoolSolve docs/ees_import.md §12 Example 3."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-04",
+      "action": "added (card C-02, roadmap batch B-01)",
+      "by": "Claude (GLM) worker agent for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+$UnitSystem SI MASS DEG PA C J
+
+{=============================================================================
+  Evaporation of liquid methane in a tank
+  CoolSolve Library model CSL-0003
+  -----------------------------------------------------------------------------
+  A tank with a cross-section of 0.5 m^2 contains liquid methane at 500 kPa.
+  Heat transferred to the methane evaporates part of it: in one hour the
+  liquid level drops by 30 mm. The vapour leaving the tank passes through a
+  heater and leaves it at 500 kPa and 275 K. The model computes the mass of
+  methane evaporated and the volumetric flow rate of the gas at the heater
+  outlet.
+
+  Inputs : A_t, p_t, DELTAh, DELTAt (tank); p_r, T_r (heater outlet)
+  Outputs: m_evap, q_v
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course "Thermodynamique appliquée" (MECA0002), repetition
+           session 1, exercise 3 (EES file R1_E3_2022.EES) - see README.md
+============================================================================}
+
+"Data"
+A_t = 0.5      "tank cross-section [m^2]"
+p_t = 500E3    "tank pressure [Pa] (500 kPa in the original)"
+DELTAh = 30e-3 "drop of the liquid level over one hour [m]"
+p_r = 500E3    "pressure at the heater outlet [Pa] (500 kPa in the original)"
+T_r = 1.85     "temperature at the heater outlet [°C] (275 K in the original)"
+DELTAt = 3600  "duration of the observation [s] (one hour)"
+
+"!Mass of methane evaporated over one hour"
+{Use the real-fluid 'methane' (EES/CoolProp), not 'CH4', which is treated as
+ an ideal gas.}
+v_l = volume(methane,P=p_t,x=0)    "specific volume of the saturated liquid in the tank [m^3/kg]"
+V_evap = A_t*DELTAh                "volume of liquid evaporated [m^3]"
+m_evap = V_evap/v_l                "mass of methane evaporated [kg]"
+
+"!Volumetric flow rate at the heater outlet"
+v_g = volume(methane,P=p_r,T=T_r)  "specific volume of the vapour at the heater outlet [m^3/kg]"
+V_gaz = v_g*m_evap                 "volume of gas produced over DELTAt [m^3]"
+q_v = V_gaz/DELTAt                 "volumetric flow rate at the heater outlet [m^3/s]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: saturated liquid in the tank, 2: saturated vapour leaving the tank,
+ 3: vapour at the heater outlet. Use the arrays h[i]/P[i] or T[i]/s[i] with
+ the "Overlay array path" option of the CoolSolve Diagram tab.}
+P[1] = p_t
+h[1] = enthalpy(methane,P=p_t,x=0)
+T[1] = temperature(methane,P=p_t,x=0)
+s[1] = entropy(methane,P=p_t,x=0)
+P[2] = p_t
+h[2] = enthalpy(methane,P=p_t,x=1)
+T[2] = temperature(methane,P=p_t,x=1)
+s[2] = entropy(methane,P=p_t,x=1)
+P[3] = p_r
+h[3] = enthalpy(methane,P=p_r,T=T_r)
+T[3] = T_r
+s[3] = entropy(methane,P=p_r,T=T_r)

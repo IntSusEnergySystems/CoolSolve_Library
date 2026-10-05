@@ -1,0 +1,70 @@
+{
+  "id": "CSL-0009",
+  "name": "dhw_tank_dynamic",
+  "title": "Domestic hot-water storage tank: dynamic temperature evolution",
+  "summary": "Transient energy balance of a fully mixed 500 L domestic hot-water tank over a 5-hour scenario (10 kW heater for 1 h, cooldown, 2 h tap draw with 12 C make-up water, ambient losses), integrated with INTEGRAL and a 1-s step.",
+  "kind": "dynamic",
+  "level": 1,
+  "status": "blocked",
+  "main_file": "dhw_tank_dynamic.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "domestic hot water",
+    "storage tank",
+    "thermal storage",
+    "dynamic",
+    "time integration",
+    "exercise"
+  ],
+  "language_features": [
+    "INTEGRAL",
+    "$IntegralTable",
+    "if (EES 5-argument)",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 20,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R3/R3_E3_2022.EES",
+    "candidate_id": "TM-0413",
+    "authors": [
+      "N. Paulus (ULiège, repetition assistant, per the source inventory)",
+      "B. Dechesne (ULiège, repetition assistant, per the source inventory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "MECA0002-1 Thermodynamique appliquée et introduction aux machines thermiques (ULiège), repetition 3, exercise 3"
+  },
+  "verification": {
+    "reference": "Integral table stored in the source EES file (18 001 rows at 1 s, decoded from the embedded plot data): tank trajectory compared point by point with the runnable variant",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0",
+    "max_rel_diff": 6.1e-05,
+    "notes": "Variant vs EES over all 18 001 points: T_tank max 3.1e-5, dU/dtau and Q_dot_amb max 6.1e-5, schedules exact; final T 39.4397 vs 39.4409 C. M_tank and v_tank agree with the EES stored solution to 10 digits."
+  },
+  "missing_features": [
+    "CS-GAP-IF5",
+    "CS-GAP-INTEGRAL-LIMITS",
+    "CS-BUG-INTEGRAL-TABLE-SEP",
+    "CS-BUG-INTEGRAL-MAXSTEPS"
+  ],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (first dynamic model of the library, roadmap card C-08)",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    }
+  ]
+}
