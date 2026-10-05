@@ -149,7 +149,8 @@ existing library). `tools/build_index.py` rejects source files and
    `SI MASS DEG PA C J`: every input value, every equation, every constant, the
    tables and the guesses, following CoolSolve `docs/ees_import.md` §6; verify
    again with `compare_solution.py … --ees-units`. Never rely on the
-   `$UnitSystem` directive or on automatic scaling.
+   `$UnitSystem` directive or on automatic scaling, and delete the directive
+   (CoolSolve has a single unit system, SI-°C-Pa-J).
 5. **Curate** (each change logged in the README conversion log):
    standard header (`templates/model/header.eescode`), comments in English,
    corrections of genuine errors (with their impact on the results), removal
@@ -291,7 +292,7 @@ contains the state-point arrays (§3, step 5). This procedure was tested on
       `.eescode` file — **no source file, no `original/` or `reference/` folder**
 - [ ] Source referenced in `model.json` (`~/…` path, URL or library name); authors
       found in the file or `TBD`
-- [ ] Header, English comments, `$UnitSystem SI MASS DEG PA C J`, units converted
+- [ ] Header, English comments, no `$UnitSystem` directive, units converted
       by hand when needed
 - [ ] Status set and justified: verification table (`verified`), sanity checks
       (`runs`), list of changes (`modified`), gap IDs (`blocked`), diagnosis
@@ -303,7 +304,8 @@ contains the state-point arrays (§3, step 5). This procedure was tested on
 
 ## 9. Style guide for `.eescode` files
 
-- First line `$UnitSystem SI MASS DEG PA C J`, then the header block.
+- No `$UnitSystem` directive: CoolSolve has a single unit system (SI mass basis,
+  °C, Pa, J, degrees for trigonometry); the file starts with the header block.
 - Section titles as displayed comments: `"!Compressor model"`.
 - One equation per line; explanation and units in a trailing comment:
   `W_dot = W_dot_loss_0 + (1 + alpha)*W_dot_in   "electrical power [W]"`.

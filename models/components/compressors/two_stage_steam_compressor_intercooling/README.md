@@ -152,8 +152,8 @@ conversion log).
   comments), the two `INTEGRAL` steps 1 kPa → 1000 Pa, all energies/entropies
   now in J (property calls unchanged; balances homogeneous), `100[%]` kept as
   the literal 100. No absolute-temperature relation needed conversion except
-  the existing `(T_in + 273.15)` of the Clausius heat. `$UnitSystem` line set
-  to `SI MASS DEG PA C J`. Comments translated to English; standard header
+  the existing `(T_in + 273.15)` of the Clausius heat. `$UnitSystem` line
+  removed (CoolSolve has a single unit system). Comments translated to English; standard header
   added. Stored solution present (35 variables) → used as verification
   reference. Candidate `TM-0101` (primary of card C-09) was inspected and
   rejected for this card: it is a cooling-tower model (AirH2O, category

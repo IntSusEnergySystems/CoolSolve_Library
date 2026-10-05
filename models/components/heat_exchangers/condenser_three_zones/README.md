@@ -152,7 +152,7 @@ model (its `.initials` were used to start the crossflow variant).
 - **2026-10-05 — import** (`tools/ees_extract.py`): decimal comma converted
   to dot by the tool; unit system of the originals `SI MASS RAD PA C J` —
   no trigonometric function is used anywhere in the model, so the RAD → DEG
-  change of the `$UnitSystem` line has no numerical effect; pressures,
+  setting has no numerical effect (the `$UnitSystem` line was then removed, as in all library models); pressures,
   temperatures and energies were already Pa / °C / J, no other conversion
   needed. EES licence tag removed. Standard header added, comments kept in
   English, phone/fax/postal address of the original header dropped (kept:
