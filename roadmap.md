@@ -13,72 +13,118 @@ in [docs/taxonomy.md](docs/taxonomy.md).
 
 ## 1. Status at a glance
 
-| Library | Count |
+| Library (2026-10-06, 09:30) | Count |
 |---|---:|
-| Models (B-01 + B-02 + B-03 reviewed, C-38 review 2026-10-05; the B-04 models merged so far are not counted) | 36 |
-| … verified / runs / modified | 29 / 1 / 0 |
-| … blocked / failing / documented only | 6 / 0 / 0 |
-| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md)) | 40 (23 gaps, 15 bugs, 2 doc issues) — recounted at C-38 from the register, incl. the 4 rows registered by B-04 so far |
-| … closed | 9 (3 gaps, 5 bugs, 1 doc issue) — CoolSolve `main` 2026-10-05 |
+| Models (`library.csv`) | 103 |
+| … verified / runs / blocked | 76 / 5 / 22 |
+| … steady / function / dynamic / optimization | 75 / 22 / 5 / 1 |
+| Functions and procedures (`functions.csv`) | 245 |
+| Regression (`test_models.py`, `CSL-0009:coolsolve` excluded) | 105 targets (81 main files + 24 variants), 0 failure |
+| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md) §4–§5) | 69 (41 gaps, 26 bugs, 2 doc issues) |
+| … closed (§7) | 9 (3 gaps, 5 bugs, 1 doc issue) |
+| … unverified suggestions (§8 *Unverified by a reviewer*) | 8 |
 
-| Backlog (source inventories) | Candidates | Distinct | todo | added | merged | discarded | parked |
+| Backlog (source inventories) | Candidates | todo | added | merged | duplicate | discarded | parked |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| ULiège collection `thermo_models` | 552 | 341 | 409 | 25 | 19 (+57 duplicates) | 42 | 0 |
-| CoolSolve examples | 47 | 47 | 8 | 31 | 8 | 0 | 0 |
-| LaboThapPy | 74 | 74 | 73 | 1 | 0 | 0 | 0 |
-| TESPy | 52 | 52 | 51 | 1 | 0 | 0 | 0 |
+| ULiège collection `thermo_models` (+50 files on 2026-10-06) | 602 | 365 | 62 | 34 | 90 | 50 | 1 |
+| CoolSolve examples | 47 | 1 | 33 | 9 | 1 | 3 | 0 |
+| `ht` (Caleb Bell), one row per correlation family | 24 | 7 | 17 | 0 | 0 | 0 | 0 |
+| ThermoCycle | 21 | 2 | 4 | 1 | 0 | 14 | 0 |
+| LaboThapPy | 74 | 73 | 1 | 0 | 0 | 0 | 0 |
+| TESPy | 52 | 51 | 1 | 0 | 0 | 0 | 0 |
 
 The tables count inventory **rows**, not models: a model imported from a
 CoolSolve example and from its EES original in `thermo_models` has two `added`
-rows (`CSL-0017`, `0018`, `0020`–`0023`, `0030`–`0035`, `0041`, `0043`; workflow §2).
-Backlog rows count the B-04 cards merged so far. Regression at the `C-38` review:
-47 targets (34 model main files + 13 variants, B-04 models merged so far
-included), 0 failure.
+rows (workflow §2). Every library model has its `added` row (cross-check of
+2026-10-06).
 
 Priorities of the candidates (wave1 / high / medium / low / skip):
-`thermo_models` 38 / 37 / 142 / 241 / 94 · CoolSolve examples 12 / 24 / 7 / 0 / 3 ·
-LaboThapPy 9 / 8 / 17 / 26 / 14 · TESPy 8 / 8 / 23 / 13 / 0.
+`thermo_models` 38 / 37 / 154 / 268 / 105 · CoolSolve examples 12 / 24 / 7 / 0 / 3 ·
+`ht` 4 / 9 / 8 / 3 / 0 · ThermoCycle 1 / 1 / 2 / 3 / 14 · LaboThapPy 9 / 8 / 17 / 26 / 14 ·
+TESPy 8 / 8 / 23 / 13 / 0.
 
 Refresh with `python3 tools/build_index.py` (models) and
 `python3 tools/backlog_stats.py` (candidates).
 
-### Where to resume (handover, 2026-10-05, 15:30)
+### Where to resume (handover, 2026-10-06, 09:30)
 
-- **State:** B-01 (`C-01`…`C-14`) and B-02 (`C-15`…`C-25`) are closed by their
-  review cards; B-03 (`C-26`…`C-37`) is closed by its review `C-38` (2026-10-05); B-04
-  (`C-39`…`C-45`, the last CoolSolve examples) is in progress, then its review
-  `C-46` closes Phase 3A. Next: B-05, the first Phase 3B batch (ULiège
-  collection, *thermodynamique appliquée* first). 41 models at 15:30.
-- **Lanes:** since B-02 the cards run in parallel isolated lanes, one per worker
-  model (`~/git/csl-lanes/<lane>`: a copy of the library + a CoolSolve folder of
-  symlinks with a private `docs/`), merged 3-way into the main trees by
-  `~/llm/scripts/csl/csl.py merge` (roadmap.md and generated index files are never
-  merged from a lane; stray files outside the library folders are ignored). IDs
-  are pre-assigned in the card lines (`— CSL-xxxx`). Worker models used:
-  opencode `muse-spark-1.3` (free; fastest, 3–8 min per card; free quota exhausted
-  after ≈ 2 h), `space-bunny` (free; 15–35 min, thorough but over-reaches), z.ai
-  `glm-5.3-flash` (10–35 min). Comparison: `~/Nextcloud/llm/opencode-model-comparison.md`.
+- **State:** B-01 … B-08 are closed (B-07 and B-08 by the light scripted reviews
+  `C-87`, `C-94` of 2026-10-06). In progress:
+  - **B-09** (`ht` correlations): 17 of 24 families translated and verified against
+    `ht` 1.2.0 (`C-96` … `C-113` except `C-100`); open `C-100`, `C-114` … `C-119`, then
+    the light review `C-120`. Pattern to follow: `CSL-0087`
+    (`models/heat_transfer/convection/internal_turbulent_nusselt`).
+  - **B-10** (files added to the ULiège collection on 2026-10-06): triage `C-121`
+    done, `C-131` added; open `C-122` … `C-130`, `C-132` … `C-135` (`C-129` back in
+    the queue after a rejected attempt), then `C-136`.
+- **Work interrupted** by the maintainer on 2026-10-06 at about 09:00: every
+  usable free worker had exhausted its opencode free quota. No task is running and
+  the supervisor is stopped (`python3 ~/llm/scripts/oc-orch.py up` to restart it;
+  `down --server` also stops the opencode server). Partial attempts are archived in
+  `~/git/csl-lanes/_results/` (`C-100_bunny_t115`, `C-122_mimo_t99`: no model folder
+  yet — restart these cards from scratch).
+- **Worker models, in order of priority** (details, benchmark and lessons:
+  `~/Nextcloud/llm/opencode-model-comparison.md`):
+  1. z.ai `glm-5.3-flash` — main worker; weekly z.ai limit until **2026-10-07 09:25
+     CEST** (15:25 UTC+8);
+  2. opencode `space-bunny-free` — best free worker (`ht` cards in 6–30 min, honest
+     verification); check its gap claims (C-85: two invalid gaps) and its inventory
+     edits;
+  3. opencode `mimo-v2.6-flash-free`, `longcat-2.5-preview-free`,
+     `ling-3.1-flash-free` — qualified by the C-10 benchmark (exact reproduction of
+     `CSL-0011`); good quality but free quota throttled hard (6–18 limit pauses a
+     night);
+  4. opencode `muse-spark-1.3-contributor-free` — fast and faithful, but its free
+     quota has been exhausted since 2026-10-05 13:00 (probe before use).
+  Not to be used: `nemotron-3-ultra-free` (fabricated a model),
+  `nemotron-3.5-lightning-free` (overwrote an inventory, injected stored values as
+  equations, false gap), `fledge-alpha-free` (not available in this country),
+  `ling-3.0-flash-fin-free` (endpoint unavailable). A new model runs the C-10
+  benchmark first (`csl.py dispatch <lane> C-10 "<C-10 line>" --id CSL-0011
+  --extra-file bench_c10_extra.txt --prep bench_c10_prep.sh`, scored by
+  `~/llm/scripts/csl/bench_score.py`).
+- **Lanes:** the cards run in parallel isolated lanes, one per worker model
+  (`~/git/csl-lanes/<lane>`: a copy of the library + a CoolSolve folder of symlinks
+  with a private `docs/`), merged 3-way into the main trees by
+  `~/llm/scripts/csl/csl.py merge`. `roadmap.md` and the generated index files are
+  never merged from a lane; stray files outside the library folders are ignored;
+  **source inventories are merged row by row** (only the rows a worker changed; row
+  deletions and decision resets to `todo` are ignored and logged — workers rewrote
+  whole inventories from stale copies three times). IDs are pre-assigned in the card
+  lines (`— CSL-xxxx`; next free: `CSL-0125`). Next card number: `C-137`.
+- **Orchestrator checks per card:** `csl.py check <lane>` (folder, build_index,
+  test_models, files changed); for imports of the ULiège collection by a less
+  trusted worker, `~/llm/scripts/csl/src_check.py TM-xxxx <folder>` (equation
+  overlap with the extracted EES source + `compare_solution.py` summary). Reject a
+  new register row whose reproducer is not valid EES (an over- or under-determined
+  system is rejected by EES too) and move unconfirmed claims to §8 of the register.
 - **Pending CoolSolve suggestions** not in the register (unverified gaps, fixes
-  of CoolSolve examples found during imports): `~/Nextcloud/llm/csl-coolsolve-pending.md`.
-- **Repository state:** everything up to `C-09` is committed (`d102799`,
-  `0c2597f`, `6dbd578`); the cards since are in the working tree, for the
-  maintainer to review and commit; `work/` is empty.
-- **CoolSolve:** use the `main` build `../CoolSolve/build/coolsolve`. Native
-  files still blocked, with the gaps to close: `CSL-0009` (`CS-GAP-IF5`,
-  `CS-GAP-INTEGRAL-LIMITS`, `CS-BUG-INTEGRAL-TABLE-SEP`,
-  `CS-BUG-INTEGRAL-MAXSTEPS`), `CSL-0010` (`CS-GAP-INTEGRAL-LIMITS`,
-  `CS-BUG-INTEGRAL-FACTOR`), `CSL-0011` (`CS-GAP-INTERP-EES`,
-  `CS-GAP-INCLUDE`), `CSL-0012` (`CS-GAP-IF-DIRECTIVE`, `CS-GAP-LOOKUPROW`,
-  `CS-BUG-LOOKUP-STRING`), `CSL-0028` (`CS-GAP-PSYCHRO-SAT`), `CSL-0035`
-  (`CS-GAP-INTERP-EES`, `CS-GAP-INTERP-EXTRAP`); those of B-04 are listed by its
-  review. After a CoolSolve release: `T-RECHECK` (workflow §6).
-- **Regression:** `python3 tools/test_models.py --coolsolve ../CoolSolve/build/coolsolve`
-  solves the main file of every runnable model **and every variant that has a
-  `.sol` next to it**, reported as `CSL-xxxx:variant` — so the runnable
-  variants of the blocked models (`CSL-0009`…`0012`) and the variants of
-  verified ones are covered (30 targets at C-14: 21 main files + 9 variants; 34 at C-25: 24 + 10; 47 at C-38: 34 + 13; all OK). It takes
-  about 4 min, 3 of them for `CSL-0009:coolsolve` (18 000 integration steps):
-  `--no-variants` or `--exclude CSL-0009:coolsolve` for a quick run.
+  of CoolSolve examples found during imports): §8 *Unverified by a reviewer* of the
+  register `~/git/CoolSolve/docs/model_library_support.md` (the orchestrator adds the
+  worker suggestions it cannot confirm there). Notable bugs registered this run, all
+  reproduced: `CS-BUG-PI-FUNCTION` (**`pi` = 1 inside a FUNCTION/PROCEDURE body,
+  silent**), `CS-BUG-COMMON-PROC` (`$COMMON` variables read as 0),
+  `CS-BUG-NO-SOL-DELETE` (`--no-sol` deletes the `.sol` baseline),
+  `CS-BUG-TINY-VALUE`; new gaps `CS-GAP-PROP-SV`, `CS-GAP-INTEGRALVALUE`,
+  `CS-GAP-GOTO`, `CS-GAP-FLUIDS-C8H18`.
+- **Repository state:** the maintainer's last commit is `d44eb6a`; the cards merged
+  since are in the working tree, to review and commit; `work/` is empty.
+- **CoolSolve:** use the `main` build `~/git/CoolSolve/build/coolsolve` (`536d427`;
+  `docs/` modified by the register rows of this run, to commit in CoolSolve). Native
+  files blocked by CoolSolve gaps: the `blocked` rows of `library.csv` (22), each with
+  its `missing_features`; most have a verified `_coolsolve` variant. After a CoolSolve
+  release: `T-RECHECK` (workflow §6).
+- **Regression:** `python3 tools/test_models.py --coolsolve ~/git/CoolSolve/build/coolsolve`
+  (absolute path: the tool runs CoolSolve from each model folder) solves the main file
+  of every runnable model **and every variant that has a `.sol` next to it**
+  (`CSL-xxxx:variant`). `--exclude CSL-0009:coolsolve` (18 000 integration steps, 3 min)
+  for a quick run: 105 targets, 0 failure on 2026-10-06.
+- **For the maintainer:** `solar/SETP.LIB` (TM-0591, textbook code of *Solar
+  Engineering of Thermal Processes*) is `parked` — publication/licence question;
+  pipe friction and two-phase pressure drop are not in `ht` but in its companion
+  library [`fluids`](https://github.com/CalebBell/fluids) — clone and triage it if
+  wanted; authors still `TBD` in a few models; figures to make (`build_index.py` lists
+  them); the taxonomy recommendations at M1 (P6.2).
 - **Decisions of the C-14 review** (workflow updated): (1) variants get a
   regression baseline from their sibling `.sol` (workflow §6); (2) the
   `$UnitSystem` line of `ees_extract.py` and `CS-GAP-UNITSYSTEM` as an error:
@@ -87,11 +133,9 @@ Refresh with `python3 tools/build_index.py` (models) and
   `tools/backlog_stats.py` now reports malformed inventory rows (an unquoted
   comma in a `notes` cell shifts `decision`/`library_id`; nine rows of B-01/B-02
   were repaired).
-- **For the maintainer:** authors still `TBD` (`CSL-0003`, `CSL-0004`; the
-  assistants named in `CSL-0009`/`CSL-0010` come from the inventory, not from
-  the files — same course, choose one policy); figures to make
-  (`build_index.py` lists them); the pending list of unverified gap suggestions
-  (Phase 5); the taxonomy recommendations at M1 (P6.2).
+- **Earlier maintainer items (still open):** authors `TBD` in `CSL-0003`,
+  `CSL-0004`, `CSL-0035` (the assistants named in `CSL-0009`/`CSL-0010` come from
+  the inventory, not from the files — same course, choose one policy).
 - **Open items of the C-38 review (B-03):** (`CSL-0036`, rearranged by its
   worker, was reworked to the original equations after the review, see §8.) `CSL-0034`: whether EES accepts a
   multi-output `PROCEDURE` in function position (`cpbar`) stays an unverified
@@ -100,11 +144,16 @@ Refresh with `python3 tools/build_index.py` (models) and
   `TBD` for `CSL-0035` too.
 - **How the batches were executed:** one card per worker, one worker at a time
   in B-01, then parallel lanes (see *Lanes*; the orchestrator merges, ticks the
-  cards and writes §8; review cards by Claude Sonnet agents), by an
-  orchestrating Claude Code session dispatching to opencode workers
-  (maintainer's local set-up: skill `~/llm/skill-opencode-orchestrator.md`,
-  helpers `~/llm/scripts/csl/`). A card takes 5–20 min. Any worker (person or
-  agent) can instead take the next card with the prompt of §7.
+  cards and writes §8), by an orchestrating Claude Code session dispatching to
+  opencode workers (maintainer's local set-up: skill
+  `~/llm/skill-opencode-orchestrator.md`, helpers `~/llm/scripts/csl/`, see their
+  README). Review cards were Claude Sonnet agents up to B-04; since B-05 they are
+  light scripted reviews by the orchestrator (build_index, test_models,
+  backlog_stats, inventory cross-check, spot checks); Claude agents only for an
+  obvious problem or an A/B comparison of two workers, and new sources are explored
+  by opencode workers (T-TRIAGE cards), not by Claude. A card takes 5–30 min of
+  worker time. Any worker (person or agent) can instead take the next card with the
+  prompt of §7.
 
 ---
 
@@ -369,7 +418,7 @@ Open questions (from the `C-14` review, for the maintainer):
 
 ## 6. Batches
 
-### B-01 — Pilot wave (Phase 2) 🔄
+### B-01 — Pilot wave (Phase 2) ✅
 
 
 ```
@@ -389,7 +438,7 @@ Open questions (from the `C-14` review, for the maintainer):
 [x] C-14  T-REVIEW     B-01                                                                                              — update workflow/templates/tools, taxonomy check (M1)
 ```
 
-### B-02 — CoolSolve examples, first production batch (Phase 3A) 🔄
+### B-02 — CoolSolve examples, first production batch (Phase 3A) ✅
 
 Prepared 2026-10-05 from `python3 tools/backlog_stats.py --next coolsolve_examples 12` (wave1 and high,
 steady first). Each card follows the C-01 pattern: the CoolSolve example plus its EES original in
@@ -410,7 +459,7 @@ the `thermo_models` inventory (cross-source map P1.8). IDs are pre-assigned beca
 [x] C-25  T-REVIEW     B-02                                                                                      — checks, diffs, §1, workflow/templates; model comparison update
 ```
 
-### B-03 — CoolSolve examples, second production batch (Phase 3A) ☐
+### B-03 — CoolSolve examples, second production batch (Phase 3A) ✅
 
 Prepared 2026-10-05 (`backlog_stats.py --next coolsolve_examples 20`): the remaining level 1–3 steady
 examples; same notes as B-02. Left for B-04: CSX-023 and CSX-006 (dynamic), CSX-019 (MODULE), CSX-028,
@@ -432,7 +481,7 @@ CSX-029, CSX-047 (level 3–4), CSX-046 (LiBr-water).
 [x] C-38  T-REVIEW     B-03                                                                                      — checks, diffs, §1, workflow; plan B-04 (remaining examples: dynamic, L3–L4, absorption)
 ```
 
-### B-04 — CoolSolve examples, last batch (Phase 3A) ☐
+### B-04 — CoolSolve examples, last batch (Phase 3A) ✅
 
 Prepared 2026-10-05: the remaining CoolSolve examples (dynamic, levels 3–4, MODULE, absorption);
 same notes as B-02. C-39 is the first application of decision D10 (MODULE flattened).
@@ -448,7 +497,7 @@ same notes as B-02. C-39 is the first application of decision D10 (MODULE flatte
 [x] C-46  T-REVIEW     B-04                                                                                      — checks, diffs, §1; close Phase 3A (all CoolSolve examples triaged); plan Phase 3B
 ```
 
-### B-05 — ULiège collection, *thermodynamique appliquée* (Phase 3B) ☐
+### B-05 — ULiège collection, *thermodynamique appliquée* (Phase 3B) ✅
 
 Prepared 2026-10-05: the wave1 candidates of the sub-folder plus two high ones (inventory filter:
 path `thermodynamique appliquee/…`, representative, `todo`). Most files are in kPa/kJ (hand conversion, D5);
@@ -471,7 +520,7 @@ the course's Python/CoolProp solutions are extra verification references (P6.5).
 [x] C-59  T-REVIEW     B-05                                                                                      — checks, diffs, §1, unit conversions, use of the Python references; plan B-06
 ```
 
-### B-06 — *thermodynamique appliquée* (high) and the last CoolSolve examples (Phase 3B/3A) ☐
+### B-06 — *thermodynamique appliquée* (high) and the last CoolSolve examples (Phase 3B/3A) ✅
 
 Prepared 2026-10-05: the high-priority candidates left in *thermodynamique appliquée* (notes as B-05) and
 three CoolSolve examples left `todo` by C-46 (notes as B-02; CSX-033 `orc_solar_complex` goes to Phase 4C).
@@ -494,7 +543,7 @@ three CoolSolve examples left `todo` by C-46 (notes as B-02; CSX-033 `orc_solar_
 [x] C-74  T-REVIEW     B-06                                                                                      — light scripted review (orchestrator)
 ```
 
-### B-07 — ULiège model data bank (Phase 3B) ☐
+### B-07 — ULiège model data bank (Phase 3B) ✅
 
 Prepared 2026-10-05: the wave1 candidates of `Model data bank` (reference RefSim/ParamID component
 models), plus TM-0472 and the BrineProp function library (P1.9). Worker notes: `~/llm/scripts/csl/b07_extra.txt`.
@@ -513,10 +562,10 @@ models), plus TM-0472 and the BrineProp function library (P1.9). Worker notes: `
 [x] C-85  T-IMPORT     TM-0494                          → components/boilers_burners/                         — condensing boiler reference model, five-step combustion (L3; Phase 4C) — CSL-0080
 [x] C-86  T-IMPORT     TM-0490                          → components/heat_exchangers/                         — vertical ground-loop heat exchanger (borefield), dynamic (L3; Phase 4A) — CSL-0081
 [x] C-88  T-RECHECK    CSL-0061, CSL-0068 (decision D11)  → (in place)                                          — rewrite the (T, H) property calls with (P, H) in the main file, drop the native/variant split, re-verify
-[ ] C-87  T-REVIEW     B-07                                                                                      — light scripted review (orchestrator)
+[x] C-87  T-REVIEW     B-07                                                                                      — light scripted review (orchestrator)
 ```
 
-### B-08 — ThermoCycle translations (Phase 3E-like) ☐
+### B-08 — ThermoCycle translations (Phase 3E-like) ✅
 
 Prepared 2026-10-05 from the ThermoCycle triage (`sources/thermocycle/`, Claude Sonnet): dynamic models and
 infrastructure excluded; the five steady-state cards that bring something new. No reference results are stored in the
@@ -525,14 +574,14 @@ correct and document are listed in `sources/thermocycle/README.md` §8. Worker n
 
 ```
 [x] C-89  T-TRANSLATE  THC-001  → renewables/solar_thermal/parabolic_trough_receiver_forristal    — steady 1D radial receiver balance (glass, vacuum annulus, wind, sky); verify vs NREL/TP-550-34169, PTR70 heat-loss test, energy-balance closure — CSL-0082
-[ ] C-90  T-FUNC       THC-002  → renewables/solar_thermal/parabolic_trough_loss_correlations     — Schott PTR70, Sopogy, Soltigua efficiency fits (with LTP-050/LTP-020); verify vs NREL report, datasheets, C-89 — CSL-0083
+[x] C-90  T-FUNC       THC-002  → renewables/solar_thermal/parabolic_trough_loss_correlations     — Schott PTR70, Sopogy, Soltigua efficiency fits (with LTP-050/LTP-020); verify vs NREL report, datasheets, C-89 — CSL-0083
 [x] C-91  T-FUNC       THC-003  → components/expanders_turbines/orc_expander_pump_empirical_maps  — isentropic-efficiency and filling-factor maps (hermetic scroll, open-drive scroll, screw) and pump curves, small ORC demo; verify by Python/CoolProp re-evaluation — CSL-0084
 [x] C-92  T-FUNC       THC-004  → heat_transfer/convection/flow_boiling_htc_shah_gungor_cooper    — Shah 1982, Gungor-Winterton, Cooper (after LTP-034/035); verify vs the original papers, Python/CoolProp — CSL-0085  **superseded by C-107** (ht HT-012 is more complete; C-107 adds Shah 1982 / Gungor-Winterton / Cooper from THC-004 if ht lacks them)
 [x] C-93  T-FUNC       THC-005  → heat_transfer/convection/in_cylinder_htc_correlations           — Annand, Woschni, Adair, Destoop, Irimescu, Kornhauser (low priority; DTU copyright of the source package to check); verify vs papers, Python — CSL-0086
-[ ] C-94  T-REVIEW     B-08                                                                                      — light scripted review (orchestrator)
+[x] C-94  T-REVIEW     B-08                                                                                      — light scripted review (orchestrator)
 ```
 
-### B-09 — Heat-transfer and pressure-drop correlations from `ht` (Caleb Bell) ☐
+### B-09 — Heat-transfer and pressure-drop correlations from `ht` (Caleb Bell) 🔄
 
 Maintainer request (2026-10-05): import all the correlations of the Python library
 [`ht`](https://github.com/CalebBell/ht) (C. Bell, MIT; local clone `~/git/ht`, commit `85e0ee6`) — convection,
@@ -588,7 +637,7 @@ family); the translation cards C-96…C-119 come from its result (2026-10-05: 24
 
 ---
 
-### B-10 — New files in the ULiège collection (2026-10-06) ☐
+### B-10 — New files in the ULiège collection (2026-10-06) 🔄
 
 The maintainer added EES files to `~/Nextcloud/thermo_models` (2026-10-06). `sweep.py` now keeps the TM/DG IDs stable
 (a path already inventoried keeps its ID, existing rows are kept as they are, new files are appended): 50 new rows
@@ -807,3 +856,7 @@ and adds the log line in §8.
 | 2026-10-06 | C-111 `CSL-0102` | Added *hx_temperature_effectiveness_pntu* (ht HT-016: 15 P-NTU / TEMA temperature-effectiveness functions and inverse NTU(P)) — verified vs ht 1.2.0 (81/81); three unverified CoolSolve suggestions in the README (ELSEIF silently wrong, recursive FUNCTION crash, function unreliable with variable arguments); worker space-bunny (31 min) |
 | 2026-10-06 | C-112 `CSL-0103` | Added *tube_bank_dp_bell_delaware* (ht HT-017: shell-side ΔP Kern, Zukauskas + Bell-Delaware Jc/Jl/Jb/Js/Jr; one ht B-spline reproduced exactly, Jl/Jb in the HEDH closed forms, bivariate digitised splines documented as not translated) — verified vs ht 1.2.0 (23/23); worker space-bunny (15 min) |
 | 2026-10-06 | C-113 `CSL-0104` | Added *supercritical_internal_nu* (ht HT-018: 18 near-supercritical internal-convection correlations) — verified vs ht 1.2.0 (71/71); worker space-bunny (15 min) |
+| 2026-10-06 | C-90 `CSL-0083` | Added *parabolic_trough_loss_correlations* (ThermoCycle THC-002: Schott PTR70, Sopogy, Soltigua receiver/collector loss fits) — verified vs an independent Python re-evaluation from the .mo sources (34/34) and the published values; worker longcat-2.5-preview (stopped by the free-usage limit before its final report; result checked and merged by the orchestrator) |
+| 2026-10-06 | C-87 review B-07 | Light scripted review (orchestrator): build_index 103 models / 245 functions / 0 errors; test_models 105 targets (81 main files + 24 variants), 0 failure (CSL-0009:coolsolve excluded); inventories cross-checked against the library (every model has its added row, after repairing the ht/thermocycle rows reset by workers); invalid gap rows of C-85 rejected; B-07 closed |
+| 2026-10-06 | C-94 review B-08 | Light scripted review (orchestrator): same checks as C-87; B-08 closed (C-89…C-91, C-93 added; C-92 folded into C-107); every translation verified against an independent Python re-implementation of the Modelica sources |
+| 2026-10-06 | handover | Work interrupted by the maintainer (all usable free opencode quotas exhausted; GLM weekly limit until 2026-10-07). Free-model benchmark (C-10 re-run): mimo-v2.6-flash, longcat-2.5-preview, ling-3.1-flash qualified; nemotron-3-ultra, nemotron-3.5-lightning rejected; fledge-alpha, ling-3.0-flash-fin unavailable. Repairs: `sweep.py` made ID-stable (+50 rows TM-0553…0602); `ht`/ThermoCycle inventory decisions reset by workers restored (22 rows) and `csl.py merge` now merges inventories row by row; thermo_models inventory restored after a worker rewrote it (C-131). CoolSolve pending suggestions moved to §8 of the register. 103 models, 245 functions, regression 105/105 |

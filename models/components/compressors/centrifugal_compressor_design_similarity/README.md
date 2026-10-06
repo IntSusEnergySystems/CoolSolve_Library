@@ -248,7 +248,7 @@ CoolSolve repository as a test case.
   look, but no register row was added for it here: the CoolSolve behaviour is
   reproduced, yet nothing shows that EES converges from the same guesses, so it
   is listed as an unverified suggestion in
-  `~/Nextcloud/llm/csl-coolsolve-pending.md` rather than in the register.
+  §8 (*Unverified by a reviewer*) of `CoolSolve/docs/model_library_support.md` rather than in the register.
 
 ## Related models
 

@@ -1,10 +1,10 @@
 {
  "snapshot": {
-  "content_hash": "sha256:90135fbfb79f66c1",
-  "files": 518,
-  "bytes": 4967515,
-  "models": 102,
-  "functions": 239,
+  "content_hash": "sha256:b1a0157bfb9bd0fa",
+  "files": 522,
+  "bytes": 5001934,
+  "models": 103,
+  "functions": 245,
   "taxonomy_version": "0.2"
  },
  "models": [
@@ -2755,11 +2755,38 @@
    "license": "MIT",
    "url": "https://github.com/thermocycle/Thermocycle-library",
    "missing_features": "",
-   "related": "",
+   "related": "CSL-0083",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
    "path": "models/renewables/solar_thermal/parabolic_trough_receiver_forristal",
    "main_file": "parabolic_trough_receiver_forristal.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0083",
+   "name": "parabolic_trough_loss_correlations",
+   "title": "Parabolic-trough receiver and collector heat-loss correlations (Schott PTR70, Sopogy, Soltigua)",
+   "category": "renewables/solar_thermal",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Function library of the empirical heat-loss and efficiency correlations of the ThermoCycle solar absorber models: the Schott PTR70 receiver heat-loss correlation (NREL/TP-550-45633) with the vacuum, lost-vacuum, hydrogen and Sopogy Soponova coefficient records, the optical/thermal efficiency chain of the same receiver, and the Soltigua PTMx collector efficiency fit with its cubic longitudinal incidence-angle modifier; a demonstration program verifies them against the NREL test data, the Soltigua datasheet and an independent Python re-evaluation.",
+   "fluids": "",
+   "tags": "parabolic trough;solar thermal;heat loss;empirical correlation;incidence angle modifier;datasheet coefficients;function library;translation",
+   "n_equations": 134,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "thermocycle",
+   "source_path": "~/git/Thermocycle-library/ThermoCycle/Components/HeatFlow/Walls/SolarAbsorber/AbsSchottSopo.mo;ThermoCycle/Components/HeatFlow/Walls/SolarAbsorber/AbsSoltigua.mo;ThermoCycle/Components/HeatFlow/Walls/SolarAbsorber/Geometry/Schott_SopoNova/*.mo;ThermoCycle/Components/HeatFlow/Walls/SolarAbsorber/Geometry/Soltigua/*.mo, commit b4f16c0b",
+   "authors": "Adriano Desideri (ULiège Thermodynamics Laboratory); Sylvain Quoilin (ULiège Thermodynamics Laboratory)",
+   "license": "MIT",
+   "url": "https://github.com/thermocycle/Thermocycle-library",
+   "missing_features": "",
+   "related": "CSL-0082",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/renewables/solar_thermal/parabolic_trough_loss_correlations",
+   "main_file": "parabolic_trough_loss_correlations.eescode",
    "figures": 0
   }
  ],
@@ -3036,6 +3063,34 @@
    "signature": "(tube_diameter, fin_diameter, fin_thickness, k_fin, h)",
    "model_id": "CSL-0099",
    "path": "models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode"
+  },
+  {
+   "function": "eta_opt_ptr70",
+   "type": "FUNCTION",
+   "signature": "(Theta, rho_cl, eps6)",
+   "model_id": "CSL-0083",
+   "path": "models/renewables/solar_thermal/parabolic_trough_loss_correlations/parabolic_trough_loss_correlations.eescode"
+  },
+  {
+   "function": "eta_opt_t_ptr70",
+   "type": "FUNCTION",
+   "signature": "(Theta, rho_cl, Alpha_t, tau_g, eps6)",
+   "model_id": "CSL-0083",
+   "path": "models/renewables/solar_thermal/parabolic_trough_loss_correlations/parabolic_trough_loss_correlations.eescode"
+  },
+  {
+   "function": "eta_soltigua",
+   "type": "FUNCTION",
+   "signature": "(T_fluid, T_amb, DNI, K_l)",
+   "model_id": "CSL-0083",
+   "path": "models/renewables/solar_thermal/parabolic_trough_loss_correlations/parabolic_trough_loss_correlations.eescode"
+  },
+  {
+   "function": "eta_th_ptr70",
+   "type": "FUNCTION",
+   "signature": "(HL, L, Q_tube_tot)",
+   "model_id": "CSL-0083",
+   "path": "models/renewables/solar_thermal/parabolic_trough_loss_correlations/parabolic_trough_loss_correlations.eescode"
   },
   {
    "function": "fd_Martin_1999",
@@ -3416,11 +3471,25 @@
    "path": "models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode"
   },
   {
+   "function": "heat_loss_ptr70",
+   "type": "FUNCTION",
+   "signature": "(T_fluid, T_amb, DNI, v_wind, Theta, A0, A1, A2, A3, A4, A5, A6)",
+   "model_id": "CSL-0083",
+   "path": "models/renewables/solar_thermal/parabolic_trough_loss_correlations/parabolic_trough_loss_correlations.eescode"
+  },
+  {
    "function": "HydraulicDiameter",
    "type": "FUNCTION",
    "signature": "(A_p, position)",
    "model_id": "CSL-0086",
    "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "iam_soltigua",
+   "type": "FUNCTION",
+   "signature": "(Theta, A_0, A_1, A_2, A_3)",
+   "model_id": "CSL-0083",
+   "path": "models/renewables/solar_thermal/parabolic_trough_loss_correlations/parabolic_trough_loss_correlations.eescode"
   },
   {
    "function": "is",

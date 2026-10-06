@@ -4,7 +4,7 @@
 
 | Models | Verified | Runs | Blocked / failing | Documented only |
 |---:|---:|---:|---:|---:|
-| 102 | 75 | 5 | 22 | 0 |
+| 103 | 76 | 5 | 22 | 0 |
 
 ## Fundamentals
 
@@ -135,6 +135,7 @@
 | ID | Model | Category | Level | Kind | Status |
 |---|---|---|---|---|---|
 | `CSL-0082` | [Parabolic-trough receiver (HCE): steady 1D radial energy balance, Forristal/NREL model](models/renewables/solar_thermal/parabolic_trough_receiver_forristal/README.md) | Solar thermal | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0083` | [Parabolic-trough receiver and collector heat-loss correlations (Schott PTR70, Sopogy, Soltigua)](models/renewables/solar_thermal/parabolic_trough_loss_correlations/README.md) | Solar thermal | 🔵 Level 2 · Intermediate | 🧩 Function library | ✅ Verified |
 
 ## Buildings
 

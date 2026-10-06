@@ -1,0 +1,243 @@
+{=============================================================================
+  Parabolic-trough receiver and collector heat-loss correlations
+  CoolSolve Library model CSL-0083
+ -----------------------------------------------------------------------------
+  Function library: empirical heat-loss and efficiency correlations of
+  parabolic-trough solar receivers and collectors, translated from the
+  ThermoCycle Modelica library (models AbsSchottSopo and AbsSoltigua and their
+  geometry records, commit b4f16c0b):
+
+  - Schott PTR70 receiver heat-loss correlation (fit of F. Burkholder and
+    C. Kutscher, NREL/TP-550-45633, May 2009), with the coefficient records of
+    the vacuum, lost-vacuum and hydrogen cases and of the Sopogy Soponova
+    receiver;
+  - optical efficiency and thermal efficiency of the Schott/Sopogy receiver
+    (same model);
+  - Soltigua PTMx collector efficiency fit (datasheet REV03-04/2013), with the
+    cubic longitudinal incidence-angle modifier of the PTMx-18/24/30/36/100
+    geometry records.
+
+  The demonstration program below calls every function with typical values and
+  checks the results against the published references: the measured heat
+  losses of the NREL PTR70 heat-loss test (Table 3 of the report), the
+  datasheet K_L table and reference conditions of the Soltigua PTMx
+  datasheet, and the independent Soponova correlation of Quoilin et al.
+
+  Inputs : see the demonstration program (every function argument is a
+           correlation input; the coefficient records are passed as arguments
+           as in the replaceable geometry records of the original)
+  Outputs: heat loss per metre of receiver [W/m], optical and thermal
+           efficiency [-], Soltigua collector efficiency [-]
+  Units  : SI - temperatures in degC (the correlations are fitted in degC),
+           DNI in W/m2, wind speed in m/s, incidence angle in deg (the
+           original takes it in rad; rad = deg*pi/180), lengths in m
+  Source : ThermoCycle Modelica library, files
+           ThermoCycle/Components/HeatFlow/Walls/SolarAbsorber/AbsSchottSopo.mo
+           ThermoCycle/Components/HeatFlow/Walls/SolarAbsorber/AbsSoltigua.mo
+           ThermoCycle/Components/HeatFlow/Walls/SolarAbsorber/Geometry/
+           Schott_SopoNova/*.mo and Soltigua/*.mo
+           - original authors S. Quoilin and A. Desideri (ULiege Thermodynamics
+           Laboratory); scientific references NREL/TP-550-45633 and the
+           Soltigua PTMx datasheet - see README.md
+ =============================================================================}
+
+"--- Schott PTR70 / Sopogy Soponova receiver: heat-loss correlation [W/m] ---"
+"Burkholder and Kutscher, NREL/TP-550-45633 (May 2009), Table 6 and Table 8."
+"As in the original, the incidence-angle modifier is the cosine of the"
+"incidence angle (the report's Ib*IAM*cos(theta) term is written"
+"DNI*cos(Theta)); the receiver temperature enters in degC. The coefficient"
+"record selects the receiver case: vacuum, lost vacuum or hydrogen PTR70, or"
+"the Sopogy Soponova receiver (identical to the hydrogen record in the"
+"original, see README). Validity: receiver temperatures of 100-500 degC"
+"(the range of the parametric runs of the report)."
+FUNCTION heat_loss_ptr70(T_fluid, T_amb, DNI, v_wind, Theta, A0, A1, A2, A3, A4, A5, A6)
+  heat_loss_ptr70 = A0 + A1*(T_fluid-T_amb) + A2*T_fluid^2 + A3*T_fluid^3 + A4*DNI*cos(Theta)*T_fluid^2 + sqrt(v_wind)*(A5 + A6*(T_fluid-T_amb))  "heat loss per metre of receiver [W/m]"
+END
+
+"--- Schott PTR70 / Sopogy Soponova receiver: optical efficiency [-] ---"
+"eta_opt = rho_cl*eps6*cos(Theta), as in the original (mirror reflectivity,"
+"unaccounted losses, incidence-angle modifier)."
+FUNCTION eta_opt_ptr70(Theta, rho_cl, eps6)
+  eta_opt_ptr70 = rho_cl*eps6*cos(Theta)  "optical efficiency of the collector [-]"
+END
+
+"--- Schott PTR70 / Sopogy Soponova receiver: optical efficiency of the tube [-] ---"
+"eta_opt_t = Alpha_t*tau_g*eta_opt, as in the original (tube absorptivity,"
+"glass transmissivity)."
+FUNCTION eta_opt_t_ptr70(Theta, rho_cl, Alpha_t, tau_g, eps6)
+  eta_opt_t_ptr70 = Alpha_t*tau_g*rho_cl*eps6*cos(Theta)  "optical efficiency seen by the metal tube [-]"
+END
+
+"--- Schott PTR70 / Sopogy Soponova receiver: thermal efficiency [-] ---"
+"eta_th = Phi_conv_f/Phi_tube_tot = 1 - HL*L/Q_tube_tot, derived from the"
+"fluxes of the original (Phi_loss_tube = HL/(2*pi*rint_t) on the internal"
+"tube surface, Phi_tube_tot = Q_tube_tot/A_int_t, A_int_t = 2*pi*rint_t*L)."
+FUNCTION eta_th_ptr70(HL, L, Q_tube_tot)
+  eta_th_ptr70 = 1 - HL*L/Q_tube_tot  "thermal efficiency of the receiver [-]"
+END
+
+"--- Soltigua PTMx collector: longitudinal incidence-angle modifier [-] ---"
+"Cubic polynomial of the incidence angle in deg, as in the original (the"
+"original converts Theta from rad to deg). Coefficient records of the"
+"PTMx-18/24/30/36/100 geometry models; the sign of the A_2 term is corrected"
+"(the original writes -A_2*Theta^2, which gives K_l > 1 at 10 deg and does"
+"not reproduce the datasheet table - see README)."
+FUNCTION iam_soltigua(Theta, A_0, A_1, A_2, A_3)
+  iam_soltigua = A_3*Theta^3 + A_2*Theta^2 + A_1*Theta + A_0  "longitudinal incidence-angle modifier [-]"
+END
+
+"--- Soltigua PTMx collector: efficiency [-] ---"
+"eta = K_l*0.747 - 0.64*(T_fluid-T_amb)/DNI, Soltigua PTMx datasheet"
+"(REV03-04/2013): peak optical efficiency 0.747, thermal loss coefficient"
+"0.64 W/(m2 K), T_fluid in degC, DNI in W/m2."
+FUNCTION eta_soltigua(T_fluid, T_amb, DNI, K_l)
+  eta_soltigua = K_l*0.747 - 0.64*(T_fluid-T_amb)/DNI  "collector efficiency [-]"
+END
+
+"============================================================================="
+"  Demonstration program: verification against the published reference values"
+"============================================================================="
+
+"--- 1. Schott PTR70 (vacuum) at the NREL heat-loss test conditions ---"
+"T_amb = 23 [C], average ambient temperature of the test stand, NREL Table 3"
+T_amb = 23
+"DNI = 0 [W/m2], heat-loss test without solar input"
+DNI = 0
+"v_wind = 0 [m/s], indoor test stand, still air"
+v_wind = 0
+"Theta = 0 [deg], incidence angle (no effect at DNI = 0)"
+Theta = 0
+"PTR70 vacuum coefficient record, NREL Table 6"
+A0 = 4.05
+A1 = 0.247
+A2 = -1.46E-3
+A3 = 5.65E-6
+A4 = 7.62E-8
+A5 = -1.7
+A6 = 0.0125
+"NREL Table 3, receiver #1: absorber temperature [degC] and measured heat loss [W/m]"
+T_fluid[1] = 100
+HL_meas[1] = 15
+T_fluid[2] = 153
+HL_meas[2] = 23
+T_fluid[3] = 213
+HL_meas[3] = 43
+T_fluid[4] = 246
+HL_meas[4] = 59
+T_fluid[5] = 317
+HL_meas[5] = 113
+T_fluid[6] = 346
+HL_meas[6] = 141
+T_fluid[7] = 390
+HL_meas[7] = 204
+T_fluid[8] = 418
+HL_meas[8] = 257
+T_fluid[9] = 453
+HL_meas[9] = 333
+T_fluid[10] = 458
+HL_meas[10] = 348
+T_fluid[11] = 506
+HL_meas[11] = 495
+"deviation of the correlation from the measured value at each test [W/m]"
+DUPLICATE i = 1,11
+  HL_calc[i] = heat_loss_ptr70(T_fluid[i], T_amb, DNI, v_wind, Theta, A0, A1, A2, A3, A4, A5, A6)  "correlation heat loss [W/m]"
+  dev[i] = HL_calc[i] - HL_meas[i]
+END
+
+"--- 2. Coefficient records at a typical operating point ---"
+"T_fluid_2 = 350 [C], receiver temperature"
+T_fluid_2 = 350
+"T_amb_2 = 30 [C], ambient temperature"
+T_amb_2 = 30
+"DNI_2 = 950 [W/m2], direct normal irradiance"
+DNI_2 = 950
+"v_wind_2 = 2 [m/s], wind speed"
+v_wind_2 = 2
+"Theta_2 = 20 [deg], incidence angle"
+Theta_2 = 20
+HL350_vacuum = heat_loss_ptr70(T_fluid_2, T_amb_2, DNI_2, v_wind_2, Theta_2, 4.05, 0.247, -1.46E-3, 5.65E-6, 7.62E-8, -1.7, 0.0125)  "PTR70 vacuum record, NREL Table 6 [W/m]"
+HL350_lostvacuum = heat_loss_ptr70(T_fluid_2, T_amb_2, DNI_2, v_wind_2, Theta_2, 50.8, 0.904, 5.79E-4, 1.13E-5, 1.73E-7, -43.2, 0.524)  "PTR70 lost-vacuum record, NREL Table 8 [W/m]"
+HL350_hydrogen = heat_loss_ptr70(T_fluid_2, T_amb_2, DNI_2, v_wind_2, Theta_2, 11.8, 1.35, 7.5E-4, 4.07E-6, 5.85E-8, -4.48, 0.285)  "PTR70 hydrogen record, NREL Table 8 [W/m]"
+HL350_soponova = heat_loss_ptr70(T_fluid_2, T_amb_2, DNI_2, v_wind_2, Theta_2, 11.8, 1.35, 7.5E-4, 4.07E-6, 5.85E-8, -4.48, 0.285)  "Sopogy Soponova record of the original (identical to hydrogen, see README) [W/m]"
+HL350_broken = heat_loss_ptr70(T_fluid_2, T_amb_2, DNI_2, v_wind_2, Theta_2, -9.95, 0.465, -8.54E-4, 1.85E-5, 6.89E-7, 24.7, 3.37)  "PTR70 broken-glass record, NREL Table 8 (not among the ThermoCycle records) [W/m]"
+
+"--- 3. Optical and thermal efficiency of the PTR70 at a solar operating point ---"
+"DNI_3 = 900 [W/m2], direct normal irradiance"
+DNI_3 = 900
+"Theta_3 = 5 [deg], incidence angle"
+Theta_3 = 5
+"T_fluid_3 = 350 [C], receiver temperature"
+T_fluid_3 = 350
+"T_amb_3 = 30 [C], ambient temperature"
+T_amb_3 = 30
+"v_wind_3 = 2 [m/s], wind speed"
+v_wind_3 = 2
+"Optical properties of the PTR70 receiver (Schott_SopoNova BaseGeometry record)"
+rho_cl = 0.89  "[-] mirror reflectivity"
+Alpha_t = 0.97  "[-] tube absorptivity"
+tau_g = 0.91  "[-] glass transmissivity"
+eps6 = 1  "[-] unaccounted losses in calculating collector optical efficiency"
+"Geometry of the PTR70 receiver (Schott_SopoNova BaseGeometry record)"
+L = 4.06  "[m] length of tubes"
+A_P = 5  "[m] aperture of the parabola"
+eta_opt = eta_opt_ptr70(Theta_3, rho_cl, eps6)  "optical efficiency of the collector [-]"
+eta_opt_t = eta_opt_t_ptr70(Theta_3, rho_cl, Alpha_t, tau_g, eps6)  "optical efficiency seen by the metal tube [-]"
+A_reflector = L*A_P  "total area of the reflector [m2]"
+Q_tube_tot = DNI_3*eta_opt_t*A_reflector  "total thermal energy flow on the tube from the Sun [W]"
+HL_350 = heat_loss_ptr70(T_fluid_3, T_amb_3, DNI_3, v_wind_3, Theta_3, 4.05, 0.247, -1.46E-3, 5.65E-6, 7.62E-8, -1.7, 0.0125)  "PTR70 vacuum record [W/m]"
+eta_th = eta_th_ptr70(HL_350, L, Q_tube_tot)  "thermal efficiency of the receiver [-]"
+eta_TOT = eta_th*eta_opt_t  "total efficiency : eta_th*eta_opt_t [-]"
+
+"--- 4. Soponova: ThermoCycle record vs the independent correlation ---"
+"T_fluid_4 = 300 [C], receiver temperature"
+T_fluid_4 = 300
+"T_amb_4 = 30 [C], ambient temperature"
+T_amb_4 = 30
+"DNI_4 = 900 [W/m2], direct normal irradiance"
+DNI_4 = 900
+"v_wind_4 = 2 [m/s], wind speed"
+v_wind_4 = 2
+"Theta_4 = 0 [deg], incidence angle"
+Theta_4 = 0
+HL_soponova_thermocycle = heat_loss_ptr70(T_fluid_4, T_amb_4, DNI_4, v_wind_4, Theta_4, 11.8, 1.35, 7.5E-4, 4.07E-6, 5.85E-8, -4.48, 0.285)  "Soponova record of the original [W/m]"
+"Independent Soponova correlation of Quoilin et al. (LaboThapPy LTP-050,"
+"10-coefficient form; reference evaluation, not a library function)"
+c0 = 20.62
+c1 = -0.2893
+c2 = 1.472E-3
+c3 = 2.240E-8
+c4 = 1.198E-3
+c5 = 1.403E-6
+c6 = 1.045
+c7 = -3.043E-2
+c8 = -8.481
+c9 = 0.2073
+HL_soponova_quoilin = c0 + c1*(T_fluid_4-T_amb_4) + c2*(T_fluid_4-T_amb_4)^2 + DNI_4*cos(Theta_4)*(c3*T_fluid_4^2 + c4*sqrt(v_wind_4)) + c5*T_fluid_4^3 + c6*v_wind_4 + c7*v_wind_4*(T_fluid_4-T_amb_4) + c8*sqrt(v_wind_4) + c9*sqrt(v_wind_4)*(T_fluid_4-T_amb_4)  "[W/m]"
+
+"--- 5. Soltigua PTMx-36: K_L polynomial vs the datasheet table ---"
+"PTMx-36 coefficient record (Soltigua BaseGeometry record of the original)"
+A_0 = 1
+A_1 = 8.95634921E-4
+A_2 = -1.57380952E-4
+A_3 = -8.61111111E-7
+DUPLICATE i = 1,7
+  Theta_tab[i] = (i-1)*10  "datasheet angles 0-60 deg [deg]"
+  K_l_calc[i] = iam_soltigua(Theta_tab[i], A_0, A_1, A_2, A_3)  "K_L of the corrected polynomial [-]"
+END
+"Datasheet K_L table, PTMx-36 column (Soltigua PTMx datasheet REV03-04/2013)"
+K_l_meas[1] = 1.000
+K_l_meas[2] = 0.995
+K_l_meas[3] = 0.949
+K_l_meas[4] = 0.861
+K_l_meas[5] = 0.729
+K_l_meas[6] = 0.547
+K_l_meas[7] = 0.301
+"deviation of the polynomial from the datasheet value at each angle [-]"
+DUPLICATE i = 1,7
+  dev_kl[i] = K_l_calc[i] - K_l_meas[i]
+END
+"Efficiency at the datasheet reference condition: T_fluid = 190 degC (mean of"
+"the 180-200 degC operating range), T_amb = 30 degC, DNI = 900 W/m2, theta = 0 deg"
+eta_ref = eta_soltigua(190, 30, 900, K_l_calc[1])  "collector efficiency [-]"
+"specific power per net collecting surface [W/m2] (datasheet: 537 W/m2 at T_out = 200 degC)"
+P_spec_ref = eta_ref*900

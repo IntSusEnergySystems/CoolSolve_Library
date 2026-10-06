@@ -1,0 +1,58 @@
+{
+  "id": "CSL-0083",
+  "name": "parabolic_trough_loss_correlations",
+  "title": "Parabolic-trough receiver and collector heat-loss correlations (Schott PTR70, Sopogy, Soltigua)",
+  "summary": "Function library of the empirical heat-loss and efficiency correlations of the ThermoCycle solar absorber models: the Schott PTR70 receiver heat-loss correlation (NREL/TP-550-45633) with the vacuum, lost-vacuum, hydrogen and Sopogy Soponova coefficient records, the optical/thermal efficiency chain of the same receiver, and the Soltigua PTMx collector efficiency fit with its cubic longitudinal incidence-angle modifier; a demonstration program verifies them against the NREL test data, the Soltigua datasheet and an independent Python re-evaluation.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "parabolic_trough_loss_correlations.eescode",
+  "fluids": [],
+  "tags": [
+    "parabolic trough",
+    "solar thermal",
+    "heat loss",
+    "empirical correlation",
+    "incidence angle modifier",
+    "datasheet coefficients",
+    "function library",
+    "translation"
+  ],
+  "language_features": [
+    "FUNCTION definitions",
+    "DUPLICATE arrays"
+  ],
+  "stats": {"n_equations": 134, "largest_block": 1},
+  "origin": {
+    "type": "software_library",
+    "source": "thermocycle",
+    "source_path": "~/git/Thermocycle-library/ThermoCycle/Components/HeatFlow/Walls/SolarAbsorber/AbsSchottSopo.mo;ThermoCycle/Components/HeatFlow/Walls/SolarAbsorber/AbsSoltigua.mo;ThermoCycle/Components/HeatFlow/Walls/SolarAbsorber/Geometry/Schott_SopoNova/*.mo;ThermoCycle/Components/HeatFlow/Walls/SolarAbsorber/Geometry/Soltigua/*.mo, commit b4f16c0b",
+    "candidate_id": "THC-002",
+    "authors": [
+      "Adriano Desideri (ULiège Thermodynamics Laboratory)",
+      "Sylvain Quoilin (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "https://github.com/thermocycle/Thermocycle-library",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "correlations of F. Burkholder and C. Kutscher (NREL/TP-550-45633, May 2009) and of the Soltigua PTMx and Sopogy Soponova datasheets"
+  },
+  "verification": {
+    "reference": "independent Python re-evaluation of the same equations (throw-away script, deleted after the import); measured heat losses of the NREL PTR70 heat-loss test (NREL/TP-550-45633, Table 3); Soltigua PTMx datasheet REV03-04/2013 (K_L table and reference conditions); independent Soponova correlation of Quoilin et al. (LaboThapPy LTP-050)",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 4.64e-10,
+    "notes": "34 common variables with the Python re-evaluation, 0 differ at rtol = 1e-3 (maximum 4.6e-10 on HL_calc[5]). Against the NREL Table 3 measured values (T_amb = 23 degC, DNI = 0, v_wind = 0): deviations -13.5 to +3.8 W/m over the eleven test points of receiver #1, all within the +/-10 W/m uncertainty of the report except the 506 degC point (2.7 %, just above the 500 degC upper end of the parametric runs). Soltigua K_L within 0.003 of the datasheet table at 0-60 deg."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0082"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-06", "action": "added (translation of ThermoCycle AbsSchottSopo/AbsSoltigua, card C-90)", "by": "Claude (Opus 5.5) for S. Quoilin"}
+  ]
+}
