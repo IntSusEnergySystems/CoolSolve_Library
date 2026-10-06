@@ -1,0 +1,84 @@
+{
+  "id": "CSL-0102",
+  "name": "hx_temperature_effectiveness_pntu",
+  "title": "Heat exchangers: P-NTU temperature effectiveness (function library)",
+  "summary": "Fifteen EES FUNCTIONs for the temperature effectiveness (P-NTU) method of a heat exchanger: the two common helper terms of the plate formulas, the temperature effectiveness P1 of the basic (counterflow, parallel, crossflow) arrangements, of the TEMA E, G, H and J shell-and-tube arrangements, of a finned-bundle air cooler and of a multipass plate heat exchanger, plus the inverse relations NTU1(P1, R1) (four closed forms and the equations of the numerical inversions, to be solved with NTU1 as an unknown).",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "hx_temperature_effectiveness_pntu.eescode",
+  "fluids": [],
+  "tags": [
+    "heat exchanger",
+    "P-NTU",
+    "temperature effectiveness",
+    "TEMA",
+    "shell and tube",
+    "plate heat exchanger",
+    "air cooler",
+    "relation",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE (nested, no ELSEIF: CoolSolve 0.3.0 ignores the ELSEIF condition)",
+    "LN / EXP / TANH / MOD",
+    "DUPLICATE loops (nested, inside a FUNCTION body)",
+    "simultaneous equations for the implicit inversions (two equations for one variable)"
+  ],
+  "stats": {
+    "n_equations": 127,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-016",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "R. K. Shah and D. P. Sekulic (Fundamentals of Heat Exchanger Design)",
+      "K. Thulukkanam (Heat Exchanger Design Handbook)",
+      "W. Rohsenow, J. Hartnett and Y. Cho (Handbook of Heat Transfer)",
+      "A. Triboix (exact crossflow formula)",
+      "S. G. Kandlikar and R. K. Shah (multipass plate effectiveness-NTU)",
+      "H. Schedwill and F. J. L. Nicole (air cooler arrangements)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/hx.py, functions P_NTU_Pp, P_NTU_Pc, temperature_effectiveness_air_cooler, temperature_effectiveness_basic, temperature_effectiveness_TEMA_E, temperature_effectiveness_TEMA_G, temperature_effectiveness_TEMA_H, temperature_effectiveness_TEMA_J, temperature_effectiveness_plate, NTU_from_P_basic, NTU_from_P_E, NTU_from_P_G, NTU_from_P_H, NTU_from_P_J and NTU_from_P_plate, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each relation is the original paper or book cited in its function comment block. Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/hx.py (case A: R1 = 1/3, NTU1 = 1 for the TEMA and plate relations, R1 = 0.1 and NTU1 = 4 for the basic counterflow relation, R1 = 0.5, NTU1 = 2 with 2 rows and 2 passes for the air cooler, x = 5 with y = 0.4 and y = 0.7 for the two helper terms) plus values computed with the same ht functions (case B: the steam/oil crossflow rating of the ht docstring, stream 1 = the process stream, R1 = 0.14242, NTU1 = 2.16007; one call per remaining branch); 81 output values in total",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 8.3e-08,
+    "notes": "compare_solution.py: 81 common variables, 0 differ (rtol=0.001). The largest relative deviation, 8.3e-8, is on temperature_effectiveness_basic_extra4, the exact crossflow arrangement evaluated by the composite Simpson quadrature (80 intervals) of the integrand inside the function, which CoolSolve cannot evaluate there; the same quadrature in the main program of CSL-0090 gives 1.4e-8. Over the other 80 values the largest deviation is 1.2e-9, on NTU_from_P_G_A (convergence tolerance of the implicit inversion); the other 79 agree to 6.6e-10, i.e. round-off."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0002",
+    "CSL-0026",
+    "CSL-0087",
+    "CSL-0090",
+    "CSL-0096",
+    "CSL-0032"
+  ],
+  "related_external": [
+    "sources/ht HT-019 (LMTD and F correction factors, the other way of rating a heat exchanger)",
+    "sources/thermo_models TSP-012 and TSP-030 (TESPy NTU and eps-NTU relations)",
+    "sources/labothappy LTP-014 and LTP-042 (LaboThapPy eps-NTU and F-LMTD)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-FUNC card C-111, family HT-016 of the ht triage)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "CSL-0097",
+  "name": "two_phase_nonboiling_in_tube",
+  "title": "In-tube two-phase non-boiling heat-transfer coefficients (function library)",
+  "summary": "Nine EES FUNCTIONs returning the forced-convection heat-transfer coefficient of a liquid and a gas flowing inside a tube without phase change (condensing or evaporating): Davis-David, Elamvaluthi-Srinivas, Groothuis-Hendal (air-water and gas/air-oil forms), Hughmark and Aggour (laminar slug / horizontal and vertical), Knott, Kudirka-Grosh-McFadden, Martin-Sims and Ravipudi-Godbold. Each returns h_tp [W/m^2/K] from the mass flow rate, the quality and the liquid and gas properties, which are arguments: no property function is called inside the functions.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "two_phase_nonboiling_in_tube.eescode",
+  "fluids": [],
+  "tags": [
+    "two-phase",
+    "non-boiling",
+    "in-tube convection",
+    "heat-transfer coefficient",
+    "correlation",
+    "condensation",
+    "evaporation",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "local constants"
+  ],
+  "stats": {
+    "n_equations": 65,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-011",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "E. J. Davis and M. M. David (Davis-David correlation, 1964)",
+      "G. Elamvaluthi and N. S. Srinivas (Elamvaluthi-Srinivas correlation, 1984)",
+      "H. Groothuis and W. P. Hendal (Groothuis-Hendal correlation, 1959)",
+      "G. A. Hughmark (Hughmark correlation, 1965)",
+      "R. F. Knott, R. N. Anderson, A. Acrivos and E. E. Petersen (Knott correlation, 1959)",
+      "A. A. Kudirka, R. J. Grosh and P. W. McFadden (Kudirka-Grosh-McFadden correlation, 1965)",
+      "B. W. Martin and G. E. Sims (Martin-Sims correlation, 1971)",
+      "S. Ravipudi and T. Godbold (Ravipudi-Godbold correlation, 1978)",
+      "Mohamed A. Aggour (Aggour correlation, Ph.D. thesis, 1978)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/conv_two_phase.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each correlation is the original paper or thesis cited in its function comment block, as reviewed by Kim, D., V. K. Ryali, A. J. Ghajar and R. L. Dougherty, Heat Transfer Engineering 20(1): 15-40, 1999. Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/conv_two_phase.py (case A) and additional values computed with the same ht functions in a throw-away virtualenv (case B); 37 output and intermediate values in total",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 4e-12,
+    "notes": "compare_solution.py: 37 common variables, 0 differ (rtol=0.001); largest relative deviation 4.0e-12 (h_Groothuis_Hendal_water_A), i.e. round-off only. The 29 'only in CoolSolve' variables are the 28 inputs of the demonstration program and the constant pi, which the reference table does not hold."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0087",
+    "CSL-0088",
+    "CSL-0089",
+    "CSL-0090",
+    "CSL-0027",
+    "CSL-0031",
+    "CSL-0098"
+  ],
+  "related_external": [
+    "sources/labothappy LTP-034 (in-tube HTC correlations, quoting two-phase in-tube correlations; the ht family is more complete)",
+    "sources/thermocycle THC-004 (flow and nucleate boiling HTC, Shah 1979; boiling, not the non-boiling two-phase case of this file)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-FUNC card C-106, family HT-011 of the ht triage)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

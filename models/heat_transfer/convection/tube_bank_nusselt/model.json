@@ -1,0 +1,80 @@
+{
+  "id": "CSL-0095",
+  "name": "tube_bank_nusselt",
+  "title": "Crossflow tube banks: Nusselt-number correlations and row / angle correction factors (function library)",
+  "summary": "Six EES FUNCTIONs for the forced convection across a bank of plain tubes: the Nusselt numbers of Zukauskas with the Bejan fit, of ESDU 73031 as given by Hewitt and of the Heat Exchanger Design Handbook, plus the tube-row correction factor of Zukauskas, the tube-row correction factor of ESDU 73031 and its bundle-inclination correction factor. The Nusselt number is taken on the tube outside diameter, so the heat-transfer coefficient follows from h = Nu*k/Do and is left to the caller. The seventh function of the ht family, Nu_Grimison_tube_bank, is a fitted spline surface in ht and is not translated (see the README).",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "tube_bank_nusselt.eescode",
+  "fluids": [],
+  "tags": [
+    "external convection",
+    "crossflow",
+    "tube bank",
+    "nusselt number",
+    "correlation",
+    "correction factors",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "nested IF/THEN/ELSE",
+    "inline IF conditional",
+    "SIN / SQRT in degrees",
+    "dimensionless arguments"
+  ],
+  "stats": {
+    "n_equations": 28,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-009",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "A. Zukauskas (Zukauskas row correction factor and Nu correlations)",
+      "A. Bejan (fit to the Zukauskas graphs, Nu_Zukauskas_Bejan)",
+      "ESDU (data sheets 73031 and 86022, Nu_ESDU_73031 and the ESDU correction factors)",
+      "G. L. Shires and T. R. Bott (Process Heat Transfer, presentation of the ESDU data)",
+      "E. U. Schlunder and ICHMT (Heat Exchanger Design Handbook, Nu_HEDH_tube_bank)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/conv_tube_bank.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each correlation is the original paper, data sheet or book cited in its function comment block (Zukauskas 1972, Bejan 2013, ESDU 73031/86022 as given in Hewitt, Shires & Bott 1994, Schlunder 1987 / Baehr & Stephan 2013). Translation published under the CoolSolve_Library MIT license (decision D3). Nu_Grimison_tube_bank, the seventh function of the ht family, is not translated: ht evaluates the tabulated coefficients through a bivariate least-squares spline fitted to the digitised Grimison tables, which cannot be read inside a FUNCTION body (CS-GAP-LOOKUP-PROC)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/conv_tube_bank.py (case A) and additional values computed with the same ht functions in a throw-away virtualenv (case B); 20 output values in total",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 2.8e-12,
+    "notes": "compare_solution.py: 20 common variables, 0 differ (rtol=0.001); largest relative deviation 2.8e-12 (Nu_Zukauskas_Bejan_A), i.e. round-off only. The two doctests of the non-translated Nu_Grimison_tube_bank are not part of the comparison."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0087",
+    "CSL-0094",
+    "CSL-0096",
+    "CSL-0099"
+  ,
+    "CSL-0101"
+  ],
+  "related_external": [
+    "sources/labothappy LTP-037 (shell-side HTC correlations) and LTP-038 (external tube bundles): the LaboThapPy integration of bundle-scale correlations; the ht family here is the reference for the equations",
+    "inventory family HT-017 tube_bank_dp_bell_delaware (shell-side dP of the same bundle, not yet translated)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-FUNC card C-104, family HT-009 of the ht triage; 6 of the 7 ht functions translated, Nu_Grimison_tube_bank excluded and documented)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

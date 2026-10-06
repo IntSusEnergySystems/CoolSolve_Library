@@ -1,0 +1,79 @@
+{
+  "id": "CSL-0093",
+  "name": "free_conv_plates_and_sphere",
+  "title": "Free convection from plates and a sphere: Nusselt-number correlations (function library)",
+  "summary": "Five EES FUNCTIONs returning the Nusselt number of natural convection from an isothermal surface: Churchill-Chu for a vertical plate (smooth laminar-to-turbulent transition, valid on the whole Rayleigh-number range), McAdams, VDI Heat Atlas and Rohsenow-Hartnett-Cho for a horizontal plate (each with the buoyancy-assisted hot-plate form and the cold-plate form of its lower surface, the McAdams and VDI ones being non-smooth switches between the laminar and turbulent branches) and Churchill for a sphere. Pr and Gr are arguments, so the calling model passes them; the heat-transfer coefficient follows from h = Nu*k/L_c and is left to the caller.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "free_conv_plates_and_sphere.eescode",
+  "fluids": [],
+  "tags": [
+    "free convection",
+    "natural convection",
+    "nusselt number",
+    "correlation",
+    "vertical plate",
+    "horizontal plate",
+    "sphere",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "LN",
+    "dimensionless arguments"
+  ],
+  "stats": {
+    "n_equations": 38,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-007",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "S. W. Churchill and H. H. S. Chu (Churchill-Chu vertical-plate correlation)",
+      "W. H. McAdams (McAdams horizontal-plate correlations)",
+      "V. D. I., VDI Heat Atlas, with K. Stewartson 1958 and E. U. Schluender 1987 (VDI horizontal-plate correlations)",
+      "W. Rohsenow, J. Hartnett and Y. Cho (Rohsenow-Hartnett-Cho horizontal-plate correlations)",
+      "S. W. Churchill, as presented in E. U. Schluender (1987) (Churchill sphere correlation)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/conv_free_immersed.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each correlation is the original paper or book cited in its function comment block (Churchill & Chu 1975, Bergman et al. 6E; McAdams, Heat Transmission; VDI Heat Atlas 2nd ed. 2010, Stewartson 1958, Schluender 1987; Rohsenow, Hartnett & Cho 1998). The same module as CSL-0092 (free_conv_cylinders), whose Popiel-Churchill function repeats the vertical-plate correlation of this model. Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/conv_free_immersed.py (case A: 10 published values - the vertical-plate and sphere correlations, the four Nu_horizontal_plate_McAdams values including its two lower-surface (cold plate) ones and its low-Prandtl set, and the hot-plate and lower-surface value of the VDI and of the Rohsenow correlation) and additional values computed with the same ht functions in a throw-away virtualenv (cases B and C: the laminar and the turbulent branches of the horizontal-plate correlations, both faces); 26 output values in total",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 3.4e-13,
+    "notes": "compare_solution.py: 26 common variables, 0 differ (rtol=0.001); largest relative deviation 3.4e-13 (Nu_horizontal_plate_McAdams_A_lowPr_cold), i.e. round-off in the double-precision evaluation only."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0092",
+    "CSL-0087",
+    "CSL-0094", "CSL-0100"
+  ,
+    "CSL-0101"
+  ],
+  "related_external": [
+    "CSL-0065 cooling_tower_condenser_water and CSL-0076 cooling_tower_direct_contact_refsim (natural convection on surfaces of a cooling tower: they use their own formulas, cross-check only)",
+    "sources/labothappy LTP-035 and ThermoCycle THC-011 (plate heat-transfer coefficients, other geometries)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-FUNC card C-102, family HT-007 of the ht triage)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

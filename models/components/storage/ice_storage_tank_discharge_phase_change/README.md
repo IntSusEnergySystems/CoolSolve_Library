@@ -214,3 +214,5 @@ model in the library.
   gaps, with its own runnable variant).
 - The DG-0023 copies of this exercise (TM-0092/TM-0095/TM-0123, AU = 1 MW/K)
   are recorded as duplicates of this model.
+- `CSL-0100` *free_conv_enclosed_and_jackets*: the vessel-jacket heat-transfer
+  coefficient of Lehrer and Stein-Schmidt rates the heat transfer of this tank.

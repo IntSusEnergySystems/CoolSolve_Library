@@ -1,0 +1,78 @@
+{
+  "id": "CSL-0086",
+  "name": "in_cylinder_htc_correlations",
+  "title": "In-cylinder heat-transfer correlations for reciprocating machines (function library)",
+  "summary": "Seven EES FUNCTIONs returning the Nusselt number of the in-cylinder gas of a reciprocating compressor, expander or engine: Annand 1963, Woschni 1967, Adair 1972, Destoop 1986, Gnielinski 2010 (pipe equation with the mean piston speed), Irimescu 2013 (Gnielinski with the wall-viscosity ratio) and the Kornhauser 1994 gas-spring correlation, plus the geometry and crank-kinematics helpers of the ThermoCycle reciprocating package (piston speed, cylinder volume, hydraulic and equivalent diameters, wall area, Adair swirl velocity with its smooth transition). The heat-transfer coefficient follows from h = Nu*lambda/Gamma and is evaluated in the demonstration program; transport properties are arguments, so the library works with any gas.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "in_cylinder_htc_correlations.eescode",
+  "fluids": [],
+  "tags": [
+    "in-cylinder heat transfer",
+    "reciprocating machine",
+    "nusselt number",
+    "correlation",
+    "engine",
+    "compressor",
+    "gas spring",
+    "crank angle",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "LOG10 / LN",
+    "dimensionless arguments"
+  ],
+  "stats": {
+    "n_equations": 86,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "thermocycle",
+    "source_path": "~/git/Thermocycle-library/ThermoCycle/Components/Units/ExpansionAndCompressionMachines/Reciprocating/HeatTransfer/{Annand1963,Woschni1967,Adair1972,Destoop1986,Gnielinski2010,Irimescu2013,Kornhauser1994,Kornhauser1994Full,GnielinskiHeatTransfer,RePrHeatTransfer}.mo, ~/git/Thermocycle-library/ThermoCycle/Components/Units/ExpansionAndCompressionMachines/Reciprocating/BaseClasses/PartialCylinderHeatTransfer.mo, ~/git/Thermocycle-library/ThermoCycle/Functions/transition_factor.mo, commit b4f16c0b",
+    "candidate_id": "THC-005",
+    "authors": [
+      "Jorrit Wronski (DTU Mechanical Engineering, 2013)",
+      "W. D. J. Annand (Annand 1963 correlation)",
+      "G. Woschni (Woschni 1967 correlation)",
+      "R. P. Adair, E. B. Qvale and J. T. Pearson (Adair 1972 correlation)",
+      "A. Kornhauser and J. Smith (Kornhauser 1994 correlation)",
+      "A. Irimescu (Irimescu 2013 correlation)",
+      "V. Gnielinski (Gnielinski pipe equation)"
+    ],
+    "url": "https://github.com/thermocycle/Thermocycle-library",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ThermoCycle commit b4f16c0b (2019-03-20), MIT (Copyright (c) 2018 Thermodynamics Laboratory, University of Liege). The reciprocating-machine package carries a DTU copyright (2011-2013, J. Wronski) and a Modelica License 2 notice while the repository license is MIT: credit J. Wronski as for any translated model and confirm with him (sources/thermocycle/README.md section 1, open question in the model README). Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "independent Python re-evaluation of the fourteen functions directly from the .mo sources, with the same CoolProp 8.0.0 air property inputs; 66 output values",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 7.13e-12,
+    "notes": "compare_solution.py: 66 common variables, 0 differ (rtol=0.001); largest relative deviation 7.13e-12 (Pe_B), i.e. round-off only. The 20 variables only in CoolSolve are the demo inputs of the two states (T, T_w, p, position, theta, rho, mu, mu_w, k, cp)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0024",
+    "CSL-0084",
+    "CSL-0087"
+  ],
+  "related_external": [
+    "sources/thermocycle THC-005 (the inventory row of this card)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-FUNC card C-93, inventory row THC-005)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

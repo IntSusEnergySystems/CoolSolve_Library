@@ -1,0 +1,84 @@
+{
+  "id": "CSL-0094",
+  "name": "external_crossflow_cylinder",
+  "title": "External forced convection: crossflow over a single cylinder (function library)",
+  "summary": "Eight EES FUNCTIONs returning the average Nusselt number of a single circular cylinder in crossflow: Zukauskas (piecewise in Re, with the wall-Prandtl correction), Churchill-Bernstein, Sanitjai-Goldstein, Fand, McAdams, Whitaker and the two forms of Perkins-Leppert (1962 and 1964), the last three with the viscosity-ratio correction. Re, Pr, Prw and the viscosities are arguments, so the calling model passes them; the surface heat-transfer coefficient follows from h = Nu*k/D and is left to the caller.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "external_crossflow_cylinder.eescode",
+  "fluids": [],
+  "tags": [
+    "external convection",
+    "forced convection",
+    "crossflow",
+    "nusselt number",
+    "correlation",
+    "cylinder",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "EXP",
+    "dimensionless arguments"
+  ],
+  "stats": {
+    "n_equations": 36,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-008",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "A. Zukauskas (Zukauskas correlation)",
+      "S. W. Churchill and M. Bernstein (Churchill-Bernstein correlation)",
+      "S. Sanitjai and R. J. Goldstein (Sanitjai-Goldstein correlation)",
+      "R. M. Fand (Fand correlation)",
+      "W. H. McAdams (McAdams correlation)",
+      "S. Whitaker (Whitaker correlation)",
+      "H. C. Perkins Jr. and G. Leppert (Perkins-Leppert 1962 and 1964 correlations)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/conv_external.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each correlation is the original paper or book cited in its function comment block (Zukauskas 1972 and Churchill & Bernstein 1977 as in Bergman et al. 6E; Sanitjai & Goldstein 2004; Fand 1965; McAdams, Heat Transmission, 3E, 1985; Whitaker 1972; Perkins & Leppert 1962 and 1964). The optional Prw argument of Nu_cylinder_Zukauskas and the optional mu/muw arguments of Nu_cylinder_Whitaker, Nu_cylinder_Perkins_Leppert_1962 and Nu_cylinder_Perkins_Leppert_1964 became mandatory (EES has no optional argument; pass Prw = Pr or mu = muw for the uncorrected form). Two discrepancies between the ht docstring and its code are resolved in favour of the code and noted in the function comments (Whitaker uses Pr^0.3, Sanitjai-Goldstein carries the power -5 of its first exponential term inside the exponential). The HT-008 inventory note saying that Nu_cylinder_Whitaker takes a D^2/(L D) geometry parameter does not apply to ht 1.2.0 (signature: Re, Pr, mu, muw). Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "case A: the 11 values published by ht 1.2.0 - the eight doctests of ht/conv_external.py (one per correlation) and the three viscosity-ratio values of ht/tests/test_conv_external.py - plus the uncorrected Zukauskas form; case B: values computed with the same ht functions in a throw-away virtualenv; 24 output values in total",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 1.9e-13,
+    "notes": "compare_solution.py: 36 common variables, 0 differ (rtol=0.001); only in EES: 2 (the Zukauskas inputs of the uniform case B, which the Python reference lists twice), only in CoolSolve: 0. Largest relative deviation 1.9e-13 (Nu_cylinder_Churchill_Bernstein_B), i.e. round-off in the double-precision evaluation only."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0018",
+    "CSL-0087",
+    "CSL-0088",
+    "CSL-0089",
+    "CSL-0090",
+    "CSL-0092",
+    "CSL-0093",
+    "CSL-0095"
+  ,
+    "CSL-0101"
+  ],
+  "related_external": [
+    "sources/labothappy LTP-038 (external tube bundles: bundle-scale correlations and the component integration; the ht single-cylinder family is the reference for the equations)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-FUNC card C-103, family HT-008 of the ht triage)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

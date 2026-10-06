@@ -219,3 +219,5 @@ solution of 186 variables, no tables).
   instead of an organic fluid.
 - `CSL-0015` (Basic R134a refrigeration cycle): same category family
   (vapour-compression/vapour-power cycles with imposed performance).
+- `CSL-0084` *orc_expander_pump_empirical_maps*: same fluid (R245fa) and a
+  small closed ORC demo, with the expander and pump performance from maps.

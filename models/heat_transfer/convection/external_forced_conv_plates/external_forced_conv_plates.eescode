@@ -1,0 +1,185 @@
+{=============================================================================
+  External forced convection over a flat plate
+  CoolSolve Library model CSL-0101 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Four Nusselt-number correlations for an isothermal flat plate in a crossflow
+  at constant surface temperature: two laminar forms (Baehr-Stephan, piecewise in
+  the Prandtl number, and Churchill-Ozoe, valid over the whole Prandtl range)
+  and two fully turbulent forms (Schlichting, with the surface-friction term of
+  that formulation, and Kreith).
+
+  All of them return the average Nusselt number of the plate, on its length L;
+  the heat-transfer coefficient follows from h = Nu*k/L and is left to the
+  caller. All inputs are dimensionless: Re (Re_L, plate length and bulk fluid
+  properties) and Pr (bulk temperature). No length appears in the arguments: the
+  plate length enters through Re, as in ht.
+
+  The demonstration program at the end calls every function, once with the
+  inputs of the ht doctest or regression test of the corresponding correlation
+  ("A" cases) and once with a second, uniform input set ("B" cases). The ht
+  values of both sets are tabulated in the README (verification table).
+
+  Three correlations of the module are only dispatchers in ht
+  (Nu_external_horizontal_plate, Nu_external_horizontal_plate_methods: they
+  select a method by name, and conv_horizontal_plate_methods only holds the
+  four functions of this file) and are not translated; an EES caller selects the
+  function directly. The laminar-turbulent transition Reynolds number of ht
+  (LAMINAR_TRANSITION_HORIZONTAL_PLATE = 5E5) is not a correlation either: it is
+  a constant of the calling model.
+
+  Inputs : Re [-], Pr [-]
+  Outputs: Nu [-] (one FUNCTION per correlation)
+  Units  : SI - dimensionless numbers
+  Source : ht (Caleb Bell), ht/conv_external.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; correlations by the authors
+           cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION Nu_horizontal_plate_laminar_Baehr(Re, Pr)
+{NU_HORIZONTAL_PLATE_LAMINAR_BAEHR - Nusselt number, laminar flow across an
+ isothermal flat plate. No other wall correction is necessary for this
+ formulation; four equations are used for different Prandtl number ranges.
+
+  Pr < 0.005      : Nu_L = 1.128*Re^0.5*Pr^0.5
+  Pr < 0.05       : Nu_L = 1.0*Re^0.5*Pr^0.5
+  Pr < 10         : Nu_L = 0.664*Re^0.5*Pr^(1/3)
+  otherwise       : Nu_L = 0.678*Re^0.5*Pr^(1/3)
+
+ Re [-] is on the plate length with the bulk fluid properties and Pr [-] is at
+ the bulk temperature. The 0.664 equation is also recommended in the Incropera
+ and VDI Heat Atlas references of the original.
+ Validity: the four Prandtl branches above (as in ht); the free convection over
+  the plate, which can increase the convection substantially, is not taken into
+  account. The transition to turbulent flow is not treated here either (ht uses
+  Re_L = 5E5, LAMINAR_TRANSITION_HORIZONTAL_PLATE).
+ Original: Baehr, H. D. and K. Stephan, Heat and Mass Transfer, Springer, 2013;
+   also shown in Bergman, T. L., A. S. Lavine, F. P. Incropera and D. P. DeWitt,
+   Introduction to Heat Transfer, 6E, Wiley, 2011, and in the VDI Heat Atlas,
+   2nd ed. 2010 edition, Berlin/New York, Springer (equation G4).
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_external.py,
+   Nu_horizontal_plate_laminar_Baehr, MIT License, C. Bell -
+   https://github.com/CalebBell/ht}
+  "Non-smooth regime switches are written with nested IF blocks (no ELSEIF)"
+  "The branch limits are those of the ht code; its docstring quotes 0.6 < Pr
+   for the 0.664 equation (as in the original)."
+  IF Pr < 0.005 THEN
+    Nu_horizontal_plate_laminar_Baehr = 1.128*(Re*Pr)^0.5
+  ELSE
+    IF Pr < 0.05 THEN
+      Nu_horizontal_plate_laminar_Baehr = (Re*Pr)^0.5
+    ELSE
+      IF Pr < 10 THEN
+        Nu_horizontal_plate_laminar_Baehr = 0.664*Re^0.5*Pr^(1/3)
+      ELSE
+        Nu_horizontal_plate_laminar_Baehr = 0.678*Re^0.5*Pr^(1/3)
+      ENDIF
+    ENDIF
+  ENDIF
+END
+
+FUNCTION Nu_horizontal_plate_laminar_Churchill_Ozoe(Re, Pr)
+{NU_HORIZONTAL_PLATE_LAMINAR_CHURCHILL_OZOE - Nusselt number, laminar flow
+ across an isothermal flat plate. No other wall correction is necessary for this
+ formulation; a single equation covers all Prandtl number ranges.
+
+  Nu_L = 0.6774*Re^0.5*Pr^(1/3) / [1 + (0.0468/Pr)^(2/3)]^0.25
+
+ Re [-] is on the plate length with the bulk fluid properties and Pr [-] is at
+ the bulk temperature.
+ Validity: laminar flow; no limit is quoted (a single equation covers all
+ Prandtl numbers); the free convection over the plate, which can increase the
+ convection substantially, is not taken into account.
+ Original: Churchill, S. W. and H. Ozoe, "Correlations for Laminar Forced
+   Convection in Flow Over an Isothermal Flat Plate and in Developing and Fully
+   Developed Flow in an Isothermal Tube", Journal of Heat Transfer 95(3): 416,
+   1 August 1973, doi:10.1115/1.3450078; also shown in Bergman, T. L., A. S.
+   Lavine, F. P. Incropera and D. P. DeWitt, Introduction to Heat Transfer, 6E,
+   Wiley, 2011.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_external.py,
+   Nu_horizontal_plate_laminar_Churchill_Ozoe, MIT License, C. Bell -
+   https://github.com/CalebBell/ht}
+  Nu_horizontal_plate_laminar_Churchill_Ozoe = 0.6774*Re^0.5*Pr^(1/3)/(1 + (0.0468/Pr)^(2/3))^0.25
+END
+
+FUNCTION Nu_horizontal_plate_turbulent_Schlichting(Re, Pr)
+{NU_HORIZONTAL_PLATE_TURBULENT_SCHLICHTING - Nusselt number, turbulent flow
+ across an isothermal flat plate. The formulation of Schlichting is used, which
+ adds a surface friction term to a formulation from Petukhov and Popov.
+
+  Nu_L = 0.037*Re^0.8*Pr / {1 + 2.443*Re^(-0.1)*(Pr^(2/3) - 1)}
+
+ Re [-] is on the plate length with the bulk fluid properties and Pr [-] is at
+ the bulk temperature.
+ Validity: turbulent flow only; no limit is quoted; the free convection over the
+ plate, which can increase the convection substantially, is not taken into
+ account.
+ Original: Schlichting, H. and K. Gersten, Grenzschicht-Theorie, 9th ed.,
+   Springer-Verlag, Berlin Heidelberg, 1997; also quoted in the VDI Heat Atlas,
+   2nd ed. 2010 edition, Berlin/New York, Springer.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_external.py,
+   Nu_horizontal_plate_turbulent_Schlichting, MIT License, C. Bell -
+   https://github.com/CalebBell/ht}
+  Nu_horizontal_plate_turbulent_Schlichting = 0.037*Re^0.8*Pr/(1 + 2.443*Re^(-0.1)*(Pr^(2/3) - 1))
+END
+
+FUNCTION Nu_horizontal_plate_turbulent_Kreith(Re, Pr)
+{NU_HORIZONTAL_PLATE_TURBULENT_KREITH - Nusselt number, turbulent flow across
+ an isothermal flat plate.
+
+  Nu_L = 0.036*Re^0.8*Pr^(1/3)
+
+ Re [-] is on the plate length with the bulk fluid properties and Pr [-] is at
+ the bulk temperature.
+ Validity: turbulent flow only (as in the original); no limit is quoted; the
+ free convection over the plate, which can increase the convection substantially,
+ is not taken into account.
+ Original: Kreith, F., R. Manglik and M. Bohn, Principles of Heat Transfer,
+   Cengage, 2010.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_external.py,
+   Nu_horizontal_plate_turbulent_Kreith, MIT License, C. Bell -
+   https://github.com/CalebBell/ht}
+  Nu_horizontal_plate_turbulent_Kreith = 0.036*Re^0.8*Pr^(1/3)
+END
+
+"!Demonstration program: every correlation is called"
+"It is ignored by the future $INCLUDE library:external_forced_conv_plates (CS-FEAT-IMPORT)."
+"Case A: the input sets of the ht doctests and of the ht regression tests of each"
+"  correlation (published values); all four Prandtl branches of Baehr are exercised."
+"Case B: one second, uniform input set (Re = 5E6, Pr = 0.7 - air in crossflow over a plate)."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case A - input sets"
+Re_A = 1E5
+Pr_A = 0.7
+Re_Kreith_A = 1.03E6
+Pr_Kreith_A = 0.71
+
+"Nu_horizontal_plate_laminar_Baehr - the four Prandtl branches at Re = 1E5 (Pr = 0.01 is the 0.005 to 0.05 branch, computed with the same ht function; the other four are the published ht values)"
+Nu_horizontal_plate_laminar_Baehr_A_Pr_1e_4 = Nu_horizontal_plate_laminar_Baehr(Re_A, 1E-4)
+Nu_horizontal_plate_laminar_Baehr_A_Pr_0p01 = Nu_horizontal_plate_laminar_Baehr(Re_A, 0.01)
+Nu_horizontal_plate_laminar_Baehr_A_Pr_0p1 = Nu_horizontal_plate_laminar_Baehr(Re_A, 0.1)
+Nu_horizontal_plate_laminar_Baehr_A_Pr1 = Nu_horizontal_plate_laminar_Baehr(Re_A, 1)
+Nu_horizontal_plate_laminar_Baehr_A_Pr100 = Nu_horizontal_plate_laminar_Baehr(Re_A, 100)
+"Nu_horizontal_plate_laminar_Baehr - the doctest, Pr = 0.7"
+Nu_horizontal_plate_laminar_Baehr_A = Nu_horizontal_plate_laminar_Baehr(Re_A, Pr_A)
+"Nu_horizontal_plate_laminar_Churchill_Ozoe - the doctest"
+Nu_horizontal_plate_laminar_Churchill_Ozoe_A = Nu_horizontal_plate_laminar_Churchill_Ozoe(Re_A, Pr_A)
+"Nu_horizontal_plate_turbulent_Schlichting - the doctest"
+Nu_horizontal_plate_turbulent_Schlichting_A = Nu_horizontal_plate_turbulent_Schlichting(Re_A, Pr_A)
+"Nu_horizontal_plate_turbulent_Kreith - the doctest"
+Nu_horizontal_plate_turbulent_Kreith_A = Nu_horizontal_plate_turbulent_Kreith(Re_Kreith_A, Pr_Kreith_A)
+
+"Case B - second, uniform input set"
+Re_B = 5E6
+Pr_B = 0.7
+
+"Nu_horizontal_plate_laminar_Baehr - far above the laminar range of the correlation"
+Nu_horizontal_plate_laminar_Baehr_B = Nu_horizontal_plate_laminar_Baehr(Re_B, Pr_B)
+"Nu_horizontal_plate_laminar_Churchill_Ozoe - far above the laminar range of the correlation"
+Nu_horizontal_plate_laminar_Churchill_Ozoe_B = Nu_horizontal_plate_laminar_Churchill_Ozoe(Re_B, Pr_B)
+"Nu_horizontal_plate_turbulent_Schlichting - turbulent range of the correlation"
+Nu_horizontal_plate_turbulent_Schlichting_B = Nu_horizontal_plate_turbulent_Schlichting(Re_B, Pr_B)
+"Nu_horizontal_plate_turbulent_Kreith - turbulent range of the correlation"
+Nu_horizontal_plate_turbulent_Kreith_B = Nu_horizontal_plate_turbulent_Kreith(Re_B, Pr_B)

@@ -1,0 +1,355 @@
+{=============================================================================
+  Film condensation: heat-transfer coefficients
+  CoolSolve Library model CSL-0089 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Six correlations for the heat-transfer coefficient h of condensing film,
+  from the Nusselt analysis of a laminar film on a flat plate (1916) to the
+  Shah (1979) correlation for condensation inside tubes:
+
+    - h_Nusselt_laminar          laminar film on a (possibly inclined) plate
+    - h_Boyko_Kruzhilin          laminar film in a vertical tube or bundle
+    - h_Akers_Deans_Crosser      condensation in horizontal tubes
+    - h_kinetic                  kinetic (diffusion) resistance of the vapor
+    - h_Cavallini_Smith_Zecchin  forced-convection condensation in a tube
+    - h_Shah                     condensation in a tube, reduced pressure form
+
+  h_kinetic is the only one that is not a HTC of the film: it is the
+  molecular-kinetic resistance of the vapor diffusing to the condensing
+  surface, used as a correction of the condensation HTC.
+
+  Five of them return the film heat-transfer coefficient h [W/m^2/K]; the two
+  in-tube correlations (Boyko-Kruzhilin, Akers-Deans-Crosser) return the
+  coefficient at the quality x of the interval. No property function is called
+  inside the functions: the calling model passes the liquid and vapor
+  properties, the mass flow rate, the geometry and (for the in-tube forms)
+  the quality x.
+
+  The demonstration program at the end calls every function: case A with the
+  input set of the ht doctest of each correlation (published values), case B
+  with one uniform, realistic input set (R134a condensing at 40 C in a 24 mm
+  tube). Both cases are tabulated against ht in the README (verification
+  table).
+
+  Two conventions of the translation: the angle of h_Nusselt_laminar is in
+  degrees, as the argument of ht, and the trigonometric functions of EES
+  (setting DEG) and of CoolSolve take degrees (CoolSolve CS-DOC-TRIG), so
+  sin(angle) is written where ht uses sin(angle*pi/180); the constant pi is
+  written as a local pi_val in the function bodies, because CoolSolve does not
+  resolve the pi constant inside a FUNCTION body (CoolSolve CS-BUG-PI-FUNCTION,
+  registered with this card: it evaluates as 1 there).
+
+  Inputs : Tsat, Tw [K], rhog, rhol [kg/m^3], kl [W/m-K], mul, mug [Pa-s],
+           Cpl [J/kg-K], Hvap [J/kg], L [m], angle [deg], m [kg/s], D [m],
+           x [-], T [K], P [Pa], MW [g/mol], f [-]
+  Outputs: h [W/m^2/K] (one FUNCTION per correlation)
+  Units  : SI - K, Pa, kg/s, kg/m^3, W/m/K, Pa-s, J/kg, J/kg/K, m, degrees
+  Source : ht (Caleb Bell), ht/condensation.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; correlations by the authors
+           cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION h_Nusselt_laminar(Tsat, Tw, rhog, rhol, kl, mul, Hvap, L, angle)
+{H_NUSSELT_LAMINAR - heat-transfer coefficient of the laminar film of a pure
+chemical condensing on a flat plate, from the Nusselt analysis of 1916; the
+plate may be inclined.
+
+  h = 0.943*[g*sin(theta)*rhol*(rhol - rhog)*kl^3*Hvap
+             /(mul*(Tsat - Tw)*L)]^0.25
+
+  the constant 0.943 is 2*sqrt(2)/3, as in the original
+
+Tsat [K] saturation temperature at the operating pressure; Tw [K] wall
+temperature; rhog [kg/m^3] density of the gas; rhol [kg/m^3] density of the
+liquid; kl [W/m/K] thermal conductivity of the liquid; mul [Pa-s] viscosity of
+the liquid; Hvap [J/kg] heat of vaporization at that pressure; L [m] length of
+the plate; angle [deg] inclination of the plate (90 = vertical, as in ht).
+Validity: none quoted in ht (laminar film, pure substance).
+Original: Nusselt (1916), as presented in Hewitt, G. L., G. F. Shires and
+  T. R. Bott, Process Heat Transfer, 1E, CRC Press, Boca Raton, 1994, p. 578.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/condensation.py, Nusselt_laminar,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  g_acc = 9.80665  "standard acceleration of gravity [m/s^2]"
+  "angle is in degrees, as in ht: the trigonometric functions of EES (setting DEG) and of CoolSolve take degrees"
+  h_Nusselt_laminar = 2*2^0.5/3*(g_acc*sin(angle)*rhol*(rhol - rhog)*kl^3*Hvap/(mul*(Tsat - Tw)*L))^0.25
+END
+
+FUNCTION h_Boyko_Kruzhilin(m, rhog, rhol, kl, mul, Cpl, D, x)
+{H_BOYKO_KRUZHILIN - heat-transfer coefficient of the film of a pure chemical
+condensing inside a vertical tube or a tube bundle, at the quality x of the
+interval, as presented in [2]_ according to [1]_.
+
+  h_f   = h_LO*[1 + x*(rhol/rhog - 1)]^0.5
+  h_LO  = 0.021*kl/D*Re_LO^0.8*Pr_l^0.43
+
+m [kg/s] mass flow rate; rhog [kg/m^3] density of the gas; rhol [kg/m^3]
+density of the liquid; kl [W/m/K] thermal conductivity of the liquid; mul
+[Pa-s] viscosity of the liquid; Cpl [J/kg/K] constant-pressure heat capacity
+of the liquid; D [m] diameter of the tubing; x [-] quality at the specific
+interval. The mass flow rate is converted into the liquid-only superficial
+velocity V_lo = m/rhol/(pi/4*D^2) and Re_lo = rhol*V_lo*D/mul.
+Validity: none quoted in ht (vertical tube or bundle, pure substance).
+Note: the docstring of ht writes the length L in h_LO; the code of ht, which
+  reproduces the published value, uses the tube diameter D - as here.
+Original: [1] Boyko, L. D. and G. N. Kruzhilin, "Heat Transfer and Hydraulic
+  Resistance during Condensation of Steam in a Horizontal Tube and in a Bundle
+  of Tubes", Int. J. Heat Mass Transfer 10(3): 361-373, 1 March 1967;
+  [2] Hewitt, G. L., G. F. Shires and T. R. Bott, Process Heat Transfer, 1E,
+  CRC Press, Boca Raton, 1994, p. 589.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/condensation.py, Boyko_Kruzhilin,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+  V_lo = m/rhol/(pi_val/4*D^2)
+  Re_lo = rhol*V_lo*D/mul
+  Pr_l = mul*Cpl/kl
+  h_lo = 0.021*kl/D*Re_lo^0.8*Pr_l^0.43
+  h_Boyko_Kruzhilin = h_lo*(1 + x*(rhol/rhog - 1))^0.5
+END
+
+FUNCTION h_Akers_Deans_Crosser(m, rhog, rhol, kl, mul, Cpl, D, x)
+{H_AKERS_DEANS_CROSSER - heat-transfer coefficient of a pure chemical
+condensing inside a horizontal tube, at the quality x of the interval, as
+presented in [2]_ according to [1]_.
+
+  Nu  = h*Di/kl = C*Re_e^n*Pr_l^(1/3)
+  C = 0.0265, n = 0.8   for Re_e > 5E4
+  C = 5.03,   n = 1/3   for Re_e < 5E4
+  Re_e = Di*Ge/mul
+  Ge   = G*[(1 - x) + x*(rhol/rhog)^0.5]
+
+m [kg/s] mass flow rate; rhog [kg/m^3] density of the gas; rhol [kg/m^3]
+density of the liquid; kl [W/m/K] thermal conductivity of the liquid; mul
+[Pa-s] viscosity of the liquid; Cpl [J/kg/K] constant-pressure heat capacity
+of the liquid; D [m] diameter of the tubing (Di above); x [-] quality at the
+specific interval.
+Validity: the two branches of the original, Re_e > 5E4 and Re_e < 5E4 (as in
+  ht); no other limit is quoted.
+Original: [1] Akers, W. W., H. A. Deans and O. K. Crosser, "Condensing Heat
+  Transfer Within Horizontal Tubes", Chem. Eng. Progr. Vol. 55, Symposium
+  Ser. No. 29, 1 January 1959; [2] Kakaç, S. (ed.), Boilers, Evaporators, and
+  Condensers, 1st ed., Wiley-Interscience, New York, 1991.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/condensation.py,
+  Akers_Deans_Crosser, MIT License, C. Bell - https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+  G = m/(pi_val/4*D^2)
+  Ge = G*((1 - x) + x*(rhol/rhog)^0.5)
+  Re_e = D*Ge/mul
+  Pr_l = mul*Cpl/kl
+  IF Re_e > 5E4 THEN
+    C = 0.0265
+    n = 0.8
+  ELSE
+    C = 5.03
+    n = 1/3
+  ENDIF
+  Nu = C*Re_e^n*Pr_l^(1/3)
+  h_Akers_Deans_Crosser = Nu*kl/D
+END
+
+FUNCTION h_kinetic(T, P, MW, Hvap, f)
+{H_KINETIC - heat-transfer coefficient of the kinetic (diffusion) resistance
+of the vapor on a condensing surface, as presented in [2]_ according to [1]_.
+
+  h = (2f/(2 - f))*(MW/(1000*2*pi*R_u*T))^0.5*(Hvap^2*P*MW)/(1000*R_u*T^2)
+
+T [K] vapor temperature; P [Pa] vapor pressure; MW [g/mol] molecular weight of
+the gas; Hvap [J/kg] heat of vaporization of the fluid at that pressure;
+f [-] correction factor for how the removal of gas particles affects the
+behaviour of the ideal gas diffusing to the condensing surface (it is quite
+close to one and has not been well explored in the literature, as in the
+original); ht gives it a default value of 1, here it is an argument.
+Validity: none quoted in ht.
+Original: [1] Berman, L. D., "On the Effect of Molecular-Kinetic Resistance
+  upon Heat Transfer with Condensation", Int. J. Heat Mass Transfer 10(10):
+  1463, 1 October 1967; [2] Kakaç, S. (ed.), Boilers, Evaporators, and
+  Condensers, 1st ed., Wiley-Interscience, New York, 1991. Also in Stephan,
+  K., Heat Transfer in Condensation and Boiling, Springer, Berlin, 1992/2013.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/condensation.py, h_kinetic,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+  R_u = 8.31446261815324  "universal gas constant [J/(mol K)]"
+  h_kinetic = 2*f/(2 - f)*(MW/(1000*2*pi_val*R_u*T))^0.5*(Hvap^2*P*MW)/(1000*R_u*T^2)
+END
+
+FUNCTION h_Cavallini_Smith_Zecchin(m, x, D, rhol, rhog, mul, mug, kl, Cpl)
+{H_CAVALLINI_SMITH_ZECCHIN - heat-transfer coefficient of the film of a fluid
+condensing inside a tube, as presented in [1]_, also given in [2]_ and [3]_.
+
+  Nu    = h*Di/kl = 0.05*Re_eq^0.8*Pr_l^0.33
+  Re_eq = Re_g*(mug/mul)*(rhol/rhog)^0.5 + Re_l
+  v_gs  = m*x/(rhog*pi/4*D^2)
+  v_ls  = m*(1 - x)/(rhol*pi/4*D^2)
+
+m [kg/s] mass flow rate; x [-] quality at the specific interval; D [m] diameter
+of the channel; rhol [kg/m^3] and rhog [kg/m^3] densities of the liquid and of
+the gas; mul [Pa-s] and mug [Pa-s] viscosities of the liquid and of the gas;
+kl [W/m/K] thermal conductivity of the liquid; Cpl [J/kg/K] constant-pressure
+heat capacity of the liquid. The Nusselt number is based on the liquid
+properties and on the tube diameter (as in the original).
+Validity: none quoted in ht (forced-convection condensation in a tube).
+Original: [1] A. Cavallini, J. R. Smith and R. Zecchin, "A Dimensionless
+  Correlation for Heat Transfer in Forced Convection Condensation", 6th
+  International Heat Transfer Conference, Tokyo, Japan, 1974, pp. 309-313;
+  [2] Kakaç, S. (ed.), Boilers, Evaporators, and Condensers, 1st ed.,
+  Wiley-Interscience, New York, 1991; [3] Balcilar, M., A. S. Dalkiliç,
+  B. Bolat and S. Wongwises, "Investigation of Empirical Correlations on the
+  Determination of Condensation Heat Transfer Characteristics during Downward
+  Annular Flow of R134a inside a Vertical Smooth Tube Using Artificial
+  Intelligence Algorithms", J. Mech. Sci. Technol. 25(10): 2683-2701,
+  12 October 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/condensation.py,
+  Cavallini_Smith_Zecchin, MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Pr_l = mul*Cpl/kl
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+  V_l = m*(1 - x)/(rhol*pi_val/4*D^2)
+  V_g = m*x/(rhog*pi_val/4*D^2)
+  Re_l = rhol*V_l*D/mul
+  Re_g = rhog*V_g*D/mug
+  Re_eq = Re_g*(mug/mul)*(rhol/rhog)^0.5 + Re_l
+  Nu_l = 0.05*Re_eq^0.8*Pr_l^0.33
+  h_Cavallini_Smith_Zecchin = Nu_l*kl/D
+END
+
+FUNCTION h_Shah(m, x, D, rhol, mul, kl, Cpl, P, Pc)
+{H_SHAH - heat-transfer coefficient of the film of a fluid condensing inside a
+tube, as presented in [1]_ and again by the same author in [2]_, also given in
+[3]_. No property of the gas is required.
+
+  h_TP = h_L*[(1 - x)^0.8 + 3.8*x^0.76*(1 - x)^0.04/Pr^0.38]
+
+The single-phase coefficient h_L is the Dittus-Boelter correlation, with a
+Reynolds number assuming all the flow is liquid (ht calls
+turbulent_Dittus_Boelter with its default arguments, heating = 1 and
+revised = 1, i.e. Nu = 0.023*Re^0.8*Pr^0.4; the correlation is also
+CSL-0087, function Nu_Dittus_Boelter).
+
+m [kg/s] mass flow rate; x [-] quality at the specific interval; D [m] diameter
+of the channel; rhol [kg/m^3] density of the liquid; mul [Pa-s] viscosity of
+the liquid; kl [W/m/K] thermal conductivity of the liquid; Cpl [J/kg/K]
+constant-pressure heat capacity of the liquid; P [Pa] pressure of the fluid;
+Pc [Pa] critical pressure of the fluid.
+Validity: none quoted in ht (condensation inside a tube).
+Original: [1] Shah, M. M., "A General Correlation for Heat Transfer during
+  Film Condensation inside Pipes", Int. J. Heat Mass Transfer 22(4): 547-556,
+  1 April 1979; [2] Shah, M. M., "Heat Transfer during Film Condensation in
+  Tubes and Annuli: A Review of the Literature", ASHRAE Transactions 87(3):
+  1086-1100, 1981; [3] Kakaç, S. (ed.), Boilers, Evaporators, and Condensers,
+  1st ed., Wiley-Interscience, New York, 1991.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/condensation.py, Shah,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+  V_L = m/(rhol*pi_val/4*D^2)
+  Re_L = rhol*V_L*D/mul
+  Pr_l = mul*Cpl/kl
+  Nu_L = 0.023*Re_L^0.8*Pr_l^0.4  "Dittus-Boelter, heating and revised coefficients, as in ht"
+  h_L = Nu_L*kl/D
+  Pr_reduced = P/Pc
+  h_Shah = h_L*((1 - x)^0.8 + 3.8*x^0.76*(1 - x)^0.04/Pr_reduced^0.38)
+END
+
+"!Demonstration program: every correlation is called twice"
+"It is ignored by the future $INCLUDE library:condensation_film (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each correlation (published values)."
+"Case B: one uniform, realistic input set - R134a condensing at 40 C in a 24 mm"
+"tube, 0.4 kg/s, quality 0.6, wall 10 K below the saturation temperature."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case A - input sets of the ht doctests"
+Tsat_A = 370
+Tw_A = 350
+rhog_A = 7.0
+rhol_A = 585
+kl_A = 0.091
+mul_A = 158.9E-6
+Hvap_A = 776900
+L_A = 0.1
+angle_A = 90
+angle_incl_A = 45
+"in-tube correlations of the doctests (steam)"
+rhog_BK_A = 6.36
+rhol_BK_A = 582.9
+kl_BK_A = 0.098
+mul_BK_A = 159E-6
+Cpl_BK_A = 2520
+D_BK_A = 0.03
+x_BK_A = 0.85
+m_Boyko_A = 500*pi/4*0.03^2
+m_Akers_A = 0.35
+m_Akers_low_A = 0.02
+T_kin_A = 300
+P_kin_A = 1E5
+Hvap_kin_A = 2441674  "water at 1 bar and 300 K, as in the ht doctest"
+MW_A = 18.02
+f_A = 0.9
+m_Cav_A = 1
+x_Cav_A = 0.4
+D_Cav_A = 0.3
+rhol_Cav_A = 800
+rhog_Cav_A = 2.5
+mul_Cav_A = 1E-5
+mug_Cav_A = 1E-3
+kl_Cav_A = 0.6
+Cpl_Cav_A = 2300
+m_Shah_A = 1
+x_Shah_A = 0.4
+D_Shah_A = 0.3
+rhol_Shah_A = 800
+mul_Shah_A = 1E-5
+kl_Shah_A = 0.6
+Cpl_Shah_A = 2300
+P_Shah_A = 1E6
+Pc_Shah_A = 2E7
+
+"h_Nusselt_laminar - vertical plate, then the same plate inclined at 45 degrees"
+h_Nusselt_laminar_A = h_Nusselt_laminar(Tsat_A, Tw_A, rhog_A, rhol_A, kl_A, mul_A, Hvap_A, L_A, angle_A)
+h_Nusselt_laminar_inclined_A = h_Nusselt_laminar(Tsat_A, Tw_A, rhog_A, rhol_A, kl_A, mul_A, Hvap_A, L_A, angle_incl_A)
+"h_Boyko_Kruzhilin - steam in a 30 mm tube at x = 0.85"
+h_Boyko_Kruzhilin_A = h_Boyko_Kruzhilin(m_Boyko_A, rhog_BK_A, rhol_BK_A, kl_BK_A, mul_BK_A, Cpl_BK_A, D_BK_A, x_BK_A)
+"h_Akers_Deans_Crosser - Re_e = 7.7E5 (high branch), then m = 0.02 kg/s, Re_e = 4.4E4 (low branch)"
+h_Akers_Deans_Crosser_A = h_Akers_Deans_Crosser(m_Akers_A, rhog_BK_A, rhol_BK_A, kl_BK_A, mul_BK_A, Cpl_BK_A, D_BK_A, x_BK_A)
+h_Akers_Deans_Crosser_lowRe_A = h_Akers_Deans_Crosser(m_Akers_low_A, rhog_BK_A, rhol_BK_A, kl_BK_A, mul_BK_A, Cpl_BK_A, D_BK_A, x_BK_A)
+"h_kinetic - water at 1 bar and 300 K, f = 1 (as in the ht doctest), then f = 0.9"
+h_kinetic_A = h_kinetic(T_kin_A, P_kin_A, MW_A, Hvap_kin_A, 1)
+h_kinetic_f_A = h_kinetic(T_kin_A, P_kin_A, MW_A, Hvap_kin_A, f_A)
+"h_Cavallini_Smith_Zecchin - the input set of the ht doctest"
+h_Cavallini_Smith_Zecchin_A = h_Cavallini_Smith_Zecchin(m_Cav_A, x_Cav_A, D_Cav_A, rhol_Cav_A, rhog_Cav_A, mul_Cav_A, mug_Cav_A, kl_Cav_A, Cpl_Cav_A)
+"h_Shah - the input set of the ht doctest"
+h_Shah_A = h_Shah(m_Shah_A, x_Shah_A, D_Shah_A, rhol_Shah_A, mul_Shah_A, kl_Shah_A, Cpl_Shah_A, P_Shah_A, Pc_Shah_A)
+
+"Case B - second, uniform input set: R134a condensing at 40 C in a 24 mm tube"
+m_B = 0.4
+Tsat_B = 313.15
+Tw_B = 303.15
+rhog_B = 30
+rhol_B = 1100
+kl_B = 0.13
+mul_B = 2.5E-4
+mug_B = 1.2E-5
+Cpl_B = 1450
+Hvap_B = 1.7E5
+L_B = 0.5
+angle_B = 90
+angle_incl_B = 60
+D_B = 0.024
+x_B = 0.6
+P_B = 1.6E6
+Pc_B = 4.059E6
+MW_B = 102.03
+f_B = 0.95
+
+"h_Nusselt_laminar - vertical plate, then the same plate inclined at 60 degrees"
+h_Nusselt_laminar_B = h_Nusselt_laminar(Tsat_B, Tw_B, rhog_B, rhol_B, kl_B, mul_B, Hvap_B, L_B, angle_B)
+h_Nusselt_laminar_inclined_B = h_Nusselt_laminar(Tsat_B, Tw_B, rhog_B, rhol_B, kl_B, mul_B, Hvap_B, L_B, angle_incl_B)
+"h_Boyko_Kruzhilin - x = 0.6"
+h_Boyko_Kruzhilin_B = h_Boyko_Kruzhilin(m_B, rhog_B, rhol_B, kl_B, mul_B, Cpl_B, D_B, x_B)
+"h_Akers_Deans_Crosser - Re_e = 3.4E5 (high branch), then m = 0.02 kg/s, Re_e = 1.7E4 (low branch)"
+h_Akers_Deans_Crosser_B = h_Akers_Deans_Crosser(m_B, rhog_B, rhol_B, kl_B, mul_B, Cpl_B, D_B, x_B)
+h_Akers_Deans_Crosser_lowRe_B = h_Akers_Deans_Crosser(m_B/20, rhog_B, rhol_B, kl_B, mul_B, Cpl_B, D_B, x_B)
+"h_kinetic - f = 1, then f = 0.95"
+h_kinetic_B = h_kinetic(Tsat_B, P_B, MW_B, Hvap_B, 1)
+h_kinetic_f_B = h_kinetic(Tsat_B, P_B, MW_B, Hvap_B, f_B)
+"h_Cavallini_Smith_Zecchin - x = 0.6"
+h_Cavallini_Smith_Zecchin_B = h_Cavallini_Smith_Zecchin(m_B, x_B, D_B, rhol_B, rhog_B, mul_B, mug_B, kl_B, Cpl_B)
+"h_Shah - x = 0.6"
+h_Shah_B = h_Shah(m_B, x_B, D_B, rhol_B, mul_B, kl_B, Cpl_B, P_B, Pc_B)

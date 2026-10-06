@@ -1,0 +1,331 @@
+{=============================================================================
+  Free convection from plates and a sphere: Nusselt-number correlations
+  CoolSolve Library model CSL-0093 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Five correlations for natural convection from an isothermal surface: one for a
+  vertical plate (Churchill & Chu 1975), three for a horizontal plate (McAdams
+  1954; VDI Heat Atlas 2010 with the buoyancy-enhanced forms of Stewartson 1958
+  and the lower-surface form of Schlünder 1987; Rohsenow, Hartnett & Cho 1998)
+  and one for a sphere (Churchill, as presented in Schlünder 1987).
+
+  All of them return the Nusselt number of the surface; the surface
+  heat-transfer coefficient follows from h = Nu*k/L_c and is left to the caller.
+  The fluid properties enter only through the dimensionless groups Pr and Gr
+  (Ra = Pr*Gr), which are arguments: no property function is called inside a
+  function, so the calling model passes Pr and Gr itself.
+
+  The three horizontal-plate correlations distinguish the buoyancy-assisted case
+  (hot plate, heat transfer from its upper surface) from the non-assisted one
+  (cold plate, heat transfer from its lower surface); in EES the Python boolean
+  `buoyancy` becomes the argument `buoyancy`: 1 = buoyancy assisted (the ht
+  default True), 0 = not assisted. Their non-smooth regime switches use IF.
+
+  The demonstration program at the end calls every function once with the input
+  set of the ht doctest of the corresponding correlation ("A" cases), once with
+  a second input set in the laminar range of the horizontal-plate correlations
+  ("B" cases) and once in the turbulent range ("C" cases); every branch of the
+  regime switches is exercised. The ht values of all 26 outputs are tabulated in
+  the README (verification table).
+
+  Two selectors of the ht family are only dispatchers
+  (Nu_free_vertical_plate(_methods), Nu_free_horizontal_plate(_methods): they
+  select a method by name) and are not translated; an EES caller selects the
+  function directly.
+
+  Inputs : Pr [-], Gr [-] (on the plate height for a vertical plate, on the
+           characteristic length of the plate for a horizontal plate, on the
+           sphere diameter for a sphere), buoyancy [-]
+  Outputs: Nu [-] (one FUNCTION per correlation)
+  Units  : SI - dimensionless numbers
+  Source : ht (Caleb Bell), ht/conv_free_immersed.py, version 1.2.0, commit
+           85e0ee6, MIT - https://github.com/CalebBell/ht ; correlations by the
+           authors cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION Nu_vertical_plate_Churchill(Pr, Gr)
+{NU_VERTICAL_PLATE_CHURCHILL - Nusselt number, natural convection from an
+isothermal vertical plate, Churchill & Chu (1975). The equation gives a smooth
+transition from the laminar to the turbulent regime.
+
+  Nu_L = [0.825 + 0.387*Ra_L^(1/6)/{1+(0.492/Pr)^(9/16)}^(8/27)]^2
+
+  Ra = Pr*Gr,  Gr is taken on the plate height [m]
+
+Checked with the original source by the author of ht. Outside the range, no
+warning is given.
+Data: Example 9.2 of Bergman, Lavine, Incropera & DeWitt (see the reference).
+Validity: all Rayleigh numbers (the equation interpolates the laminar and the
+turbulent branch of a vertical plate); as in the original, it can be applied to
+a vertical cylinder as well, subject to D/L >= 35/Gr_L^(1/4).
+Original: Churchill, Stuart W., and Humbert H. S. Chu, "Correlating Equations
+  for Laminar and Turbulent Free Convection from a Vertical Plate", International
+  Journal of Heat and Mass Transfer 18(11): 1323-1329, 1 November 1975,
+  doi:10.1016/0017-9310(75)90243-4; also presented in Bergman, Theodore L.,
+  Adrienne S. Lavine, Frank P. Incropera and David P. DeWitt, Introduction to
+  Heat Transfer, 6E, Hoboken, NJ: Wiley, 2011 (Example 9.2).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_vertical_plate_Churchill, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  Nu_vertical_plate_Churchill = (0.825 + 0.387*Ra^(1/6)/(1 + (0.492/Pr)^(9/16))^(8/27))^2
+END
+
+FUNCTION Nu_horizontal_plate_McAdams(Pr, Gr, buoyancy)
+{NU_HORIZONTAL_PLATE_MCADAMS - Nusselt number, natural convection from an
+isothermal horizontal plate, McAdams (1954). Four forms are used, two for the
+laminar and two for the turbulent regime, because the buoyancy of the plate
+changes the flow: if the plate is hot, buoyancy lifts the fluid off the plate and
+enhances the free convection, whereas if the plate is cold the cold fluid above
+it settles on it and decreases the free convection.
+
+  Nu = 0.54*Ra^(1/4)     Ra <= 1E7,  buoyancy assisted (hot plate)
+  Nu = 0.15*Ra^(1/3)     Ra >  1E7,  buoyancy assisted
+  Nu = 0.27*Ra^(1/4)     Ra <= 1E10, not buoyancy assisted (cold plate)
+  Nu = 0.15*Ra^(1/3)     Ra >  1E10, not buoyancy assisted
+
+  Ra = Pr*Gr,  Gr is taken on the characteristic length of the plate [m]
+
+buoyancy = 1 selects the buoyancy-assisted forms (the ht default, True), 0 the
+non-assisted ones. The switches between the forms are not smooth (as in ht).
+Outside the range, no warning is given.
+Data: air; Gr of the ht doctests is based on the characteristic length.
+Validity: the four Rayleigh-number branches above; McAdams gives no range.
+Original: McAdams, William Henry, Heat Transmission, 3E, Malabar, Fla:
+  Krieger Pub Co, 1985 (first edition 1942).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_horizontal_plate_McAdams, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  IF buoyancy = 1 THEN
+    IF Ra <= 1E7 THEN
+      sel = 0
+    ELSE
+      sel = 1
+    ENDIF
+  ELSE
+    IF Ra <= 1E10 THEN
+      sel = 2
+    ELSE
+      sel = 3
+    ENDIF
+  ENDIF
+  IF sel = 1 THEN
+    Nu_horizontal_plate_McAdams = 0.15*Ra^(1/3)
+  ELSE
+    IF sel = 3 THEN
+      Nu_horizontal_plate_McAdams = 0.15*Ra^(1/3)
+    ELSE
+      IF sel = 2 THEN
+        Nu_horizontal_plate_McAdams = 0.27*Ra^0.25
+      ELSE
+        Nu_horizontal_plate_McAdams = 0.54*Ra^0.25
+      ENDIF
+    ENDIF
+  ENDIF
+END
+
+FUNCTION Nu_horizontal_plate_VDI(Pr, Gr, buoyancy)
+{NU_HORIZONTAL_PLATE_VDI - Nusselt number, natural convection from an isothermal
+horizontal plate, VDI Heat Atlas (2010). Three forms are used, one for the
+laminar and one for the turbulent regime at the upper surface of the plate and
+one at its lower surface; the lower-surface form is recommended for the laminar
+flow regime. As in McAdams, the buoyancy of the plate changes the flow: if the
+plate is hot, buoyancy lifts the fluid off the plate and enhances the free
+convection, whereas if the plate is cold the cold fluid above it settles on it and
+decreases the free convection.
+
+  Nu = 0.766*(Ra*f2)^0.2      Ra*f2 < 7E4,  buoyancy assisted (hot plate)
+  Nu = 0.15*(Ra*f2)^(1/3)     Ra*f2 >= 7E4, buoyancy assisted
+  Nu = 0.6*(Ra*f1)^0.2                          not assisted (cold plate)
+
+  f2 = {1 + (0.322/Pr)^0.55}^(20/11)      f1 = {1 + (0.492/Pr)^(9/16)}^(-16/9)
+  Ra = Pr*Gr,  Gr is taken on the characteristic length of the plate [m]
+
+The characteristic length suggested for use is, with a and b being the length and
+the width of the plate, L = a*b/{2*(a+b)}; the form of the Grashof number
+argument is that of the caller.
+buoyancy = 1 selects the upper-surface (hot plate) forms (the ht default, True),
+0 the lower-surface one. The switch between the two upper-surface forms is not
+smooth (as in ht). Outside the range, no warning is given.
+Validity: the three branches above; the lower-surface form is recommended in the
+laminar regime.
+Original: Gesellschaft, V. D. I., ed., VDI Heat Atlas, 2nd ed., 2010 edition,
+  Berlin; New York: Springer, 2010. The buoyancy-enhanced (upper surface) cases
+  are from Stewartson, Keith, "On the Free Convection from a Horizontal Plate",
+  Zeitschrift fuer Angewandte Mathematik und Physik ZAMP 9(3): 276-282,
+  1 September 1958, https://doi.org/10.1007/BF02033031; the lower-surface
+  correlation is said to be from Schluender, Ernst U, and International Center
+  for Heat and Mass Transfer, Heat Exchanger Design Handbook, Washington:
+  Hemisphere Pub. Corp., 1987, although the equations there are not quite the
+  same and do not include the Prandtl number correction.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_horizontal_plate_VDI, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  IF buoyancy = 1 THEN
+    f2 = (1 + (0.322/Pr)^0.55)^(20/11)
+    IF Ra*f2 < 7E4 THEN
+      Nu_horizontal_plate_VDI = 0.766*(Ra*f2)^0.2
+    ELSE
+      Nu_horizontal_plate_VDI = 0.15*(Ra*f2)^(1/3)
+    ENDIF
+  ELSE
+    f1 = (1 + (0.492/Pr)^(9/16))^(-16/9)
+    Nu_horizontal_plate_VDI = 0.6*(Ra*f1)^0.2
+  ENDIF
+END
+
+FUNCTION Nu_horizontal_plate_Rohsenow(Pr, Gr, buoyancy)
+{NU_HORIZONTAL_PLATE_ROHSENOW - Nusselt number, natural convection from an
+isothermal horizontal plate, Rohsenow, Hartnett & Cho (1998). Three forms are
+used, a laminar and a turbulent form at the upper surface of the plate, combined
+into one tenth-power mean, and one at its lower surface; the lower-surface form
+is recommended for the laminar flow regime. As in McAdams, the buoyancy of the
+plate changes the flow: if the plate is hot, buoyancy lifts the fluid off the
+plate and enhances the free convection, whereas if the plate is cold the cold
+fluid above it settles on it and decreases the free convection.
+
+  Nu = {Nu_l^10 + Nu_t^10}^(1/10)            buoyancy assisted (hot plate)
+
+  Nu_l = 1.4/LN{1 + 1.4/Nu_T}
+  Nu_T = 0.835*Cl*Ra^(1/4)            (average Cl)
+  Cl   = 0.0972 - (0.0157 + 0.462*C_tV)*t1 + (0.615*C_tV - 0.0548 - 6E-6*Pr)*t2
+  Nu_t = C_tU*Ra^(1/3)
+  C_tU = 0.14*(1 + 0.01707*Pr)/(1 + 0.01*Pr)
+  C_tV = 0.13*Pr^0.22/{1 + 0.61*Pr^0.81}^0.42
+
+  Nu = 2.5/LN{1 + 2.5/Nu_T}                   not assisted (cold plate)
+  Nu_T = 0.527*Ra^0.2/{1 + (1.9/Pr)^0.9}^(2/9)
+
+  Ra = Pr*Gr,  Gr is taken on the characteristic length of the plate [m]
+
+t1 = Ah/A is the heated to non-heated area ratio and t2 = Lf*P/A the vertical
+distance between the lowest and the highest point of the body (P: perimeter, A:
+area); both are set to 1 and 0 respectively, as in ht for a plain plate, so the
+t2 term of Cl vanishes. No friction/C term is used in the lower-surface form.
+The characteristic length suggested for use is, with a and b being the length
+and the width of the plate, L = a*b/{2*(a+b)}.
+buoyancy = 1 selects the upper-surface forms (the ht default, True), 0 the
+lower-surface one. The switch between the two faces is not smooth (as in ht).
+Outside the range, no warning is given.
+Validity: no range is given in the source; the lower-surface form is recommended
+in the laminar regime.
+Original: Rohsenow, Warren, James Hartnett and Young Cho, Handbook of Heat
+  Transfer, 3E, New York: McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_horizontal_plate_Rohsenow, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  IF buoyancy = 1 THEN
+    C_tU = 0.14*(1 + 0.01707*Pr)/(1 + 0.01*Pr)
+    C_tV = 0.13*Pr^0.22/(1 + 0.61*Pr^0.81)^0.42
+    t1 = 1    "heated to non-heated area ratio Ah/A [-], as in ht"
+    t2 = 0    "vertical distance between the lowest and the highest point Lf*P/A [-], as in ht"
+    Cl = 0.0972 - (0.0157 + 0.462*C_tV)*t1 + (0.615*C_tV - 0.0548 - 6E-6*Pr)*t2
+    Nu_T = 0.835*Cl*Ra^0.25    "average Cl"
+    Nu_l = 1.4/LN(1 + 1.4/Nu_T)
+    Nu_t = C_tU*Ra^(1/3)
+    m = 10
+    Nu_horizontal_plate_Rohsenow = (Nu_l^m + Nu_t^m)^(1/m)
+  ELSE
+    Nu_T = 0.527*Ra^0.2/(1 + (1.9/Pr)^0.9)^(2/9)    "no friction/C term"
+    Nu_horizontal_plate_Rohsenow = 2.5/LN(1 + 2.5/Nu_T)
+  ENDIF
+END
+
+FUNCTION Nu_sphere_Churchill(Pr, Gr)
+{NU_SPHERE_CHURCHILL - Nusselt number, natural convection from an isothermal
+sphere, Churchill, as presented in Schluender (1987). The equation gives a
+smooth transition from the laminar to the turbulent regime.
+
+  Nu_D = 2 + 0.589*Ra_D^(1/4)/{1+(0.469/Pr)^(9/16)}^(4/9)
+           *{1 + 7.44E-8*Ra_D/{1+(0.469/Pr)^(9/16)}^(16/9)}^(1/12)
+
+  Ra = Pr*Gr,  Gr is taken on the sphere diameter [m]
+
+Checked with the original source by the author of ht. Outside the range, no
+warning is given.
+Validity: good for Ra < 1E13; the limit of Nu is 2 at low Grashof numbers.
+Original: Schluender, Ernst U, and International Center for Heat and Mass
+  Transfer, Heat Exchanger Design Handbook, Washington: Hemisphere Pub. Corp.,
+  1987 (correlation of Churchill, S. W.).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_sphere_Churchill, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  Nu_sphere_Churchill = 2 + 0.589*Ra^0.25/(1 + (0.469/Pr)^(9/16))^(4/9)*(1 + 7.44E-8*Ra/(1 + (0.469/Pr)^(9/16))^(16/9))^(1/12)
+END
+
+"!Demonstration program: every correlation is called at least once"
+"It is ignored by the future $INCLUDE library:free_conv_plates_and_sphere (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each correlation (published values)."
+"  _cold suffix: buoyancy = 0 (cold plate, heat transfer at the lower surface)."
+"  _lowPr suffix: the second ht doctest of Nu_horizontal_plate_McAdams (Pr = 0.01)."
+"Case B: second input set, in the laminar range of the horizontal-plate"
+"  correlations (Pr = 0.7, Gr = 1E4, Ra = 7E3)."
+"Case C: third input set, in the turbulent range (Pr = 0.71, Gr = 2E10, Ra = 1.42E10)."
+"All 26 outputs of the three sets are tabulated against ht in the README."
+
+"Case A - input sets (the ht doctests)"
+Pr_A_plate = 0.69      "air, ht doctest of Nu_vertical_plate_Churchill with Gr = 2.63E9 [-]"
+Gr_A_plate = 2.63E9
+Pr_A_horiz = 5.54      "ht doctests of the three horizontal-plate correlations with Gr = 3.21E8 [-]"
+Gr_A_horiz = 3.21E8
+Pr_A_lowPr = 0.01      "second ht doctest set of Nu_horizontal_plate_McAdams [-]"
+Gr_A_lowPr = 3.21E8
+Pr_A_sphere = 0.7      "ht doctest of Nu_sphere_Churchill with Gr = 1E7 [-]"
+Gr_A_sphere = 1E7
+
+"Nu_vertical_plate_Churchill"
+Nu_vertical_plate_Churchill_A = Nu_vertical_plate_Churchill(Pr_A_plate, Gr_A_plate)
+"Nu_horizontal_plate_McAdams"
+Nu_horizontal_plate_McAdams_A = Nu_horizontal_plate_McAdams(Pr_A_horiz, Gr_A_horiz, 1)
+Nu_horizontal_plate_McAdams_A_cold = Nu_horizontal_plate_McAdams(Pr_A_horiz, Gr_A_horiz, 0)
+Nu_horizontal_plate_McAdams_A_lowPr = Nu_horizontal_plate_McAdams(Pr_A_lowPr, Gr_A_lowPr, 1)
+Nu_horizontal_plate_McAdams_A_lowPr_cold = Nu_horizontal_plate_McAdams(Pr_A_lowPr, Gr_A_lowPr, 0)
+"Nu_horizontal_plate_VDI"
+Nu_horizontal_plate_VDI_A = Nu_horizontal_plate_VDI(Pr_A_horiz, Gr_A_horiz, 1)
+Nu_horizontal_plate_VDI_A_cold = Nu_horizontal_plate_VDI(Pr_A_horiz, Gr_A_horiz, 0)
+"Nu_horizontal_plate_Rohsenow"
+Nu_horizontal_plate_Rohsenow_A = Nu_horizontal_plate_Rohsenow(Pr_A_horiz, Gr_A_horiz, 1)
+Nu_horizontal_plate_Rohsenow_A_cold = Nu_horizontal_plate_Rohsenow(Pr_A_horiz, Gr_A_horiz, 0)
+"Nu_sphere_Churchill"
+Nu_sphere_Churchill_A = Nu_sphere_Churchill(Pr_A_sphere, Gr_A_sphere)
+
+"Case B - input set in the laminar range"
+Pr_B = 0.7             "Prandtl number [-]"
+Gr_B = 1E4             "Grashof number [-]"
+
+"Nu_vertical_plate_Churchill"
+Nu_vertical_plate_Churchill_B = Nu_vertical_plate_Churchill(Pr_B, Gr_B)
+"Nu_horizontal_plate_McAdams"
+Nu_horizontal_plate_McAdams_B = Nu_horizontal_plate_McAdams(Pr_B, Gr_B, 1)
+Nu_horizontal_plate_McAdams_B_cold = Nu_horizontal_plate_McAdams(Pr_B, Gr_B, 0)
+"Nu_horizontal_plate_VDI"
+Nu_horizontal_plate_VDI_B = Nu_horizontal_plate_VDI(Pr_B, Gr_B, 1)
+Nu_horizontal_plate_VDI_B_cold = Nu_horizontal_plate_VDI(Pr_B, Gr_B, 0)
+"Nu_horizontal_plate_Rohsenow"
+Nu_horizontal_plate_Rohsenow_B = Nu_horizontal_plate_Rohsenow(Pr_B, Gr_B, 1)
+Nu_horizontal_plate_Rohsenow_B_cold = Nu_horizontal_plate_Rohsenow(Pr_B, Gr_B, 0)
+"Nu_sphere_Churchill"
+Nu_sphere_Churchill_B = Nu_sphere_Churchill(Pr_B, Gr_B)
+
+"Case C - input set in the turbulent range"
+Pr_C = 0.71            "Prandtl number [-]"
+Gr_C = 2E10            "Grashof number [-]"
+
+"Nu_vertical_plate_Churchill"
+Nu_vertical_plate_Churchill_C = Nu_vertical_plate_Churchill(Pr_C, Gr_C)
+"Nu_horizontal_plate_McAdams"
+Nu_horizontal_plate_McAdams_C = Nu_horizontal_plate_McAdams(Pr_C, Gr_C, 1)
+Nu_horizontal_plate_McAdams_C_cold = Nu_horizontal_plate_McAdams(Pr_C, Gr_C, 0)
+"Nu_horizontal_plate_VDI"
+Nu_horizontal_plate_VDI_C = Nu_horizontal_plate_VDI(Pr_C, Gr_C, 1)
+Nu_horizontal_plate_VDI_C_cold = Nu_horizontal_plate_VDI(Pr_C, Gr_C, 0)
+"Nu_horizontal_plate_Rohsenow"
+Nu_horizontal_plate_Rohsenow_C = Nu_horizontal_plate_Rohsenow(Pr_C, Gr_C, 1)
+Nu_horizontal_plate_Rohsenow_C_cold = Nu_horizontal_plate_Rohsenow(Pr_C, Gr_C, 0)
+"Nu_sphere_Churchill"
+Nu_sphere_Churchill_C = Nu_sphere_Churchill(Pr_C, Gr_C)

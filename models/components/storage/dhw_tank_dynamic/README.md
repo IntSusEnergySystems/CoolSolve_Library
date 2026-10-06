@@ -190,3 +190,5 @@ Source file (EES X10.836, comments in French), collection of S. Quoilin:
   with phase change (MSTh R6 Ex4), same `INTEGRAL`/`$IntegralTable` pattern,
   blocked by the same gaps, with its own runnable variant; the DG-0023 copies
   of the exercise (TM-0092/TM-0095/TM-0123) are recorded as its duplicates.
+- `CSL-0100` *free_conv_enclosed_and_jackets*: the vessel-jacket heat-transfer
+  coefficient of Lehrer and Stein-Schmidt rates the heat transfer of this tank.

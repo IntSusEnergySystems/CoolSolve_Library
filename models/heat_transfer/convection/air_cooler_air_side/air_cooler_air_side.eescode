@@ -1,0 +1,700 @@
+{=============================================================================
+  Air-cooled heat exchanger, air side: finned-tube-bundle heat-transfer
+  coefficient, air-side pressure drop and fan noise (function library)
+  CoolSolve Library model CSL-0099 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Eight correlations of the air side of an air cooler (a finned tube bundle
+  crossed by air), all of them taken from the Python library ht:
+
+    - the air-side heat-transfer coefficient on a bare-tube basis, with the
+      Briggs and Young formula, the ESDU high-fin and low-fin formulas and the
+      Ganguli/VDI formula (four functions);
+    - the air-side pressure drop across the bundle, with the ESDU high-fin and
+      low-fin formulas (two functions);
+    - the sound pressure level of an air-cooler bay with one fan, with the
+      GPSA and the Mukherjee formulas (two functions).
+
+  Every heat-transfer and pressure-drop function is the *product* of a
+  dimensionless correlation and of the surface geometry: the caller passes the
+  mass flow rate of air, the minimum free-flow area, the areas and pitches of
+  the bundle and the air properties, as in the original library. No air
+  property is evaluated here: rho, Cp, mu, k and k_fin are inputs.
+
+  Two helpers are needed by the four heat-transfer functions: the Kern and
+  Kraus efficiency of a circular fin (with the modified Bessel functions
+  I0, I1, K0 and K1 of its closed-form solution) and the two Bessel functions
+  themselves, evaluated here by their power series because CoolSolve has no
+  Bessel function (the same approach as CSL-0090). The row-count correction
+  factor of the ESDU low-fin formula is written inline, with the table of
+  CSL-0095 (ESDU_tube_row_correction), so that no function of another model is
+  duplicated here.
+
+  The demonstration program at the end calls every function: case A uses the
+  input sets of the ht doctests, case B a second, uniform set (a two-row
+  in-line low-fin bundle and a second fan). The ht values of both cases are
+  tabulated in the README (verification table).
+
+  Inputs : m [kg/s], A, A_min, A_fin, A_tube_showing [m^2], A_increase [-],
+           tube_diameter, fin_diameter, fin_thickness, fin_height, bare_length,
+           pitch_parallel, pitch_normal [m], tube_rows [-],
+           flow_area_contraction_ratio [-], rho [kg/m^3], Cp [J/kg-K],
+           mu [Pa-s], k [W/m-K], k_fin [W/m-K], Pr_wall [-],
+           tip_speed [m/s], power [W], fan_diameter [m], induced [-]
+  Outputs: h [W/m^2-K], dP [Pa], noise [dB(A)]
+  Units  : SI - SI-MASS-DEG-PA-C-J (no unit conversion was needed: ht is SI)
+  Source : ht (Caleb Bell), ht/air_cooler.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; correlations by the authors
+           cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION bessel_mod_I_series(n_order, z)
+{BESSEL_MOD_I_SERIES - modified Bessel function of the first kind I_n(z), of
+order 0 or 1, evaluated by its power series [-].
+
+  I_n(z) = (z/2)^n sum_{k>=0} (z^2/4)^k / [k! (k+n)!]
+
+Written with the terms a_k = (z^2/4)^k/(k!)^2, so that I_0 = sum a_k and
+I_1 = (z/2) sum a_k/(k+1); the series is truncated after 13 terms
+(k = 0..12). n_order is 0 or 1 [-], z > 0 [-].
+Validity: the truncated series is exact to machine precision for z <= 2
+  (the neglected term is below 1E-20 relative there); for larger z more terms
+  are needed. The demonstration program stays below z = 1.7.
+Original: Watson, G. N., "A Treatise on the Theory of Bessel Functions", 2nd
+  edition, Cambridge University Press, 1945 (the series of the modified
+  Bessel functions of the first kind, section 6.6); as given in Abramowitz,
+  A. A. and I. F. Stegun, "Handbook of Mathematical Functions", 9th edition,
+  Dover, 1964, formula 9.6.2.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/core.py, fin_efficiency_Kern_Kraus
+  (which calls the modified Bessel functions I0 and I1 of the scipy library),
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  q = z^2/4
+  a = 1
+  S = 1
+  T = 1
+  DUPLICATE k = 1, 12
+    a = a*q/(k*k)
+    S = S + a
+    T = T + a/(k+1)
+  END
+  IF n_order = 0 THEN
+    bessel_mod_I_series = S
+  ELSE
+    bessel_mod_I_series = z/2*T
+  ENDIF
+END
+
+FUNCTION bessel_mod_K_series(n_order, z)
+{BESSEL_MOD_K_SERIES - modified Bessel function of the second kind K_n(z), of
+order 0 or 1, evaluated by its power series [-].
+
+  K_0(z) = -[ln(z/2) + gamma] I_0(z) + sum_{k>=1} H_k (z^2/4)^k/(k!)^2
+
+  K_1(z) = I_0(z)/z + [ln(z/2) + gamma] I_1(z) - (2/z) sum_{k>=1} k H_k a_k
+
+with H_k the harmonic numbers (H_0 = 0), gamma = 0.577215664901533 the
+Euler-Mascheroni constant and a_k = (z^2/4)^k/(k!)^2; I_0 and I_1 are the
+truncated sums of bessel_mod_I_series, computed in the same loop. K_1 is the
+negative derivative of K_0 (dI_0/dz = I_1, da_k/dz = 2k a_k/z), the form in
+which the derivative of the series of K_0 can be written term by term. The sums
+are truncated after 13 terms (k = 0..12).
+n_order is 0 or 1 [-], z > 0 [-].
+Validity: exact to machine precision for z <= 2 (the neglected term is below
+  1E-20 relative there); for larger z more terms are needed. The
+  demonstration program stays below z = 1.7.
+Original: Watson, G. N., "A Treatise on the Theory of Bessel Functions", 2nd
+  edition, Cambridge University Press, 1945; as given in Abramowitz, A. A. and
+  I. F. Stegun, "Handbook of Mathematical Functions", 9th edition, Dover, 1964,
+  formula 9.6.11 (differentiated term by term for K_1).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/core.py, fin_efficiency_Kern_Kraus
+  (which calls the modified Bessel functions K0 and K1 of the scipy library),
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  q = z^2/4
+  gamma = 0.577215664901533
+  a = 1
+  H = 0
+  I_0 = 1
+  I_1_sum = 1
+  S_0 = 0
+  S_1 = 0
+  DUPLICATE k = 1, 12
+    a = a*q/(k*k)
+    H = H + 1.0/k
+    I_0 = I_0 + a
+    I_1_sum = I_1_sum + a/(k+1)
+    S_0 = S_0 + H*a
+    S_1 = S_1 + k*H*a
+  END
+  I_1 = z/2*I_1_sum
+  IF n_order = 0 THEN
+    bessel_mod_K_series = -(LN(z/2) + gamma)*I_0 + S_0
+  ELSE
+    bessel_mod_K_series = I_0/z + (LN(z/2) + gamma)*I_1 - 2*S_1/z
+  ENDIF
+END
+
+FUNCTION eta_fin_Kern_Kraus_aircooler(tube_diameter, fin_diameter, fin_thickness, k_fin, h)
+{ETA_FIN_KERN_KRAUS_AIRCOOLER - efficiency of a circular fin of constant
+thickness attached to a circular tube [-]; the helper the four air-side
+heat-transfer coefficients need.
+
+  eta_f = 2 r_o / [m (r_e^2 - r_o^2)] *
+          [I_1(m r_e) K_1(m r_o) - K_1(m r_e) I_1(m r_o)] /
+          [I_0(m r_o) K_1(m r_e) + I_1(m r_e) K_0(m r_o)]
+
+  m = sqrt(2 h/(k_fin t_fin)),  r_e = D_fin/2,  r_o = D_tube/2
+
+tube_diameter [m] is the outer diameter of the bare tube, fin_diameter [m] the
+outer diameter of the tube including its fins, fin_thickness [m] the fin
+thickness, k_fin [W/m-K] the fin conductivity and h [W/m^2-K] the heat-transfer
+coefficient on the fin surface. I_n and K_n are the modified Bessel functions
+of bessel_mod_I_series and bessel_mod_K_series (CoolSolve has no Bessel
+function, so they are evaluated here by their power series; the combination
+below is the closed form of the original, unchanged).
+Validity: no limits quoted in the original; the series form used for the Bessel
+  functions is exact to machine precision for m r_e <= 2 (m r_e is 1.6 at most
+  in the demonstration program).
+Original: Kern, D. Q. and A. D. Kraus, "Extended Surface Heat Transfer",
+  McGraw-Hill, 1972 (the exact efficiency of a circular fin of constant
+  thickness); the same solution in Bergman, T. L., A. S. Lavine, F. P.
+  Incropera and D. P. DeWitt, "Introduction to Heat Transfer", 6th edition,
+  Wiley, 2011, and Thulukkanam, K., "Heat Exchanger Design Handbook", 2nd
+  edition, CRC Press, 2013.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/core.py, fin_efficiency_Kern_Kraus,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  r_e = fin_diameter/2
+  r_o = tube_diameter/2
+  m = SQRT(2*h/(k_fin*fin_thickness))
+  z_e = m*r_e
+  z_o = m*r_o
+  I1_z_e = bessel_mod_I_series(1, z_e)
+  I1_z_o = bessel_mod_I_series(1, z_o)
+  K1_z_e = bessel_mod_K_series(1, z_e)
+  K1_z_o = bessel_mod_K_series(1, z_o)
+  I0_z_o = bessel_mod_I_series(0, z_o)
+  K0_z_o = bessel_mod_K_series(0, z_o)
+  eta_fin_Kern_Kraus_aircooler = 2*r_o/(m*(r_e^2 - r_o^2))*(I1_z_e*K1_z_o - K1_z_e*I1_z_o)/(I0_z_o*K1_z_e + I1_z_e*K0_z_o)
+END
+
+FUNCTION h_Briggs_Young(m, A, A_min, A_increase, A_fin, A_tube_showing, tube_diameter, fin_diameter, fin_thickness, bare_length, rho, Cp, mu, k, k_fin)
+{H_BRIGGS_YOUNG - air-side heat-transfer coefficient of a finned tube bundle
+(a tube finned on both sides), as a bare-tube-basis coefficient (as if there
+were no fins) [W/m^2-K].
+
+  Nu = 0.134 Re^0.681 Pr^0.33 (S/h_f)^0.2 (S/t_f)^0.1134
+
+  V_max = m/(A_min rho),  Re = V_max D_tube rho/mu,  Pr = Cp mu/k
+  h = k/D_tube Nu
+  h_{A,total} = (eta_f A_fin + A_tube_showing)/A h
+  h_{bare,total} = A_increase h_{A,total}
+
+m [kg/s] is the mass flow rate of air across the bundle, A [m^2] the combined
+finned and bare surface area exposed, A_min [m^2] the minimum free-flow area,
+A_increase [-] the ratio of the actual surface area to the bare-tube surface
+area, A_fin [m^2] the area of all the fins, A_tube_showing [m^2] the area of
+bare tube showing, tube_diameter [m] the bare-tube diameter, fin_diameter [m]
+the tube diameter including its fins (fin height h_f = (fin_diameter -
+tube_diameter)/2), fin_thickness [m] the fin thickness, bare_length [m] the
+length of bare tube between two fins (fin interval minus the fin thickness),
+and rho [kg/m^3], Cp [J/kg-K], mu [Pa-s], k [W/m-K], k_fin [W/m-K] the bulk
+air and fin properties. eta_f is the fin efficiency of
+eta_fin_Kern_Kraus_aircooler.
+Validity: 1000 < Re < 8000, 11.13 mm < D_tube < 40.89 mm, 1.42 mm < fin height
+  < 16.57 mm, 0.33 mm < fin thickness < 2.02 mm, 1.30 mm < fin pitch < 4.06 mm,
+  24.49 mm < normal pitch < 111 mm (as in the original).
+Original: Briggs, D. E. and E. H. Young, 1963, "Convection Heat Transfer and
+  Pressure Drop of Air Flowing across Triangular Banks of Finned Tubes",
+  Chemical Engineering Progress Symp., Series 41, No. 59. Chem. Eng. Prog.
+  Symp. Series No. 41, "Heat Transfer - Houston"; as given in Mukherjee, R.
+  and G. Hewitt, "Practical Thermal Design of Air-Cooled Heat Exchangers",
+  Begell House Publishers, 2007, and Kroeger, D., "Air-Cooled Heat Exchangers
+  and Cooling Towers: Thermal-Flow Performance Evaluation and Design", Vol. 1,
+  PennWell Corp., 2004.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/air_cooler.py, h_Briggs_Young,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  fin_height = (fin_diameter - tube_diameter)/2
+  V_max = m/(A_min*rho)
+  Re = V_max*tube_diameter*rho/mu
+  Pr = Cp*mu/k
+  Nu = 0.134*Re^0.681*Pr^(1/3)*(bare_length/fin_height)^0.2*(bare_length/fin_thickness)^0.1134
+  h = k/tube_diameter*Nu
+  efficiency = eta_fin_Kern_Kraus_aircooler(tube_diameter, fin_diameter, fin_thickness, k_fin, h)
+  h_A_total = (efficiency*A_fin + A_tube_showing)/A*h
+  h_Briggs_Young = A_increase*h_A_total
+END
+
+FUNCTION h_ESDU_high_fin(m, A, A_min, A_increase, A_fin, A_tube_showing, tube_diameter, fin_diameter, fin_thickness, bare_length, pitch_parallel, pitch_normal, tube_rows, rho, Cp, mu, k, k_fin, Pr_wall)
+{H_ESDU_HIGH_FIN - air-side heat-transfer coefficient of a high-fin bundle
+(fins at least 1/3 in high), as a bare-tube-basis coefficient [W/m^2-K].
+
+  Nu = 0.242 Re^0.658 (S/h_f)^0.297 (p_1/p_2)^-0.091 Pr^(1/3) F_1 F_2
+
+  F_2 = 0.76 (1 row), 0.84 (2 rows), 0.92 (3 rows), 1 (4 rows or more)
+  F_1 = (Pr/Pr_wall)^0.26, the wall property correction factor
+
+  V_max = m/(A_min rho),  Re = V_max D_tube rho/mu,  Pr = Cp mu/k
+  h = k/D_tube Nu
+  h_{A,total} = (eta_f A_fin + A_tube_showing)/A h
+  h_{bare,total} = A_increase h_{A,total}
+
+Arguments as in h_Briggs_Young, plus pitch_parallel [m] (distance between tube
+centres along a line parallel to the flow), pitch_normal [m] (distance between
+tube centres in a line 90 degrees to the flow), tube_rows [-] (number of tube
+rows per bundle) and Pr_wall [-] (Prandtl number at the wall temperature).
+Passing Pr_wall = Pr gives F_1 = 1, i.e. no property correction: this is what
+the original does when its Pr_wall argument is not given. F_2 is 1 for four
+tube rows or more.
+Validity: none quoted in the original; the data of the ESDU report it is
+  taken from cover high fins (4 to 11 fins/inch, tube diameters 3/8 to 2 in,
+  fin heights 1/3 to 5/8 in, fin-tip to fin-root diameter ratios 1.2 to 2.4,
+  5000 < Re < 50000).
+Original: "High-Fin Staggered Tube Banks: Heat Transfer and Pressure Drop for
+  Turbulent Single Phase Gas Flow." ESDU 86022 (October 1, 1986); as given in
+  Hewitt, G. L. Shires, T. R. Bott G. F., G. L. Shires and T. R. Bott, "Process
+  Heat Transfer", 1st edition, CRC Press, 1994.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/air_cooler.py, h_ESDU_high_fin,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  fin_height = (fin_diameter - tube_diameter)/2
+  V_max = m/(A_min*rho)
+  Re = V_max*tube_diameter*rho/mu
+  Pr = Cp*mu/k
+  Nu = 0.242*Re^0.658*(bare_length/fin_height)^0.297*(pitch_normal/pitch_parallel)^-0.091*Pr^(1/3)
+  IF tube_rows < 2 THEN
+    F_2 = 0.76
+  ELSE
+    IF tube_rows < 3 THEN
+      F_2 = 0.84
+    ELSE
+      IF tube_rows < 4 THEN
+        F_2 = 0.92
+      ELSE
+        F_2 = 1
+      ENDIF
+    ENDIF
+  ENDIF
+  Nu = Nu*F_2*(Pr/Pr_wall)^0.26
+  h = k/tube_diameter*Nu
+  efficiency = eta_fin_Kern_Kraus_aircooler(tube_diameter, fin_diameter, fin_thickness, k_fin, h)
+  h_A_total = (efficiency*A_fin + A_tube_showing)/A*h
+  h_ESDU_high_fin = A_increase*h_A_total
+END
+
+FUNCTION h_ESDU_low_fin(m, A, A_min, A_increase, A_fin, A_tube_showing, tube_diameter, fin_diameter, fin_thickness, bare_length, pitch_parallel, pitch_normal, tube_rows, rho, Cp, mu, k, k_fin, Pr_wall)
+{H_ESDU_LOW_FIN - air-side heat-transfer coefficient of a low-fin bundle (fins
+formed on the tube outside wall, normally by cold rolling), as a
+bare-tube-basis coefficient [W/m^2-K].
+
+  Nu = 0.183 Re^0.7 (S/h_f)^0.36 (p_1/D_fin)^0.06 (h_f/D_fin)^0.11 Pr^0.36
+       F_1 F_2
+
+  F_2 = ESDU tube row count correction factor (in-line or staggered, see the
+       table below; 1 for 10 tube rows or more, which disables the correction)
+  F_1 = (Pr/Pr_wall)^0.26, the wall property correction factor
+
+  V_max = m/(A_min rho),  Re = V_max D_tube rho/mu,  Pr = Cp mu/k
+  h = k/D_tube Nu
+  h_{A,total} = (eta_f A_fin + A_tube_showing)/A h
+  h_{bare,total} = A_increase h_{A,total}
+
+Arguments as in h_ESDU_high_fin. The bundle is taken as staggered when
+|1 - pitch_normal/pitch_parallel| > 0.05, in-line otherwise. The row count
+correction factor F_2 (ESDU 73031, as shown in Hewitt et al.) is written here
+as the ladder below, the form of the function ESDU_tube_row_correction of
+library model CSL-0095:
+
+  tube rows      staggered    in-line
+  2              0.8593       0.8479
+  3              0.8593       0.8479
+  4              0.8984       0.8957
+  5              0.9268       0.9306
+  6              0.9482       0.9551
+  7              0.9650       0.9724
+  8              0.9777       0.9839
+  9              0.9868       0.9902
+  10 or more     1            1
+
+The original has a third correction factor for tube angles other than 30, 45 or
+60 degrees, which is not fully explained and is not shown in the source of the
+ESDU relation; it is not implemented here either (as in the original).
+Validity: none quoted in the formula; the data of the ESDU report cover low
+  fins (11 to 32 fins/inch, tube diameters 0.5 to 1.25 in, fin heights 0.03 to
+  0.1 in, 1000 < Re < 80000).
+Original: "High-Fin Staggered Tube Banks: Heat Transfer and Pressure Drop for
+  Turbulent Single Phase Gas Flow." ESDU 86022 (October 1, 1986); the row
+  count factor is from "Convective Heat Transfer During Crossflow of Fluids
+  Over Plain Tube Banks." ESDU 73031 (November 1, 1973); both as given in
+  Hewitt, G. L. Shires, T. R. Bott G. F., G. L. Shires and T. R. Bott, "Process
+  Heat Transfer", 1st edition, CRC Press, 1994.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/air_cooler.py, h_ESDU_low_fin
+  (which calls ESDU_tube_row_correction of ht/conv_tube_bank.py and
+  wall_factor of ht/core.py), MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  fin_height = (fin_diameter - tube_diameter)/2
+  V_max = m/(A_min*rho)
+  Re = V_max*tube_diameter*rho/mu
+  Pr = Cp*mu/k
+  Nu = 0.183*Re^0.7*(bare_length/fin_height)^0.36*(pitch_normal/fin_diameter)^0.06*(fin_height/fin_diameter)^0.11*Pr^0.36
+  IF ABS(1 - pitch_normal/pitch_parallel) > 0.05 THEN
+    staggered = 1
+  ELSE
+    staggered = 0
+  ENDIF
+  F_2 = 1
+  IF tube_rows <= 2 THEN
+    IF staggered = 1 THEN
+      F_2 = 0.8593
+    ELSE
+      F_2 = 0.8479
+    ENDIF
+  ELSE
+    IF tube_rows < 10 THEN
+      IF staggered = 1 THEN
+        F_2 = 0.8984
+        IF tube_rows = 5 THEN F_2 = 0.9268
+        IF tube_rows = 6 THEN F_2 = 0.9482
+        IF tube_rows = 7 THEN F_2 = 0.965
+        IF tube_rows = 8 THEN F_2 = 0.9777
+        IF tube_rows = 9 THEN F_2 = 0.9868
+      ELSE
+        F_2 = 0.8957
+        IF tube_rows = 5 THEN F_2 = 0.9306
+        IF tube_rows = 6 THEN F_2 = 0.9551
+        IF tube_rows = 7 THEN F_2 = 0.9724
+        IF tube_rows = 8 THEN F_2 = 0.9839
+        IF tube_rows = 9 THEN F_2 = 0.9902
+      ENDIF
+    ENDIF
+  ENDIF
+  Nu = Nu*F_2*(Pr/Pr_wall)^0.26
+  h = k/tube_diameter*Nu
+  efficiency = eta_fin_Kern_Kraus_aircooler(tube_diameter, fin_diameter, fin_thickness, k_fin, h)
+  h_A_total = (efficiency*A_fin + A_tube_showing)/A*h
+  h_ESDU_low_fin = A_increase*h_A_total
+END
+
+FUNCTION h_Ganguli_VDI(m, A, A_min, A_increase, A_fin, A_tube_showing, tube_diameter, fin_diameter, fin_thickness, bare_length, pitch_parallel, pitch_normal, tube_rows, rho, Cp, mu, k, k_fin)
+{H_GANGULI_VDI - air-side heat-transfer coefficient of a finned tube bundle, as
+a bare-tube-basis coefficient [W/m^2-K]; the Ganguli parametric-study formula as
+modified in the VDI Heat Atlas.
+
+  In-line:    Nu_d = 0.22 Re_d^0.6 (A/A_tube,only)^-0.15 Pr^(1/3)
+  Staggered:  Nu_d = 0.38 Re_d^0.6 (A/A_tube,only)^-0.15 Pr^(1/3)
+
+The leading coefficient depends on the arrangement and on the row count:
+in-line (|1 - pitch_normal/pitch_parallel| < 0.05) 0.2 for 3 tube rows or
+fewer, 0.22 above; staggered 0.2 for 1 row, 0.33 for 2, 0.36 for 3 and 0.38
+above. The area ratio is passed as A_increase (the VDI example shows the ratio
+of the total area to the original bare-tube area), and
+
+  V_max = m/(A_min rho),  Re = V_max D_tube rho/mu,  Pr = Cp mu/k
+  h = k/D_tube Nu
+  h_{A,total} = (eta_f A_fin + A_tube_showing)/A h
+  h_{bare,total} = A_increase h_{A,total}
+
+Arguments as in h_Briggs_Young, plus pitch_parallel [m], pitch_normal [m] and
+tube_rows [-].
+Validity: none quoted in the original.
+Original: Ganguli, A., S. S. Tung and J. Taborek, "Parametric Study of
+  Air-Cooled Heat Exchanger Finned Tube Geometry", in AIChE Symposium Series
+  81: 122-128, 1985; as modified in V. D. I. Gesellschaft (ed.), "VDI Heat
+  Atlas", 2nd edition, Springer, 2010; the worked example (Example 12.1) of
+  Serth, R. W. and T. Lestina, "Process Heat Transfer: Principles, Applications
+  and Rules of Thumb", Academic Press, 2014, gives this function; the model is
+  also shown in Kroeger, D., "Air-Cooled Heat Exchangers and Cooling Towers",
+  Vol. 1, PennWell Corp., 2004.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/air_cooler.py, h_Ganguli_VDI,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  V_max = m/(A_min*rho)
+  Re = V_max*tube_diameter*rho/mu
+  Pr = Cp*mu/k
+  IF ABS(1 - pitch_normal/pitch_parallel) < 0.05 THEN
+    IF tube_rows < 4 THEN
+      coeff = 0.2
+    ELSE
+      coeff = 0.22
+    ENDIF
+  ELSE
+    IF tube_rows = 1 THEN
+      coeff = 0.2
+    ELSE
+      IF tube_rows = 2 THEN
+        coeff = 0.33
+      ELSE
+        IF tube_rows = 3 THEN
+          coeff = 0.36
+        ELSE
+          coeff = 0.38
+        ENDIF
+      ENDIF
+    ENDIF
+  ENDIF
+  Nu = coeff*Re^0.6*Pr^(1/3)*A_increase^-0.15
+  h = k/tube_diameter*Nu
+  efficiency = eta_fin_Kern_Kraus_aircooler(tube_diameter, fin_diameter, fin_thickness, k_fin, h)
+  h_A_total = (efficiency*A_fin + A_tube_showing)/A*h
+  h_Ganguli_VDI = A_increase*h_A_total
+END
+
+FUNCTION dP_ESDU_high_fin(m, A_min, A_increase, flow_area_contraction_ratio, tube_diameter, pitch_parallel, pitch_normal, tube_rows, rho, mu)
+{DP_ESDU_HIGH_FIN - air-side pressure drop across a high-fin tube bank [Pa],
+with the effects of the friction along the fins and of the acceleration.
+
+  V_max = m/(A_min rho),  Re = V_max D_tube rho/mu
+  K_f = 4.567 Re^-0.242 A_increase^0.504 (p_1/D_tube)^-0.376
+                     (p_2/D_tube)^-0.546
+  K_acc = 1 + (flow area contraction ratio)^2
+  dP = (K_acc + n_rows K_f) rho V_max^2 / 2
+
+m [kg/s] is the mass flow rate of air, A_min [m^2] the minimum free-flow area,
+A_increase [-] the ratio of the actual surface area to the bare-tube surface
+area, flow_area_contraction_ratio [-] the ratio of A_min to the bundle face
+area, tube_diameter [m] the bare-tube diameter, pitch_parallel [m] and
+pitch_normal [m] the tube pitches, tube_rows [-] the number of tube rows, rho
+[kg/m^3] the bulk air density and mu [Pa-s] the bulk air viscosity. The
+Reynolds number is based on V_max, i.e. on the minimum free-flow area.
+Validity: the data of the ESDU report cover fin densities 4 to 11/inch, tube
+  outer diameters 3/8 to 2 in, fin heights 1/3 to 5/8 in, fin-tip to
+  fin-root diameter ratios 1.2 to 2.4 and 5000 < Re < 50000; the report claims
+  72 % of its experimental points within 10 % of this correlation.
+Original: "High-Fin Staggered Tube Banks: Heat Transfer and Pressure Drop for
+  Turbulent Single Phase Gas Flow." ESDU (October 1, 1986); as described in
+  Hewitt, G. L. Shires T. Reg Bott G. F., G. L. Shires and T. R. Bott, "Process
+  Heat Transfer", 1st edition, CRC Press, 1994.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/air_cooler.py, dP_ESDU_high_fin,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  V_max = m/(A_min*rho)
+  Re = V_max*tube_diameter*rho/mu
+  K_f = 4.567*Re^-0.242*A_increase^0.504*(pitch_normal/tube_diameter)^-0.376*(pitch_parallel/tube_diameter)^-0.546
+  K_acc = 1 + flow_area_contraction_ratio^2
+  dP_ESDU_high_fin = (K_acc + tube_rows*K_f)*0.5*rho*V_max^2
+END
+
+FUNCTION dP_ESDU_low_fin(m, A_min, A_increase, flow_area_contraction_ratio, tube_diameter, fin_height, bare_length, pitch_parallel, pitch_normal, tube_rows, rho, mu)
+{DP_ESDU_LOW_FIN - air-side pressure drop across a low-fin tube bank [Pa], with
+the effects of the friction along the fins and of the acceleration.
+
+  V_max = m/(A_min rho),  Re = V_max D_tube rho/mu
+  K_f = 4.72 Re^-0.286 (h_f/S)^0.51 ((p_1-D_tube)/(p_2-D_tube))^0.536
+                     (D_tube/(p_1-D_tube))^0.36
+  K_acc = 1 + (flow area contraction ratio)^2
+  dP = (K_acc + n_rows K_f) rho V_max^2 / 2
+
+Arguments as in dP_ESDU_high_fin, plus fin_height [m] (the height of the fins
+above the bare tube) and bare_length [m] (the length of bare tube between two
+fins). The Reynolds number is based on V_max, i.e. on the minimum free-flow
+area. Low fins are fins formed on the tube outside wall, normally by the cold
+rolling process.
+Validity: the data of the ESDU report cover fin densities 11 to 32/inch, tube
+  outer diameters 0.5 to 1.25 in, fin heights 0.03 to 0.1 in and
+  1000 < Re < 80000; the report compared this correlation with 81 results and
+  obtained a standard deviation of 7.7 %.
+Original: "High-Fin Staggered Tube Banks: Heat Transfer and Pressure Drop for
+  Turbulent Single Phase Gas Flow." ESDU (October 1, 1986); as described in
+  Hewitt, G. L. Shires T. Reg Bott G. F., G. L. Shires and T. R. Bott, "Process
+  Heat Transfer", 1st edition, CRC Press, 1994.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/air_cooler.py, dP_ESDU_low_fin,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  V_max = m/(A_min*rho)
+  Re = V_max*tube_diameter*rho/mu
+  K_f = 4.72*Re^-0.286*(fin_height/bare_length)^0.51*((pitch_normal-tube_diameter)/(pitch_parallel-tube_diameter))^0.536*(tube_diameter/(pitch_normal-tube_diameter))^0.36
+  K_acc = 1 + flow_area_contraction_ratio^2
+  dP_ESDU_low_fin = (K_acc + tube_rows*K_f)*0.5*rho*V_max^2
+END
+
+FUNCTION air_cooler_noise_GPSA(tip_speed, power)
+{AIR_COOLER_NOISE_GPSA - sound pressure level at 1 m from an air-cooler bay
+with one fan, GPSA handbook method [dB(A)].
+
+  PWL = 56 + 30 log10(tip speed [m/min]/304.8) + 10 log10(power [hp])
+
+tip_speed [m/s] is the tip speed of the fan blades and power [W] the shaft
+power of a single fan motor; the formula uses m/min and hp, so the inputs are
+converted here (60 m/min per m/s and 745.6998715822701 W per hp, the values
+used by the original library).
+Validity: none quoted in the original.
+Original: GPSA, "Engineering Data Book, SI", 13th edition, Gas Processors
+  Suppliers Association, 2012 (air-cooler design and noise; the example of the
+  original library is an example problem of this book).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/air_cooler.py,
+  air_cooler_noise_GPSA, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  air_cooler_noise_GPSA = 56 + 30*log10(tip_speed*60/304.8) + 10*log10(power/745.6998715822701)
+END
+
+FUNCTION air_cooler_noise_Mukherjee(tip_speed, power, fan_diameter, induced)
+{AIR_COOLER_NOISE_MUKHERJEE - sound pressure level at 1 m from an air-cooler
+bay with one fan (p0 = 2E-5 Pa), Mukherjee and Hewitt method [dB(A)].
+
+  SPL = 46 + 30 log10(tip speed [m/s]) + 10 log10(power [hp])
+             - 20 log10(D_fan), less 3 dB for an induced-draft fan
+
+tip_speed [m/s] is the tip speed of the fan blades, power [W] the shaft power
+of a single fan motor, fan_diameter [m] the fan diameter and induced [-] 0 for
+a forced-draft and 1 for an induced-draft air cooler. The formula uses hp,
+so the input is converted here (745.6998715822701 W per hp, the value used by
+the original library).
+Validity: none quoted in the original.
+Original: Mukherjee, R. and G. Hewitt, "Practical Thermal Design of Air-Cooled
+  Heat Exchangers", Begell House Publishers Inc., 2007.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/air_cooler.py,
+  air_cooler_noise_Mukherjee, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  noise = 46 + 30*log10(tip_speed) + 10*log10(power/745.6998715822701) - 20*log10(fan_diameter)
+  IF induced = 1 THEN
+    noise = noise - 3
+  ENDIF
+  air_cooler_noise_Mukherjee = noise
+END
+
+"!Demonstration program: every function is called twice"
+"It is ignored by the future $INCLUDE library:air_cooler_air_side (CS-FEAT-IMPORT)."
+"Case A: the input sets of the ht doctests of each function (three bundles and"
+"one fan); case B: a second, uniform set (a two-row in-line low-fin bundle and"
+"a second fan). The ht values of both cases are tabulated in the README."
+
+"!Helper functions - modified Bessel functions of the first and second kind (z = 1.5)"
+I0_A = bessel_mod_I_series(0, 1.5)
+I1_A = bessel_mod_I_series(1, 1.5)
+K0_A = bessel_mod_K_series(0, 1.5)
+K1_A = bessel_mod_K_series(1, 1.5)
+
+"!Helper function - circular fin efficiency (ht doctest of fin_efficiency_Kern_Kraus)"
+eta_fin_doctest = eta_fin_Kern_Kraus_aircooler(0.0254, 0.05715, 3.8E-4, 200, 58)
+
+"!Case A1 - high-fin bundle: 4 rows of 20 tubes, 3 m long, 1 in OD, 0.4 mm fins"
+"!at 2.309 mm pitch, 15.9 mm high, staggered pitches 52.07 x 60.33 mm, 21.56 kg/s of air"
+m_A1 = 21.56
+A_A1 = 452.2258759
+A_min_A1 = 1.760309311
+A_increase_A1 = 23.61351166
+A_fin_A1 = 436.4421443
+A_tube_showing_A1 = 15.78373157
+tube_diameter_A1 = 0.0254
+fin_diameter_A1 = 0.0572
+fin_thickness_A1 = 0.000406
+bare_length_A1 = 0.001903
+pitch_parallel_A1 = 0.05207
+pitch_normal_A1 = 0.06033
+tube_rows_A1 = 4
+rho_A1 = 1.161
+Cp_A1 = 1007
+mu_A1 = 1.85E-5
+k_A1 = 0.0263
+k_fin_A1 = 205
+Pr_wall_A1 = Cp_A1*mu_A1/k_A1   "Pr_wall = Pr: no property correction, as in the original [1]"
+
+h_Briggs_Young_A1 = h_Briggs_Young(m_A1, A_A1, A_min_A1, A_increase_A1, A_fin_A1, A_tube_showing_A1, tube_diameter_A1, fin_diameter_A1, fin_thickness_A1, bare_length_A1, rho_A1, Cp_A1, mu_A1, k_A1, k_fin_A1)
+h_ESDU_high_fin_A1 = h_ESDU_high_fin(m_A1, A_A1, A_min_A1, A_increase_A1, A_fin_A1, A_tube_showing_A1, tube_diameter_A1, fin_diameter_A1, fin_thickness_A1, bare_length_A1, pitch_parallel_A1, pitch_normal_A1, tube_rows_A1, rho_A1, Cp_A1, mu_A1, k_A1, k_fin_A1, Pr_wall_A1)
+h_ESDU_high_fin_wall_A1 = h_ESDU_high_fin(m_A1, A_A1, A_min_A1, A_increase_A1, A_fin_A1, A_tube_showing_A1, tube_diameter_A1, fin_diameter_A1, fin_thickness_A1, bare_length_A1, pitch_parallel_A1, pitch_normal_A1, tube_rows_A1, rho_A1, Cp_A1, mu_A1, k_A1, k_fin_A1, 0.71)
+
+"!Case A2 - low-fin bundle: 4 rows of 8 tubes, 0.5 m long, 16.4 mm OD, 1 mm fins"
+"!at 3 mm pitch, 4.1 mm high, staggered pitches 27.1 x 31.3 mm, 0.914 kg/s of air"
+m_A2 = 0.914
+A_A2 = 3.778288765
+A_min_A2 = 0.04866666667
+A_increase_A2 = 4.583333333
+A_fin_A2 = 3.22871949
+A_tube_showing_A2 = 0.5495692749
+tube_diameter_A2 = 0.0164
+fin_diameter_A2 = 0.0246
+fin_thickness_A2 = 0.001
+bare_length_A2 = 0.002
+fin_height_A2 = 0.0041
+pitch_parallel_A2 = 0.0271
+pitch_normal_A2 = 0.0313
+tube_rows_A2 = 4
+flow_area_contraction_ratio_A2 = 0.3658460189
+rho_A2 = 1.217
+Cp_A2 = 1007
+mu_A2 = 1.8E-5
+k_A2 = 0.0253
+k_fin_A2 = 15
+Pr_wall_A2 = Cp_A2*mu_A2/k_A2   "Pr_wall = Pr: no property correction, as in the original [1]"
+
+h_ESDU_low_fin_A2 = h_ESDU_low_fin(m_A2, A_A2, A_min_A2, A_increase_A2, A_fin_A2, A_tube_showing_A2, tube_diameter_A2, fin_diameter_A2, fin_thickness_A2, bare_length_A2, pitch_parallel_A2, pitch_normal_A2, tube_rows_A2, rho_A2, Cp_A2, mu_A2, k_A2, k_fin_A2, Pr_wall_A2)
+h_ESDU_low_fin_wall_A2 = h_ESDU_low_fin(m_A2, A_A2, A_min_A2, A_increase_A2, A_fin_A2, A_tube_showing_A2, tube_diameter_A2, fin_diameter_A2, fin_thickness_A2, bare_length_A2, pitch_parallel_A2, pitch_normal_A2, tube_rows_A2, rho_A2, Cp_A2, mu_A2, k_A2, k_fin_A2, 0.72)
+dP_ESDU_high_fin_A2 = dP_ESDU_high_fin(m_A2, A_min_A2, A_increase_A2, flow_area_contraction_ratio_A2, tube_diameter_A2, pitch_parallel_A2, pitch_normal_A2, tube_rows_A2, rho_A2, mu_A2)
+dP_ESDU_low_fin_A2 = dP_ESDU_low_fin(m_A2, A_min_A2, A_increase_A2, flow_area_contraction_ratio_A2, tube_diameter_A2, fin_height_A2, bare_length_A2, pitch_parallel_A2, pitch_normal_A2, tube_rows_A2, rho_A2, mu_A2)
+
+"!Case A3 - Ganguli/VDI worked example (Example 12.1 of Serth and Lestina):"
+"!4 rows of 56 tubes, 36 ft long, 1 in OD, 0.33 mm fins at 10/inch, 15.875 mm"
+"!high, pitches 63.5 x 110 mm, 130.7 kg/s of air"
+m_A3 = 130.70315
+A_A3 = 4211.940656
+A_min_A3 = 20.87531309
+A_increase_A3 = 21.475
+A_fin_A3 = 4041.305575
+A_tube_showing_A3 = 170.6350813
+tube_diameter_A3 = 0.0254
+fin_diameter_A3 = 0.05715
+fin_thickness_A3 = 0.0003302
+bare_length_A3 = 0.0022098
+pitch_parallel_A3 = 0.1099852263
+pitch_normal_A3 = 0.0635
+tube_rows_A3 = 4
+rho_A3 = 1.2013848
+Cp_A3 = 1009.0188
+mu_A3 = 1.9304793E-5
+k_A3 = 0.027864828
+k_fin_A3 = 238
+
+h_Ganguli_VDI_A3 = h_Ganguli_VDI(m_A3, A_A3, A_min_A3, A_increase_A3, A_fin_A3, A_tube_showing_A3, tube_diameter_A3, fin_diameter_A3, fin_thickness_A3, bare_length_A3, pitch_parallel_A3, pitch_normal_A3, tube_rows_A3, rho_A3, Cp_A3, mu_A3, k_A3, k_fin_A3)
+
+"!Case A4 - fan: 52.95 m/s tip speed (3177 m/min), 18.717 kW (25.1 hp), 4.267 m fan"
+tip_speed_A4 = 52.95
+power_A4 = 18717.066776715    "25.1 hp, as in the original [1]"
+fan_diameter_A4 = 4.267
+
+air_cooler_noise_GPSA_A4 = air_cooler_noise_GPSA(tip_speed_A4, power_A4)
+air_cooler_noise_Mukherjee_A4 = air_cooler_noise_Mukherjee(tip_speed_A4, power_A4, fan_diameter_A4, 0)
+air_cooler_noise_Mukherjee_ind_A4 = air_cooler_noise_Mukherjee(tip_speed_A4, power_A4, fan_diameter_A4, 1)
+
+"!Case B - second, uniform input set: 2-row in-line low-fin bundle"
+"!2 rows of 10 tubes, 1.2 m long, 19.05 mm OD, 0.8 mm fins at 3.5 mm pitch,"
+"!3 mm high, in-line square pitches of 40 mm, 2.35 kg/s of air"
+m_B = 2.35
+A_B = 4.389792295
+A_min_B = 0.2349428571
+A_increase_B = 3.05624297
+A_fin_B = 3.281761542
+A_tube_showing_B = 1.108030753
+tube_diameter_B = 0.01905
+fin_diameter_B = 0.02505
+fin_thickness_B = 0.0008
+bare_length_B = 0.0027
+fin_height_B = 0.003
+pitch_parallel_B = 0.04
+pitch_normal_B = 0.04
+tube_rows_B = 2
+flow_area_contraction_ratio_B = 0.4661564626
+rho_B = 1.16
+Cp_B = 1007
+mu_B = 1.9E-5
+k_B = 0.026
+k_fin_B = 15
+Pr_wall_B = Cp_B*mu_B/k_B   "Pr_wall = Pr: no property correction, as in the original [1]"
+
+h_Briggs_Young_B = h_Briggs_Young(m_B, A_B, A_min_B, A_increase_B, A_fin_B, A_tube_showing_B, tube_diameter_B, fin_diameter_B, fin_thickness_B, bare_length_B, rho_B, Cp_B, mu_B, k_B, k_fin_B)
+h_ESDU_high_fin_B = h_ESDU_high_fin(m_B, A_B, A_min_B, A_increase_B, A_fin_B, A_tube_showing_B, tube_diameter_B, fin_diameter_B, fin_thickness_B, bare_length_B, pitch_parallel_B, pitch_normal_B, tube_rows_B, rho_B, Cp_B, mu_B, k_B, k_fin_B, Pr_wall_B)
+h_ESDU_high_fin_wall_B = h_ESDU_high_fin(m_B, A_B, A_min_B, A_increase_B, A_fin_B, A_tube_showing_B, tube_diameter_B, fin_diameter_B, fin_thickness_B, bare_length_B, pitch_parallel_B, pitch_normal_B, tube_rows_B, rho_B, Cp_B, mu_B, k_B, k_fin_B, 0.7)
+h_ESDU_low_fin_B = h_ESDU_low_fin(m_B, A_B, A_min_B, A_increase_B, A_fin_B, A_tube_showing_B, tube_diameter_B, fin_diameter_B, fin_thickness_B, bare_length_B, pitch_parallel_B, pitch_normal_B, tube_rows_B, rho_B, Cp_B, mu_B, k_B, k_fin_B, Pr_wall_B)
+h_ESDU_low_fin_wall_B = h_ESDU_low_fin(m_B, A_B, A_min_B, A_increase_B, A_fin_B, A_tube_showing_B, tube_diameter_B, fin_diameter_B, fin_thickness_B, bare_length_B, pitch_parallel_B, pitch_normal_B, tube_rows_B, rho_B, Cp_B, mu_B, k_B, k_fin_B, 0.77)
+h_Ganguli_VDI_B = h_Ganguli_VDI(m_B, A_B, A_min_B, A_increase_B, A_fin_B, A_tube_showing_B, tube_diameter_B, fin_diameter_B, fin_thickness_B, bare_length_B, pitch_parallel_B, pitch_normal_B, tube_rows_B, rho_B, Cp_B, mu_B, k_B, k_fin_B)
+dP_ESDU_high_fin_B = dP_ESDU_high_fin(m_B, A_min_B, A_increase_B, flow_area_contraction_ratio_B, tube_diameter_B, pitch_parallel_B, pitch_normal_B, tube_rows_B, rho_B, mu_B)
+dP_ESDU_low_fin_B = dP_ESDU_low_fin(m_B, A_min_B, A_increase_B, flow_area_contraction_ratio_B, tube_diameter_B, fin_height_B, bare_length_B, pitch_parallel_B, pitch_normal_B, tube_rows_B, rho_B, mu_B)
+
+"!Case B - helper functions and second fan: 42 m/s tip speed, 45 kW, 3 m fan"
+I0_B = bessel_mod_I_series(0, 1.5)
+I1_B = bessel_mod_I_series(1, 1.5)
+K0_B = bessel_mod_K_series(0, 1.5)
+K1_B = bessel_mod_K_series(1, 1.5)
+eta_fin_B = eta_fin_Kern_Kraus_aircooler(tube_diameter_B, fin_diameter_B, fin_thickness_B, k_fin_B, 98.5)
+
+tip_speed_B = 42
+power_B = 45000
+fan_diameter_B = 3
+
+air_cooler_noise_GPSA_B = air_cooler_noise_GPSA(tip_speed_B, power_B)
+air_cooler_noise_Mukherjee_B = air_cooler_noise_Mukherjee(tip_speed_B, power_B, fan_diameter_B, 0)
+air_cooler_noise_Mukherjee_ind_B = air_cooler_noise_Mukherjee(tip_speed_B, power_B, fan_diameter_B, 1)

@@ -147,3 +147,7 @@ Sources (not copied into the library):
 - `CSL-0014` *hx_constant_pinch*: three-zone condenser sized by an imposed pinch.
 - See also the CoolSolve examples `exchangers2` (crossflow HX) and `exchangers3`
   (shell-and-tube condenser) for the companion exercises of the same session.
+- `CSL-0090` *hx_effectiveness_ntu*: the effectiveness-NTU relations
+  (Cmin, Cmax, Cr, NTU<->UA, eps and NTU for the counterflow, parallel,
+  crossflow and boiler/condenser arrangements) as EES functions, to be copied
+  in a model that rates a counterflow exchanger.

@@ -172,9 +172,23 @@ rating, different fluids and values) and is left at `todo`.
 
 ## Related models
 
+- `CSL-0096` *plate_hx_heat_transfer*: the plate-heat-exchanger correlations
+  (single-phase Nu and flow boiling) a shell-and-tube condenser rating would
+  use for its two-phase side, in place of the `h_` functions of `CSL-0089`.
 - `CSL-0002` *counterflow_hx_oil_water*: same exercise session (répétition 12)
   for the counterflow arrangement (oil cooled by water).
 - `CSL-0026` *crossflow_hx_hot_gas_water*: same exercise session
   (répétition 12, exercise 3) for the crossflow arrangement.
 - `CSL-0008` *condenser_three_zones*: three-zone ε-NTU model of an air-cooled
   condenser, each zone with its own effectiveness law.
+- `CSL-0089` *condensation_film*: the in-tube film-condensation correlations
+  (Boyko-Kruzhilin, Akers-Deans-Crosser, Cavallini-Smith-Zecchin, Shah) that a
+  condenser design can use for the condensing-side coefficient.
+- `CSL-0090` *hx_effectiveness_ntu*: the effectiveness-NTU relations
+  (Cmin, Cmax, Cr, NTU<->UA, eps and NTU for the counterflow, parallel,
+  crossflow and boiler/condenser arrangements) as EES functions, to be copied
+  in a model that rates a shell-and-tube condenser.
+- `CSL-0097` *two_phase_nonboiling_in_tube*: the two-phase non-boiling
+  in-tube heat-transfer coefficients of the `ht` family (Davis-David,
+  Groothuis-Hendal, Hughmark, Knott, Aggour, 9 functions), which a condenser
+  or evaporator design can use for a tube carrying a condensing mixture.

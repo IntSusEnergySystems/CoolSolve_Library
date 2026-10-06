@@ -1,10 +1,10 @@
 {
  "snapshot": {
-  "content_hash": "sha256:19b15af2304a6454",
-  "files": 411,
-  "bytes": 3578797,
-  "models": 78,
-  "functions": 19,
+  "content_hash": "sha256:90135fbfb79f66c1",
+  "files": 518,
+  "bytes": 4967515,
+  "models": 102,
+  "functions": 239,
   "taxonomy_version": "0.2"
  },
  "models": [
@@ -82,11 +82,38 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0005;CSL-0034",
+   "related": "CSL-0005;CSL-0034;CSL-0080",
    "coolsolve_version": "0.3.0+fix/library-gaps@fbdb6a7",
    "verified_on": "2026-10-05",
    "path": "models/components/boilers_burners/boiler_mean_specific_heat",
    "main_file": "boiler_mean_specific_heat.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0080",
+   "name": "condensing_boiler_refsim",
+   "title": "Condensing boiler reference model (RefSim)",
+   "category": "components/boilers_burners",
+   "kind": "steady",
+   "level": 3,
+   "status": "blocked",
+   "summary": "Reference simulation model of a condensing boiler of the ULiège model bank (Laborelec toolkit lineage): a supposed adiabatic combustion chamber described by five fictitious processes (cooling of the air and of the fuel to the reference temperature, stoichiometric combustion, CO2-CO dissociation of the air excess, heating of the products), a counter-flow dry gas-water heat exchanger (epsilon-NTU), a cooling coil standing for the wet gas-water exchanger in which the fumes condense (solved as fully dry and as fully wet, the regime of highest cooling power being kept) and a semi-isothermal water-environment exchanger standing for the heat losses to the ambient; the mean specific heat of the combustion products comes from the cpbar function of the bank.",
+   "fluids": "Water;AirH2O;Air;N2;O2;CO2;H2O;CH4;C2H6;C3H8;C4H10;Methane",
+   "tags": "boiler;condensing boiler;combustion;natural gas;mean specific heat;flue gas;condensation;cooling coil;eps-NTU;thermal resistances;moist air;wet bulb;reference model;model bank;parametric table",
+   "n_equations": 258,
+   "largest_block": 52,
+   "origin_type": "research",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/Model data bank/Heat_and_Cool_Production_Systems/Heat_Production_by_Combustion/CondensingBoiler_RefSim_Model_VLAR080109.zip!/CondensingBoiler_RefSim_EES_Model_VLAR080109.EES",
+   "authors": "Vincent Lemort (ULiège Thermodynamics Laboratory); Andrés Rodríguez (ULiège Thermodynamics Laboratory)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-GAP-NAME-SYMBOL;CS-GAP-FLUIDS-C8H18;CS-GAP-IF5;CS-BUG-COMMON-PROC",
+   "related": "CSL-0006;CSL-0005;CSL-0081",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/components/boilers_burners/condensing_boiler_refsim",
+   "main_file": "condensing_boiler_refsim.eescode",
    "figures": 0
   },
   {
@@ -109,7 +136,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0001;CSL-0020;CSL-0037;CSL-0036",
+   "related": "CSL-0001;CSL-0020;CSL-0037;CSL-0036;CSL-0078",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/compressors/scroll_compressor_semi_empirical",
@@ -352,11 +379,38 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0007;CSL-0036;CSL-0040",
+   "related": "CSL-0007;CSL-0036;CSL-0040;CSL-0084",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/expanders_turbines/scroll_expander_semi_empirical",
    "main_file": "scroll_expander_semi_empirical.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0084",
+   "name": "orc_expander_pump_empirical_maps",
+   "title": "ORC expander and pump empirical maps (function library)",
+   "category": "components/expanders_turbines",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Eleven ThermoCycle performance-map functions for ORC machines — isentropic efficiency and filling factor of hermetic-scroll, open-drive and single-screw expanders, test-rig pump mass-flow and efficiency curves, SQ-thesis pump efficiency and rig line pressure drops — with a small closed R245fa ORC demo that couples the hermetic-scroll map to a pump curve.",
+   "fluids": "R245fa",
+   "tags": "ORC;expander;scroll;screw;pump;isentropic efficiency;filling factor;empirical map;performance curve;part-load;function library;translation",
+   "n_equations": 79,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "thermocycle",
+   "source_path": "~/git/Thermocycle-library/ThermoCycle/Functions/{correlation_hermetic_scroll_epsilon_s,correlation_hermetic_scroll_FF,correlation_open_expander_epsilon_s,correlation_open_expander_FF,correlation_eta_is_pump}.mo, ~/git/Thermocycle-library/ThermoCycle/Functions/TestRig/{GenericScrewExpander_IsentropicEfficiency,GenericScrewExpander_FillingFactor,GenericCentrifugalPump_IsentropicEfficiency,GenericCentrifugalPump_MassFlowRate,PressureDropCorrelation_HP,PressureDropCorrelation_LP}.mo, ~/git/Thermocycle-library/ThermoCycle/Components/Units/ExpansionAndCompressionMachines/{Expander,Pump}.mo, commit b4f16c0b",
+   "authors": "Adriano Desideri (ULiège Thermodynamics Laboratory); Sylvain Quoilin (ULiège Thermodynamics Laboratory); Jorrit Wronski (DTU Mechanical Engineering)",
+   "license": "MIT",
+   "url": "https://github.com/thermocycle/Thermocycle-library",
+   "missing_features": "",
+   "related": "CSL-0019;CSL-0037;CSL-0038;CSL-0086",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps",
+   "main_file": "orc_expander_pump_empirical_maps.eescode",
    "figures": 0
   },
   {
@@ -379,7 +433,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0008;CSL-0014;CSL-0026;CSL-0027",
+   "related": "CSL-0008;CSL-0014;CSL-0026;CSL-0027;CSL-0090;CSL-0102",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-04",
    "path": "models/components/heat_exchangers/counterflow_hx_oil_water",
@@ -406,7 +460,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0002;CSL-0014;CSL-0032;CSL-0026;CSL-0027;CSL-0031",
+   "related": "CSL-0002;CSL-0014;CSL-0032;CSL-0026;CSL-0027;CSL-0031;CSL-0099",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/heat_exchangers/condenser_three_zones",
@@ -460,7 +514,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0002;CSL-0008;CSL-0027",
+   "related": "CSL-0002;CSL-0008;CSL-0027;CSL-0090;CSL-0102",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/heat_exchangers/crossflow_hx_hot_gas_water",
@@ -487,7 +541,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0002;CSL-0026;CSL-0008",
+   "related": "CSL-0002;CSL-0026;CSL-0008;CSL-0089;CSL-0090;CSL-0096;CSL-0097",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/heat_exchangers/shell_and_tube_steam_condenser",
@@ -514,7 +568,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0015;CSL-0016;CSL-0017;CSL-0008",
+   "related": "CSL-0015;CSL-0016;CSL-0017;CSL-0008;CSL-0089;CSL-0097",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/heat_exchangers/refrigeration_evaporator_wet_coil",
@@ -541,11 +595,119 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0008;CSL-0030",
+   "related": "CSL-0008;CSL-0030;CSL-0102",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/heat_exchangers/wet_air_cooled_condenser",
    "main_file": "wet_air_cooled_condenser.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0081",
+   "name": "vertical_ghes_refsim",
+   "title": "Vertical ground-loop heat exchanger (borefield) with heat pump: reference simulation model",
+   "category": "components/heat_exchangers",
+   "kind": "dynamic",
+   "level": 3,
+   "status": "blocked",
+   "summary": "Time-dependent simulation of a vertical ground-coupled heat exchanger (a field of n_b boreholes of depth L_bh) exchanging heat with a heat pump: the borehole wall temperature follows the g-function of a cylindrical heat source, the borehole resistance is that of Remund, and the Multiple Load Aggregation Algorithm of Pinel superposes the hour, day, week, month and remaining load histories of the borefield over a multi-year integration.",
+   "fluids": "",
+   "tags": "borefield;ground source heat pump;vertical ground loop;cylindrical heat source;g-function;Remund;multiple load aggregation algorithm;ground temperature penalty;Nusselt correlation;time integration;reference model;model bank",
+   "n_equations": 74,
+   "largest_block": 73,
+   "origin_type": "research",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/Model data bank/Heat_and_Cool_Production_Systems/Ground_Heat_Exchangers/VerticalGHES_EXE_Model_SB080213.zip!/VerticalGHES_RefSim_EES_Model_SB080213.EES",
+   "authors": "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-GAP-IF-DIRECTIVE;CS-GAP-INTEGRAL-LIMITS;CS-GAP-INTEGRALVALUE;CS-GAP-GOTO;CS-GAP-IF5;CS-BUG-INTEGRAL-FACTOR;CS-BUG-INTEGRAL-TABLE-SEP",
+   "related": "CSL-0078;CSL-0080",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/components/heat_exchangers/vertical_ghes_refsim",
+   "main_file": "vertical_ghes_refsim.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0090",
+   "name": "hx_effectiveness_ntu",
+   "title": "Heat exchangers: effectiveness-NTU relations (function library)",
+   "category": "components/heat_exchangers",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Seventeen EES FUNCTIONs for the effectiveness-NTU (epsilon-NTU) method of a heat exchanger: the heat capacity rates Cmin and Cmax, their ratio Cr, the conversions NTU = UA/Cmin and UA = NTU*Cmin, and the effectiveness eps(NTU, Cr) and its inverse NTU(eps, Cr) for counterflow, parallel flow, crossflow (both fluids unmixed, exact integral formula and closed approximate formula; Cmin mixed; Cmax mixed) and boiler/condenser flow arrangements.",
+   "fluids": "",
+   "tags": "heat exchanger;effectiveness-NTU;counterflow;parallel flow;crossflow;condenser;boiler;relation;function library",
+   "n_equations": 407,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); A. Triboix (exact and approximate crossflow formulas); T. L. Bergman, A. S. Lavine, F. P. Incropera and D. P. DeWitt (Introduction to Heat Transfer, 6E); R. K. Shah and D. P. Sekulic (Fundamentals of Heat Exchanger Design); J. P. Holman (Heat Transfer, 10th ed.)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0002;CSL-0026;CSL-0027;CSL-0087;CSL-0089;CSL-0094;CSL-0096;CSL-0097;CSL-0098;CSL-0099;CSL-0102",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu",
+   "main_file": "hx_effectiveness_ntu.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0096",
+   "name": "plate_hx_heat_transfer",
+   "title": "Plate heat exchangers: single-phase Nusselt numbers and two-phase boiling heat-transfer coefficients (function library)",
+   "category": "components/heat_exchangers",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Eleven EES FUNCTIONs for the corrugated channel of a chevron-style plate-and-frame heat exchanger: four single-phase Nusselt-number correlations (Kumar with its coefficient tables, Martin with the two Martin friction factors, Muley-Manglik, Khan-Khan) and five flow-boiling heat-transfer coefficients written for a given heat flux (Amalfi with its two Bond-number branches, Lee-Kang-Kim, Han-Lee-Kim, Huang-Sheer, Yan-Lin), plus the two friction-factor correlations of Martin that the Nusselt correlation calls. All fluid properties are arguments, so the calling model evaluates them.",
+   "fluids": "",
+   "tags": "plate heat exchanger;chevron plate;nusselt number;flow boiling;two-phase;correlation;function library",
+   "n_equations": 68,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); H. Kumar and Z. H. Ayub (Kumar correlation); H. Martin (Martin Nu and friction-factor correlations); A. Muley and R. M. Manglik (Muley-Manglik correlation); T. S. Khan, M. S. Khan, M.-C. Chyu and Z. H. Ayub (Khan-Khan correlation); R. L. Amalfi, F. Vakili-Farahani and J. R. Thome (Amalfi correlation); E. Lee, H. Kang and Y. Kim (Lee-Kang-Kim correlation); D.-H. Han, K.-J. Lee and Y.-H. Kim (Han-Lee-Kim correlation); J. Huang, T. J. Sheer and M. Bailey-McEwan (Huang-Sheer correlation); Y.-Y. Yan and T.-F. Lin (Yan-Lin correlation)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0087;CSL-0088;CSL-0090;CSL-0095;CSL-0027;CSL-0098;CSL-0102",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/components/heat_exchangers/plate_hx_heat_transfer",
+   "main_file": "plate_hx_heat_transfer.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0102",
+   "name": "hx_temperature_effectiveness_pntu",
+   "title": "Heat exchangers: P-NTU temperature effectiveness (function library)",
+   "category": "components/heat_exchangers",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Fifteen EES FUNCTIONs for the temperature effectiveness (P-NTU) method of a heat exchanger: the two common helper terms of the plate formulas, the temperature effectiveness P1 of the basic (counterflow, parallel, crossflow) arrangements, of the TEMA E, G, H and J shell-and-tube arrangements, of a finned-bundle air cooler and of a multipass plate heat exchanger, plus the inverse relations NTU1(P1, R1) (four closed forms and the equations of the numerical inversions, to be solved with NTU1 as an unknown).",
+   "fluids": "",
+   "tags": "heat exchanger;P-NTU;temperature effectiveness;TEMA;shell and tube;plate heat exchanger;air cooler;relation;function library",
+   "n_equations": 127,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); R. K. Shah and D. P. Sekulic (Fundamentals of Heat Exchanger Design); K. Thulukkanam (Heat Exchanger Design Handbook); W. Rohsenow, J. Hartnett and Y. Cho (Handbook of Heat Transfer); A. Triboix (exact crossflow formula); S. G. Kandlikar and R. K. Shah (multipass plate effectiveness-NTU); H. Schedwill and F. J. L. Nicole (air cooler arrangements)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0002;CSL-0026;CSL-0087;CSL-0090;CSL-0096;CSL-0032",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu",
+   "main_file": "hx_temperature_effectiveness_pntu.eescode",
    "figures": 0
   },
   {
@@ -622,7 +784,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-GAP-ELSEIF-CHAIN;CS-GAP-UPPERCASE;CS-GAP-CALL-EXPR-OUT;CS-GAP-STRING-ARRAY;CS-GAP-LOOKUP-PROC",
-   "related": "CSL-0079",
+   "related": "CSL-0079;CSL-0078",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/pumps_fans/centrifugal_brine_pump_refsim",
@@ -649,7 +811,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-GAP-IF5;CS-GAP-INTEGRAL-LIMITS;CS-BUG-INTEGRAL-TABLE-SEP;CS-BUG-INTEGRAL-MAXSTEPS",
-   "related": "CSL-0041",
+   "related": "CSL-0041;CSL-0100",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/storage/dhw_tank_dynamic",
@@ -676,11 +838,38 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-GAP-IF5;CS-GAP-INTEGRAL-LIMITS;CS-BUG-WATER-NEAR-FREEZING;CS-BUG-INTEGRAL-TABLE-SEP;CS-BUG-INTEGRAL-MAXSTEPS;CS-BUG-INTEGRAL-TABLE-CASE",
-   "related": "CSL-0009",
+   "related": "CSL-0009;CSL-0100",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/storage/ice_storage_tank_discharge_phase_change",
    "main_file": "ice_storage_tank_discharge_phase_change.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0120",
+   "name": "ball_valve_authority",
+   "title": "Ball valve authority from opening angle",
+   "category": "components/valves_nozzles_piping",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Equivalent opening diameter and valve authority from the ball angle using Idel'cik Memento p.339",
+   "fluids": "",
+   "tags": "valves_nozzles_piping;ball_valve;authority;Idelcik",
+   "n_equations": 14,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/procedures EES/vanne à bille SQ071010.EES",
+   "authors": "Sylvain Quoilin (ULiège Thermodynamics Laboratory)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "",
+   "related": "",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/components/valves_nozzles_piping/ball_valve_authority",
+   "main_file": "ball_valve_authority.eescode",
    "figures": 0
   },
   {
@@ -730,7 +919,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0034;CSL-0049",
+   "related": "CSL-0034;CSL-0049;CSL-0086",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/cycles/engines/single_cylinder_engine_weibe",
@@ -973,7 +1162,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0004;CSL-0015;CSL-0038;CSL-0040;CSL-0036",
+   "related": "CSL-0004;CSL-0015;CSL-0038;CSL-0040;CSL-0036;CSL-0084",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/cycles/organic_rankine/orc_simple_r245fa",
@@ -1027,7 +1216,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0019;CSL-0036;CSL-0040",
+   "related": "CSL-0019;CSL-0036;CSL-0040;CSL-0084;CSL-0104",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/cycles/organic_rankine/orc_co2_polynomial_maps",
@@ -1297,7 +1486,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0001;CSL-0015;CSL-0025;CSL-0061",
+   "related": "CSL-0001;CSL-0015;CSL-0025;CSL-0061;CSL-0078",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_scroll_compressor_data_check",
@@ -1324,11 +1513,38 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0076;CSL-0074;CSL-0001",
+   "related": "CSL-0076;CSL-0074;CSL-0001;CSL-0078;CSL-0099",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/cycles/refrigeration_heat_pumps/aircooled_chiller_refsim",
    "main_file": "aircooled_chiller_refsim.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0078",
+   "name": "brine_to_water_heat_pump_refsim",
+   "title": "Brine-to-water heat pump reference model (RefSim)",
+   "category": "cycles/refrigeration_heat_pumps",
+   "kind": "steady",
+   "level": 2,
+   "status": "blocked",
+   "summary": "Reference simulation model of a brine-to-water (ground-source) heat pump of the ULiège model bank: a scroll compressor described in five steps (suction heating-up, isentropic compression to an adapted pressure, isochoric compression to the discharge plenum, exhaust cooling-down and internal leakage through the scroll throat) with all its heat transfers referred to a fictitious envelope of uniform temperature, a brine evaporator and a water condenser, both described by three thermal resistances in series referred to their nominal flows; the brine properties come from the BrineProp library.",
+   "fluids": "R407C;Water;PG (propylene glycol, BrineProp library)",
+   "tags": "heat pump;brine-to-water;ground source;scroll compressor;internal leakage;isochoric compression;compressor heat transfer;fictitious envelope;thermal resistances;glycol;secondary refrigerant;reference model;model bank",
+   "n_equations": 252,
+   "largest_block": 31,
+   "origin_type": "research",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/Model data bank/Heat_and_Cool_Production_Systems/Heat_Production_by_Vapor_Compression/BrinetoWaterHeatPump_RefSim_Model_VL080108.zip!/BrinetoWaterHeatPump_RefSim_EES_Model_VL080108.EES",
+   "authors": "Vincent Lemort (ULiège Thermodynamics Laboratory)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-GAP-ELSEIF-CHAIN;CS-GAP-UPPERCASE;CS-GAP-STRING-ARRAY;CS-GAP-LOOKUP-PROC;CS-GAP-CALL-EXPR-OUT",
+   "related": "CSL-0077;CSL-0079;CSL-0072;CSL-0007;CSL-0068;CSL-0081",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-05",
+   "path": "models/cycles/refrigeration_heat_pumps/brine_to_water_heat_pump_refsim",
+   "main_file": "brine_to_water_heat_pump_refsim.eescode",
    "figures": 0
   },
   {
@@ -1432,7 +1648,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0006;CSL-0011;CSL-0034;CSL-0046;CSL-0050;CSL-0058",
+   "related": "CSL-0006;CSL-0011;CSL-0034;CSL-0046;CSL-0050;CSL-0058;CSL-0080;CSL-0087",
    "coolsolve_version": "0.3.0+fix/library-gaps@fbdb6a7",
    "verified_on": "2026-10-05",
    "path": "models/fundamentals/combustion/cpbar_combustion_products",
@@ -1702,11 +1918,389 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-GAP-ELSEIF-CHAIN;CS-GAP-UPPERCASE;CS-GAP-STRING-ARRAY;CS-GAP-LOOKUP-PROC",
-   "related": "CSL-0072;CSL-0074",
+   "related": "CSL-0072;CSL-0074;CSL-0078;CSL-0087",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/fundamentals/properties/brineprop_secondary_refrigerants",
    "main_file": "brineprop_secondary_refrigerants.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0086",
+   "name": "in_cylinder_htc_correlations",
+   "title": "In-cylinder heat-transfer correlations for reciprocating machines (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Seven EES FUNCTIONs returning the Nusselt number of the in-cylinder gas of a reciprocating compressor, expander or engine: Annand 1963, Woschni 1967, Adair 1972, Destoop 1986, Gnielinski 2010 (pipe equation with the mean piston speed), Irimescu 2013 (Gnielinski with the wall-viscosity ratio) and the Kornhauser 1994 gas-spring correlation, plus the geometry and crank-kinematics helpers of the ThermoCycle reciprocating package (piston speed, cylinder volume, hydraulic and equivalent diameters, wall area, Adair swirl velocity with its smooth transition). The heat-transfer coefficient follows from h = Nu*lambda/Gamma and is evaluated in the demonstration program; transport properties are arguments, so the library works with any gas.",
+   "fluids": "",
+   "tags": "in-cylinder heat transfer;reciprocating machine;nusselt number;correlation;engine;compressor;gas spring;crank angle;function library",
+   "n_equations": 86,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "thermocycle",
+   "source_path": "~/git/Thermocycle-library/ThermoCycle/Components/Units/ExpansionAndCompressionMachines/Reciprocating/HeatTransfer/{Annand1963,Woschni1967,Adair1972,Destoop1986,Gnielinski2010,Irimescu2013,Kornhauser1994,Kornhauser1994Full,GnielinskiHeatTransfer,RePrHeatTransfer}.mo, ~/git/Thermocycle-library/ThermoCycle/Components/Units/ExpansionAndCompressionMachines/Reciprocating/BaseClasses/PartialCylinderHeatTransfer.mo, ~/git/Thermocycle-library/ThermoCycle/Functions/transition_factor.mo, commit b4f16c0b",
+   "authors": "Jorrit Wronski (DTU Mechanical Engineering, 2013); W. D. J. Annand (Annand 1963 correlation); G. Woschni (Woschni 1967 correlation); R. P. Adair, E. B. Qvale and J. T. Pearson (Adair 1972 correlation); A. Kornhauser and J. Smith (Kornhauser 1994 correlation); A. Irimescu (Irimescu 2013 correlation); V. Gnielinski (Gnielinski pipe equation)",
+   "license": "MIT",
+   "url": "https://github.com/thermocycle/Thermocycle-library",
+   "missing_features": "",
+   "related": "CSL-0024;CSL-0084;CSL-0087",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/heat_transfer/convection/in_cylinder_htc_correlations",
+   "main_file": "in_cylinder_htc_correlations.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0087",
+   "name": "internal_turbulent_nusselt",
+   "title": "Internal turbulent convection: Nusselt-number correlations for pipe flow (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Twenty-three EES FUNCTIONs returning the Nusselt number of single-phase turbulent flow in a circular pipe: Dittus-Boelter (heating/cooling, original and revised coefficients), Sieder-Tate, Hausen (turbulent thermal entry), Colburn, Drexel-McAdams, von Karman, Prandtl, Friend-Metzner, Petukhov-Kirillov-Popov, Webb, Sandall, Gnielinski (general and the two smooth-pipe forms), Churchill-Zajic, ESDU, Martinelli, Nunner, Dipprey-Sabersky, Gowen-Smith, Kawase-Ulbrecht, Kawase-De and Bhatti-Shah. The heat-transfer coefficient follows from h = Nu*k/Di and is left to the caller.",
+   "fluids": "",
+   "tags": "internal convection;turbulent flow;nusselt number;correlation;pipe flow;rough pipe;thermal entry region;function library",
+   "n_equations": 70,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); S. W. Churchill and S. C. Zajic (Churchill-Zajic correlation); V. Gnielinski (Gnielinski correlations); M. S. Bhatti and R. K. Shah (Bhatti-Shah correlation); F. W. Dittus and L. M. K. Boelter (Dittus-Boelter correlation); E. N. Sieder and G. E. Tate (Sieder-Tate correlation)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0005;CSL-0018;CSL-0079;CSL-0088;CSL-0086;CSL-0089;CSL-0090;CSL-0092;CSL-0093;CSL-0094;CSL-0095;CSL-0096;CSL-0097;CSL-0098;CSL-0099;CSL-0100;CSL-0101;CSL-0102;CSL-0103;CSL-0104",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt",
+   "main_file": "internal_turbulent_nusselt.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0088",
+   "name": "nucleate_boiling_and_chf",
+   "title": "Pool nucleate boiling heat flux and critical heat flux (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Twelve EES FUNCTIONs for the pool nucleate-boiling regime of a heated surface: nine heat-transfer-coefficient correlations (Rohsenow, McNelly, Forster-Zuber, Montinsky, Stephan-Abdelsalam with its five variants selected by one flag, HEDH-Taborek, Bier, Cooper, Gorenflo) returning h [W/m^2/K] from the excess wall temperature, and three critical-heat-flux correlations (Zuber, Serth-HEDH, HEDH-Montinsky) returning q_crit [W/m^2]. The fluid properties are arguments, so the calling model passes them; the wall heat flux follows from q = h*Te and the heat-transfer coefficient of the CHF correlations is left to the caller.",
+   "fluids": "",
+   "tags": "pool boiling;nucleate boiling;critical heat flux;evaporator;correlation;function library",
+   "n_equations": 78,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); W. M. Rohsenow (Rohsenow correlation); M. J. McNelly (McNelly correlation); H. K. Forster and N. Zuber (Forster-Zuber correlation); I. L. Mostinsky (Montinsky and HEDH-Montinsky correlations); K. Stephan and M. Abdelsalam (Stephan-Abdelsalam correlation); Taborek (HEDH-Taborek correlation, as described by Schlunder); M. G. Cooper (Cooper correlation); E. U. Schlunder (VDI Heat Atlas, Gorenflo reference data and the HEDH presentation); N. Zuber (Zuber critical heat flux and the Serth-HEDH form)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0087;CSL-0089;CSL-0092;CSL-0094;CSL-0096;CSL-0097;CSL-0098",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/heat_transfer/convection/nucleate_boiling_and_chf",
+   "main_file": "nucleate_boiling_and_chf.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0089",
+   "name": "condensation_film",
+   "title": "Film condensation: heat-transfer coefficients (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Six EES FUNCTIONs returning the heat-transfer coefficient of condensing film: the Nusselt analysis of 1916 for a laminar film on a flat plate (inclined or vertical), Boyko-Kruzhilin for a vertical tube or bundle, Akers-Deans-Crosser for condensation in horizontal tubes, the molecular-kinetic (diffusion) resistance of the vapor, Cavallini-Smith-Zecchin for forced-convection condensation in a tube and Shah (1979) for condensation in a tube in reduced-pressure form. The fluid properties, mass flow rate, geometry and quality are arguments: no property function is called inside the functions.",
+   "fluids": "",
+   "tags": "film condensation;two-phase;heat-transfer coefficient;correlation;Nusselt plate;in-tube condensation;function library",
+   "n_equations": 80,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); W. Nusselt (laminar film on a plate, 1916); L. D. Boyko and G. N. Kruzhilin (vertical tube / bundle, 1967); W. W. Akers, H. A. Deans and O. K. Crosser (horizontal tubes, 1959); L. D. Berman (molecular-kinetic resistance, 1967); A. Cavallini, J. R. Smith and R. Zecchin (forced-convection condensation in a tube, 1974); M. M. Shah (film condensation inside pipes, 1979)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0027;CSL-0031;CSL-0087;CSL-0088;CSL-0090;CSL-0092;CSL-0094;CSL-0097;CSL-0098;CSL-0100",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/heat_transfer/convection/condensation_film",
+   "main_file": "condensation_film.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0092",
+   "name": "free_conv_cylinders",
+   "title": "Free convection from cylinders: Nusselt-number correlations for vertical and horizontal cylinders (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Thirteen EES FUNCTIONs returning the Nusselt number of natural convection from a cylinder: ten for a vertical isothermal cylinder (Griffiths-Davis-Morgan, Jakob-Linke-Morgan, Carne-Morgan, Eigenson-Morgan with its three branches, Touloukian-Morgan, McAdams-Weiss-Saunders, Kreith-Eckert, Hanesian-Kalish-Morgan, Al-Arabi-Khamis and Popiel-Churchill, the last two taking the height L and the diameter D) and three for a horizontal one (Churchill-Chu, Kuehn-Goldstein, Morgan with its five Rayleigh-number ranges). Eight vertical-cylinder correlations take a three-state regime flag (automatic, laminar, turbulent). Pr and Gr are arguments, so the calling model passes them; the heat-transfer coefficient follows from h = Nu*k/D and is left to the caller.",
+   "fluids": "",
+   "tags": "free convection;natural convection;nusselt number;correlation;vertical cylinder;horizontal cylinder;function library",
+   "n_equations": 62,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); E. Griffiths, A. H. Davis and V. T. Morgan (Griffiths-Davis-Morgan correlation); M. Jakob, W. Linke and V. T. Morgan (Jakob-Linke-Morgan correlation); J. B. Carne and V. T. Morgan (Carne-Morgan correlation); L. Eigenson and V. T. Morgan (Eigenson-Morgan correlation); Y. S. Touloukian, G. A. Hawkins, M. Jakob and V. T. Morgan (Touloukian-Morgan correlation); R. Weise, O. A. Saunders and W. H. McAdams (McAdams-Weiss-Saunders correlation); E. R. G. Eckert, T. W. Jackson, F. Kreith and R. Manglik (Kreith-Eckert correlation); D. Hanesian, R. Kalish and V. T. Morgan (Hanesian-Kalish-Morgan correlation); M. Al-Arabi and M. Khamis (Al-Arabi-Khamis correlation); C. O. Popiel, J. Wojtkowiak and K. Bober (Popiel-Churchill correlation); S. W. Churchill and H. H. S. Chu (Churchill-Chu correlations, horizontal cylinder and vertical plate); T. H. Kuehn and R. J. Goldstein (Kuehn-Goldstein correlation); V. T. Morgan (horizontal-cylinder correlation)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0087;CSL-0088;CSL-0089;CSL-0093;CSL-0094;CSL-0100;CSL-0101",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/heat_transfer/convection/free_conv_cylinders",
+   "main_file": "free_conv_cylinders.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0093",
+   "name": "free_conv_plates_and_sphere",
+   "title": "Free convection from plates and a sphere: Nusselt-number correlations (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Five EES FUNCTIONs returning the Nusselt number of natural convection from an isothermal surface: Churchill-Chu for a vertical plate (smooth laminar-to-turbulent transition, valid on the whole Rayleigh-number range), McAdams, VDI Heat Atlas and Rohsenow-Hartnett-Cho for a horizontal plate (each with the buoyancy-assisted hot-plate form and the cold-plate form of its lower surface, the McAdams and VDI ones being non-smooth switches between the laminar and turbulent branches) and Churchill for a sphere. Pr and Gr are arguments, so the calling model passes them; the heat-transfer coefficient follows from h = Nu*k/L_c and is left to the caller.",
+   "fluids": "",
+   "tags": "free convection;natural convection;nusselt number;correlation;vertical plate;horizontal plate;sphere;function library",
+   "n_equations": 38,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); S. W. Churchill and H. H. S. Chu (Churchill-Chu vertical-plate correlation); W. H. McAdams (McAdams horizontal-plate correlations); V. D. I., VDI Heat Atlas, with K. Stewartson 1958 and E. U. Schluender 1987 (VDI horizontal-plate correlations); W. Rohsenow, J. Hartnett and Y. Cho (Rohsenow-Hartnett-Cho horizontal-plate correlations); S. W. Churchill, as presented in E. U. Schluender (1987) (Churchill sphere correlation)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0092;CSL-0087;CSL-0094;CSL-0100;CSL-0101",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/heat_transfer/convection/free_conv_plates_and_sphere",
+   "main_file": "free_conv_plates_and_sphere.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0094",
+   "name": "external_crossflow_cylinder",
+   "title": "External forced convection: crossflow over a single cylinder (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Eight EES FUNCTIONs returning the average Nusselt number of a single circular cylinder in crossflow: Zukauskas (piecewise in Re, with the wall-Prandtl correction), Churchill-Bernstein, Sanitjai-Goldstein, Fand, McAdams, Whitaker and the two forms of Perkins-Leppert (1962 and 1964), the last three with the viscosity-ratio correction. Re, Pr, Prw and the viscosities are arguments, so the calling model passes them; the surface heat-transfer coefficient follows from h = Nu*k/D and is left to the caller.",
+   "fluids": "",
+   "tags": "external convection;forced convection;crossflow;nusselt number;correlation;cylinder;function library",
+   "n_equations": 36,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); A. Zukauskas (Zukauskas correlation); S. W. Churchill and M. Bernstein (Churchill-Bernstein correlation); S. Sanitjai and R. J. Goldstein (Sanitjai-Goldstein correlation); R. M. Fand (Fand correlation); W. H. McAdams (McAdams correlation); S. Whitaker (Whitaker correlation); H. C. Perkins Jr. and G. Leppert (Perkins-Leppert 1962 and 1964 correlations)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0018;CSL-0087;CSL-0088;CSL-0089;CSL-0090;CSL-0092;CSL-0093;CSL-0095;CSL-0101",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/heat_transfer/convection/external_crossflow_cylinder",
+   "main_file": "external_crossflow_cylinder.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0095",
+   "name": "tube_bank_nusselt",
+   "title": "Crossflow tube banks: Nusselt-number correlations and row / angle correction factors (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Six EES FUNCTIONs for the forced convection across a bank of plain tubes: the Nusselt numbers of Zukauskas with the Bejan fit, of ESDU 73031 as given by Hewitt and of the Heat Exchanger Design Handbook, plus the tube-row correction factor of Zukauskas, the tube-row correction factor of ESDU 73031 and its bundle-inclination correction factor. The Nusselt number is taken on the tube outside diameter, so the heat-transfer coefficient follows from h = Nu*k/Do and is left to the caller. The seventh function of the ht family, Nu_Grimison_tube_bank, is a fitted spline surface in ht and is not translated (see the README).",
+   "fluids": "",
+   "tags": "external convection;crossflow;tube bank;nusselt number;correlation;correction factors;function library",
+   "n_equations": 28,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); A. Zukauskas (Zukauskas row correction factor and Nu correlations); A. Bejan (fit to the Zukauskas graphs, Nu_Zukauskas_Bejan); ESDU (data sheets 73031 and 86022, Nu_ESDU_73031 and the ESDU correction factors); G. L. Shires and T. R. Bott (Process Heat Transfer, presentation of the ESDU data); E. U. Schlunder and ICHMT (Heat Exchanger Design Handbook, Nu_HEDH_tube_bank)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0087;CSL-0094;CSL-0096;CSL-0099;CSL-0101",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/heat_transfer/convection/tube_bank_nusselt",
+   "main_file": "tube_bank_nusselt.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0097",
+   "name": "two_phase_nonboiling_in_tube",
+   "title": "In-tube two-phase non-boiling heat-transfer coefficients (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Nine EES FUNCTIONs returning the forced-convection heat-transfer coefficient of a liquid and a gas flowing inside a tube without phase change (condensing or evaporating): Davis-David, Elamvaluthi-Srinivas, Groothuis-Hendal (air-water and gas/air-oil forms), Hughmark and Aggour (laminar slug / horizontal and vertical), Knott, Kudirka-Grosh-McFadden, Martin-Sims and Ravipudi-Godbold. Each returns h_tp [W/m^2/K] from the mass flow rate, the quality and the liquid and gas properties, which are arguments: no property function is called inside the functions.",
+   "fluids": "",
+   "tags": "two-phase;non-boiling;in-tube convection;heat-transfer coefficient;correlation;condensation;evaporation;function library",
+   "n_equations": 65,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); E. J. Davis and M. M. David (Davis-David correlation, 1964); G. Elamvaluthi and N. S. Srinivas (Elamvaluthi-Srinivas correlation, 1984); H. Groothuis and W. P. Hendal (Groothuis-Hendal correlation, 1959); G. A. Hughmark (Hughmark correlation, 1965); R. F. Knott, R. N. Anderson, A. Acrivos and E. E. Petersen (Knott correlation, 1959); A. A. Kudirka, R. J. Grosh and P. W. McFadden (Kudirka-Grosh-McFadden correlation, 1965); B. W. Martin and G. E. Sims (Martin-Sims correlation, 1971); S. Ravipudi and T. Godbold (Ravipudi-Godbold correlation, 1978); Mohamed A. Aggour (Aggour correlation, Ph.D. thesis, 1978)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0087;CSL-0088;CSL-0089;CSL-0090;CSL-0027;CSL-0031;CSL-0098",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/heat_transfer/convection/two_phase_nonboiling_in_tube",
+   "main_file": "two_phase_nonboiling_in_tube.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0098",
+   "name": "flow_boiling_in_tubes",
+   "title": "Flow and film boiling inside tubes: heat-transfer coefficients (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Ten EES FUNCTIONs returning the two-phase (flow-boiling) heat-transfer coefficient h_tp [W/m^2/K] of a fluid flowing and boiling inside a tube: Lazarek-Black, Li-Wu, Sun-Mishima, Thome, Yun-Heo-Kim, Chen-Edelstein, Chen-Bennett and Liu-Winterton from ht, plus Shah 1982 and Gungor-Winterton 1987 from the ThermoCycle Modelica library (which ht does not have). Each returns h_tp from the mass flow rate, the quality, the tube diameter and the liquid and vapour properties, which are arguments: no property function is called inside the functions.",
+   "fluids": "",
+   "tags": "boiling;flow boiling;film boiling;two-phase;in-tube convection;heat-transfer coefficient;correlation;function library",
+   "n_equations": 156,
+   "largest_block": 2,
+   "origin_type": "software_library",
+   "source": "ht (8 functions) + ThermoCycle/Modelica (Shah 1982, Gungor-Winterton 1987)",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); G. M. Lazarek and S. H. Black (Lazarek-Black correlation, 1982); W. Li and Z. Wu (Li-Wu correlation, 2010); L. Sun and K. Mishima (Sun-Mishima correlation, 2009); J. R. Thome, V. Dupont and A. M. Jacobi (Thome flow-boiling model, 2004); R. Yun, J. H. Heo and Y. Kim (Yun-Heo-Kim correlation, 2006); J. C. Chen (Chen correlation, 1966) and S. Edelstein, A. J. Perez and J. C. Chen (analytic form, 1984); D. L. Bennett and J. C. Chen (Bennett-Chen correlation, 1980); Z. Liu and R. H. S. Winterton (Liu-Winterton correlation, 1991); M. M. Shah (chart correlation, ASHRAE Transactions 88, 1982); K. E. Gungor and R. H. S. Winterton (simplified correlation, Chem. Eng. Res. Des. 65, 1987); Christoph C. Richter (smooth transition function of order 2, PhD thesis, 2008); Jorrit Wronski (ThermoCycle correlation library, DTU)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0087;CSL-0088;CSL-0089;CSL-0096;CSL-0097;CSL-0090",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/heat_transfer/convection/flow_boiling_in_tubes",
+   "main_file": "flow_boiling_in_tubes.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0099",
+   "name": "air_cooler_air_side",
+   "title": "Air-cooled heat exchanger, air side: finned-bundle HTC, pressure drop and fan noise (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Eight EES FUNCTIONs for the air side of an air cooler (a finned tube bundle crossed by air): the air-side heat-transfer coefficient on a bare-tube basis (Briggs-Young, ESDU high-fin, ESDU low-fin, Ganguli/VDI), the air-side pressure drop across the bundle (ESDU high-fin and low-fin) and the sound pressure level of a one-fan bay (GPSA, Mukherjee). Three helper functions complete the family: the Kern-Kraus circular-fin efficiency and the two modified Bessel functions it needs, evaluated by their power series. All arguments are the geometry of the bundle and the air properties; no property function is called inside the functions.",
+   "fluids": "",
+   "tags": "air cooler;finned tube bundle;forced convection;heat transfer coefficient;pressure drop;fin efficiency;noise;function library",
+   "n_equations": 117,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); D. E. Briggs and E. H. Young (Briggs-Young correlation); A. Ganguli, S. S. Tung and J. Taborek (Ganguli correlation, AIChE Symposium Series 81); V. D. I. Gesellschaft (VDI Heat Atlas, 2nd edition); ESDU 86022 and ESDU 73031 (high-fin staggered tube banks; convective heat transfer over plain tube banks); G. L. Hewitt, G. L. Shires and T. R. Bott (Process Heat Transfer, where the ESDU formulas are presented); R. Mukherjee and G. Hewitt (Practical Thermal Design of Air-Cooled Heat Exchangers, 2007); GPSA (Engineering Data Book, SI, 13th edition, 2012); D. Q. Kern and A. D. Kraus (Extended Surface Heat Transfer, 1972)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0087;CSL-0090;CSL-0095;CSL-0008;CSL-0077",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/heat_transfer/convection/air_cooler_air_side",
+   "main_file": "air_cooler_air_side.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0100",
+   "name": "free_conv_enclosed_and_jackets",
+   "title": "Natural convection in enclosures and vessels: plates, critical Rayleigh numbers, helical coils, vessel jackets (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Ten EES FUNCTIONs for the natural convection of an enclosed fluid layer, of a helical coil in a tank and of a vessel jacket: the Rayleigh-Benard Nusselt numbers between parallel horizontal plates (Holling-Herwig as its residual, Probert, Hollands with a user-supplied critical Rayleigh number), between vertical plates (Thess, aspect ratio), the critical Rayleigh number of parallel disks (Buell-Caton polynomial), the helical-coil correlations of Ali, Prabhanjan-Rennie-Raghavan and Xin-Ebadian (vertical or horizontal), and the average heat-transfer coefficient of a vessel jacket (Lehrer, Stein-Schmidt, tangential or radial inlet, with or without the buoyancy contribution).",
+   "fluids": "",
+   "tags": "free convection;enclosure;rayleigh-benard;critical rayleigh number;helical coil;vessel jacket;correlation;function library",
+   "n_equations": 69,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); M. Hoelling and H. Herwig (Holling-Herwig correlation); S. D. Probert, R. G. Brooks and M. Dixon (Probert correlation); K. G. T. Hollands (Hollands correlation); M. E. Ali (vertical helical coil correlation); D. G. Prabhanjan, T. J. Rennie and G. S. V. Raghavan (helical coiled tubes); R. C. Xin and M. A. Ebadian (helicoidal pipes); J. C. Buell and I. Catton (critical Rayleigh number of disks); I. H. Lehrer (jacket-side Nusselt number); W. A. Stein and W. Schmidt (jacket side of an agitated vessel)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0009;CSL-0018;CSL-0041;CSL-0087;CSL-0089;CSL-0092;CSL-0093;CSL-0101",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets",
+   "main_file": "free_conv_enclosed_and_jackets.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0101",
+   "name": "external_forced_conv_plates",
+   "title": "External forced convection over a flat plate (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Four EES FUNCTIONs returning the average Nusselt number of an isothermal flat plate in crossflow at constant surface temperature: Baehr-Stephan (laminar, piecewise in the Prandtl number), Churchill-Ozoe (laminar, one equation for the whole range), Schlichting (turbulent, with the surface-friction term of that formulation) and Kreith (turbulent). Re on the plate length and the bulk Prandtl number are arguments; the average heat-transfer coefficient follows from h = Nu*k/L and is left to the caller.",
+   "fluids": "",
+   "tags": "external convection;forced convection;flat plate;nusselt number;correlation;laminar boundary layer;turbulent boundary layer;function library",
+   "n_equations": 19,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); H. D. Baehr and K. Stephan (Baehr-Stephan correlation); S. W. Churchill and H. Ozoe (Churchill-Ozoe correlation); H. Schlichting and K. Gersten (Schlichting correlation); F. Kreith, R. Manglik and M. Bohn (Kreith correlation)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0087;CSL-0092;CSL-0093;CSL-0094;CSL-0095;CSL-0100",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/heat_transfer/convection/external_forced_conv_plates",
+   "main_file": "external_forced_conv_plates.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0104",
+   "name": "supercritical_internal_nu",
+   "title": "Near-supercritical internal convection: Nusselt-number correlations for vertical upward pipe flow (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Eighteen EES FUNCTIONs returning the Nusselt number of turbulent vertical upward flow in a pipe at near-supercritical pressure: McAdams, Shitsman, Griem, Jackson, Gupta, Swenson, Xu, Mokry, Bringer-Smith, Ornatsky, Gorban, Zhu, Bishop, Yamagata, Kitoh, Krasnoshchekov-Protopopov, Petukhov and Krasnoshchekov. Most of them correct the Reynolds-analogy form with the wall-to-bulk density, viscosity, conductivity and heat-capacity ratios, or with a temperature-dependent exponent fixed by the position of the wall temperature relative to the pseudo-critical point. The heat-transfer coefficient follows from h = Nu*k/Di and is left to the caller.",
+   "fluids": "",
+   "tags": "internal convection;near-supercritical;supercritical pressure;nusselt number;correlation;pipe flow;vertical upflow;wall properties;function library",
+   "n_equations": 119,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); W. H. McAdams (McAdams correlation); J. D. Jackson (Jackson correlation); H. S. Swenson, J. R. Carver and C. R. Kakarala (Swenson correlation); H. Griem (Griem correlation); R. P. Bringer and J. M. Smith (Bringer-Smith correlation); K. Kitoh, S. Koshizuka and Y. Oka (Kitoh correlation); B. S. Petukhov, V. A. Kurganov and V. B. Ankudinov (Petukhov correlation); E. A. Krasnoshchekov, V. S. Protopopov and I. V. Kuraeva (Krasnoshchekov and Krasnoshchekov-Protopopov correlations)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0038;CSL-0087",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu",
+   "main_file": "supercritical_internal_nu.eescode",
    "figures": 0
   },
   {
@@ -1729,11 +2323,38 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "",
+   "related": "CSL-0087;CSL-0094;CSL-0100;CSL-0103",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_colebrook",
    "main_file": "pipe_pressure_drop_colebrook.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0103",
+   "name": "tube_bank_dp_bell_delaware",
+   "title": "Shell-and-tube pressure drop: Kern and the Bell-Delaware correction factors (function library)",
+   "category": "heat_transfer/pressure_drop",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Six EES FUNCTIONs for the shell side of a shell-and-tube heat exchanger: the bundle pressure drop by the equivalent-diameter method of Kern (its friction factor is the cubic B-spline of ht, reproduced in EES arithmetic with the Cox-de Boor basis functions), and the five Bell-Delaware correction factors Jc (baffle configuration, Chebyshev fit or HEDH linear fit), Jl (baffle leakage), Jb (bundle bypassing, with the laminar coefficient), Js (unequal baffle spacing) and Jr (adverse temperature gradient in laminar flow). One helper, Kern_knot_step, evaluates a half-open knot interval. dP_Zukauskas of the same ht family is not translated (bivariate splines of digitized graphs, no closed form).",
+   "fluids": "",
+   "tags": "pressure drop;shell-and-tube;bell-delaware;tube bank;correction factor;heat exchanger;correlation;function library",
+   "n_equations": 67,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ht",
+   "source_path": "",
+   "authors": "Caleb Bell (ht library); D. Q. Kern (equivalent-diameter pressure drop, Process Heat Transfer, 1950); K. J. Bell (Delaware method, University of Delaware, 1963 and 1988); E. U. Schlunder (Heat Exchanger Design Handbook, 1987); R. W. Serth (Process Heat Transfer, 2E, 2014)",
+   "license": "MIT",
+   "url": "https://github.com/CalebBell/ht",
+   "missing_features": "",
+   "related": "CSL-0018;CSL-0087",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware",
+   "main_file": "tube_bank_dp_bell_delaware.eescode",
    "figures": 0
   },
   {
@@ -2113,9 +2734,71 @@
    "path": "models/hvac/psychrometrics/adiabatic_saturation_wet_bulb",
    "main_file": "adiabatic_saturation_wet_bulb.eescode",
    "figures": 0
+  },
+  {
+   "id": "CSL-0082",
+   "name": "parabolic_trough_receiver_forristal",
+   "title": "Parabolic-trough receiver (HCE): steady 1D radial energy balance, Forristal/NREL model",
+   "category": "renewables/solar_thermal",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "First-principles 1D radial energy balance of a parabolic-trough heat collector element (glass envelope, evacuated annulus with residual gas, forced convection to the wind, radiation to the sky), solved in steady state for a receiver at a given heat-transfer-fluid temperature; gives the heat loss per reflector area, the thermal and total efficiency and the temperatures of the tube and of the glass envelope.",
+   "fluids": "",
+   "tags": "parabolic trough;solar thermal;heat collector element;vacuum annulus;free molecular conduction;heat loss;optical efficiency;sky radiation;wind convection;translation",
+   "n_equations": 85,
+   "largest_block": 20,
+   "origin_type": "software_library",
+   "source": "thermocycle",
+   "source_path": "~/git/Thermocycle-library/ThermoCycle/Components/HeatFlow/Walls/SolarAbsorber/SolAbsForristal.mo (parameters of ThermoCycle/Components/Units/Solar/SolarField_Forristal.mo), commit b4f16c0b",
+   "authors": "Adriano Desideri (ULiège Thermodynamics Laboratory); Sylvain Quoilin (ULiège Thermodynamics Laboratory)",
+   "license": "MIT",
+   "url": "https://github.com/thermocycle/Thermocycle-library",
+   "missing_features": "",
+   "related": "",
+   "coolsolve_version": "0.3.0@536d427",
+   "verified_on": "2026-10-06",
+   "path": "models/renewables/solar_thermal/parabolic_trough_receiver_forristal",
+   "main_file": "parabolic_trough_receiver_forristal.eescode",
+   "figures": 0
   }
  ],
  "functions": [
+  {
+   "function": "AdairSwirlVelocity",
+   "type": "FUNCTION",
+   "signature": "(omega_c, theta)",
+   "model_id": "CSL-0086",
+   "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "air_cooler_noise_GPSA",
+   "type": "FUNCTION",
+   "signature": "(tip_speed, power)",
+   "model_id": "CSL-0099",
+   "path": "models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode"
+  },
+  {
+   "function": "air_cooler_noise_Mukherjee",
+   "type": "FUNCTION",
+   "signature": "(tip_speed, power, fan_diameter, induced)",
+   "model_id": "CSL-0099",
+   "path": "models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode"
+  },
+  {
+   "function": "bessel_mod_I_series",
+   "type": "FUNCTION",
+   "signature": "(n_order, z)",
+   "model_id": "CSL-0099",
+   "path": "models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode"
+  },
+  {
+   "function": "bessel_mod_K_series",
+   "type": "FUNCTION",
+   "signature": "(n_order, z)",
+   "model_id": "CSL-0099",
+   "path": "models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode"
+  },
   {
    "function": "BRINEPROP",
    "type": "PROCEDURE",
@@ -2127,8 +2810,43 @@
    "function": "BRINEPROP",
    "type": "PROCEDURE",
    "signature": "(Pr$,Fl$,Conc,Temp:output)",
+   "model_id": "CSL-0078",
+   "path": "models/cycles/refrigeration_heat_pumps/brine_to_water_heat_pump_refsim/brine_to_water_heat_pump_refsim.eescode"
+  },
+  {
+   "function": "BRINEPROP",
+   "type": "PROCEDURE",
+   "signature": "(Pr$,Fl$,Conc,Temp:output)",
    "model_id": "CSL-0079",
    "path": "models/fundamentals/properties/brineprop_secondary_refrigerants/brineprop_secondary_refrigerants.eescode"
+  },
+  {
+   "function": "calc_Cmax",
+   "type": "FUNCTION",
+   "signature": "(m_dot_h, m_dot_c, Cp_h, Cp_c)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "calc_Cmin",
+   "type": "FUNCTION",
+   "signature": "(m_dot_h, m_dot_c, Cp_h, Cp_c)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "calc_Cr",
+   "type": "FUNCTION",
+   "signature": "(m_dot_h, m_dot_c, Cp_h, Cp_c)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "COILWET",
+   "type": "PROCEDURE",
+   "signature": "(flag_dp:Q_dot_coil_wet,T_wb_ex_coil_wet)",
+   "model_id": "CSL-0080",
+   "path": "models/components/boilers_burners/condensing_boiler_refsim/condensing_boiler_refsim.eescode"
   },
   {
    "function": "cond",
@@ -2136,6 +2854,41 @@
    "signature": "(fluid$,T_r_su_cd,M_dot_r_cd,DELTAT_r_ex_cd,Q_dot_cd1,T_w_ex_cd,T_w_su_cd,T_a_su_cd2,T_a_ex_cd2,p_r_cd:pinch_cd,h_r_ex_cd_v,t_r_ex_cd_v,h_r_ex_cd_tp,t_r_ex_cd_tp,T_r_ex_cd,h_r_ex_cd,M_dot_w_cd1,M_dot_a_cd2)",
    "model_id": "CSL-0040",
    "path": "models/cycles/organic_rankine/orc_biomass_chp/orc_biomass_chp.eescode"
+  },
+  {
+   "function": "correlation_eta_is_pump",
+   "type": "FUNCTION",
+   "signature": "(Xpp)",
+   "model_id": "CSL-0084",
+   "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode"
+  },
+  {
+   "function": "correlation_hermetic_scroll_epsilon_s",
+   "type": "FUNCTION",
+   "signature": "(rho, rp)",
+   "model_id": "CSL-0084",
+   "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode"
+  },
+  {
+   "function": "correlation_hermetic_scroll_FF",
+   "type": "FUNCTION",
+   "signature": "(rho, rp)",
+   "model_id": "CSL-0084",
+   "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode"
+  },
+  {
+   "function": "correlation_open_expander_epsilon_s",
+   "type": "FUNCTION",
+   "signature": "(N_rot, rho, log_rp)",
+   "model_id": "CSL-0084",
+   "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode"
+  },
+  {
+   "function": "correlation_open_expander_FF",
+   "type": "FUNCTION",
+   "signature": "(log_Nrot, rho)",
+   "model_id": "CSL-0084",
+   "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode"
   },
   {
    "function": "cp_g",
@@ -2153,6 +2906,13 @@
   },
   {
    "function": "cpbar",
+   "type": "FUNCTION",
+   "signature": "(m,n,f,T_p1,T_p2)",
+   "model_id": "CSL-0080",
+   "path": "models/components/boilers_burners/condensing_boiler_refsim/condensing_boiler_refsim.eescode"
+  },
+  {
+   "function": "cpbar",
    "type": "PROCEDURE",
    "signature": "(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)",
    "model_id": "CSL-0034",
@@ -2166,11 +2926,144 @@
    "path": "models/fundamentals/combustion/cpbar_combustion_products/cpbar_combustion_products.eescode"
   },
   {
+   "function": "crossflow_effectiveness_to_int",
+   "type": "FUNCTION",
+   "signature": "(v, NTU, t0)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "CylinderVolume",
+   "type": "FUNCTION",
+   "signature": "(A_p, position)",
+   "model_id": "CSL-0086",
+   "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "CylinderWallArea",
+   "type": "FUNCTION",
+   "signature": "(A_p, position)",
+   "model_id": "CSL-0086",
+   "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "dP_ESDU_high_fin",
+   "type": "FUNCTION",
+   "signature": "(m, A_min, A_increase, flow_area_contraction_ratio, tube_diameter, pitch_parallel, pitch_normal, tube_rows, rho, mu)",
+   "model_id": "CSL-0099",
+   "path": "models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode"
+  },
+  {
+   "function": "dP_ESDU_low_fin",
+   "type": "FUNCTION",
+   "signature": "(m, A_min, A_increase, flow_area_contraction_ratio, tube_diameter, fin_height, bare_length, pitch_parallel, pitch_normal, tube_rows, rho, mu)",
+   "model_id": "CSL-0099",
+   "path": "models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode"
+  },
+  {
+   "function": "dP_Kern",
+   "type": "FUNCTION",
+   "signature": "(m, rho, mu, mu_w, DShell, LSpacing, pitch, Do, NBaffles)",
+   "model_id": "CSL-0103",
+   "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode"
+  },
+  {
+   "function": "eps_boiler_condenser",
+   "type": "FUNCTION",
+   "signature": "(NTU)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "eps_counterflow",
+   "type": "FUNCTION",
+   "signature": "(NTU, Cr)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "eps_crossflow_approx",
+   "type": "FUNCTION",
+   "signature": "(NTU, Cr)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "eps_crossflow_mixed_Cmax",
+   "type": "FUNCTION",
+   "signature": "(NTU, Cr)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "eps_crossflow_mixed_Cmin",
+   "type": "FUNCTION",
+   "signature": "(NTU, Cr)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "eps_parallel",
+   "type": "FUNCTION",
+   "signature": "(NTU, Cr)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "EquivalentDiameter",
+   "type": "FUNCTION",
+   "signature": "(A_p, position)",
+   "model_id": "CSL-0086",
+   "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "ESDU_tube_angle_correction",
+   "type": "FUNCTION",
+   "signature": "(angle)",
+   "model_id": "CSL-0095",
+   "path": "models/heat_transfer/convection/tube_bank_nusselt/tube_bank_nusselt.eescode"
+  },
+  {
+   "function": "ESDU_tube_row_correction",
+   "type": "FUNCTION",
+   "signature": "(tube_rows, staggered)",
+   "model_id": "CSL-0095",
+   "path": "models/heat_transfer/convection/tube_bank_nusselt/tube_bank_nusselt.eescode"
+  },
+  {
+   "function": "eta_fin_Kern_Kraus_aircooler",
+   "type": "FUNCTION",
+   "signature": "(tube_diameter, fin_diameter, fin_thickness, k_fin, h)",
+   "model_id": "CSL-0099",
+   "path": "models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode"
+  },
+  {
+   "function": "fd_Martin_1999",
+   "type": "FUNCTION",
+   "signature": "(Re, chevron_angle)",
+   "model_id": "CSL-0096",
+   "path": "models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode"
+  },
+  {
+   "function": "fd_Martin_VDI",
+   "type": "FUNCTION",
+   "signature": "(Re, chevron_angle)",
+   "model_id": "CSL-0096",
+   "path": "models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode"
+  },
+  {
    "function": "fluidprop",
    "type": "PROCEDURE",
    "signature": "(Fluid$,Temp, Pres,Rh:Rho,Mu,Gamma)",
    "model_id": "CSL-0075",
    "path": "models/components/instrumentation/iso5167_orifice_plate_flow_rate/iso5167_orifice_plate_flow_rate.eescode"
+  },
+  {
+   "function": "G",
+   "type": "FUNCTION",
+   "signature": "(u)",
+   "model_id": "CSL-0081",
+   "path": "models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode"
   },
   {
    "function": "gamma",
@@ -2180,6 +3073,412 @@
    "path": "models/fundamentals/combustion/cpbar_combustion_products/cpbar_combustion_products.eescode"
   },
   {
+   "function": "GenericCentrifugalPump_IsentropicEfficiency",
+   "type": "FUNCTION",
+   "signature": "(f_pp, r_p)",
+   "model_id": "CSL-0084",
+   "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode"
+  },
+  {
+   "function": "GenericCentrifugalPump_MassFlowRate",
+   "type": "FUNCTION",
+   "signature": "(f_pp)",
+   "model_id": "CSL-0084",
+   "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode"
+  },
+  {
+   "function": "GenericScrewExpander_FillingFactor",
+   "type": "FUNCTION",
+   "signature": "(p_su_exp, rho_su_exp, rpm)",
+   "model_id": "CSL-0084",
+   "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode"
+  },
+  {
+   "function": "GenericScrewExpander_IsentropicEfficiency",
+   "type": "FUNCTION",
+   "signature": "(rp, rpm, p)",
+   "model_id": "CSL-0084",
+   "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode"
+  },
+  {
+   "function": "h_Aggour",
+   "type": "FUNCTION",
+   "signature": "(m, x, alpha, D, rhol, Cpl, kl, mu_b, mu_w, L, turbulent)",
+   "model_id": "CSL-0097",
+   "path": "models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode"
+  },
+  {
+   "function": "h_Akers_Deans_Crosser",
+   "type": "FUNCTION",
+   "signature": "(m, rhog, rhol, kl, mul, Cpl, D, x)",
+   "model_id": "CSL-0089",
+   "path": "models/heat_transfer/convection/condensation_film/condensation_film.eescode"
+  },
+  {
+   "function": "h_Amalfi",
+   "type": "FUNCTION",
+   "signature": "(m, x, Dh, rhol, rhog, mul, mug, kl, Hvap, sigma, q, A_channel_flow, chevron_angle)",
+   "model_id": "CSL-0096",
+   "path": "models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode"
+  },
+  {
+   "function": "h_Bier",
+   "type": "FUNCTION",
+   "signature": "(P, Pc, Te)",
+   "model_id": "CSL-0088",
+   "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
+  },
+  {
+   "function": "h_Boyko_Kruzhilin",
+   "type": "FUNCTION",
+   "signature": "(m, rhog, rhol, kl, mul, Cpl, D, x)",
+   "model_id": "CSL-0089",
+   "path": "models/heat_transfer/convection/condensation_film/condensation_film.eescode"
+  },
+  {
+   "function": "h_Briggs_Young",
+   "type": "FUNCTION",
+   "signature": "(m, A, A_min, A_increase, A_fin, A_tube_showing, tube_diameter, fin_diameter, fin_thickness, bare_length, rho, Cp, mu, k, k_fin)",
+   "model_id": "CSL-0099",
+   "path": "models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode"
+  },
+  {
+   "function": "h_Cavallini_Smith_Zecchin",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, rhol, rhog, mul, mug, kl, Cpl)",
+   "model_id": "CSL-0089",
+   "path": "models/heat_transfer/convection/condensation_film/condensation_film.eescode"
+  },
+  {
+   "function": "h_Chen_Bennett",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, rhol, rhog, mul, mug, kl, Cpl, Hvap, sigma, dPsat, Te)",
+   "model_id": "CSL-0098",
+   "path": "models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode"
+  },
+  {
+   "function": "h_Chen_Edelstein",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, rhol, rhog, mul, mug, kl, Cpl, Hvap, sigma, dPsat, Te)",
+   "model_id": "CSL-0098",
+   "path": "models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode"
+  },
+  {
+   "function": "h_Cooper",
+   "type": "FUNCTION",
+   "signature": "(P, Pc, MW, Te, Rp)",
+   "model_id": "CSL-0088",
+   "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
+  },
+  {
+   "function": "h_Davis_David",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, rhol, rhog, Cpl, kl, mul)",
+   "model_id": "CSL-0097",
+   "path": "models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode"
+  },
+  {
+   "function": "h_Elamvaluthi_Srinivas",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, rhol, rhog, Cpl, kl, mug, mu_b, mu_w)",
+   "model_id": "CSL-0097",
+   "path": "models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode"
+  },
+  {
+   "function": "h_ESDU_high_fin",
+   "type": "FUNCTION",
+   "signature": "(m, A, A_min, A_increase, A_fin, A_tube_showing, tube_diameter, fin_diameter, fin_thickness, bare_length, pitch_parallel, pitch_normal, tube_rows, rho, Cp, mu, k, k_fin, Pr_wall)",
+   "model_id": "CSL-0099",
+   "path": "models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode"
+  },
+  {
+   "function": "h_ESDU_low_fin",
+   "type": "FUNCTION",
+   "signature": "(m, A, A_min, A_increase, A_fin, A_tube_showing, tube_diameter, fin_diameter, fin_thickness, bare_length, pitch_parallel, pitch_normal, tube_rows, rho, Cp, mu, k, k_fin, Pr_wall)",
+   "model_id": "CSL-0099",
+   "path": "models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode"
+  },
+  {
+   "function": "h_Forster_Zuber",
+   "type": "FUNCTION",
+   "signature": "(rhol, rhog, mul, kl, Cpl, Hvap, sigma, dPsat, Te)",
+   "model_id": "CSL-0088",
+   "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
+  },
+  {
+   "function": "h_Ganguli_VDI",
+   "type": "FUNCTION",
+   "signature": "(m, A, A_min, A_increase, A_fin, A_tube_showing, tube_diameter, fin_diameter, fin_thickness, bare_length, pitch_parallel, pitch_normal, tube_rows, rho, Cp, mu, k, k_fin)",
+   "model_id": "CSL-0099",
+   "path": "models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode"
+  },
+  {
+   "function": "h_Gorenflo",
+   "type": "FUNCTION",
+   "signature": "(P, Pc, h0, Ra, Te, is_water)",
+   "model_id": "CSL-0088",
+   "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
+  },
+  {
+   "function": "h_Groothuis_Hendal",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, rhol, rhog, Cpl, kl, mug, mu_b, mu_w, water)",
+   "model_id": "CSL-0097",
+   "path": "models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode"
+  },
+  {
+   "function": "h_Gungor_Winterton_1987",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, q, rhol, rhog, mul, kl, Cpl, i_fg)",
+   "model_id": "CSL-0098",
+   "path": "models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode"
+  },
+  {
+   "function": "h_Han_Lee_Kim",
+   "type": "FUNCTION",
+   "signature": "(m, x, Dh, rhol, rhog, mul, kl, Hvap, Cpl, q, A_channel_flow, wavelength, chevron_angle)",
+   "model_id": "CSL-0096",
+   "path": "models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode"
+  },
+  {
+   "function": "h_HEDH_Taborek",
+   "type": "FUNCTION",
+   "signature": "(P, Pc, Te)",
+   "model_id": "CSL-0088",
+   "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
+  },
+  {
+   "function": "h_Huang_Sheer",
+   "type": "FUNCTION",
+   "signature": "(rhol, rhog, mul, kl, Hvap, sigma, Cpl, q, Tsat, angle)",
+   "model_id": "CSL-0096",
+   "path": "models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode"
+  },
+  {
+   "function": "h_Hughmark",
+   "type": "FUNCTION",
+   "signature": "(m, x, alpha, D, L, Cpl, kl, mu_b, mu_w)",
+   "model_id": "CSL-0097",
+   "path": "models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode"
+  },
+  {
+   "function": "h_jacket_Lehrer",
+   "type": "FUNCTION",
+   "signature": "(m, Dtank, Djacket, H, Dinlet, rho, Cp, k, mu, muw, isobaric_expansion, dT, radial_inlet, bottom_inlet)",
+   "model_id": "CSL-0100",
+   "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode"
+  },
+  {
+   "function": "h_jacket_Stein_Schmidt",
+   "type": "FUNCTION",
+   "signature": "(m, Dtank, Djacket, H, Dinlet, rho, Cp, k, mu, muw, rhow, radial_inlet, bottom_inlet, fd)",
+   "model_id": "CSL-0100",
+   "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode"
+  },
+  {
+   "function": "h_kinetic",
+   "type": "FUNCTION",
+   "signature": "(T, P, MW, Hvap, f)",
+   "model_id": "CSL-0089",
+   "path": "models/heat_transfer/convection/condensation_film/condensation_film.eescode"
+  },
+  {
+   "function": "h_Knott",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, rhol, rhog, hl)",
+   "model_id": "CSL-0097",
+   "path": "models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode"
+  },
+  {
+   "function": "h_Kudirka_Grosh_McFadden",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, rhol, rhog, Cpl, kl, mug, mu_b, mu_w)",
+   "model_id": "CSL-0097",
+   "path": "models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode"
+  },
+  {
+   "function": "h_Lazarek_Black",
+   "type": "FUNCTION",
+   "signature": "(m, D, mul, kl, Hvap, q, Te, by_Te)",
+   "model_id": "CSL-0098",
+   "path": "models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode"
+  },
+  {
+   "function": "h_Lee_Kang_Kim",
+   "type": "FUNCTION",
+   "signature": "(m, x, D_eq, rhol, rhog, mul, mug, kl, Hvap, q, A_channel_flow)",
+   "model_id": "CSL-0096",
+   "path": "models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode"
+  },
+  {
+   "function": "h_Li_Wu",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, rhol, rhog, mul, kl, Hvap, sigma, q, Te, by_Te)",
+   "model_id": "CSL-0098",
+   "path": "models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode"
+  },
+  {
+   "function": "h_Liu_Winterton",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, rhol, rhog, mul, kl, Cpl, MW, P, Pc, Te)",
+   "model_id": "CSL-0098",
+   "path": "models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode"
+  },
+  {
+   "function": "h_Martin_Sims",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, rhol, rhog, hl)",
+   "model_id": "CSL-0097",
+   "path": "models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode"
+  },
+  {
+   "function": "h_McNelly",
+   "type": "FUNCTION",
+   "signature": "(rhol, rhog, kl, Cpl, Hvap, sigma, P, Te)",
+   "model_id": "CSL-0088",
+   "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
+  },
+  {
+   "function": "h_Montinsky",
+   "type": "FUNCTION",
+   "signature": "(P, Pc, Te)",
+   "model_id": "CSL-0088",
+   "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
+  },
+  {
+   "function": "h_Nusselt_laminar",
+   "type": "FUNCTION",
+   "signature": "(Tsat, Tw, rhog, rhol, kl, mul, Hvap, L, angle)",
+   "model_id": "CSL-0089",
+   "path": "models/heat_transfer/convection/condensation_film/condensation_film.eescode"
+  },
+  {
+   "function": "h_Ravipudi_Godbold",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, rhol, rhog, Cpl, kl, mug, mu_b, mu_w)",
+   "model_id": "CSL-0097",
+   "path": "models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode"
+  },
+  {
+   "function": "h_Rohsenow",
+   "type": "FUNCTION",
+   "signature": "(rhol, rhog, mul, kl, Cpl, Hvap, sigma, Te, Csf, n)",
+   "model_id": "CSL-0088",
+   "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
+  },
+  {
+   "function": "h_Shah",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, rhol, mul, kl, Cpl, P, Pc)",
+   "model_id": "CSL-0089",
+   "path": "models/heat_transfer/convection/condensation_film/condensation_film.eescode"
+  },
+  {
+   "function": "h_Shah_1982",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, q, rhol, rhog, mul, kl, Cpl, i_fg, vertical)",
+   "model_id": "CSL-0098",
+   "path": "models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode"
+  },
+  {
+   "function": "h_Stephan_Abdelsalam",
+   "type": "FUNCTION",
+   "signature": "(rhol, rhog, mul, kl, Cpl, Hvap, sigma, Tsat, Te, form, kw, rhow, Cpw)",
+   "model_id": "CSL-0088",
+   "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
+  },
+  {
+   "function": "h_Sun_Mishima",
+   "type": "FUNCTION",
+   "signature": "(m, D, rhol, rhog, mul, kl, Hvap, sigma, q, Te, by_Te)",
+   "model_id": "CSL-0098",
+   "path": "models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode"
+  },
+  {
+   "function": "h_Thome",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, rhol, rhog, mul, mug, kl, kg, Cpl, Cpg, Hvap, sigma, Psat, Pc, q)",
+   "model_id": "CSL-0098",
+   "path": "models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode"
+  },
+  {
+   "function": "h_Yan_Lin",
+   "type": "FUNCTION",
+   "signature": "(m, x, Dh, rhol, rhog, mul, kl, Hvap, Cpl, q, A_channel_flow)",
+   "model_id": "CSL-0096",
+   "path": "models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode"
+  },
+  {
+   "function": "h_Yun_Heo_Kim",
+   "type": "FUNCTION",
+   "signature": "(m, x, D, rhol, mul, Hvap, sigma, q, Te, by_Te)",
+   "model_id": "CSL-0098",
+   "path": "models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode"
+  },
+  {
+   "function": "HydraulicDiameter",
+   "type": "FUNCTION",
+   "signature": "(A_p, position)",
+   "model_id": "CSL-0086",
+   "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "is",
+   "type": "FUNCTION",
+   "signature": "",
+   "model_id": "CSL-0092",
+   "path": "models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode"
+  },
+  {
+   "function": "Jb_Bell",
+   "type": "FUNCTION",
+   "signature": "(Fsbp, n_seal_strips, n_crossflow_rows, laminar)",
+   "model_id": "CSL-0103",
+   "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode"
+  },
+  {
+   "function": "Jc_Bell",
+   "type": "FUNCTION",
+   "signature": "(Fc, method)",
+   "model_id": "CSL-0103",
+   "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode"
+  },
+  {
+   "function": "Jl_Bell",
+   "type": "FUNCTION",
+   "signature": "(Ssb, Stb, Sm)",
+   "model_id": "CSL-0103",
+   "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode"
+  },
+  {
+   "function": "Jr_Bell",
+   "type": "FUNCTION",
+   "signature": "(Re, total_row_passes)",
+   "model_id": "CSL-0103",
+   "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode"
+  },
+  {
+   "function": "Js_Bell",
+   "type": "FUNCTION",
+   "signature": "(nb, B, B_in, B_out, laminar)",
+   "model_id": "CSL-0103",
+   "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode"
+  },
+  {
+   "function": "Kern_knot_step",
+   "type": "FUNCTION",
+   "signature": "(x, a, b)",
+   "model_id": "CSL-0103",
+   "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode"
+  },
+  {
+   "function": "mean",
+   "type": "PROCEDURE",
+   "signature": "(t,DELTAtau,q,h,d,w,m:q_day,q_week,q_month,q_rest)",
+   "model_id": "CSL-0081",
+   "path": "models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode"
+  },
+  {
    "function": "mmprod",
    "type": "FUNCTION",
    "signature": "(m,n,f)",
@@ -2187,11 +3486,809 @@
    "path": "models/fundamentals/combustion/cpbar_combustion_products/cpbar_combustion_products.eescode"
   },
   {
+   "function": "NTU_boiler_condenser",
+   "type": "FUNCTION",
+   "signature": "(effectiveness)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "NTU_counterflow",
+   "type": "FUNCTION",
+   "signature": "(effectiveness, Cr)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "NTU_crossflow_mixed_Cmax",
+   "type": "FUNCTION",
+   "signature": "(effectiveness, Cr)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "NTU_crossflow_mixed_Cmin",
+   "type": "FUNCTION",
+   "signature": "(effectiveness, Cr)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "NTU_from_P_basic",
+   "type": "FUNCTION",
+   "signature": "(P1, R1, subtype)",
+   "model_id": "CSL-0102",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
+  },
+  {
+   "function": "NTU_from_P_E",
+   "type": "FUNCTION",
+   "signature": "(P1, R1, Ntp, optimal)",
+   "model_id": "CSL-0102",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
+  },
+  {
+   "function": "NTU_from_P_G_residual",
+   "type": "FUNCTION",
+   "signature": "(NTU1, R1, P1, Ntp, optimal)",
+   "model_id": "CSL-0102",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
+  },
+  {
+   "function": "NTU_from_P_H_residual",
+   "type": "FUNCTION",
+   "signature": "(NTU1, R1, P1, Ntp, optimal)",
+   "model_id": "CSL-0102",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
+  },
+  {
+   "function": "NTU_from_P_J_residual",
+   "type": "FUNCTION",
+   "signature": "(NTU1, R1, P1, Ntp)",
+   "model_id": "CSL-0102",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
+  },
+  {
+   "function": "NTU_from_P_plate_residual",
+   "type": "FUNCTION",
+   "signature": "(NTU1, R1, P1, Np1, Np2, counterflow, passes_counterflow)",
+   "model_id": "CSL-0102",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
+  },
+  {
+   "function": "NTU_from_UA",
+   "type": "FUNCTION",
+   "signature": "(UA, Cmin)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "NTU_parallel",
+   "type": "FUNCTION",
+   "signature": "(effectiveness, Cr)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "Nu_Adair_1972",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0086",
+   "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "Nu_Annand_1963",
+   "type": "FUNCTION",
+   "signature": "(Re)",
+   "model_id": "CSL-0086",
+   "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "Nu_Bhatti_Shah",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, fd, eD)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Bishop",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, rho_w, rho_b, Di, x, corr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Bringer_Smith",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Churchill_Zajic",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, fd)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_coil_Xin_Ebadian",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, horizontal)",
+   "model_id": "CSL-0100",
+   "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode"
+  },
+  {
+   "function": "Nu_Colburn",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_cylinder_Churchill_Bernstein",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0094",
+   "path": "models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode"
+  },
+  {
+   "function": "Nu_cylinder_Fand",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0094",
+   "path": "models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode"
+  },
+  {
+   "function": "Nu_cylinder_McAdams",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0094",
+   "path": "models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode"
+  },
+  {
+   "function": "Nu_cylinder_Perkins_Leppert_1962",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, mu, muw)",
+   "model_id": "CSL-0094",
+   "path": "models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode"
+  },
+  {
+   "function": "Nu_cylinder_Perkins_Leppert_1964",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, mu, muw)",
+   "model_id": "CSL-0094",
+   "path": "models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode"
+  },
+  {
+   "function": "Nu_cylinder_Sanitjai_Goldstein",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0094",
+   "path": "models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode"
+  },
+  {
+   "function": "Nu_cylinder_Whitaker",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, mu, muw)",
+   "model_id": "CSL-0094",
+   "path": "models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode"
+  },
+  {
+   "function": "Nu_cylinder_Zukauskas",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, Prw)",
+   "model_id": "CSL-0094",
+   "path": "models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode"
+  },
+  {
+   "function": "Nu_Destoop_1986",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0086",
+   "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "Nu_Dipprey_Sabersky",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, fd, eD)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Dittus_Boelter",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, heating, revised)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Drexel_McAdams",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_ESDU",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_ESDU_73031",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, tube_rows, pitch_parallel, pitch_normal, Pr_wall, angle)",
+   "model_id": "CSL-0095",
+   "path": "models/heat_transfer/convection/tube_bank_nusselt/tube_bank_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Friend_Metzner",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, fd)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Gnielinski",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, fd)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Gnielinski_2010",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, DL)",
+   "model_id": "CSL-0086",
+   "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "Nu_Gnielinski_smooth_1",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Gnielinski_smooth_2",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Gorban",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Gowen_Smith",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, fd)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Griem",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, H_b, corr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Gupta",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, rho_w, rho_b, mu_w, mu_b, corr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Hausen_turbulent_entry",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, Di, x)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_HEDH_tube_bank",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, Do, tube_rows, pitch_parallel, pitch_normal)",
+   "model_id": "CSL-0095",
+   "path": "models/heat_transfer/convection/tube_bank_nusselt/tube_bank_nusselt.eescode"
+  },
+  {
+   "function": "Nu_horizontal_cylinder_Churchill_Chu",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr)",
+   "model_id": "CSL-0092",
+   "path": "models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode"
+  },
+  {
+   "function": "Nu_horizontal_cylinder_Kuehn_Goldstein",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr)",
+   "model_id": "CSL-0092",
+   "path": "models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode"
+  },
+  {
+   "function": "Nu_horizontal_cylinder_Morgan",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr)",
+   "model_id": "CSL-0092",
+   "path": "models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode"
+  },
+  {
+   "function": "Nu_horizontal_plate_laminar_Baehr",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0101",
+   "path": "models/heat_transfer/convection/external_forced_conv_plates/external_forced_conv_plates.eescode"
+  },
+  {
+   "function": "Nu_horizontal_plate_laminar_Churchill_Ozoe",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0101",
+   "path": "models/heat_transfer/convection/external_forced_conv_plates/external_forced_conv_plates.eescode"
+  },
+  {
+   "function": "Nu_horizontal_plate_McAdams",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, buoyancy)",
+   "model_id": "CSL-0093",
+   "path": "models/heat_transfer/convection/free_conv_plates_and_sphere/free_conv_plates_and_sphere.eescode"
+  },
+  {
+   "function": "Nu_horizontal_plate_Rohsenow",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, buoyancy)",
+   "model_id": "CSL-0093",
+   "path": "models/heat_transfer/convection/free_conv_plates_and_sphere/free_conv_plates_and_sphere.eescode"
+  },
+  {
+   "function": "Nu_horizontal_plate_turbulent_Kreith",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0101",
+   "path": "models/heat_transfer/convection/external_forced_conv_plates/external_forced_conv_plates.eescode"
+  },
+  {
+   "function": "Nu_horizontal_plate_turbulent_Schlichting",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0101",
+   "path": "models/heat_transfer/convection/external_forced_conv_plates/external_forced_conv_plates.eescode"
+  },
+  {
+   "function": "Nu_horizontal_plate_VDI",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, buoyancy)",
+   "model_id": "CSL-0093",
+   "path": "models/heat_transfer/convection/free_conv_plates_and_sphere/free_conv_plates_and_sphere.eescode"
+  },
+  {
+   "function": "Nu_Irimescu_2013",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, K, DL)",
+   "model_id": "CSL-0086",
+   "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "Nu_Jackson",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, rho_w, rho_b, Cp_avg, Cp_b, T_b, T_w, T_pc, corr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Kawase_De",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, fd)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Kawase_Ulbrecht",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, fd)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Khan_Khan",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, chevron_angle)",
+   "model_id": "CSL-0096",
+   "path": "models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode"
+  },
+  {
+   "function": "Nu_Kitoh",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, H_b, G, q, corr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Kornhauser_1994",
+   "type": "FUNCTION",
+   "signature": "(Pe)",
+   "model_id": "CSL-0086",
+   "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "Nu_Krasnoshchekov",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, rho_w, rho_b, Cp_avg, Cp_b, T_b, T_w, T_pc, corr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Krasnoshchekov_Protopopov",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, Cp_avg, Cp_b, k_w, k_b, mu_w, mu_b, corr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Kumar",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, chevron_angle, mu, mu_wall)",
+   "model_id": "CSL-0096",
+   "path": "models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode"
+  },
+  {
+   "function": "Nu_Martin",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, chevron_angle, variant)",
+   "model_id": "CSL-0096",
+   "path": "models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode"
+  },
+  {
+   "function": "Nu_Martinelli",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, fd)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_McAdams",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Mokry",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, rho_w, rho_b, corr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Muley_Manglik",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, chevron_angle, plate_enlargement_factor)",
+   "model_id": "CSL-0096",
+   "path": "models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode"
+  },
+  {
+   "function": "Nu_Nunner",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, fd, fd_smooth)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Nusselt_Rayleigh_Hollands",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, buoyancy, Rac)",
+   "model_id": "CSL-0100",
+   "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode"
+  },
+  {
+   "function": "Nu_Nusselt_Rayleigh_Holling_Herwig_err",
+   "type": "FUNCTION",
+   "signature": "(Nu, Ra, D2)",
+   "model_id": "CSL-0100",
+   "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode"
+  },
+  {
+   "function": "Nu_Nusselt_Rayleigh_Probert",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, buoyancy)",
+   "model_id": "CSL-0100",
+   "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode"
+  },
+  {
+   "function": "Nu_Nusselt_vertical_Thess",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, H, L, geometry)",
+   "model_id": "CSL-0100",
+   "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode"
+  },
+  {
+   "function": "Nu_Ornatsky",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr_b, Pr_w, rho_w, rho_b, corr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Petukhov",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, rho_w, rho_b, mu_w, mu_b, corr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Petukhov_Kirillov_Popov",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, fd)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Prandtl",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, fd)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Sandall",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, fd)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Shitsman",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr_b, Pr_w)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Sieder_Tate",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, mu, mu_w)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_sphere_Churchill",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr)",
+   "model_id": "CSL-0093",
+   "path": "models/heat_transfer/convection/free_conv_plates_and_sphere/free_conv_plates_and_sphere.eescode"
+  },
+  {
+   "function": "Nu_Swenson",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, rho_w, rho_b, corr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_vertical_cylinder_Al_Arabi_Khamis",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, L, D, turbulent)",
+   "model_id": "CSL-0092",
+   "path": "models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode"
+  },
+  {
+   "function": "Nu_vertical_cylinder_Carne_Morgan",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, turbulent)",
+   "model_id": "CSL-0092",
+   "path": "models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode"
+  },
+  {
+   "function": "Nu_vertical_cylinder_Eigenson_Morgan",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, turbulent)",
+   "model_id": "CSL-0092",
+   "path": "models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode"
+  },
+  {
+   "function": "Nu_vertical_cylinder_Griffiths_Davis_Morgan",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, turbulent)",
+   "model_id": "CSL-0092",
+   "path": "models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode"
+  },
+  {
+   "function": "Nu_vertical_cylinder_Hanesian_Kalish_Morgan",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr)",
+   "model_id": "CSL-0092",
+   "path": "models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode"
+  },
+  {
+   "function": "Nu_vertical_cylinder_Jakob_Linke_Morgan",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, turbulent)",
+   "model_id": "CSL-0092",
+   "path": "models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode"
+  },
+  {
+   "function": "Nu_vertical_cylinder_Kreith_Eckert",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, turbulent)",
+   "model_id": "CSL-0092",
+   "path": "models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode"
+  },
+  {
+   "function": "Nu_vertical_cylinder_McAdams_Weiss_Saunders",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, turbulent)",
+   "model_id": "CSL-0092",
+   "path": "models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode"
+  },
+  {
+   "function": "Nu_vertical_cylinder_Popiel_Churchill",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, L, D)",
+   "model_id": "CSL-0092",
+   "path": "models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode"
+  },
+  {
+   "function": "Nu_vertical_cylinder_Touloukian_Morgan",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr, turbulent)",
+   "model_id": "CSL-0092",
+   "path": "models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode"
+  },
+  {
+   "function": "Nu_vertical_helical_coil_Ali",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr)",
+   "model_id": "CSL-0100",
+   "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode"
+  },
+  {
+   "function": "Nu_vertical_helical_coil_Prabhanjan_Rennie_Raghavan",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr)",
+   "model_id": "CSL-0100",
+   "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode"
+  },
+  {
+   "function": "Nu_vertical_plate_Churchill",
+   "type": "FUNCTION",
+   "signature": "(Pr, Gr)",
+   "model_id": "CSL-0093",
+   "path": "models/heat_transfer/convection/free_conv_plates_and_sphere/free_conv_plates_and_sphere.eescode"
+  },
+  {
+   "function": "Nu_von_Karman",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, fd)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Webb",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, fd)",
+   "model_id": "CSL-0087",
+   "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Woschni_1967",
+   "type": "FUNCTION",
+   "signature": "(Re)",
+   "model_id": "CSL-0086",
+   "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "Nu_Xu",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, rho_w, rho_b, mu_w, mu_b, corr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Yamagata",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, Pr_pc, Cp_avg, Cp_b, T_b, T_w, T_pc, corr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Zhu",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, rho_w, rho_b, k_w, k_b, corr)",
+   "model_id": "CSL-0104",
+   "path": "models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode"
+  },
+  {
+   "function": "Nu_Zukauskas_Bejan",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, tube_rows, pitch_parallel, pitch_normal, Pr_wall)",
+   "model_id": "CSL-0095",
+   "path": "models/heat_transfer/convection/tube_bank_nusselt/tube_bank_nusselt.eescode"
+  },
+  {
+   "function": "Nusselt",
+   "type": "PROCEDURE",
+   "signature": "(c_p_f,rho_f,mu_f,mu_f_w,k_f,D_p_i,L_b,m_dot_f_b:Nu#,Re,Pr)",
+   "model_id": "CSL-0081",
+   "path": "models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode"
+  },
+  {
+   "function": "P_NTU_Pc",
+   "type": "FUNCTION",
+   "signature": "(x, y)",
+   "model_id": "CSL-0102",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
+  },
+  {
+   "function": "P_NTU_Pp",
+   "type": "FUNCTION",
+   "signature": "(x, y)",
+   "model_id": "CSL-0102",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
+  },
+  {
+   "function": "Penalty",
+   "type": "PROCEDURE",
+   "signature": "(t,t_s,B,H,NB,A:F_correlation_p)",
+   "model_id": "CSL-0081",
+   "path": "models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode"
+  },
+  {
+   "function": "PistonSpeed",
+   "type": "FUNCTION",
+   "signature": "(stroke, omega)",
+   "model_id": "CSL-0086",
+   "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "PressureDropCorrelation_HP",
+   "type": "FUNCTION",
+   "signature": "(M_flow)",
+   "model_id": "CSL-0084",
+   "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode"
+  },
+  {
+   "function": "PressureDropCorrelation_LP",
+   "type": "FUNCTION",
+   "signature": "(M_flow)",
+   "model_id": "CSL-0084",
+   "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode"
+  },
+  {
    "function": "pump",
    "type": "PROCEDURE",
    "signature": "(fluid$,epsilon_pp,h_r_su_pp,t_r_su_pp,p_r_su_pp,p_r_ex_pp,M_dot_r_pp:W_dot_pp,T_r_ex_pp,h_r_ex_pp)",
    "model_id": "CSL-0040",
    "path": "models/cycles/organic_rankine/orc_biomass_chp/orc_biomass_chp.eescode"
+  },
+  {
+   "function": "q_CHF_HEDH_Montinsky",
+   "type": "FUNCTION",
+   "signature": "(P, Pc)",
+   "model_id": "CSL-0088",
+   "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
+  },
+  {
+   "function": "q_CHF_Serth_HEDH",
+   "type": "FUNCTION",
+   "signature": "(Di, sigma, Hvap, rhol, rhog)",
+   "model_id": "CSL-0088",
+   "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
+  },
+  {
+   "function": "q_CHF_Zuber",
+   "type": "FUNCTION",
+   "signature": "(sigma, Hvap, rhol, rhog, K)",
+   "model_id": "CSL-0088",
+   "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
   },
   {
    "function": "q_dot_pinch_fun_cd",
@@ -2208,11 +4305,74 @@
    "path": "models/cycles/refrigeration_heat_pumps/high_temp_heat_pump_pcm_storage/high_temp_heat_pump_pcm_storage.eescode"
   },
   {
+   "function": "Rac_Nusselt_Rayleigh_disk",
+   "type": "FUNCTION",
+   "signature": "(H, D, insulated)",
+   "model_id": "CSL-0100",
+   "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode"
+  },
+  {
    "function": "single_phase_HX",
    "type": "PROCEDURE",
    "signature": "(cf$,hf$,t_cf_su,t_cf_ex,P_cf_su,P_cf_ex,P_hf_su,P_hf_ex,t_hf_su,t_hf_ex,M_dot_hf,M_dot_cf,alpha,C_cf,C_hf,n_cf,n_hf:Q_dot,epsilon,NTU,AU)",
    "model_id": "CSL-0008",
    "path": "models/components/heat_exchangers/condenser_three_zones/condenser_three_zones.eescode"
+  },
+  {
+   "function": "summation",
+   "type": "PROCEDURE",
+   "signature": "(q,h,d,w,m,t,DELTAtau,Fo_p,time:sum)",
+   "model_id": "CSL-0081",
+   "path": "models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode"
+  },
+  {
+   "function": "temperature_effectiveness_air_cooler",
+   "type": "FUNCTION",
+   "signature": "(R1, NTU1, rows, passes, coerce)",
+   "model_id": "CSL-0102",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
+  },
+  {
+   "function": "temperature_effectiveness_basic",
+   "type": "FUNCTION",
+   "signature": "(R1, NTU1, subtype)",
+   "model_id": "CSL-0102",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
+  },
+  {
+   "function": "temperature_effectiveness_plate",
+   "type": "FUNCTION",
+   "signature": "(R1, NTU1, Np1, Np2, counterflow, passes_counterflow)",
+   "model_id": "CSL-0102",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
+  },
+  {
+   "function": "temperature_effectiveness_TEMA_E",
+   "type": "FUNCTION",
+   "signature": "(R1, NTU1, Ntp, optimal)",
+   "model_id": "CSL-0102",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
+  },
+  {
+   "function": "temperature_effectiveness_TEMA_G",
+   "type": "FUNCTION",
+   "signature": "(R1, NTU1, Ntp, optimal)",
+   "model_id": "CSL-0102",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
+  },
+  {
+   "function": "temperature_effectiveness_TEMA_H",
+   "type": "FUNCTION",
+   "signature": "(R1, NTU1, Ntp, optimal)",
+   "model_id": "CSL-0102",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
+  },
+  {
+   "function": "temperature_effectiveness_TEMA_J",
+   "type": "FUNCTION",
+   "signature": "(R1, NTU1, Ntp)",
+   "model_id": "CSL-0102",
+   "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
   },
   {
    "function": "therminol66",
@@ -2222,11 +4382,32 @@
    "path": "models/cycles/organic_rankine/orc_simple_r245fa/orc_simple_r245fa.eescode"
   },
   {
+   "function": "tr_factor_Richter2",
+   "type": "FUNCTION",
+   "signature": "(start, stop, position)",
+   "model_id": "CSL-0098",
+   "path": "models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode"
+  },
+  {
+   "function": "TransitionFactor",
+   "type": "FUNCTION",
+   "signature": "(start, stop, position)",
+   "model_id": "CSL-0086",
+   "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
    "function": "two_phase_CD",
    "type": "PROCEDURE",
    "signature": "(cf$,R$,t_cf_su,t_cf_ex,t_cd,M_dot_r,M_dot_cf,alpha,C_cf,C_r,n_cf,n_r:Q_dot,epsilon,NTU,AU)",
    "model_id": "CSL-0008",
    "path": "models/components/heat_exchangers/condenser_three_zones/condenser_three_zones.eescode"
+  },
+  {
+   "function": "UA_from_NTU",
+   "type": "FUNCTION",
+   "signature": "(NTU, Cmin)",
+   "model_id": "CSL-0090",
+   "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
   },
   {
    "function": "warning_error",
@@ -2248,6 +4429,13 @@
    "signature": "(eta_I,W_dot_el_net,eta_global,i)",
    "model_id": "CSL-0040",
    "path": "models/cycles/organic_rankine/orc_biomass_chp/orc_biomass_chp.eescode"
+  },
+  {
+   "function": "Zukauskas_tube_row_correction",
+   "type": "FUNCTION",
+   "signature": "(tube_rows, staggered, Re)",
+   "model_id": "CSL-0095",
+   "path": "models/heat_transfer/convection/tube_bank_nusselt/tube_bank_nusselt.eescode"
   }
  ]
 }

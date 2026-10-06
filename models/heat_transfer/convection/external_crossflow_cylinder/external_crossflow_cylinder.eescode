@@ -1,0 +1,325 @@
+{=============================================================================
+  External forced convection: crossflow over a single cylinder
+  CoolSolve Library model CSL-0094 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Eight Nusselt-number correlations for a single circular cylinder (tube) in
+  crossflow: Zukauskas (piecewise in Re, with the optional wall-Prandtl
+  correction), Churchill-Bernstein, Sanitjai-Goldstein, Fand, McAdams,
+  Whitaker and the two forms of Perkins-Leppert (1962 and 1964), the last three
+  with the optional viscosity-ratio correction. ht ranks them
+  Sanitjai-Goldstein, Churchill-Bernstein, Zukauskas, Whitaker,
+  Perkins-Leppert 1964, McAdams, Fand, Perkins-Leppert 1962.
+
+  All of them return the Nusselt number of the cylinder, on its diameter D; the
+  wall heat-transfer coefficient follows from h = Nu*k/D and is left to the
+  caller. Inputs are dimensionless except the two viscosities mu and mu_w [Pa-s]:
+  Re (on D), Pr (at the film temperature for Churchill-Bernstein,
+  Sanitjai-Goldstein, Fand and McAdams; at the free-stream temperature for
+  Zukauskas, Whitaker and Perkins-Leppert, as quoted in ht), Pr_w (wall
+  Prandtl number) and mu / mu_w.
+
+  ht makes Pr_w and mu / mu_w optional; EES has no optional argument, so they
+  are mandatory and the caller passes Pr_w = Pr (resp. mu = mu_w) for the
+  uncorrected form. Both forms are exercised in the demonstration program.
+
+  The demonstration program at the end calls every function, once with the
+  inputs of the ht doctest of the corresponding correlation ("A" cases) and
+  once with a second, uniform input set ("B" cases). The ht values of both
+  sets are tabulated in the README (verification table).
+
+  Two correlations of the family are only dispatchers in ht
+  (Nu_external_cylinder, Nu_external_cylinder_methods: they select a method by
+  name) and are not translated; an EES caller selects the function directly.
+
+  Inputs : Re [-], Pr [-], Pr_w [-], mu / mu_w [Pa-s]
+  Outputs: Nu [-] (one FUNCTION per correlation)
+  Units  : SI - dimensionless numbers, viscosities in Pa-s
+  Source : ht (Caleb Bell), ht/conv_external.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; correlations by the authors
+           cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION Nu_cylinder_Zukauskas(Re, Pr, Prw)
+{NU_CYLINDER_ZUKAUSKAS - Nusselt number, crossflow over a single circular
+ cylinder, Zukauskas. Applies to both the laminar and the turbulent regime.
+
+  Nu_D = C*Re^m*Pr^n*(Pr/Pr_w)^0.25
+
+  C and m from the four Re ranges below; outside of them the nearest range is
+  used blindly (as in ht). n = 0.37 if Pr <= 10, 0.36 otherwise.
+
+  Re            C      m
+  1 - 40        0.75   0.4
+  40 - 1E3      0.51   0.5
+  1E3 - 2E5     0.26   0.6
+  2E5 - 1E6     0.076  0.7
+
+ Re [-] is on the cylinder diameter, Pr [-] at the free-stream temperature and
+ Prw [-] at the wall temperature. Passing Prw = Pr gives the form without the
+ wall-Prandtl correction, which ht leaves to an outside function.
+ Validity: the four Re ranges above (as in ht); the tabulated upper limit is
+ 1E6.
+ Original: Zukauskas, A., "Heat Transfer from Tubes in Crossflow", in T. F.
+   Irvine and J. P. Hartnett (eds), Advances in Heat Transfer, Vol. 8,
+   pp. 93-160, Academic Press, New York, 1972; also shown without
+   modification in Bergman, T. L., A. S. Lavine, F. P. Incropera and
+   D. P. DeWitt, Introduction to Heat Transfer, 6E, Wiley, 2011 (Example 7.3).
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_external.py, Nu_cylinder_Zukauskas,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  "Non-smooth regime switches are written with nested IF blocks (no ELSEIF)"
+  IF Re <= 40 THEN
+    C = 0.75
+    m = 0.4
+  ELSE
+    IF Re < 1E3 THEN
+      C = 0.51
+      m = 0.5
+    ELSE
+      IF Re < 2E5 THEN
+        C = 0.26
+        m = 0.6
+      ELSE
+        C = 0.076
+        m = 0.7
+      ENDIF
+    ENDIF
+  ENDIF
+  IF Pr <= 10 THEN
+    n = 0.37
+  ELSE
+    n = 0.36
+  ENDIF
+  Nu_cylinder_Zukauskas = C*Re^m*Pr^n*(Pr/Prw)^0.25
+END
+
+FUNCTION Nu_cylinder_Churchill_Bernstein(Re, Pr)
+{NU_CYLINDER_CHURCHILL_BERNSTEIN - Nusselt number, crossflow over a single
+ circular cylinder, Churchill-Bernstein. No wall correction is needed for this
+ formulation. Applies to both the laminar and the turbulent regime.
+
+  Nu_D = 0.3 + {0.62*Re^0.5*Pr^(1/3)/[1 + (0.4/Pr)^(2/3)]^0.25}*
+                     {1 + (Re/282000)^(5/8)}^0.8
+
+ Re [-] is on the cylinder diameter and Pr [-] at the film temperature.
+ Validity: laminar and turbulent regimes, no range quoted (as in ht); ht notes
+   that the equation "appears to provide a lower bound for RePr > 0.4" and that
+   an alternate exponent for a smaller range is presented in the original.
+ Original: Churchill, S. W. and M. Bernstein, "A Correlating Equation for
+   Forced Convection from Gases and Liquids to a Circular Cylinder in
+   Crossflow", Journal of Heat Transfer 99(2): 300-306, 1 May 1977; as shown
+   without modification in Bergman, T. L., A. S. Lavine, F. P. Incropera and
+   D. P. DeWitt, Introduction to Heat Transfer, 6E, Wiley, 2011 (Example 7.3).
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_external.py,
+   Nu_cylinder_Churchill_Bernstein, MIT License, C. Bell -
+   https://github.com/CalebBell/ht}
+  Nu_cylinder_Churchill_Bernstein = 0.3 + (0.62*Re^0.5*Pr^(1/3))/(1 + (0.4/Pr)^(2/3))^0.25*(1 + (Re/282000)^(5/8))^0.8
+END
+
+FUNCTION Nu_cylinder_Sanitjai_Goldstein(Re, Pr)
+{NU_CYLINDER_SANITJAI_GOLDSTEIN - Nusselt number, crossflow over a single
+ circular cylinder, Sanitjai-Goldstein. No wall correction is needed for this
+ formulation; ht considers it the most recent of the family and believes it to
+ be more accurate than the other formulations available. Applies to both the
+ laminar and the turbulent regime.
+
+  Nu = 0.446*Re^0.5*Pr^0.35 +
+       0.528*[(6.5*EXP(Re/5000))^(-5) + (0.031*Re^0.8)^(-5)]^(-1/5)*Pr^0.42
+
+ The exponent -5 of the first term is carried inside the exponential in the
+ equation written here (6.5^(-5)*EXP(-5*Re/5000)): this is the form of the ht
+ code, which avoids an overflow error for a large-diameter cylinder; as in the
+ original.
+ Re [-] is on the cylinder diameter and Pr [-] at the film temperature.
+ Validity: laminar and turbulent regimes; developed with water, ethylene
+   glycol-water mixtures and air (Pr = 0.7 to 176) and with test results for
+   2E3 <= Re <= 9E4 (as in ht).
+ Original: Sanitjai, S. and R. J. Goldstein, "Forced Convection Heat Transfer
+   from a Circular Cylinder in Crossflow to Air and Liquids", Int. J. Heat Mass
+   Transfer 47(22): 4795-4805, October 2004; as shown in the ht docstring, the
+   paper also gives local heat-transfer coefficients.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_external.py,
+   Nu_cylinder_Sanitjai_Goldstein, MIT License, C. Bell -
+   https://github.com/CalebBell/ht}
+  Nu_cylinder_Sanitjai_Goldstein = 0.446*Re^0.5*Pr^0.35 + 0.528*(6.5^(-5)*EXP(-5*Re/5000) + (0.031*Re^0.8)^(-5))^(-1/5)*Pr^0.42
+END
+
+FUNCTION Nu_cylinder_Fand(Re, Pr)
+{NU_CYLINDER_FAND - Nusselt number, crossflow over a single circular cylinder,
+ Fand. No wall correction is needed for this formulation. Applies to both the
+ laminar and the turbulent regime.
+
+  Nu = (0.35 + 0.34*Re^0.5 + 0.15*Re^0.58)*Pr^0.3
+
+ Re [-] is on the cylinder diameter and Pr [-] at the film temperature.
+ Validity: laminar and turbulent regimes; developed with water and 1E4 <= Re
+   <= 1E5, compared with other data of the literature, with a claimed validity
+   of 1E-1 <= Re <= 1E5 (as in ht).
+ Original: Fand, R. M., "Heat Transfer by Forced Convection from a Cylinder to
+   Water in Crossflow", Int. J. Heat Mass Transfer 8(7): 995-1010, 1 July
+   1965; also shown in Sanitjai, S. and R. J. Goldstein, Int. J. Heat Mass
+   Transfer 47(22): 4795-4805, October 2004.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_external.py, Nu_cylinder_Fand,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_cylinder_Fand = (0.35 + 0.34*Re^0.5 + 0.15*Re^0.58)*Pr^0.3
+END
+
+FUNCTION Nu_cylinder_McAdams(Re, Pr)
+{NU_CYLINDER_MCADAMS - Nusselt number, crossflow over a single circular
+ cylinder, McAdams. No wall correction is needed for this formulation. Applies
+ to both the laminar and the turbulent regime.
+
+  Nu = (0.35 + 0.56*Re^0.52)*Pr^0.3
+
+ Re [-] is on the cylinder diameter and Pr [-] at the film temperature.
+ Validity: laminar and turbulent regimes; developed with very limited test
+   results for water only, no range quoted (as in ht).
+ Original: McAdams, W. H., Heat Transmission, 3E, Krieger, Malabar, Fla,
+   1985; also shown in Fand, R. M., Int. J. Heat Mass Transfer 8(7): 995-1010,
+   1 July 1965.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_external.py, Nu_cylinder_McAdams,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_cylinder_McAdams = (0.35 + 0.56*Re^0.52)*Pr^0.3
+END
+
+FUNCTION Nu_cylinder_Whitaker(Re, Pr, mu, muw)
+{NU_CYLINDER_WHITAKER - Nusselt number, crossflow over a single circular
+ cylinder, Whitaker. ht recommends the viscosity-exponent correction of 0.25,
+ which it applies only when mu and muw are given. Applies to both the laminar
+ and the turbulent regime.
+
+  Nu_D = (0.4*Re^0.5 + 0.06*Re^(2/3))*Pr^0.3*(mu/mu_w)^0.25
+
+ The exponent of Pr is 0.3 in the ht code, which is the form that reproduces its
+ doctest value; the formula printed in the ht docstring shows Pr^0.4 (as in the
+ original).
+ Re [-] is on the cylinder diameter and Pr [-] at the free-stream temperature;
+ mu [Pa-s] is the free-stream viscosity and muw [Pa-s] the wall viscosity.
+ Passing mu = muw gives the form without the viscosity correction.
+ Validity: laminar and turbulent regimes; developed with 1 to 1E5 Re, 0.67 to
+   300 Pr and viscosity ratios of 0.25 to 5.2, and reported to agree with the
+   experimental data generally within 25% (as in ht).
+ Original: Whitaker, S., "Forced Convection Heat Transfer Correlations for
+   Flow in Pipes, Past Flat Plates, Single Cylinders, Single Spheres, and for
+   Flow in Packed Beds and Tube Bundles", AIChE Journal 18(2): 361-371,
+   1 March 1972; also shown in Sanitjai, S. and R. J. Goldstein, Int. J. Heat
+   Mass Transfer 47(22): 4795-4805, October 2004.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_external.py, Nu_cylinder_Whitaker,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_cylinder_Whitaker = (0.4*Re^0.5 + 0.06*Re^(2/3))*Pr^0.3*(mu/muw)^0.25
+END
+
+FUNCTION Nu_cylinder_Perkins_Leppert_1962(Re, Pr, mu, muw)
+{NU_CYLINDER_PERKINS_LEPPERT_1962 - Nusselt number, crossflow over a single
+ circular cylinder, the 1962 form of Perkins-Leppert. ht recommends the
+ viscosity-exponent correction of 0.25, which it applies only when mu and muw
+ are given. Applies to both the laminar and the turbulent regime.
+
+  Nu = (0.30*Re^0.5 + 0.10*Re^0.67)*Pr^0.4*(mu/mu_w)^0.25
+
+ Re [-] is on the cylinder diameter and Pr [-] at the free-stream temperature;
+ mu [Pa-s] is the free-stream viscosity and muw [Pa-s] the wall viscosity.
+ Passing mu = muw gives the form without the viscosity correction.
+ Validity: laminar and turbulent regimes; considered 40 <= Re <= 1E5,
+   1 <= Pr <= 300 and viscosity ratios of 0.25 to 4 (as in ht).
+ Original: Perkins, H. C. Jr. and G. Leppert, "Forced Convection Heat Transfer
+   from a Uniformly Heated Cylinder", Journal of Heat Transfer 84(3): 257-261,
+   1 August 1962; also shown in Sanitjai, S. and R. J. Goldstein, Int. J. Heat
+   Mass Transfer 47(22): 4795-4805, October 2004.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_external.py,
+   Nu_cylinder_Perkins_Leppert_1962, MIT License, C. Bell -
+   https://github.com/CalebBell/ht}
+  Nu_cylinder_Perkins_Leppert_1962 = (0.30*Re^0.5 + 0.10*Re^0.67)*Pr^0.4*(mu/muw)^0.25
+END
+
+FUNCTION Nu_cylinder_Perkins_Leppert_1964(Re, Pr, mu, muw)
+{NU_CYLINDER_PERKINS_LEPPERT_1964 - Nusselt number, crossflow over a single
+ circular cylinder, the 1964 form of Perkins-Leppert, which considers the new
+ data available since the 1962 form. ht recommends the viscosity-exponent
+ correction of 0.25, which it applies only when mu and muw are given. Applies
+ to both the laminar and the turbulent regime.
+
+  Nu = (0.31*Re^0.5 + 0.11*Re^0.67)*Pr^0.4*(mu/mu_w)^0.25
+
+ Re [-] is on the cylinder diameter and Pr [-] at the free-stream temperature;
+ mu [Pa-s] is the free-stream viscosity and muw [Pa-s] the wall viscosity.
+ Passing mu = muw gives the form without the viscosity correction.
+ Validity: laminar and turbulent regimes; considers 2E3 <= Re <= 1.2E5,
+   1 <= Pr <= 7 and surface-to-bulk temperature differences of 11 to 66 K (as in
+   ht).
+ Original: Perkins, H. C. Jr. and G. Leppert, "Local Heat-Transfer Coefficients
+   on a Uniformly Heated Cylinder", Int. J. Heat Mass Transfer 7(2): 143-158,
+   February 1964; also shown in Sanitjai, S. and R. J. Goldstein, Int. J. Heat
+   Mass Transfer 47(22): 4795-4805, October 2004.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_external.py,
+   Nu_cylinder_Perkins_Leppert_1964, MIT License, C. Bell -
+   https://github.com/CalebBell/ht}
+  Nu_cylinder_Perkins_Leppert_1964 = (0.31*Re^0.5 + 0.11*Re^0.67)*Pr^0.4*(mu/muw)^0.25
+END
+
+"!Demonstration program: every correlation is called twice"
+"It is ignored by the future $INCLUDE library:external_crossflow_cylinder (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each correlation (published values):"
+"  Re = 7992, Pr = 0.707, Prw = 0.69 for Zukauskas; Re = 6071, Pr = 0.7 for the seven"
+"  other correlations; mu = 1E-3 Pa-s, muw = 1.2E-3 Pa-s for the viscosity corrections."
+"Case B: one second, uniform input set (Re = 3.5E4, Pr = 4.5, Prw = 5.1, mu = 8.5E-4 Pa-s, muw = 6E-4 Pa-s)."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case A - input set"
+Re_A = 6071         "Reynolds number on the cylinder diameter [-] (ht doctest)"
+Re_Zukauskas_A = 7992  "Reynolds number on the cylinder diameter [-] (ht doctest)"
+Pr_A = 0.7          "Prandtl number at the film temperature [-] (ht doctest)"
+Pr_Zukauskas_A = 0.707  "Prandtl number at the free-stream temperature [-] (ht doctest)"
+Prw_A = 0.69        "Prandtl number at the wall temperature [-] (ht doctest)"
+mu_A = 1E-3         "free-stream viscosity [Pa-s]"
+muw_A = 1.2E-3      "wall viscosity [Pa-s]"
+
+"Nu_cylinder_Zukauskas - with the wall-Prandtl correction, then with Prw = Pr (none)"
+Nu_cylinder_Zukauskas_A = Nu_cylinder_Zukauskas(Re_Zukauskas_A, Pr_Zukauskas_A, Prw_A)
+Nu_cylinder_Zukauskas_equalprw_A = Nu_cylinder_Zukauskas(Re_Zukauskas_A, Pr_Zukauskas_A, Pr_Zukauskas_A)
+"Nu_cylinder_Churchill_Bernstein"
+Nu_cylinder_Churchill_Bernstein_A = Nu_cylinder_Churchill_Bernstein(Re_A, Pr_A)
+"Nu_cylinder_Sanitjai_Goldstein"
+Nu_cylinder_Sanitjai_Goldstein_A = Nu_cylinder_Sanitjai_Goldstein(Re_A, Pr_A)
+"Nu_cylinder_Fand"
+Nu_cylinder_Fand_A = Nu_cylinder_Fand(Re_A, Pr_A)
+"Nu_cylinder_McAdams"
+Nu_cylinder_McAdams_A = Nu_cylinder_McAdams(Re_A, Pr_A)
+"Nu_cylinder_Whitaker - without viscosity ratio (mu = muw), then with the ratio"
+Nu_cylinder_Whitaker_A = Nu_cylinder_Whitaker(Re_A, Pr_A, mu_A, mu_A)
+Nu_cylinder_Whitaker_visc_A = Nu_cylinder_Whitaker(Re_A, Pr_A, mu_A, muw_A)
+"Nu_cylinder_Perkins_Leppert_1962 - without viscosity ratio (mu = muw), then with the ratio"
+Nu_cylinder_Perkins_Leppert_1962_A = Nu_cylinder_Perkins_Leppert_1962(Re_A, Pr_A, mu_A, mu_A)
+Nu_cylinder_Perkins_Leppert_1962_visc_A = Nu_cylinder_Perkins_Leppert_1962(Re_A, Pr_A, mu_A, muw_A)
+"Nu_cylinder_Perkins_Leppert_1964 - without viscosity ratio (mu = muw), then with the ratio"
+Nu_cylinder_Perkins_Leppert_1964_A = Nu_cylinder_Perkins_Leppert_1964(Re_A, Pr_A, mu_A, mu_A)
+Nu_cylinder_Perkins_Leppert_1964_visc_A = Nu_cylinder_Perkins_Leppert_1964(Re_A, Pr_A, mu_A, muw_A)
+
+"Case B - second, uniform input set"
+Re_B = 3.5E4        "Reynolds number on the cylinder diameter [-]"
+Pr_B = 4.5          "Prandtl number at the film temperature [-]"
+Prw_B = 5.1         "Prandtl number at the wall temperature [-]"
+mu_B = 8.5E-4       "free-stream viscosity [Pa-s]"
+muw_B = 6E-4        "wall viscosity [Pa-s]"
+
+"Nu_cylinder_Zukauskas - with the wall-Prandtl correction, then with Prw = Pr (none)"
+Nu_cylinder_Zukauskas_B = Nu_cylinder_Zukauskas(Re_B, Pr_B, Prw_B)
+Nu_cylinder_Zukauskas_equalprw_B = Nu_cylinder_Zukauskas(Re_B, Pr_B, Pr_B)
+"Nu_cylinder_Churchill_Bernstein"
+Nu_cylinder_Churchill_Bernstein_B = Nu_cylinder_Churchill_Bernstein(Re_B, Pr_B)
+"Nu_cylinder_Sanitjai_Goldstein"
+Nu_cylinder_Sanitjai_Goldstein_B = Nu_cylinder_Sanitjai_Goldstein(Re_B, Pr_B)
+"Nu_cylinder_Fand"
+Nu_cylinder_Fand_B = Nu_cylinder_Fand(Re_B, Pr_B)
+"Nu_cylinder_McAdams"
+Nu_cylinder_McAdams_B = Nu_cylinder_McAdams(Re_B, Pr_B)
+"Nu_cylinder_Whitaker - without viscosity ratio (mu = muw), then with the ratio"
+Nu_cylinder_Whitaker_B = Nu_cylinder_Whitaker(Re_B, Pr_B, mu_B, mu_B)
+Nu_cylinder_Whitaker_visc_B = Nu_cylinder_Whitaker(Re_B, Pr_B, mu_B, muw_B)
+"Nu_cylinder_Perkins_Leppert_1962 - without viscosity ratio (mu = muw), then with the ratio"
+Nu_cylinder_Perkins_Leppert_1962_B = Nu_cylinder_Perkins_Leppert_1962(Re_B, Pr_B, mu_B, mu_B)
+Nu_cylinder_Perkins_Leppert_1962_visc_B = Nu_cylinder_Perkins_Leppert_1962(Re_B, Pr_B, mu_B, muw_B)
+"Nu_cylinder_Perkins_Leppert_1964 - without viscosity ratio (mu = muw), then with the ratio"
+Nu_cylinder_Perkins_Leppert_1964_B = Nu_cylinder_Perkins_Leppert_1964(Re_B, Pr_B, mu_B, mu_B)
+Nu_cylinder_Perkins_Leppert_1964_visc_B = Nu_cylinder_Perkins_Leppert_1964(Re_B, Pr_B, mu_B, muw_B)

@@ -1,0 +1,69 @@
+{
+  "id": "CSL-0084",
+  "name": "orc_expander_pump_empirical_maps",
+  "title": "ORC expander and pump empirical maps (function library)",
+  "summary": "Eleven ThermoCycle performance-map functions for ORC machines — isentropic efficiency and filling factor of hermetic-scroll, open-drive and single-screw expanders, test-rig pump mass-flow and efficiency curves, SQ-thesis pump efficiency and rig line pressure drops — with a small closed R245fa ORC demo that couples the hermetic-scroll map to a pump curve.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "orc_expander_pump_empirical_maps.eescode",
+  "fluids": [
+    "R245fa"
+  ],
+  "tags": [
+    "ORC",
+    "expander",
+    "scroll",
+    "screw",
+    "pump",
+    "isentropic efficiency",
+    "filling factor",
+    "empirical map",
+    "performance curve",
+    "part-load",
+    "function library",
+    "translation"
+  ],
+  "language_features": [
+    "functions",
+    "min/max clamps",
+    "string variables",
+    "property functions",
+    "degrees trigonometry with radian conversion"
+  ],
+  "stats": {
+    "n_equations": 79,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "thermocycle",
+    "source_path": "~/git/Thermocycle-library/ThermoCycle/Functions/{correlation_hermetic_scroll_epsilon_s,correlation_hermetic_scroll_FF,correlation_open_expander_epsilon_s,correlation_open_expander_FF,correlation_eta_is_pump}.mo, ~/git/Thermocycle-library/ThermoCycle/Functions/TestRig/{GenericScrewExpander_IsentropicEfficiency,GenericScrewExpander_FillingFactor,GenericCentrifugalPump_IsentropicEfficiency,GenericCentrifugalPump_MassFlowRate,PressureDropCorrelation_HP,PressureDropCorrelation_LP}.mo, ~/git/Thermocycle-library/ThermoCycle/Components/Units/ExpansionAndCompressionMachines/{Expander,Pump}.mo, commit b4f16c0b",
+    "candidate_id": "THC-003",
+    "authors": [
+      "Adriano Desideri (ULiège Thermodynamics Laboratory)",
+      "Sylvain Quoilin (ULiège Thermodynamics Laboratory)",
+      "Jorrit Wronski (DTU Mechanical Engineering)"
+    ],
+    "url": "https://github.com/thermocycle/Thermocycle-library",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "ThermoCycle Modelica library, ULiège Thermodynamics Laboratory; fits of the ULiège ORC test rigs"
+  },
+  "verification": {
+    "reference": "independent Python re-evaluation of the eleven polynomials written from the .mo sources (log = natural logarithm in Modelica) with CoolProp 8.0.0 states for the ORC demo, script kept in the throw-away work folder and deleted; energy-balance closure",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 9.74e-11,
+    "notes": "compare_solution.py: 62 common variables, 0 differ (rtol=0.001); maximum relative difference 9.74e-11 (eta_th) excluding err_bal, which is 0 by construction in Python and 5.5e-12 W in CoolSolve; 17 CoolSolve-only variables are the demo inputs and the constants of the check points. ThermoCycle stores no reference results, so no published value of the fits was available."
+  },
+  "missing_features": [],
+  "related": ["CSL-0019", "CSL-0037", "CSL-0038", "CSL-0086"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-06", "action": "added (translation of the ThermoCycle expander and pump maps, card C-91)", "by": "Claude (Opus 5.5) for S. Quoilin"}
+  ]
+}

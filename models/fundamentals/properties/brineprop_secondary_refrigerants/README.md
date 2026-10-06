@@ -319,3 +319,9 @@ of the same function library, by a follow-up card.
   relative (work folder, Python, deleted).
 - `CSL-0074` *cooling_coil_refsim* — cooling coil of the same model bank that
   calls the library for the brine side (copy in its file).
+- `CSL-0087` *internal_turbulent_nusselt*: the other translated function
+  library (from `ht`), the third kind of function library of the library next to
+  this one and `CSL-0005`.
+- `CSL-0078` *brine_to_water_heat_pump_refsim* — brine evaporator of the same
+  model bank; calls the library for the density and the specific heat of a 25 %
+  propylene glycol solution (copy of the procedure in its file, tables shipped).

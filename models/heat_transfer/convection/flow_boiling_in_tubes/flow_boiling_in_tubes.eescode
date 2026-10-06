@@ -1,0 +1,782 @@
+{=============================================================================
+  Flow and film boiling inside tubes: heat-transfer coefficients
+  CoolSolve Library model CSL-0098 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Ten correlations for the two-phase (flow-boiling) heat-transfer coefficient h_tp
+  of a fluid flowing and boiling inside a tube, all returning h_tp [W/m^2/K]:
+
+    from ht (heat transfer component of ChEDL), flow and film boiling:
+    - h_Lazarek_Black          film boiling, vertical tube, upward or downward
+    - h_Li_Wu                 film boiling, any orientation of flow
+    - h_Sun_Mishima           film boiling, any orientation of flow
+    - h_Thome                 flow boiling with hydrodynamic slug model
+    - h_Yun_Heo_Kim           flow boiling, any orientation of flow
+    - h_Chen_Edelstein        convective + nucleate, Chen 1966 / Edelstein 1984
+    - h_Chen_Bennett          convective + nucleate, Bennett & Chen 1980
+    - h_Liu_Winterton         convective + nucleate, Liu & Winterton 1991
+
+    from the ThermoCycle Modelica library (Shah 1982 and Gungor-Winterton 1987,
+    which ht does not have):
+    - h_Shah_1982             saturated boiling chart correlation, Shah 1982
+    - h_Gungor_Winterton_1987 simplified turbulent flow boiling, 1987
+
+  Every function takes the mass flow rate, the quality (where the correlation
+  needs it), the tube diameter and the liquid and vapour properties as arguments:
+  no property function is called inside a function, so the calling model passes
+  the properties itself (as everywhere else in this library).
+
+  Four correlations (Lazarek-Black, Li-Wu, Sun-Mishima, Yun-Heo-Kim) are given
+  either as a function of the wall heat flux q or of the excess wall temperature
+  Te = T_wall - T_sat; the last form is the algebraic inversion of the first and
+  is selected with the flag by_Te (1 = Te given, 0 = q given), as in ht, where
+  the two inputs are optional. h_Thome takes q only: in ht the Te form solves an
+  inner equation for q (a secant iteration); here q is an additional unknown of
+  the calling system, with the equation h_Thome(...) = Te (see the demonstration
+  program and the README).
+
+  Three correlations call other correlations of the library, which are written
+  out in the body (CoolSolve cannot import the functions of another library file
+  yet, CS-FEAT-IMPORT): the Dittus-Boelter coefficient (CSL-0087, functions
+  Nu_Dittus_Boelter and Nu_Gnielinski), the Forster-Zuber and Cooper pool-boiling
+  coefficients (CSL-0088, functions h_Forster_Zuber and h_Cooper).
+
+  The demonstration program at the end calls every correlation: case A with the
+  input set of the ht doctest of the corresponding correlation, case B with one
+  uniform, realistic input set (R134a at 5 C, 0.2 kg/s, quality 0.4, 4E4 W/m^2,
+  10 mm tube), case C with a low liquid Froude number (only for the two
+  ThermoCycle correlations, where it separates the vertical and the horizontal
+  form of Shah 1982). Both cases are tabulated against ht in the README.
+
+  Inputs : m [kg/s], x [-], D [m], q [W/m^2], Te [K], dPsat [Pa], i_fg [J/kg],
+           rhol / rhog [kg/m^3], mul / mug [Pa-s], kl / kg [W/m-K],
+           Cpl / Cpg [J/kg-K], Hvap [J/kg], sigma [N/m], Psat / P / Pc [Pa],
+           MW [g/mol], vertical / by_Te flags [-]
+  Outputs: h_tp [W/m^2/K] (one FUNCTION per correlation)
+  Units  : SI - temperatures in K, pressures in Pa
+  Source : ht (Caleb Bell), ht/boiling_flow.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; ThermoCycle (Modelica, MIT),
+           Components/HeatFlow/HeatTransfer/TwoPhaseCorrelations/Shah1982.mo and
+           GungorWinterton1987.mo ; correlations by the authors cited in each
+           function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0 for the eight
+           ht correlations, and against a Python transcription of the two
+           ThermoCycle equations for the other two (README.md, "Verification")
+=============================================================================}
+
+FUNCTION tr_factor_Richter2(start, stop, position)
+{TR_FACTOR_RICHTER2 - weight of a smooth transition from 0 at start to 1 at
+stop, the blending function that the Shah 1982 correlation uses in ThermoCycle.
+
+  tFactor = 0                                             position <= start
+          = 1                                             position >= stop
+          = 1 - [a*(1/3*cos(phi)^2*sin(phi) + 2/3*sin(phi)) + b]
+  phi = (position - x_t)/Delta_x*pi, x_t = start + Delta_x/2, a = -3/4, b = 1/2
+        (Delta_x = stop - start; order 2 = two continuous derivatives)
+
+start, stop [dimensionless] bounds of the transition interval, position [-] the
+variable being switched. SIN and COS take their argument in degrees, everywhere
+in EES and in CoolSolve, so phi is written in degrees.
+Original: Richter, C. C., "Proposal of New Object-Oriented Equation-Based Model
+  Libraries for Thermodynamic Systems", PhD thesis, Technische Universitaet
+  Braunschweig, 2008, p. 68 ff (the transition function of order 2).
+Taken from: ThermoCycle (Modelica, MIT), Functions/transition_factor.mo, function
+  transition_factor, default order = 2, as called by
+  TwoPhaseCorrelations/Shah1982.mo}
+  Delta_x = stop - start
+  x_t = start + 0.5*Delta_x
+  IF position <= start THEN
+    tr_factor_Richter2 = 0
+  ELSE
+    IF position >= stop THEN
+      tr_factor_Richter2 = 1
+    ELSE
+      phi = (position - x_t)/Delta_x*180  "phi in degrees, so that SIN and COS apply"
+      tr_factor_Richter2 = 1 - (-0.75*(1/3*COS(phi)^2*SIN(phi) + 2/3*SIN(phi)) + 0.5)
+    ENDIF
+  ENDIF
+END
+
+FUNCTION h_Lazarek_Black(m, D, mul, kl, Hvap, q, Te, by_Te)
+{H_LAZAREK_BLACK - heat-transfer coefficient of the film boiling of a saturated
+fluid in a vertical tube, upward or downward flow. Quality independent, no gas
+property required, Reynolds number assuming all the flow is liquid.
+
+  h_tp = 30*Re_lo^0.857*Bg^0.714*kl/D
+  Re_lo = G*D/mul,  Bg = q/(G*Hvap),  G = m/(pi/4*D^2)
+
+m [kg/s] mass flow rate, D [m] diameter of the channel, mul [Pa-s] viscosity of
+the liquid, kl [W/m-K] thermal conductivity of the liquid, Hvap [J/kg] heat of
+vaporization, q [W/m^2] heat flux to the wall, Te [K] excess temperature of the
+wall. by_Te = 0 uses q, by_Te = 1 uses the algebraic inversion for a prescribed
+excess temperature (the second form of ht, derived with sympy).
+Validity: developed for quality 0 to 0.6, Re_lo 860 to 5500, mass flux 125 to
+  750 kg/m^2/s, q of 1.4 to 38 W/cm^2, pipe diameter 3.1 mm, data with R113 only
+  (as quoted in ht).
+Original: Lazarek, G. M. and S. H. Black, "Evaporative Heat Transfer, Pressure
+  Drop and Critical Heat Flux in a Small Vertical Tube with R-113", Int. J. Heat
+  Mass Transfer 25(7): 945-960, July 1982; also reviewed by Fang, X., Z. Zhou
+  and D. Li, "Review of Correlations of Flow Boiling Heat Transfer Coefficients
+  for Carbon Dioxide", Int. J. Refrigeration 36(8): 2017-2039, December 2013, and
+  by Bertsch, S. S., E. A. Groll and S. V. Garimella, "Review and Comparative
+  Analysis of Studies on Saturated Flow Boiling in Small Channels", Nanoscale
+  Microscale Thermophys. Eng. 12(3): 187-227, 2008.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_flow.py, Lazarek_Black,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (CS-BUG-PI-FUNCTION)"
+  G = m/(pi_val/4*D^2)  "two-phase mass flux [kg/m^2/s]"
+  Relo = G*D/mul
+  IF by_Te = 0 THEN
+    Bg = q/(G*Hvap)  "boiling number [-]"
+    h_Lazarek_Black = 30*Relo^0.857*Bg^0.714*kl/D
+  ELSE
+    h_Lazarek_Black = 27000*30^(71/143)*(1/(G*Hvap))^(357/143)*Relo^(857/286)*Te^(357/143)*kl^(500/143)/D^(500/143)
+  ENDIF
+END
+
+FUNCTION h_Li_Wu(m, x, D, rhol, rhog, mul, kl, Hvap, sigma, q, Te, by_Te)
+{H_LI_WU - heat-transfer coefficient of the film boiling of a saturated fluid in
+a tube, any orientation of flow. Uses the liquid Reynolds number, the Bond
+number and the boiling number.
+
+  h_tp = 334*Bg^0.3*(Bo*Re_l^0.36)^0.4*kl/D
+  Re_l = G*(1-x)*D/mul,  Bo = g*(rhol-rhog)*D^2/sigma,  Bg = q/(G*Hvap)
+
+m [kg/s] mass flow rate, x [-] quality at the specific tube interval, D [m]
+diameter of the tube, rhol / rhog [kg/m^3] densities of the liquid and of the
+gas, mul [Pa-s] viscosity of the liquid, kl [W/m-K] thermal conductivity of the
+liquid, Hvap [J/kg] heat of vaporization, sigma [N/m] surface tension of the
+liquid, q [W/m^2] heat flux to the wall, Te [K] excess temperature of the wall.
+by_Te = 0 uses q, by_Te = 1 the algebraic inversion (the second form of ht).
+Validity: hydraulic diameters from 0.19 to 3.1 mm and 12 different fluids, from
+  18 sets of experimental data (as quoted in ht); no numeric range given.
+Original: Li, W. and Z. Wu, "A General Correlation for Evaporative Heat Transfer
+  in Micro/mini-Channels", Int. J. Heat Mass Transfer 53(9-10): 1778-1787,
+  April 2010; also reviewed by Fang, Zhou & Li (2013) and by Kim, S.-M. and
+  I. Mudawar, "Review of Databases and Predictive Methods for Pressure Drop in
+  Adiabatic, Condensing and Boiling Mini/micro-Channel Flows", Int. J. Heat Mass
+  Transfer 77: 74-97, October 2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_flow.py, Li_Wu,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (CS-BUG-PI-FUNCTION)"
+  g_val = 9.80665  "gravitational acceleration [m/s^2]"
+  G = m/(pi_val/4*D^2)  "two-phase mass flux [kg/m^2/s]"
+  Rel = G*D*(1-x)/mul
+  Bo = g_val*(rhol-rhog)*D^2/sigma  "bond number [-]"
+  IF by_Te = 0 THEN
+    Bg = q/(G*Hvap)  "boiling number [-]"
+    h_Li_Wu = 334*Bg^0.3*(Bo*Rel^0.36)^0.4*kl/D
+  ELSE
+    A = 334*(Bo*Rel^0.36)^0.4*kl/D
+    h_Li_Wu = A^(10/7)*Te^(3/7)/(G^(3/7)*Hvap^(3/7))
+  ENDIF
+END
+
+FUNCTION h_Sun_Mishima(m, D, rhol, rhog, mul, kl, Hvap, sigma, q, Te, by_Te)
+{H_SUN_MISHIMA - heat-transfer coefficient of the film boiling of a saturated
+fluid in a tube, any orientation of flow. Uses the liquid-only Reynolds number,
+the Weber number (with the velocity if all the fluid were liquid) and the boiling
+number.
+
+  h_tp = 6*Re_lo^1.05*Bg^0.54/[We_l^0.191*(rhol/rhog)^0.142]*kl/D
+  Re_lo = G*D/mul,  We_l = V^2*D*rhol/sigma,  V = G/rhol,  Bg = q/(G*Hvap)
+
+m [kg/s] mass flow rate, D [m] diameter of the tube, rhol / rhog [kg/m^3]
+densities of the liquid and of the gas, mul [Pa-s] viscosity of the liquid, kl
+[W/m-K] thermal conductivity of the liquid, Hvap [J/kg] heat of vaporization,
+sigma [N/m] surface tension of the liquid, q [W/m^2] heat flux to the wall, Te
+[K] excess temperature of the wall. by_Te = 0 uses q, by_Te = 1 the algebraic
+inversion (the second form of ht).
+Validity: hydraulic diameters from 0.21 to 6.05 mm and 11 different fluids, from
+  2501 data points (as quoted in ht); no numeric range given.
+Original: Sun, L. and K. Mishima, "An Evaluation of Prediction Methods for
+  Saturated Flow Boiling Heat Transfer in Mini-Channels", Int. J. Heat Mass
+  Transfer 52(23-24): 5323-5329, November 2009; also reviewed by Fang, Zhou &
+  Li (2013).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_flow.py, Sun_Mishima,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (CS-BUG-PI-FUNCTION)"
+  G = m/(pi_val/4*D^2)  "two-phase mass flux [kg/m^2/s]"
+  V = G/rhol
+  Relo = G*D/mul
+  We = V^2*D*rhol/sigma  "weber number [-]"
+  IF by_Te = 0 THEN
+    Bg = q/(G*Hvap)  "boiling number [-]"
+    h_Sun_Mishima = 6*Relo^1.05*Bg^0.54/(We^0.191*(rhol/rhog)^0.142)*kl/D
+  ELSE
+    A = 6*Relo^1.05/(We^0.191*(rhol/rhog)^0.142)*kl/D
+    h_Sun_Mishima = A^(50/23)*Te^(27/23)/(G^(27/23)*Hvap^(27/23))
+  ENDIF
+END
+
+FUNCTION h_Thome(m, x, D, rhol, rhog, mul, mug, kl, kg, Cpl, Cpg, Hvap, sigma, Psat, Pc, q)
+{H_THOME - heat-transfer coefficient of the flow boiling of a saturated fluid in
+a tube, any orientation of flow; the Thome model adds a hydrodynamic layer with
+liquid, film and dry (vapour) segments to the laminar, transitional and turbulent
+convection of each phase. The heat flux q is an input: for a prescribed excess
+wall temperature Te, ht solves an inner equation for q (to_solve_q_Thome, a secant
+iteration); here q is an additional unknown of the calling system with the
+equation h_Thome(...) = Te (see the demonstration program).
+
+  h(z) = tl/tau*h_l(z) + t_film/tau*h_film(z) + t_dry/tau*h_g(z)
+  h_l/g(z) = (Nu_lam^4 + Nu_trans^4)^(1/4)*k/D
+  Nu_lam = 0.91*Pr^(1/3)*sqrt(Re*D/L(z))
+  Nu_trans = (f/8)(Re-1000)*Pr/[1 + 12.7*(f/8)^0.5*(Pr^(2/3)-1)]*[1 + (D/L(z))^(2/3)]
+  f = (1.82*log10(Re) - 1.64)^(-2)
+  L_l = tau*G*(1-x)/rhol,  L_dry = v_p*t_dry
+  t_l = tau/[1 + (rhol/rhog)*x/(1-x)],  t_v = tau/[1 + (rhog/rhol)*(1-x)/x]
+  tau = 1/f_opt,  f_opt = (q/q_ref)^n_f,  q_ref = 3328*(Psat/Pc)^(-0.5), n_f = 1.74
+  h_film(z) = 2*kl/[delta_0(z) + delta_min],  delta_min = 0.3E-6 m
+  delta_0/D = C_delta0*(3*sqrt(nul/(v_p*D)))^0.84*[(0.07*Bo^0.41)^(-8) + 0.1^(-8)]^(-1/8)
+  Bo = rhol*D/sigma*v_p^2  (the Bond number of the model, not the usual one)
+  v_p = G*[x/rhog + (1-x)/rhol],  C_delta0 = 0.29
+
+m [kg/s] mass flow rate, x [-] quality at the specific tube interval, D [m]
+diameter of the tube, rhol / rhog [kg/m^3] densities of the liquid and of the
+gas, mul / mug [Pa-s] viscosities, kl / kg [W/m-K] thermal conductivities, Cpl /
+Cpg [J/kg-K] heat capacities, Hvap [J/kg] heat of vaporization, sigma [N/m]
+surface tension of the liquid, Psat [Pa] vapor pressure of the fluid, Pc [Pa]
+critical pressure, q [W/m^2] heat flux to the wall.
+Validity: data from 7 studies, 7 fluids, D_h from 0.7 to 3.1 mm, heat flux from
+  0.5 to 17.8 W/cm^2, quality from 0.01 to 0.99, mass flux from 50 to 564 kg/m^2/s
+  (as quoted in ht).
+Original: Thome, J. R., V. Dupont and A. M. Jacobi, "Heat Transfer Model for
+  Evaporation in Microchannels. Part I: Presentation of the Model", Int. J. Heat
+  Mass Transfer 47(14-16): 3375-3385, July 2004, and Part II, same volume,
+  3387-3401; also reviewed by Bertsch, Groll & Garimella (2008).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_flow.py, Thome,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (CS-BUG-PI-FUNCTION)"
+  C_delta0 = 0.3E-6  "delta_min of the model [m]"
+  G = m/(pi_val/4*D^2)  "two-phase mass flux [kg/m^2/s]"
+  Rel = G*D*(1-x)/mul
+  Reg = G*D*x/mug
+  qref = 3328*(Psat/Pc)^(-0.5)  "reference heat flux of the model [W/m^2]"
+  fopt = (q/qref)^1.74
+  tau = 1/fopt  "residence time of a slug [s]"
+  vp = G*(x/rhog + (1-x)/rhol)  "velocity of the slug [m/s]"
+  Bo = rhol*D/sigma*vp^2  "bond number of the model [-]"
+  nul = mul/rhol  "kinematic viscosity of the liquid [m^2/s]"
+  delta0 = D*0.29*(3*(nul/vp/D)^0.5)^0.84*((0.07*Bo^0.41)^(-8) + 0.1^(-8))^(-1/8)  "initial film thickness [m]"
+  tl = tau/(1 + rhol/rhog*(x/(1-x)))
+  tv = tau/(1 + rhog/rhol*((1-x)/x))
+  t_dry_film = rhol*Hvap/q*(delta0 - C_delta0)
+  IF t_dry_film > tv THEN
+    t_film = tv  "the film lasts the whole vapour slug"
+    t_dry = 0
+  ELSE
+    t_film = t_dry_film
+    t_dry = tv - t_film
+  ENDIF
+  Ll = tau*G/rhol*(1-x)  "length of a liquid slug [m]"
+  Ldry = t_dry*vp  "length of a dry (vapour) slug [m]"
+  Prg = mug*Cpg/kg
+  Prl = mul*Cpl/kl
+  fg = (1.82*LOG10(Reg) - 1.64)^(-2)  "friction factor of the vapour slug [-]"
+  fl = (1.82*LOG10(Rel) - 1.64)^(-2)  "friction factor of the liquid slug [-]"
+  Nu_lam_Zl = 2*0.455*Prl^(1/3)*(D*Rel/Ll)^0.5  "as in ht (twice 0.455)"
+  Nu_trans_Zl = (fl/8)*(Rel - 1000)*Prl/(1 + 12.7*(fl/8)^0.5*(Prl^(2/3) - 1))*(1 + (D/Ll)^(2/3))  "Gnielinski, CSL-0087"
+  IF Ldry = 0 THEN
+    Nu_lam_Zg = 0
+    Nu_trans_Zg = 0
+  ELSE
+    Nu_lam_Zg = 2*0.455*Prg^(1/3)*(D*Reg/Ldry)^0.5
+    Nu_trans_Zg = (fg/8)*(Reg - 1000)*Prg/(1 + 12.7*(fg/8)^0.5*(Prg^(2/3) - 1))*(1 + (D/Ldry)^(2/3))
+  ENDIF
+  h_Zl = kl/D*(Nu_lam_Zl^4 + Nu_trans_Zl^4)^0.25
+  h_Zg = kg/D*(Nu_lam_Zg^4 + Nu_trans_Zg^4)^0.25
+  h_film = 2*kl/(delta0 + C_delta0)
+  h_Thome = tl/tau*h_Zl + t_film/tau*h_film + t_dry/tau*h_Zg
+END
+
+FUNCTION h_Yun_Heo_Kim(m, x, D, rhol, mul, Hvap, sigma, q, Te, by_Te)
+{H_YUN_HEO_KIM - heat-transfer coefficient of the flow boiling of a saturated
+fluid in a tube, any orientation of flow. Uses the liquid Reynolds number, the
+Weber number (velocity of the liquid if all the flow were liquid) and the boiling
+number.
+
+  h_tp = 136876*(Bg*We_l)^0.1993*Re_l^(-0.1626)
+  Re_l = G*D*(1-x)/mul,  We_l = G^2*D/(rhol*sigma),  Bg = q/(G*Hvap)
+
+m [kg/s] mass flow rate, x [-] quality at the specific tube interval, D [m]
+diameter of the tube, rhol [kg/m^3] density of the liquid, mul [Pa-s] viscosity
+of the liquid, Hvap [J/kg] heat of vaporization, sigma [N/m] surface tension of
+the liquid, q [W/m^2] heat flux to the wall, Te [K] excess temperature of the
+wall. by_Te = 0 uses q, by_Te = 1 the algebraic inversion (the second form of ht).
+Validity: none quoted in ht.
+Original: Yun, R., J. H. Heo and Y. Kim, "Evaporative Heat Transfer and Pressure
+  Drop of R410A in Microchannels", Int. J. Refrigeration 29(1): 92-100, January
+  2006, with the erratum Int. J. Refrigeration 30(8): 1468, December 2007; also
+  reviewed by Bertsch, Groll & Garimella (2008).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_flow.py, Yun_Heo_Kim,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (CS-BUG-PI-FUNCTION)"
+  G = m/(pi_val/4*D^2)  "two-phase mass flux [kg/m^2/s]"
+  V = G/rhol
+  Rel = G*D*(1-x)/mul
+  We = V^2*D*rhol/sigma  "weber number [-]"
+  IF by_Te = 0 THEN
+    Bg = q/(G*Hvap)  "boiling number [-]"
+    h_Yun_Heo_Kim = 136876*(Bg*We)^0.1993*Rel^(-0.1626)
+  ELSE
+    A = 136876*We^0.1993*Rel^(-0.1626)*(Te/G/Hvap)^0.1993
+    h_Yun_Heo_Kim = A^(10000/8007)
+  ENDIF
+END
+
+FUNCTION h_Chen_Edelstein(m, x, D, rhol, rhog, mul, mug, kl, Cpl, Hvap, sigma, dPsat, Te)
+{H_CHEN_EDELSTEIN - heat-transfer coefficient of a saturated fluid boiling with
+forced convection in a tube, combining the Dittus-Boelter single-phase
+coefficient of the liquid and the Forster-Zuber nucleate-pool-boiling
+coefficient with two factors F and S.
+
+  h_tp = S*h_nb + F*h_sp,l
+  h_sp,l = 0.023*Re_l^0.8*Pr_l^0.4*kl/D,  Re_l = D*G*(1-x)/mul
+  h_nb = 0.00122*(kl^0.79*Cpl^0.45*rhol^0.49/[sigma^0.5*mul^0.29*Hvap^0.24*rhog^0.24])*Te^0.24*dPsat^0.75
+  F = (1 + X_tt^(-0.5))^1.78
+  X_tt = [(1-x)/x]^0.9*(rhog/rhol)^0.5*(mul/mug)^0.1
+  S = 0.9622 - 0.5822*atan(Re_l*F^1.25/(6.18E4))
+
+m [kg/s] mass flow rate, x [-] quality at the specific tube interval, D [m]
+diameter of the tube, rhol / rhog [kg/m^3] densities of the liquid and of the
+gas, mul / mug [Pa-s] viscosities, kl [W/m-K] thermal conductivity of the liquid,
+Cpl [J/kg-K] heat capacity of the liquid, Hvap [J/kg] heat of vaporization,
+sigma [N/m] surface tension of the liquid, dPsat [Pa] difference between the
+saturation pressure at the wall temperature and at the saturation temperature,
+Te [K] excess temperature of the wall. ATAN returns degrees in EES and in
+CoolSolve, so the angle is converted to radians.
+Validity: none quoted in ht; the model is only put together in the review of
+  Bertsch, Groll & Garimella (2008); many other forms of this equation exist
+  with different functions for F and S.
+Original: Chen, J. C., "Correlation for Boiling Heat Transfer to Saturated
+  Fluids in Convective Flow", Ind. Eng. Chem. Process Des. Dev. 5(3): 322-329,
+  1 July 1966; Edelstein, S., A. J. Perez and J. C. Chen, "Analytic
+  Representation of Convective Boiling Functions", AIChE Journal 30(5): 840-841,
+  1 September 1984; Bertsch, Groll & Garimella (2008).
+The single-phase and pool-boiling coefficients are CSL-0087 (Nu_Dittus_Boelter)
+  and CSL-0088 (h_Forster_Zuber); the Lockhart-Martinelli parameter is computed
+  here, as in ht.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_flow.py, Chen_Edelstein,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (CS-BUG-PI-FUNCTION)"
+  G = m/(pi_val/4*D^2)  "two-phase mass flux [kg/m^2/s]"
+  Rel = D*G*(1-x)/mul
+  Prl = mul*Cpl/kl
+  hl = 0.023*Rel^0.8*Prl^0.4*kl/D  "Dittus-Boelter of the liquid (CSL-0087), heating and revised"
+  Xtt = ((1-x)/x)^0.9*(rhog/rhol)^0.5*(mul/mug)^0.1  "Lockhart-Martinelli parameter [-]"
+  F = (1 + Xtt^(-0.5))^1.78
+  S = 0.9622 - 0.5822*ATAN(Rel*F^1.25/6.18E4)*pi_val/180  "ATAN gives degrees"
+  hnb = 0.00122*(kl^0.79*Cpl^0.45*rhol^0.49/sigma^0.5/mul^0.29/Hvap^0.24/rhog^0.24)*Te^0.24*dPsat^0.75  "Forster-Zuber (CSL-0088)"
+  h_Chen_Edelstein = hnb*S + hl*F
+END
+
+FUNCTION h_Chen_Bennett(m, x, D, rhol, rhog, mul, mug, kl, Cpl, Hvap, sigma, dPsat, Te)
+{H_CHEN_BENNETT - heat-transfer coefficient of a saturated fluid boiling with
+forced convection in a tube; the same model as h_Chen_Edelstein with the factors F
+and S of Bennett & Chen (1980).
+
+  h_tp = S*h_nb + F*h_sp,l
+  h_sp,l = 0.023*Re_l^0.8*Pr_l^0.4*kl/D,  Re_l = D*G*(1-x)/mul
+  h_nb = 0.00122*(kl^0.79*Cpl^0.45*rhol^0.49/[sigma^0.5*mul^0.29*Hvap^0.24*rhog^0.24])*Te^0.24*dPsat^0.75
+  F = [(Pr_l+1)/2]^0.444*(1 + X_tt^(-0.5))^1.78
+  X_tt = [(1-x)/x]^0.9*(rhog/rhol)^0.5*(mul/mug)^0.1
+  X_0 = 0.041*[sigma/(g*(rhol-rhog))]^0.5
+  S = [1 - exp(-F*h_sp,l*X_0/kl)]/[F*h_sp,l*X_0/kl]
+
+m [kg/s] mass flow rate, x [-] quality at the specific tube interval, D [m]
+diameter of the tube, rhol / rhog [kg/m^3] densities of the liquid and of the
+gas, mul / mug [Pa-s] viscosities, kl [W/m-K] thermal conductivity of the liquid,
+Cpl [J/kg-K] heat capacity of the liquid, Hvap [J/kg] heat of vaporization,
+sigma [N/m] surface tension of the liquid, dPsat [Pa] difference between the
+saturation pressure at the wall temperature and at the saturation temperature,
+Te [K] excess temperature of the wall.
+Validity: none quoted in ht; many other forms of this equation exist with
+  different functions for F and S.
+Original: Bennett, D. L. and J. C. Chen, "Forced Convective Boiling in Vertical
+  Tubes for Saturated Pure Components and Binary Mixtures", AIChE Journal 26(3):
+  454-461, 1 May 1980, and Bennett, D. L., M. W. Davies and B. L. Hertzler, "The
+  Suppression of Saturated Nucleate Boiling by Forced Convective Flow", AIChE
+  Symposium Series 76(199): 91-103, 1980; Bertsch, Groll & Garimella (2008).
+The single-phase and pool-boiling coefficients are CSL-0087 (Nu_Dittus_Boelter)
+  and CSL-0088 (h_Forster_Zuber).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_flow.py, Chen_Bennett,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (CS-BUG-PI-FUNCTION)"
+  g_val = 9.80665  "gravitational acceleration [m/s^2]"
+  G = m/(pi_val/4*D^2)  "two-phase mass flux [kg/m^2/s]"
+  Rel = D*G*(1-x)/mul
+  Prl = mul*Cpl/kl
+  hl = 0.023*Rel^0.8*Prl^0.4*kl/D  "Dittus-Boelter of the liquid (CSL-0087), heating and revised"
+  Xtt = ((1-x)/x)^0.9*(rhog/rhol)^0.5*(mul/mug)^0.1  "Lockhart-Martinelli parameter [-]"
+  F = ((Prl+1)/2)^0.444*(1 + Xtt^(-0.5))^1.78
+  X0 = 0.041*(sigma/(g_val*(rhol-rhog)))^0.5  "critical quality of the interfacial instability [m]"
+  S = (1 - EXP(-F*hl*X0/kl))/(F*hl*X0/kl)
+  hnb = 0.00122*(kl^0.79*Cpl^0.45*rhol^0.49/sigma^0.5/mul^0.29/Hvap^0.24/rhog^0.24)*Te^0.24*dPsat^0.75  "Forster-Zuber (CSL-0088)"
+  h_Chen_Bennett = hnb*S + hl*F
+END
+
+FUNCTION h_Liu_Winterton(m, x, D, rhol, rhog, mul, kl, Cpl, MW, P, Pc, Te)
+{H_LIU_WINTERTON - heat-transfer coefficient of a saturated fluid boiling with
+forced convection in a tube: the convective coefficient of the liquid and the
+Cooper nucleate-pool-boiling coefficient, combined in quadrature.
+
+  h_tp = sqrt[(F*h_l)^2 + (S*h_nb)^2]
+  S = [1 + 0.055*F^0.1*Re_L^0.16]^(-1)
+  h_l = 0.023*Re_L^0.8*Pr_l^0.4*kl/D,  Re_L = G*D/mul
+  F = [1 + x*Pr_l*(rhol/rhog - 1)]^0.35
+  h_nb = {55*Te^0.67*(P/Pc)^[0.12 - 0.2*log10(R_p)]*[-log10(P/Pc)]^(-0.55)*MW^(-0.5)}^(1/0.33)
+
+m [kg/s] mass flow rate, x [-] quality at the specific tube interval, D [m]
+diameter of the tube, rhol / rhog [kg/m^3] densities of the liquid and of the
+gas, mul [Pa-s] viscosity of the liquid, kl [W/m-K] thermal conductivity of the
+liquid, Cpl [J/kg-K] heat capacity of the liquid, MW [g/mol] molar mass, P [Pa]
+pressure of the fluid, Pc [Pa] critical pressure, Te [K] excess temperature of
+the wall. The roughness Rp of the Cooper pool-boiling term is the 1 micrometre
+default of ht (it enters only through its logarithm); the Reynolds number of h_l
+assumes all the flow to be liquid, as in ht.
+Validity: none quoted in ht. A correction for horizontal flow at low Froude
+  numbers exists in the original but is not recommended in several sources and is
+  not implemented in ht.
+Original: Liu, Z. and R. H. S. Winterton, "A General Correlation for Saturated
+  and Subcooled Flow Boiling in Tubes and Annuli, Based on a Nucleate Pool Boiling
+  Equation", Int. J. Heat Mass Transfer 34(11): 2759-2766, November 1991; also
+  reviewed by Fang, Zhou & Li (2013) and by Bertsch, Groll & Garimella (2008).
+The single-phase coefficient is CSL-0087 (Nu_Dittus_Boelter) and the pool-boiling
+  coefficient is CSL-0088 (h_Cooper).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_flow.py, Liu_Winterton,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (CS-BUG-PI-FUNCTION)"
+  G = m/(pi_val/4*D^2)  "two-phase mass flux [kg/m^2/s]"
+  ReL = D*G/mul
+  Prl = mul*Cpl/kl
+  hl = 0.023*ReL^0.8*Prl^0.4*kl/D  "Dittus-Boelter of the liquid (CSL-0087), heating and revised"
+  F = (1 + x*Prl*(rhol/rhog - 1))^0.35
+  S = (1 + 0.055*F^0.1*ReL^0.16)^(-1)
+  Pr_r = P/Pc  "reduced pressure [-]"
+  Rp_um = 1  "surface roughness [micrometres], the default of ht"
+  hnb = (55*Te^0.67*Pr_r^(0.12 - 0.2*LOG10(Rp_um))*(-LOG10(Pr_r))^(-0.55)*MW^(-0.5))^(1/0.33)  "Cooper (CSL-0088)"
+  h_Liu_Winterton = ((F*hl)^2 + (S*hnb)^2)^0.5
+END
+
+FUNCTION h_Shah_1982(m, x, D, q, rhol, rhog, mul, kl, Cpl, i_fg, vertical)
+{H_SHAH_1982 - heat-transfer coefficient of a saturated fluid boiling inside a
+tube, from the chart correlation of Shah (1982): the enhancement factor psi =
+h_tp/h_l of the liquid-only Dittus-Boelter coefficient is built from a
+convective term and a nucleate term, each of them taking the larger of its
+correlations, blended smoothly where they cross.
+
+  psi = h_tp/h_l (Eq. 1)
+  Co = (1/x - 1)^0.8*sqrt(rhog/rhol) (Eq. 2)
+  Bo = q/(G*i_fg) (Eq. 3)
+  Fr_l = G^2/(rhol^2*g*D) (Eq. 4)
+  h_l = 0.023*Re_l^0.8*Pr_l^0.4*kl/D (Eq. 5, Dittus-Boelter of the liquid flow)
+  psi_nb = 230*sqrt(Bo) (Eq. 6) or 1 + 46*sqrt(Bo) (Eq. 7)
+  psi_cb = 1.8/N^0.8 (Eq. 8)
+  psi_nbbs = F*sqrt(Bo)*exp(2.74*N^(-0.1)) (Eq. 9)
+  psi_bs = F*sqrt(Bo)*exp(2.47*N^(-0.15)) (Eq. 10)
+  F = 14.70 (Eq. 11) or 15.43 (Eq. 12)
+  N = Co (Eq. 13, vertical flow) or 0.38*Fr_l^(-0.3)*Co (Eq. 14, horizontal flow)
+  psi_N>1 = max(psi_nb, psi_cb);  psi_0.1<N<=1 = max(psi_nbbs, psi_cb);
+  psi_N<=0.1 = max(psi_bs, psi_cb)
+
+m [kg/s] mass flow rate, x [-] vapour quality, D [m] hydraulic diameter of the
+tube, q [W/m^2] heat transfer rate per unit surface, rhol / rhog [kg/m^3]
+densities of the saturated liquid and of the saturated vapour, mul [Pa-s] viscosity
+of the liquid, kl [W/m-K] thermal conductivity of the liquid, Cpl [J/kg-K] heat
+capacity of the liquid, i_fg [J/kg] latent heat of vaporization, vertical = 1 for
+vertical flow, 0 for horizontal flow. Pr_l is capped at 100 and the Reynolds
+number uses the liquid mass flow m*(1-x), as in the ThermoCycle implementation.
+The branches are blended with the smooth transition function of
+tr_factor_Richter2 (half width 25 % of the switch value), as in ThermoCycle.
+Validity: saturated flow boiling in a tube, as in the original (no numeric range
+  in the Modelica source).
+Original: Shah, M. M., "Chart Correlation for Saturated Boiling Heat Transfer:
+  Equations and Further Study", ASHRAE Transactions 88(1): 185-196, 1982; as
+  implemented in ThermoCycle, equation by equation.
+Taken from: ThermoCycle (Modelica, MIT, https://github.com/JeSoftware/
+  Thermocycle-library), Components/HeatFlow/HeatTransfer/TwoPhaseCorrelations/
+  Shah1982.mo, with Functions/transition_factor.mo and
+  SinglePhaseCorrelations/DittusBoelter1930.mo; the same physics is also given in
+  ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Dittus_Boelter
+  (CSL-0087), but ht has no Shah correlation}
+  pi_val = 3.141592653589793  "pi, as a local constant (CS-BUG-PI-FUNCTION)"
+  g_val = 9.80665  "gravitational acceleration [m/s^2]"
+  G = m/(pi_val/4*D^2)  "two-phase mass flux [kg/m^2/s]"
+  Re_l = G*(1-x)*D/mul
+  Pr_l = MIN(100, mul*Cpl/kl)  "as in the original: Pr capped at 100"
+  hl = 0.023*Re_l^0.8*Pr_l^0.4*kl/D  "liquid-only coefficient (Eq. 5)"
+  Co = (1/MAX(x,1E-20) - 1)^0.8*SQRT(rhog/rhol)  "convection number (Eq. 2)"
+  Bo = q/(G*i_fg)  "boiling number (Eq. 3)"
+  sqrtBo = SQRT(MAX(Bo,1E-20))
+  Fr_l = G^2/(rhol^2*g_val*D)  "liquid Froude number (Eq. 4)"
+  IF vertical = 1 THEN
+    Fr_start = -1E6  "vertical flow: the Froude blend always gives N = Co"
+    Fr_stop = 0
+  ELSE
+    Fr_start = 0.039
+    Fr_stop = 0.041
+  ENDIF
+  N_trans = tr_factor_Richter2(Fr_start, Fr_stop, Fr_l)
+  N = (1-N_trans)*(0.38*Fr_l^(-0.3)*Co) + N_trans*Co  "(Eq. 13) and (Eq. 14)"
+  F_trans = tr_factor_Richter2(0.875*11E-4, 1.125*11E-4, Bo)
+  F = (1-F_trans)*15.43 + F_trans*14.7  "(Eq. 11) and (Eq. 12)"
+  psi_cb = 1.8/N^0.8  "convective enhancement (Eq. 8)"
+  psi_nb_trans = tr_factor_Richter2(0.875*0.3E-4, 1.125*0.3E-4, Bo)
+  psi_nb = (1-psi_nb_trans)*(1 + 46*sqrtBo) + psi_nb_trans*(230*sqrtBo)  "(Eq. 6) and (Eq. 7)"
+  psi_N10 = MAX(psi_nb, psi_cb)  "fully nucleate boiling, N > 1"
+  psi_nbbs = F*sqrtBo*EXP(2.74*N^(-0.1))  "partly suppressed nucleation (Eq. 9)"
+  psi_N05 = MAX(psi_nbbs, psi_cb)  "0.1 < N <= 1"
+  psi_bs = F*sqrtBo*EXP(2.47*N^(-0.15))  "suppressed nucleation (Eq. 10)"
+  psi_N01 = MAX(psi_bs, psi_cb)  "N <= 0.1"
+  psi_0105_trans = tr_factor_Richter2(0.875*0.1, 1.125*0.1, N)
+  psi_0105 = (1-psi_0105_trans)*psi_N01 + psi_0105_trans*psi_N05
+  psi_0510_trans = tr_factor_Richter2(0.875, 1.125, N)
+  psi_0510 = (1-psi_0510_trans)*psi_N05 + psi_0510_trans*psi_N10
+  psi_trans = tr_factor_Richter2(0.4375, 0.5625, N)
+  psi = (1-psi_trans)*psi_0105 + psi_trans*psi_0510
+  h_Shah_1982 = psi*hl
+END
+
+FUNCTION h_Gungor_Winterton_1987(m, x, D, q, rhol, rhog, mul, kl, Cpl, i_fg)
+{H_GUNGOR_WINTERTON_1987 - heat-transfer coefficient of a saturated fluid boiling
+with turbulent forced convection in a tube, simplified general correlation of
+Gungor and Winterton.
+
+  h_tp = h_l*[1 + 3000*Bo^0.86 + 1.12*(x/(1-x))^0.75*(rhol/rhog)^0.41]*Term2
+  Bo = |q|/(|G|*i_fg)
+  Fr_l = G^2/(rhol^2*g*D)
+  Term2 = Fr_l^(0.1 - 2*Fr_l) if Fr_l < 0.05, 1 otherwise
+  h_l = 0.023*Re_l^0.8*Pr_l^0.4*kl/D (Dittus-Boelter of the liquid flow)
+
+m [kg/s] mass flow rate, x [-] vapour quality, D [m] hydraulic diameter of the
+tube, q [W/m^2] heat transfer rate per unit surface, rhol / rhog [kg/m^3]
+densities of the saturated liquid and of the saturated vapour, mul [Pa-s] viscosity
+of the liquid, kl [W/m-K] thermal conductivity of the liquid, Cpl [J/kg-K] heat
+capacity of the liquid, i_fg [J/kg] latent heat of vaporization. The Reynolds
+number uses the liquid mass flow m*(1-x) and Pr_l is capped at 100, as in the
+ThermoCycle implementation.
+Validity: turbulent two-phase flow, as in the original (no numeric range in the
+  Modelica source).
+Original: Gungor, K. E. and R. H. S. Winterton, "Simplified General Correlation
+  for Saturated Flow Boiling and Comparison of Correlations with Data", Chemical
+  Engineering Research and Design 65: 148-156, 1987; as implemented in
+  ThermoCycle.
+Taken from: ThermoCycle (Modelica, MIT, https://github.com/JeSoftware/
+  Thermocycle-library), Components/HeatFlow/HeatTransfer/TwoPhaseCorrelations/
+  GungorWinterton1987.mo, with SinglePhaseCorrelations/DittusBoelter1930.mo; ht
+  1.2.0 (commit 85e0ee6) has no Gungor-Winterton correlation}
+  pi_val = 3.141592653589793  "pi, as a local constant (CS-BUG-PI-FUNCTION)"
+  g_val = 9.80665  "gravitational acceleration [m/s^2]"
+  G = m/(pi_val/4*D^2)  "two-phase mass flux [kg/m^2/s]"
+  Re_l = G*(1-x)*D/mul
+  Pr_l = MIN(100, mul*Cpl/kl)  "as in the original: Pr capped at 100"
+  hl = 0.023*Re_l^0.8*Pr_l^0.4*kl/D  "liquid-only coefficient"
+  Fr_l = G^2/(rhol^2*g_val*D)  "liquid Froude number"
+  Bo = ABS(q)/(ABS(G)*i_fg)  "boiling number"
+  term1 = 1 + 3000*Bo^0.86 + 1.12*(x/(1-x))^0.75*(rhol/rhog)^0.41
+  IF Fr_l < 0.05 THEN
+    term2 = Fr_l^(0.1 - 2*Fr_l)  "small liquid Froude number: low-velocity correction"
+  ELSE
+    term2 = 1
+  ENDIF
+  h_Gungor_Winterton_1987 = hl*term1*term2
+END
+
+"!Demonstration program: every correlation is called"
+"It is ignored by the future $INCLUDE library:flow_boiling_in_tubes (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each correlation (published values);"
+"for the two ThermoCycle correlations, the same fluid as the ht doctests (CO2 at"
+"1 bar, as in the review ht quotes). Case B: one uniform, realistic input set -"
+"R134a at 5 C (CoolProp 8.0.0 saturation properties), 0.2 kg/s, quality 0.4,"
+"10 mm tube, 4E4 W/m^2, wall 30 K above the saturation temperature. Case C: a low"
+"liquid Froude number (0.85 kg/s in a 100 mm tube), which is where the vertical"
+"and the horizontal form of Shah 1982 differ. All values are tabulated against"
+"ht (or against the Python transcription of the ThermoCycle equations) in the"
+"README (verification tables)."
+
+"Case A - input sets of the ht doctests (CO2-like properties, as in the reviews ht quotes)"
+LB_m_A = 10
+LB_D_A = 0.3
+LB_mul_A = 1E-3
+LB_kl_A = 0.6
+LB_Hvap_A = 2E6
+LB_Te_A = 100
+LB_q_A = 1E7
+LW_m_A = 1
+LW_x_A = 0.2
+LW_D_A = 0.3
+LW_rhol_A = 567
+LW_rhog_A = 18.09
+LW_kl_A = 0.086
+LW_mul_A = 156E-6
+LW_sigma_A = 0.02
+LW_Hvap_A = 9E5
+LW_q_A = 1E5
+SM_m_A = 1
+SM_D_A = 0.3
+SM_rhol_A = 567
+SM_rhog_A = 18.09
+SM_kl_A = 0.086
+SM_mul_A = 156E-6
+SM_sigma_A = 0.02
+SM_Hvap_A = 9E5
+SM_Te_A = 10
+SM_q_A = 1E5
+TH_rhol_A = 567
+TH_rhog_A = 18.09
+TH_kl_A = 0.086
+TH_kg_A = 0.2
+TH_mul_A = 156E-6
+TH_mug_A = 1E-5
+TH_Cpl_A = 2300
+TH_Cpg_A = 1400
+TH_sigma_A = 0.02
+TH_Hvap_A = 9E5
+TH_Psat_A = 1E5
+TH_Pc_A = 22E6
+TH_D_A = 0.3
+TH_q_A = 1E5
+TH_x1_A = 0.4
+TH_m1_A = 1
+TH_x2_A = 0.5
+TH_m2_A = 10
+YK_m_A = 1
+YK_x_A = 0.4
+YK_D_A = 0.3
+YK_rhol_A = 567
+YK_mul_A = 156E-6
+YK_sigma_A = 0.02
+YK_Hvap_A = 9E5
+YK_q_A = 1E4
+CB_m_A = 0.106
+CB_x_A = 0.2
+CB_D_A = 0.0212
+CB_rhol_A = 567
+CB_rhog_A = 18.09
+CB_mul_A = 156E-6
+CB_mug_A = 7.11E-6
+CB_kl_A = 0.086
+CB_Cpl_A = 2730
+CB_Hvap_A = 2E5
+CB_sigma_A = 0.02
+CB_dPsat_A = 1E5
+CB_Te_A = 3
+LR_m_A = 1
+LR_x_A = 0.4
+LR_D_A = 0.3
+LR_rhol_A = 567
+LR_rhog_A = 18.09
+LR_mul_A = 156E-6
+LR_kl_A = 0.086
+LR_Cpl_A = 2300
+LR_P_A = 1E6
+LR_Pc_A = 22E6
+LR_MW_A = 44.02
+LR_Te_A = 7
+SG_m_A = 1
+SG_x_A = 0.4
+SG_D_A = 0.01
+SG_q_A = 5E4
+SG_rhol_A = 567
+SG_rhog_A = 18.09
+SG_mul_A = 156E-6
+SG_kl_A = 0.086
+SG_Cpl_A = 2300
+SG_ifg_A = 9E5
+
+"h_Lazarek_Black - excess temperature (ht doctest) and heat flux (ht test value)"
+h_Lazarek_Black_Te_A = h_Lazarek_Black(LB_m_A, LB_D_A, LB_mul_A, LB_kl_A, LB_Hvap_A, LB_q_A, LB_Te_A, 1)
+h_Lazarek_Black_q_A = h_Lazarek_Black(LB_m_A, LB_D_A, LB_mul_A, LB_kl_A, LB_Hvap_A, LB_q_A, LB_Te_A, 0)
+"h_Li_Wu - heat flux (ht doctest) and the excess temperature it implies"
+h_Li_Wu_q_A = h_Li_Wu(LW_m_A, LW_x_A, LW_D_A, LW_rhol_A, LW_rhog_A, LW_mul_A, LW_kl_A, LW_Hvap_A, LW_sigma_A, LW_q_A, 0, 0)
+h_Li_Wu_Te_A = h_Li_Wu(LW_m_A, LW_x_A, LW_D_A, LW_rhol_A, LW_rhog_A, LW_mul_A, LW_kl_A, LW_Hvap_A, LW_sigma_A, LW_q_A, LW_q_A/h_Li_Wu_q_A, 1)
+"h_Sun_Mishima - excess temperature (ht doctest) and heat flux (ht test value)"
+h_Sun_Mishima_Te_A = h_Sun_Mishima(SM_m_A, SM_D_A, SM_rhol_A, SM_rhog_A, SM_mul_A, SM_kl_A, SM_Hvap_A, SM_sigma_A, SM_q_A, SM_Te_A, 1)
+h_Sun_Mishima_q_A = h_Sun_Mishima(SM_m_A, SM_D_A, SM_rhol_A, SM_rhog_A, SM_mul_A, SM_kl_A, SM_Hvap_A, SM_sigma_A, SM_q_A, SM_Te_A, 0)
+"h_Thome - two heat fluxes, as in the two cases of the ht test"
+h_Thome_q_A = h_Thome(TH_m1_A, TH_x1_A, TH_D_A, TH_rhol_A, TH_rhog_A, TH_mul_A, TH_mug_A, TH_kl_A, TH_kg_A, TH_Cpl_A, TH_Cpg_A, TH_Hvap_A, TH_sigma_A, TH_Psat_A, TH_Pc_A, TH_q_A)
+h_Thome_q2_A = h_Thome(TH_m2_A, TH_x2_A, TH_D_A, TH_rhol_A, TH_rhog_A, TH_mul_A, TH_mug_A, TH_kl_A, TH_kg_A, TH_Cpl_A, TH_Cpg_A, TH_Hvap_A, TH_sigma_A, TH_Psat_A, TH_Pc_A, TH_q_A)
+"h_Yun_Heo_Kim - heat flux (ht doctest) and the excess temperature it implies"
+h_Yun_Heo_Kim_q_A = h_Yun_Heo_Kim(YK_m_A, YK_x_A, YK_D_A, YK_rhol_A, YK_mul_A, YK_Hvap_A, YK_sigma_A, YK_q_A, 0, 0)
+h_Yun_Heo_Kim_Te_A = h_Yun_Heo_Kim(YK_m_A, YK_x_A, YK_D_A, YK_rhol_A, YK_mul_A, YK_Hvap_A, YK_sigma_A, YK_q_A, YK_q_A/h_Yun_Heo_Kim_q_A, 1)
+"h_Chen_Edelstein"
+h_Chen_Edelstein_A = h_Chen_Edelstein(CB_m_A, CB_x_A, CB_D_A, CB_rhol_A, CB_rhog_A, CB_mul_A, CB_mug_A, CB_kl_A, CB_Cpl_A, CB_Hvap_A, CB_sigma_A, CB_dPsat_A, CB_Te_A)
+"h_Chen_Bennett"
+h_Chen_Bennett_A = h_Chen_Bennett(CB_m_A, CB_x_A, CB_D_A, CB_rhol_A, CB_rhog_A, CB_mul_A, CB_mug_A, CB_kl_A, CB_Cpl_A, CB_Hvap_A, CB_sigma_A, CB_dPsat_A, CB_Te_A)
+"h_Liu_Winterton"
+h_Liu_Winterton_A = h_Liu_Winterton(LR_m_A, LR_x_A, LR_D_A, LR_rhol_A, LR_rhog_A, LR_mul_A, LR_kl_A, LR_Cpl_A, LR_MW_A, LR_P_A, LR_Pc_A, LR_Te_A)
+"h_Shah_1982 - vertical and horizontal flow (identical here: the liquid Froude number is high)"
+h_Shah_1982_v_A = h_Shah_1982(SG_m_A, SG_x_A, SG_D_A, SG_q_A, SG_rhol_A, SG_rhog_A, SG_mul_A, SG_kl_A, SG_Cpl_A, SG_ifg_A, 1)
+h_Shah_1982_h_A = h_Shah_1982(SG_m_A, SG_x_A, SG_D_A, SG_q_A, SG_rhol_A, SG_rhog_A, SG_mul_A, SG_kl_A, SG_Cpl_A, SG_ifg_A, 0)
+"h_Gungor_Winterton_1987"
+h_Gungor_Winterton_A = h_Gungor_Winterton_1987(SG_m_A, SG_x_A, SG_D_A, SG_q_A, SG_rhol_A, SG_rhog_A, SG_mul_A, SG_kl_A, SG_Cpl_A, SG_ifg_A)
+
+"Case B - uniform input set: R134a saturated at 5 C (CoolProp 8.0.0)"
+m_B = 0.2
+x_B = 0.4
+D_B = 0.01
+q_B = 4E4
+Te_B = 30
+rhol_B = 1278.0699907738838
+rhog_B = 17.1308574901
+mul_B = 0.000250111362056
+mug_B = 0.0000109110428049
+kl_B = 0.0898078137783
+kg_B = 0.0119540069634
+Cpl_B = 1355.1559599
+Cpg_B = 920.594602049
+Hvap_B = 194740.148673
+sigma_B = 0.0107300565896
+dPsat_B = 537322.375747
+Psat_B = 3.5E5
+Pc_B = 4059276.3737910665
+P_B = 3.5E5
+MW_B = 102.032
+
+"h_Lazarek_Black - heat flux and excess temperature"
+h_Lazarek_Black_q_B = h_Lazarek_Black(m_B, D_B, mul_B, kl_B, Hvap_B, q_B, Te_B, 0)
+h_Lazarek_Black_Te_B = h_Lazarek_Black(m_B, D_B, mul_B, kl_B, Hvap_B, q_B, Te_B, 1)
+"h_Li_Wu - heat flux and excess temperature"
+h_Li_Wu_q_B = h_Li_Wu(m_B, x_B, D_B, rhol_B, rhog_B, mul_B, kl_B, Hvap_B, sigma_B, q_B, Te_B, 0)
+h_Li_Wu_Te_B = h_Li_Wu(m_B, x_B, D_B, rhol_B, rhog_B, mul_B, kl_B, Hvap_B, sigma_B, q_B, Te_B, 1)
+"h_Sun_Mishima - heat flux and excess temperature"
+h_Sun_Mishima_q_B = h_Sun_Mishima(m_B, D_B, rhol_B, rhog_B, mul_B, kl_B, Hvap_B, sigma_B, q_B, Te_B, 0)
+h_Sun_Mishima_Te_B = h_Sun_Mishima(m_B, D_B, rhol_B, rhog_B, mul_B, kl_B, Hvap_B, sigma_B, q_B, Te_B, 1)
+"h_Thome - heat flux given, and excess temperature given (q becomes an unknown)"
+h_Thome_q_B = h_Thome(m_B, x_B, D_B, rhol_B, rhog_B, mul_B, mug_B, kl_B, kg_B, Cpl_B, Cpg_B, Hvap_B, sigma_B, Psat_B, Pc_B, q_B)
+h_Thome_Te_B = h_Thome(m_B, x_B, D_B, rhol_B, rhog_B, mul_B, mug_B, kl_B, kg_B, Cpl_B, Cpg_B, Hvap_B, sigma_B, Psat_B, Pc_B, q_Thome_Te_B)
+q_Thome_Te_B = h_Thome_Te_B*Te_B  "the equation ht solves by iteration (q = h*Te); q_Thome_Te_B is the unknown (see the .initials)"
+"h_Yun_Heo_Kim - heat flux and excess temperature"
+h_Yun_Heo_Kim_q_B = h_Yun_Heo_Kim(m_B, x_B, D_B, rhol_B, mul_B, Hvap_B, sigma_B, q_B, Te_B, 0)
+h_Yun_Heo_Kim_Te_B = h_Yun_Heo_Kim(m_B, x_B, D_B, rhol_B, mul_B, Hvap_B, sigma_B, q_B, Te_B, 1)
+"h_Chen_Edelstein"
+h_Chen_Edelstein_B = h_Chen_Edelstein(m_B, x_B, D_B, rhol_B, rhog_B, mul_B, mug_B, kl_B, Cpl_B, Hvap_B, sigma_B, dPsat_B, Te_B)
+"h_Chen_Bennett"
+h_Chen_Bennett_B = h_Chen_Bennett(m_B, x_B, D_B, rhol_B, rhog_B, mul_B, mug_B, kl_B, Cpl_B, Hvap_B, sigma_B, dPsat_B, Te_B)
+"h_Liu_Winterton"
+h_Liu_Winterton_B = h_Liu_Winterton(m_B, x_B, D_B, rhol_B, rhog_B, mul_B, kl_B, Cpl_B, MW_B, P_B, Pc_B, Te_B)
+"h_Shah_1982 - vertical and horizontal flow"
+h_Shah_1982_v_B = h_Shah_1982(m_B, x_B, D_B, q_B, rhol_B, rhog_B, mul_B, kl_B, Cpl_B, Hvap_B, 1)
+h_Shah_1982_h_B = h_Shah_1982(m_B, x_B, D_B, q_B, rhol_B, rhog_B, mul_B, kl_B, Cpl_B, Hvap_B, 0)
+"h_Gungor_Winterton_1987"
+h_Gungor_Winterton_B = h_Gungor_Winterton_1987(m_B, x_B, D_B, q_B, rhol_B, rhog_B, mul_B, kl_B, Cpl_B, Hvap_B)
+"the liquid-only coefficient the two ThermoCycle correlations start from"
+hl_B = 0.023*(m_B*(1-x_B)/(3.141592653589793/4*D_B^2)*D_B/mul_B)^0.8*MIN(100, mul_B*Cpl_B/kl_B)^0.4*kl_B/D_B
+
+"Case C - low liquid Froude number (Fr_l = 0.037), CO2 properties as in case A"
+m_C = 0.85
+x_C = 0.4
+D_C = 0.1
+q_C = 5E4
+rhol_C = 567
+rhog_C = 18.09
+mul_C = 156E-6
+kl_C = 0.086
+Cpl_C = 2300
+ifg_C = 9E5
+Fr_l_C = (m_C/(3.141592653589793/4*D_C^2))^2/(rhol_C^2*9.80665*D_C)  "liquid Froude number [-]"
+
+"h_Shah_1982 - vertical flow (N = Co) and horizontal flow (N = 0.38*Fr_l^-0.3*Co)"
+h_Shah_1982_v_C = h_Shah_1982(m_C, x_C, D_C, q_C, rhol_C, rhog_C, mul_C, kl_C, Cpl_C, ifg_C, 1)
+h_Shah_1982_h_C = h_Shah_1982(m_C, x_C, D_C, q_C, rhol_C, rhog_C, mul_C, kl_C, Cpl_C, ifg_C, 0)
+"h_Gungor_Winterton_1987 - the low-Froude correction term is active here"
+h_Gungor_Winterton_C = h_Gungor_Winterton_1987(m_C, x_C, D_C, q_C, rhol_C, rhog_C, mul_C, kl_C, Cpl_C, ifg_C)

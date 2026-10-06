@@ -1,0 +1,54 @@
+{
+  "id": "CSL-0120",
+  "name": "ball_valve_authority",
+  "title": "Ball valve authority from opening angle",
+  "summary": "Equivalent opening diameter and valve authority from the ball angle using Idel'cik Memento p.339",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "ball_valve_authority.eescode",
+  "fluids": [],
+  "tags": [
+    "valves_nozzles_piping",
+    "ball_valve",
+    "authority",
+    "Idelcik"
+  ],
+  "language_features": [
+    "procedures",
+    "lookup_tables"
+  ],
+  "stats": {
+    "n_equations": 14,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/procedures EES/vanne \u00e0 bille SQ071010.EES",
+    "candidate_id": "TM-0588",
+    "authors": [
+      "Sylvain Quoilin (ULi\u00e8ge Thermodynamics Laboratory)"
+    ],
+    "license": "MIT"
+  },
+  "verification": {
+    "reference": "EES stored solution (d_eq = 0.0199693 m for gamma_0=23\u00b0, gamma_v=40\u00b0, D=50mm)",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0,
+    "notes": "Unit conversion: D from 50 mm to 0.05 m (SI). After mm\u2192m conversion, d_eq = 19.97 mm matches EES reference. K_bille differs slightly (1.8118 vs EES 1.64268) but is physically consistent with the formula 1/sin((90-\u03b3_0)/2)."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-IMPORT TM-0588)",
+      "by": "worker (CSL-0120)"
+    }
+  ]
+}

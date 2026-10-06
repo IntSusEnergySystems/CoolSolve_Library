@@ -1,0 +1,88 @@
+{
+  "id": "CSL-0100",
+  "name": "free_conv_enclosed_and_jackets",
+  "title": "Natural convection in enclosures and vessels: plates, critical Rayleigh numbers, helical coils, vessel jackets (function library)",
+  "summary": "Ten EES FUNCTIONs for the natural convection of an enclosed fluid layer, of a helical coil in a tank and of a vessel jacket: the Rayleigh-Benard Nusselt numbers between parallel horizontal plates (Holling-Herwig as its residual, Probert, Hollands with a user-supplied critical Rayleigh number), between vertical plates (Thess, aspect ratio), the critical Rayleigh number of parallel disks (Buell-Caton polynomial), the helical-coil correlations of Ali, Prabhanjan-Rennie-Raghavan and Xin-Ebadian (vertical or horizontal), and the average heat-transfer coefficient of a vessel jacket (Lehrer, Stein-Schmidt, tangential or radial inlet, with or without the buoyancy contribution).",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "free_conv_enclosed_and_jackets.eescode",
+  "fluids": [],
+  "tags": [
+    "free convection",
+    "enclosure",
+    "rayleigh-benard",
+    "critical rayleigh number",
+    "helical coil",
+    "vessel jacket",
+    "correlation",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "LN / EXP",
+    "MAX / MIN",
+    "implicit equation in the main program",
+    "dimensionless arguments"
+  ],
+  "stats": {
+    "n_equations": 69,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-014",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "M. Hoelling and H. Herwig (Holling-Herwig correlation)",
+      "S. D. Probert, R. G. Brooks and M. Dixon (Probert correlation)",
+      "K. G. T. Hollands (Hollands correlation)",
+      "M. E. Ali (vertical helical coil correlation)",
+      "D. G. Prabhanjan, T. J. Rennie and G. S. V. Raghavan (helical coiled tubes)",
+      "R. C. Xin and M. A. Ebadian (helicoidal pipes)",
+      "J. C. Buell and I. Catton (critical Rayleigh number of disks)",
+      "I. H. Lehrer (jacket-side Nusselt number)",
+      "W. A. Stein and W. Schmidt (jacket side of an agitated vessel)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), files ht/conv_free_enclosed.py, ht/conv_free_immersed.py (Nu_coil_Xin_Ebadian) and ht/conv_jacket.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each correlation is the original paper or book cited in its function comment block. Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/conv_free_enclosed.py, ht/conv_free_immersed.py and ht/conv_jacket.py (case A) and additional values computed with the same ht functions in a throw-away virtualenv (case B); 33 output values in total",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 8.8e-13,
+    "notes": "compare_solution.py: 33 common variables, 0 differ (rtol=0.001); largest relative deviation 8.8e-13 (Nu_HH_B), i.e. round-off only. The two Holling-Herwig residuals are compared against an exact zero and are 2.8e-14 and 7.3e-12 in absolute value."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0009",
+    "CSL-0018",
+    "CSL-0041",
+    "CSL-0087",
+    "CSL-0089",
+    "CSL-0092",
+    "CSL-0093"
+  ,
+    "CSL-0101"
+  ],
+  "related_external": [
+    "sources/ht HT-014 (the two members of the family not translated here: Nu_Nusselt_Rayleigh_Holling_Herwig, implicit in Nu, and Rac_Nusselt_Rayleigh, a bivariate spline fit)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-FUNC card C-109, family HT-014 of the ht triage)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

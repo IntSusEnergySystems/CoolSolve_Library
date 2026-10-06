@@ -1,0 +1,43 @@
+$UnitSystem SI MASS DEG PA C J
+
+"Modèle simplifié d'une vanne à bille à passage intégral ou réduit"
+"Permet d'estimer l'autorité de la vanne en calculant le diamètre équivalent de son ouverture"
+
+gamma_rad = gamma_v/360 * 2*pi
+
+K_bille = 1/ sin((90 - gamma_0)/2)		"=sqrt(2) s'il n'y a pas d'angle mort"
+R = D/2									"Rayon de la section de passage"
+R_sphere = R * K_bille					"Rayon de la bille"
+
+DELTAx = max(0,R_sphere * sin ((gamma_v-gamma_0)/2))	"Déplacement de la sphère au niveau de l'ouverture (approximation)"
+
+teta = 2 * arccos (1 - DELTAx/R)		"Angle d'ouverture de la section de cercle"
+{R*(1 - cos(teta/2)) = DELTAx}
+
+teta_rad = teta/360 * 2 * pi			"Conversion en radians"
+
+A_demi = R^2 * (teta_rad/2 - sin(teta)/2)	"Angle d'une des demi-lunes"
+A = A_demi*2
+
+d_eq = sqrt(4 * A/pi)					"Diamètre de la section équivalente"
+{A = pi * d_eq^2/4}					
+
+A_tot = pi * D^2 /4						"Permet de vérfier que A = A_tot si gamma = 90°"
+
+{gamma =90}								"Angle d'ouverture de la vanne en degrés"
+D = 0.05								"Diamètre du passage au niveau de la bille (= diamètre si gamma=90).  S'il s'agit d'un vanne à passage réduit, indiquer le diamètre du passage"
+												"1 pouce = 25.4 mm"
+gamma_0 = 23							"Angle mort pour lequel l'ouverture reste nulle, typiquement 23°   "
+gamma_v = 40
+
+{d_eq = d_eq}
+
+"!!!!!!!!  La réduction de section a lieu 2 fois, en entrée et en sortie !!!!!!!!!!!!!!!"
+
+"Données du livre : <<  >> "
+{i = 1} 
+{(d_eq_bis / D )^2 = lookup('donnees',i,2)
+90 - gamma_bis = lookup('donnees',i,1)}
+
+"Références : 
+I.E. Idel'cik, Memento de pertes de charge, Eyrolles, Collection du centre de recherches et d'essais de chatou, Paris, 1969, p.339"

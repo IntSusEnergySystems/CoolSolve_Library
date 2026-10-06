@@ -1,0 +1,106 @@
+{
+  "id": "CSL-0080",
+  "name": "condensing_boiler_refsim",
+  "title": "Condensing boiler reference model (RefSim)",
+  "summary": "Reference simulation model of a condensing boiler of the ULiège model bank (Laborelec toolkit lineage): a supposed adiabatic combustion chamber described by five fictitious processes (cooling of the air and of the fuel to the reference temperature, stoichiometric combustion, CO2-CO dissociation of the air excess, heating of the products), a counter-flow dry gas-water heat exchanger (epsilon-NTU), a cooling coil standing for the wet gas-water exchanger in which the fumes condense (solved as fully dry and as fully wet, the regime of highest cooling power being kept) and a semi-isothermal water-environment exchanger standing for the heat losses to the ambient; the mean specific heat of the combustion products comes from the cpbar function of the bank.",
+  "kind": "steady",
+  "level": 3,
+  "status": "blocked",
+  "main_file": "condensing_boiler_refsim.eescode",
+  "fluids": [
+    "Water",
+    "AirH2O",
+    "Air",
+    "N2",
+    "O2",
+    "CO2",
+    "H2O",
+    "CH4",
+    "C2H6",
+    "C3H8",
+    "C4H10",
+    "Methane"
+  ],
+  "tags": [
+    "boiler",
+    "condensing boiler",
+    "combustion",
+    "natural gas",
+    "mean specific heat",
+    "flue gas",
+    "condensation",
+    "cooling coil",
+    "eps-NTU",
+    "thermal resistances",
+    "moist air",
+    "wet bulb",
+    "reference model",
+    "model bank",
+    "parametric table"
+  ],
+  "language_features": [
+    "property functions",
+    "moist-air property functions (humrat, relhum, dewpoint)",
+    "ideal-gas substances (CO2, H2O, O2, N2, CH4, C2H6, C3H8, C4H10)",
+    "FUNCTION cpbar",
+    "PROCEDURE COILWET with $common",
+    "SUBPROGRAM flattened",
+    "5-argument IF function",
+    "CALL ERROR in a function body",
+    "UNITSYSTEM unit checks",
+    "min/max",
+    "implicit equations",
+    "display comments",
+    "parametric table in the source file",
+    "control-panel values restored"
+  ],
+  "stats": {
+    "n_equations": 258,
+    "largest_block": 52
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/Heat_and_Cool_Production_Systems/Heat_Production_by_Combustion/CondensingBoiler_RefSim_Model_VLAR080109.zip!/CondensingBoiler_RefSim_EES_Model_VLAR080109.EES",
+    "candidate_id": "TM-0494",
+    "authors": [
+      "Vincent Lemort (ULiège Thermodynamics Laboratory)",
+      "Andrés Rodríguez (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en",
+    "course": "ULiège model bank (Laborelec toolkit lineage), heat production by combustion, condensing boiler reference simulation model, 9 January 2008"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (243 of its 258 variable records hold a value); the comparison concerns the runnable variant condensing_boiler_refsim_coolsolve.eescode run at the operating point of that stored solution (x_load 0.37, T_w_su_boil 30 C, V_dot_w_boil_ls 5.6 l/s, T_amb 20 C), the native file being blocked",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 1.0,
+    "notes": "225 common variables, 74 differ above rtol=0.001. Maximum relative difference 1.00 on h_C4H10_ref and h_C4H10_su, which the variant replaces by constants (CS-GAP-FLUIDS-C8H18; x_C4H10 = 0, so no result is affected); excluding those two, the maximum is 0.75 on ratio_loss, a consequence of the stale AU_wenv of the stored solution (see below). All the results of the boiler agree to better than 2e-05: Q_dot_u_boil 106671.004 / 106670.473 W (5e-06), eta_HHV 0.978721 / 0.978704 (1.8e-05), T_w_ex_boil 34.5739 / 34.5734 C (1.4e-05), M_dot_f_boil_kgh and M_dot_g_boil_kgh identical. The remaining differences: (a) the stored EES solution is stale (CS-BUG-EXTRACT-STALE): it uses a_gw = 0.62 (AU_gw = 310*(0.04060649/0.09423)^0.62 = 183.9474 W/K is the stored value, while the equations window has 0.65, which gives 179.36), R_a_coil_n = 0.003 K/W (R_a_coil = 0.0056699 K/W stored, 0.0047249 with the 0.0025 of the file), R_m_coil = 1e-4 K/W and AU_wenv = 0.5 W/K (Q_dot_wenv 7.2868 W stored, 29.149 W with the 2 W/K of the file) - this family accounts for epsilon_gw (+3.4e-03), Q_dot_gw (-2.9e-03), Q_dot_coil (+2.5e-02), Q_dot_sens_coil (+1.1e-01) and ratio_loss; re-running the variant with those four parameters gives Q_dot_u_boil 106660.6 W (-9e-05), eta_HHV 0.978626 (-8e-05), T_w_ex_boil 34.57344 C, Q_dot_coil 11888.4 W (+4.8e-04), Q_dot_wenv 7.28680 W (2e-08) and 43 differing variables; (b) moist-air properties of EES 7.888 vs CoolProp (c_p_a_coil +1.1e-02, c_p_a_su_coil +8.3e-03, c_p_a_ex_coil_dry +2.1e-02, T_wb_su_coil +2.4e-03, W_a_ex_coil_dry +9.7e-03, h_a_su_coil +8.7e-03); (c) RH_a_ex_coil_dry (1.55e-01 with the parameter set of the stored solution) is a diagnostic output of the dry regime which feeds no equation when the wet regime is selected. The native file also depends on CS-BUG-COMMON-PROC: the ten $common variables of COILWET are evaluated as zero inside the body, so the wet coil is not solved at all (SingularJacobian); the only forward-referenced body local of the model is c_p_af_coil (of SUBPROGRAM WETCOIL), which the stored EES solution shows to be part of the simultaneous solution of the body (Q_dot_coil_wet 11882.65 W with c_p_af_coil 14793 J/kg.K). No reference variable excluded: the 18 variables only in the EES reference are the local variables of the cpbar FUNCTION, the 33 only in the CoolSolve solution the internal variables of the flattened coil, the state points of the diagrams and the diagnostic variables."
+  },
+  "missing_features": [
+    "CS-GAP-NAME-SYMBOL",
+    "CS-GAP-FLUIDS-C8H18",
+    "CS-GAP-IF5",
+    "CS-BUG-COMMON-PROC"
+  ],
+  "related": [
+    "CSL-0006",
+    "CSL-0005",
+    "CSL-0081"
+  ],
+  "related_external": [
+    "ULiège model bank (Laborelec toolkit lineage), Model data bank, heat production by combustion (CondensingBoiler_RefSim_Model_VLAR080109.zip)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (roadmap card C-85, T-IMPORT of TM-0494; blocked native file, runnable _coolsolve variant verified against the stored EES solution)",
+      "by": "opencode worker (t90) for S. Quoilin"
+    }
+  ]
+}

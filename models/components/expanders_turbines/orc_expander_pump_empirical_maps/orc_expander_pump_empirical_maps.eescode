@@ -1,0 +1,203 @@
+{=============================================================================
+  Empirical maps of ORC expanders and pumps
+  CoolSolve Library model CSL-0084
+ -----------------------------------------------------------------------------
+  Isentropic-efficiency and filling-factor maps of three volumetric expander
+  technologies (hermetic scroll, open-drive scroll, single screw), the
+  mass-flow and isentropic-efficiency curves of the ULiege test-rig pump and
+  the test-rig line pressure-drop fits of the ThermoCycle Modelica library
+  (THC-003), followed by a small closed ORC demo on R245fa that couples the
+  hermetic-scroll expander map to a pump curve.
+
+  Inputs : rho [kg/m3], rp [-], rpm [rev/min], p [Pa], N_rot [Hz], f_pp [Hz],
+           X_pp [-], M_dot [kg/s], T_ev / T_cd [degC], DELTAT_sh / DELTAT_sc [K],
+           V_s [m3], V_dot_max [m3/s]
+  Outputs: epsilon_s [-], FF [-], FFVs [m3/s], eta [-], M_dot [kg/s], dp [Pa],
+           W_dot [W], Q_dot [W], N_rot [Hz], rpm [rev/min]
+  Units  : SI - temperatures in degC, pressures in Pa, energies in J
+  Source : ThermoCycle Modelica library, commit b4f16c0b - see README.md
+============================================================================}
+
+"Empirical maps of the ThermoCycle expander and pump functions"
+
+"Hermetic scroll expander: isentropic efficiency map (correlation_hermetic_scroll_epsilon_s.mo)"
+FUNCTION correlation_hermetic_scroll_epsilon_s(rho, rp)
+    lr = ln(rho)      "log(rho) of the original; log is the natural logarithm in Modelica [1]"
+    lp = ln(rp)       "log(rp) of the original [1]"
+    eps_raw = -6.64245265E+01 + 4.76955293E+01*lr - 1.35858904E+01*lr^2 + 1.77003970E+00*lr^3 - 1.02953583E-01*lr^4 + 2.39566357E-03*lr^5 + 1.13504981E+02*lp - 8.33543737E+01*lp^2 + 2.88988540E+01*lp^3 - 4.38850733E+00*lp^4 + 1.91516689E-01*lp^5 - 7.18843549E+01*lr*lp + 4.65090842E+01*lr*lp^2 - 1.32188184E+01*lr*lp^3 + 1.35479342E+00*lr*lp^4 + 1.74244753E+01*lr^2*lp - 9.46485860E+00*lr^2*lp^2 + 1.96681732E+00*lr^2*lp^3 - 9.18290140E-02*lr^2*lp^4 - 1.59497299E+00*lr^3*lp + 4.72814319E-01*lr^3*lp^2 + 8.68612468E-02*lr^3*lp^3 - 4.23519754E-02*lr^3*lp^4 + 3.27301261E-02*lr^4*lp + 2.62330241E-02*lr^4*lp^2 - 2.60988688E-02*lr^4*lp^3 + 5.48900609E-03*lr^4*lp^4  "polynomial fit in log(rho) and log(rp) [1]"
+    correlation_hermetic_scroll_epsilon_s = min(0.65, max(0, eps_raw))  "isentropic efficiency, clamped as in the original [-]"
+END
+
+"Hermetic scroll expander: filling-factor map (correlation_hermetic_scroll_FF.mo)"
+FUNCTION correlation_hermetic_scroll_FF(rho, rp)
+    lr = ln(rho)      "log(rho) of the original [1]"
+    lp = ln(rp)       "log(rp) of the original [1]"
+    FF_raw = 7.57680390E-01 + 1.03377082E-01*lr - 9.44421504E-03*lr^2 - 9.77306474E-04*lr^3 + 1.21317764E-01*lp - 3.37184749E-02*lp^2 + 2.66140555E-03*lp^3 - 4.37896534E-02*lr*lp + 9.10515577E-03*lr*lp^2 + 6.54874695E-03*lr^2*lp - 1.34144803E-03*lr^2*lp^2  "polynomial fit in log(rho) and log(rp) [1]"
+    correlation_hermetic_scroll_FF = min(1.2, max(1, FF_raw))  "filling factor, clamped as in the original [-]"
+END
+
+"Open-drive scroll expander: isentropic efficiency map (correlation_open_expander_epsilon_s.mo)"
+"arg N_rot is passed the speed in rev/min by the original caller (Expander.mo passes its rpm variable)"
+FUNCTION correlation_open_expander_epsilon_s(N_rot, rho, log_rp)
+    eps_raw = -2.16329421E+00 + 6.78008871E-04*N_rot - 5.54407717E-07*N_rot^2 + 8.03956432E-11*N_rot^3 - 2.24146877E-15*N_rot^4 + 2.91161840E-03*rho + 1.12613000E-06*rho^2 + 8.49777454E-08*rho^3 - 4.50090810E-10*rho^4 + 4.67781024E+00*log_rp - 3.55789871E+00*log_rp^2 + 1.16705018E+00*log_rp^3 - 1.38101959E-01*log_rp^4 + 2.37728921E-07*N_rot*rho - 3.25174455E-09*N_rot*rho^2 + 7.85764846E-12*N_rot*rho^3 - 6.05137025E-04*N_rot*log_rp + 4.49229123E-04*N_rot*log_rp^2 - 9.99328287E-05*N_rot*log_rp^3 + 3.75965704E-11*N_rot^2*rho + 4.39606024E-13*N_rot^2*rho^2 - 8.61198734E-16*N_rot^2*rho^3 + 6.95577624E-07*N_rot^2*log_rp - 4.20590506E-07*N_rot^2*log_rp^2 + 8.24820738E-08*N_rot^2*log_rp^3 + 3.34903471E-15*N_rot^3*rho - 7.54325941E-17*N_rot^3*rho^2 + 8.13185576E-20*N_rot^3*rho^3 - 9.33650022E-11*N_rot^3*log_rp + 5.77554418E-11*N_rot^3*log_rp^2 - 1.14741098E-11*N_rot^3*log_rp^3 + 7.45493269E-03*rho*log_rp - 5.32817717E-03*rho*log_rp^2 + 9.48009166E-04*rho*log_rp^3 - 9.67639285E-05*rho^2*log_rp + 5.34409340E-05*rho^2*log_rp^2 - 8.76813140E-06*rho^2*log_rp^3 + 2.69821471E-07*rho^3*log_rp - 1.37299471E-07*rho^3*log_rp^2 + 2.18231218E-08*rho^3*log_rp^3  "polynomial fit in N_rot [rev/min], rho [kg/m3] and log(p_su/p_ex) [1]"
+    correlation_open_expander_epsilon_s = min(0.79, max(0, eps_raw))  "isentropic efficiency, clamped as in the original [-]"
+END
+
+"Open-drive scroll expander: filling-factor map (correlation_open_expander_FF.mo)"
+FUNCTION correlation_open_expander_FF(log_Nrot, rho)
+    FF_raw = 8.36779658E+00 - 1.41098700E+00*log_Nrot + 6.19613713E-02*log_Nrot^2 - 5.13791668E-04*rho - 5.77341306E-07*rho^2  "polynomial fit in log(N_rot) and rho; log_Nrot = ln(rpm) as passed by the original caller [1]"
+    correlation_open_expander_FF = min(1.592, max(0.576, FF_raw))  "filling factor, clamped as in the original [-]"
+END
+
+"Single screw expander: isentropic efficiency map (Functions/TestRig/GenericScrewExpander_IsentropicEfficiency.mo)"
+"rp = p_su/p_ex [-], rpm [rev/min], p = p_su [Pa]"
+FUNCTION GenericScrewExpander_IsentropicEfficiency(rp, rpm, p)
+    rpm_star = (rpm - 3000)/3000        "reduced speed [-]"
+    rpm_star_m = (3547 - 3000)/3000     "reduced reference speed rpm_m = 3547 rev/min [-]"
+    p_star = (p/1e5 - 10)/10            "supply pressure in bar, reduced [-]"
+    x_0 = 3.079                         "shape parameter x_0 (a0 = 0) [-]"
+    dydx = 0.7924 + 0.8411*p_star - 0.8345*rpm_star  "initial slope [-]"
+    x_m = 10 - 3*p_star + 3*rpm_star     "abscissa of the maximum [-]"
+    y_max = 0.592 + 0.02383*p_star - 0.4827*(rpm_star - rpm_star_m)^2  "peak efficiency [-]"
+    B = dydx/(1.213*y_max)               "C = shape = 1.213 (shape_0) [-]"
+    E = (B*(x_m - x_0) - tan(90/1.213))/(B*(x_m - x_0) - atan(B*(x_m - x_0))*pi()/180)  "normalisation: tan(pi/(2C)) and atan of the original are in radians, EES trigonometry is in degrees; pi() because bare pi resolves to an undefined variable inside a FUNCTION in CoolSolve [-]"
+    GenericScrewExpander_IsentropicEfficiency = y_max*sin(1.213*atan(B*(rp - x_0) - E*(B*(rp - x_0) - atan(B*(rp - x_0))*pi()/180)))  "isentropic efficiency; the two atan of the argument are in radians in the original, EES atan returns degrees [-]"
+END
+
+"Single screw expander: filling-factor map (Functions/TestRig/GenericScrewExpander_FillingFactor.mo)"
+"p_su_exp [Pa], rho_su_exp [kg/m3], rpm [rev/min]; returns FFVs = M_dot/(n*rho) [m3/s],"
+"used by Expander.mo as FF with the swept volume set to V_s = 1 m3 (comment of the original)"
+FUNCTION GenericScrewExpander_FillingFactor(p_su_exp, rho_su_exp, rpm)
+    rpm_star = (rpm - 3000)/3000        "reduced speed [-]"
+    p_star = (p_su_exp/1e5 - 10)/10     "supply pressure in bar, reduced [-]"
+    m_dot_pred = 4.00774818E-01 + 5.33125918E-01*p_star + 1.49433502E-01*p_star^2 - 2.76390528E-01*rpm_star - 1.44346740E+00*rpm_star^2 + 2.42971080E-01*p_star*rpm_star  "predicted mass flow rate [kg/s]"
+    GenericScrewExpander_FillingFactor = m_dot_pred/(rpm/60*rho_su_exp)  "FFVs [m3/s]"
+END
+
+"Test-rig centrifugal pump: isentropic efficiency map (Functions/TestRig/GenericCentrifugalPump_IsentropicEfficiency.mo)"
+"pump frequency f_pp [Hz], pressure ratio r_p = p_ex/p_su [-]"
+FUNCTION GenericCentrifugalPump_IsentropicEfficiency(f_pp, r_p)
+    r_p_star = (r_p - 9)/9              "reduced pressure ratio [-]"
+    f_pp_star = (f_pp - 30)/30          "reduced pump frequency [-]"
+    eps_raw = 1.64002163E-01 + 2.61635282E-01*f_pp_star - 3.93078704E-01*f_pp_star^2 - 7.82556670E-03*r_p_star + 1.91223439E-05*r_p_star^2 + 5.89131488E-02*f_pp_star*r_p_star  "polynomial fit [-]"
+    GenericCentrifugalPump_IsentropicEfficiency = min(0.8, max(0, eps_raw))  "isentropic efficiency, clamped as in the original [-]"
+END
+
+"Test-rig centrifugal pump: mass-flow curve (Functions/TestRig/GenericCentrifugalPump_MassFlowRate.mo)"
+FUNCTION GenericCentrifugalPump_MassFlowRate(f_pp)
+    GenericCentrifugalPump_MassFlowRate = -2.95825023E-01 + 1.79289093E-02*f_pp  "mass flow rate at the pump frequency f_pp [Hz] -> [kg/s]"
+END
+
+"Pump isentropic efficiency of the SQ thesis curve (Functions/correlation_eta_is_pump.mo)"
+FUNCTION correlation_eta_is_pump(Xpp)
+    lp = ln(Xpp)                       "ln(Xpp) of the original [1]"
+    correlation_eta_is_pump = 0.931 - 0.11*lp - 0.2*lp^2 - 0.06*lp^3  "isentropic efficiency at the flow fraction Xpp [-]"
+END
+
+"Test-rig high-pressure line pressure drop (Functions/TestRig/PressureDropCorrelation_HP.mo)"
+FUNCTION PressureDropCorrelation_HP(M_flow)
+    PressureDropCorrelation_HP = 11857.8*M_flow + 77609.9*M_flow^2  "dp = k1*M_dot + k2*M_dot^2 [Pa], M_dot [kg/s]"
+END
+
+"Test-rig low-pressure line pressure drop (Functions/TestRig/PressureDropCorrelation_LP.mo)"
+FUNCTION PressureDropCorrelation_LP(M_flow)
+    PressureDropCorrelation_LP = 38453.9*M_flow + 23282.7*M_flow^2  "dp = k1*M_dot + k2*M_dot^2 [Pa], M_dot [kg/s]"
+END
+
+"Map check points: each function called once with typical values (reference: independent Python re-evaluation, see README)"
+rho_map = 50 [kg/m3]      "supply density of a scroll expander [kg/m3]"
+rp_map = 6                "pressure ratio p_su/p_ex [-]"
+eps_herm = correlation_hermetic_scroll_epsilon_s(rho_map, rp_map)  "hermetic scroll isentropic efficiency [-]"
+FF_herm = correlation_hermetic_scroll_FF(rho_map, rp_map)          "hermetic scroll filling factor [-]"
+rpm_map = 3000 [rev/min]  "expander speed [rev/min]"
+log_rp_map = ln(rp_map)   "log(p_su/p_ex) of the original, natural logarithm [1]"
+eps_open = correlation_open_expander_epsilon_s(rpm_map, rho_map, log_rp_map)  "open-drive scroll isentropic efficiency [-]"
+log_Nrot_map = ln(rpm_map)  "log(rpm) of the original, natural logarithm [1]"
+FF_open = correlation_open_expander_FF(log_Nrot_map, rho_map)  "open-drive scroll filling factor [-]"
+p_map = 10E5 [Pa]         "supply pressure of the screw expander [Pa]"
+rp_screw = 4              "pressure ratio of the screw expander [-]"
+eps_screw = GenericScrewExpander_IsentropicEfficiency(rp_screw, rpm_map, p_map)  "screw expander isentropic efficiency [-]"
+FFVs_screw = GenericScrewExpander_FillingFactor(p_map, rho_map, rpm_map)  "screw expander FFVs = M_dot/(n*rho) [m3/s]"
+r_p_pump = 9              "pump pressure ratio p_ex/p_su of the fit anchor [-]"
+eta_pump_orc = GenericCentrifugalPump_IsentropicEfficiency(f_pp, r_p_pump)  "test-rig pump isentropic efficiency [-]"
+M_dot_pump_orc = GenericCentrifugalPump_MassFlowRate(f_pp)  "test-rig pump mass flow rate [kg/s]"
+X_pp_map = 0.8            "flow fraction [-]"
+eta_pump_sq = correlation_eta_is_pump(X_pp_map)  "pump isentropic efficiency of the SQ curve [-]"
+M_dot_rig = 0.3 [kg/s]    "test-rig mass flow rate for the line fits [kg/s]"
+dp_HP = PressureDropCorrelation_HP(M_dot_rig)  "high-pressure line pressure drop [Pa]"
+dp_LP = PressureDropCorrelation_LP(M_dot_rig)  "low-pressure line pressure drop [Pa]"
+
+"Small closed ORC demo on R245fa: pump (SQ thesis branch of Pump.mo), evaporator,"
+"hermetic scroll expander (Expander.mo, ExpTypes.HermExp) and condenser, in steady state"
+fluid$ = 'R245fa'
+T_ev = 80 [degC]          "evaporating temperature [degC]"
+T_cd = 35 [degC]          "condensing temperature [degC]"
+DELTAT_sh = 5 [K]         "superheating at the evaporator outlet [K]"
+DELTAT_sc = 3 [K]         "subcooling at the condenser outlet [K]"
+V_dot_max = 2E-4 [m3/s]   "maximum pump flow rate, as in Pump.mo [m3/s]"
+eta_em = 1                "electro-mechanical efficiency of the pump [-]"
+V_s = 1.0E-4 [m3]         "swept volume of the scroll expander [m3]"
+f_pp = 40 [Hz]            "pump frequency [Hz]"
+X_pp = f_pp/50            "pump flow fraction, as in Pump.mo [-]"
+
+"Evaporator and condenser pressures"
+p_ev = pressure(fluid$, T=T_ev, x=0)   "evaporating pressure [Pa]"
+p_cd = pressure(fluid$, T=T_cd, x=0)   "condensing pressure [Pa]"
+
+"Pump suction state (condenser outlet, subcooled liquid)"
+T_1 = T_cd - DELTAT_sc   "pump suction temperature [degC]"
+p_1 = p_cd               "pump suction pressure [Pa]"
+h_1 = enthalpy(fluid$, T=T_1, P=p_1)  "pump suction enthalpy [J/kg]"
+rho_1 = density(fluid$, P=p_1, H=h_1) "pump suction liquid density [kg/m3]"
+
+"Pump (Pump.mo, PumpTypes.SQThesis branch)"
+V_dot = V_dot_max*min(X_pp, 1)  "pump flow rate [m3/s]"
+M_dot = V_dot*rho_1    "refrigerant mass flow rate [kg/s]"
+eta_in = 0.931 - 0.108*log10(X_pp) - 0.204*log10(X_pp)^2 - 0.05954*log10(X_pp)^3  "pump internal effectiveness [-]"
+eta = eta_in*eta_em    "pump overall effectiveness [-]"
+h_2 = h_1 + (p_ev - p_1)/(eta*rho_1)  "pump discharge enthalpy [J/kg]"
+W_dot_pump = M_dot*(h_2 - h_1)  "pump power consumption [W]"
+
+"Evaporator outlet state"
+T_3 = T_ev + DELTAT_sh  "expander supply temperature [degC]"
+p_3 = p_ev              "expander supply pressure [Pa]"
+h_3 = enthalpy(fluid$, T=T_3, P=p_3)   "expander supply enthalpy [J/kg]"
+s_3 = entropy(fluid$, P=p_3, H=h_3)    "expander supply entropy [J/kg-K]"
+rho_3 = density(fluid$, P=p_3, H=h_3)  "expander supply density [kg/m3]"
+
+"Expander (Expander.mo, ExpTypes.HermExp)"
+p_4 = p_cd              "expander exhaust pressure [Pa]"
+rp = p_3/p_4            "expander pressure ratio [-]"
+epsilon_s = correlation_hermetic_scroll_epsilon_s(rho_3, rp)  "isentropic efficiency of the expander [-]"
+FF = correlation_hermetic_scroll_FF(rho_3, rp)  "filling factor of the expander [-]"
+h_ex_s = enthalpy(fluid$, P=p_4, S=s_3)  "isentropic exhaust enthalpy [J/kg]"
+h_4 = h_3 - (h_3 - h_ex_s)*epsilon_s     "expander exhaust enthalpy [J/kg]"
+V_dot_su = FF*V_s*N_rot  "supply volume flow rate [m3/s]"
+V_dot_su = M_dot/rho_3   "supply volume flow rate from the mass flow rate [m3/s]"
+W_dot_exp = M_dot*(h_3 - h_4)  "power generated [W]"
+rpm = N_rot*60           "expander speed [rev/min]"
+
+"Cycle results"
+Q_dot_ev = M_dot*(h_3 - h_2)    "heat input at the evaporator [W]"
+Q_dot_cond = M_dot*(h_4 - h_1)  "heat rejected at the condenser [W]"
+W_dot_net = W_dot_exp - W_dot_pump  "net power of the cycle [W]"
+eta_th = W_dot_net/Q_dot_ev     "thermal efficiency of the cycle [-]"
+err_bal = W_dot_net - (Q_dot_ev - Q_dot_cond)  "energy-balance closure [W]"
+
+"State points for the thermodynamic diagrams"
+P[1] = p_1    "pump suction pressure [Pa]"
+P[2] = p_ev   "pump discharge pressure [Pa]"
+P[3] = p_3    "expander supply pressure [Pa]"
+P[4] = p_cd   "expander exhaust pressure [Pa]"
+h[1] = h_1    "pump suction enthalpy [J/kg]"
+h[2] = h_2    "pump discharge enthalpy [J/kg]"
+h[3] = h_3    "expander supply enthalpy [J/kg]"
+h[4] = h_4    "expander exhaust enthalpy [J/kg]"
+T[1] = T_1    "pump suction temperature [degC]"
+T[2] = temperature(fluid$, P=p_ev, H=h_2)  "pump discharge temperature [degC]"
+T[3] = T_3    "expander supply temperature [degC]"
+T[4] = temperature(fluid$, P=p_cd, H=h_4)  "expander exhaust temperature [degC]"
+s[1] = entropy(fluid$, P=p_1, H=h_1)   "pump suction entropy [J/kg-K]"
+s[2] = entropy(fluid$, P=p_ev, H=h_2)  "pump discharge entropy [J/kg-K]"
+s[3] = s_3    "expander supply entropy [J/kg-K]"
+s[4] = entropy(fluid$, P=p_cd, H=h_4)  "expander exhaust entropy [J/kg-K]"

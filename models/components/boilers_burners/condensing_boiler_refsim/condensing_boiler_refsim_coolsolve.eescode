@@ -1,0 +1,677 @@
+{=============================================================================
+  Condensing boiler reference model (RefSim)
+  CoolSolve Library model CSL-0080
+ -----------------------------------------------------------------------------
+  Reference model of the ULiege model bank (Laborelec toolkit lineage): the
+  condensing boiler is described as an assembly of a supposed to be adiabatic
+  combustion chamber and three (dry gas-water, wet gas-water, water-environment)
+  heat exchangers.
+
+  The combustion is represented by a set of five fictitious processes
+  (as in the original):
+    1) bringing air to the reference temperature of 25 C
+    2) bringing the fuel to the reference temperature of 25 C
+    3) performing the stoechiometric combustion at 25 C
+    4) taking of the air default (if any) and producing the corresponding
+       CO2-CO dissociation
+    5) heating-up the combustion product until the temperature at the exhaust
+       of the combustion chamber.
+
+  The dry gas-water heat exchanger is supposed to be counter-flow and is based
+  on a classical epsilon-NTU model; it represents the amount of heat that is
+  transfered from the gas fumes to the water before any condensation occurs in
+  the fumes. The wet heat exchanger, where condensation may occur, is modelled
+  as a cooling coil: it is solved twice, as fully dry and as fully wet, and the
+  (dry or wet) regime giving the highest cooling power is kept (Jim Braun's
+  proposal, as in the original). The water-environment heat exchanger is
+  represented as semi-isothermal, which makes the heat losses of the boiler to
+  the environment appear.
+
+  Imports from the source file (see README.md, conversion log):
+   - the SUBPROGRAM WETCOIL is flattened into the PROCEDURE COILWET
+     (decision D10 on MODULE/SUBPROGRAM), tag of the call: wc. Formal and actual
+     arguments are identical (M_dot_a_coil, C_dot_w_coil, c_p_a_su_coil,
+     T_w_su_coil, T_wb_su_coil, h_a_su_coil -> Q_dot_coil_wet,
+     T_wb_ex_coil_wet); the internal variables of the subprogram take the
+     suffix _wc (C_dot_af_coil -> C_dot_af_coil_wc, R_af_coil -> R_af_coil_wc,
+     ...), because the main program uses the same names without the suffix.
+     $common R_a_coil,R_m_coil,R_w_coil,P_atm of the subprogram is dropped:
+     those four variables are already $common of COILWET.
+   - the 7 input values (section 1) and the 11 model parameters (section 2.2)
+     that EES holds in its control panel, not in the equations window, are
+     restored as statements with their original values (CS-GAP-PARAMETRIC);
+     the parametric table of the source file is documented in README.md.
+   - the $UnitSystem directive is removed (SI MASS DEG PA C J, as in the
+     original: no unit conversion was needed), the display strings of the
+     original are kept as comments, and the "Example of solution" comment
+     block of the original (224 lines, values of an older set of parameters) is
+     documented in README.md instead of being kept here.
+
+  Inputs : P_w, T_w_su_boil, V_dot_w_boil_ls, T_amb, T_a_su_boil, P_atm, RH_amb,
+           x_load (operating point) and the 11 model parameters of section 2.2
+  Outputs: Q_dot_u_boil, T_w_ex_boil, M_dot_f_boil, M_dot_g_boil_kgh,
+           M_dot_w_cond_coil_kgh, T_g_ex_boil, eta_HHV, eta_LHV, RH_a_ex_coil,
+           Q_dot_sens_coil, Q_dot_lat_coil
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : ULiege model bank (Laborelec toolkit lineage), heat production by
+           combustion, condensing boiler reference simulation model,
+           9 January 2008 - V. Lemort, A. Rodriguez, see README.md
+
+  Variant: condensing_boiler_refsim_coolsolve.eescode is the runnable variant of
+           this model (the native file is blocked, see README.md). It changes
+           only what the gaps force; every change is logged in the README:
+             1) the two fuel-composition variables C% and H% renamed C_pc, H_pc
+                (CS-GAP-NAME-SYMBOL);
+             2) molarmass(C4H10) and the two C4H10 enthalpies replaced by the
+                values EES returns (CS-GAP-FLUIDS-C8H18);
+             3) the five five-argument IF(A,B,X,Y,Z) calls rewritten as
+                three-argument IF(cond,X,Z) (CS-GAP-IF5);
+             4) the body of the PROCEDURE COILWET copied into the main program
+                and its two outputs written with the three-argument IF
+                (CS-BUG-COMMON-PROC: the ten $common variables are zero inside a
+                body, and a body local used before it is assigned - here
+                c_p_af_coil - is not iterated).
+           No equation of the original is changed and the syntax used is valid
+           EES (no CoolSolve-only construct). The operating point is the one of
+           the stored EES solution of the source file (x_load 0.37, T_w_su_boil
+           30 C, V_dot_w_boil_ls 5.6 l/s, T_amb 20 C) instead of the input block
+           of the source file, because the cooling-coil block does not converge
+           at full load (see README, Limitations).
+=============================================================================}
+
+"!Title: CONDENSING BOILER MODEL"
+"Date : 2008 January 9"
+"Authors: Vincent Lemort, Andrés Rodríguez"
+"University of Liège
+Faculty of Applied Sciences
+Thermodynamics Laboratory
+Campus of Sart-Tilman, B49 (P33)
+B-4000 LIEGE (BELGIUM)"
+"Contact: vincent.lemort@ulg.ac.be, aarodriguez@ulg.ac.be"
+"website : www.labothap.ulg.ac.be"
+"!Short Description :"
+"This reference model is representing the condensing boiler by an assembly of a supposed to be adiabatic combustion chamber and three  (dry gas-water, wet gas-water and water-environment) heat exchangers.
+ 
+The combustion itself is represented by a set of five fictitious processes:
+
+1) bringing air to the reference temperature of 25°C
+2) bringing the fuel to the reference temperature of 25°C
+3) performing the stoechiometric combustion at 25°C
+4) taking of the air default (if any) and producing the corresponding CO2-CO dissociation
+5) heating-up the combustion product until the temperature at the exhaust of the combustion chamber.
+
+The dry gas-water heat exchanger is supposed to be counter-flow and is based on a classical epsilon-NTU model of the heat exchanger. This heat exchanger  represents the amount of heat that is transfered from the gas fumes to the water before any condensation occurs in the fumes.
+
+The wet heat exchanger is where condensation may occur. It is modelled as a cooling coil and can, eventually, work in dry regime if the return temperature of water is high enough. The model is indeed based on a double simulation: at each point, the coil is simulated as fully dry and as fully wet. Then, according with the well known Jim Braun's proposal, the (dry or wet) regime giving the highest cooling power is selected as the most accurate.
+
+The water-environment heat exchanger is represented as semi-isothermal. This makes appear the heat losses of the boiler to the environment.  This loss is supposed here to occur  from water. The assumption is valid for most of modern boilers where the combustion chamber is entirely surrounded of water.
+"
+
+"!Nomenclature :"
+"	"
+"AU				Overall heat transfer coefficient		W m-2 K-1
+C_dot					Capacity flow rate					W K-1
+Cp				Specific heat	 						J kg-1 K-1			
+h					Enthalpy 								J kg-1
+M_dot				Mass flow rate						kg s-1
+NTU				Number of Transfer Units
+P					Pressure								Pa
+Q_dot				Heat flow rate							W
+R					Thermal resistance					K W-1
+RH 				Relative humidity
+t					Temperature							K
+v					Specific volume						m3 kg-1
+V_dot					Volumetric flow rate					m3 s-1
+W				Specific humidity						kg kg-1
+	
+Greek symbols:
+	
+rho					Density							kg m-3
+epsilon				Effectiveness
+eta					Efficiency
+	
+Subscripts:
+	
+a						air
+af					fictitious air
+amb					ambient
+atm					atmospheric
+boil					boiler
+coil					coil
+cond					condensation
+dry					dry
+ex					exhaust
+f						fuel
+kgh					kilograms per hour
+g						gas, vapor in saturated state
+n						nominal conditions
+su					supply
+w						water
+wb		         		wet bulb
+wet					wet"
+"	"
+"	"
+
+"!References :"
+"[1] ASHRAE (1999) HVAC Toolkit : A Toolkit for Primary System Energy Calculation. Atlanta : American Society of Heating, Refrigerating and Air-Conditioning Engineers, Inc."
+"[2] Bourdouxhe, J-P., Grodent, M., Lebrun, J., Saavedran C. (1994) A Toolkit for Primary HVAC System Energy Calculation - Part 1 : Boiler Model. ASHRAE Transactions, vol. 100, Part 2. Atlanta : American Society of Heating, Refrigerating and Air-Conditioning Engineers, Inc."
+"[3] Lebrun, J and Lemort, V. (2007). Machines et Systèmes Thermiques. Notes de Cours. "
+
+"!Disclaimer"
+"the accuracy or reliability of information presented in this model is not guaranteed or warranted in any way. Every use of this model, for commercial purpose or not, incurs liability of the user only. this model is freely distributed and may not be sold or distributed for commercial purpose. the user is asked to cite his sources and the origin of this model."
+"!Help us improving this model : any feedback comment is very welcome" 
+
+"!*************************************************** MODEL ***************************************************"
+
+" ----------------------------------------------------------- Average Specific heat of the combustion products ------------------------------------------------------------ "
+FUNCTION  cpbar(m,n,f,T_p1,T_p2)
+
+{$CPBAR
+CPBAR function returns cp_bar (J/kg.K) of the complete combustion products of a
+CmHn hydrocarbon between two temperatures. The inputs are : the type of
+fuel (m and n), the fuel-air ratio (f) and  the two temperatures (T_p1 and T_p2)
+in °C.  Note that dissociation is not taken into account and simplified air is used.
+
+Moreover, the function returns the specific heat for pure air if f=0 (whatever m and n).
+
+When using this function, don't forget to set mass basis calculation in the unit system
+settings.}
+
+"Check of the units setting"
+IF (unitsystem('K')=1)  THEN CALL error('Please, set °C for temperature units!')
+If (unitsystem('Molar')=1)  then CALL error('Please, set Mass basis!')
+
+"Composition de l'air simplifié"
+x_air_N2 = 0.79 ; x_air_O2= 0.21 
+
+"Constante universelle des gaz"
+R_u = 8314 "J/kmol.K"
+
+"Masses molaires des différents constituants"
+MM_O2 = molarmass(O2) ; MM_N2 = molarmass(N2)
+MM_CO2 = molarmass(CO2) ; MM_H2O = molarmass(H2O)
+
+IF (f>0) Then
+
+"f  stoechiométrique, excès d'air et f"
+parfuel = m+n/4
+MM_f = 12*m+1*n
+f_st = MM_f/(parfuel*(MM_O2+(x_air_N2/x_air_O2)*MM_N2))
+e = (f_st/f)-1 
+
+IF (f>f_st) then CALL error('The f value provided is higher than f_st: XXXF3',f_st)
+
+"Fractions molaires des constituants" 
+nkmoltot = m+ n/2 + parfuel*(e+(1+e)*(x_air_N2/x_air_O2))
+x_CO2 = m/nkmoltot
+x_H2O = (n/2)/nkmoltot
+x_O2 = parfuel*e/nkmoltot
+x_N2 = parfuel*(1+e)*(x_air_N2/x_air_O2)/nkmoltot
+
+"Masse molaire des produits de combustion"
+MM_prod = x_CO2*MM_CO2+x_H2O*MM_H2O+x_O2*MM_O2+x_N2*MM_N2
+
+"Enthalpie et chaleur massique des produits de combustion ; /kg de produits"
+hp_1 = (enthalpy(CO2,T=T_p1)-enthalpy(CO2, T=T_p2))*MM_CO2
+hp_2 = (enthalpy(H2O,T=T_p1)-enthalpy(H2O, T=T_p2))*MM_H2O
+hp_3 = (enthalpy(O2,T=T_p1)-enthalpy(O2, T=T_p2))*MM_O2
+hp_4 = (enthalpy(N2,T=T_p1)-enthalpy(N2, T=T_p2))*MM_N2
+hp = (x_CO2*hp_1+x_H2O*hp_2+x_O2*hp_3+x_N2*hp_4)/MM_prod
+cpbar  = hp/(T_p1-T_p2)
+
+ELSE
+
+"Cas de l'air pur"
+MM_a = x_air_O2*MM_O2+x_air_N2*MM_N2
+ha_1 = (enthalpy(O2,T=T_p1)-enthalpy(O2, T=T_p2))*MM_O2
+ha_2 = (enthalpy(N2,T=T_p1)-enthalpy(N2, T=T_p2))*MM_N2
+ha = (x_air_O2*ha_1+x_air_N2*ha_2)/MM_a
+cpbar  = ha/(T_p1-T_p2)
+ENDIF
+
+END
+
+" ########################################################################################################################## "
+"! ##################################################### MAIN PROGRAM ##################################################### "
+" ########################################################################################################################## "
+
+"!1. INPUTS"
+
+P_w=2E5 [Pa]			"Water pressure"
+T_w_su_boil=30 [C]  "30 C: operating point of the stored EES solution of the source file"
+V_dot_w_boil_ls=5.6 [l/s]  "5.6 l/s: operating point of the stored EES solution"
+T_amb=20 [C]  "20 C: operating point of the stored EES solution"
+T_a_su_boil=25 [C]  "25 C: control-panel value of the source file"
+P_atm=1E5 [Pa]  "1 bar: control-panel value of the source file"
+RH_amb=0.5 [-]  "0.5: control-panel value of the source file"
+x_load=0.37 [-]  "0.37: operating point of the stored EES solution"
+
+"!2. PARAMETERS"
+
+"2.1. Operating parameters"
+
+V_dot_w_boil_ls_n=9.5    "Volumetric flowrate of water in nominal conditions"
+e=0.01 					"Excess of air in the combustion"
+LHV=4.4E7 [J/kg] 		"Lower Heating Value "
+
+"2.2. Model parameters"
+V_dot_f_boil_n_m3h=28.32 [m^3/h]  "Volumetric flowrate of fuel in nominal conditions"
+AU_gw_N=310 [W/K]  "value of the control panel of the source file"
+M_dot_g_boil_n=0.09423 [kg/s]  "value of the control panel of the source file"
+a_gw=0.65 [-]  "value of the control panel of the source file"
+AU_wenv=2 [W/K]  "value of the control panel of the source file"
+R_a_coil_n=0.0025 [K/W]  "value of the control panel of the source file"
+R_w_coil_n=0.00085 [K/W]  "value of the control panel of the source file"
+R_m_coil=0.00015 [K/W]  "value of the control panel of the source file"
+M_dot_a_coil_n=0.102 [kg/s]  "value of the control panel of the source file"
+M_dot_w_coil_n=5.672 [kg/s]  "value of the control panel of the source file"
+a_coil=0.6 [-]  "value of the control panel of the source file"
+b_coil=0.8 [-]  "value of the control panel of the source file"
+
+"!3. OUTPUTS"
+"Q_dot_u_boil" "! in diagram"
+"T_w_ex_boil"  "! in diagram"
+"M_dot_f_boil "   "! in diagram"
+"M_dot_g_boil_kgh"  "! in diagram"
+"M_dot_w_cond_coil_kgh"  "! in diagram"
+"T_g_ex_boil"   "! in diagram"
+"eta_HHV"   "! in diagram"
+"eta_LHV"   "! in diagram"
+"RH_a_ex_coil"    "! in diagram"
+"Q_dot_sens_coil"    "! in diagram"
+"Q_dot_lat_coil"    "! in diagram"
+
+"!4. FUEL CHARACTERISTICS"
+
+
+"4.1. High Heating Value"
+"HHV=1.11*LHV" "rule of thumb"
+	"see exact calculation hereunder"
+"4.2. Density"
+rho_f=(0.72+0.81)/2
+
+"4.3. Composition (in volume)"
+x_CH4=0.90	
+x_C2H6=(0.027+0.046)/2
+x_C3H8=0	
+x_C4H10=0
+x_C5H12=0
+x_N2=.03175 {(0.001+0.15)/2}	
+x_CO2=.03175 {(0.01+0.05)/2}
+
+C_pc=73.3 "[kg C/kg fuel]"
+H_pc=23.9 "[kg H/kg fuel]"
+
+
+"4.4.  Fuel-air ratio for a CmHn fuel"
+mm=C_pc/MM_C "[kmol C/kg fuel]"
+nn=H_pc/MM_H   "[kmol C/kg fuel]"
+m=1
+n=nn/mm "[mol H/mol C]"
+f_st=(12+n)/(137.28*(1+n/4))
+f=f_st/(1+e)
+MM_f=MM_C+n*MM_H
+MM_C=12
+MM_H=1
+
+
+
+"4.5.  Fuel flow rate"
+
+P_f_su_boil=1.025E5  [Pa]
+T_f_su_boil=T_amb  
+rho_f_su=rho_f   "[kg/m^3]"
+M_dot_f_boil_kgh=M_dot_f_boil*3600 "[kg/h]"
+V_dot_f_m3h=M_dot_f_boil_kgh/rho_f_su "[nm^3/h]"
+
+
+M_dot_f_boil_n=V_dot_f_boil_n_m3h/3600*rho_f_su "nominal value"
+M_dot_f_boil=x_load*M_dot_f_boil_n
+
+
+"!5. ADIABATIC COMBUSTION CHAMBER"
+
+
+M_dot_a_boil=M_dot_f_boil/f
+T_ref=20  [°C]
+
+"5.1. Air"
+Q_dot_1=M_dot_a_boil*c_p_a_boil*(T_ref-T_a_su_boil)
+c_p_a_boil=CP(air,T=T_a_su_boil)
+
+"5.2. Fuel"
+Q_dot_2=M_dot_f_boil*c_p_f*(T_ref-T_f_su_boil)
+c_p_f=CP(methane,T=T_f_su_boil,P=P_f_su_boil)
+	"or:"
+Q_dot_2_bis=M_dot_f_boil*(y_CH4_su*(h_CH4_ref-h_CH4_su)+y_C2H6_su*(h_C2H6_ref-h_C2H6_su)+y_C3H8_su*(h_C3H8_ref-h_C3H8_su)+y_C4H10_su*(h_C4H10_ref-h_C4H10_su)+y_N2_su*(h_N2_ref-h_N2_su)+y_CO2_su*(h_CO2_ref-h_CO2_su))
+
+h_CH4_su=ENTHALPY(CH4,T=T_f_su_boil)
+h_C2H6_su=ENTHALPY(C2H6,T=T_f_su_boil)
+h_C3H8_su=ENTHALPY(C3H8,T=T_f_su_boil)
+h_C4H10_su=0 "J/kg: C4H10 is not a CoolSolve fluid and x_C4H10=0, so the enthalpy difference cancels"
+h_N2_su=ENTHALPY(N2,T=T_f_su_boil)
+h_CO2_su=ENTHALPY(CO2,T=T_f_su_boil)
+
+h_CH4_ref=ENTHALPY(CH4,T=T_ref)
+h_C2H6_ref=ENTHALPY(C2H6,T=T_ref)
+h_C3H8_ref=ENTHALPY(C3H8,T=T_ref)
+h_C4H10_ref=0 "J/kg: see h_C4H10_su"
+
+"5.3. Combustion"
+Q_dot_3=- M_dot_f_boil*LHV
+
+"5.4. Non complete combustion"
+Q_dot_4=0"(if the combustion is complete)"
+
+"5.5. Combustion products"
+M_dot_g_boil=M_dot_a_boil+M_dot_f_boil "fume flow rate"
+M_dot_g_boil_kgh=3600*M_dot_g_boil
+Q_dot_5=M_dot_g_boil*c_p_g*(T_adiab-T_ref) 
+c_p_g=cpbar(m,n,f,T_adiab,T_ref)	"fumes specific heat"
+	"or:"
+Q_dot_5_bis=M_dot_g_boil*(y_CO2_ex*(h_CO2_ex-h_CO2_ref)+y_H2O_ex*(h_H2O_ex-h_H2O_ref)+y_O2_ex*(h_O2_ex-h_O2_ref)+y_N2_ex*(h_N2_ex-h_N2_ref))
+
+h_CO2_ex=ENTHALPY(CO2,T=T_adiab)
+h_H2O_ex=ENTHALPY(H2O,T=T_adiab)
+h_O2_ex=ENTHALPY(O2,T=T_adiab)
+h_N2_ex=ENTHALPY(N2,T=T_adiab)
+h_CO2_ref=ENTHALPY(CO2,T=T_ref)
+h_H2O_ref=ENTHALPY(H2O,T=T_ref)
+h_O2_ref=ENTHALPY(O2,T=T_ref)
+h_N2_ref=ENTHALPY(N2,T=T_ref)
+
+"5.6. Global heat balance"
+Q_dot_1+Q_dot_2+Q_dot_3+Q_dot_4+Q_dot_5=0
+
+"5.7. Water flow rate in fumes"
+
+M_dot_H2O_comb=y_H2O_ex*M_dot_g_boil
+L_w=enthalpy(water,P=P_atm,x=1)-enthalpy(water,P=P_atm,x=0)
+Q_dot_cond_H2O=M_dot_H2O_comb*L_w
+q_cond_H2O=Q_dot_cond_H2O/M_dot_f_boil
+HHV=LHV+q_cond_H2O
+
+
+	"5.7.1 mass fraction of the reactants"
+
+"CH4+(1+e)*2*O2+3.76*(1+e)*2*N2=>		CO2+		2*H2O+		e*2*O2+	3.76*(1+e)*2*N2"
+"C2H6+(1+e)*3.5*O2+3.76*(1+e)*3.5*N2=>	2*CO2+	3*H2O+		e*3.5*O2+	3.76*(1+e)*3.5*N2"
+"C3H8+(1+e)*5*O2+3.76*(1+e)*5*N2=>		3*CO2+	4*H2O+		e*5*O2+	3.76*(1+e)*5*N2"
+"C4H10+(1+e)*6.5*O2+3.76*(1+e)*6.5*N2=>	4*CO2+	5*H2O+		e*6.5*O2+	3.76*(1+e)*6.5*N2"
+"N2=>N2"
+"CO2=>CO2"
+
+MM_CH4=molarmass(CH4)
+MM_C2H6=molarmass(C2H6)
+MM_C3H8=molarmass(C3H8)
+MM_C4H10=58.12 "kg/kmol, value returned by EES for molarmass(C4H10)"
+MM_H2O=molarmass(water)
+MM_CO2=molarmass(CO2)
+MM_O2=molarmass(O2)
+MM_N2=molarmass(N2)
+
+y_CH4_su=(x_CH4*MM_CH4)/(x_CH4*MM_CH4+x_C2H6*MM_C2H6+x_C3H8*MM_C3H8+x_C4H10*MM_C4H10+x_N2*MM_N2+x_CO2*MM_CO2)
+y_C2H6_su=(x_C2H6*MM_C2H6)/(x_CH4*MM_CH4+x_C2H6*MM_C2H6+x_C3H8*MM_C3H8+x_C4H10*MM_C4H10+x_N2*MM_N2+x_CO2*MM_CO2)
+y_C3H8_su=(x_C3H8*MM_C3H8)/(x_CH4*MM_CH4+x_C2H6*MM_C2H6+x_C3H8*MM_C3H8+x_C4H10*MM_C4H10+x_N2*MM_N2+x_CO2*MM_CO2)
+y_C4H10_su=(x_C4H10*MM_C4H10)/(x_CH4*MM_CH4+x_C2H6*MM_C2H6+x_C3H8*MM_C3H8+x_C4H10*MM_C4H10+x_N2*MM_N2+x_CO2*MM_CO2)
+y_N2_su=(x_N2*MM_N2)/(x_CH4*MM_CH4+x_C2H6*MM_C2H6+x_C3H8*MM_C3H8+x_C4H10*MM_C4H10+x_N2*MM_N2+x_CO2*MM_CO2)
+y_CO2_su=(x_CO2*MM_CO2)/(x_CH4*MM_CH4+x_C2H6*MM_C2H6+x_C3H8*MM_C3H8+x_C4H10*MM_C4H10+x_N2*MM_N2+x_CO2*MM_CO2)
+
+    "5.7.2. molar fractions of the products"
+
+t_CO2=	x_CH4*1+x_C2H6*2+x_C3H8*3+x_C4H10*4+x_CO2	"Number of moles of CO2 in fumes"
+t_H2O=	x_CH4*2+x_C2H6*3+x_C3H8*4+x_C4H10*5		"Number of moles of H2O in fumes"
+t_O2=		x_CH4*e*2+x_C2H6*e*3.5+x_C3H8*e*5+x_C4H10*e*6.5+x_CO2 "Number of moles of O2 in fumes"
+t_N2=		x_CH4*3.76*(1+e)*2+x_C2H6*3.76*(1+e)*3.5+x_C3H8*3.76*(1+e)*5+x_C4H10*3.76*(1+e)*6.5+x_N2  "Number of moles of N2 in fumes"
+
+x_CO2_ex=t_CO2/(t_CO2+t_H2O+t_O2+t_N2) "molar fraction of CO2 in fumes"
+x_H2O_ex=t_H2O/(t_CO2+t_H2O+t_O2+t_N2)  "molar fraction of H2O in fumes"
+x_O2_ex=t_O2/(t_CO2+t_H2O+t_O2+t_N2)        "molar fraction of O2 in fumes"
+x_N2_ex=t_N2/(t_CO2+t_H2O+t_O2+t_N2)       "molar fraction of N2 in fumes"
+
+	"5.7.3. mass fractions of the products"
+
+y_CO2_ex=t_CO2*MM_CO2/(t_CO2*MM_CO2+t_H2O*MM_H2O+t_O2*MM_O2+t_N2*MM_N2)      "mass fraction of CO2 in fumes"
+y_H2O_ex=t_H2O*MM_H2O/(t_CO2*MM_CO2+t_H2O*MM_H2O+t_O2*MM_O2+t_N2*MM_N2)     "mass fraction of H2O in fumes"
+y_O2_ex=t_O2*MM_O2/(t_CO2*MM_CO2+t_H2O*MM_H2O+t_O2*MM_O2+t_N2*MM_N2)               "mass fraction of O2 in fumes"
+y_N2_ex=t_N2*MM_N2/(t_CO2*MM_CO2+t_H2O*MM_H2O+t_O2*MM_O2+t_N2*MM_N2)               "mass fraction of N2 in fumes"
+
+
+
+
+"!6. GAS-WATER HEAT EXCHANGER"
+
+cp_a=1005		"Specific heat of dry air"
+cp_g=1820		"Specific heat of vapor in saturated state"
+h_fg_0=2501000   "Latent heat at 0°C"
+
+T_g_su_gw=T_adiab
+T_w_su_gw=T_w_ex_coil
+"!**"
+
+
+"6.1. Heat exchange coefficient"
+AU_gw=AU_gw_N*(M_dot_g_boil/M_dot_g_boil_N)^a_gw
+
+"6.2. Gas capacity flow rate"
+C_dot_g_gw=M_dot_g_boil*c_p_g_gw
+c_p_g_gw=cpbar(m,n,f,T_g_su_gw,T_g_ex_gw)
+
+
+"6.3. Water capacity flow rate"
+T_w_m_gw=(T_w_su_gw+T_w_ex_gw)/2
+c_w_gw=4186
+C_dot_w_gw=M_dot_w_boil*c_w_gw
+
+rho_w_su_boil=density(water,P=P_w,T=T_w_su_boil)
+v_w_su_boil=1/rho_w_su_boil
+V_dot_w_boil_ls=V_dot_w_boil*1000 "[l/s]"
+M_dot_w_boil_n=V_dot_w_boil_ls_n/1000/v_w_su_boil
+M_dot_w_boil=V_dot_w_boil_ls/1000/v_w_su_boil
+
+
+"6.4. Power"
+C_dot_min_gw=min(C_dot_g_gw,C_dot_w_gw)
+C_dot_max_gw=max(C_dot_g_gw,C_dot_w_gw)
+omega_gw=C_dot_min_gw/C_dot_max_gw
+
+NTU_gw=AU_gw/C_dot_min_gw
+epsilon_gw=(1-exp(-NTU_gw*(1-omega_gw)))/(1-omega_gw*exp(-NTU_gw*(1-omega_gw))) "(with a supposed-to-be counter flow heat exchanger)"
+
+Q_dot_gw=epsilon_gw*C_dot_min_gw*(T_g_su_gw-T_w_su_gw)
+Q_dot_gw=C_dot_g_gw*(T_g_su_gw-T_g_ex_gw)
+Q_dot_gw=C_dot_w_gw*(T_w_ex_gw-T_w_su_gw)
+
+"6.5. Dew point calculation"
+
+T_a_su_gw=T_adiab
+c_p_a_gw=cp_a+w_a_su_gw*cp_g
+T_a_gw_m=(T_g_su_gw+T_g_ex_gw)/2
+
+M_dot_a_gw*c_p_a_gw=M_dot_g_boil*c_p_g_gw_dp
+c_p_g_gw_dp=cpbar(m,n,f,T_g_su_gw,T_dp_su_gw)
+M_dot_H2O_air=w_a_su_boil*M_dot_a_boil
+W_a_su_boil=HUMRAT(AirH2O,T=T_a_su_boil,P=P_atm,R=RH_a_su_boil)
+RH_a_su_boil=RH_amb
+M_dot_H2O_g=M_dot_H2O_comb+M_dot_H2O_air
+M_dot_H2O_g=M_dot_a_gw*w_a_su_gw
+p_w_s_su_gw=exp((17.438*T_dp_su_gw/(239.78+T_dp_su_gw))+6.4147)  "!!**"
+p_w_s_su_gw=P_atm*W_a_su_gw/(0.622+W_a_su_gw)
+flag_dp=if(T_dp_su_gw-T_w_su_boil,1,0) "1 when the water inlet temperature is below the dew point of the fumes"
+
+
+"!7. WATER-ENVIRONMENT HEAT EXCHANGER"
+
+"Considered as a semi-isothermal heat exchanger"
+T_env=T_amb
+NTU_wenv=AU_wenv/C_dot_w_env
+T_w_m_env=(T_w_ex_gw+T_w_ex_boil)/2
+c_w_env=SPECHEAT(Water,T=T_w_m_env,P=P_w)
+C_dot_w_env=M_dot_w_boil*c_w_env
+epsilon_wenv=1-exp(-NTU_wenv)
+
+Q_dot_wenv=epsilon_wenv*C_dot_w_env*(T_w_ex_gw-T_env)
+Q_dot_wenv=C_dot_w_env*(T_w_ex_gw-T_w_ex_boil)
+
+"!8. COOLING COIL"
+
+"8.1. Conversion gas-air H2O"
+
+T_a_su_coil=T_g_ex_gw
+c_p_a_coil=SPECHEAT(AirH2O,T=T_a_coil_m,P=P_atm,w=w_a_su_coil)
+T_a_coil_m=(T_a_su_coil+T_a_ex_coil)/2
+
+M_dot_a_coil*c_p_a_coil=M_dot_g_boil*c_p_g_coil
+c_p_g_coil=cpbar(m,n,f,T_a_su_coil,T_a_ex_coil)
+
+M_dot_H2O_g=M_dot_a_coil*w_a_su_coil
+RH_a_su_coil=RELHUM(AirH2O,T=T_a_su_coil,P=P_atm,w=w_a_su_coil)
+T_dp_a_su_coil=DEWPOINT(AirH2O,T=T_a_su_coil,P=P_atm,w=w_a_su_coil)
+
+"8.2. Cooling coil model"
+
+T_w_su_coil=T_w_su_boil
+
+	"8.2.1. Thermal Resistances"
+
+R_a_coil = R_a_coil_n * (M_dot_a_coil_n / M_dot_a_coil)^a_coil
+R_w_coil = R_w_coil_n * (M_dot_w_coil_n / M_dot_w_coil)^b_coil
+M_dot_w_coil=M_dot_w_boil
+
+	"8.2.2. Dry regime"
+
+1 / AU_coil_dry = R_a_coil + R_m_coil + R_w_coil "Definition of thermal resistances :" "( 3 resistances in serie : air , metal and water)"
+
+C_dot_a_coil = M_dot_a_coil * c_p_a_su_coil 
+c_p_a_su_coil = specheat(AIRH2O,T=t_a_su_coil ,P=P_atm ,W=W_a_su_coil)
+c_p_a_ex_coil_dry= specheat(AIRH2O,T=t_a_ex_coil_dry ,P=P_atm ,W=W_a_ex_coil_dry)
+
+C_dot_w_coil = M_dot_w_coil * c_p_w_coil
+c_p_w_coil=SPECHEAT(Water,T=T_w_su_coil,P=P_w)
+
+
+C_dot_min_coil_dry = min ( C_dot_a_coil , C_dot_w_coil )
+C_dot_max_coil_dry = max ( C_dot_a_coil , C_dot_w_coil )
+omega_coil_dry = C_dot_min_coil_dry / C_dot_max_coil_dry
+
+NTU_coil_dry = AU_coil_dry / C_dot_min_coil_dry
+
+epsilon_coil_dry = ( 1 - exp ( -NTU_coil_dry * ( 1 - omega_coil_dry ) ) ) / ( 1 - omega_coil_dry * exp ( -NTU_coil_dry * ( 1 - omega_coil_dry ) ) )
+
+Q_dot_coil_dry = C_dot_a_coil * ( T_a_su_coil - T_a_ex_coil_dry ) "Air side"
+Q_dot_coil_dry = C_dot_w_coil * ( T_w_ex_coil_dry - T_w_su_coil ) "Refrigerant side"
+Q_dot_coil_dry = epsilon_coil_dry * C_dot_min_coil_dry * ( T_a_su_coil - T_w_su_coil ) "Effectiveness"
+
+RH_a_ex_coil_dry=RELHUM(AirH2O,T=T_a_ex_coil_dry,P=P_atm,w=w_a_ex_coil_dry)
+W_a_ex_coil_dry = W_a_su_coil
+
+
+"or:"
+p_w_s_ex_coil_dry=P_SAT(Water,T=T_dp_ex_coil_dry)
+p_w_s_ex_coil_dry=P_atm*W_a_ex_coil_dry/(0.622+W_a_ex_coil_dry)
+
+( t_c_ex_coil_dry - t_w_su_coil ) / ( R_w_coil + R_m_coil ) = ( t_a_ex_coil_dry - t_w_su_coil ) / ( R_a_coil + R_m_coil + R_w_coil )
+DELTA_t_cond = t_dp_ex_coil_dry - t_c_ex_coil_dry   "( Condensation may occur only if this term is positive )." 
+
+
+	"8.2.3. Wet regime "
+
+h_a_su_coil = enthalpy(AIRH2O,T=t_a_su_coil,P=P_atm,W = W_a_su_coil) "Humid air properties:"
+ "!!**"
+
+"Wetbulb temperature calculation: adiabatic saturation"
+h_a_su_coil+(W_s_wb_su_coil-W_a_su_coil)*h_w_su_coil_wb=h_s_wb_su_coil
+h_s_wb_su_coil=cp_a*T_wb_su_coil+(cp_g*T_wb_su_coil+h_fg_0)*W_s_wb_su_coil "enthalpy of saturated air at the temperature T_wb"
+p_w_s_su_coil=P_SAT(Water,T=T_wb_su_coil)
+p_w_s_su_coil=P_atm*W_s_wb_su_coil/(0.622+W_s_wb_su_coil)
+h_w_su_coil_wb=ENTHALPY(Water,T=T_wb_su_coil,P=P_atm)
+
+
+"exchanged power"
+Q_dot_coil_wet = C_dot_w_coil * (  T_w_ex_coil_wet - T_w_su_coil  )  
+Q_dot_coil_wet_bis=M_dot_a_coil*(h_a_su_coil-h_a_ex_coil_wet)
+"Body of the PROCEDURE COILWET of the source file, copied into the main program:"
+"the two outputs of the procedure are written with the three-argument IF (see README)"
+		C_dot_af_coil_wc  = M_dot_a_coil * c_p_af_coil_wc
+		C_dot_max_coil_wet_wc = max ( C_dot_af_coil_wc , C_dot_w_coil )
+		C_dot_min_coil_wet_wc = min ( C_dot_af_coil_wc , C_dot_w_coil )
+		omega_coil_wet_wc = C_dot_min_coil_wet_wc / C_dot_max_coil_wet_wc
+		R_af_coil_wc  = R_a_coil * c_p_a_su_coil / c_p_af_coil_wc "(according to Merckel theory and assuming that Lewis = 1)"
+		AU_coil_wet_wc = 1/(R_af_coil_wc + R_m_coil + R_w_coil)
+		NTU_coil_wet_wc =AU_coil_wet_wc / C_dot_min_coil_wet_wc
+		epsilon_coil_wet_wc = ( 1 - exp ( -NTU_coil_wet_wc * ( 1 - omega_coil_wet_wc ) ) )/( 1 - omega_coil_wet_wc * exp ( -NTU_coil_wet_wc * ( 1 - omega_coil_wet_wc ) ) ) "Hypothesis : counterflow:"
+		Q_dot_coil_wet_if = epsilon_coil_wet_wc * C_dot_min_coil_wet_wc * ( T_wb_su_coil - T_w_su_coil )
+		T_wb_ex_coil_wet_if = T_wb_su_coil - Q_dot_coil_wet_if / C_dot_af_coil_wc
+		T_a_ex_coil_wet_wc=T_wb_ex_coil_wet
+		RH_a_ex_coil_wet_wc=1
+		h_a_ex_coil_wet_wc=enthalpy(airH2O,P=P_atm,T=T_a_ex_coil_wet_wc,R=RH_a_ex_coil_wet_wc)
+		c_p_af_coil_wc=(h_a_su_coil-h_a_ex_coil_wet_wc)/(MAX((T_wb_su_coil-T_wb_ex_coil_wet),0.0001))
+Q_dot_coil_wet=if(flag_dp, Q_dot_coil_wet_if, 0)
+T_wb_ex_coil_wet=if(flag_dp, T_wb_ex_coil_wet_if, T_wb_su_coil)
+
+
+
+RH_a_ex_coil_wet=1 "Simplification" 
+T_a_ex_coil_wet=T_wb_ex_coil_wet
+
+
+W_a_ex_coil_wet=HUMRAT(AirH2O,T=T_a_ex_coil_wet,P=P_atm,R=RH_a_ex_coil_wet)
+h_a_ex_coil_wet=cp_a*T_a_ex_coil_wet+(cp_g*T_a_ex_coil_wet+h_fg_0)*W_a_ex_coil_wet
+
+"condensation"
+c_w_coil = 4187 "kJ/kgK"
+t_w_cond_coil=t_a_ex_coil_wet
+M_dot_w_cond_coil_wet = M_dot_a_coil * ( W_a_su_coil - W_a_ex_coil_wet )
+
+
+	"8.2.4. Choice between the two regimes"
+
+Q_dot_coil = if (Q_dot_coil_wet-Q_dot_coil_dry, Q_dot_coil_wet, Q_dot_coil_dry) "regime of highest cooling power"
+M_dot_w_cond_coil= if(Q_dot_coil_wet-Q_dot_coil_dry,M_dot_w_cond_coil_wet,0)
+M_dot_w_cond_coil_kgh=3600*M_dot_w_cond_coil
+t_a_ex_coil = if(Q_dot_coil_wet-Q_dot_coil_dry,t_a_ex_coil_wet,t_a_ex_coil_dry) 
+RH_a_ex_coil=if(Q_dot_coil_wet-Q_dot_coil_dry,RH_a_ex_coil_wet,RH_a_ex_coil_dry)
+
+Q_dot_sens_coil=C_dot_a_coil*(t_a_su_coil-t_a_ex_coil)
+Q_dot_lat_coil=Q_dot_coil-Q_dot_sens_coil
+Q_dot_coil=C_dot_w_coil*(t_w_ex_coil-t_w_su_coil) 
+
+T_g_ex_boil=T_a_ex_coil
+
+
+"!9. GLOBAL BALANCE OF THE BOILER"
+
+Q_dot_u_1_boil_bis=M_dot_w_boil*c_w_gw*(T_w_ex_gw-T_w_su_gw)+ M_dot_w_boil*c_w_env*(T_w_ex_boil-T_w_ex_gw)
+Q_dot_u_1_boil=M_dot_w_boil*c_w*(T_w_ex_boil-T_w_su_gw)
+c_w=4183
+
+	"Including the coil:"
+Q_dot_u_boil=Q_dot_u_1_boil+Q_dot_coil
+Q_dot_c_LHV=M_dot_f_boil*LHV
+Q_dot_c_HHV=M_dot_f_boil*HHV
+eta_1_LHV=Q_dot_u_1_boil/Q_dot_c_LHV
+eta_1_HHV=Q_dot_u_1_boil/Q_dot_c_HHV
+eta_LHV=Q_dot_u_boil/Q_dot_c_LHV
+eta_HHV=Q_dot_u_boil/Q_dot_c_HHV
+Q_dot_u_boil_kW=Q_dot_u_boil/1000
+
+ratio_loss=Q_dot_wenv/Q_dot_u_boil
+
+"State points of the water side for the thermodynamic diagrams (pattern CSL-0001):"
+"1 = boiler supply, 2 = cooling coil supply, 3 = dry exchanger exhaust, 4 = boiler exhaust"
+P[1]=P_w
+h[1]=enthalpy(water,P=P[1],T=T_w_su_boil)
+T[1]=T_w_su_boil
+s[1]=entropy(water,P=P[1],h=h[1])
+P[2]=P_w
+h[2]=enthalpy(water,P=P[2],T=T_w_su_coil)
+T[2]=T_w_su_coil
+s[2]=entropy(water,P=P[2],h=h[2])
+P[3]=P_w
+h[3]=enthalpy(water,P=P[3],T=T_w_ex_gw)
+T[3]=T_w_ex_gw
+s[3]=entropy(water,P=P[3],h=h[3])
+P[4]=P_w
+h[4]=enthalpy(water,P=P[4],T=T_w_ex_boil)
+T[4]=T_w_ex_boil
+s[4]=entropy(water,P=P[4],h=h[4])

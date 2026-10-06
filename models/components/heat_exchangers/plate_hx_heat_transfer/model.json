@@ -1,0 +1,85 @@
+{
+  "id": "CSL-0096",
+  "name": "plate_hx_heat_transfer",
+  "title": "Plate heat exchangers: single-phase Nusselt numbers and two-phase boiling heat-transfer coefficients (function library)",
+  "summary": "Eleven EES FUNCTIONs for the corrugated channel of a chevron-style plate-and-frame heat exchanger: four single-phase Nusselt-number correlations (Kumar with its coefficient tables, Martin with the two Martin friction factors, Muley-Manglik, Khan-Khan) and five flow-boiling heat-transfer coefficients written for a given heat flux (Amalfi with its two Bond-number branches, Lee-Kang-Kim, Han-Lee-Kim, Huang-Sheer, Yan-Lin), plus the two friction-factor correlations of Martin that the Nusselt correlation calls. All fluid properties are arguments, so the calling model evaluates them.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "plate_hx_heat_transfer.eescode",
+  "fluids": [],
+  "tags": [
+    "plate heat exchanger",
+    "chevron plate",
+    "nusselt number",
+    "flow boiling",
+    "two-phase",
+    "correlation",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ENDIF",
+    "SIN/COS/TAN",
+    "LN / LOG10",
+    "dimensional arguments"
+  ],
+  "stats": {
+    "n_equations": 68,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-010",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "H. Kumar and Z. H. Ayub (Kumar correlation)",
+      "H. Martin (Martin Nu and friction-factor correlations)",
+      "A. Muley and R. M. Manglik (Muley-Manglik correlation)",
+      "T. S. Khan, M. S. Khan, M.-C. Chyu and Z. H. Ayub (Khan-Khan correlation)",
+      "R. L. Amalfi, F. Vakili-Farahani and J. R. Thome (Amalfi correlation)",
+      "E. Lee, H. Kang and Y. Kim (Lee-Kang-Kim correlation)",
+      "D.-H. Han, K.-J. Lee and Y.-H. Kim (Han-Lee-Kim correlation)",
+      "J. Huang, T. J. Sheer and M. Bailey-McEwan (Huang-Sheer correlation)",
+      "Y.-Y. Yan and T.-F. Lin (Yan-Lin correlation)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), files ht/conv_plate.py and ht/boiling_plate.py, MIT license, Copyright (C) 2016 Caleb Bell. Nu_plate_Martin calls the two friction-factor correlations friction_plate_Martin_1999 and friction_plate_Martin_VDI of the companion library fluids (1.3.1, same author, MIT), which are translated here as fd_Martin_1999 and fd_Martin_VDI; the two Lockhart-Martinelli, Bond, Prandtl and thermal-diffusivity helpers of fluids used by the boiling correlations are written out as their defining equations inside the functions. The scientific basis of each correlation is the original paper or book cited in its function comment block. Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/conv_plate.py and ht/boiling_plate.py (case A) and additional values computed with the same ht functions in a throw-away virtualenv (case B); 24 output values in total",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 3.6e-12,
+    "notes": "compare_solution.py: 24 common variables, 0 differ (rtol=0.001); largest relative deviation 3.6e-12 (h_Lee_Kang_Kim_B), i.e. round-off only."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0087",
+    "CSL-0088",
+    "CSL-0090",
+    "CSL-0095",
+    "CSL-0027",
+    "CSL-0098",
+    "CSL-0102"
+  ],
+  "related_external": [
+    "sources/labothappy LTP-035 (plate HTC family, quotes Martin, Han, Amalfi and Shah; the ht family is more complete)",
+    "sources/thermocycle THC-011 (single-phase and plate correlations, Martin 2012)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-FUNC card C-105, family HT-010 of the ht triage)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

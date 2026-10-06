@@ -1,0 +1,324 @@
+{=============================================================================
+  In-cylinder heat-transfer correlations for reciprocating machines
+  CoolSolve Library model CSL-0086 (function library, kind = function)
+ -----------------------------------------------------------------------------
+  Seven Nusselt-number correlations for the gas side of the cylinder wall of a
+  reciprocating compressor, expander or engine, from the ThermoCycle
+  Modelica library (THC-005): Annand (1963), Woschni (1967), Adair (1972),
+  Destoop (1986), Gnielinski (2010), Irimescu (2013) and the gas-spring
+  correlation of Kornhauser (1994).
+
+  The correlation returns the Nusselt number; the heat-transfer coefficient
+  follows from h = Nu*lambda/Gamma with the characteristic length Gamma of the
+  correlation (bore, equivalent diameter 6V/A or hydraulic diameter 4V/A).
+  Geometry, kinematics and transport properties are passed as arguments: the
+  library calls no property function, so it works with any gas.
+
+  The demonstration program at the end evaluates all seven correlations at two
+  crank-angle states of one machine (air properties of CoolProp 8.0.0 given as
+  inputs) and is the regression baseline.
+
+  Inputs : bore [m], stroke [m], N [rev/min], theta [rad], position [m],
+           rho [kg/m3], mu / mu_w [Pa s], lambda [W/(m K)], cp [J/(kg K)]
+  Outputs: Nu [-] and h [W/(m2 K)] per correlation, geometry and kinematics
+  Units  : SI - temperatures in degC, pressures in Pa, angles in rad
+  Source : ThermoCycle Modelica library, commit b4f16c0b - see README.md
+  Status : VERIFIED against an independent Python re-evaluation of the
+           equations and against CoolProp air properties (README.md,
+           "Verification")
+============================================================================}
+
+"Geometry, kinematics and transition functions (PartialCylinderHeatTransfer.mo)"
+
+"Mean or current piston speed of the crank mechanism"
+FUNCTION PistonSpeed(stroke, omega)
+{PISTONSPEED - piston speed from the angular speed of the crankshaft.
+  c = omega*stroke/(2*pi)
+  Arguments: stroke [m], omega [rad/s]. Output: c [m/s].
+  As in the original: c_m = omega_m/(2*pi)*stroke and
+  c_c = omega_c/(2*pi)*stroke (PartialCylinderHeatTransfer.mo).}
+  PistonSpeed = omega*stroke/(2*pi())
+END
+
+"Swept volume above the piston at the given clearance"
+FUNCTION CylinderVolume(A_p, position)
+{CYLINDERVOLUME - instantaneous cylinder volume.
+  V = A_p*position
+  Arguments: A_p (piston cross area) [m2], position (clearance from the
+  cylinder head) [m]. Output: V [m3]. As in the original (Kornhauser1994.mo).}
+  CylinderVolume = A_p*position
+END
+
+"Hydraulic diameter of the gas volume, Kornhauser (1994)"
+FUNCTION HydraulicDiameter(A_p, position)
+{HYDRAULICDIAMETER - D_h = 4*V/A_p = 4*position [m].
+  Arguments: A_p [m2], position [m]. Output: D_h [m]. As in the original
+  (Kornhauser1994.mo, Kornhauser1994Full.mo).}
+  HydraulicDiameter = 4*position
+END
+
+"Equivalent diameter of the gas volume, Adair (1972)"
+FUNCTION EquivalentDiameter(A_p, position)
+{EQUIVALENTDIAMETER - De = 6*V/A_p = 6*position [m].
+  Arguments: A_p [m2], position [m]. Output: De [m]. As in the original
+  (Adair1972.mo: "Equivalent diameter 6V/A").}
+  EquivalentDiameter = 6*position
+END
+
+"Heat-transfer area of the cylinder wall, piston face included"
+FUNCTION CylinderWallArea(A_p, position)
+{CYLINDERWALLAREA - A = A_p + 2*sqrt(A_p*pi)*position = piston area +
+  bore*pi*clearance [m2].
+  Arguments: A_p [m2], position [m]. Output: A [m2]. Equation as in the
+  original (PartialCylinderHeatTransfer.mo: pistonCrossArea +
+  2*sqrt(pistonCrossArea*pi)*position[i]).}
+  CylinderWallArea = A_p + 2*sqrt(A_p*pi())*position
+END
+
+"Smooth 0-to-1 switch used by the Adair swirl velocity"
+FUNCTION TransitionFactor(start, stop, position)
+{TRANSITIONFACTOR - smooth weighting factor between 0 and 1, order 2.
+  0 for position <= start, 1 for position >= stop and, in between,
+  1/2 + 3/4*(cos(phi)^2*sin(phi)/3 + 2*sin(phi)/3) with
+  phi = (position - (start + stop)/2)/(stop - start) in degrees.
+  Arguments: start, stop, position [rad]. Output: factor [-].
+  ThermoCycle.Functions.transition_factor.mo, the default order 2, after
+  C. C. Richter, PhD thesis, Technical University Carolo-Wilhelmina
+  Braunschweig, 2008, p.68 (as cited there);
+  the smooth() wrapper of the original only serves the dynamic solver.}
+  d = stop - start
+  phi = (position - (start + 0.5*d))/d*180
+  IF position < start THEN
+    TransitionFactor = 0
+  ELSE
+    IF position > stop THEN
+      TransitionFactor = 1
+    ELSE
+      TransitionFactor = 0.5 + 0.75*(COS(phi)^2*SIN(phi)/3 + 2*SIN(phi)/3)
+    ENDIF
+  ENDIF
+END
+
+"Swirl (gas) velocity of the Adair correlation"
+FUNCTION AdairSwirlVelocity(omega_c, theta)
+{ADAIRSWIRLVELOCITY - swirl velocity omega_g [rad/s] of Adair et al. (1972).
+  omega_g = (1 - 0.5*t)*2*N*(1.04 + cos(2*theta)), N = omega_c/(2*pi) [rev/s],
+  t = tFactor1 - tFactor2, two transition factors over the 0.05*pi rad
+  (9 degrees crankshaft angle) intervals around pi/2 and 3*pi/2 that switch
+  between the two branches of eq. 15 of the paper (the smooth transition of
+  the ThermoCycle implementation replaces its if-clause).
+  Arguments: omega_c [rad/s], theta (crankshaft angle) [rad].
+  Output: omega_g [rad/s]. As in the original (Adair1972.mo).
+  EES trigonometry is in degrees, so the angle is converted inside.}
+  freq = omega_c/(2*pi())
+  dTheta = 0.05*pi()    "transition interval, 9 degrees crankshaft angle [rad]"
+  t1 = TransitionFactor(pi()/2 - 0.5*dTheta, pi()/2 + 0.5*dTheta, theta)
+  t2 = TransitionFactor(3*pi()/2 - 0.5*dTheta, 3*pi()/2 + 0.5*dTheta, theta)
+  AdairSwirlVelocity = (1 - 0.5*(t1 - t2))*2*freq*(1.04 + COS(2*theta*180/pi()))
+END
+
+"Nusselt-number correlations (RePrHeatTransfer.mo, GnielinskiHeatTransfer.mo)"
+
+"Annand (1963): motored engine, mean piston speed and bore"
+FUNCTION Nu_Annand_1963(Re)
+{NU_ANNAND_1963 - Nusselt number of the in-cylinder correlation of Annand.
+  Nu = 0.575*Re^0.700
+  Argument: Re = rho*c_m*bore/mu [-] (Lambda = c_m, Gamma = bore).
+  The radiation term of the paper is not part of the model (as in the
+  original). Original: W. Annand, "Heat transfer in cylinders of
+  reciprocating internal combustion engines", Proc. IMechE, 177(36),
+  973-996, 1963. Taken from: ThermoCycle Annand1963.mo, a = 0.575, b = 0.7,
+  c = 0 (RePrHeatTransfer.mo), by J. Wronski for DTU, 2013, MIT.}
+  Nu_Annand_1963 = 0.575*Re^0.700
+END
+
+"Woschni (1967): compression phase, velocity 2.28*c_m"
+FUNCTION Nu_Woschni_1967(Re)
+{NU_WOSCHNI_1967 - Nusselt number of the in-cylinder correlation of Woschni.
+  Nu = 0.035*Re^0.800
+  Argument: Re = rho*2.28*c_m*bore/mu [-] (Lambda = 2.28*c_m, Gamma = bore);
+  the combustion and scavenging terms of the paper are not part of the model
+  (source comment: "Use compression phase only, neglect scavenging and
+  combustion terms"). Original: G. Woschni, "A Universally Applicable Equation
+  for the Instantaneous Heat Transfer Coefficient in the Internal Combustion
+  Engine", SAE 670931, 1967. Taken from: ThermoCycle Woschni1967.mo,
+  a = 0.035, b = 0.8, c = 0, MIT.}
+  Nu_Woschni_1967 = 0.035*Re^0.800
+END
+
+"Adair (1972): reciprocating compressor, swirl velocity and 6V/A diameter"
+FUNCTION Nu_Adair_1972(Re, Pr)
+{NU_ADAIR_1972 - Nusselt number of the in-cylinder correlation of Adair.
+  Nu = 0.053*Re^0.800*Pr^0.600
+  Arguments: Re = rho*(0.5*De*omega_g)*De/mu [-] (Lambda = 0.5*De*omega_g,
+  Gamma = De), Pr [-].
+  Original: R. P. Adair, E. B. Qvale and J. T. Pearson, "Instantaneous Heat
+  Transfer to the Cylinder Wall in Reciprocating Compressors", Proc.
+  International Compressor Engineering Conference, paper 86, 521-526, 1972.
+  Taken from: ThermoCycle Adair1972.mo, a = 0.053, b = 0.8, c = 0.6, MIT.}
+  Nu_Adair_1972 = 0.053*Re^0.800*Pr^0.600
+END
+
+"Destoop (1986): reciprocating compressor, mean piston speed and bore"
+FUNCTION Nu_Destoop_1986(Re, Pr)
+{NU_DESTOOP_1986 - Nusselt number of the in-cylinder correlation of Destoop.
+  Nu = 0.6*Re^0.800*Pr^0.600
+  Arguments: Re = rho*c_m*bore/mu [-] (Lambda = c_m, Gamma = bore), Pr [-].
+  Taken from: ThermoCycle Destoop1986.mo, a = 0.6, b = 0.8, c = 0.6, MIT.
+  Source defect: the documentation of that file cites Annand 1963
+  (copy-paste, sources/thermocycle/README.md section 8); the paper of
+  Destoop is not identified in the library.}
+  Nu_Destoop_1986 = 0.6*Re^0.800*Pr^0.600
+END
+
+"Gnielinski (2010): pipe equation with the mean piston speed"
+FUNCTION Nu_Gnielinski_2010(Re, Pr, DL)
+{NU_GNIELINSKI_2010 - Nusselt number of the Gnielinski pipe equation as
+  parameterised for the cylinder of Gnielinski2010.mo.
+  zeta = (1.80*log10(Re) - 1.50)^(-2)
+  Nu = (zeta/8)*Re*Pr/(1 + 12.7*sqrt(zeta/8)*(Pr^(2/3) - 1))*(1 + DL^(2/3))
+  Arguments: Re = rho*c_m*bore/mu [-] (Lambda = c_m, Gamma = D = bore),
+  Pr [-], DL = D/L [-] with L the clearance of the cylinder.
+  Original: V. Gnielinski, "New equations for heat and mass transfer in
+  turbulent pipe and channel flow", Int. Chem. Eng. 16(2), 359-368, 1976;
+  friction factor as in ThermoCycle Gnielinski2010.mo (1.80/1.50, no Re-1000
+  correction, K = 1), MIT.}
+  zeta = (1.80*log10(Re) - 1.50)^(-2)
+  Nu_Gnielinski_2010 = ((zeta/8)*Re*Pr)/(1 + 12.7*sqrt(zeta/8)*(Pr^(2/3) - 1))*(1 + DL^(2/3))
+END
+
+"Irimescu (2013): Gnielinski equation with the viscosity ratio"
+FUNCTION Nu_Irimescu_2013(Re, Pr, K, DL)
+{NU_IRIMESCU_2013 - Nusselt number of the in-cylinder correlation of Irimescu.
+  zeta = (1.82*log10(Re) - 1.64)^(-2)
+  Nu = (zeta/8)*(Re - 1000)*Pr/(1 + 12.7*sqrt(zeta/8)*(Pr^(2/3) - 1))*     (1 + DL^(2/3))*K
+  Arguments: Re = rho*c_c*bore/mu [-] (Lambda = c_c, Gamma = D = bore),
+  Pr [-], K = (mu/mu_w)^0.14 [-] viscosity ratio of gas to wall state,
+  DL = D/L [-] with L the clearance of the cylinder.
+  Original: A. Irimescu, "Convective heat transfer equation for turbulent flow
+  in tubes applied to internal combustion engines operated under motored
+  conditions", Applied Thermal Engineering 50(1), 536-545, 2013 (with
+  Gnielinski 1976). Simplified version: the characteristic velocity is the
+  piston speed, not the turbulence-based velocity of the paper (source
+  comment). Taken from: ThermoCycle Irimescu2013.mo and
+  GnielinskiHeatTransfer.mo, MIT.}
+  zeta = (1.82*log10(Re) - 1.64)^(-2)
+  Nu_Irimescu_2013 = ((zeta/8)*(Re - 1000)*Pr)/(1 + 12.7*sqrt(zeta/8)*(Pr^(2/3) - 1))*(1 + DL^(2/3))*K
+END
+
+"Kornhauser (1994): gas spring, Peclet number of the angular speed"
+FUNCTION Nu_Kornhauser_1994(Pe)
+{NU_KORNHAUSER_1994 - Nusselt number of the gas-spring correlation of
+  Kornhauser and Smith.
+  Nu = 0.56*Pe^0.69
+  Argument: Pe = Lambda*D_h^2/(4*alpha_f) [-], Lambda = omega_c/(2*pi) [1/s]
+  (the original calls it an angular velocity and uses it in rev/s),
+  D_h = 4*V/A_p [m], alpha_f = lambda/(rho*cp) [m2/s].
+  Original: A. Kornhauser and J. Smith, "Application of a complex Nusselt
+  number to heat transfer during compression and expansion", ASME J. Heat
+  Transfer 116(3), 536-542, 1994. Taken from: ThermoCycle Kornhauser1994.mo,
+  a = 0.56, b = 0.69, MIT.}
+  Nu_Kornhauser_1994 = 0.56*Pe^0.69
+END
+
+"Demonstration program: one machine, two crank-angle states"
+
+"Machine (as in the ThermoCycle reciprocating examples)"
+bore = 0.05          "bore [m]"
+stroke = 0.04        "stroke [m]"
+N = 3000             "crankshaft speed [rev/min]"
+omega_c = N/60*2*pi() "current angular crank velocity [rad/s]"
+omega_m = omega_c    "mean angular crank velocity [rad/s], constant speed (as in the original: omega_m = crankshaftAngle/time)"
+A_p = pi()*bore^2/4  "piston cross area [m2]"
+c_m = PistonSpeed(stroke, omega_m) "mean piston speed [m/s]"
+c_c = PistonSpeed(stroke, omega_c) "current piston speed [m/s]"
+
+"State A: 60 degrees crankshaft angle, air at 80 degC and 3 bar, wall 60 degC"
+theta_A = 60*pi()/180 "crankshaft angle, 0 = top dead centre [rad]"
+position_A = 0.015    "clearance from the cylinder head [m]"
+T_A = 80              "gas temperature [degC]"
+p_A = 3E5             "gas pressure [Pa]"
+T_w_A = 60            "wall temperature [degC]"
+rho_A = 2.959144948281    "gas density, CoolProp 8.0.0 air at T_A and p_A [kg/m3]"
+mu_A = 2.103448100022E-5  "dynamic viscosity at T_A and p_A [Pa s]"
+mu_w_A = 2.012569837946E-5 "dynamic viscosity at T_w_A and p_A [Pa s]"
+k_A = 3.027788491409E-2   "thermal conductivity at T_A and p_A [W/(m K)]"
+cp_A = 1011.588695774     "specific heat capacity at constant pressure, T_A and p_A [J/(kg K)]"
+
+"State B: 90 degrees crankshaft angle (mid-stroke), air at 150 degC and 10 bar, wall 120 degC"
+theta_B = 90*pi()/180 "crankshaft angle [rad]"
+position_B = 0.025    "clearance from the cylinder head [m]"
+T_B = 150             "gas temperature [degC]"
+p_B = 1E6             "gas pressure [Pa]"
+T_w_B = 120           "wall temperature [degC]"
+rho_B = 8.212802710315    "gas density, CoolProp 8.0.0 air at T_B and p_B [kg/m3]"
+mu_B = 2.412945037697E-5  "dynamic viscosity at T_B and p_B [Pa s]"
+mu_w_B = 2.287208570769E-5 "dynamic viscosity at T_w_B and p_B [Pa s]"
+k_B = 3.520110136254E-2   "thermal conductivity at T_B and p_B [W/(m K)]"
+cp_B = 1023.411374259      "specific heat capacity at constant pressure, T_B and p_B [J/(kg K)]"
+
+"State A: geometry, transport properties and dimensionless numbers"
+V_A = CylinderVolume(A_p, position_A)          "cylinder volume [m3]"
+D_h_A = HydraulicDiameter(A_p, position_A)     "hydraulic diameter 4V/A_p [m]"
+De_A = EquivalentDiameter(A_p, position_A)     "equivalent diameter 6V/A_p [m]"
+A_w_A = CylinderWallArea(A_p, position_A)      "heat-transfer area, piston face included [m2]"
+Pr_A = cp_A*mu_A/k_A                          "Prandtl number [-]"
+alpha_f_A = k_A/(rho_A*cp_A)                  "thermal diffusivity [m2/s]"
+omega_g_A = AdairSwirlVelocity(omega_c, theta_A) "swirl velocity of Adair [rad/s]"
+tf_A = TransitionFactor(pi()/2 - 0.025*pi(), pi()/2 + 0.025*pi(), theta_A) "Adair transition factor of state A [-]"
+Re_m_A = rho_A*c_m*bore/mu_A                  "Reynolds number, Lambda = c_m, Gamma = bore [-]"
+Re_c_A = rho_A*c_c*bore/mu_A                  "Reynolds number, Lambda = c_c, Gamma = bore [-]"
+Re_w_A = rho_A*2.28*c_m*bore/mu_A             "Reynolds number of Woschni, Lambda = 2.28*c_m [-]"
+Re_g_A = rho_A*(0.5*De_A*omega_g_A)*De_A/mu_A "Reynolds number of Adair, Lambda = 0.5*De*omega_g, Gamma = De [-]"
+Pe_A = (omega_c/(2*pi()))*D_h_A^2/(4*alpha_f_A) "Peclet number of Kornhauser [-]"
+kappa_A = (mu_A/mu_w_A)^0.14                      "viscosity ratio of Irimescu [-]"
+DL_A = bore/position_A                        "ratio D/L of the Gnielinski entry factor, D = bore, L = clearance [-]"
+
+"State A: Nusselt numbers and heat-transfer coefficients"
+Nu_Annand_A = Nu_Annand_1963(Re_m_A)
+h_Annand_A = Nu_Annand_A*k_A/bore              "h = Nu*lambda/Gamma, Gamma = bore [W/(m2 K)]"
+Nu_Woschni_A = Nu_Woschni_1967(Re_w_A)
+h_Woschni_A = Nu_Woschni_A*k_A/bore            "Gamma = bore [W/(m2 K)]"
+Nu_Adair_A = Nu_Adair_1972(Re_g_A, Pr_A)
+h_Adair_A = Nu_Adair_A*k_A/De_A                "Gamma = De [W/(m2 K)]"
+Nu_Destoop_A = Nu_Destoop_1986(Re_m_A, Pr_A)
+h_Destoop_A = Nu_Destoop_A*k_A/bore            "Gamma = bore [W/(m2 K)]"
+Nu_Gnielinski_A = Nu_Gnielinski_2010(Re_m_A, Pr_A, DL_A)
+h_Gnielinski_A = Nu_Gnielinski_A*k_A/bore      "Gamma = D = bore [W/(m2 K)]"
+Nu_Irimescu_A = Nu_Irimescu_2013(Re_c_A, Pr_A, kappa_A, DL_A)
+h_Irimescu_A = Nu_Irimescu_A*k_A/bore          "Gamma = D = bore [W/(m2 K)]"
+Nu_Kornhauser_A = Nu_Kornhauser_1994(Pe_A)
+h_Kornhauser_A = Nu_Kornhauser_A*k_A/D_h_A     "Gamma = D_h [W/(m2 K)]"
+
+"State B: geometry, transport properties and dimensionless numbers"
+V_B = CylinderVolume(A_p, position_B)          "cylinder volume [m3]"
+D_h_B = HydraulicDiameter(A_p, position_B)     "hydraulic diameter 4V/A_p [m]"
+De_B = EquivalentDiameter(A_p, position_B)     "equivalent diameter 6V/A_p [m]"
+A_w_B = CylinderWallArea(A_p, position_B)      "heat-transfer area, piston face included [m2]"
+Pr_B = cp_B*mu_B/k_B                          "Prandtl number [-]"
+alpha_f_B = k_B/(rho_B*cp_B)                  "thermal diffusivity [m2/s]"
+omega_g_B = AdairSwirlVelocity(omega_c, theta_B) "swirl velocity of Adair [rad/s]"
+tf_B = TransitionFactor(pi()/2 - 0.025*pi(), pi()/2 + 0.025*pi(), theta_B) "Adair transition factor of state B [-]"
+Re_m_B = rho_B*c_m*bore/mu_B                  "Reynolds number, Lambda = c_m, Gamma = bore [-]"
+Re_c_B = rho_B*c_c*bore/mu_B                  "Reynolds number, Lambda = c_c, Gamma = bore [-]"
+Re_w_B = rho_B*2.28*c_m*bore/mu_B             "Reynolds number of Woschni, Lambda = 2.28*c_m [-]"
+Re_g_B = rho_B*(0.5*De_B*omega_g_B)*De_B/mu_B "Reynolds number of Adair, Lambda = 0.5*De*omega_g, Gamma = De [-]"
+Pe_B = (omega_c/(2*pi()))*D_h_B^2/(4*alpha_f_B) "Peclet number of Kornhauser [-]"
+kappa_B = (mu_B/mu_w_B)^0.14                      "viscosity ratio of Irimescu [-]"
+DL_B = bore/position_B                        "ratio D/L of the Gnielinski entry factor, D = bore, L = clearance [-]"
+
+"State B: Nusselt numbers and heat-transfer coefficients"
+Nu_Annand_B = Nu_Annand_1963(Re_m_B)
+h_Annand_B = Nu_Annand_B*k_B/bore              "h = Nu*lambda/Gamma, Gamma = bore [W/(m2 K)]"
+Nu_Woschni_B = Nu_Woschni_1967(Re_w_B)
+h_Woschni_B = Nu_Woschni_B*k_B/bore            "Gamma = bore [W/(m2 K)]"
+Nu_Adair_B = Nu_Adair_1972(Re_g_B, Pr_B)
+h_Adair_B = Nu_Adair_B*k_B/De_B                "Gamma = De [W/(m2 K)]"
+Nu_Destoop_B = Nu_Destoop_1986(Re_m_B, Pr_B)
+h_Destoop_B = Nu_Destoop_B*k_B/bore            "Gamma = bore [W/(m2 K)]"
+Nu_Gnielinski_B = Nu_Gnielinski_2010(Re_m_B, Pr_B, DL_B)
+h_Gnielinski_B = Nu_Gnielinski_B*k_B/bore      "Gamma = D = bore [W/(m2 K)]"
+Nu_Irimescu_B = Nu_Irimescu_2013(Re_c_B, Pr_B, kappa_B, DL_B)
+h_Irimescu_B = Nu_Irimescu_B*k_B/bore          "Gamma = D = bore [W/(m2 K)]"
+Nu_Kornhauser_B = Nu_Kornhauser_1994(Pe_B)
+h_Kornhauser_B = Nu_Kornhauser_B*k_B/D_h_B     "Gamma = D_h [W/(m2 K)]"

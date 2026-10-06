@@ -186,3 +186,7 @@ exchanger titles): only the `CSX-017` row is decided on by this card.
   condenser, each zone with its own effectiveness law.
 - `CSL-0027` *shell_and_tube_steam_condenser*: the next exercise of the same
   session (1-2 shell-and-tube steam condenser, ε-NTU rating).
+- `CSL-0090` *hx_effectiveness_ntu*: the effectiveness-NTU relations
+  (Cmin, Cmax, Cr, NTU<->UA, eps and NTU for the counterflow, parallel,
+  crossflow and boiler/condenser arrangements) as EES functions, to be copied
+  in a model that rates a crossflow exchanger.

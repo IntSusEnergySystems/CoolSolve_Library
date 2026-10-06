@@ -1145,6 +1145,47 @@ def load_curation(path):
 # ======================================================================================
 # main pipeline
 # ======================================================================================
+PREV = []      # rows of the previous inventory.csv (set by main): keeps the TM-/DG- IDs stable
+
+
+def assign_ids(recs, dropped=()):
+    """A path already in the inventory keeps its TM ID (personal files, whose path is redacted: the k-th
+    file of a folder takes the k-th redacted ID of that folder); new files get the next free numbers."""
+    by_path = {' '.join(p['path'].split()): p['candidate_id'] for p in PREV if '[redacted ' not in p['path']}
+    red = collections.defaultdict(list)
+    for p in PREV:
+        if '[redacted ' in p['path']:
+            red[(p['path'].rsplit('/', 1)[0], p['path'].rsplit('.', 1)[-1])].append(p['candidate_id'])
+    for v in red.values():
+        v.sort()
+    used = set()
+    for r in recs:
+        if is_personal(r['rel']):
+            folder, name = r['rel'].rsplit('/', 1)
+            q = red.get((folder, name.rsplit('.', 1)[-1] if '.' in name else ''))
+            cid = q.pop(0) if q else None
+        else:
+            cid = by_path.get(' '.join(r['rel'].split()))     # write_csv collapses blanks
+        r['cid'] = cid if cid and cid not in used else None
+        if r['cid']:
+            used.add(cid)
+    keeper = {' '.join(k.split()): r for r in recs for k in [r['rel']] if r['cid'] is None}
+    for gone, kept in dropped:           # an inventoried zip member now dropped as a copy of a new file
+        cid = by_path.get(' '.join(gone.split()))
+        r = keeper.get(' '.join(kept.split()))
+        if cid and r is not None and r['cid'] is None and cid not in used:
+            r['cid'] = cid
+            used.add(cid)
+    nxt = max([int(p['candidate_id'][3:]) for p in PREV] + [0]) + 1
+    for r in recs:
+        if r['cid'] is None:
+            r['cid'] = 'TM-%04d' % nxt
+            nxt += 1
+    lost = sorted({p['candidate_id'] for p in PREV} - used)
+    if lost:
+        sys.stderr.write('WARNING: %d previous IDs no longer found on disk: %s\n' % (len(lost), ' '.join(lost[:20])))
+
+
 def build(root, curation_path):
     disk, zipped, datafiles, junk = discover(root)
     recs, dropped = [], []
@@ -1161,8 +1202,7 @@ def build(root, curation_path):
         seen[r['text_hash']] = r['rel']
         recs.append(r)
     n_disk = len(disk)
-    for i, r in enumerate(recs):
-        r['cid'] = 'TM-%04d' % (i + 1)
+    assign_ids(recs, dropped)
     by_rel = {r['rel']: r for r in recs}
 
     # ---- duplicate groups ----
@@ -1170,16 +1210,26 @@ def build(root, curation_path):
     comps = [sorted(c) for c in comps]
     comps.sort(key=lambda c: c[0])
     gcount = 0
+    old_dg = {p['candidate_id']: p['duplicate_group'] for p in PREV if p.get('duplicate_group')}
+    old_rep = {p['candidate_id'] for p in PREV if p.get('is_representative') == 'yes'}
+    dg_next = max([int(g[3:]) for g in old_dg.values()] + [0]) + 1
+    used_dg = set()
     for comp in comps:
         members = [recs[i] for i in comp]
-        rep = sorted(members, key=rep_key)[0]
+        was_rep = [r for r in members if r['cid'] in old_rep]     # keep the previous representative
+        rep = sorted(was_rep or members, key=rep_key)[0]
         for r in members:
             r['group_size'] = len(comp)
             r['is_rep'] = (r is rep)
             r['rep'] = rep
         if len(comp) > 1:
-            gcount += 1
-            gid = 'DG-%04d' % gcount
+            prev = collections.Counter(old_dg[r['cid']] for r in members if r['cid'] in old_dg)
+            prev = [g for g, _ in prev.most_common() if g not in used_dg]
+            if len(prev) > 1:
+                sys.stderr.write('note: duplicate groups %s now joined as %s\n' % (', '.join(prev), prev[0]))
+            if prev: gid = prev[0]
+            else: gid = 'DG-%04d' % dg_next; dg_next += 1
+            used_dg.add(gid)
             for r in members:
                 r['dgroup'] = gid
                 r['jac'] = jaccard(sets[recs.index(r)], sets[recs.index(rep)]) if r is not rep else 1.0
@@ -1435,14 +1485,34 @@ def main():
     ap.add_argument('--curation', default=os.path.join(HERE, 'curation.csv'))
     ap.add_argument('--stats', action='store_true')
     args = ap.parse_args()
-    rows, recs, dropped, junk, n_disk = build(args.root, args.curation)
-    os.makedirs(args.out, exist_ok=True)
     previous = os.path.join(args.out, 'inventory.csv')
-    if os.path.exists(previous):                       # keep the workflow's manual columns
+    old = {}
+    if os.path.exists(previous):                       # keep the IDs and the workflow's manual columns
         with open(previous, encoding='utf-8', newline='') as f:
-            old = {r['path']: r for r in csv.DictReader(f)}
+            PREV.extend(csv.DictReader(f))
+        old = {' '.join(r['path'].split()): r for r in PREV}
+    rows, recs, dropped, junk, n_disk = build(args.root, args.curation)
+    rows.sort(key=lambda r: r['candidate_id'])          # previous rows first, new files appended
+    prev_by_id = {p['candidate_id']: p for p in PREV}
+    for i, r in enumerate(rows):          # a row already inventoried is kept as it is (workers' notes and
+        p = prev_by_id.get(r['candidate_id'])                # decisions); only a group change is recorded
+        if not p:
+            continue
+        if ' '.join(p['path'].split()) != ' '.join(r['path'].split()):
+            r['decision'], r['library_id'] = p['decision'], p['library_id']
+            r['notes'] = (r['notes'] + '; ' if r['notes'] else '') + 'sweep %s: file now at this path (was %s)' % (
+                time.strftime('%Y-%m-%d'), p['path'])
+            continue
+        keep = dict(p)
+        if p['duplicate_group'] != r['duplicate_group']:
+            keep['duplicate_group'] = r['duplicate_group']
+            keep['notes'] = (p['notes'] + '; ' if p['notes'] else '') + 'sweep %s: duplicate group %s -> %s' % (
+                time.strftime('%Y-%m-%d'), p['duplicate_group'] or '-', r['duplicate_group'] or '-')
+        rows[i] = keep
+    os.makedirs(args.out, exist_ok=True)
+    if old:
         for r in rows:
-            o = old.get(r['path'])
+            o = old.get(' '.join(r['path'].split()))
             if o and o.get('decision'):
                 r['decision'], r['library_id'] = o['decision'], o.get('library_id', '')
     write_csv(rows, os.path.join(args.out, 'inventory.csv'))

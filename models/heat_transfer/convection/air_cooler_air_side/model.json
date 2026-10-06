@@ -1,0 +1,79 @@
+{
+  "id": "CSL-0099",
+  "name": "air_cooler_air_side",
+  "title": "Air-cooled heat exchanger, air side: finned-bundle HTC, pressure drop and fan noise (function library)",
+  "summary": "Eight EES FUNCTIONs for the air side of an air cooler (a finned tube bundle crossed by air): the air-side heat-transfer coefficient on a bare-tube basis (Briggs-Young, ESDU high-fin, ESDU low-fin, Ganguli/VDI), the air-side pressure drop across the bundle (ESDU high-fin and low-fin) and the sound pressure level of a one-fan bay (GPSA, Mukherjee). Three helper functions complete the family: the Kern-Kraus circular-fin efficiency and the two modified Bessel functions it needs, evaluated by their power series. All arguments are the geometry of the bundle and the air properties; no property function is called inside the functions.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "air_cooler_air_side.eescode",
+  "fluids": [],
+  "tags": [
+    "air cooler",
+    "finned tube bundle",
+    "forced convection",
+    "heat transfer coefficient",
+    "pressure drop",
+    "fin efficiency",
+    "noise",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "DUPLICATE",
+    "LN / log10 / SQRT / ABS"
+  ],
+  "stats": {"n_equations": 117, "largest_block": 1},
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-013",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "D. E. Briggs and E. H. Young (Briggs-Young correlation)",
+      "A. Ganguli, S. S. Tung and J. Taborek (Ganguli correlation, AIChE Symposium Series 81)",
+      "V. D. I. Gesellschaft (VDI Heat Atlas, 2nd edition)",
+      "ESDU 86022 and ESDU 73031 (high-fin staggered tube banks; convective heat transfer over plain tube banks)",
+      "G. L. Hewitt, G. L. Shires and T. R. Bott (Process Heat Transfer, where the ESDU formulas are presented)",
+      "R. Mukherjee and G. Hewitt (Practical Thermal Design of Air-Cooled Heat Exchangers, 2007)",
+      "GPSA (Engineering Data Book, SI, 13th edition, 2012)",
+      "D. Q. Kern and A. D. Kraus (Extended Surface Heat Transfer, 1972)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), files ht/air_cooler.py (the 8 correlations), ht/core.py (fin_efficiency_Kern_Kraus and the SciPy modified Bessel functions) and ht/conv_tube_bank.py (ESDU_tube_row_correction, written inline in h_ESDU_low_fin), MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each correlation is the original paper or book cited in its function comment block. Translation published under the CoolSolve_Library MIT license with full credit (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/air_cooler.py (case A) and additional values computed with the same ht functions in a throw-away virtualenv (case B); the modified Bessel functions compared with scipy.special.iv/kv and the fin efficiency with the ht doctest of fin_efficiency_Kern_Kraus; 32 output values in total",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 3.8e-10,
+    "notes": "compare_solution.py: 32 common variables, 0 differ (rtol=0.001); largest relative deviation 3.8e-10 (dP_ESDU_high_fin_B), which is the rounding of the ten-significant-digit input values printed in the demonstration program."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0087",
+    "CSL-0090",
+    "CSL-0095",
+    "CSL-0008",
+    "CSL-0077"
+  ],
+  "related_external": [
+    "sources/labothappy LTP-039 (finned-tube air-side heat-transfer coefficient) and LTP-032 (finned-tube air-side pressure drop): models that need these functions",
+    "roadmap card C-114 / model CSL-0105: Ft_aircooler (HT-019), the temperature-effectiveness factor of the same ht module, translated there"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-FUNC card C-108, family HT-013 of the ht triage)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

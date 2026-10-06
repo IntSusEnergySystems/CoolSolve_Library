@@ -1,0 +1,83 @@
+{
+  "id": "CSL-0089",
+  "name": "condensation_film",
+  "title": "Film condensation: heat-transfer coefficients (function library)",
+  "summary": "Six EES FUNCTIONs returning the heat-transfer coefficient of condensing film: the Nusselt analysis of 1916 for a laminar film on a flat plate (inclined or vertical), Boyko-Kruzhilin for a vertical tube or bundle, Akers-Deans-Crosser for condensation in horizontal tubes, the molecular-kinetic (diffusion) resistance of the vapor, Cavallini-Smith-Zecchin for forced-convection condensation in a tube and Shah (1979) for condensation in a tube in reduced-pressure form. The fluid properties, mass flow rate, geometry and quality are arguments: no property function is called inside the functions.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "condensation_film.eescode",
+  "fluids": [],
+  "tags": [
+    "film condensation",
+    "two-phase",
+    "heat-transfer coefficient",
+    "correlation",
+    "Nusselt plate",
+    "in-tube condensation",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "SIN",
+    "local constants"
+  ],
+  "stats": {
+    "n_equations": 80,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-003",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "W. Nusselt (laminar film on a plate, 1916)",
+      "L. D. Boyko and G. N. Kruzhilin (vertical tube / bundle, 1967)",
+      "W. W. Akers, H. A. Deans and O. K. Crosser (horizontal tubes, 1959)",
+      "L. D. Berman (molecular-kinetic resistance, 1967)",
+      "A. Cavallini, J. R. Smith and R. Zecchin (forced-convection condensation in a tube, 1974)",
+      "M. M. Shah (film condensation inside pipes, 1979)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/condensation.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each correlation is the original paper or book cited in its function comment block (in most cases as given in Hewitt, Shires & Bott, Process Heat Transfer, 1994, or Kakaç, Boilers, Evaporators, and Condensers, 1991). Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/condensation.py (case A) and additional values computed with the same ht functions in a throw-away virtualenv (case B); 18 output values in total",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 2e-12,
+    "notes": "compare_solution.py: 18 common variables, 0 differ (rtol=0.001); largest relative deviation 2.0e-12 (h_Shah_A), i.e. round-off only. The 63 'only in CoolSolve' variables are the 63 inputs of the demonstration program, which the reference table does not hold."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0027",
+    "CSL-0031",
+    "CSL-0087",
+    "CSL-0088",
+    "CSL-0090",
+    "CSL-0092",
+    "CSL-0094",
+    "CSL-0097",
+    "CSL-0098", "CSL-0100"
+  ],
+  "related_external": [
+    "sources/thermo_models TM-0585 (plate-heat-exchanger condensation correlations of Kuo-Lie-Hsieh-Lin; a different geometry, cross-check only)",
+    "sources/tespy TSP-009 (TESPy condenser component, not a heat-transfer coefficient correlation)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-FUNC card C-98, family HT-003 of the ht triage)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

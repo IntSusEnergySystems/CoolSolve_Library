@@ -1,20 +1,240 @@
 function,type,signature,model_id,path
+AdairSwirlVelocity,FUNCTION,"(omega_c, theta)",CSL-0086,models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode
+air_cooler_noise_GPSA,FUNCTION,"(tip_speed, power)",CSL-0099,models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode
+air_cooler_noise_Mukherjee,FUNCTION,"(tip_speed, power, fan_diameter, induced)",CSL-0099,models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode
+bessel_mod_I_series,FUNCTION,"(n_order, z)",CSL-0099,models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode
+bessel_mod_K_series,FUNCTION,"(n_order, z)",CSL-0099,models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode
 BRINEPROP,PROCEDURE,"(Pr$,Fl$,Conc,Temp:output)",CSL-0072,models/components/pumps_fans/centrifugal_brine_pump_refsim/centrifugal_brine_pump_refsim.eescode
+BRINEPROP,PROCEDURE,"(Pr$,Fl$,Conc,Temp:output)",CSL-0078,models/cycles/refrigeration_heat_pumps/brine_to_water_heat_pump_refsim/brine_to_water_heat_pump_refsim.eescode
 BRINEPROP,PROCEDURE,"(Pr$,Fl$,Conc,Temp:output)",CSL-0079,models/fundamentals/properties/brineprop_secondary_refrigerants/brineprop_secondary_refrigerants.eescode
+calc_Cmax,FUNCTION,"(m_dot_h, m_dot_c, Cp_h, Cp_c)",CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+calc_Cmin,FUNCTION,"(m_dot_h, m_dot_c, Cp_h, Cp_c)",CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+calc_Cr,FUNCTION,"(m_dot_h, m_dot_c, Cp_h, Cp_c)",CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+COILWET,PROCEDURE,"(flag_dp:Q_dot_coil_wet,T_wb_ex_coil_wet)",CSL-0080,models/components/boilers_burners/condensing_boiler_refsim/condensing_boiler_refsim.eescode
 cond,PROCEDURE,"(fluid$,T_r_su_cd,M_dot_r_cd,DELTAT_r_ex_cd,Q_dot_cd1,T_w_ex_cd,T_w_su_cd,T_a_su_cd2,T_a_ex_cd2,p_r_cd:pinch_cd,h_r_ex_cd_v,t_r_ex_cd_v,h_r_ex_cd_tp,t_r_ex_cd_tp,T_r_ex_cd,h_r_ex_cd,M_dot_w_cd1,M_dot_a_cd2)",CSL-0040,models/cycles/organic_rankine/orc_biomass_chp/orc_biomass_chp.eescode
+correlation_eta_is_pump,FUNCTION,(Xpp),CSL-0084,models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode
+correlation_hermetic_scroll_epsilon_s,FUNCTION,"(rho, rp)",CSL-0084,models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode
+correlation_hermetic_scroll_FF,FUNCTION,"(rho, rp)",CSL-0084,models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode
+correlation_open_expander_epsilon_s,FUNCTION,"(N_rot, rho, log_rp)",CSL-0084,models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode
+correlation_open_expander_FF,FUNCTION,"(log_Nrot, rho)",CSL-0084,models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode
 cp_g,FUNCTION,"(T_p1,T_p2,m,n,p,e)",CSL-0040,models/cycles/organic_rankine/orc_biomass_chp/orc_biomass_chp.eescode
 cpbar,PROCEDURE,"(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)",CSL-0006,models/components/boilers_burners/boiler_mean_specific_heat/boiler_mean_specific_heat.eescode
+cpbar,FUNCTION,"(m,n,f,T_p1,T_p2)",CSL-0080,models/components/boilers_burners/condensing_boiler_refsim/condensing_boiler_refsim.eescode
 cpbar,PROCEDURE,"(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)",CSL-0034,models/cycles/engines/gas_engine_full_power_cpbar/gas_engine_full_power_cpbar.eescode
 cpbar,PROCEDURE,"(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)",CSL-0005,models/fundamentals/combustion/cpbar_combustion_products/cpbar_combustion_products.eescode
+crossflow_effectiveness_to_int,FUNCTION,"(v, NTU, t0)",CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+CylinderVolume,FUNCTION,"(A_p, position)",CSL-0086,models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode
+CylinderWallArea,FUNCTION,"(A_p, position)",CSL-0086,models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode
+dP_ESDU_high_fin,FUNCTION,"(m, A_min, A_increase, flow_area_contraction_ratio, tube_diameter, pitch_parallel, pitch_normal, tube_rows, rho, mu)",CSL-0099,models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode
+dP_ESDU_low_fin,FUNCTION,"(m, A_min, A_increase, flow_area_contraction_ratio, tube_diameter, fin_height, bare_length, pitch_parallel, pitch_normal, tube_rows, rho, mu)",CSL-0099,models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode
+dP_Kern,FUNCTION,"(m, rho, mu, mu_w, DShell, LSpacing, pitch, Do, NBaffles)",CSL-0103,models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode
+eps_boiler_condenser,FUNCTION,(NTU),CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+eps_counterflow,FUNCTION,"(NTU, Cr)",CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+eps_crossflow_approx,FUNCTION,"(NTU, Cr)",CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+eps_crossflow_mixed_Cmax,FUNCTION,"(NTU, Cr)",CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+eps_crossflow_mixed_Cmin,FUNCTION,"(NTU, Cr)",CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+eps_parallel,FUNCTION,"(NTU, Cr)",CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+EquivalentDiameter,FUNCTION,"(A_p, position)",CSL-0086,models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode
+ESDU_tube_angle_correction,FUNCTION,(angle),CSL-0095,models/heat_transfer/convection/tube_bank_nusselt/tube_bank_nusselt.eescode
+ESDU_tube_row_correction,FUNCTION,"(tube_rows, staggered)",CSL-0095,models/heat_transfer/convection/tube_bank_nusselt/tube_bank_nusselt.eescode
+eta_fin_Kern_Kraus_aircooler,FUNCTION,"(tube_diameter, fin_diameter, fin_thickness, k_fin, h)",CSL-0099,models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode
+fd_Martin_1999,FUNCTION,"(Re, chevron_angle)",CSL-0096,models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode
+fd_Martin_VDI,FUNCTION,"(Re, chevron_angle)",CSL-0096,models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode
 fluidprop,PROCEDURE,"(Fluid$,Temp, Pres,Rh:Rho,Mu,Gamma)",CSL-0075,models/components/instrumentation/iso5167_orifice_plate_flow_rate/iso5167_orifice_plate_flow_rate.eescode
+G,FUNCTION,(u),CSL-0081,models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode
 gamma,FUNCTION,"(m,n,f,T_p1,T_p2)",CSL-0005,models/fundamentals/combustion/cpbar_combustion_products/cpbar_combustion_products.eescode
+GenericCentrifugalPump_IsentropicEfficiency,FUNCTION,"(f_pp, r_p)",CSL-0084,models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode
+GenericCentrifugalPump_MassFlowRate,FUNCTION,(f_pp),CSL-0084,models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode
+GenericScrewExpander_FillingFactor,FUNCTION,"(p_su_exp, rho_su_exp, rpm)",CSL-0084,models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode
+GenericScrewExpander_IsentropicEfficiency,FUNCTION,"(rp, rpm, p)",CSL-0084,models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode
+h_Aggour,FUNCTION,"(m, x, alpha, D, rhol, Cpl, kl, mu_b, mu_w, L, turbulent)",CSL-0097,models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode
+h_Akers_Deans_Crosser,FUNCTION,"(m, rhog, rhol, kl, mul, Cpl, D, x)",CSL-0089,models/heat_transfer/convection/condensation_film/condensation_film.eescode
+h_Amalfi,FUNCTION,"(m, x, Dh, rhol, rhog, mul, mug, kl, Hvap, sigma, q, A_channel_flow, chevron_angle)",CSL-0096,models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode
+h_Bier,FUNCTION,"(P, Pc, Te)",CSL-0088,models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode
+h_Boyko_Kruzhilin,FUNCTION,"(m, rhog, rhol, kl, mul, Cpl, D, x)",CSL-0089,models/heat_transfer/convection/condensation_film/condensation_film.eescode
+h_Briggs_Young,FUNCTION,"(m, A, A_min, A_increase, A_fin, A_tube_showing, tube_diameter, fin_diameter, fin_thickness, bare_length, rho, Cp, mu, k, k_fin)",CSL-0099,models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode
+h_Cavallini_Smith_Zecchin,FUNCTION,"(m, x, D, rhol, rhog, mul, mug, kl, Cpl)",CSL-0089,models/heat_transfer/convection/condensation_film/condensation_film.eescode
+h_Chen_Bennett,FUNCTION,"(m, x, D, rhol, rhog, mul, mug, kl, Cpl, Hvap, sigma, dPsat, Te)",CSL-0098,models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode
+h_Chen_Edelstein,FUNCTION,"(m, x, D, rhol, rhog, mul, mug, kl, Cpl, Hvap, sigma, dPsat, Te)",CSL-0098,models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode
+h_Cooper,FUNCTION,"(P, Pc, MW, Te, Rp)",CSL-0088,models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode
+h_Davis_David,FUNCTION,"(m, x, D, rhol, rhog, Cpl, kl, mul)",CSL-0097,models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode
+h_Elamvaluthi_Srinivas,FUNCTION,"(m, x, D, rhol, rhog, Cpl, kl, mug, mu_b, mu_w)",CSL-0097,models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode
+h_ESDU_high_fin,FUNCTION,"(m, A, A_min, A_increase, A_fin, A_tube_showing, tube_diameter, fin_diameter, fin_thickness, bare_length, pitch_parallel, pitch_normal, tube_rows, rho, Cp, mu, k, k_fin, Pr_wall)",CSL-0099,models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode
+h_ESDU_low_fin,FUNCTION,"(m, A, A_min, A_increase, A_fin, A_tube_showing, tube_diameter, fin_diameter, fin_thickness, bare_length, pitch_parallel, pitch_normal, tube_rows, rho, Cp, mu, k, k_fin, Pr_wall)",CSL-0099,models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode
+h_Forster_Zuber,FUNCTION,"(rhol, rhog, mul, kl, Cpl, Hvap, sigma, dPsat, Te)",CSL-0088,models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode
+h_Ganguli_VDI,FUNCTION,"(m, A, A_min, A_increase, A_fin, A_tube_showing, tube_diameter, fin_diameter, fin_thickness, bare_length, pitch_parallel, pitch_normal, tube_rows, rho, Cp, mu, k, k_fin)",CSL-0099,models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode
+h_Gorenflo,FUNCTION,"(P, Pc, h0, Ra, Te, is_water)",CSL-0088,models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode
+h_Groothuis_Hendal,FUNCTION,"(m, x, D, rhol, rhog, Cpl, kl, mug, mu_b, mu_w, water)",CSL-0097,models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode
+h_Gungor_Winterton_1987,FUNCTION,"(m, x, D, q, rhol, rhog, mul, kl, Cpl, i_fg)",CSL-0098,models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode
+h_Han_Lee_Kim,FUNCTION,"(m, x, Dh, rhol, rhog, mul, kl, Hvap, Cpl, q, A_channel_flow, wavelength, chevron_angle)",CSL-0096,models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode
+h_HEDH_Taborek,FUNCTION,"(P, Pc, Te)",CSL-0088,models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode
+h_Huang_Sheer,FUNCTION,"(rhol, rhog, mul, kl, Hvap, sigma, Cpl, q, Tsat, angle)",CSL-0096,models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode
+h_Hughmark,FUNCTION,"(m, x, alpha, D, L, Cpl, kl, mu_b, mu_w)",CSL-0097,models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode
+h_jacket_Lehrer,FUNCTION,"(m, Dtank, Djacket, H, Dinlet, rho, Cp, k, mu, muw, isobaric_expansion, dT, radial_inlet, bottom_inlet)",CSL-0100,models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode
+h_jacket_Stein_Schmidt,FUNCTION,"(m, Dtank, Djacket, H, Dinlet, rho, Cp, k, mu, muw, rhow, radial_inlet, bottom_inlet, fd)",CSL-0100,models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode
+h_kinetic,FUNCTION,"(T, P, MW, Hvap, f)",CSL-0089,models/heat_transfer/convection/condensation_film/condensation_film.eescode
+h_Knott,FUNCTION,"(m, x, D, rhol, rhog, hl)",CSL-0097,models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode
+h_Kudirka_Grosh_McFadden,FUNCTION,"(m, x, D, rhol, rhog, Cpl, kl, mug, mu_b, mu_w)",CSL-0097,models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode
+h_Lazarek_Black,FUNCTION,"(m, D, mul, kl, Hvap, q, Te, by_Te)",CSL-0098,models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode
+h_Lee_Kang_Kim,FUNCTION,"(m, x, D_eq, rhol, rhog, mul, mug, kl, Hvap, q, A_channel_flow)",CSL-0096,models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode
+h_Li_Wu,FUNCTION,"(m, x, D, rhol, rhog, mul, kl, Hvap, sigma, q, Te, by_Te)",CSL-0098,models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode
+h_Liu_Winterton,FUNCTION,"(m, x, D, rhol, rhog, mul, kl, Cpl, MW, P, Pc, Te)",CSL-0098,models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode
+h_Martin_Sims,FUNCTION,"(m, x, D, rhol, rhog, hl)",CSL-0097,models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode
+h_McNelly,FUNCTION,"(rhol, rhog, kl, Cpl, Hvap, sigma, P, Te)",CSL-0088,models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode
+h_Montinsky,FUNCTION,"(P, Pc, Te)",CSL-0088,models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode
+h_Nusselt_laminar,FUNCTION,"(Tsat, Tw, rhog, rhol, kl, mul, Hvap, L, angle)",CSL-0089,models/heat_transfer/convection/condensation_film/condensation_film.eescode
+h_Ravipudi_Godbold,FUNCTION,"(m, x, D, rhol, rhog, Cpl, kl, mug, mu_b, mu_w)",CSL-0097,models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode
+h_Rohsenow,FUNCTION,"(rhol, rhog, mul, kl, Cpl, Hvap, sigma, Te, Csf, n)",CSL-0088,models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode
+h_Shah,FUNCTION,"(m, x, D, rhol, mul, kl, Cpl, P, Pc)",CSL-0089,models/heat_transfer/convection/condensation_film/condensation_film.eescode
+h_Shah_1982,FUNCTION,"(m, x, D, q, rhol, rhog, mul, kl, Cpl, i_fg, vertical)",CSL-0098,models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode
+h_Stephan_Abdelsalam,FUNCTION,"(rhol, rhog, mul, kl, Cpl, Hvap, sigma, Tsat, Te, form, kw, rhow, Cpw)",CSL-0088,models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode
+h_Sun_Mishima,FUNCTION,"(m, D, rhol, rhog, mul, kl, Hvap, sigma, q, Te, by_Te)",CSL-0098,models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode
+h_Thome,FUNCTION,"(m, x, D, rhol, rhog, mul, mug, kl, kg, Cpl, Cpg, Hvap, sigma, Psat, Pc, q)",CSL-0098,models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode
+h_Yan_Lin,FUNCTION,"(m, x, Dh, rhol, rhog, mul, kl, Hvap, Cpl, q, A_channel_flow)",CSL-0096,models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode
+h_Yun_Heo_Kim,FUNCTION,"(m, x, D, rhol, mul, Hvap, sigma, q, Te, by_Te)",CSL-0098,models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode
+HydraulicDiameter,FUNCTION,"(A_p, position)",CSL-0086,models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode
+is,FUNCTION,,CSL-0092,models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode
+Jb_Bell,FUNCTION,"(Fsbp, n_seal_strips, n_crossflow_rows, laminar)",CSL-0103,models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode
+Jc_Bell,FUNCTION,"(Fc, method)",CSL-0103,models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode
+Jl_Bell,FUNCTION,"(Ssb, Stb, Sm)",CSL-0103,models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode
+Jr_Bell,FUNCTION,"(Re, total_row_passes)",CSL-0103,models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode
+Js_Bell,FUNCTION,"(nb, B, B_in, B_out, laminar)",CSL-0103,models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode
+Kern_knot_step,FUNCTION,"(x, a, b)",CSL-0103,models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode
+mean,PROCEDURE,"(t,DELTAtau,q,h,d,w,m:q_day,q_week,q_month,q_rest)",CSL-0081,models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode
 mmprod,FUNCTION,"(m,n,f)",CSL-0005,models/fundamentals/combustion/cpbar_combustion_products/cpbar_combustion_products.eescode
+NTU_boiler_condenser,FUNCTION,(effectiveness),CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+NTU_counterflow,FUNCTION,"(effectiveness, Cr)",CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+NTU_crossflow_mixed_Cmax,FUNCTION,"(effectiveness, Cr)",CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+NTU_crossflow_mixed_Cmin,FUNCTION,"(effectiveness, Cr)",CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+NTU_from_P_basic,FUNCTION,"(P1, R1, subtype)",CSL-0102,models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode
+NTU_from_P_E,FUNCTION,"(P1, R1, Ntp, optimal)",CSL-0102,models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode
+NTU_from_P_G_residual,FUNCTION,"(NTU1, R1, P1, Ntp, optimal)",CSL-0102,models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode
+NTU_from_P_H_residual,FUNCTION,"(NTU1, R1, P1, Ntp, optimal)",CSL-0102,models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode
+NTU_from_P_J_residual,FUNCTION,"(NTU1, R1, P1, Ntp)",CSL-0102,models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode
+NTU_from_P_plate_residual,FUNCTION,"(NTU1, R1, P1, Np1, Np2, counterflow, passes_counterflow)",CSL-0102,models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode
+NTU_from_UA,FUNCTION,"(UA, Cmin)",CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+NTU_parallel,FUNCTION,"(effectiveness, Cr)",CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
+Nu_Adair_1972,FUNCTION,"(Re, Pr)",CSL-0086,models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode
+Nu_Annand_1963,FUNCTION,(Re),CSL-0086,models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode
+Nu_Bhatti_Shah,FUNCTION,"(Re, Pr, fd, eD)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Bishop,FUNCTION,"(Re, Pr, rho_w, rho_b, Di, x, corr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Bringer_Smith,FUNCTION,"(Re, Pr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Churchill_Zajic,FUNCTION,"(Re, Pr, fd)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_coil_Xin_Ebadian,FUNCTION,"(Pr, Gr, horizontal)",CSL-0100,models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode
+Nu_Colburn,FUNCTION,"(Re, Pr)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_cylinder_Churchill_Bernstein,FUNCTION,"(Re, Pr)",CSL-0094,models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode
+Nu_cylinder_Fand,FUNCTION,"(Re, Pr)",CSL-0094,models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode
+Nu_cylinder_McAdams,FUNCTION,"(Re, Pr)",CSL-0094,models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode
+Nu_cylinder_Perkins_Leppert_1962,FUNCTION,"(Re, Pr, mu, muw)",CSL-0094,models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode
+Nu_cylinder_Perkins_Leppert_1964,FUNCTION,"(Re, Pr, mu, muw)",CSL-0094,models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode
+Nu_cylinder_Sanitjai_Goldstein,FUNCTION,"(Re, Pr)",CSL-0094,models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode
+Nu_cylinder_Whitaker,FUNCTION,"(Re, Pr, mu, muw)",CSL-0094,models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode
+Nu_cylinder_Zukauskas,FUNCTION,"(Re, Pr, Prw)",CSL-0094,models/heat_transfer/convection/external_crossflow_cylinder/external_crossflow_cylinder.eescode
+Nu_Destoop_1986,FUNCTION,"(Re, Pr)",CSL-0086,models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode
+Nu_Dipprey_Sabersky,FUNCTION,"(Re, Pr, fd, eD)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Dittus_Boelter,FUNCTION,"(Re, Pr, heating, revised)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Drexel_McAdams,FUNCTION,"(Re, Pr)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_ESDU,FUNCTION,"(Re, Pr)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_ESDU_73031,FUNCTION,"(Re, Pr, tube_rows, pitch_parallel, pitch_normal, Pr_wall, angle)",CSL-0095,models/heat_transfer/convection/tube_bank_nusselt/tube_bank_nusselt.eescode
+Nu_Friend_Metzner,FUNCTION,"(Re, Pr, fd)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Gnielinski,FUNCTION,"(Re, Pr, fd)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Gnielinski_2010,FUNCTION,"(Re, Pr, DL)",CSL-0086,models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode
+Nu_Gnielinski_smooth_1,FUNCTION,"(Re, Pr)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Gnielinski_smooth_2,FUNCTION,"(Re, Pr)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Gorban,FUNCTION,"(Re, Pr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Gowen_Smith,FUNCTION,"(Re, Pr, fd)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Griem,FUNCTION,"(Re, Pr, H_b, corr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Gupta,FUNCTION,"(Re, Pr, rho_w, rho_b, mu_w, mu_b, corr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Hausen_turbulent_entry,FUNCTION,"(Re, Pr, Di, x)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_HEDH_tube_bank,FUNCTION,"(Re, Pr, Do, tube_rows, pitch_parallel, pitch_normal)",CSL-0095,models/heat_transfer/convection/tube_bank_nusselt/tube_bank_nusselt.eescode
+Nu_horizontal_cylinder_Churchill_Chu,FUNCTION,"(Pr, Gr)",CSL-0092,models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode
+Nu_horizontal_cylinder_Kuehn_Goldstein,FUNCTION,"(Pr, Gr)",CSL-0092,models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode
+Nu_horizontal_cylinder_Morgan,FUNCTION,"(Pr, Gr)",CSL-0092,models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode
+Nu_horizontal_plate_laminar_Baehr,FUNCTION,"(Re, Pr)",CSL-0101,models/heat_transfer/convection/external_forced_conv_plates/external_forced_conv_plates.eescode
+Nu_horizontal_plate_laminar_Churchill_Ozoe,FUNCTION,"(Re, Pr)",CSL-0101,models/heat_transfer/convection/external_forced_conv_plates/external_forced_conv_plates.eescode
+Nu_horizontal_plate_McAdams,FUNCTION,"(Pr, Gr, buoyancy)",CSL-0093,models/heat_transfer/convection/free_conv_plates_and_sphere/free_conv_plates_and_sphere.eescode
+Nu_horizontal_plate_Rohsenow,FUNCTION,"(Pr, Gr, buoyancy)",CSL-0093,models/heat_transfer/convection/free_conv_plates_and_sphere/free_conv_plates_and_sphere.eescode
+Nu_horizontal_plate_turbulent_Kreith,FUNCTION,"(Re, Pr)",CSL-0101,models/heat_transfer/convection/external_forced_conv_plates/external_forced_conv_plates.eescode
+Nu_horizontal_plate_turbulent_Schlichting,FUNCTION,"(Re, Pr)",CSL-0101,models/heat_transfer/convection/external_forced_conv_plates/external_forced_conv_plates.eescode
+Nu_horizontal_plate_VDI,FUNCTION,"(Pr, Gr, buoyancy)",CSL-0093,models/heat_transfer/convection/free_conv_plates_and_sphere/free_conv_plates_and_sphere.eescode
+Nu_Irimescu_2013,FUNCTION,"(Re, Pr, K, DL)",CSL-0086,models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode
+Nu_Jackson,FUNCTION,"(Re, Pr, rho_w, rho_b, Cp_avg, Cp_b, T_b, T_w, T_pc, corr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Kawase_De,FUNCTION,"(Re, Pr, fd)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Kawase_Ulbrecht,FUNCTION,"(Re, Pr, fd)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Khan_Khan,FUNCTION,"(Re, Pr, chevron_angle)",CSL-0096,models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode
+Nu_Kitoh,FUNCTION,"(Re, Pr, H_b, G, q, corr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Kornhauser_1994,FUNCTION,(Pe),CSL-0086,models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode
+Nu_Krasnoshchekov,FUNCTION,"(Re, Pr, rho_w, rho_b, Cp_avg, Cp_b, T_b, T_w, T_pc, corr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Krasnoshchekov_Protopopov,FUNCTION,"(Re, Pr, Cp_avg, Cp_b, k_w, k_b, mu_w, mu_b, corr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Kumar,FUNCTION,"(Re, Pr, chevron_angle, mu, mu_wall)",CSL-0096,models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode
+Nu_Martin,FUNCTION,"(Re, Pr, chevron_angle, variant)",CSL-0096,models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode
+Nu_Martinelli,FUNCTION,"(Re, Pr, fd)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_McAdams,FUNCTION,"(Re, Pr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Mokry,FUNCTION,"(Re, Pr, rho_w, rho_b, corr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Muley_Manglik,FUNCTION,"(Re, Pr, chevron_angle, plate_enlargement_factor)",CSL-0096,models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode
+Nu_Nunner,FUNCTION,"(Re, Pr, fd, fd_smooth)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Nusselt_Rayleigh_Hollands,FUNCTION,"(Pr, Gr, buoyancy, Rac)",CSL-0100,models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode
+Nu_Nusselt_Rayleigh_Holling_Herwig_err,FUNCTION,"(Nu, Ra, D2)",CSL-0100,models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode
+Nu_Nusselt_Rayleigh_Probert,FUNCTION,"(Pr, Gr, buoyancy)",CSL-0100,models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode
+Nu_Nusselt_vertical_Thess,FUNCTION,"(Pr, Gr, H, L, geometry)",CSL-0100,models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode
+Nu_Ornatsky,FUNCTION,"(Re, Pr_b, Pr_w, rho_w, rho_b, corr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Petukhov,FUNCTION,"(Re, Pr, rho_w, rho_b, mu_w, mu_b, corr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Petukhov_Kirillov_Popov,FUNCTION,"(Re, Pr, fd)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Prandtl,FUNCTION,"(Re, Pr, fd)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Sandall,FUNCTION,"(Re, Pr, fd)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Shitsman,FUNCTION,"(Re, Pr_b, Pr_w)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Sieder_Tate,FUNCTION,"(Re, Pr, mu, mu_w)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_sphere_Churchill,FUNCTION,"(Pr, Gr)",CSL-0093,models/heat_transfer/convection/free_conv_plates_and_sphere/free_conv_plates_and_sphere.eescode
+Nu_Swenson,FUNCTION,"(Re, Pr, rho_w, rho_b, corr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_vertical_cylinder_Al_Arabi_Khamis,FUNCTION,"(Pr, Gr, L, D, turbulent)",CSL-0092,models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode
+Nu_vertical_cylinder_Carne_Morgan,FUNCTION,"(Pr, Gr, turbulent)",CSL-0092,models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode
+Nu_vertical_cylinder_Eigenson_Morgan,FUNCTION,"(Pr, Gr, turbulent)",CSL-0092,models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode
+Nu_vertical_cylinder_Griffiths_Davis_Morgan,FUNCTION,"(Pr, Gr, turbulent)",CSL-0092,models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode
+Nu_vertical_cylinder_Hanesian_Kalish_Morgan,FUNCTION,"(Pr, Gr)",CSL-0092,models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode
+Nu_vertical_cylinder_Jakob_Linke_Morgan,FUNCTION,"(Pr, Gr, turbulent)",CSL-0092,models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode
+Nu_vertical_cylinder_Kreith_Eckert,FUNCTION,"(Pr, Gr, turbulent)",CSL-0092,models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode
+Nu_vertical_cylinder_McAdams_Weiss_Saunders,FUNCTION,"(Pr, Gr, turbulent)",CSL-0092,models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode
+Nu_vertical_cylinder_Popiel_Churchill,FUNCTION,"(Pr, Gr, L, D)",CSL-0092,models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode
+Nu_vertical_cylinder_Touloukian_Morgan,FUNCTION,"(Pr, Gr, turbulent)",CSL-0092,models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode
+Nu_vertical_helical_coil_Ali,FUNCTION,"(Pr, Gr)",CSL-0100,models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode
+Nu_vertical_helical_coil_Prabhanjan_Rennie_Raghavan,FUNCTION,"(Pr, Gr)",CSL-0100,models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode
+Nu_vertical_plate_Churchill,FUNCTION,"(Pr, Gr)",CSL-0093,models/heat_transfer/convection/free_conv_plates_and_sphere/free_conv_plates_and_sphere.eescode
+Nu_von_Karman,FUNCTION,"(Re, Pr, fd)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Webb,FUNCTION,"(Re, Pr, fd)",CSL-0087,models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode
+Nu_Woschni_1967,FUNCTION,(Re),CSL-0086,models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode
+Nu_Xu,FUNCTION,"(Re, Pr, rho_w, rho_b, mu_w, mu_b, corr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Yamagata,FUNCTION,"(Re, Pr, Pr_pc, Cp_avg, Cp_b, T_b, T_w, T_pc, corr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Zhu,FUNCTION,"(Re, Pr, rho_w, rho_b, k_w, k_b, corr)",CSL-0104,models/heat_transfer/convection/supercritical_internal_nu/supercritical_internal_nu.eescode
+Nu_Zukauskas_Bejan,FUNCTION,"(Re, Pr, tube_rows, pitch_parallel, pitch_normal, Pr_wall)",CSL-0095,models/heat_transfer/convection/tube_bank_nusselt/tube_bank_nusselt.eescode
+Nusselt,PROCEDURE,"(c_p_f,rho_f,mu_f,mu_f_w,k_f,D_p_i,L_b,m_dot_f_b:Nu#,Re,Pr)",CSL-0081,models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode
+P_NTU_Pc,FUNCTION,"(x, y)",CSL-0102,models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode
+P_NTU_Pp,FUNCTION,"(x, y)",CSL-0102,models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode
+Penalty,PROCEDURE,"(t,t_s,B,H,NB,A:F_correlation_p)",CSL-0081,models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode
+PistonSpeed,FUNCTION,"(stroke, omega)",CSL-0086,models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode
+PressureDropCorrelation_HP,FUNCTION,(M_flow),CSL-0084,models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode
+PressureDropCorrelation_LP,FUNCTION,(M_flow),CSL-0084,models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode
 pump,PROCEDURE,"(fluid$,epsilon_pp,h_r_su_pp,t_r_su_pp,p_r_su_pp,p_r_ex_pp,M_dot_r_pp:W_dot_pp,T_r_ex_pp,h_r_ex_pp)",CSL-0040,models/cycles/organic_rankine/orc_biomass_chp/orc_biomass_chp.eescode
+q_CHF_HEDH_Montinsky,FUNCTION,"(P, Pc)",CSL-0088,models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode
+q_CHF_Serth_HEDH,FUNCTION,"(Di, sigma, Hvap, rhol, rhog)",CSL-0088,models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode
+q_CHF_Zuber,FUNCTION,"(sigma, Hvap, rhol, rhog, K)",CSL-0088,models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode
 q_dot_pinch_fun_cd,PROCEDURE,"(m_dot_h, h_h_in, h_h_x0, h_h_x1, h_h_out, T_h_in, T_h_x0, T_h_x1, T_h_out, T_c_in, T_c_x0, T_c_x1, T_c_out:Q_dot_sc, Q_dot_tp, Q_dot_sh, DT_min)",CSL-0039,models/cycles/refrigeration_heat_pumps/high_temp_heat_pump_pcm_storage/high_temp_heat_pump_pcm_storage.eescode
 q_dot_pinch_fun_ev,PROCEDURE,"(m_dot_c, h_c_in, h_c_x0, h_c_x1, h_c_out, T_c_in, T_c_x0, T_c_x1, T_c_out, T_h_in, T_h_x0, T_h_x1, T_h_out:Q_dot_sc, Q_dot_tp, Q_dot_sh, DT_min)",CSL-0039,models/cycles/refrigeration_heat_pumps/high_temp_heat_pump_pcm_storage/high_temp_heat_pump_pcm_storage.eescode
+Rac_Nusselt_Rayleigh_disk,FUNCTION,"(H, D, insulated)",CSL-0100,models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode
 single_phase_HX,PROCEDURE,"(cf$,hf$,t_cf_su,t_cf_ex,P_cf_su,P_cf_ex,P_hf_su,P_hf_ex,t_hf_su,t_hf_ex,M_dot_hf,M_dot_cf,alpha,C_cf,C_hf,n_cf,n_hf:Q_dot,epsilon,NTU,AU)",CSL-0008,models/components/heat_exchangers/condenser_three_zones/condenser_three_zones.eescode
+summation,PROCEDURE,"(q,h,d,w,m,t,DELTAtau,Fo_p,time:sum)",CSL-0081,models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode
+temperature_effectiveness_air_cooler,FUNCTION,"(R1, NTU1, rows, passes, coerce)",CSL-0102,models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode
+temperature_effectiveness_basic,FUNCTION,"(R1, NTU1, subtype)",CSL-0102,models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode
+temperature_effectiveness_plate,FUNCTION,"(R1, NTU1, Np1, Np2, counterflow, passes_counterflow)",CSL-0102,models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode
+temperature_effectiveness_TEMA_E,FUNCTION,"(R1, NTU1, Ntp, optimal)",CSL-0102,models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode
+temperature_effectiveness_TEMA_G,FUNCTION,"(R1, NTU1, Ntp, optimal)",CSL-0102,models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode
+temperature_effectiveness_TEMA_H,FUNCTION,"(R1, NTU1, Ntp, optimal)",CSL-0102,models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode
+temperature_effectiveness_TEMA_J,FUNCTION,"(R1, NTU1, Ntp)",CSL-0102,models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode
 therminol66,PROCEDURE,"(T_oil66:rho_oil66,cp_oil66,k_oil66,nu_oil66)",CSL-0019,models/cycles/organic_rankine/orc_simple_r245fa/orc_simple_r245fa.eescode
+tr_factor_Richter2,FUNCTION,"(start, stop, position)",CSL-0098,models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode
+TransitionFactor,FUNCTION,"(start, stop, position)",CSL-0086,models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode
 two_phase_CD,PROCEDURE,"(cf$,R$,t_cf_su,t_cf_ex,t_cd,M_dot_r,M_dot_cf,alpha,C_cf,C_r,n_cf,n_r:Q_dot,epsilon,NTU,AU)",CSL-0008,models/components/heat_exchangers/condenser_three_zones/condenser_three_zones.eescode
+UA_from_NTU,FUNCTION,"(NTU, Cmin)",CSL-0090,models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode
 warning_error,PROCEDURE,"(var1_in,var2_in,var3_in, var4_in:var1_out,var2_out,var3_out,var4_out)",CSL-0075,models/components/instrumentation/iso5167_orifice_plate_flow_rate/iso5167_orifice_plate_flow_rate.eescode
 weibe,PROCEDURE,"(theta, theta_s, theta_d : x_b, x_dot_b)",CSL-0024,models/cycles/engines/single_cylinder_engine_weibe/single_cylinder_engine_weibe.eescode
 write,FUNCTION,"(eta_I,W_dot_el_net,eta_global,i)",CSL-0040,models/cycles/organic_rankine/orc_biomass_chp/orc_biomass_chp.eescode
+Zukauskas_tube_row_correction,FUNCTION,"(tube_rows, staggered, Re)",CSL-0095,models/heat_transfer/convection/tube_bank_nusselt/tube_bank_nusselt.eescode

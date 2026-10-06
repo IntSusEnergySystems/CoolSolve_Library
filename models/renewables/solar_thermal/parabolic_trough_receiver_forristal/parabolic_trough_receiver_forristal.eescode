@@ -1,0 +1,156 @@
+{=============================================================================
+  CoolSolve Library model CSL-0082
+  Parabolic-trough receiver (HCE): steady 1D radial energy balance
+ -----------------------------------------------------------------------------
+  One cell of the heat collector element of a parabolic-trough solar collector:
+  1D radial energy balance between the absorber tube and the environment, based
+  on the Forristal model (R. Forristall, NREL/TP-550-34169, October 2003).
+  Steady state: the only dynamic terms of the original are the thermal masses of
+  the glass envelope and of the metal tube (der(T_g) and der(T_t)), so the two
+  energy balances are written with zero accumulation. One cell = the receiver at
+  a given heat-transfer-fluid temperature (the original integrates N cells along
+  the tube; the flux on the tube and the glass are uniform along the cell).
+
+  Phenomena: conduction through the tube and glass walls (half-thickness
+  resistances), free-molecular conduction of the residual gas in the evacuated
+  annulus, radiation across the vacuum (tube to glass), forced convection to the
+  ambient and radiation to the sky. The fluid enters through the temperature of
+  the internal surface of the tube.
+
+  Assumptions of the original: temperatures, fluxes and properties are uniform
+  around the circumference of the HCE; solar absorption is linear; constant
+  density and heat capacity in the tube and in the glass envelope.
+
+  Inputs : DNI, incidence angle, wind speed, ambient temperature, fluid
+           temperature on the internal tube surface
+  Outputs: heat loss per reflector area, thermal and total efficiency, absorbed
+           power, temperatures of the tube and of the glass envelope
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J; the radiation
+           and mean-free-path terms need absolute temperatures, which are
+           written explicitly as T_..._K
+  Source : ThermoCycle Modelica library, file
+           ThermoCycle/Components/HeatFlow/Walls/SolarAbsorber/SolAbsForristal.mo
+           (parameters of ThermoCycle/Components/Units/Solar/SolarField_Forristal.mo),
+           commit b4f16c0b - original authors S. Quoilin and A. Desideri
+           (ULiège Thermodynamics Laboratory); scientific reference R. Forristall,
+           NREL/TP-550-34169 - see README.md
+=============================================================================}
+
+"Inputs and parameters"
+DNI = 900 [W/m2]  "direct normal irradiance"
+Theta_inc = 5 [deg]  "incidence angle [deg] (5 deg = 0.0873 rad in the original)"
+v_wind = 5 [m/s]  "wind speed on the receiver"
+T_amb = 20 [C]  "ambient air temperature"
+T_int_t = 200 [C]  "temperature of the fluid on the internal surface of the tube"
+
+"Optical properties (HCE shadowing, tracking and geometry error, dirt, unaccounted losses, mirror reflectivity)"
+eps1 = 0.9754  "[-] HCE shadowing"
+eps2 = 0.994  "[-] tracking error"
+eps3 = 0.98  "[-] geometry error"
+eps4 = 0.962566845  "[-] dirt on mirrors"
+eps5 = 0.981283422  "[-] dirt on HCE"
+eps6 = 0.96  "[-] unaccounted"
+rho_cl = 0.935  "[-] mirror reflectivity"
+Tau_g = 0.963  "[-] glass transmissivity"
+Alpha_g = 0.02  "[-] glass absorptivity, constant (see Forristal pag 18)"
+Alpha_t = 0.97  "[-] tube absorptivity"
+Eps_g = 0.89  "[-] glass emissivity, constant (see Forristal pag 18)"
+
+"Geometry of the reflector and of the tube"
+L = 8 [m]  "length of the tube"
+A_P = 5 [m]  "aperture of the parabola"
+Nt = 1  "[-] number of tubes in parallel"
+rext_g = Dext_g/2  "external radius of the glass envelope [m]"
+rint_g = rext_g-th_g  "internal radius of the glass envelope [m]"
+rext_t = Dext_t/2  "external radius of the metal tube [m]"
+rint_t = rext_t-th_t  "internal radius of the metal tube [m]"
+
+"Geometry and properties of the glass envelope"
+Dext_g = 0.12 [m]  "external glass diameter"
+th_g = 0.0025 [m]  "glass thickness"
+lambda_g = 1.05 [W/m-K]  "thermal conductivity of the glass"
+
+"Geometry and properties of the metal tube"
+Dext_t = 0.07 [m]  "external tube diameter"
+th_t = 0.002 [m]  "tube thickness"
+lambda_t = 54 [W/m-K]  "thermal conductivity of the tube"
+
+"Constants"
+Sigma = 5.670373E-8 [W/m2-K4]  "Stefan-Boltzmann constant"
+
+"Properties of the ambient air (constant, as in the original)"
+k_air = 0.025574811 [W/m-K]  "thermal conductivity of the air at constant pressure"
+rho_air = 1.183650626 [kg/m3]  "density of the air"
+mu_air = 1.83055E-05 [kg/m-s]  "dynamic viscosity of the air at the glass temperature"
+Pr = 0.72  "[-] Prandtl number"
+
+"Properties of the annulus gas (air considered as the annulus gas)"
+Pvacuum = 0.013332237 [Pa]  "vacuum pressure between the metal tube and the glass envelope"
+DELTA = 3.53E-08  "molecular diameter of the annulus gas, in cm because the mean-free-path correlation is written with that unit [cm]"
+BB = 1.571  "[-] interaction coefficient"
+k_st = 0.02551 [W/m-K]  "thermal conductivity at standard pressure and temperature"
+
+"Absolute temperatures [K], as needed by the T^4 and mean-free-path terms"
+T_amb_K = T_amb+273.15  "ambient air temperature [K]"
+T_sky = T_amb-8  "sky temperature, assumption of the original [C]"
+T_sky_K = T_sky+273.15  "sky temperature [K]"
+T_int_t_K = T_int_t+273.15  "temperature of the fluid on the internal tube surface [K]"
+T_ext_g_K = T_ext_g+273.15  "external surface of the glass envelope [K]"
+T_int_g_K = T_int_g+273.15  "internal surface of the glass envelope [K]"
+T_ext_t_K = T_ext_t+273.15  "external surface of the metal tube [K]"
+
+"Optical efficiency and absorbed flux"
+IAM = cos(Theta_inc)  "incidence angle modifier, cos of the incidence angle [-]"
+eta_opt = eps1*eps2*eps3*eps4*eps5*eps6*rho_cl*IAM  "optical efficiency of the collector [-]"
+eta_opt_g = eta_opt*Alpha_g  "optical efficiency seen by the glass envelope [-]"
+eta_opt_t = eta_opt*Alpha_t*Tau_g  "optical efficiency seen by the metal tube [-]"
+A_ref = L*A_P*Nt  "total area of the reflector [m2]"
+A_ext_g = pi*Dext_g*L*Nt  "total lateral external area of the glass envelope [m2]"
+A_ext_t = pi*Dext_t*L*Nt  "total lateral external area of the metal tube [m2]"
+Q_glass_tot = DNI*eta_opt_g*A_ref  "power absorbed by the glass envelope [W]"
+Phi_glass_tot = Q_glass_tot/A_ext_g  "heat flux absorbed by the glass envelope per external glass area [W/m2]"
+Q_tube_tot = DNI*eta_opt_t*A_ref  "power absorbed by the metal tube [W]"
+Phi_tube_tot = Q_tube_tot/A_ext_t  "heat flux absorbed by the metal tube per external tube area [W/m2]"
+
+"Forced convection to the ambient air (Nu = C*Re^m*Pr^n, C and m from Forristal)"
+Re = v_wind*rho_air*Dext_g/mu_air  "Reynolds number of the ambient air [-]"
+C = if(Re-40, if(Re-1000, if(Re-200000, 0.076, 0.26), 0.51), 0.75)  "Nusselt coefficient C, function of Re [-]"
+m = if(Re-40, if(Re-1000, if(Re-200000, 0.7, 0.6), 0.5), 0.4)  "Nusselt exponent m, function of Re [-]"
+n = if(Pr-10, 0.36, 0.37)  "Nusselt exponent n, function of Pr [-]"
+Nu = C*Re^m*Pr^n  "Nusselt number of the ambient air [-]"
+Gamma_air = k_air*Nu/Dext_g  "external heat transfer coefficient [W/m2-K]"
+
+"Radiation and convection from the glass envelope to the environment"
+Phi_conv_air = Gamma_air*(T_ext_g-T_amb)  "convective flux from the external glass surface [W/m2]"
+Phi_rad_air = Eps_g*Sigma*(T_ext_g_K^4-T_sky_K^4)  "radiative flux from the external glass surface to the sky [W/m2]"
+Phi_glass_ext = Phi_glass_tot-Phi_rad_air-Phi_conv_air  "net heat flux entering the glass envelope at its external surface [W/m2]"
+Phi_glass_ext = lambda_g/(rext_g*ln(2*rext_g/(rint_g+rext_g)))*(T_ext_g-T_g)  "conduction through the external half-thickness of the glass [W/m2]"
+
+"Glass envelope energy balance (steady: no accumulation of heat in the glass)"
+rint_g*Phi_glass_int+rext_g*Phi_glass_ext = 0  "energy balance of the glass envelope, zero accumulation [W/m]"
+Phi_glass_int = lambda_g/(rint_g*ln((rint_g+rext_g)/(2*rint_g)))*(T_int_g-T_g)  "conduction through the internal half-thickness of the glass [W/m2]"
+
+"Evacuated annulus between the metal tube and the glass envelope"
+Eps_t = 0.062+2E-7*T_ext_t^2  "coating emissivity, function of the temperature in degC (Forristal pag 18) [-]"
+T_g_t = (T_int_g_K+T_ext_t_K)/2  "average temperature between the air and the external tube temperature [K]"
+LAMBDA = 2.33E-20*T_g_t/(Pvacuum/133.322368*DELTA^2)  "mean free path between collisions of a molecule [m]"
+Gamma_vacuum = k_st/((Dext_t/2)*ln(rint_g/rext_t)+BB*LAMBDA*(rext_t/rint_t+1))  "heat transfer coefficient of the residual gas [W/m2-K]"
+Phi_conv_gas = Gamma_vacuum*(T_ext_t-T_int_g)  "convective flux in the vacuum [W/m2]"
+Phi_rad_gas = Sigma*(T_ext_t_K^4-T_int_g_K^4)/(1/Eps_t+Dext_t/Dext_g*(1/Eps_g-1))  "radiative flux in the vacuum [W/m2]"
+Phi_glass_int = Phi_conv_gas+Phi_rad_gas  "flux transferred from the tube to the internal glass surface [W/m2]"
+
+"Metal tube energy balance and heat flux to the fluid"
+Phi_tube_ext = Phi_tube_tot-Phi_glass_int  "net heat flux entering the tube at its external surface [W/m2]"
+rint_t*Phi_tube_int+rext_t*Phi_tube_ext = 0  "energy balance of the metal tube, zero accumulation [W/m]"
+Phi_tube_ext = lambda_t/(rext_t*ln(2*rext_t/(rint_t+rext_t)))*(T_ext_t-T_t)  "conduction through the external half-thickness of the tube [W/m2]"
+Phi_tube_int = lambda_t/(rint_t*ln((rint_t+rext_t)/(2*rint_t)))*(T_int_t-T_t)  "conduction through the internal half-thickness of the tube [W/m2]"
+
+"Thermal and total efficiency, heat losses"
+Q_abs = -Phi_tube_int*2*rint_t*pi*L*Nt  "power absorbed by the fluid [W] (sign corrected, see README)"
+eta_th = if(Q_tube_tot, Q_abs/Q_tube_tot, Q_abs)  "thermal efficiency [-]"
+eta_TOT = eta_th*eta_opt_t  "total efficiency [-]"
+Phi_loss = (Phi_rad_air+Phi_conv_air)*A_ext_g/A_ref  "heat losses with respect to the reflector surface [W/m2]"
+
+"Energy-balance closure check (added here, not in the original)"
+Q_loss = (Phi_rad_air+Phi_conv_air)*A_ext_g  "total power lost to the environment [W]"
+err_bal = Q_glass_tot+Q_tube_tot-Q_abs-Q_loss  "closure error of the overall energy balance [W]"

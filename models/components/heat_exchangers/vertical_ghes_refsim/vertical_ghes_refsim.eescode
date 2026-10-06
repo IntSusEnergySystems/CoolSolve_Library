@@ -1,0 +1,406 @@
+{=============================================================================
+  Vertical ground-loop heat exchanger (borefield) with a heat pump: reference
+  simulation model
+  CoolSolve Library model CSL-0081
+ -----------------------------------------------------------------------------
+  Time-dependent simulation of a vertical ground-coupled heat exchanger (a
+  field of vertical U-tube boreholes) exchanging heat with a heat pump. As in
+  the original, the model is based on the Cylindrical Heat Source theory: the
+  borehole wall temperature follows the g-function of a line source in an
+  infinite medium, the borehole thermal resistance is that of Remund, and the
+  Multiple Load Aggregation Algorithm (MLAA) of Pinel superposes the hour,
+  day, week, month and "rest" load histories of the borefield. The fluid
+  temperature is the mean of the supply and exhaust temperatures of the loop.
+  The interference (long-term) temperature penalty of Bernier is implemented
+  in a PROCEDURE that the original does not call (it is neglected for
+  short- and middle-term simulations, t_p = 0).
+
+  Inputs : borefield geometry (n_b, L_bh, d_bh, B_sp, A_bf), ground properties
+           (k_s, alpha_s), pipe and grout (D_p_in, D_p_out, k_p, k_grout),
+           brine properties (c_p_f, rho_f, mu_f, k_f), undisturbed ground
+           temperature t_g, loop flow rate M_dot_f_bf and supply temperature
+           t_f_su_loop, heat-pump load Q_dot_hp and COP_heatpump, simulation
+           window (tau_summer_1, tau_summer_2) and time step DELTAtau
+  Outputs: t_w (borehole wall temperature), Q_dot_borefield, t_f, t_f_su_loop,
+           t_f_ex_loop, annual energy Q_bf_kWh, trajectory in the integral table
+  Units  : SI - temperatures in °C, times in s unless the name says otherwise,
+           powers in W, energies in kWh only for Q_bf_kWh
+  Source : ULiège Thermodynamics Laboratory, model data bank, reference
+           simulation model by Stéphane Bertagnolio, 2008 February 12th
+           (EES file VerticalGHES_RefSim_EES_Model_SB080213.EES) - see README.md
+=============================================================================}
+
+PROCEDURE Nusselt(c_p_f,rho_f,mu_f,mu_f_w,k_f,D_p_i,L_b,m_dot_f_b:Nu#,Re,Pr)
+"Nusselt calculation"
+A_p=PI*D_p_i^2/4
+V_f=m_dot_f_b/rho_f*1/A_p
+Re:=rho_f*V_f*D_p_i/mu_f "Reynolds Number"
+Pr:=c_p_f*mu_f/k_f "Prandlt number"
+IF Re <= 2300 THEN	"!Sieder and Tate's Correlation; Whitaker modification"
+"valid for :
+T_w = constant
+0.48 < Pr < 16700
+0.0044 (mu_f/mu_f_w) < 9.75"
+F_whitaker =(Re*Pr*D_p_i/L_b)^(1/3)*(mu_f/mu_f_w)^0.14
+IF (F_whitaker <2) THEN
+Nu#:=3.66
+ELSE
+Nu#:=1.86*(Re*Pr*D_p_i/L_b)^(1/3)*(mu_f/mu_f_w)^0.14
+ENDIF
+ENDIF
+IF (2300<Re) AND (Re<=10000) THEN	"!Gnielinski's Correlation"
+"valid for :
+0.5 < Pr < 2000
+2300 < Re < 5E6"
+f:=(0.790*ln(Re)-1.64)^(-2)
+Nu#:= ((f/8)*(Re-1000)*Pr)/(1+12.7*sqrt(f/8)*(Pr^(2/3)-1))
+ENDIF
+IF (10000 < Re) THEN	"!Gnielinski's Correlation"
+"valid for :
+0.5 < Pr < 2000
+2300 < Re < 5E6"
+f:=(0.790*ln(Re)-1.64)^(-2)
+Nu#:= ((f/8)*(Re-1000)*Pr)/(1+12.7*sqrt(f/8)*(Pr^(2/3)-1))
+ENDIF
+{IF (10000 < Re) THEN	"!Dittus-Boelter's Correlation for moderate temperature difference : T_w-T_f (less accurate)"
+"valid for:
+0.7<Pr<160
+Re>10000
+L/D>10"
+n:=0.3 "(0.3 en cooling, et 0.4 en heating)"
+Nu#:=0.023*Re^0.8*Pr^n
+ENDIF}
+END
+
+FUNCTION G (u)
+"Cylindrical Heat Source Function"
+{for p=1}
+"The equation for the function G is contained in a brief technical note entitled Heating of a Cylindrical Cavity by Leonard Y. Cooper,
+in the International Journal of Heat and Mass Transfer, Vol. 19, pp. 575-577. Pergamon Press, 1976.
+The long-time solution is given directly in the paper, but the short time solution depends on a sum with terms involving the gamma function.
+Below is a Basic routine that implements the function G, but it's been some time since I looked at this, so you might want to check it over
+and compare with other methods of getting the function G."
+egam = 1.781072418
+p2 = 9.86960440109
+tcrit = 6.124633
+ca = 1.128379
+c0 = -0.5
+c1 = 0.2756227
+c2 = -0.1499385
+c3 = 0.0617932
+c4 = -0.01508767
+c5 = 0.001566857
+If u <= tcrit Then
+G = Sqrt(u) * (ca + c0 * Sqrt(u) + c1 * u + c2 * (u ^ 1.5) + c3 * (u ^ 2) + c4 * (u ^ 2.5) + c5 * (u ^ 3))
+Else
+z = ln(4 * u / egam)
+G = (2 * z * (8 * u * (1 + 2 * u) - 1 - 3 * z) + 16 * u + p2 + 3) / (64 * (u ^ 2))
+EndIf
+G = G / 6.28318530718
+END
+
+PROCEDURE mean(t,DELTAtau,q,h,d,w,m:q_day,q_week,q_month,q_rest)
+"Past loads aggregation (see [3])"
+q_day=q
+q_week=q
+q_month=q
+q_rest=q
+IF t=1 THEN GOTO 1000
+IF (t<=d) THEN GOTO 10 ELSE GOTO 20
+10:
+q_day=(INTEGRALVALUE((t-1)*DELTAtau,q_day)*(t-1)+q)/t
+q_week=(INTEGRALVALUE((t-1)*DELTAtau,q_week)*(t-1)+q)/t
+q_month=(INTEGRALVALUE((t-1)*DELTAtau,q_month)*(t-1)+q)/t
+q_rest=(INTEGRALVALUE((t-1)*DELTAtau,q_rest)*(t-1)+q)/t
+GOTO 1000
+20:
+IF (t<=w) THEN GOTO 30 ELSE GOTO 40
+30:
+q_day=(INTEGRALVALUE((t-1)*DELTAtau,q_day)*d-INTEGRALVALUE((t-d)*DELTAtau,Q_dot_bf)+q)/d
+q_week=(INTEGRALVALUE((t-1)*DELTAtau,q_week)*(t-1)+q)/t
+q_month=(INTEGRALVALUE((t-1)*DELTAtau,q_month)*(t-1)+q)/t
+q_rest=(INTEGRALVALUE((t-1)*DELTAtau,q_rest)*(t-1)+q)/t
+GOTO 1000
+40:
+IF (t<=m) THEN GOTO 50 ELSE GOTO 60
+50:
+q_day=(INTEGRALVALUE((t-1)*DELTAtau,q_day)*d-INTEGRALVALUE((t-d)*DELTAtau,Q_dot_bf)+q)/d
+q_week=(INTEGRALVALUE((t-1)*DELTAtau,q_week)*w-INTEGRALVALUE((t-w)*DELTAtau,Q_dot_bf)+q)/w
+q_month=(INTEGRALVALUE((t-1)*DELTAtau,q_month)*(t-1)+q)/t
+q_rest=(INTEGRALVALUE((t-1)*DELTAtau,q_rest)*(t-1)+q)/t
+GOTO 1000
+60:
+q_day=(INTEGRALVALUE((t-1)*DELTAtau,q_day)*d-INTEGRALVALUE((t-d)*DELTAtau,Q_dot_bf)+q)/d
+q_week=(INTEGRALVALUE((t-1)*DELTAtau,q_week)*w-INTEGRALVALUE((t-w)*DELTAtau,Q_dot_bf)+q)/w
+q_month=(INTEGRALVALUE((t-1)*DELTAtau,q_month)*m-INTEGRALVALUE((t-m)*DELTAtau,Q_dot_bf)+q)/m
+q_rest=(INTEGRALVALUE((t-1)*DELTAtau,q_rest)*(t-1)+q)/t
+GOTO 1000
+1000:
+END
+
+PROCEDURE summation (q,h,d,w,m,t,DELTAtau,Fo_p,time:sum)
+"Multiple Load Aggregation Algorithm (see [3])"
+sum:=0	"somme retournée au programme principal"
+sum1:=0	"terme de la dernière heure (pas vraiment une somme)"
+sum2:=0 	"ancien terme associé aux 10 ans précédentes"
+sum3:=0 	"somme des 'h' dernières heures"
+sum4:=0	"terme associé au flux moyen des 'd' dernières heures avant l'interval h"
+sum5:=0	"terme associé au flux moyen des 'w' dernières heures avant l'interval (h+d)"
+sum6:=0	"terme associé au flux moyen des 'm' dernières heures avant l'interval (h+d+w)"
+sum7:=0	"terme associé au flux moyen des 'rest' dernières heures avant l'interval (h+d+w+m)"
+
+sum1:=q*G(Fo_p*time)
+IF (t=1) THEN GOTO 999
+IF (t>(h+d+w+m)) THEN GOTO 10 ELSE GOTO 20
+10 :
+sum4:=INTEGRALVALUE((t-h)*DELTAtau,q_day)*(G(Fo_p*(h+d)*time)-G(Fo_p*h*time))
+sum5:=INTEGRALVALUE((t-h-d)*DELTAtau,q_week)*(G(Fo_p*(h+d+w)*time)-G(Fo_p*(h+d)*time))
+sum6:=INTEGRALVALUE((t-h-d-w)*DELTAtau,q_month)*(G(Fo_p*(h+d+w+m)*time)-G(Fo_p*(h+d+w)*time))
+sum7:=INTEGRALVALUE((t-h-d-w-m)*DELTAtau,q_rest)*(G(Fo_p*t*time)-G(Fo_p*(h+d+w+m)*time))
+GOTO 100
+20 :
+IF (t>(h+d+w)) THEN GOTO 30 ELSE GOTO 40
+30 :
+sum4:=INTEGRALVALUE((t-h)*DELTAtau,q_day)*(G(Fo_p*(h+d)*time)-G(Fo_p*h*time))
+sum5:=INTEGRALVALUE((t-h-d)*DELTAtau,q_week)*(G(Fo_p*(h+d+w)*time)-G(Fo_p*(h+d)*time))
+sum6:=0
+sum7:=INTEGRALVALUE((t-h-d-w)*DELTAtau,q_rest)*(G(Fo_p*t*time)-G(Fo_p*(h+d+w)*time))
+GOTO 100
+40 :
+IF (t>(h+d)) THEN GOTO 50 ELSE GOTO 60
+50:
+sum4:=INTEGRALVALUE((t-h)*DELTAtau,q_day)*(G(Fo_p*(h+d)*time)-G(Fo_p*h*time))
+sum5:=0
+sum6:=0
+sum7:=INTEGRALVALUE((t-h-d)*DELTAtau,q_rest)*(G(Fo_p*t*time)-G(Fo_p*(h+d)*time))
+GOTO 100
+60 :
+100 :
+j:=t
+90 : j:=j-1
+sum3:=sum3 + INTEGRALVALUE(j*DELTAtau,q_day)*(G(Fo_p*(t-j+1)*time)-G(Fo_p*(t-j)*time))
+IF((j>t-h+1) AND (j>1)) THEN GOTO 90
+999 : sum:=sum1+sum2+sum3+sum4+sum5+sum6+sum7
+
+END
+
+PROCEDURE Penalty (t,t_s,B,H,NB,A:F_correlation_p)
+"Penalty temperature calculation (see [6])"
+"valid for:"
+"-2 < ln(t/t_s) < 3"
+"4 < n_b < 144"
+"1 < A_bf < 9"
+"0.05 < B_sp/L_bh < 0.1"
+a_0=1.9827
+F_1=-3.5034E1*B/H+3.4173E2*(B/H)^2-1.2912E3*(B/H)^3
+F_2=5.222E-1*(ln(t/t_s))-1.5616E-1*(ln(t/t_s))^2-9.7468E-3*(ln(t/t_s))^3
+F_3=2.2491E-1*NB-9.7069E-4*NB^2+2.0964E-6*NB^3
+F_4=-4.5140E-1*A+2.5026E-2*A^2+1.6956E-3*A^3
+F_5=-5.8677*(B/H*ln(t/t_s))+2.6374*B/H*ln(t/t_s)^2
+F_6=-2.9016*(B/H*NB)+1.6551E-2*(B/H*NB^2)
+F_7=4.2146*B/H*A-3.1854E-1*B/H*A^2
+F_8=7.6758*(B/H)^2*ln(t/t_s)-9.029*(B/H)^2*ln(t/t_s)^2
+F_9=1.1102E1*(B/H)^2*NB-8.3937E-2*(B/H)^2*NB^2
+F_10=-2.2183E1*(B/H)^2*A+1.9101*(B/H)^2*A^2
+F_11=2.0589E-2*ln(t/t_s)*NB-6.4679E-5*ln(t/t_s)*NB^2
+F_12=-1.1044E-2*ln(t/t_s)*A+2.0201E-4*ln(t/t_s)*A^2
+F_13=-3.8683E-3*ln(t/t_s)^2*NB+1.544E-5*ln(t/t_s)^2*NB^2
+F_14=4.4823E-3*ln(t/t_s)^2*A-1.7647E-4*ln(t/t_s)^2*A^2
+F_15=3.3797E-2*NB*A-3.6375E-3*NB*A^2
+F_16=-5.0113E-4*NB^2*A-9.8598E-6*NB^2*A^2
+F_correlation_p=a_0+F_1+F_2+F_3+F_4+F_5+F_6+F_7+F_8+F_9+F_10+F_11+F_12+F_13+F_14+F_15+F_16
+END
+
+"!Title: Vertical Ground Loop Heat Exchanger (horizontal in the original, corrected)"
+"Date : 2008 February 12th"
+"Authors: S.Bertagnolio"
+"University of Liège
+Faculty of Applied Sciences
+Thermodynamics Laboratory
+Campus of Sart-Tilman, B49 (P33)
+B-4000 LIEGE (BELGIUM)"
+
+"! Description :"
+"General Description"
+"This model simulates a vertical ground coupled heat exchanger or, more simply, a vertical pipe buried in the earth. The model is based on work of Bernier and the work done in a Master of Science Thesis by Patrice Pinel at Ecole Polytechnique de Montréal."
+"Mathematical Description"
+"The borehole wall temperature is computed using the Cylindrical Heat Source theory. The borehole thermal resistance is computed using the method proposed by Remund. The Multiple Load Aggregation Algorithm developed by Pinel is also implemented. The temperature penalty due to interference between boreholes is taken into account by using a correlation proposed by Bernier."
+
+"!Nomenclature :"
+"M_dot				Mass flow rate							kg s-1"
+"t_r_su_cd				Condenser supply temperature					C"
+"d					diameter							m"
+"tau				time variable							s"
+"e					thickness							m"
+"c_p				Specific heat							J/kg-K"
+"k					thermal conductivity						W/m-K"
+"A					area								m^2"
+"R					thermal resistance						K/W"
+"t					temperature							C"
+"z					depth								m"
+"L					length								m"
+"Q_dot				power								W"
+"V					volume								m^3"
+"Fo				Fourier number"
+"Greek symbols"
+"rho				Density								kg m-3"
+"mu				viscosity							Pa-s"
+"alpha				thermal diffusivity						m^2/day"
+"Subscripts"
+"f					fluid"
+"s					soil"
+"p					pipe"
+"bf					borefield"
+"bh				borehole"
+"i					inner"
+"o					outer"
+"g					ground or grout"
+"h					hour"
+"su					supply"
+"ex					exhaust"
+"MLAA				Multiple Load Aggregation Algorithm"
+
+"!References :"
+"[1] Bernier, M., Kummert, M., Bertagnolio, S. (2007) Development and applications of test cases for comparing vertical ground heat exchanger models. Proceeding of Building Simulation 2007, Beijing, China."
+"[2] Bernier, M.A. (2006). Closed-Loop Ground-Coupled Heat Pump Systems. ASHRAE Journal, 48(9), p. 12-18."
+"[3] Bernier, M.A., Labib, R., Pinel, P., Paillot, R. (2004). A Multiple Load Aggregation Algorithm for Annual Hourly Simulations of GCHP Systems. HVAC and R Research, 10(4), p. 471-487."
+"[4] Bernier, M. (2001). Ground-coupled heat pump system simulation. ASHRAE Transactions. 107(1): 605-616."
+"[5] Bernier, M. (2000). A Review of the Cylindrical Heat Source Method for the Design and Analysis of Vertical Ground-Coupled Heat Pump Systems. 4th International Conference on Heat Pumps in Cold Climates, p. 1-14."
+"[6] Bernier, M., Chahla, A., Pinel, P. (2005) Long-term ground temperature changes in geo-exchange systems. Submitted for possible publication in ASHRAE Transactions"
+
+"!1. OUTPUTS"
+"t_w, t_f_ex_loop [C]"
+"Q_dot_borefield [W]"
+
+"!2. INPUTS"
+"2.1. Load"
+{Q_dot_hp=-(A_heating+B_heating*sin(270+time_h/8760*360))*sin(time_h\day/24*180) "synthetic profile"
+Q_dot_cooling_max=(A_heating+B_heating)
+Q_dot_heating_max=B_heating-A_heating
+Q_dot_cooling_max=50000 [W]
+Q_dot_heating_max=120000 [W]}
+{Q_dot_hp=100000 [W]}
+"2.2. Total (borefield) flow rate - M_dot_f_bf [kg/s]"
+M_dot_f_bf=1 [kg/s] "restored input; the control-panel default of the original is 22 kg/s"
+"2.3. Fluid supply temperature - t_f_su_loop [C]"
+"2.3bis. Exhaust temperature of the heat-pump loop (restored input; see README)"
+t_f_ex_loop=-1.217340997 [C]
+"2.4. undisturbed ground temperature - t_g [C]"
+t_g=10 [C] "restored input (the control-panel default of the original is 10 °C)"
+"2.5. Heat-pump load (the two commented profiles above are the alternatives of the original)"
+Q_dot_hp=4339.061513 [W] "restored input: constant load of the stored EES run, as in the original's {Q_dot_hp=100000 [W]}"
+"!3. PARAMETERS"
+"3.1. time variables"
+tau_summer_1=1 [h]
+tau_summer_2=1000 [h]
+tau-tau_1=(tau_summer-tau_summer_1)*3600
+tau_1=tau_summer_1*3600
+tau_2=tau_summer_2*3600
+DELTAtau_summer=DELTAtau/3600
+DELTAtau=3600 [s] "time step of the integration; as in the original, not an input of the control panel"
+DELTAtau_table=DELTAtau "integral table time step"
+run_h=tau_summer-tau_summer_1+1
+"Hour / day :"
+time_day\step=1/24*DELTAtau_summer
+time_h\day_1=time_h-24*trunc(time_h/24)
+time_h\day=if(time_h\day_1,0.0000001,24,24,time_h\day_1)
+"Day / year :"
+time_h=tau_summer
+time_day_1=trunc(time_h/24)+1
+time\day=if(round(time_h\day),24,time_day_1,time_day_1-1,time_day_1-1)+0.00001
+"3.2. aggregation"
+{h=6/DELTAtau_summer
+d=24/DELTAtau_summer
+w=168/DELTAtau_summer
+m=744/DELTAtau_summer}
+h_MLAA=6
+d_MLAA=24
+w_MLAA=168
+m_MLAA=744
+"3.3. Borehole"
+d_bh=0.152 [m] "borehole diameter"
+L_bf=n_b*L_bh "[m] total length"
+n_b=1 "number of boreholes; 1 in the stored EES solution (the control-panel default of the original is 20)"
+L_bh=100 [m] "borehole depth"
+borehole_configuration$='B' "control panel: selects the beta coefficients below"
+$IF borehole_configuration$='A'
+"configuration A"
+beta_0=20.1 [-]
+beta_1=-0.9447 [-]
+$ENDIF
+$IF borehole_configuration$='B'
+"configuration B"
+beta_0=17.44 [-]
+beta_1=-0.6052 [-]
+$ENDIF
+$IF borehole_configuration$='C'
+"configuration C"
+beta_0=21.91 [-]
+beta_1=-0.3796 [-]
+$ENDIF
+"3.4. borefield (for penalty temperature calculation for long-term simulation)"
+A_bf=1.25 "borefiel aspect ratio"
+B_sp=5.5 [m] "borehole spacing"
+"3.5. Soil"
+alpha_s=0.082 [m^2/day] "thermal diffusivity of the ground"
+k_s=2.1 [W/m-K] "thermal conductivity of the ground"
+"3.6. Pipe"
+k_p=0.42 [W/m-K] "thermal conductivity of the pipe"
+D_p_in=0.0274 [m] "U-tube inner diameter"
+D_p_out=0.0335 [m] "U-tube outer diameter"
+"3.7. Grout"
+k_grout=2.6[W/m-K] "Grout thermal conductivity"
+"3.8. Fluid"
+c_p_f=3960 [J/kg-K] "fluid specific heat"
+rho_f=1022 [kg/m^3] "fluid density"
+mu_f=0.003081 [Pa-s]
+mu_f_w=0.003081 [Pa-s]
+k_f=0.49 [W/m-K]
+"3.9. Heat pump"
+COP_heatpump=3.5 [-]
+"!4. SIMULATION"
+"!4.1. Multiple Loads Aggregation Algorithm"
+CALL mean(run_h,DELTAtau,Q_dot_bf,h_MLAA,d_MLAA,w_MLAA,m_MLAA:q_day,q_week,q_month,q_rest)
+"!4.2. Interference Temperature Penalty"
+{CALL penalty (time_day,t_s,B_sp,L_bh,n_b,A_bf:F_correlation_p)
+t_s=L_bh^2/(9*alpha_s)
+lnt\t_s=ln((time_day)/t_s)
+"validity :"
+f_penalty=IF(n_b,4,0,0,IF(n_b,144,1,0,0))*IF(lnt\t_s,-2,0,0,IF(lnt\t_s,3,1,0,0))*IF(A_bf,1,0,0,IF(A_bf,9,1,0,0))*IF((B_sp/L_bh),0.05,0,0,IF((B_sp/L_bh),0.1,1,0,0))
+"-2 < ln(t/t_s) < 3"
+"4 < n_b < 144"
+"1 < A_bf < 9"
+"0.05 < B_sp/L_bh < 0.1"
+"Temperature penalty"
+t_p=f_penalty*Q_dot_borefield/(L_bf)*1/(2*PI*k_s)*F_correlation_p}
+t_p=0 [C] "the temperature penalty is neglected for short and middle-term simulations (less than 5 years)"
+"!4.3. Borehole wal temperature"
+CALL summation (Q_dot_bf,h_MLAA,d_MLAA,w_MLAA,m_MLAA,run_h,DELTAtau,Fo,time_day\step:sum_MLAA)
+sum_MLAA/(k_s*L_bf)=t_g-t_w+t_p
+DELTAt_g=t_g-t_w
+"Fourier number"
+Fo=4*alpha_s/(d_bh)^2
+"!4.4. Borehole thermal resistance"
+R_b=R_fluid+R_pp+R_g
+"pipe thermal resistance"
+R_pp=R_pipe/2
+R_pipe=ln(D_p_out/D_p_in)/(2*PI*k_p)
+"fluid thermal resistance"
+R_fluid=1/(PI*D_p_in*h_in)
+CALL Nusselt(c_p_f,rho_f,mu_f,mu_f_w,k_f,D_p_in,L_bh,m_dot_f_bh:Nu#,Re,Pr)
+Nu#=(h_in*D_p_in)/k_f
+{h_in=3300 [W/m^2-K]}
+"grout thermal resistance"
+R_g=1/(S_bh*k_grout)
+S_bh=beta_0*(d_bh/D_p_out)^beta_1
+"!4.5. Fluid temperature"
+Q_dot_borefield=L_bf/R_b*(t_w-t_f)
+t_f_su_loop=t_f-Q_dot_borefield/(2*m_dot_f_bf*c_p_f)
+t_f=(t_f_su_loop+t_f_ex_loop)/2
+m_dot_f_bh=m_dot_f_bf/n_b
+"!4.6. Load"
+Q_dot_borefield=Q_dot_hp*(1-1/COP_heatpump)
+Q_dot_bf=Q_dot_borefield
+Q_bf_kWh=integral(Q_dot_borefield,tau,tau_1,tau_2,DELTAtau)/3.6E6
+
+$IntegralTable tau:DELTAtau_table,tau_summer,time_day,time\day,Q_dot_hp,Q_dot_bf,q_day,q_week,q_month,q_rest,Q_bf_kWh,run_h,t_w,t_p,t_f_su_loop,t_f_ex_loop

@@ -158,5 +158,18 @@ stored solution is the verification reference).
 
 ## Related models
 
-None yet in the library. See the CoolSolve example
-`pressuredrop.eescode` (same model, kept in CoolSolve as a test case).
+- `CSL-0087` *internal_turbulent_nusselt* (function library): its
+  turbulent internal-convection correlations take the Darcy friction factor
+  computed here as an input (`ht` ships no friction-factor correlation of its
+  own).
+- See also the CoolSolve example `pressuredrop.eescode` (same model, kept in
+  CoolSolve as a test case).
+- `CSL-0094` *external_crossflow_cylinder*: the crossflow heat-transfer
+  correlations of the same `ht` triage take the pipe Reynolds number `Re`
+  computed here as an argument.
+- `CSL-0100` *free_conv_enclosed_and_jackets*: `h_jacket_Stein_Schmidt` takes the
+  Darcy friction factor computed here as an argument (tangential jacket inlet).
+- `CSL-0103` *tube_bank_dp_bell_delaware*: the shell-side pressure drop of a
+  shell-and-tube heat exchanger (Kern) and the Bell-Delaware correction factors;
+  a shell-and-tube model combines its bundle drop with the pipe friction factor
+  of this file.

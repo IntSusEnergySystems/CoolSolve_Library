@@ -295,3 +295,9 @@ mentions these five rows and states that they stay `todo` for their own cards;
   evaporating/condensing temperatures and this duty belong to.
 - `CSL-0008` *condenser_three_zones*: air-cooled R134a condenser, the
   counterpart of this evaporator on the condensing side.
+- `CSL-0089` *condensation_film*: the film-condensation correlations for the
+  condensing side of this R134a circuit (its coil condenses moist air).
+- `CSL-0097` *two_phase_nonboiling_in_tube*: the two-phase non-boiling
+  in-tube heat-transfer coefficients of the `ht` family (9 functions), an
+  alternative rating of the same evaporator coil when the two-phase flow is
+  treated without phase change.

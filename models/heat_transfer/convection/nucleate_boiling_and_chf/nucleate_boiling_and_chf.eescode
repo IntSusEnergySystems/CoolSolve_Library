@@ -1,0 +1,557 @@
+{=============================================================================
+  Pool nucleate boiling heat flux and critical heat flux
+  CoolSolve Library model CSL-0088 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Nine pool nucleate-boiling heat-transfer-coefficient correlations
+  (Rohsenow, McNelly, Forster-Zuber, Montinsky, Stephan-Abdelsalam with its five
+  variants, HEDH-Taborek, Bier, Cooper, Gorenflo) and three critical-heat-flux
+  correlations (Zuber, Serth-HEDH, HEDH-Montinsky), from Forster and Zuber (1955)
+  to the VDI Heat Atlas (1993).
+
+  The nine boiling functions return the nucleate-boiling heat-transfer
+  coefficient h [W/m^2/K] of a pool-boiling surface for a given excess wall
+  temperature Te = T_wall - T_sat [K]; the wall heat flux follows from q = h*Te
+  and is left to the caller. The three CHF functions return the critical heat
+  flux q_crit [W/m^2], i.e. the upper limit of that flux.
+
+  The correlations take the liquid and vapour properties as arguments (rho_l,
+  rho_v, mu_l, k_l, Cp_l, Hvap, sigma, MW, the saturation pressure P, the
+  critical pressure Pc, the saturation temperature Tsat and the saturation
+  pressure rise dPsat); no property function is called inside a FUNCTION, so
+  the calling model passes them (rule 5 of sources/ht/README.md, section 7).
+
+  The Python source offers a second algebraic form of each boiling correlation,
+  with the heat flux q in place of the excess wall temperature Te. That form is
+  the implicit inversion of the Te form (ht's own tests check that both return
+  the same h), so it is not translated: the caller computes q = h*Te.
+
+  The demonstration program at the end calls every function, once with the
+  inputs of the ht doctest of the corresponding correlation ("A" cases) and once
+  with a second, uniform input set ("B" cases). The ht values of both sets are
+  tabulated in the README (verification table).
+
+  Four members of the ht family are only dispatchers in ht
+  (h_nucleic, h_nucleic_methods, qmax_boiling, qmax_boiling_methods: they select
+  a method by name) and are not translated; an EES caller selects the FUNCTION
+  directly. The two reference data tables of ht (h0_Gorenflow_1993, h0_VDI_2e,
+  one reference coefficient per CAS number) are not translated either: h0 is an
+  argument of h_Gorenflo.
+
+  Inputs : fluid properties [kg/m^3, Pa-s, W/m/K, J/kg/K, J/kg, N/m, g/mol],
+           P, Pc, dPsat [Pa], Tsat [K], Te [K], Di [m], Rp / Ra [m], K [-],
+           h0 [W/m^2/K], MW [g/mol], variant flags [-]
+  Outputs: h [W/m^2/K] (nine boiling functions), q_crit [W/m^2] (three CHF
+           functions)
+  Units  : SI - pressures in Pa, temperatures in K, lengths in m, MW in g/mol
+  Source : ht (Caleb Bell), ht/boiling_nucleic.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; correlations by the authors
+           cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION h_Rohsenow(rhol, rhog, mul, kl, Cpl, Hvap, sigma, Te, Csf, n)
+{H_ROHSENOW - heat-transfer coefficient of an evaporator in the nucleate
+boiling regime, as presented in [1] from [2].
+
+  h = mu_l*Hvap*[g*(rho_l-rho_v)/sigma]^0.5*
+      [Cp_l*Te^(2/3)/(Csf*Hvap*Pr_l^n)]^3      Pr_l = Cp_l*mu_l/k_l
+
+rhol / rhog are the densities of the liquid and of the produced vapour
+[kg/m^3], mul the liquid viscosity [Pa-s], kl its thermal conductivity [W/m/K],
+Cpl its heat capacity [J/kg/K], Hvap the heat of vaporization at P [J/kg], sigma
+the surface tension [N/m], Te the excess wall temperature [K], Csf the Rohsenow
+coefficient of the fluid and the metal [-] and n the Rohsenow constant, 1 for
+water and 1.7 for the other fluids usually [-].
+Validity: no range quoted in ht; the correlation is given for the nucleate
+  boiling regime (as in the original).
+Original: [1] Cao, E., Heat Transfer in Process Engineering, McGraw Hill
+  Professional, 2009 (presentation); [2] Rohsenow, W., "A Method of
+  Correlating Heat Transfer Data for Surface Boiling of Liquids", Technical
+  Report, M.I.T. Division of Industrial Cooperation, Cambridge, Mass., 1951.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_nucleic.py, Rohsenow,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  g_acc = 9.80665
+  Pr_l = Cpl*mul/kl
+  h_Rohsenow = mul*Hvap*(g_acc*(rhol-rhog)/sigma)^0.5*(Cpl*Te^(2/3)/Csf/Hvap/Pr_l^n)^3
+END
+
+FUNCTION h_McNelly(rhol, rhog, kl, Cpl, Hvap, sigma, P, Te)
+{H_MCNELLY - heat-transfer coefficient of an evaporator in the nucleate boiling
+regime, as presented in [1] from [2].
+
+  h = {0.225*(Te*Cp_l/Hvap)^0.69*(P*k_l/sigma)^0.31*(rho_l/rho_v-1)^0.33}^(1/0.31)
+
+P [Pa] is the saturation pressure of the fluid; the other arguments are the
+liquid properties as in h_Rohsenow (rho_v is not needed, only rho_l).
+Validity: no range quoted in ht (as in the original).
+Original: [1] Cao, E., Heat Transfer in Process Engineering, McGraw Hill
+  Professional, 2009 (presentation); [2] McNelly, M. J., "A correlation of the
+  rates of heat transfer to nucleate boiling liquids", J. Imp. Coll. Chem. Eng.
+  Soc. 7:18, 1953.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_nucleic.py, McNelly,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  h_McNelly = (0.225*(Te*Cpl/Hvap)^0.69*(P*kl/sigma)^0.31*(rhol/rhog-1)^0.33)^(1/0.31)
+END
+
+FUNCTION h_Forster_Zuber(rhol, rhog, mul, kl, Cpl, Hvap, sigma, dPsat, Te)
+{H_FORSTER_ZUBER - heat-transfer coefficient of an evaporator in the nucleate
+boiling regime, as presented in [1] from [2].
+
+  h = 0.00122*(k_l^0.79*Cp_l^0.45*rho_l^0.49/
+               (sigma^0.5*mu_l^0.29*Hvap^0.24*rho_v^0.24))*Te^0.24*dPsat^0.75
+
+dPsat [Pa] is the difference between the saturation pressure of the fluid at the
+wall temperature and at the saturation temperature; the other arguments are the
+liquid properties as in h_Rohsenow.
+Validity: no range quoted in ht (as in the original).
+Original: [1] Cao, E., Heat Transfer in Process Engineering, McGraw Hill
+  Professional, 2009 (presentation); [2] Forster, H. K. and N. Zuber,
+  "Dynamics of Vapor Bubbles and Boiling Heat Transfer", AIChE Journal 1(4):
+  531-535, December 1955, doi:10.1002/aic.690010425; also [3] Serth, R. W.,
+  Process Heat Transfer: Principles, Applications and Rules of Thumb, 2E,
+  Academic Press, Amsterdam, 2014 (example).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_nucleic.py, Forster_Zuber,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  h_Forster_Zuber = 0.00122*(kl^0.79*Cpl^0.45*rhol^0.49/sigma^0.5/mul^0.29/Hvap^0.24/rhog^0.24)*Te^0.24*dPsat^0.75
+END
+
+FUNCTION h_Montinsky(P, Pc, Te)
+{H_MONTINSKY - heat-transfer coefficient of an evaporator in the nucleate boiling
+regime, as presented in [1] from [2] (a law of corresponding states: only the
+reduced pressure P/Pc enters).
+
+  h = {0.00417*Pc^0.69*Te^0.7*[1.8*Pr_r^0.17 + 4*Pr_r^1.2 + 10*Pr_r^10]}^(1/0.3)
+  Pr_r = P/Pc
+
+P [Pa] is the saturation pressure of the fluid, Pc [Pa] its critical pressure.
+Note: the coefficient 0.00417 goes with Pc in kPa, so Pc is divided by 1000
+here (the same internal conversion as in ht).
+Validity: no range quoted in ht (as in the original).
+Original: [1] Cao, E., Heat Transfer in Process Engineering, McGraw Hill
+  Professional, 2009 (presentation); [2] Mostinsky, I. L., "Application of the
+  rule of corresponding states for the calculation of heat transfer and critical
+  heat flux", Teploenergetika 4:66, 1963, English abstract in Br. Chem. Eng.
+  8(8):586, 1963; also [3] Rohsenow, W., J. Hartnett and Y. Cho, Handbook of
+  Heat Transfer, 3E, McGraw-Hill, 1998, and [4] Serth, R. W., Process Heat
+  Transfer, 2E, Academic Press, 2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_nucleic.py, Montinsky,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Pr_r = P/Pc
+  h_Montinsky = (0.00417*(Pc/1000)^0.69*Te^0.7*(1.8*Pr_r^0.17 + 4*Pr_r^1.2 + 10*Pr_r^10))^(1/0.3)
+END
+
+FUNCTION h_Stephan_Abdelsalam(rhol, rhog, mul, kl, Cpl, Hvap, sigma, Tsat, Te, form, kw, rhow, Cpw)
+{H_STEPHAN_ABDELSALAM - heat-transfer coefficient of an evaporator in the
+nucleate boiling regime, as presented in [1] from [2]; five variants are given,
+selected by the argument form [-]:
+
+  form = 1 general      h = {0.23*X1^0.674*X2^0.35*X3^0.371*X5^0.297*X8^(-1.73)*k_l/Db}^(1/0.326)
+  form = 2 water        h = {0.246E7*X1^0.673*X4^(-1.58)*X3^1.26*X8^5.22*k_l/Db}^(1/0.327)
+  form = 3 hydrocarbon  h = {0.0546*X5^0.335*X1^0.67*X8^(-4.33)*X4^0.248*k_l/Db}^(1/0.33)
+  form = 4 cryogenic    h = {4.82*X1^0.624*X7^0.117*X3^0.374*X4^(-0.329)*X5^0.257*k_l/Db}^(1/0.376)
+  form = 5 refrigerant  h = {207*X1^0.745*X5^0.581*X6^0.533*k_l/Db}^(1/0.255)
+
+  X1 = Db*Te/(k_l*Tsat)          X2 = alpha_l^2*rho_l/(sigma*Db)
+  X3 = Hvap*Db^2/alpha_l^2       X4 = Hvap*Db^2/alpha_l^2
+  X5 = rho_v/rho_l               X6 = Cp_l*mu_l/k_l
+  X7 = rho_w*Cp_w*k_w/(rho_l*Cp_l*k_l)
+  X8 = (rho_l-rho_v)/rho_l
+  Db = 0.0146*angle*(2*sigma/(g*(rho_l-rho_v)))^0.5
+  alpha_l = k_l/(rho_l*Cp_l)
+
+Tsat [K] is the saturation temperature at the operating pressure (the unit
+[Pa] that ht writes for this argument is inconsistent with its use in X1). The contact angle angle [deg]
+of the bubble with the wall is not an argument here: as in ht, it is selected by
+the variant (35 deg for general, hydrocarbon and refrigerant, 45 deg for water,
+1 deg for cryogenic). kw [W/m/K], rhow [kg/m^3] and Cpw [J/kg/K] are the wall
+conductivity, density and heat capacity, used by the cryogenic variant only
+(copper at STP in ht: kw = 401, rhow = 8.96, Cpw = 384); the other arguments are
+the liquid properties as in h_Rohsenow.
+Notes: the ht docstring lists X3 = Cp_l*Tsat*Db^2/alpha_l^2 and
+  X4 = Hvap*Db^2/alpha_l^2, but its code computes both as
+  Hvap*Db^2/alpha_l^2; the code is used here, so the values agree with ht. The
+  length D_d of the ht docstring formulas is the bubble departure diameter Db of
+  its code.
+Validity: no range quoted in ht; the wall properties of the cryogenic variant
+  must be given (as in the original).
+Original: [1] Cao, E., Heat Transfer in Process Engineering, McGraw Hill
+  Professional, 2009 (presentation); [2] Stephan, K. and M. Abdelsalam,
+  "Heat-Transfer Correlations for Natural Convection Boiling", Int. J. Heat
+  Mass Transfer 23(1): 73-87, January 1980, doi:10.1016/0017-9310(80)90140-4;
+  also [3] Serth, R. W., Process Heat Transfer, 2E, Academic Press, 2014
+  (example).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_nucleic.py, Stephan_Abdelsalam,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  g_acc = 9.80665
+  "The non-smooth switches are written as nested IF blocks (as in the original ladder)"
+  IF form = 2 THEN
+    angle = 45
+  ELSE
+    IF form = 4 THEN
+      angle = 1
+    ELSE
+      angle = 35
+    ENDIF
+  ENDIF
+  Db = 0.0146*angle*(2*sigma/g_acc/(rhol-rhog))^0.5
+  alpha_l = kl/rhol/Cpl
+  X1 = Db/kl/Tsat*Te
+  X2 = alpha_l^2*rhol/sigma/Db
+  X3 = Hvap*Db^2/alpha_l^2
+  X4 = Hvap*Db^2/alpha_l^2
+  X5 = rhog/rhol
+  X6 = Cpl*mul/kl
+  X7 = rhow*Cpw*kw/(rhol*Cpl*kl)
+  X8 = (rhol-rhog)/rhol
+  IF form = 1 THEN
+    h_Stephan_Abdelsalam = (0.23*X1^0.674*X2^0.35*X3^0.371*X5^0.297*X8^(-1.73)*kl/Db)^(1/0.326)
+  ELSE
+    IF form = 2 THEN
+      h_Stephan_Abdelsalam = (0.246E7*X1^0.673*X4^(-1.58)*X3^1.26*X8^5.22*kl/Db)^(1/0.327)
+    ELSE
+      IF form = 3 THEN
+        h_Stephan_Abdelsalam = (0.0546*X5^0.335*X1^0.67*X8^(-4.33)*X4^0.248*kl/Db)^(1/0.33)
+      ELSE
+        IF form = 4 THEN
+          h_Stephan_Abdelsalam = (4.82*X1^0.624*X7^0.117*X3^0.374*X4^(-0.329)*X5^0.257*kl/Db)^(1/0.376)
+        ELSE
+          h_Stephan_Abdelsalam = (207*X1^0.745*X5^0.581*X6^0.533*kl/Db)^(1/0.255)
+        ENDIF
+      ENDIF
+    ENDIF
+  ENDIF
+END
+
+FUNCTION h_HEDH_Taborek(P, Pc, Te)
+{H_HEDH_TABOREK - heat-transfer coefficient of an evaporator in the nucleate
+boiling regime, after Taborek (1986) as described in [1] and presented in [2]; a
+modification of [3]. A law of corresponding states: only the reduced pressure
+P/Pc enters.
+
+  h = {0.00417*Pc^0.69*Te^0.7*[2.1*Pr_r^0.27 + (9 + 1/(1-Pr_r^2))*Pr_r^2]}^(1/0.3)
+  Pr_r = P/Pc
+
+P [Pa] is the saturation pressure of the fluid, Pc [Pa] its critical pressure.
+Note: as in h_Montinsky, the coefficient 0.00417 goes with Pc in kPa, so Pc is
+divided by 1000 here; and the ht code raises Pr_r to the power 2 in the second
+term (the docstring writes Pr_r there), which is what is used here.
+Validity: no range quoted in ht; the term 1/(1-Pr_r^2) of the formula grows
+  without bound as the reduced pressure approaches 1 (as in the original).
+Original: [1] Schlunder, E. U. and International Center for Heat and Mass
+  Transfer, Heat Exchanger Design Handbook, Hemisphere, Washington, 1987;
+  [2] Mostinsky, I. L., "Application of the rule of corresponding states for the
+  calculation of heat transfer and critical heat flux", Teploenergetika 4:66,
+  1963, English abstract in Br. Chem. Eng. 8(8):586, 1963; [3] Taborek, 1986 (as
+  cited by ht).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_nucleic.py, HEDH_Taborek,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Pr_r = P/Pc
+  h_HEDH_Taborek = (0.00417*(Pc/1000)^0.69*Te^0.7*(2.1*Pr_r^0.27 + (9 + 1/(1-Pr_r^2))*Pr_r^2))^(1/0.3)
+END
+
+FUNCTION h_Bier(P, Pc, Te)
+{H_BIER - heat-transfer coefficient of an evaporator in the nucleate boiling
+regime, as presented in [1]. A law of corresponding states: only the reduced
+pressure P/Pc enters.
+
+  h = {0.00417*Pc^0.69*Te^0.7*[0.7 + 2*Pr_r*(4 + 1/(1-Pr_r))]}^(1/0.3)
+  Pr_r = P/Pc
+
+P [Pa] is the saturation pressure of the fluid, Pc [Pa] its critical pressure.
+Note: the coefficient 0.00417 goes with Pc in kPa, so Pc is divided by 1000
+here (the same internal conversion as in ht).
+Validity: no range quoted in ht; ht notes that no example of this correlation is
+  known and that it seems to give results very different from the other
+  correlations.
+Original: [1] Rohsenow, W., J. Hartnett and Y. Cho, Handbook of Heat Transfer,
+  3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_nucleic.py, Bier,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Pr_r = P/Pc
+  h_Bier = (0.00417*(Pc/1000)^0.69*Te^0.7*(0.7 + 2*Pr_r*(4 + 1/(1-Pr_r))))^(1/0.3)
+END
+
+FUNCTION h_Cooper(P, Pc, MW, Te, Rp)
+{H_COOPER - heat-transfer coefficient of an evaporator in the nucleate boiling
+regime, as presented in [1] from [2]; a law of corresponding states.
+
+  h = {55*Te^0.67*Pr_r^(0.12-0.2*log10(Rp))*(-log10(Pr_r))^(-0.55)*MW^(-0.5)}^(1/0.33)
+  Pr_r = P/Pc
+
+P [Pa] is the saturation pressure of the fluid, Pc [Pa] its critical pressure,
+MW [g/mol] its molar mass and Rp [m] the roughness parameter of the surface
+(1 micrometer by default in ht). Note: ht converts Rp to micrometers before
+taking its logarithm (Rp*1E6 here), so the roughness enters only through that
+logarithm.
+Validity: no range quoted in ht (as in the original).
+Original: [1] Rohsenow, W., J. Hartnett and Y. Cho, Handbook of Heat Transfer,
+  3E, McGraw-Hill, 1998 (presentation); [2] Cooper, M. G., "Saturation and
+  Nucleate Pool Boiling: A Simple Correlation", Inst. Chem. Eng. Symp. Ser.
+  (86/2): 785, 1984; also [3] Serth, R. W., Process Heat Transfer, 2E, Academic
+  Press, 2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_nucleic.py, Cooper,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Pr_r = P/Pc
+  Rp_um = Rp*1E6
+  h_Cooper = (55*Te^0.67*Pr_r^(0.12 - 0.2*LOG10(Rp_um))*(-LOG10(Pr_r))^(-0.55)*MW^(-0.5))^(1/0.33)
+END
+
+FUNCTION h_Gorenflo(P, Pc, h0, Ra, Te, is_water)
+{H_GORENFLO - heat-transfer coefficient of an evaporator in the nucleate boiling
+regime, after [1], also presented in [2]. A law of corresponding states with a
+single regression constant per fluid, h0 [W/m^2/K], and a roughness correction:
+
+  h/h0 = C_W*F(p_r)*(q/q_0)^n,  C_W = (Ra/Ra_0)^0.13   with
+  q_0 = 20000 W/m^2 and Ra_0 = 0.4 micrometer
+
+In the excess-wall-temperature form used here (the implicit inversion of the
+heat-flux form above):
+
+  h = {h0*C_W*F(p_r)*(Te/q_0)^n}^(-1/(n-1))
+
+  water (p_r = P/Pc):        n = 0.9-0.3*p_r^0.15
+                            F(p_r) = 1.73*p_r^0.27 + (6.1+0.68/(1-p_r))*p_r^2
+  other fluids:              n = 0.9-0.3*p_r^0.3
+                            F(p_r) = 1.2*p_r^0.27 + (2.5+1/(1-p_r))*p_r
+
+P [Pa] is the saturation pressure of the fluid, Pc [Pa] its critical pressure,
+Ra [m] the roughness parameter of the surface (0.4 micrometer by default in ht;
+note that ht names this argument Ra although it is a roughness, not a Rayleigh
+number), h0 [W/m^2/K] the reference heat-transfer coefficient of the fluid and
+is_water the flag selecting the water variant (1) or the other-fluid variant
+(0).
+Note: h0 is not computed here. ht looks it up by CAS number in its two VDI Heat
+  Atlas tables (h0_Gorenflow_1993, 44 fluids, and h0_VDI_2e, 55 fluids); those
+  data tables are not part of this translation, so the caller passes the
+  reference coefficient of its fluid (5600 W/m^2/K for water in both tables).
+  The exponent of the roughness correction is 0.133 in the ht code (its docstring
+  writes 0.13); the code is used here, so the values agree with ht.
+Validity: no range quoted in ht; the correlation is given for the pool-boiling
+  regime of the fluids of [1] (as in the original).
+Original: [1] Schlunder, E. U., VDI Heat Atlas, V.D.I. Verlag, Dusseldorf,
+  1993; [2] Bertsch, S. S., E. A. Groll and S. V. Garimella, "Review and
+  Comparative Analysis of Studies on Saturated Flow Boiling in Small Channels",
+  Nanoscale and Microscale Thermophysical Engineering 12(3): 187-227,
+  4 September 2008, doi:10.1080/15567260802317357.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_nucleic.py, Gorenflo,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  p_r = P/Pc
+  Ra_0 = 0.4E-6
+  q_0 = 2E4
+  IF is_water = 1 THEN
+    n = 0.9 - 0.3*p_r^0.15
+    F_pr = 1.73*p_r^0.27 + (6.1 + 0.68/(1-p_r))*p_r^2
+  ELSE
+    n = 0.9 - 0.3*p_r^0.3
+    F_pr = 1.2*p_r^0.27 + (2.5 + 1/(1-p_r))*p_r
+  ENDIF
+  C_W = (Ra/Ra_0)^0.133
+  h_Gorenflo = (h0*C_W*F_pr*(Te/q_0)^n)^(-1/(n-1))
+END
+
+FUNCTION q_CHF_Zuber(sigma, Hvap, rhol, rhog, K)
+{Q_CHF_ZUBER - critical heat flux of the nucleate boiling regime of a flat plate
+or of any other shape, as presented in various sources.
+
+  q_crit = K*Hvap*rho_v^0.5*[sigma*g*(rho_l-rho_v)]^0.25
+
+sigma [N/m] is the surface tension of the liquid, Hvap [J/kg] its heat of
+vaporization at P, rhol and rhog the densities of the liquid and of the vapour
+[kg/m^3] and K [-] the constant of the correlation. ht uses K = 0.18 by default
+(the Wolverine Tube data book, as cited in [4]); the value pi/24 is believed to
+be the original [1] one and 0.149 is now more widely used, a value claimed to
+come from [2] according to [5]. Both 0.149 and 0.18 are exercised in the
+demonstration program.
+Validity: no range quoted in ht (as in the original).
+Original: [1] Zuber, N., "On the stability of boiling heat transfer", Trans.
+  ASME 80:711-720, 1958; [2] Lienhard, J. H. and V. K. Dhir, "Extended
+  Hydrodynamic Theory of the Peak and Minimum Heat Fluxes", NASA CR-2270, 1973;
+  [3] Serth, R. W., Process Heat Transfer, 2E, Academic Press, 2014 (example);
+  [4] Cao, E., Heat Transfer in Process Engineering, McGraw Hill Professional,
+  2009; [5] Kreith, F., R. Manglik and M. Bohn, Principles of Heat Transfer,
+  7E, Cengage Learning, Mason, OH, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_nucleic.py, Zuber,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  g_acc = 9.80665
+  q_CHF_Zuber = K*Hvap*rhog^0.5*(g_acc*sigma*(rhol-rhog))^0.25
+END
+
+FUNCTION q_CHF_Serth_HEDH(Di, sigma, Hvap, rhol, rhog)
+{Q_CHF_SERTH_HEDH - critical heat flux of the nucleate boiling regime of a tube
+bundle, according to [2] citing [3], using [1] as the original form.
+
+  q_crit = K*Hvap*rho_v^0.5*[sigma*g*(rho_l-rho_v)]^0.25
+
+  R* = Di/2*[g*(rho_l-rho_v)/sigma]^0.5
+  K = 0.125*(R*)^(-0.25)   for 0.12 <= R* <= 1.17,    K = 0.118 otherwise
+
+Di [m] is the inside diameter of the tubes; the other arguments are those of
+q_CHF_Zuber.
+Note: the constant of the first branch is 0.125 in the ht code and 0.123 in its
+  docstring; the code is used here, so the values agree with ht. The EES IF is
+  the non-smooth regime switch of that branch.
+Validity: 0.12 <= R* <= 1.17 for the diameter-dependent constant, the constant
+  0.118 being used outside (as in ht).
+Original: [1] Zuber, N., "On the stability of boiling heat transfer", Trans.
+  ASME 80:711-720, 1958; [2] Serth, R. W., Process Heat Transfer: Principles,
+  Applications and Rules of Thumb, 2E, Academic Press, Amsterdam, 2014;
+  [3] Schlunder, E. U. and International Center for Heat and Mass Transfer,
+  Heat Exchanger Design Handbook, Hemisphere, Washington, 1987.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_nucleic.py, Serth_HEDH,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  g_acc = 9.80665
+  R = Di/2*(g_acc*(rhol-rhog)/sigma)^0.5
+  IF R >= 0.12 AND R <= 1.17 THEN
+    K = 0.125*R^(-0.25)
+  ELSE
+    K = 0.118
+  ENDIF
+  q_CHF_Serth_HEDH = K*Hvap*rhog^0.5*(g_acc*sigma*(rhol-rhog))^0.25
+END
+
+FUNCTION q_CHF_HEDH_Montinsky(P, Pc)
+{Q_CHF_HEDH_MONTINSKY - critical heat flux of the nucleate boiling regime,
+according to [3] as presented in [1], using an expression modified from [2]. A
+law of corresponding states.
+
+  q_crit = 367*Pc*p_r^0.35*(1-p_r)^0.9      p_r = P/Pc
+
+P [Pa] is the saturation pressure of the fluid and Pc [Pa] its critical
+pressure. Note: the constant 367 goes with Pc in kPa, so Pc is divided by 1000
+here (the same internal conversion as in ht).
+Validity: no range quoted in ht; the correlation vanishes at the critical
+  pressure (as in the original).
+Original: [1] Schlunder, E. U. and International Center for Heat and Mass
+  Transfer, Heat Exchanger Design Handbook, Hemisphere, Washington, 1987;
+  [2] Mostinsky, I. L., "Application of the rule of corresponding states for the
+  calculation of heat transfer and critical heat flux", Teploenergetika 4:66,
+  1963, English abstract in Br. Chem. Eng. 8(8):586, 1963; [3] Serth, R. W.,
+  Process Heat Transfer, 2E, Academic Press, 2014 (example).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_nucleic.py, HEDH_Montinsky,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  p_r = P/Pc
+  q_CHF_HEDH_Montinsky = 367*(Pc/1000)*p_r^0.35*(1-p_r)^0.9
+END
+
+"!Demonstration program: every correlation is called twice"
+"It is ignored by the future $INCLUDE library:nucleate_boiling_and_chf (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each correlation (published values)."
+"Case B: one second, uniform input set - water at 1 atm and an excess wall temperature of 15 K"
+"         (dPsat estimated as 3906 K^-1*Te, as in the ht test suite)."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case A - input sets"
+"Water at 1 atm: the property set of the McNelly, Forster-Zuber, Montinsky, Bier and Cooper doctests"
+rhol_w1 = 958
+rhog_w1 = 0.597
+mul_w1 = 2.75E-4
+kl_w1 = 0.688
+Cpl_w1 = 4180
+sigma_w1 = 0.0588
+Hvap_w1 = 2.25E6
+P_w1 = 101325
+Pc_w1 = 22048321
+MW_w1 = 18.02
+Rp_w1 = 1E-6
+"Water at atmospheric pressure on oxidized aluminium: the property set of the Rohsenow doctest"
+rhol_w2 = 957.854
+rhog_w2 = 0.595593
+mul_w2 = 2.79E-4
+kl_w2 = 0.680
+Cpl_w2 = 4217
+sigma_w2 = 0.0589
+Hvap_w2 = 2.257E6
+"Copper wall (cryogenic variant of Stephan-Abdelsalam), as in ht"
+kw_r = 401
+rhow_r = 8.96
+Cpw_r = 384
+"Fluid of the Stephan-Abdelsalam, Zuber and Serth-HEDH doctests (properties only, the fluid is not named in the original)"
+rhol_r = 567
+rhog_r = 18.09
+mul_r = 156E-6
+kl_r = 0.086
+Cpl_r = 2730
+sigma_r = 8.2E-3
+Hvap_r = 272E3
+Tsat_r = 437.5
+"Water at 3 bar (Gorenflo doctest), reference coefficient of water in the VDI Heat Atlas table of ht"
+h0_w = 5600
+Ra_w = 0.4E-6
+
+"h_Rohsenow - water at atmospheric pressure, Te = 4.9 K, Csf = 0.011, n = 1.26"
+h_Rohsenow_A = h_Rohsenow(rhol_w2, rhog_w2, mul_w2, kl_w2, Cpl_w2, Hvap_w2, sigma_w2, 4.9, 0.011, 1.26)
+"h_McNelly - water at 1 atm, Te = 4.3 K"
+h_McNelly_A = h_McNelly(rhol_w1, rhog_w1, kl_w1, Cpl_w1, Hvap_w1, sigma_w1, P_w1, 4.3)
+"h_Forster_Zuber - water at 1 atm, Te = 4.3 K, dPsat = 3906 K^-1*Te"
+h_Forster_Zuber_A = h_Forster_Zuber(rhol_w1, rhog_w1, mul_w1, kl_w1, Cpl_w1, Hvap_w1, sigma_w1, 3906*4.3, 4.3)
+"h_Montinsky - water at 1 atm, Te = 4.3 K"
+h_Montinsky_A = h_Montinsky(P_w1, Pc_w1, 4.3)
+"h_Stephan_Abdelsalam - the five variants, Te = 16.2 K"
+h_Stephan_Abdelsalam_A = h_Stephan_Abdelsalam(rhol_r, rhog_r, mul_r, kl_r, Cpl_r, Hvap_r, sigma_r, Tsat_r, 16.2, 1, kw_r, rhow_r, Cpw_r)
+h_Stephan_Abdelsalam_water_A = h_Stephan_Abdelsalam(rhol_r, rhog_r, mul_r, kl_r, Cpl_r, Hvap_r, sigma_r, Tsat_r, 16.2, 2, kw_r, rhow_r, Cpw_r)
+h_Stephan_Abdelsalam_hydrocarbon_A = h_Stephan_Abdelsalam(rhol_r, rhog_r, mul_r, kl_r, Cpl_r, Hvap_r, sigma_r, Tsat_r, 16.2, 3, kw_r, rhow_r, Cpw_r)
+h_Stephan_Abdelsalam_cryogenic_A = h_Stephan_Abdelsalam(rhol_r, rhog_r, mul_r, kl_r, Cpl_r, Hvap_r, sigma_r, Tsat_r, 16.2, 4, kw_r, rhow_r, Cpw_r)
+h_Stephan_Abdelsalam_refrigerant_A = h_Stephan_Abdelsalam(rhol_r, rhog_r, mul_r, kl_r, Cpl_r, Hvap_r, sigma_r, Tsat_r, 16.2, 5, kw_r, rhow_r, Cpw_r)
+"h_HEDH_Taborek - Te = 16.2 K, P = 310.3 kPa, Pc = 2550 kPa"
+h_HEDH_Taborek_A = h_HEDH_Taborek(310.3E3, 2550E3, 16.2)
+"h_Bier - water at 1 atm, Te = 4.3 K"
+h_Bier_A = h_Bier(P_w1, Pc_w1, 4.3)
+"h_Cooper - water at 1 atm, Te = 4.3 K"
+h_Cooper_A = h_Cooper(P_w1, Pc_w1, MW_w1, 4.3, Rp_w1)
+"h_Gorenflo - water at 3 bar; the excess wall temperature of the state of the ht doctest (q = 20000 W/m^2)"
+h_Gorenflo_A = h_Gorenflo(3E5, 22048320, h0_w, Ra_w, 6.571717192133176, 1)
+"q_CHF_Zuber - the two constants of the literature, K = 0.149 and K = 0.18"
+q_CHF_Zuber_A = q_CHF_Zuber(sigma_r, Hvap_r, rhol_r, rhog_r, 0.149)
+q_CHF_Zuber_K018_A = q_CHF_Zuber(sigma_r, Hvap_r, rhol_r, rhog_r, 0.18)
+"q_CHF_Serth_HEDH - 12.7 mm tubes (R* = 5.14, outside the range of the diameter-dependent constant)"
+q_CHF_Serth_HEDH_A = q_CHF_Serth_HEDH(0.0127, sigma_r, Hvap_r, rhol_r, rhog_r)
+"q_CHF_HEDH_Montinsky - P = 310.3 kPa, Pc = 2550 kPa"
+q_CHF_HEDH_Montinsky_A = q_CHF_HEDH_Montinsky(310.3E3, 2550E3)
+"Walls heat fluxes of the two first states (q = h*Te), the quantity the CHF correlations limit"
+q_Rohsenow_A = h_Rohsenow_A*4.9
+q_Gorenflo_A = h_Gorenflo_A*6.571717192133176
+
+"Case B - second, uniform input set: water at 1 atm, Te = 15 K"
+rhol_B = 958
+rhog_B = 0.597
+mul_B = 2.75E-4
+kl_B = 0.688
+Cpl_B = 4180
+sigma_B = 0.0588
+Hvap_B = 2.25E6
+P_B = 101325
+Pc_B = 22048321
+MW_B = 18.02
+Rp_B = 1E-6
+Te_B = 15
+h0_B = 5600
+Ra_B = 0.4E-6
+Tsat_B = 373.15
+"Di_B = 5 mm for Serth-HEDH: R* = 1.00, inside the 0.12-1.17 range of that correlation"
+
+"h_Rohsenow - water at 1 atm, Csf = 0.013 and n = 1 for water"
+h_Rohsenow_B = h_Rohsenow(rhol_B, rhog_B, mul_B, kl_B, Cpl_B, Hvap_B, sigma_B, Te_B, 0.013, 1)
+"h_McNelly"
+h_McNelly_B = h_McNelly(rhol_B, rhog_B, kl_B, Cpl_B, Hvap_B, sigma_B, P_B, Te_B)
+"h_Forster_Zuber - dPsat = 3906 K^-1*Te"
+h_Forster_Zuber_B = h_Forster_Zuber(rhol_B, rhog_B, mul_B, kl_B, Cpl_B, Hvap_B, sigma_B, 3906*Te_B, Te_B)
+"h_Montinsky"
+h_Montinsky_B = h_Montinsky(P_B, Pc_B, Te_B)
+"h_Stephan_Abdelsalam - the general variant"
+h_Stephan_Abdelsalam_B = h_Stephan_Abdelsalam(rhol_B, rhog_B, mul_B, kl_B, Cpl_B, Hvap_B, sigma_B, Tsat_B, Te_B, 1, kw_r, rhow_r, Cpw_r)
+"h_HEDH_Taborek"
+h_HEDH_Taborek_B = h_HEDH_Taborek(P_B, Pc_B, Te_B)
+"h_Bier"
+h_Bier_B = h_Bier(P_B, Pc_B, Te_B)
+"h_Cooper"
+h_Cooper_B = h_Cooper(P_B, Pc_B, MW_B, Te_B, Rp_B)
+"h_Gorenflo - water at 1 atm"
+h_Gorenflo_B = h_Gorenflo(P_B, Pc_B, h0_B, Ra_B, Te_B, 1)
+"q_CHF_Zuber - water at 1 atm, K = 0.149"
+q_CHF_Zuber_B = q_CHF_Zuber(sigma_B, Hvap_B, rhol_B, rhog_B, 0.149)
+"q_CHF_Serth_HEDH - 5 mm tubes"
+q_CHF_Serth_HEDH_B = q_CHF_Serth_HEDH(0.005, sigma_B, Hvap_B, rhol_B, rhog_B)
+"q_CHF_HEDH_Montinsky"
+q_CHF_HEDH_Montinsky_B = q_CHF_HEDH_Montinsky(P_B, Pc_B)
+q_Rohsenow_B = h_Rohsenow_B*Te_B

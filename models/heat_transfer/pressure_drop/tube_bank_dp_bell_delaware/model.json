@@ -1,0 +1,76 @@
+{
+  "id": "CSL-0103",
+  "name": "tube_bank_dp_bell_delaware",
+  "title": "Shell-and-tube pressure drop: Kern and the Bell-Delaware correction factors (function library)",
+  "summary": "Six EES FUNCTIONs for the shell side of a shell-and-tube heat exchanger: the bundle pressure drop by the equivalent-diameter method of Kern (its friction factor is the cubic B-spline of ht, reproduced in EES arithmetic with the Cox-de Boor basis functions), and the five Bell-Delaware correction factors Jc (baffle configuration, Chebyshev fit or HEDH linear fit), Jl (baffle leakage), Jb (bundle bypassing, with the laminar coefficient), Js (unequal baffle spacing) and Jr (adverse temperature gradient in laminar flow). One helper, Kern_knot_step, evaluates a half-open knot interval. dP_Zukauskas of the same ht family is not translated (bivariate splines of digitized graphs, no closed form).",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "tube_bank_dp_bell_delaware.eescode",
+  "fluids": [],
+  "tags": [
+    "pressure drop",
+    "shell-and-tube",
+    "bell-delaware",
+    "tube bank",
+    "correction factor",
+    "heat exchanger",
+    "correlation",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE/ENDIF",
+    "EXP",
+    "spline basis functions (Cox-de Boor)",
+    "SI arguments"
+  ],
+  "stats": {
+    "n_equations": 67,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-017",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "D. Q. Kern (equivalent-diameter pressure drop, Process Heat Transfer, 1950)",
+      "K. J. Bell (Delaware method, University of Delaware, 1963 and 1988)",
+      "E. U. Schlunder (Heat Exchanger Design Handbook, 1987)",
+      "R. W. Serth (Process Heat Transfer, 2E, 2014)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/conv_tube_bank.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each correlation is the original paper or book cited in its function comment block: Kern 1950 as presented in Peters, Timmerhaus & West 2002 (the doctest example); the two Delaware reports of K. J. Bell; the curve fits of Schlunder 1987 and Serth 2014. Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/conv_tube_bank.py (case A) and additional values computed with the same ht functions in a throw-away virtualenv (case B); 23 output values in total",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 3.8e-13,
+    "notes": "compare_solution.py: 23 common variables, 0 differ (rtol=0.001); largest relative deviation 3.8e-13 (dP_Kern_equalmu_B), i.e. round-off only. Jc uses the Chebyshev fit and Jl/Jb the HEDH closed forms of ht, which differ from the default spline of ht by 0.1 %, 6.4 % and 0.16 % at the case-A inputs (README, Verification)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0018",
+    "CSL-0087"
+  ],
+  "related_external": [
+    "sources/ht HT-017 (inventory row of this family)",
+    "sources/labothappy LTP-030 and LTP-037 (Kern, Donohue and Bell-Delaware shell-side pressure drop and heat transfer, different parameterisation)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-FUNC card C-112, family HT-017 of the ht triage)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,490 @@
+{=============================================================================
+  Brine-to-water heat pump reference model - runnable variant
+  CoolSolve Library model CSL-0078
+  (variant of brine_to_water_heat_pump_refsim.eescode, which is kept in valid
+   EES and is blocked in CoolSolve; see its header)
+ -----------------------------------------------------------------------------
+  Faithful runnable transcription of the native file. It changes ONLY what the
+  registered CoolSolve gaps force:
+
+  1. CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE, CS-GAP-STRING-ARRAY and
+     CS-GAP-LOOKUP-PROC break the BRINEPROP procedure of the BrineProp library
+     (EES "ELSE IF" chains closed by repeated "ENDIF", the string function
+     Uppercase$, string arrays read by index, and LOOKUP tables read inside a
+     procedure). It is split in two, as in CSL-0072:
+     - a selector PROCEDURE BRINEPROP_SELECT(Conc,Fl$:Fl_brine) holding the
+       22 concentration range checks and the 11-branch fluid ladder, rewritten
+       as sequential single-line IF statements with mutually exclusive
+       conditions (same behaviour);
+     - the property evaluation FLATTENED into the main program (library
+       decision D10 style) for the two properties this model uses:
+         CALL BRINEPROP('Density','PG',conc_glw,t_glw_su_ev:rho_glw_su_ev)
+           -> block tagged _rho (Pr = 2: Density as in the original, Fl = 2: PG)
+         CALL BRINEPROP('specheat','PG',conc_glw,t_glw_su_ev:cp_glw/1000)
+           -> block tagged _cp  (Pr = 3: SpecHeat, Fl = 2: PG)
+       The REPEAT loop of the procedure is expanded into its 18 explicit
+       equations (CoolSolve counts a DUPLICATE loop counter as an unknown
+       without an equation).  The 18-term polynomial, the tables ('Brine1',
+       'Brine2'), the row index
+       Row[k] = k + (Fl-1)*18 and the output scaling (output = Funkt for
+       Density, output = Funkt/1000 for SpecHeat) are kept exactly as in the
+       original; the procedure-internal variables are renamed per call
+       (<variable>_rho, <variable>_cp).
+  2. CS-GAP-CALL-EXPR-OUT: the expression output of the second call
+     (:cp_glw/1000) becomes the equation cp_glw = Funkt_cp: the procedure
+     output of Pr=3 is Funkt/1000, so the two factors of 1000 cancel and
+     cp_glw keeps the value of the original (3973.6 J/kg-K for this
+     operating point).
+
+  CoolSolve cannot solve the redundant equations of the original (four
+  variables are defined twice: h_ex1_cp, M_dot_s_cp, Q_dot_ev and Q_dot_cd -
+  the RefSim models compute each quantity from two independent routes, as a
+  consistency check), so the four duplicate definitions are turned into
+  post-processing CHECKS here (same right-hand sides, new names, no effect on
+  the other results):
+
+     h_ex1_cp_chk      = h_thr_cp+1/2*C_thr_cp^2
+     M_dot_s_cp_chk    = V_dot_s_cp/v_su2_cp
+     Q_dot_ev_chk      = epsilon_ev*C_dot_glw_ev*(t_glw_su_ev-t_ev)
+     Q_dot_cd_chk      = epsilon_cd*C_dot_w_cd*(t_cd-t_w_su_cd)
+     Q_dot_ev_chk_brine = C_dot_glw_ev*(t_glw_su_ev-t_glw_ex_ev)
+     Q_dot_cd_chk_water = C_dot_w_cd*(t_w_ex_cd-t_w_su_cd)
+  and the two heat rates are computed from their own side only, the exit
+  temperatures t_glw_ex_ev and t_w_ex_cd being given by the explicit
+  temperature-rise equations of the original.
+
+  Everything else - variable names, equations, defaults, units - is as in the
+  native file. The companion tables of this variant
+  (brine_to_water_heat_pump_refsim_coolsolve-Brine1/Brine2.csv) hold the same
+  decoded values as the native ones.
+=============================================================================}
+
+
+{Selector part of BRINEPROP: range checks and fluid number (no lookup here,
+ so it stays a procedure; the ELSE IF ladders are rewritten as sequential
+ single-line IF statements with mutually exclusive conditions)}
+
+Procedure BRINEPROP_SELECT(Conc,Fl$:Fl_brine)
+
+IF (Fl$='EG') AND (Conc<0) THEN Call ERROR('Concentration must be equal to or larger than 0.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='EG') AND (Conc>56.1) THEN Call ERROR('Concentration must be equal to or smaller than 56.1%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='PG') AND (Conc<15.2) THEN Call ERROR('Concentration must be equal to or larger than 15.2%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='PG') AND (Conc>57.0) THEN Call ERROR('Concentration must be equal to or smaller than 57.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='EA') AND (Conc<11.1) THEN Call ERROR('Concentration must be equal to or larger than 11.1%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='EA') AND (Conc>60.1) THEN Call ERROR('Concentration must be equal or smaller than 60.1%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='MA') AND (Conc<7.8) THEN Call ERROR('Concentration must be equal to or larger than 7.8%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='MA') AND (Conc>44.3) THEN Call ERROR('Concentration must be equal or smaller than 44.3%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='GL') AND (Conc<19.5) THEN Call ERROR('Concentration must be equal to or larger than 19.5%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='GL') AND (Conc>63.0) THEN Call ERROR('Concentration must be equal or smaller than 63.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='NH3') AND (Conc<7.8) THEN Call ERROR('Concentration must be equal to or larger than 7.8%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='NH3') AND (Conc>23.6) THEN Call ERROR('Concentration must be equal to or smaller than 23.6%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='K2CO3') AND (Conc<13.3) THEN Call ERROR('Concentration must be equal to or larger than 13.3%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='K2CO3') AND (Conc>39.0) THEN Call ERROR('Concentration must be equal to or smaller than 39.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='CaCl2') AND (Conc<9.0) THEN Call ERROR('Concentration must be equal to or larger than 9.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='CaCl2') AND (Conc>29.4) THEN Call ERROR('Concentration must be equal or smaller than 29.4%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='MgCl2') AND (Conc<7.2) THEN Call ERROR('Concentration must be equal to or larger than 7.2%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='MgCl2') AND (Conc>20.5) THEN Call ERROR('Concentration must be equal or smaller than 20.5%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='NaCl') AND (Conc<7.9) THEN Call ERROR('Concentration must be equal to or larger than 7.9%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='NaCl') AND (Conc>22.6) THEN Call ERROR('Concentration must be equal to or smaller than 22.6%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='KAc') AND (Conc<11.0) THEN Call ERROR('Concentration must be equal to or larger than 11.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+IF (Fl$='KAc') AND (Conc>41.0) THEN Call ERROR('Concentration must be equal to or smaller than 41.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+
+"Fluid parameter of the original ELSE IF ladder, as sequential IF statements"
+EG=1;PG=2;EA=3;MA=4;GL=5;NH3=6;K2CO3=7;CaCl2=8;MgCl2=9;NaCl=10;KAc=11
+Fl_brine=0
+IF (Fl$='EG') THEN Fl_brine:=EG
+IF (Fl$='PG') THEN Fl_brine:=PG
+IF (Fl$='EA') THEN Fl_brine:=EA
+IF (Fl$='MA') THEN Fl_brine:=MA
+IF (Fl$='GL') THEN Fl_brine:=GL
+IF (Fl$='NH3') THEN Fl_brine:=NH3
+IF (Fl$='K2CO3') THEN Fl_brine:=K2CO3
+IF (Fl$='CaCl2') THEN Fl_brine:=CaCl2
+IF (Fl$='MgCl2') THEN Fl_brine:=MgCl2
+IF (Fl$='NaCl') THEN Fl_brine:=NaCl
+IF (Fl$='KAc') THEN Fl_brine:=KAc
+IF (Fl_brine=0) THEN Call ERROR('Unrecognized fluid name: the BrineProp library knows EG, PG, EA, MA, GL, NH3, K2CO3, CaCl2, MgCl2, NaCl and KAc.')
+END
+
+"{--- end of the selector procedure ---}"
+
+CALL BRINEPROP_SELECT(conc_glw,'PG':Fl_brine)
+
+"!title: BRINE TO WATER HEAT PUMP"
+
+"Date : 2008 January 8"
+"Authors: Vincent Lemort"
+"University of Liège"
+"Faculty of Applied Sciences"
+"Thermodynamics Laboratory"
+"!Short description:"
+"This model describes a brine to water heat pump. The model includes a scroll compressor model, a brine evaporator model and a water condenser model."
+
+"!Nomenclature (as in the original):"
+"A            Area [m^2]"
+"AU           Global heat transfer coefficient [W/K]"
+"C            Velocity [m/s]"
+"conc         Concentration [%]"
+"COP          Coefficient of performance [-]"
+"c_p          Specific heat [J/kg-K]"
+"h            Specific enthalpy [J/kg]"
+"M_dot        Mass flow rate [kg/s]"
+"NtU          Number of transfer units [-]"
+"p            Pressure [Pa]"
+"Q_dot        Thermal power [W]"
+"R            Thermal resistance [K/W]"
+"r_p          Pressure ratio [-]"
+"r_v_in       Internal built-in volume ratio [-]"
+"s            Specific entropy [J/kg-K]"
+"t            Temperature [C]"
+"v            Specific volume [m^3/kg]"
+"V_dot_s      Swept volume [m^3/s]"
+"W_dot        Electrical power [W]"
+"X            Fraction [-]"
+"x            Quality [-]"
+"delta_T      Temperature difference [K]"
+"epsilon      Efficiency [-]"
+"gamma        Isentropic coefficient [-]"
+"rho          Density [kg/m^3]"
+"Subscripts: amb (ambient), cd (condenser), cp (compressor), ev (evaporator),"
+" ex (exhaust), glw (glycol water, brine), leak (leakage), loss (mechanical"
+" losses), n (nominal), oh (overheating), r (refrigerant), s (isentropic),"
+" sc (subcooling), su (supply), thr (throat), w (water, envelope)"
+
+"!Reference:"
+"[1] Winandy, E., C., Saavedra O., J., Lebrun (2002) Experimental analysis and simplified modelling of a hermetic scroll refrigeration compressor. Applied thermal Engineering 22, 107-120."
+
+"!Disclaimer of the original: the accuracy or reliability of the information is not guaranteed; the model is freely distributed and may not be sold; the user is asked to cite his sources and the origin of the model."
+
+"!*************************************************** MODEL ***************************************************"
+
+"!1. INPUTS (panel of the original; the values below are those of the run whose solution is stored in the file, see the README conversion log)"
+t_amb=25                               "ambient temperature [C]"
+fluid$='R407C'                         "refrigerant [-]"
+n_cp=1                                 "number of compressors [-]"
+t_w_su_cd=25.50380279                  "water supply temperature at the condenser [C]"
+p_w_su_cd=400000                       "water supply pressure at the condenser [Pa]"
+t_glw_su_ev=0                          "brine supply temperature at the evaporator [C]"
+DELTAt_oh_ev=5                         "superheating at the evaporator exhaust [K]"
+DELTAt_sc_cd=5                         "subcooling at the condenser exhaust [K]"
+M_dot_w_cd=0.3889                      "water flow rate at the condenser [kg/s]"
+M_dot_glw_ev=1.11                      "brine flow rate at the evaporator [kg/s]"
+X_cp=1                                 "fraction of the swept volume in use [-]"
+conc_glw=25                            "glycol concentration of the brine [%]"
+P_ev=436182.6219                       "evaporating pressure [Pa]"
+P_cd=1730328.509                       "condensing pressure [Pa]"
+M_dot_r=0.07561309079                  "refrigerant mass flow rate through the compressor [kg/s]"
+
+"!2. PARAMETERS (panel of the original; the values below are those of the stored run)"
+"!2.1. Compressor"
+A_leak_cp=5e-07                        "leakage area of the scroll throat [m^2]"
+r_v_in_cp=3.2                          "internal built-in volume ratio [-]"
+W_dot_loss0_cp=150                    "constant electro-mechanical losses [W]"
+alpha_cp=0.25                          "loss factor proportional to the internal power [-]"
+M_dot_r_cp_n=0.12                      "nominal refrigerant mass flow rate [kg/s]"
+N_rot=3000                             "rotation speed [tr/min]"
+AU_su_cp_n=25                          "nominal heat transfer coefficient at the compressor supply [W/K]"
+AU_amb_cp=10                           "heat transfer coefficient compressor-ambient [W/K]"
+AU_ex_cp_n=30                          "nominal heat transfer coefficient at the compressor exhaust [W/K]"
+V_s_cp_ref=9.477777778e-05             "reference swept volume of the compressor [m^3]"
+
+"!2.2. Brine evaporator"
+R_m_ev=1e-05                           "metal resistance of the evaporator [K/W]"
+R_glw_ev_n=6e-05                       "nominal brine-side resistance [K/W]"
+R_r_ev_n=6e-05                         "nominal refrigerant-side resistance [K/W]"
+M_dot_glw_ev_n=1.121                   "nominal brine flow rate [kg/s]"
+M_dot_r_ev_n=0.12                      "nominal refrigerant flow rate [kg/s]"
+
+"!2.3. Water condenser"
+M_dot_w_cd_n=0.389                     "nominal water flow rate [kg/s]"
+R_m_cd=1e-05                           "metal resistance of the condenser [K/W]"
+R_w_cd_n=0.0003                        "nominal water-side resistance [K/W]"
+R_r_cd_n=0.0003                        "nominal refrigerant-side resistance [K/W]"
+M_dot_r_cd_n=0.12                      "nominal refrigerant flow rate [kg/s]"
+
+"!3. OUTPUTS"
+"delta_T [C]: temperature variation; y [W]: power"
+
+"!4. EQUATIONS"
+"!4.1. Scroll compressor [1]"
+"4.1.1. Status supply: su"
+DELTAt_oh_su_cp=DELTAt_oh_ev                                    "superheating of the supply gas [K]"
+t_sat_su_cp=temperature(fluid$,P=P_ev,x=1)                      "saturation temperature at the supply pressure [C]"
+t_su_cp=t_sat_su_cp+DELTAt_oh_su_cp                              "supply temperature [C]"
+P_su_cp=P_ev                                                    "supply pressure [Pa]"
+h_su_cp=enthalpy(fluid$,t=t_su_cp,P=P_su_cp)                    "specific enthalpy [J/kg]"
+s_su_cp=entropy(fluid$,t=t_su_cp,P=P_su_cp)                     "specific entropy [J/kg-K]"
+v_su_cp=volume(fluid$,t=t_su_cp,P=P_su_cp)                      "specific volume [m^3/kg]"
+
+"4.1.2. Heating-up: su => su1"
+c_p_su_cp = specheat(fluid$,t=t_su_cp,P=P_su_cp)                "specific heat of the supply gas [J/kg-K]"
+C_dot_su_cp = M_dot_r*c_p_su_cp                                  "capacity flow rate of the supply gas [W/K]"
+AU_su_cp=AU_su_cp_n*(M_dot_r/M_dot_r_cp_n)^0.8                  "conductance at the supply [W/K]"
+NtU_su_cp = AU_su_cp/C_dot_su_cp                                "number of transfer units [-]"
+epsilon_su_cp = 1-exp(-NtU_su_cp)                                "effectiveness [-]"
+Q_dot_su_cp = epsilon_su_cp*C_dot_su_cp*(t_w_cp-t_su_cp)        "heat transfer to the supply gas [W]"
+h_su1_cp = h_su_cp+Q_dot_su_cp/M_dot_r                          "specific enthalpy after heating-up [J/kg]"
+p_su1_cp=p_su_cp                                                 "no pressure drop, as in the original [Pa]"
+t_su1_cp = temperature(fluid$,h=h_su1_cp,p=p_su1_cp)            "temperature after heating-up [C]"
+DELTAt_su_cp=t_su1_cp-t_su_cp                                    "temperature rise [K]"
+v_su1_cp = volume(fluid$,t=t_su1_cp,p=p_su1_cp)                 "specific volume [m^3/kg]"
+s_su1_cp= entropy(fluid$,t=t_su1_cp,p=p_su1_cp)                  "specific entropy [J/kg-K]"
+
+"4.1.3. Mixing with internal leakage: su1 => su2"
+M_dot_s_cp=M_dot_r+M_dot_leak_cp                                 "mass flow rate entering the compression chamber [kg/s]"
+h_su2_cp=(M_dot_r*h_su1_cp+M_dot_leak_cp*h_ex1_cp)/M_dot_s_cp          "mixing of the two streams; the mixing equation of the original 4.1.3 written explicitly on h_su2_cp [J/kg]"
+
+"4.1.4. Flow rate calculation: su2"
+M_dot_s_cp_chk=V_dot_s_cp/v_su2_cp                                "check: mass flow rate from the swept volume (original 4.1.4) [kg/s]"
+v_su2_cp=volume(fluid$,P=P_su_cp,h=h_su2_cp)                     "specific volume entering the compression chamber [m^3/kg]"
+s_su2_cp=entropy(fluid$,P=P_su_cp,h=h_su2_cp)                    "specific entropy entering the compression chamber [J/kg-K]"
+V_dot_s_cp_max=V_s_cp_ref*(N_rot/60)                             "maximum swept volume flow rate [m^3/s]"
+V_dot_s_cp=V_dot_s_cp_max*X_cp                                    "swept volume flow rate [m^3/s]"
+V_dot_s_cp_m3h=V_dot_s_cp*3600                                   "swept volume flow rate [m^3/h]"
+
+"4.1.5. Isentropic compression from the supply pressure up to the adapted pressure: su2 => in"
+"The first compression is adiabatic-reversible and so isentropic, up to the adapted pressure."
+s_in_cp=s_su2_cp                                                "isentropic compression [J/kg-K]"
+v_in_cp=v_su2_cp/r_v_in_cp                                       "definition of the internal built-in volume ratio [m^3/kg]"
+t_in_cp = temperature(fluid$,P=p_in_cp,s=s_in_cp)               "temperature at the adapted pressure, added for the (P, s) pair below [C]"
+h_in_cp = enthalpy(fluid$,P=p_in_cp,s=s_in_cp)                  "specific enthalpy at the adapted pressure (decision D11: the original wrote the pair (s, v)) [J/kg]"
+w_in1_cp= h_in_cp-h_su2_cp                                       "isentropic compression work [J/kg]"
+p_in_cp=pressure(fluid$,T=t_in_cp,v=v_in_cp)                     "adapted pressure (decision D11: the original wrote the pair (s, v)) [Pa]"
+
+"4.1.6. Isochoric compression from the adapted pressure up to the exhaust pressure: in => ex1"
+"The second compression is also adiabatic, but not reversible and at constant absolute volume (this second part corresponds to the opening of the compression chamber to the discharge plenum)."
+p_ex1_cp=p_ex_cp                                                 "no pressure drop [Pa]"
+p_ex_cp=P_cd                                                     "exhaust pressure [Pa]"
+w_in2_cp= v_in_cp*(p_ex1_cp-p_in_cp)                             "isochoric compression work [J/kg]"
+
+"4.1.7. Total compression work and power"
+w_in_cp=w_in1_cp+w_in2_cp                                        "total compression work [J/kg]"
+W_dot_in_cp=M_dot_r*w_in_cp                                      "internal power of the compressor [W]"
+h_ex1_cp=h_su2_cp+w_in_cp                                        "both compression steps are considered adiabatic, from su2 to ex1 [J/kg]"
+v_ex1_cp=volume(fluid$,P=P_ex1_cp,h=h_ex1_cp)                    "specific volume at the compressor exhaust [m^3/kg]"
+
+"4.1.8. Electrical consumption"
+W_dot_cp=W_dot_in_cp+W_dot_loss_cp                               "the compressor electrical power is split into two terms [W]"
+W_dot_loss_cp=W_dot_loss0_cp+alpha_cp*W_dot_in_cp                "constant electro-mechanical losses + losses proportional to the internal power [W]"
+
+"4.1.9. Internal leakage: ex1 => su1"
+s_ex1_cp=entropy(fluid$,P=P_ex1_cp,h=h_ex1_cp)                   "specific entropy at the compressor exhaust [J/kg-K]"
+s_thr_cp=s_ex1_cp                                                "isentropic flow to the throat [J/kg-K]"
+C_thr_cp^2=2*(h_ex1_cp-h_thr_cp)                                         "leakage velocity at the throat, from the energy relation h_ex1_cp=h_thr_cp+1/2*C_thr_cp^2 of the original [m^2/s^2]"
+V_dot_leak_cp=A_leak_cp*C_thr_cp                                      "leakage volume flow rate [m^3/s]"
+h_ex1_cp_chk=h_thr_cp+1/2*C_thr_cp^2                              "check: conservation of the total enthalpy in the leakage orifice (original 4.1.9) [J/kg]"
+h_thr_cp=enthalpy(fluid$,P=P_thr_cp,s=s_thr_cp)                  "specific enthalpy at the throat [J/kg]"
+M_dot_leak_cp=V_dot_leak_cp/v_thr_cp                             "leakage mass flow rate [kg/s]"
+v_thr_cp=volume(fluid$,P=P_thr_cp,s=s_thr_cp)                    "specific volume at the throat [m^3/kg]"
+P_thr_cp=max(P_thr_crit,P_su1_cp)                                "throat pressure [Pa]"
+P_thr_crit=P_ex1_cp*(2/(gamma_leak_cp+1))^(gamma_leak_cp/(gamma_leak_cp-1))  "critical pressure of the leakage flow [Pa]"
+gamma_leak_cp=1.03                                                      "isentropic coefficient of the leakage flow; the original leaves it commented out (this default value) and lets the leakage relations solve it (see the README)"
+P_thr_chk=P_ex1_cp*(v_ex1_cp/v_thr_cp)^gamma_leak_cp    "check: isentropic relation across the leakage orifice, P_thr_cp = P_ex1_cp*(v_ex1_cp/v_thr_cp)^gamma_leak_cp is the original equation P_ex1_cp*v_ex1_cp^gamma_leak_cp = P_thr_cp*v_thr_cp^gamma_leak_cp [Pa]"
+
+"4.1.10. Exhaust cooling-down: ex1 => ex"
+t_ex1_cp=temperature(fluid$,h=h_ex1_cp,p=p_ex1_cp)               "temperature at the compressor exhaust [C]"
+AU_ex_cp=AU_ex_cp_n*(M_dot_r/M_dot_r_cp_n)^0.8                    "conductance at the exhaust [W/K]"
+c_p_ex1_cp = specheat(fluid$,t=t_ex1_cp,P=p_ex1_cp)              "specific heat of the discharge gas [J/kg-K]"
+C_dot_ex_cp = M_dot_r*c_p_ex1_cp                                 "capacity flow rate of the discharge gas [W/K]"
+NtU_ex_cp = AU_ex_cp/C_dot_ex_cp                                 "number of transfer units [-]"
+epsilon_ex_cp = 1-exp(-NtU_ex_cp)                                "effectiveness [-]"
+Q_dot_ex_cp = epsilon_ex_cp*C_dot_ex_cp*(t_w_cp-t_ex1_cp)        "heat transfer from the discharge gas [W]"
+h_ex_cp  = h_ex1_cp+Q_dot_ex_cp/M_dot_r                          "specific enthalpy at the compressor exhaust [J/kg]"
+t_ex_cp=temperature(fluid$,h=h_ex_cp,p=p_ex_cp)                  "compressor exhaust temperature [C]"
+DELTAt_ex_cp=t_ex_cp-t_ex1_cp                                    "temperature drop [K]"
+
+"4.1.11. Fictitious envelope heat balance"
+t_w_cp=t_amb+(W_dot_loss_cp-Q_dot_su_cp-Q_dot_ex_cp)/AU_amb_cp         "fictitious envelope temperature; the heat balance of the original 4.1.11, 0 = W_dot_loss_cp-Q_dot_su_cp-Q_dot_ex_cp-Q_dot_amb_cp, written explicitly on t_w_cp [C]"
+Q_dot_amb_cp = AU_amb_cp*(t_w_cp-t_amb)                          "heat exchange with the ambient [W]"
+
+"4.1.12. Volumetric effectiveness"
+epsilon_v_cp=v_su_cp/v_su1_cp                                    "volumetric effectiveness [-]"
+
+"4.1.13. Global isentropic effectiveness"
+h_exs_cp = enthalpy(fluid$,p=p_ex_cp,s=s_su_cp)                  "specific enthalpy of the isentropic compression [J/kg]"
+w_s_cp=h_exs_cp-h_su_cp                                          "isentropic compression work [J/kg]"
+w_cp=W_dot_cp/M_dot_r                                            "specific electrical power [J/kg]"
+epsilon_s_cp= w_s_cp/w_cp                                        "global isentropic effectiveness [-]"
+
+"4.1.14. Pressure ratio"
+r_p_cp=P_ex_cp/P_su_cp                                           "pressure ratio [-]"
+
+"!4.2. Brine evaporator"
+"4.2.1. Effectiveness"
+NtU_ev=AU_ev/C_dot_glw_ev                                        "number of transfer units [-]"
+epsilon_ev=1-exp(-NtU_ev)                                        "effectiveness [-]"
+AU_ev=1/(R_glw_ev+R_m_ev+R_r_ev)                                   "three thermal resistances in series, 1/AU_ev = R_glw_ev+R_m_ev+R_r_ev as in the original [W/K]"
+R_glw_ev=R_glw_ev_n*(M_dot_glw_ev_n/M_dot_glw_ev)^0.8             "brine-side resistance [K/W]"
+R_r_ev=R_r_ev_n*(M_dot_r_ev_n/M_dot_r_ev)^0.8                    "refrigerant-side resistance [K/W]"
+
+"4.2.2. Evaporating power"
+Q_dot_ev_chk=epsilon_ev*C_dot_glw_ev*(t_glw_su_ev-t_ev)          "check: evaporating power from the effectiveness (original 4.2.2) [W]"
+
+"4.2.3. Refrigerant side"
+M_dot_r_ev=n_cp*M_dot_r                                          "refrigerant flow rate [kg/s]"
+h_su_ev=h_ex_cd                                                  "isenthalpic expansion [J/kg]"
+h_ex_ev=h_su_cp                                                  "refrigerant enters the compressor [J/kg]"
+t_sat_ex_ev=temperature(fluid$,P=P_ev,x=1)                       "saturation temperature at the evaporating pressure [C]"
+t_su_ev=temperature(fluid$,P=P_ev,h=h_su_ev)                     "temperature after the expansion valve [C]"
+t_ev=(t_sat_ex_ev+t_su_ev)/2                                     "mean evaporating temperature [C]"
+Q_dot_ev=M_dot_r_ev*(h_ex_ev-h_su_ev)                            "evaporating power, refrigerant side [W]"
+
+"4.2.4. Brine side"
+V_dot_glw_min_ev=3900E-3/3600                                    "minimum brine volume flow rate [m^3/s]"
+M_dot_glw_min_ev=V_dot_glw_min_ev*rho_glw_su_ev                   "minimum brine mass flow rate [kg/s]"
+{--- BRINEPROP('Density','PG',conc_glw,t_glw_su_ev), flattened into the main
+     program (see the header): the procedure-internal variables of the original
+     are renamed with the suffix _rho. The polynomial, the tables, the row
+     index and the output scaling are those of the BrineProp library. ---}
+Pr_rho=2
+Row_rho[1]=1+(Fl_brine-1)*18
+c_rho[1]=lookup('Brine1',Row_rho[1],Pr_rho)
+Row_rho[2]=2+(Fl_brine-1)*18
+c_rho[2]=lookup('Brine1',Row_rho[2],Pr_rho)
+Row_rho[3]=3+(Fl_brine-1)*18
+c_rho[3]=lookup('Brine1',Row_rho[3],Pr_rho)
+Row_rho[4]=4+(Fl_brine-1)*18
+c_rho[4]=lookup('Brine1',Row_rho[4],Pr_rho)
+Row_rho[5]=5+(Fl_brine-1)*18
+c_rho[5]=lookup('Brine1',Row_rho[5],Pr_rho)
+Row_rho[6]=6+(Fl_brine-1)*18
+c_rho[6]=lookup('Brine1',Row_rho[6],Pr_rho)
+Row_rho[7]=7+(Fl_brine-1)*18
+c_rho[7]=lookup('Brine1',Row_rho[7],Pr_rho)
+Row_rho[8]=8+(Fl_brine-1)*18
+c_rho[8]=lookup('Brine1',Row_rho[8],Pr_rho)
+Row_rho[9]=9+(Fl_brine-1)*18
+c_rho[9]=lookup('Brine1',Row_rho[9],Pr_rho)
+Row_rho[10]=10+(Fl_brine-1)*18
+c_rho[10]=lookup('Brine1',Row_rho[10],Pr_rho)
+Row_rho[11]=11+(Fl_brine-1)*18
+c_rho[11]=lookup('Brine1',Row_rho[11],Pr_rho)
+Row_rho[12]=12+(Fl_brine-1)*18
+c_rho[12]=lookup('Brine1',Row_rho[12],Pr_rho)
+Row_rho[13]=13+(Fl_brine-1)*18
+c_rho[13]=lookup('Brine1',Row_rho[13],Pr_rho)
+Row_rho[14]=14+(Fl_brine-1)*18
+c_rho[14]=lookup('Brine1',Row_rho[14],Pr_rho)
+Row_rho[15]=15+(Fl_brine-1)*18
+c_rho[15]=lookup('Brine1',Row_rho[15],Pr_rho)
+Row_rho[16]=16+(Fl_brine-1)*18
+c_rho[16]=lookup('Brine1',Row_rho[16],Pr_rho)
+Row_rho[17]=17+(Fl_brine-1)*18
+c_rho[17]=lookup('Brine1',Row_rho[17],Pr_rho)
+Row_rho[18]=18+(Fl_brine-1)*18
+c_rho[18]=lookup('Brine1',Row_rho[18],Pr_rho)
+xm_rho=lookup('Brine2',Fl_brine,1)
+ym_rho=lookup('Brine2',Fl_brine,2)
+x_rho=conc_glw-xm_rho
+y_rho=t_glw_su_ev-ym_rho
+Funkt_rho=c_rho[1]+(c_rho[2]*y_rho)+(c_rho[3]*y_rho^2)+(c_rho[4]*y_rho^3)+(c_rho[5]*x_rho)+(c_rho[6]*x_rho*y_rho)+(c_rho[7]*x_rho*y_rho^2)+(c_rho[8]*x_rho*y_rho^3)+(c_rho[9]*x_rho^2)+(c_rho[10]*x_rho^2*y_rho)+(c_rho[11]*x_rho^2*y_rho^2)+(c_rho[12]*x_rho^2*y_rho^3)+(c_rho[13]*x_rho^3)+(c_rho[14]*x_rho^3*y_rho)+(c_rho[15]*x_rho^3*y_rho^2)+(c_rho[16]*x_rho^4)+(c_rho[17]*x_rho^4*y_rho)+(c_rho[18]*x_rho^5)
+
+{--- end of the Density call ---}
+rho_glw_su_ev=Funkt_rho                                              "brine density; output scaling of the original (Pr=2: output=Funkt) [kg/m^3]"
+{--- BRINEPROP('specheat','PG',conc_glw,t_glw_su_ev), flattened into the main
+     program (see the header): the procedure-internal variables of the original
+     are renamed with the suffix _cp. The polynomial, the tables, the row
+     index and the output scaling are those of the BrineProp library. ---}
+Pr_cp=3
+Row_cp[1]=1+(Fl_brine-1)*18
+c_cp[1]=lookup('Brine1',Row_cp[1],Pr_cp)
+Row_cp[2]=2+(Fl_brine-1)*18
+c_cp[2]=lookup('Brine1',Row_cp[2],Pr_cp)
+Row_cp[3]=3+(Fl_brine-1)*18
+c_cp[3]=lookup('Brine1',Row_cp[3],Pr_cp)
+Row_cp[4]=4+(Fl_brine-1)*18
+c_cp[4]=lookup('Brine1',Row_cp[4],Pr_cp)
+Row_cp[5]=5+(Fl_brine-1)*18
+c_cp[5]=lookup('Brine1',Row_cp[5],Pr_cp)
+Row_cp[6]=6+(Fl_brine-1)*18
+c_cp[6]=lookup('Brine1',Row_cp[6],Pr_cp)
+Row_cp[7]=7+(Fl_brine-1)*18
+c_cp[7]=lookup('Brine1',Row_cp[7],Pr_cp)
+Row_cp[8]=8+(Fl_brine-1)*18
+c_cp[8]=lookup('Brine1',Row_cp[8],Pr_cp)
+Row_cp[9]=9+(Fl_brine-1)*18
+c_cp[9]=lookup('Brine1',Row_cp[9],Pr_cp)
+Row_cp[10]=10+(Fl_brine-1)*18
+c_cp[10]=lookup('Brine1',Row_cp[10],Pr_cp)
+Row_cp[11]=11+(Fl_brine-1)*18
+c_cp[11]=lookup('Brine1',Row_cp[11],Pr_cp)
+Row_cp[12]=12+(Fl_brine-1)*18
+c_cp[12]=lookup('Brine1',Row_cp[12],Pr_cp)
+Row_cp[13]=13+(Fl_brine-1)*18
+c_cp[13]=lookup('Brine1',Row_cp[13],Pr_cp)
+Row_cp[14]=14+(Fl_brine-1)*18
+c_cp[14]=lookup('Brine1',Row_cp[14],Pr_cp)
+Row_cp[15]=15+(Fl_brine-1)*18
+c_cp[15]=lookup('Brine1',Row_cp[15],Pr_cp)
+Row_cp[16]=16+(Fl_brine-1)*18
+c_cp[16]=lookup('Brine1',Row_cp[16],Pr_cp)
+Row_cp[17]=17+(Fl_brine-1)*18
+c_cp[17]=lookup('Brine1',Row_cp[17],Pr_cp)
+Row_cp[18]=18+(Fl_brine-1)*18
+c_cp[18]=lookup('Brine1',Row_cp[18],Pr_cp)
+xm_cp=lookup('Brine2',Fl_brine,1)
+ym_cp=lookup('Brine2',Fl_brine,2)
+xc_cp=conc_glw-xm_cp
+yc_cp=t_glw_su_ev-ym_cp
+Funkt_cp=c_cp[1]+(c_cp[2]*yc_cp)+(c_cp[3]*yc_cp^2)+(c_cp[4]*yc_cp^3)+(c_cp[5]*xc_cp)+(c_cp[6]*xc_cp*yc_cp)+(c_cp[7]*xc_cp*yc_cp^2)+(c_cp[8]*xc_cp*yc_cp^3)+(c_cp[9]*xc_cp^2)+(c_cp[10]*xc_cp^2*yc_cp)+(c_cp[11]*xc_cp^2*yc_cp^2)+(c_cp[12]*xc_cp^2*yc_cp^3)+(c_cp[13]*xc_cp^3)+(c_cp[14]*xc_cp^3*yc_cp)+(c_cp[15]*xc_cp^3*yc_cp^2)+(c_cp[16]*xc_cp^4)+(c_cp[17]*xc_cp^4*yc_cp)+(c_cp[18]*xc_cp^5)
+
+{--- end of the specheat call ---}
+"output scaling of the original for Pr=3: output=Funkt/1000 [kJ/kg-K]"
+cp_glw=Funkt_cp                                                      "brine specific heat [J/kg-K] (CS-GAP-CALL-EXPR-OUT: the procedure output of Pr=3 is Funkt/1000 and the original passed the expression cp_glw/1000, so cp_glw = Funkt_cp)"
+C_dot_glw_ev=M_dot_glw_ev*cp_glw                                 "brine capacity flow rate [W/K]"
+t_glw_ex_ev=t_glw_su_ev-Q_dot_ev/C_dot_glw_ev                       "brine temperature at the evaporator exhaust [C]"
+Q_dot_ev_chk_brine=C_dot_glw_ev*(t_glw_su_ev-t_glw_ex_ev)           "check: evaporating power from the brine temperature rise (original 4.2.4) [W]"
+
+"!4.3. Water condenser"
+"4.3.1. Effectiveness"
+AU_cd=1/(R_w_cd+R_m_cd+R_r_cd)                                     "three thermal resistances in series, 1/AU_cd = R_w_cd+R_m_cd+R_r_cd as in the original [W/K]"
+R_w_cd=R_w_cd_n*(M_dot_w_cd_n/M_dot_w_cd)^0.8                    "water-side resistance [K/W]"
+R_r_cd=R_r_cd_n*(M_dot_r_cd_n/M_dot_r_cd)^0.8                    "refrigerant-side resistance [K/W]"
+NtU_cd=AU_cd/C_dot_w_cd                                          "number of transfer units [-]"
+epsilon_cd=1-exp(-NtU_cd)                                        "effectiveness [-]"
+
+"4.3.2. Condensing power"
+Q_dot_cd_chk=epsilon_cd*C_dot_w_cd*(t_cd-t_w_su_cd)               "check: condensing power from the effectiveness (original 4.3.2) [W]"
+
+"4.3.3. Refrigerant side"
+DELTAt_oh_su_cd=t_ex_cp-t_sat_su_cd                              "superheating at the compressor exhaust [K]"
+t_sat_su_cd=temperature(fluid$,P=P_cd,x=1)                       "saturation temperature at the condensing pressure [C]"
+t_sat_ex_cd=temperature(fluid$,P=P_cd,x=0)                       "saturation temperature at the condensing pressure [C]"
+t_cd=(t_sat_su_cd+t_sat_ex_cd)/2                                 "mean condensing temperature [C]"
+M_dot_r_cd=n_cp*M_dot_r                                          "refrigerant flow rate [kg/s]"
+h_su_cd=h_ex_cp                                                  "refrigerant enters the condenser [J/kg]"
+t_ex_cd=t_sat_ex_cd-DELTAt_sc_cd                                 "temperature at the condenser exhaust [C]"
+h_ex_cd=enthalpy(fluid$,t=t_ex_cd,p=P_cd)                        "specific enthalpy at the condenser exhaust [J/kg]"
+Q_dot_cd=M_dot_r_cd*(h_su_cd-h_ex_cd)                            "condensing power, refrigerant side [W]"
+
+"4.3.4. Water side"
+V_dot_w_min_cd=1400E-3/3600                                      "minimum water volume flow rate [m^3/s]"
+M_dot_w_min_cd=V_dot_w_min_cd*rho_w_su_cd                         "minimum water mass flow rate [kg/s]"
+rho_w_su_cd=density(water,P=P_w_su_cd,t=t_w_su_cd)               "water density [kg/m^3]"
+cp_w=4187                                                        "specific heat of the water [J/kg-K]"
+C_dot_w_cd=M_dot_w_cd*cp_w                                       "water capacity flow rate [W/K]"
+t_w_ex_cd=t_w_su_cd+Q_dot_cd/C_dot_w_cd                              "water temperature at the condenser exhaust [C]"
+Q_dot_cd_chk_water=C_dot_w_cd*(t_w_ex_cd-t_w_su_cd)                  "check: condensing power from the water temperature rise (original 4.3.4) [W]"
+
+"!4.4. Performances of the system"
+W_dot_cp_tot=n_cp*W_dot_cp                                       "total electrical power of the compressors [W]"
+COP_heating=Q_dot_cd/W_dot_cp_tot                                "heating COP of the system [-]"
+
+"!5. State points for the thermodynamic diagrams (CoolSolve *Diagram* tab, *Array overlay*)"
+"i = 1 evaporator exhaust (compressor supply), 2 compressor exhaust (condenser supply), 3 condenser exhaust (expansion valve supply), 4 evaporator supply."
+P[1]=P_ev                                    "state 1 pressure [Pa]"
+h[1]=h_ex_ev                                 "state 1 enthalpy [J/kg]"
+T[1]=t_su_cp                                 "state 1 temperature [C]"
+s[1]=s_su_cp                                 "state 1 entropy [J/kg-K]"
+P[2]=P_cd                                    "state 2 pressure [Pa]"
+h[2]=h_ex_cp                                 "state 2 enthalpy [J/kg]"
+T[2]=t_ex_cp                                 "state 2 temperature [C]"
+s[2]=entropy(fluid$,P=P_cd,h=h_ex_cp)        "state 2 entropy [J/kg-K]"
+P[3]=P_cd                                    "state 3 pressure [Pa]"
+h[3]=h_ex_cd                                 "state 3 enthalpy [J/kg]"
+T[3]=t_ex_cd                                 "state 3 temperature [C]"
+s[3]=entropy(fluid$,P=P_cd,h=h_ex_cd)        "state 3 entropy [J/kg-K]"
+P[4]=P_ev                                    "state 4 pressure [Pa]"
+h[4]=h_su_ev                                 "state 4 enthalpy [J/kg]"
+T[4]=t_su_ev                                 "state 4 temperature [C]"
+s[4]=entropy(fluid$,P=P_ev,h=h_su_ev)        "state 4 entropy (two-phase state) [J/kg-K]"

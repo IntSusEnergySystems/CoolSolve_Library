@@ -215,6 +215,9 @@ log; the model has no figure yet (maintainer, workflow §7).
   model copies its `BRINEPROP` procedure and its two coefficient tables from,
   as a function model of its own (same tables, same polynomial, verified
   against an independent EES stored solution).
+- `CSL-0078` *brine_to_water_heat_pump_refsim* — another model of the bank
+  that calls the same BrineProp library (density and specific heat of a 25 %
+  propylene glycol solution), with the same blocked-native-file treatment.
 - `TM-0486` (inventory): sibling **ParamID** model of the same pump in the
   source collection (parameter identification from measurements, level 2) —
   a separate model if imported; not in the library yet.

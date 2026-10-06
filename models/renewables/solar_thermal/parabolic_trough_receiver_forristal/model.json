@@ -1,0 +1,58 @@
+{
+  "id": "CSL-0082",
+  "name": "parabolic_trough_receiver_forristal",
+  "title": "Parabolic-trough receiver (HCE): steady 1D radial energy balance, Forristal/NREL model",
+  "summary": "First-principles 1D radial energy balance of a parabolic-trough heat collector element (glass envelope, evacuated annulus with residual gas, forced convection to the wind, radiation to the sky), solved in steady state for a receiver at a given heat-transfer-fluid temperature; gives the heat loss per reflector area, the thermal and total efficiency and the temperatures of the tube and of the glass envelope.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "parabolic_trough_receiver_forristal.eescode",
+  "fluids": [],
+  "tags": [
+    "parabolic trough",
+    "solar thermal",
+    "heat collector element",
+    "vacuum annulus",
+    "free molecular conduction",
+    "heat loss",
+    "optical efficiency",
+    "sky radiation",
+    "wind convection",
+    "translation"
+  ],
+  "language_features": [
+    "3-argument IF function",
+    "temperature in K for the radiation terms"
+  ],
+  "stats": {"n_equations": 85, "largest_block": 20},
+  "origin": {
+    "type": "software_library",
+    "source": "thermocycle",
+    "source_path": "~/git/Thermocycle-library/ThermoCycle/Components/HeatFlow/Walls/SolarAbsorber/SolAbsForristal.mo (parameters of ThermoCycle/Components/Units/Solar/SolarField_Forristal.mo), commit b4f16c0b",
+    "candidate_id": "THC-001",
+    "authors": [
+      "Adriano Desideri (ULiège Thermodynamics Laboratory)",
+      "Sylvain Quoilin (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "https://github.com/thermocycle/Thermocycle-library",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "scientific model of R. Forristall, NREL/TP-550-34169 (October 2003)"
+  },
+  "verification": {
+    "reference": "independent Python re-evaluation of the same equations (scipy fsolve, written from the Modelica source, script and CSV kept in the conversion work folder and deleted afterwards); physics cross-check against the measured heat losses and glass temperatures of the NREL PTR70 heat-loss test (F. Burkholder and C. Kutscher, NREL/TP-550-45633, May 2009, Table 3 and Table 4); energy-balance closure",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 2.35e-09,
+    "notes": "27 common variables, 0 differ at rtol = 1e-3 (maximum 2.35e-09 on err_bal). The glass mid temperature T_g is the one variable the source does not define consistently (its two definitions of Phi_glass_ext carry opposite signs); the CoolSolve solution is the physically ordered one, T_int_g > T_g > T_ext_g, and matches the reference re-evaluated in that form. The model reproduces the measured glass surface temperatures of the NREL test stand (35.0 and 80.1 degC) but over-predicts its heat-loss values by a factor 1.9 to 3.2; see README."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-06", "action": "added (translation of ThermoCycle SolAbsForristal, card C-89)", "by": "Claude (Opus 5.5) for S. Quoilin"}
+  ]
+}

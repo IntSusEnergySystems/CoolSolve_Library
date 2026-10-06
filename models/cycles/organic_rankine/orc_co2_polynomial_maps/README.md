@@ -240,3 +240,8 @@ transcritical/supercritical CO2 exercise. The status is therefore *runs* (not
   imposed-effectiveness subcritical R245fa cycle.
 - `CSL-0036` *ORC with two-stage expander and intermediate extraction (R134a)*:
   another vapour power cycle with a component model more detailed than a map.
+- `CSL-0084` *orc_expander_pump_empirical_maps*: same map approach for
+  volumetric expanders and pumps, other fluid (R245fa) and other maps.- `CSL-0104` *supercritical_internal_nu*: the near-supercritical internal
+  convection correlations (function library) for the parts of the CO2 heat
+  exchangers that cross the pseudo-critical point of R744; this model uses
+  polynomial maps instead.

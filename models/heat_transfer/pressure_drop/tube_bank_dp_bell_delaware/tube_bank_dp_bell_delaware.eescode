@@ -1,0 +1,397 @@
+{=============================================================================
+  Shell-and-tube pressure drop: Kern and the Bell-Delaware correction factors
+  CoolSolve Library model CSL-0103 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Shell-side (crossflow) pressure drop of a shell-and-tube heat exchanger by the
+  equivalent-diameter method of Kern, and the five correction factors of the
+  Bell-Delaware method: baffle configuration Jc, baffle leakage Jl, bundle
+  bypassing Jb, unequal baffle spacing Js and the laminar-flow correction Jr.
+
+  dP_Kern returns the pressure drop across the tube bundle [Pa] from the mass
+  flow rate, the fluid properties and the shell geometry. The five Bell-Delaware
+  factors are dimensionless and multiply the shell-side heat-transfer and
+  pressure-drop coefficients of the HEDH method; assembling them with the
+  friction factor, the flow area and the geometric factor is left to the caller.
+
+  Curve data: the friction factor of the Kern method is read from a graph; the
+  cubic B-spline that ht fits to the digitized points is reproduced here in
+  EES arithmetic (Cox-de Boor basis functions), so no lookup table is needed.
+  The three Bell-Delaware curves of ht (Jc, Jl, Jb) are also digitized graphs;
+  for those the closed forms that the original documents give are used - the
+  Chebyshev fit of ht for Jc and the HEDH curve fits for Jl and Jb (see the
+  comment block of each function and the README, "Conversion log").
+
+  Not translated: dP_Zukauskas (Zukauskas 1972). Its friction factor and its
+  pitch-ratio correction are bivariate splines of digitized graphs (104 to 228
+  coefficients each, ht/conv_tube_bank.py), which have no closed form and are
+  far too large to expand into EES equations; see README.md, "Limitations".
+
+  The demonstration program at the end calls every function, once with the
+  inputs of the ht doctest of the corresponding correlation ("A" cases) and
+  once with a second input set ("B" cases). The ht values of both sets are
+  tabulated in the README (verification table).
+
+  Inputs : m [kg/s], rho [kg/m^3], mu / mu_w [Pa-s], DShell / LSpacing / pitch /
+           Do [m], NBaffles [-], Ssb / Stb / Sm [m^2], fractions and counts [-],
+           Re [-], laminar / method flags [-]
+  Outputs: dP [Pa]; Jc, Jl, Jb, Js, Jr [-] (one FUNCTION each)
+  Units  : SI - masses in kg, lengths in m, pressures in Pa
+  Source : ht (Caleb Bell), ht/conv_tube_bank.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; correlations by the authors
+           cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION dP_Kern(m, rho, mu, mu_w, DShell, LSpacing, pitch, Do, NBaffles)
+{DP_KERN - pressure drop across the tube bundle of a shell-and-tube heat
+exchanger, equivalent-diameter method of Kern; f is the friction factor read
+from the graph of Kern (as in Peters and Timmerhaus). Pass mu_w = mu for the
+form without the wall-viscosity correction (ht makes mu_w optional).
+
+  dP = f*(m/Ss)^2*DShell*(NBaffles+1) / {2*rho*De*(mu/mu_w)^0.14}
+
+  Ss  = DShell*(pitch-Do)*LSpacing/pitch          "shell-side flow area [m^2]"
+  De  = 4*(pitch^2 - pi*Do^2/4)/(pi*Do)           "equivalent diameter [m]"
+  Vs  = m/Ss/rho                                  "velocity in the crossflow
+                                                    section [m/s]"
+  Re  = rho*De*Vs/mu                              "Reynolds number on De [-]"
+
+Validity: none quoted by ht; the graph is scanned from Kern and the friction
+factor is valid on the range of its spline, Re = 9.95 to 1.012E6 [-].
+Original: Kern, Donald Quentin, Process Heat Transfer, McGraw-Hill, 1950;
+  presented in Peters, Max, Klaus Timmerhaus and Ronald West, Plant Design and
+  Economics for Chemical Engineers, 5E, McGraw-Hill, New York, 2002 (the doctest
+  example, about 10% difference due to reading the graph).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_tube_bank.py, dP_Kern,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Ss = DShell*(pitch - Do)*LSpacing/pitch
+  De = 4*(pitch^2 - pi()*Do^2/4)/(pi()*Do)
+  Vs = m/Ss/rho
+  Re = rho*De*Vs/mu
+
+  !Cox-de Boor basis functions of the cubic B-spline of ht (15 knots, 11 non-zero
+  !coefficients): it reproduces the friction factor f(Re) read from the graph of
+  !Kern. Knots: 9.9524 (x4), 17.9105, 27.7862, 47.2083, 83.9573, 281.996,
+  !1122.76, 42999.9, 1012440 (x4).
+  !Zero-length knot intervals (repeated knots) have an identically zero term in
+  !the recursion and are dropped, which leaves the equations below unchanged.
+  B0_3 = Kern_knot_step(Re, 9.9524, 17.9105)
+  B0_4 = Kern_knot_step(Re, 17.9105, 27.7862)
+  B0_5 = Kern_knot_step(Re, 27.7862, 47.2083)
+  B0_6 = Kern_knot_step(Re, 47.2083, 83.9573)
+  B0_7 = Kern_knot_step(Re, 83.9573, 281.996)
+  B0_8 = Kern_knot_step(Re, 281.996, 1122.76)
+  B0_9 = Kern_knot_step(Re, 1122.76, 42999.9)
+  B0_10 = Kern_knot_step(Re, 42999.9, 1012440)
+
+  B1_0 = 0
+  B1_1 = 0
+  B1_2 = (17.9105 - Re)/7.9581*B0_3
+  B1_3 = (Re - 9.9524)/7.9581*B0_3 + (27.7862 - Re)/9.8757*B0_4
+  B1_4 = (Re - 17.9105)/9.8757*B0_4 + (47.2083 - Re)/19.4221*B0_5
+  B1_5 = (Re - 27.7862)/19.4221*B0_5 + (83.9573 - Re)/36.749*B0_6
+  B1_6 = (Re - 47.2083)/36.749*B0_6 + (281.996 - Re)/198.0387*B0_7
+  B1_7 = (Re - 83.9573)/198.0387*B0_7 + (1122.76 - Re)/840.764*B0_8
+  B1_8 = (Re - 281.996)/840.764*B0_8 + (42999.9 - Re)/41877.14*B0_9
+  B1_9 = (Re - 1122.76)/41877.14*B0_9 + (1012440 - Re)/969440.1*B0_10
+  B1_10 = (Re - 42999.9)/969440.1*B0_10
+  B1_11 = 0
+  B1_12 = 0
+
+  B2_0 = 0
+  B2_1 = (17.9105 - Re)/7.9581*B1_2
+  B2_2 = (Re - 9.9524)/7.9581*B1_2 + (27.7862 - Re)/17.8338*B1_3
+  B2_3 = (Re - 9.9524)/17.8338*B1_3 + (47.2083 - Re)/29.2978*B1_4
+  B2_4 = (Re - 17.9105)/29.2978*B1_4 + (83.9573 - Re)/56.1711*B1_5
+  B2_5 = (Re - 27.7862)/56.1711*B1_5 + (281.996 - Re)/234.7877*B1_6
+  B2_6 = (Re - 47.2083)/234.7877*B1_6 + (1122.76 - Re)/1038.8027*B1_7
+  B2_7 = (Re - 83.9573)/1038.8027*B1_7 + (42999.9 - Re)/42717.904*B1_8
+  B2_8 = (Re - 281.996)/42717.904*B1_8 + (1012440 - Re)/1011317.24*B1_9
+  B2_9 = (Re - 1122.76)/1011317.24*B1_9 + (1012440 - Re)/969440.1*B1_10
+  B2_10 = (Re - 42999.9)/969440.1*B1_10
+  B2_11 = 0
+
+  B3_0 = (17.9105 - Re)/7.9581*B2_1
+  B3_1 = (Re - 9.9524)/7.9581*B2_1 + (27.7862 - Re)/17.8338*B2_2
+  B3_2 = (Re - 9.9524)/17.8338*B2_2 + (47.2083 - Re)/37.2559*B2_3
+  B3_3 = (Re - 9.9524)/37.2559*B2_3 + (83.9573 - Re)/66.0468*B2_4
+  B3_4 = (Re - 17.9105)/66.0468*B2_4 + (281.996 - Re)/254.2098*B2_5
+  B3_5 = (Re - 27.7862)/254.2098*B2_5 + (1122.76 - Re)/1075.5517*B2_6
+  B3_6 = (Re - 47.2083)/1075.5517*B2_6 + (42999.9 - Re)/42915.9427*B2_7
+  B3_7 = (Re - 83.9573)/42915.9427*B2_7 + (1012440 - Re)/1012158.004*B2_8
+  B3_8 = (Re - 281.996)/1012158.004*B2_8 + (1012440 - Re)/1011317.24*B2_9
+  B3_9 = (Re - 1122.76)/1011317.24*B2_9 + (1012440 - Re)/969440.1*B2_10
+  B3_10 = (Re - 42999.9)/969440.1*B2_10
+
+  f_Kern = 6.04043594917824*B3_0 + 4.64973456285782*B3_1 + 2.95274850806163*B3_2 + 1.9569061885042*B3_3 + 1.16630699464204*B3_4 + 0.68305495362151*B3_5 + 0.458868026544776*B3_6 + 0.223877923319717*B3_7 + 0.127211909755306*B3_8 + 0.139545654888124*B3_9 + 0.128888957434687*B3_10
+
+  dP_Kern = f_Kern*(Vs*rho)^2*DShell*(NBaffles + 1)/(2*rho*De*(mu/mu_w)^0.14)
+END
+
+FUNCTION Kern_knot_step(x, a, b)
+{KERN_KNOT_STEP - helper of dP_Kern, not a correlation: 1 if the half-open knot
+interval [a, b[ contains x, 0 otherwise. It is the degree-0 function of the
+Cox-de Boor recursion of the friction-factor spline of Kern. The block IF form
+is used because the single-line form of the conditional is mis-evaluated by
+CoolSolve 0.3.0 (see the README, "Limitations and CoolSolve gaps").
+  Kern_knot_step = 1 if a <= x < b, 0 otherwise}
+  IF x >= a THEN
+    IF x < b THEN
+      Kern_knot_step = 1
+    ELSE
+      Kern_knot_step = 0
+    ENDIF
+  ELSE
+    Kern_knot_step = 0
+  ENDIF
+END
+
+FUNCTION Jc_Bell(Fc, method)
+{JC_BELL - baffle configuration (window) correction factor of the Bell-Delaware
+method: it accounts for the tubes that are in the baffle window, where the
+fluid flows parallel to them, and not in crossflow. Fc is the fraction of the
+tubes between baffle tips (1 = no tube in the window).
+
+  Jc = 0.55 + 0.72*Fc                        (method = 2, HEDH linear curve fit)
+
+  method = 1: Chebyshev fit of the digitized graph of Bell,
+             Jc = sum(c_k*(2*Fc - 1)^k), k = 0..16, evaluated in Horner form
+             (the maximum error of this fit is 0.142% and its average error
+              0.04%, i.e. within the error of the digitization - as in ht)
+
+Validity: 0 <= Fc <= 1 [-]. ht notes max ~1.1536 at ~0.9066, min ~0.5328 at
+  Fc = 0 and ~1.0314 at Fc = 1; well designed exchangers have Jc near 1.0.
+Original: Bell, Kenneth J., Final Report of the Cooperative Research Program on
+  Shell and Tube Heat Exchangers, University of Delaware, Engineering
+  Experimental Station, 1963; Bell, Delaware Method for Shell-Side Design, in
+  Shah, R. K., Eleswarapu Chinna Subbarao and R. A. Mashelkar (eds), Heat
+  Transfer Equipment Design, CRC Press, 1988; the linear fit is given in
+  Schlunder, E. U. (ed.), Heat Exchanger Design Handbook, Hemisphere, 1987 and
+  in Serth, R. W., Process Heat Transfer, 2E, Academic Press, 2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_tube_bank.py, baffle_correction_Bell
+  (the 'chebyshev' and the 'HEDH' methods; the default 'spline' method is a
+  digitized curve and is not translated), MIT License, C. Bell}
+  IF method = 1 THEN
+    u = 2*Fc - 1
+    Jc_Bell = -17.2670875309741
+    Jc_Bell = Jc_Bell*u - 17.3410726763777
+    Jc_Bell = Jc_Bell*u + 60.3838026259099
+    Jc_Bell = Jc_Bell*u + 60.782028038612
+    Jc_Bell = Jc_Bell*u - 83.865563269877
+    Jc_Bell = Jc_Bell*u - 84.7402441123631
+    Jc_Bell = Jc_Bell*u + 58.6646184487256
+    Jc_Bell = Jc_Bell*u + 59.5614608259622
+    Jc_Bell = Jc_Bell*u - 21.7869575471309
+    Jc_Bell = Jc_Bell*u - 22.2293787075981
+    Jc_Bell = Jc_Bell*u + 4.1167302227508
+    Jc_Bell = Jc_Bell*u + 4.22624601250434
+    Jc_Bell = Jc_Bell*u - 0.334972300460048
+    Jc_Bell = Jc_Bell*u - 0.368582665326309
+    Jc_Bell = Jc_Bell*u - 0.0629839069257099
+    Jc_Bell = Jc_Bell*u + 0.358833096309762
+    Jc_Bell = Jc_Bell*u + 0.934547858287335
+  ELSE
+    Jc_Bell = 0.55 + 0.72*Fc
+  ENDIF
+END
+
+FUNCTION Jl_Bell(Ssb, Stb, Sm)
+{JL_BELL - baffle leakage factor of the Bell-Delaware method: it accounts for
+the leakage between each baffle. Ssb is the shell-to-baffle leakage area, Stb
+the total baffle leakage area and Sm the crossflow area.
+
+  Jl = 0.44*(1 - r_s) + [1 - 0.44*(1 - r_s)]*exp(-2.2*r_lm)
+
+  r_s  = Ssb/(Ssb + Stb)                       "shell-to-baffle share [-]"
+  r_lm = (Ssb + Stb)/Sm                        "leakage-to-crossflow area
+                                                 ratio [-]"
+
+Validity: the HEDH curve fit quoted by ht; 0 <= Ssb/(Ssb + Stb) <= 1 (ht raises
+  an error outside). The default method of ht interpolates the digitized graph
+  (its argument is clipped at 0.743614); this closed form needs no clipping.
+Original: Bell 1963 and 1988 (as above); the curve fit is given in Schlunder,
+  E. U. (ed.), Heat Exchanger Design Handbook, Hemisphere, 1987 and in Serth,
+  R. W., Process Heat Transfer, 2E, Academic Press, 2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_tube_bank.py, baffle_leakage_Bell
+  (the 'HEDH' method; the default 'spline' method is a digitized curve and is
+  not translated), MIT License, C. Bell}
+  r_s = Ssb/(Ssb + Stb)
+  r_lm = (Ssb + Stb)/Sm
+  Jl_Bell = 0.44*(1 - r_s) + (1 - 0.44*(1 - r_s))*exp(-2.2*r_lm)
+END
+
+FUNCTION Jb_Bell(Fsbp, n_seal_strips, n_crossflow_rows, laminar)
+{JB_BELL - bundle bypassing effect correction factor of the Bell-Delaware
+method. Fsbp is the fraction of the crossflow area which is not blocked by a
+baffle and is available for bypassing, n_seal_strips the number of seal strips
+per side of a baffle and n_crossflow_rows the number of tube rows in the
+crossflow of the baffle. laminar = 1 selects the laminar-flow coefficients.
+
+  Jb = exp{-c*Fsbp*[1 - (2*z)^(1/3)]}           c = 1.35 (laminar), 1.25
+                                               z = n_seal_strips/n_crossflow_rows
+
+Validity: the HEDH curve fit quoted by ht; Fsbp is clipped at 0.695 in the
+  default (spline) method of ht, this closed form needs no clipping.
+Original: Bell 1963 and 1988 (as above); the curve fit is given in Schlunder,
+  E. U. (ed.), Heat Exchanger Design Handbook, Hemisphere, 1987.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_tube_bank.py, bundle_bypassing_Bell
+  (the 'HEDH' method; the default 'spline' method is a digitized curve and is
+  not translated), MIT License, C. Bell}
+  IF laminar = 1 THEN
+    c = 1.35
+  ELSE
+    c = 1.25
+  ENDIF
+  z = n_seal_strips/n_crossflow_rows
+  Jb_Bell = exp(-c*Fsbp*(1 - (2*z)^(1/3)))
+END
+
+FUNCTION Js_Bell(nb, B, B_in, B_out, laminar)
+{JS_BELL - unequal baffle spacing correction factor of the Bell-Delaware method:
+the inlet and/or outlet baffle spacing is often smaller than the standard
+spacing B, so the fluid velocity and the heat-transfer coefficients are higher
+there. nb is the number of baffles. laminar = 1 selects the laminar exponent.
+
+  Js = {(nb - 1) + (B_in/B)^(1-n) + (B_out/B)^(1-n)}
+       / {(nb - 1) + (B_in/B) + (B_out/B)}
+
+  n = 1/3 (laminar), 0.6 (turbulent)
+
+Validity: none quoted by ht. Pass B_in = B and B_out = B for equal spacing
+  (ht makes these two arguments optional and then uses B).
+Original: Bell 1963 and 1988 (as above).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_tube_bank.py,
+  unequal_baffle_spacing_Bell, MIT License, C. Bell}
+  IF laminar = 1 THEN
+    n = 1/3
+  ELSE
+    n = 0.6
+  ENDIF
+  Js_Bell = ((nb - 1) + (B_in/B)^(1 - n) + (B_out/B)^(1 - n))/((nb - 1) + B_in/B + B_out/B)
+END
+
+FUNCTION Jr_Bell(Re, total_row_passes)
+{JR_BELL - correction factor for the adverse temperature gradient built up in
+laminar flow (Bell-Delaware method). total_row_passes is the total number of
+tube rows passed by the fluid, windows included and repeat passes of tube rows
+counted.
+
+  Jr* = (10/total_row_passes)^0.18
+
+  Jr = 1                                if Re > 100
+  Jr = Jr*                              if Re < 20
+  Jr = Jr* + (20 - Re)/80*(Jr* - 1)      if 20 <= Re <= 100
+
+  and the result is clipped from below at 0.4.
+
+Validity: the Bell-Delaware method uses a Reynolds-number criterion of 100 for
+  the laminar correction (as in ht).
+Original: Bell 1963 and 1988 (as above); the interpolation between Re = 20 and
+  Re = 100 and the 0.4 limit are described in Schlunder, E. U. (ed.), Heat
+  Exchanger Design Handbook, Hemisphere, 1987 and in Serth, R. W., Process Heat
+  Transfer, 2E, Academic Press, 2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_tube_bank.py, laminar_correction_Bell,
+  MIT License, C. Bell}
+  IF Re > 100 THEN
+    Jr_Bell = 1
+  ELSE
+    Jr_star = (10/total_row_passes)^0.18
+    IF Re < 20 THEN
+      Jr_Bell = Jr_star
+    ELSE
+      Jr_Bell = Jr_star + (20 - Re)/80*(Jr_star - 1)
+    ENDIF
+    IF Jr_Bell < 0.4 THEN
+      Jr_Bell = 0.4
+    ENDIF
+  ENDIF
+END
+
+
+"!Demonstration program: every correlation is called twice"
+"It is ignored by the future $INCLUDE library:tube_bank_dp_bell_delaware (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each correlation (published values)."
+"Case B: a second input set, computed with the same Python functions."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case A - input set"
+m_A = 11              "mass flow rate [kg/s] (ht doctest of dP_Kern)"
+rho_A = 995           "density of the shell-side fluid [kg/m^3]"
+mu_A = 0.000803       "viscosity of the shell-side fluid [Pa-s]"
+mu_w_A = 0.000657     "viscosity at the tube wall temperature [Pa-s]"
+DShell_A = 0.584      "shell diameter [m]"
+LSpacing_A = 0.1524   "baffle spacing [m]"
+pitch_A = 0.0254      "tube pitch [m]"
+Do_A = 0.019          "tube outside diameter [m]"
+NBaffles_A = 22       "number of baffles [-]"
+Fc_A = 0.82           "fraction of the tubes in crossflow (between baffle tips) [-]"
+Ssb_A = 1             "shell-to-baffle leakage area [m^2]"
+Stb_A = 3             "total baffle leakage area [m^2]"
+Sm_A = 8              "crossflow area [m^2]"
+Fsbp_A = 0.5          "bypass area fraction [-]"
+n_seal_A = 5          "seal strips per baffle side [-]"
+n_rows_A = 25         "tube rows in the baffle crossflow [-]"
+nb_A = 16             "number of baffles [-]"
+B_A = 0.1             "standard baffle spacing [m]"
+B_in_A = 0.15         "inlet baffle spacing [m]"
+B_out_A = 0.15        "outlet baffle spacing [m]"
+Re_A = 30             "shell Reynolds number of the Bell-Delaware method [-]"
+n_pass_A = 80         "total number of tube rows passed by the fluid [-]"
+
+"Case A - calls"
+dP_Kern_A = dP_Kern(m_A, rho_A, mu_A, mu_w_A, DShell_A, LSpacing_A, pitch_A, Do_A, NBaffles_A)
+dP_Kern_equalmu_A = dP_Kern(m_A, rho_A, mu_A, mu_A, DShell_A, LSpacing_A, pitch_A, Do_A, NBaffles_A)
+"without the wall-viscosity correction (mu_w = mu)"
+Jc_Bell_A = Jc_Bell(Fc_A, 1)     "Chebyshev fit of the digitized graph of ht"
+Jc_Bell_HEDH_A = Jc_Bell(Fc_A, 2)  "HEDH linear curve fit"
+Jl_Bell_A = Jl_Bell(Ssb_A, Stb_A, Sm_A)
+Jb_Bell_A = Jb_Bell(Fsbp_A, n_seal_A, n_rows_A, 0)
+Jb_Bell_laminar_A = Jb_Bell(Fsbp_A, n_seal_A, n_rows_A, 1)
+Js_Bell_A = Js_Bell(nb_A, B_A, B_in_A, B_out_A, 0)
+Js_Bell_equal_A = Js_Bell(nb_A, B_A, B_A, B_A, 0)  "equal baffle spacings"
+Js_Bell_laminar_A = Js_Bell(nb_A, B_A, B_in_A, B_out_A, 1)
+Jr_Bell_A = Jr_Bell(Re_A, n_pass_A)
+Jr_Bell_turbulent_A = Jr_Bell(150, n_pass_A)  "Re > 100: the factor is 1"
+
+"Case B - second input set"
+"!Oil side of a 1-shell-pass exchanger: 8 kg/s of a light oil (rho = 82 kg/m^3,
+!mu = 2.4E-5 Pa-s, mu_w = 3.1E-5 Pa-s), 600 mm shell, 200 mm baffle spacing,
+!32 mm tube pitch, 25 mm tubes, 16 baffles; leakage areas in m^2, a bypass
+!fraction of 0.12 and a laminar shell Reynolds number of 60."
+m_B = 8
+rho_B = 82
+mu_B = 0.000024
+mu_w_B = 0.000031
+DShell_B = 0.6
+LSpacing_B = 0.25
+pitch_B = 0.032
+Do_B = 0.025
+NBaffles_B = 16
+Fc_B = 0.85
+Ssb_B = 0.004
+Stb_B = 0.012
+Sm_B = 0.08
+Fsbp_B = 0.12
+n_seal_B = 4
+n_rows_B = 20
+nb_B = 12
+B_B = 0.2
+B_in_B = 0.28
+B_out_B = 0.18
+Re_B = 60
+n_pass_B = 40
+
+"Case B - calls"
+dP_Kern_B = dP_Kern(m_B, rho_B, mu_B, mu_w_B, DShell_B, LSpacing_B, pitch_B, Do_B, NBaffles_B)
+dP_Kern_equalmu_B = dP_Kern(m_B, rho_B, mu_B, mu_B, DShell_B, LSpacing_B, pitch_B, Do_B, NBaffles_B)
+Jc_Bell_B = Jc_Bell(Fc_B, 1)
+Jc_Bell_HEDH_B = Jc_Bell(Fc_B, 2)
+Jl_Bell_B = Jl_Bell(Ssb_B, Stb_B, Sm_B)
+Jb_Bell_B = Jb_Bell(Fsbp_B, n_seal_B, n_rows_B, 0)
+Jb_Bell_laminar_B = Jb_Bell(Fsbp_B, n_seal_B, n_rows_B, 1)
+Js_Bell_B = Js_Bell(nb_B, B_B, B_in_B, B_out_B, 0)
+Js_Bell_equal_B = Js_Bell(nb_B, B_B, B_B, B_B, 0)
+Js_Bell_laminar_B = Js_Bell(nb_B, B_B, B_in_B, B_out_B, 1)
+Jr_Bell_B = Jr_Bell(Re_B, n_pass_B)
+

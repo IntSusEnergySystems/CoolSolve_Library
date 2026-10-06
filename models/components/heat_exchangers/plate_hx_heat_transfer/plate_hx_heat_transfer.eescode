@@ -1,0 +1,656 @@
+{=============================================================================
+  Plate heat exchangers: single-phase Nusselt numbers and two-phase boiling
+  heat-transfer coefficients (function library)
+  CoolSolve Library model CSL-0096 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Correlations for single-phase flow and for flow boiling inside the
+  corrugated channels of a chevron-style plate-and-frame heat exchanger.
+
+  Four single-phase correlations return the Nusselt number of the channel
+  (Nu_plate_Kumar, Nu_plate_Martin, Nu_plate_Muley_Manglik, Nu_plate_Khan_Khan
+  of ht) and five flow-boiling correlations return the heat-transfer
+  coefficient of the channel (h_boiling_Amalfi, h_boiling_Lee_Kang_Kim,
+  h_boiling_Han_Lee_Kim, h_boiling_Huang_Sheer, h_boiling_Yan_Lin of ht).
+
+  Two more EES functions, fd_Martin_1999 and fd_Martin_VDI, are the two
+  friction-factor correlations of Martin that Nu_plate_Martin calls inside ht
+  (they come from the companion library fluids); they are translated here
+  because the Nu correlation cannot be evaluated without them.
+
+  Every boiling correlation is written for a given heat flux q [W/m^2]: it is
+  a local correlation of a plate evaporator, not of the whole exchanger. All
+  the fluid properties are arguments of the functions: the calling model
+  evaluates them (rule 5 of sources/ht/README.md, section 7).
+
+  The demonstration program at the end calls every function, once with the
+  inputs of the ht doctest of the corresponding correlation ("A" cases) and
+  once with a second, uniform input set ("B" cases: a 60 degree brazed-plate
+  R134a evaporator). The ht values of both sets are tabulated in the README
+  (verification table).
+
+  No dispatcher of the family had to be dropped: ht exports nine functions
+  and all nine are translated.
+
+  Inputs : Re [-], Pr [-], chevron_angle [degrees], plate_enlargement_factor [-],
+           quality x [-], Dh or D_eq [m], mass flow rate m [kg/s] per channel,
+           channel flow area A_channel_flow [m^2], wavelength [m], rhol, rhog
+           [kg/m^3], mul, mug [Pa-s], kl [W/m-K], Hvap [J/kg], sigma [N/m],
+           Cpl [J/kg-K], q [W/m^2], Tsat [K], variant and angle flags [-]
+  Outputs: Nu [-] (single-phase), h [W/m^2-K] (flow boiling), fd [-]
+  Units  : SI - lengths in m, degrees for the chevron and contact angles
+  Source : ht (Caleb Bell), ht/conv_plate.py and ht/boiling_plate.py, version
+           1.2.0, commit 85e0ee6, MIT - https://github.com/CalebBell/ht ;
+           correlations by the authors cited in each function block - see
+           README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+ =============================================================================}
+
+FUNCTION fd_Martin_1999(Re, chevron_angle)
+{FD_MARTIN_1999 - Darcy friction factor of single-phase flow in the
+corrugated channel of a chevron plate heat exchanger, correlation of 1999.
+
+  1/SQRT(f_f) = COS(beta)/SQRT(0.045*TAN(beta) + 0.09*SIN(beta) + f0/COS(beta))
+               + (1 - COS(beta))/SQRT(3.8*f1)
+  f0 = 16/Re for Re < 2000, (1.56*LN(Re) - 3)^-2 for Re >= 2000
+  f1 = 149/Re + 0.9625 for Re < 2000, 9.75*Re^-0.289 for Re >= 2000
+  fd = 4*f_f (the correlation is written on the Fanning factor)
+
+  COS, SIN and TAN take degrees, as in EES and CoolSolve (the argument of the
+  Python code is converted to radians before the call).
+  The regime switch at Re = 2000 is discontinuous in the correlation (see the
+  notes of the original) and is written with two sequential IF blocks.
+Validity: Re from 200 to 10000, chevron_angle from 0 to 80 degrees (as in
+  fluids).  Re is on the hydraulic diameter of the channel [-].
+Original: Martin, Holger, "Economic optimization of compact heat exchangers",
+  EF-Conference on Compact Heat Exchangers and Enhancement Technology for the
+  Process Industries, Banff, Canada, July 18-23, 1999 (also Shah, R. K. and
+  D. P. Sekulic, Fundamentals of Heat Exchanger Design, Wiley, 2002); the same
+  model is first published in Martin, H., "A Theoretical Approach to Predict
+  the Performance of Chevron-Type Plate Heat Exchangers", Chem. Eng. Process.
+  Process Intensification 35(4): 301-310, 1996.
+Taken from: fd_Martin_1999 = friction_plate_Martin_1999 of the companion
+  library fluids (C. Bell), 1.3.1, called by ht 1.2.0 (commit 85e0ee6) in
+  ht/conv_plate.py, function Nu_plate_Martin, MIT License -
+  https://github.com/CalebBell/fluids}
+  f0 = 16/Re
+  f1 = 149/Re + 0.9625
+  IF Re >= 2000 THEN
+    f0 = (1.56*LN(Re) - 3)^-2
+    f1 = 9.75*Re^-0.289
+  ENDIF
+  rhs = COS(chevron_angle)/SQRT(0.045*TAN(chevron_angle) + 0.09*SIN(chevron_angle) + f0/COS(chevron_angle))
+  rhs = rhs + (1 - COS(chevron_angle))/SQRT(3.8*f1)
+  fd_Martin_1999 = 4*rhs^-2
+END
+
+FUNCTION fd_Martin_VDI(Re, chevron_angle)
+{FD_MARTIN_VDI - Darcy friction factor of single-phase flow in the corrugated
+channel of a chevron plate heat exchanger, the revision of 1999 published in
+the VDI Heat Atlas (slightly higher than the 1999 correlation).
+
+  1/SQRT(fd) = COS(beta)/SQRT(0.18*TAN(beta) + 0.36*SIN(beta) + f0/COS(beta))
+              + (1 - COS(beta))/SQRT(3.8*f1)
+  f0 = 64/Re for Re < 2000, (1.8*LOG10(Re) - 1.5)^-2 for Re >= 2000
+  f1 = 597/Re + 3.85 for Re < 2000, 39*Re^-0.289 for Re >= 2000
+  a = 3.8, b = 0.18, c = 0.36 (the three adjustable constants of the model)
+
+  COS, SIN and TAN take degrees, as in EES and CoolSolve.
+  The regime switch at Re = 2000 is discontinuous in the correlation and is
+  written with two sequential IF blocks.
+Validity: Re from 200 to 10000, chevron_angle from 0 to 80 degrees (as in
+  fluids).  Re is on the hydraulic diameter of the channel [-].
+Original: V. D. I. (ed.), VDI Heat Atlas, 2nd edition, Springer, Berlin / New
+  York, 2010, section G1 (plate heat exchangers).
+Taken from: fd_Martin_VDI = friction_plate_Martin_VDI of the companion
+  library fluids (C. Bell), 1.3.1, called by ht 1.2.0 (commit 85e0ee6) in
+  ht/conv_plate.py, function Nu_plate_Martin, MIT License -
+  https://github.com/CalebBell/fluids}
+  a = 3.8
+  b = 0.18
+  c = 0.36
+  f0 = 64/Re
+  f1 = 597/Re + 3.85
+  IF Re >= 2000 THEN
+    f0 = (1.8*LOG10(Re) - 1.5)^-2
+    f1 = 39*Re^-0.289
+  ENDIF
+  rhs = COS(chevron_angle)/SQRT(b*TAN(chevron_angle) + c*SIN(chevron_angle) + f0/COS(chevron_angle))
+  rhs = rhs + (1 - COS(chevron_angle))/SQRT(a*f1)
+  fd_Martin_VDI = rhs^-2
+END
+
+FUNCTION Nu_Kumar(Re, Pr, chevron_angle, mu, mu_wall)
+{NU_KUMAR - Nusselt number of single-phase flow in the channel of a
+**well-designed** Chevron-style plate heat exchanger; the coefficients C1 and m
+are read from tables, first on the chevron angle, then on Re, and a wall
+viscosity correction can be applied.
+
+  Nu = C1*Re^m*Pr^0.33*(mu/mu_wall)^0.17
+
+  The 5 chevron-angle rows of the 3 columns of the original (the column is
+  selected by Re, the largest column being used above its limit) are, in the
+  order chevron_angle <= 30, <= 45, <= 50, <= 60 and > 60 degrees:
+    (C1, m, Re upper limit) = (0.718, 0.349, 10), (0.348, 0.663, 10),
+                              (0.348, 0.663, 100)
+                            = (0.718, 0.349, 10), (0.400, 0.598, 100),
+                              (0.300, 0.663, 300)
+                            = (0.630, 0.333, 20), (0.291, 0.591, 300),
+                              (0.130, 0.732, 400)
+                            = (0.562, 0.326, 20), (0.306, 0.529, 400),
+                              (0.108, 0.703, 500)
+                            = (0.562, 0.326, 20), (0.331, 0.503, 400),
+                              (0.087, 0.718, 500)
+
+  The data were developed by APV International Limited; the fit of the graph of
+  the original is by the author of [2]. "The author of [1] states clearly this
+  correlation is 'applicable only to well designed Chevron PHEs'" (as in the
+  original). The viscosity correction is only applied when both viscosities
+  are given in ht; EES has no optional argument, so mu [Pa-s] and mu_wall
+  [Pa-s] are mandatory and the caller passes mu = mu_wall for the form without
+  the correction. Passing a chevron angle above 65 degrees gives the last row,
+  as in ht. The coefficients change from one row/column to the next, so the
+  result has the small discontinuities of the original.
+Validity: Re from 0.1 to 10000, chevron_angle from 30 to 65 degrees (as in ht).
+Original: Kumar, H., "The plate heat exchanger: construction and design", in
+  First U.K. National Conference on Heat Transfer, University of Leeds, 3-5
+  July 1984, IChemE Symposium Series 86: 1275-1288, 1984; the curve fit is
+  Ayub, Z. H., "Plate Heat Exchanger Literature Survey and New Heat Transfer
+  and Pressure Drop Correlations for Refrigerant Evaporators", Heat Transfer
+  Engineering 24(5): 3-16, 2003, doi:10.1080/01457630304056.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_plate.py, Nu_plate_Kumar,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  "row of the coefficient tables, selected by the chevron angle"
+  i_angle = 1
+  IF chevron_angle > 30 THEN
+    i_angle = 2
+  ENDIF
+  IF chevron_angle > 45 THEN
+    i_angle = 3
+  ENDIF
+  IF chevron_angle > 50 THEN
+    i_angle = 4
+  ENDIF
+  IF chevron_angle > 60 THEN
+    i_angle = 5
+  ENDIF
+  "row 1: chevron_angle <= 30 degrees - Reynolds-number limit, C1 and m of the three columns"
+  Re_lim_1 = 10
+  Re_lim_2 = 10
+  Re_lim_3 = 100
+  C1_1 = 0.718
+  C1_2 = 0.348
+  C1_3 = 0.348
+  m_1 = 0.349
+  m_2 = 0.663
+  m_3 = 0.663
+  IF i_angle = 2 THEN
+    "row 2: chevron_angle <= 45 degrees - Reynolds-number limit, C1 and m of the three columns"
+    Re_lim_1 = 10
+    Re_lim_2 = 100
+    Re_lim_3 = 300
+    C1_1 = 0.718
+    C1_2 = 0.4
+    C1_3 = 0.3
+    m_1 = 0.349
+    m_2 = 0.598
+    m_3 = 0.663
+  ENDIF
+  IF i_angle = 3 THEN
+    "row 3: chevron_angle <= 50 degrees - Reynolds-number limit, C1 and m of the three columns"
+    Re_lim_1 = 20
+    Re_lim_2 = 300
+    Re_lim_3 = 400
+    C1_1 = 0.63
+    C1_2 = 0.291
+    C1_3 = 0.13
+    m_1 = 0.333
+    m_2 = 0.591
+    m_3 = 0.732
+  ENDIF
+  IF i_angle = 4 THEN
+    "row 4: chevron_angle <= 60 degrees - Reynolds-number limit, C1 and m of the three columns"
+    Re_lim_1 = 20
+    Re_lim_2 = 400
+    Re_lim_3 = 500
+    C1_1 = 0.562
+    C1_2 = 0.306
+    C1_3 = 0.108
+    m_1 = 0.326
+    m_2 = 0.529
+    m_3 = 0.703
+  ENDIF
+  IF i_angle = 5 THEN
+    "row 5: chevron_angle above 60 degrees - Reynolds-number limit, C1 and m of the three columns"
+    Re_lim_1 = 20
+    Re_lim_2 = 400
+    Re_lim_3 = 500
+    C1_1 = 0.562
+    C1_2 = 0.331
+    C1_3 = 0.087
+    m_1 = 0.326
+    m_2 = 0.503
+    m_3 = 0.718
+  ENDIF
+
+  "column of the row: the first of its three Reynolds-number limits the number does not exceed"
+  i_Re = 1
+  IF Re > Re_lim_1 THEN
+    i_Re = 2
+  ENDIF
+  IF Re > Re_lim_2 THEN
+    i_Re = 3
+  ENDIF
+  C1 = C1_1
+  m = m_1
+  IF i_Re = 2 THEN
+    C1 = C1_2
+    m = m_2
+  ENDIF
+  IF i_Re = 3 THEN
+    C1 = C1_3
+    m = m_3
+  ENDIF
+  Nu_Kumar = C1*Re^m*Pr^0.33*(mu/mu_wall)^0.17
+END
+
+FUNCTION Nu_Martin(Re, Pr, chevron_angle, variant)
+{NU_MARTIN - Nusselt number of single-phase flow in the channel of a
+Chevron-style plate heat exchanger.
+
+  Nu = 0.122*Pr^(1/3)*[fd*Re^2*SIN(2*beta)]^0.374
+
+  fd is the Darcy friction factor computed with the correlation of Martin
+  (1999) or with his later formulation of the VDI Heat Atlas, chosen by the
+  flag variant (0 = 1999, 1 = VDI); they are the two EES functions
+  fd_Martin_1999 and fd_Martin_VDI of this file, as in ht.
+  SIN takes degrees in EES and CoolSolve: the argument of the Python code,
+  2*radians(chevron_angle), is therefore written SIN(2*chevron_angle).
+Validity: experimental data from Re = 200 to 10000, chevron angles from 0 to
+  80 degrees (as in ht).  Re is on the hydraulic diameter of the channel [-].
+Original: Martin, Holger, "A Theoretical Approach to Predict the Performance
+  of Chevron-Type Plate Heat Exchangers", Chemical Engineering and Processing:
+  Process Intensification 35(4): 301-310, 1996, doi:10.1016/0255-2701(95)04129-X;
+  friction factor and economic optimization, Martin, Holger, "Economic
+  optimization of compact heat exchangers", EF-Conference on Compact Heat
+  Exchangers and Enhancement Technology for the Process Industries, Banff,
+  Canada, July 18-23, 1999; VDI Heat Atlas, 2nd edition, Springer, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_plate.py, Nu_plate_Martin,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF variant = 0 THEN
+    fd = fd_Martin_1999(Re, chevron_angle)
+  ENDIF
+  IF variant = 1 THEN
+    fd = fd_Martin_VDI(Re, chevron_angle)
+  ENDIF
+  Nu_Martin = 0.122*Pr^(1/3)*(fd*Re^2*SIN(2*chevron_angle))^0.374
+END
+
+FUNCTION Nu_Muley_Manglik(Re, Pr, chevron_angle, plate_enlargement_factor)
+{NU_MULEY_MANGLIK - Nusselt number of single-phase flow in the channel of a
+Chevron-style plate heat exchanger.
+
+  Nu = [0.2668 - 0.006967*beta + 7.244E-5*beta^2]
+      *[20.7803 - 50.9372*phi + 41.1585*phi^2 - 10.1507*phi^3]
+      *Re^[0.728 + 0.0543*SIN(2*pi*beta/90 + 3.7)]*Pr^(1/3)
+
+  beta = chevron_angle [degrees] and phi = plate_enlargement_factor = the extra
+  surface area multiplier as compared to a flat plate caused by the
+  corrugations [-].
+  "the correlation as presented in the original suffers from a typo, with a
+   coefficient of 10.51 instead of 10.15. Several more decimal places were
+   published along with the corrected typo in [2]. This has a *very large*
+   difference if not implemented" (as in the original): the corrected form is
+   used here.
+  SIN takes degrees in EES and CoolSolve: the argument of the Python code,
+  2*pi*beta/90 + 3.7 rad, is therefore written SIN(4*beta + 3.7*180/pi()).
+Validity: Re above 1000, chevron_angle between 30 and 60 degrees, enlargement
+  factors from 1 to 1.5 (as in ht); because of its cubic form the
+  correlation is not likely to be accurate outside those ranges.
+Original: Muley, A. and R. M. Manglik, "Experimental Study of Turbulent Flow
+  Heat Transfer and Pressure Drop in a Plate Heat Exchanger With Chevron
+  Plates", Journal of Heat Transfer 121(1): 110-117, February 1999,
+  doi:10.1115/1.2825923; corrected form in Palm, B. and J. Claesson, "Plate
+  Heat Exchangers: Calculation Methods for Single- and Two-Phase Flow
+  (Keynote)", Proceedings of the International Conference on Mechanical and
+  Metallurgical Technology, ICMM2005: 103-113, 2005, doi:10.1115/ICMM2005-75092.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_plate.py, Nu_plate_Muley_Manglik,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  t1 = 0.2668 - 0.006967*chevron_angle + 7.244E-5*chevron_angle^2
+  t2 = 20.7803 - 50.9372*plate_enlargement_factor + 41.1585*plate_enlargement_factor^2 - 10.1507*plate_enlargement_factor^3
+  t3 = 0.728 + 0.0543*SIN(4*chevron_angle + 3.7*180/pi())
+  Nu_Muley_Manglik = t1*t2*Re^t3*Pr^(1/3)
+END
+
+FUNCTION Nu_Khan_Khan(Re, Pr, chevron_angle)
+{NU_KHAN_KHAN - Nusselt number of single-phase flow in the channel of a
+Chevron-style plate heat exchanger.
+
+  Nu = (0.0161*beta/beta_max + 0.1298)*Re^(0.198*beta/beta_max + 0.6398)*Pr^0.35
+
+  beta_max = 60 degrees.  The viscosity correction power recommended with this
+  correlation is the blanket Sieder and Tate (1936) value of 0.14 (as in the
+  original); it is not part of the equation and is left to the caller.
+Validity: Re from 500 to 2500, chevron_angle between 30 and 60 degrees,
+  Prandtl numbers between 3.5 and 6 (as in ht).
+Original: Khan, T. S., M. S. Khan, M.-C. Chyu and Z. H. Ayub, "Experimental
+  Investigation of Single Phase Convective Heat Transfer Coefficient in a
+  Corrugated Plate Heat Exchanger for Multiple Plate Configurations", Applied
+  Thermal Engineering 30(8): 1058-1065, 1 June 2010,
+  doi:10.1016/j.applthermaleng.2010.01.021.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_plate.py, Nu_plate_Khan_Khan,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  beta_ratio = chevron_angle/60
+  Nu_Khan_Khan = (0.0161*beta_ratio + 0.1298)*Re^(0.198*beta_ratio + 0.6398)*Pr^0.35
+END
+
+FUNCTION h_Amalfi(m, x, Dh, rhol, rhog, mul, mug, kl, Hvap, sigma, q, A_channel_flow, chevron_angle)
+{H_AMALFI - two-phase (flow boiling) heat-transfer coefficient of a liquid and
+vapour flowing in a plate and frame heat exchanger; a correlation developed
+from a wide range of existing correlations and data sets, which ht presents as
+the most accurate currently available.
+
+  For the Bond number Bd < 4 ("tiny channel case"):
+    h = 982*(kl/Dh)*(beta/beta_max)^1.101*(G^2*Dh/(rho_h*sigma))^0.315
+        *(rhol/rhog)^-0.224*Bo^0.320
+  For the Bond number Bd >= 4:
+    h = 18.495*(kl/Dh)*(beta/beta_max)^0.135*Re_g^0.135*Re_lo^0.351
+        *Bd^0.235*Bo^0.198*(rhol/rhog)^-0.223
+
+  beta_max = 45 degrees; G = m/A_channel_flow is the mass flux of the channel;
+  rho_h = 1/(x/rhog + (1-x)/rhol) is the homogeneous holdup density;
+  Re_lo = G*Dh/mul and Re_g = G*x*Dh/mug; Bo = q/(G*Hvap) is the boiling
+  number and Bd = g*(rhol - rhog)*Dh^2/sigma is the Bond number.
+  Note that the exponent of (beta/beta_max) in the second equation is 0.135 in
+  the code of ht, which is what this function implements, while the formula
+  printed in its docstring gives 0.248; the value 776.078 of the doctest is on
+  the Bd < 4 branch and does not discriminate between the two.
+  The chevron_angle argument is mandatory here (it has the default value of 45
+  degrees in ht) and the switch Bd < 4 is discontinuous by nature (EES IF).
+Validity: developed from a 1903-point database; the fluids of the original are
+  R134a, ammonia, R236fa, R600a, R290, R1270, R1234yf, R410A, R507A,
+  ammonia/water and air/water mixtures, over a wide range of operating
+  conditions and plate geometries (as in ht).
+Original: Amalfi, R. L., F. Vakili-Farahani and J. R. Thome, "Flow Boiling
+  and Frictional Pressure Gradients in Plate Heat Exchangers. Part 2:
+  Comparison of Literature Methods to Database and New Prediction Methods",
+  International Journal of Refrigeration 61: 185-203, January 2016,
+  doi:10.1016/j.ijrefrig.2015.07.009.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_plate.py, h_boiling_Amalfi,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  g_acc = 9.80665    "gravitational acceleration [m/s^2]; the EES constant g is not resolved inside a function body (CS-BUG-PI-FUNCTION)"
+  beta_s = chevron_angle/45
+  rho_s = rhol/rhog
+  G = m/A_channel_flow
+  Bd = g_acc*(rhol - rhog)*Dh^2/sigma
+  rho_h = 1/(x/rhog + (1 - x)/rhol)
+  We_m = G^2*Dh/sigma/rho_h
+  Bo = q/(G*Hvap)
+  IF Bd < 4 THEN
+    Nu_tp = 982*beta_s^1.101*We_m^0.315*Bo^0.320*rho_s^-0.224
+  ENDIF
+  IF Bd >= 4 THEN
+    Re_lo = G*Dh/mul
+    Re_g = G*x*Dh/mug
+    Nu_tp = 18.495*beta_s^0.135*Re_g^0.135*Re_lo^0.351*Bd^0.235*Bo^0.198*rho_s^-0.223
+  ENDIF
+  h_Amalfi = kl/Dh*Nu_tp
+END
+
+FUNCTION h_Lee_Kang_Kim(m, x, D_eq, rhol, rhog, mul, mug, kl, Hvap, q, A_channel_flow)
+{H_LEE_KANG_KIM - two-phase (flow boiling) heat-transfer coefficient of a liquid
+and vapour flowing in a plate and frame heat exchanger, as reviewed in [2].
+
+  For Re_g/Re_l < 9:
+    h = 98.7*(kl/D_eq)*(Re_g/Re_l)^-0.0848*Bo^-0.0597*Xtt^0.0973
+  For Re_g/Re_l >= 9:
+    h = 234.9*(kl/D_eq)*(Re_g/Re_l)^-0.576*Bo^-0.275*Xtt^0.66
+
+  G = m/A_channel_flow is the mass flux of the channel, Bo = q/(G*Hvap) is the
+  boiling number and Re_g/Re_l = x/(1-x)*mul/mug; the two-phase parameter is
+  the Lockhart-Martinelli one of [1] with the powers of the original,
+  Xtt = ((1-x)/x)^0.875*(rhog/rhol)^0.5*(mul/mug)^0.125.
+  Note that this model depends on the specific heat flux involved. It also
+  uses the equivalent diameter, not the hydraulic diameter (as in the
+  original).
+Validity: developed with mass fluxes from 14.5 to 33.6 kg/m^2/s, heat flux
+  from 15 to 30 kW/m^2, qualities from 0.09 to 0.6, 200 < Re < 600,
+  2.3 < Re_g/Re_l < 32.1, 0.00019 < Bo < 0.001, 0.028 < Xtt < 0.3; mean
+  average deviation of 4.4 % (as in ht).
+Original: Lee, E., H. Kang and Y. Kim, "Flow Boiling Heat Transfer and
+  Pressure Drop of Water in a Plate Heat Exchanger with Corrugated Channels at
+  Low Mass Flux Conditions", International Journal of Heat and Mass Transfer
+  77: 37-45, October 2014, doi:10.1016/j.ijheatmasstransfer.2014.05.019;
+  review: Amalfi, R. L., F. Vakili-Farahani and J. R. Thome, "Flow Boiling
+  and Frictional Pressure Gradients in Plate Heat Exchangers. Part 1: Review
+  and Experimental Database", International Journal of Refrigeration 61:
+  166-184, January 2016, doi:10.1016/j.ijrefrig.2015.07.010; Xtt form of
+  Woldesemayat, M. A. and A. J. Ghajar, "Comparison of Void Fraction
+  Correlations for Different Flow Patterns in Horizontal and Upward Inclined
+  Pipes", International Journal of Multiphase Flow 33(4): 347-370, 2007.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_plate.py,
+  h_boiling_Lee_Kang_Kim, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  G = m/A_channel_flow
+  Bo = q/(G*Hvap)
+  Re_ratio = x/(1 - x)*mul/mug
+  Xtt = ((1 - x)/x)^0.875*(rhog/rhol)^0.5*(mul/mug)^0.125
+  IF Re_ratio < 9 THEN
+    h_Lee_Kang_Kim = 98.7*kl/D_eq*Re_ratio^-0.0848*Bo^-0.0597*Xtt^0.0973
+  ENDIF
+  IF Re_ratio >= 9 THEN
+    h_Lee_Kang_Kim = 234.9*kl/D_eq*Re_ratio^-0.576*Bo^-0.275*Xtt^0.66
+  ENDIF
+END
+
+FUNCTION h_Han_Lee_Kim(m, x, Dh, rhol, rhog, mul, kl, Hvap, Cpl, q, A_channel_flow, wavelength, chevron_angle)
+{H_HAN_LEE_KIM - two-phase (flow boiling) heat-transfer coefficient of a liquid
+and vapour flowing in a plate and frame heat exchanger, developed from
+experiments with three plate exchangers and the working fluids R410A and R22.
+
+  h = Ge_1*(kl/Dh)*Re_eq^Ge_2*Pr^0.4*Bo_eq^0.3
+  Ge_1 = 2.81*(lambda/Dh)^-0.041*(pi/2 - beta)^-2.83
+  Ge_2 = 0.746*(lambda/Dh)^-0.082*(pi/2 - beta)^0.61
+  Re_eq = G_eq*Dh/mul,  Bo_eq = q/(G_eq*Hvap),  Pr = Cpl*mul/kl
+  G_eq = (m/A_channel_flow)*[1 - x + x*(rhol/rhog)^0.5]
+
+  lambda is the wavelength (pitch) of the corrugations, the flow area is twice
+  the corrugation amplitude times the width of the plate and the mass flow is
+  that of one channel. The angle beta is the chevron angle converted to
+  radians: "Radians is used in degrees, and the formulas are for the
+  inclination angle not the chevron angle (it is converted internally)" (as in
+  the original). Note that this model depends on the specific heat flux
+  involved.
+Validity: developed with three plate heat exchangers with angles of 45, 35 and
+  20 degrees, mass fluxes from 13 to 34 kg/m^2/s, evaporating temperatures of
+  5, 10 and 15 degrees, vapour qualities from 0.15 to 0.9 and heat fluxes of
+  2.5 to 8.5 kW/m^2 (as in ht).
+Original: Han, D.-H., K.-J. Lee and Y.-H. Kim, "Experiments on the
+  Characteristics of Evaporation of R410A in Brazed Plate Heat Exchangers
+  with Different Geometric Configurations", Applied Thermal Engineering 23(10):
+  1209-1225, July 2003, doi:10.1016/S1359-4311(03)00061-9.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_plate.py,
+  h_boiling_Han_Lee_Kim, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  beta = chevron_angle*pi()/180    "chevron angle [rad]"
+  G = m/A_channel_flow
+  G_eq = G*((1 - x) + x*(rhol/rhog)^0.5)
+  Re_eq = G_eq*Dh/mul
+  Bo_eq = q/(G_eq*Hvap)
+  Pr = Cpl*mul/kl
+  Ge1 = 2.81*(wavelength/Dh)^-0.041*beta^-2.83
+  Ge2 = 0.746*(wavelength/Dh)^-0.082*beta^0.61
+  h_Han_Lee_Kim = Ge1*kl/Dh*Re_eq^Ge2*Pr^0.4*Bo_eq^0.3
+END
+
+FUNCTION h_Huang_Sheer(rhol, rhog, mul, kl, Hvap, sigma, Cpl, q, Tsat, angle)
+{H_HUANG_SHEER - two-phase (flow boiling) heat-transfer coefficient of a liquid
+and vapour flowing in a plate and frame heat exchanger; a correlation that
+depends on the properties of the fluid and not on the geometry of the
+exchanger.
+
+  h = 1.87E-3*(kl/d_o)*(q*d_o/(kl*Tsat))^0.56*(Hvap*d_o^2/alpha_l^2)^0.31*Pr_l^0.33
+  d_o = 0.0146*theta*[2*sigma/(g*(rhol - rhog))]^0.5   with theta = 35 degrees
+  Pr_l = Cpl*mul/kl  and  alpha_l = kl/(rhol*Cpl) [m^2/s]
+
+  d_o is the bubble diameter, the angle argument being the contact angle of
+  the bubbles with the wall (assumed to be 35 degrees for the refrigerants of
+  the development of the correlation); it is used in degrees, as in the code of
+  ht. "As first published in [1] a power of two was missing in the
+  correlation for bubble diameter in the dimensionless group with a power of
+  0.31. That made the correlation non-dimensional" (as in the original).
+  Tsat is the saturation temperature in K, as in ht. Note that this model
+  depends on the specific heat flux involved and on the saturation
+  temperature.
+Validity: developed with 222 data points for R134a and R507A (only two for
+  ammonia and R12), chevron angles from 28 to 60 degrees, heat fluxes from
+  1.85 to 10.75 kW/m^2, mass fluxes from 5.6 to 52.25 kg/m^2/s, qualities
+  from 0.21 to 0.95 and saturation temperatures of 1.9 to 13.04 degrees
+  Celsius (as in ht). "The inclusion of the saturation temperature makes this
+  correlation have limited predictive power for other fluids whose saturation
+  tempratures might be much higher or lower than those used in the
+  development of the correlation. For this reason it should be regarded with
+  caution" (as in the original).
+Original: Huang, J., T. J. Sheer and M. Bailey-McEwan, "Heat Transfer and
+  Pressure Drop in Plate Heat Exchanger Refrigerant Evaporators", International
+  Journal of Refrigeration 35(2): 325-335, March 2012,
+  doi:10.1016/j.ijrefrig.2011.11.002.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_plate.py,
+  h_boiling_Huang_Sheer, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  g_acc = 9.80665    "gravitational acceleration [m/s^2]; the EES constant g is not resolved inside a function body (CS-BUG-PI-FUNCTION)"
+  d_o = 0.0146*angle*(2*sigma/(g_acc*(rhol - rhog)))^0.5
+  Prl = Cpl*mul/kl
+  alpha_l = kl/(rhol*Cpl)
+  h_Huang_Sheer = 1.87E-3*(kl/d_o)*(q*d_o/(kl*Tsat))^0.56*(Hvap*d_o^2/alpha_l^2)^0.31*Prl^0.33
+END
+
+FUNCTION h_Yan_Lin(m, x, Dh, rhol, rhog, mul, kl, Hvap, Cpl, q, A_channel_flow)
+{H_YAN_LIN - two-phase (flow boiling) heat-transfer coefficient of a liquid and
+vapour flowing in a plate and frame heat exchanger.
+
+  h = 1.926*(kl/Dh)*Re_eq*Pr_l^(1/3)*Bo_eq^0.3*Re^-0.5
+  Re_eq = G_eq*Dh/mul,  Bo_eq = q/(G_eq*Hvap),  Pr_l = Cpl*mul/kl
+  G_eq = (m/A_channel_flow)*[1 - x + x*(rhol/rhog)^0.5],  Re = (m/A_channel_flow)*Dh/mul
+
+  The factor Re^-0.5, written in the equation of the original as well, is kept
+  as it is: the code of ht notes for it that it is "not actually specified
+  clearly but it is in another paper by them" (as in the original).
+Validity: developed with R134a as the refrigerant in a plate heat exchanger
+  with 2 channels, chevron angle 60 degrees, quality from 0.1 to 0.8, heat
+  flux 11 to 15 kW/m^2 and mass fluxes of 55 and 70 kg/m^2/s; claimed to be
+  valid for 2000 < Re_eq < 10000 (as in ht).
+Original: Yan, Y.-Y. and T.-F. Lin, "Evaporation Heat Transfer and Pressure
+  Drop of Refrigerant R-134a in a Plate Heat Exchanger", Journal of Heat
+  Transfer 121(1): 118-127, February 1999, doi:10.1115/1.2825924.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/boiling_plate.py, h_boiling_Yan_Lin,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  G = m/A_channel_flow
+  G_eq = G*((1 - x) + x*(rhol/rhog)^0.5)
+  Re_eq = G_eq*Dh/mul
+  Re = G*Dh/mul
+  Bo_eq = q/(G_eq*Hvap)
+  Pr_l = Cpl*mul/kl
+  h_Yan_Lin = 1.926*(kl/Dh)*Re_eq*Pr_l^(1/3)*Bo_eq^0.3*Re^-0.5
+END
+
+"!Demonstration program: every correlation is called twice"
+"It is ignored by the future $INCLUDE library:plate_hx_heat_transfer (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each correlation (published values)."
+"Case B: one second, uniform input set: a 60 degree brazed-plate R134a evaporator."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"!Case A - input set"
+Re_A = 2000
+Pr_A = 0.7
+chevron_angle_A = 30
+F_A = 1.18
+m_A = 3E-5
+x_A = 0.4
+Dh_A = 1.72E-3
+D_eq_A = 2E-3
+rhol_A = 567
+rhog_A = 18.09
+mul_A = 156E-6
+mug_A = 7.11E-6
+kl_A = 0.086
+Hvap_A = 9E5
+sigma_A = 0.02
+Cpl_A = 2200
+q_A = 1E5
+A_ch_A = 3E-4
+wavelength_A = 3.7E-3
+Tsat_A = 279.15
+mu_A = 1E-3
+mu_wall_A = 8E-4
+
+"fd_Martin_1999 - turbulent branch of the correlation (Re = 20000)"
+fd_Martin_1999_A = fd_Martin_1999(20000, 45)
+"Nu_Kumar - without and with the wall viscosity correction (mu = mu_wall)"
+Nu_Kumar_A = Nu_Kumar(Re_A, Pr_A, chevron_angle_A, 1, 1)
+Nu_Kumar_visc_A = Nu_Kumar(Re_A, Pr_A, chevron_angle_A, mu_A, mu_wall_A)
+"Nu_Martin - friction factor of 1999 (variant = 0) and of the VDI Heat Atlas (variant = 1)"
+Nu_Martin_A = Nu_Martin(2000, 0.7, 45, 0)
+Nu_Martin_VDI_A = Nu_Martin(2000, 0.7, 45, 1)
+"Nu_Muley_Manglik - chevron angle of 45 degrees, enlargement factor 1.18"
+Nu_Muley_Manglik_A = Nu_Muley_Manglik(Re_A, Pr_A, 45, F_A)
+"Nu_Khan_Khan - chevron angle of 30 degrees"
+Nu_Khan_Khan_A = Nu_Khan_Khan(1000, 4.5, 30)
+"h_Amalfi - Bond number < 4 branch (small channel)"
+h_Amalfi_A = h_Amalfi(m_A, x_A, Dh_A, rhol_A, rhog_A, mul_A, mug_A, kl_A, Hvap_A, sigma_A, q_A, A_ch_A, 45)
+"h_Lee_Kang_Kim - equivalent diameter of 2 mm"
+h_Lee_Kang_Kim_A = h_Lee_Kang_Kim(m_A, x_A, D_eq_A, rhol_A, rhog_A, mul_A, 9E-6, kl_A, Hvap_A, q_A, A_ch_A)
+"h_Han_Lee_Kim - wavelength of 3.7 mm, chevron angle of 45 degrees"
+h_Han_Lee_Kim_A = h_Han_Lee_Kim(m_A, x_A, 2E-3, rhol_A, rhog_A, mul_A, kl_A, Hvap_A, Cpl_A, q_A, A_ch_A, wavelength_A, 45)
+"h_Huang_Sheer - saturation temperature of 279.15 K, contact angle of 35 degrees, q = 10 kW/m^2"
+h_Huang_Sheer_A = h_Huang_Sheer(rhol_A, rhog_A, mul_A, kl_A, Hvap_A, sigma_A, Cpl_A, 1E4, Tsat_A, 35)
+"h_Yan_Lin - hydraulic diameter of 2 mm"
+h_Yan_Lin_A = h_Yan_Lin(m_A, x_A, 2E-3, rhol_A, rhog_A, mul_A, kl_A, Hvap_A, Cpl_A, q_A, A_ch_A)
+
+"!Case B - second, uniform input set"
+"60 degree brazed-plate R134a evaporator, approximate fluid properties at 10 degrees Celsius"
+Re_B = 6000
+Pr_B = 4.5
+chevron_angle_B = 60
+F_B = 1.25
+m_B = 8E-3
+x_B = 0.35
+Dh_B = 3E-3
+D_eq_B = 7.4E-3
+rhol_B = 1206
+rhog_B = 41.9
+mul_B = 2.6E-4
+mug_B = 1.35E-5
+kl_B = 0.0835
+Hvap_B = 201300
+sigma_B = 0.0143
+Cpl_B = 1420
+q_B = 5E4
+A_ch_B = 4E-4
+wavelength_B = 3.7E-3
+Tsat_B = 283.15
+mu_B = 2.6E-4
+mu_wall_B = 2E-4
+
+"fd_Martin_1999 and fd_Martin_VDI at the chevron angle of 60 degrees"
+fd_Martin_1999_B = fd_Martin_1999(Re_B, chevron_angle_B)
+fd_Martin_VDI_B = fd_Martin_VDI(Re_B, chevron_angle_B)
+"Nu_Kumar - wall viscosity correction, chevron angle of 60 degrees"
+Nu_Kumar_B = Nu_Kumar(Re_B, Pr_B, chevron_angle_B, mu_B, mu_wall_B)
+"Nu_Martin - both friction factors"
+Nu_Martin_B = Nu_Martin(Re_B, Pr_B, chevron_angle_B, 0)
+Nu_Martin_VDI_B = Nu_Martin(Re_B, Pr_B, chevron_angle_B, 1)
+"Nu_Muley_Manglik"
+Nu_Muley_Manglik_B = Nu_Muley_Manglik(Re_B, Pr_B, chevron_angle_B, F_B)
+"Nu_Khan_Khan"
+Nu_Khan_Khan_B = Nu_Khan_Khan(Re_B, Pr_B, chevron_angle_B)
+"h_Amalfi - Bond number >= 4 branch (mass flux of 20 kg/m^2/s)"
+h_Amalfi_B = h_Amalfi(m_B, x_B, Dh_B, rhol_B, rhog_B, mul_B, mug_B, kl_B, Hvap_B, sigma_B, q_B, A_ch_B, chevron_angle_B)
+"h_Lee_Kang_Kim - Re_g/Re_l >= 9 branch"
+h_Lee_Kang_Kim_B = h_Lee_Kang_Kim(m_B, x_B, D_eq_B, rhol_B, rhog_B, mul_B, mug_B, kl_B, Hvap_B, q_B, A_ch_B)
+"h_Han_Lee_Kim - chevron angle of 60 degrees"
+h_Han_Lee_Kim_B = h_Han_Lee_Kim(m_B, x_B, Dh_B, rhol_B, rhog_B, mul_B, kl_B, Hvap_B, Cpl_B, q_B, A_ch_B, wavelength_B, chevron_angle_B)
+"h_Huang_Sheer - saturation temperature of 283.15 K, contact angle of 35 degrees"
+h_Huang_Sheer_B = h_Huang_Sheer(rhol_B, rhog_B, mul_B, kl_B, Hvap_B, sigma_B, Cpl_B, q_B, Tsat_B, 35)
+"h_Yan_Lin"
+h_Yan_Lin_B = h_Yan_Lin(m_B, x_B, Dh_B, rhol_B, rhog_B, mul_B, kl_B, Hvap_B, Cpl_B, q_B, A_ch_B)

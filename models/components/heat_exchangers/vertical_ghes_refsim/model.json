@@ -1,0 +1,80 @@
+{
+  "id": "CSL-0081",
+  "name": "vertical_ghes_refsim",
+  "title": "Vertical ground-loop heat exchanger (borefield) with heat pump: reference simulation model",
+  "summary": "Time-dependent simulation of a vertical ground-coupled heat exchanger (a field of n_b boreholes of depth L_bh) exchanging heat with a heat pump: the borehole wall temperature follows the g-function of a cylindrical heat source, the borehole resistance is that of Remund, and the Multiple Load Aggregation Algorithm of Pinel superposes the hour, day, week, month and remaining load histories of the borefield over a multi-year integration.",
+  "kind": "dynamic",
+  "level": 3,
+  "status": "blocked",
+  "main_file": "vertical_ghes_refsim.eescode",
+  "fluids": [],
+  "tags": [
+    "borefield",
+    "ground source heat pump",
+    "vertical ground loop",
+    "cylindrical heat source",
+    "g-function",
+    "Remund",
+    "multiple load aggregation algorithm",
+    "ground temperature penalty",
+    "Nusselt correlation",
+    "time integration",
+    "reference model",
+    "model bank"
+  ],
+  "language_features": [
+    "INTEGRAL",
+    "$IntegralTable",
+    "PROCEDURE",
+    "FUNCTION",
+    "IF/THEN/ELSE ladders",
+    "GOTO and statement labels",
+    "INTEGRALVALUE",
+    "if (EES 5-argument)",
+    "$IF compile-time directives",
+    "string variables"
+  ],
+  "stats": {
+    "n_equations": 74,
+    "largest_block": 73
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/Heat_and_Cool_Production_Systems/Ground_Heat_Exchangers/VerticalGHES_EXE_Model_SB080213.zip!/VerticalGHES_RefSim_EES_Model_SB080213.EES",
+    "candidate_id": "TM-0490",
+    "authors": [
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en",
+    "course": "ULiège model bank (Laborelec toolkit lineage), Model data bank, ground heat exchangers, reference simulation model, 2008-02-12"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (86 variable records, 86/86 decoded) cross-checked by hand for this import: the model cannot be solved in CoolSolve, so the check is an algebraic one-liner per stored quantity (borehole resistance, S_bh, Fourier number, borefield power, wall temperature, heat-pump load); the values quoted in the README agree to 10 significant digits",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": null,
+    "notes": "No numerical comparison with compare_solution.py is possible: the native file is blocked (CS-GAP-IF-DIRECTIVE, CS-GAP-INTEGRAL-LIMITS, CS-GAP-INTEGRALVALUE, CS-GAP-GOTO) and no faithful runnable variant exists. The stored EES solution is partly stale (see README): t_s, f_penalty, F_correlation_p, A_heating, B_heating, Q_dot, q, t, time, alpha, L_b, m_dot_f_b, D_p_i are leftovers of commented-out equation sets."
+  },
+  "missing_features": [
+    "CS-GAP-IF-DIRECTIVE",
+    "CS-GAP-INTEGRAL-LIMITS",
+    "CS-GAP-INTEGRALVALUE",
+    "CS-GAP-GOTO",
+    "CS-GAP-IF5",
+    "CS-BUG-INTEGRAL-FACTOR",
+    "CS-BUG-INTEGRAL-TABLE-SEP"
+  ],
+  "related": ["CSL-0078",
+    "CSL-0080"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-06", "action": "added (blocked: no faithful runnable variant)", "by": "Claude (Opus 4.5) for S. Quoilin"}
+  ]
+}

@@ -1,0 +1,719 @@
+{=============================================================================
+  Free convection from cylinders: Nusselt-number correlations for vertical and
+  horizontal cylinders
+  CoolSolve Library model CSL-0092 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Ten correlations for natural convection from a vertical cylinder (Griffiths,
+  Davis & Morgan 1922; Jakob & Linke 1935; Carne 1937; Eigenson 1940;
+  Touloukian, Hawkins & Jakob 1948; Weise 1935 / Saunders 1936 / McAdams;
+  Eckert & Jackson 1950 / Kreith, Manglik & Bohn; Hanesian & Kalish 1970;
+  Al-Arabi & Khamis 1982; Popiel, Wojtkowiak & Bober 2007) and three for a
+  horizontal cylinder (Churchill & Chu 1975; Kuehn & Goldstein 1976; Morgan
+  1975), all in the presentation of Morgan, V.T., "The Overall Convective Heat
+  Transfer from Smooth Circular Cylinders", Advances in Heat Transfer 11,
+  199-264 (1975).
+
+  All of them return the Nusselt number of the cylinder; the surface
+  heat-transfer coefficient follows from h = Nu*k/D and is left to the caller.
+  The fluid properties enter only through the dimensionless groups Pr and Gr
+  (Ra = Pr*Gr), which are arguments: no property function is called inside a
+  function, so the calling model passes Pr and Gr itself.
+
+  Eight of the ten vertical-cylinder correlations are piecewise in Ra (laminar
+  and turbulent branches joined without smoothing) and therefore take the
+  argument `turbulent`: -1 selects the branch automatically from Ra (the ht
+  default, None), 0 forces the laminar branch, 1 forces the turbulent branch.
+
+  The demonstration program at the end calls every function once with the input
+  set of the ht doctest of the corresponding correlation ("A" cases), once
+  with both branches forced ("A_lam", "A_turb") and once with a second uniform
+  input set ("B" cases). The ht values of all the sets are tabulated in the
+  README (verification table).
+
+  Two selectors of the ht family are only dispatchers
+  (Nu_vertical_cylinder(_methods), Nu_horizontal_cylinder(_methods): they select
+  a method by name) and are not translated; an EES caller selects the function
+  directly.
+
+  Inputs : Pr [-], Gr [-] (on the cylinder height, vertical; on the cylinder
+           diameter, horizontal), L [m], D [m], turbulent [-]
+  Outputs: Nu [-] (one FUNCTION per correlation)
+  Units  : SI - dimensionless numbers, lengths in m
+  Source : ht (Caleb Bell), ht/conv_free_immersed.py, version 1.2.0, commit
+           85e0ee6, MIT - https://github.com/CalebBell/ht ; correlations by the
+           authors cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION Nu_vertical_cylinder_Griffiths_Davis_Morgan(Pr, Gr, turbulent)
+{NU_VERTICAL_CYLINDER_GRIFFITHS_DAVIS_MORGAN - Nusselt number, natural convection
+from a vertical isothermal cylinder, results of Griffiths, Davis & Great Britain
+(1922) correlated by Morgan (1975).
+
+  Nu_H = 0.67*Ra_H^0.25      1E7 < Ra < 1E9
+  Nu_H = 0.0782*Ra_H^0.357   1E9 < Ra < 1E11,   Ra = Pr*Gr
+
+turbulent = -1 selects the branch from Ra (automatic, the ht default), 0 forces
+the laminar branch, 1 forces the turbulent one. The transition between the two
+ranges is not smooth (as in ht). Outside the range, no warning is given.
+Data: cylinder of diameter 17.43 cm, length from 4.65 to 263.5 cm, air.
+Validity: the two Rayleigh-number ranges above.
+Original: Griffiths, E., A. H. Davis and Great Britain, "The Transmission of
+  Heat by Radiation and Convection", London: H. M. Stationery Office, 1922;
+  correlated by Morgan, V. T., "The Overall Convective Heat Transfer from Smooth
+  Circular Cylinders", in Advances in Heat Transfer, eds. T. F. Irvin and
+  J. P. Hartnett, 11, 199-264, 1975; as presented in Popiel, C. O., "Free
+  Convection Heat Transfer from Vertical Slender Cylinders: A Review", Heat
+  Transfer Engineering 29(6): 521-536, 1 June 2008, and in Boetcher, S. K. S.,
+  "Natural Convection Heat Transfer From Vertical Cylinders", in Natural
+  Convection from Circular Cylinders, 23-42, Springer, 2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_vertical_cylinder_Griffiths_Davis_Morgan, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  IF turbulent = 1 THEN
+    sel = 1
+  ELSE
+    IF turbulent = 0 THEN
+      sel = 0
+    ELSE
+      IF Ra > 1E9 THEN
+        sel = 1
+      ELSE
+        sel = 0
+      ENDIF
+    ENDIF
+  ENDIF
+  IF sel = 1 THEN
+    Nu_vertical_cylinder_Griffiths_Davis_Morgan = 0.0782*Ra^0.357
+  ELSE
+    Nu_vertical_cylinder_Griffiths_Davis_Morgan = 0.67*Ra^0.25
+  ENDIF
+END
+
+FUNCTION Nu_vertical_cylinder_Jakob_Linke_Morgan(Pr, Gr, turbulent)
+{NU_VERTICAL_CYLINDER_JAKOB_LINKE_MORGAN - Nusselt number, natural convection
+from a vertical isothermal cylinder, results of Jakob & Linke (1935)
+correlated by Morgan (1975).
+
+  Nu_H = 0.555*Ra_H^0.25   1E4 < Ra < 1E8
+  Nu_H = 0.129*Ra_H^(1/3)  1E8 < Ra < 1E12,   Ra = Pr*Gr
+
+turbulent = -1 selects the branch from Ra (automatic, the ht default), 0 forces
+the laminar branch, 1 forces the turbulent one. The transition between the two
+ranges is not smooth (as in ht). Outside the range, no warning is given.
+Data: cylinder of diameter 3.5 cm, length from L/D = 4.3, air.
+Validity: the two Rayleigh-number ranges above.
+Original: Jakob, M. and W. Linke, "Warmeubergang beim Verdampfen von
+  Flussigkeiten an senkrechten und waagerechten Flaschen", Phys. Z., 36,
+  267-280, 1935; correlated by Morgan, V. T., "The Overall Convective Heat
+  Transfer from Smooth Circular Cylinders", in Advances in Heat Transfer, eds.
+  T. F. Irvin and J. P. Hartnett, 11, 199-264, 1975; as presented in Popiel,
+  C. O., "Free Convection Heat Transfer from Vertical Slender Cylinders: A
+  Review", Heat Transfer Engineering 29(6): 521-536, 1 June 2008, and in
+  Boetcher, S. K. S., "Natural Convection Heat Transfer From Vertical
+  Cylinders", in Natural Convection from Circular Cylinders, 23-42, Springer,
+  2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_vertical_cylinder_Jakob_Linke_Morgan, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  IF turbulent = 1 THEN
+    sel = 1
+  ELSE
+    IF turbulent = 0 THEN
+      sel = 0
+    ELSE
+      IF Ra > 1E8 THEN
+        sel = 1
+      ELSE
+        sel = 0
+      ENDIF
+    ENDIF
+  ENDIF
+  IF sel = 1 THEN
+    Nu_vertical_cylinder_Jakob_Linke_Morgan = 0.129*Ra^(1/3)
+  ELSE
+    Nu_vertical_cylinder_Jakob_Linke_Morgan = 0.555*Ra^0.25
+  ENDIF
+END
+
+FUNCTION Nu_vertical_cylinder_Carne_Morgan(Pr, Gr, turbulent)
+{NU_VERTICAL_CYLINDER_CARNE_MORGAN - Nusselt number, natural convection from a
+vertical isothermal cylinder, results of Carne (1937) correlated by
+Morgan (1975).
+
+  Nu_H = 1.07*Ra_H^0.28    2E6 < Ra < 2E8
+  Nu_H = 0.152*Ra_H^0.38   2E8 < Ra < 2E11,   Ra = Pr*Gr
+
+turbulent = -1 selects the branch from Ra (automatic, the ht default), 0 forces
+the laminar branch, 1 forces the turbulent one. The transition between the two
+ranges is not smooth (as in ht). Outside the range, no warning is given.
+Data: cylinder of diameters 0.475 cm to 7.62 cm, L/D from 8 to 127; the
+isothermal boundary condition was assumed but not verified.
+Validity: the two Rayleigh-number ranges above.
+Original: Carne, J. B., "LIX. Heat Loss by Natural Convection from Vertical
+  Cylinders", The London, Edinburgh, and Dublin Philosophical Magazine and
+  Journal of Science 24(162): 634-653, 1 October 1937; correlated by Morgan,
+  V. T., "The Overall Convective Heat Transfer from Smooth Circular Cylinders",
+  in Advances in Heat Transfer, eds. T. F. Irvin and J. P. Hartnett, 11,
+  199-264, 1975; as presented in Popiel, C. O., "Free Convection Heat Transfer
+  from Vertical Slender Cylinders: A Review", Heat Transfer Engineering 29(6):
+  521-536, 1 June 2008, and in Boetcher, S. K. S., "Natural Convection Heat
+  Transfer From Vertical Cylinders", in Natural Convection from Circular
+  Cylinders, 23-42, Springer, 2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_vertical_cylinder_Carne_Morgan, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  IF turbulent = 1 THEN
+    sel = 1
+  ELSE
+    IF turbulent = 0 THEN
+      sel = 0
+    ELSE
+      IF Ra > 2E8 THEN
+        sel = 1
+      ELSE
+        sel = 0
+      ENDIF
+    ENDIF
+  ENDIF
+  IF sel = 1 THEN
+    Nu_vertical_cylinder_Carne_Morgan = 0.152*Ra^0.38
+  ELSE
+    Nu_vertical_cylinder_Carne_Morgan = 1.07*Ra^0.28
+  ENDIF
+END
+
+FUNCTION Nu_vertical_cylinder_Eigenson_Morgan(Pr, Gr, turbulent)
+{NU_VERTICAL_CYLINDER_EIGENSON_MORGAN - Nusselt number, natural convection from
+a vertical isothermal cylinder, results of Eigenson (1940) correlated by
+Morgan (1975); the only correlation of the family with three branches, the
+middle one being the transition formula.
+
+  Nu_H = 0.48*Ra_H^0.25                  Ra <= 1E9
+  Nu_H = 51.5 + 0.0000726*Ra_H^0.63      1E9 < Ra < 1.69E10
+  Nu_H = 0.148*Ra_H^(1/3) - 127.6        Ra > 1.69E10,   Ra = Pr*Gr
+
+sel = 0, 1 and 2 select the first, second and third form; the ht docstring
+prints the range of the first form as 10^9 < Ra, which its code contradicts.
+turbulent = -1 selects the branch from Ra (automatic, the ht default), 0 forces
+the first (lowest-Rayleigh) form, 1 forces the third one. The transitions are
+not smooth (as in ht). Outside the range, no warning is given.
+Data: height 2.5 m with diameters of 2.4, 7.55, 15, 35 and 50 mm, another
+experiment with a diameter of 58 mm and a length of 6.5 m; results presented as
+appropriate for both flat plates and cylinders.
+Validity: the three Rayleigh-number ranges above.
+Original: Eigenson, L., "Les lois gouvernant la transmission de la chaleur aux
+  gaz biatomiques par les parois des cylindres verticaux dans le cas de
+  convection naturelle", Dokl. Akad. Nauk SSSR 26: 440-444, 1940; correlated by
+  Morgan, V. T., "The Overall Convective Heat Transfer from Smooth Circular
+  Cylinders", in Advances in Heat Transfer, eds. T. F. Irvin and J. P. Hartnett,
+  11, 199-264, 1975; as presented in Popiel, C. O., "Free Convection Heat
+  Transfer from Vertical Slender Cylinders: A Review", Heat Transfer
+  Engineering 29(6): 521-536, 1 June 2008, and in more detail in Boetcher,
+  S. K. S., "Natural Convection Heat Transfer From Vertical Cylinders", in
+  Natural Convection from Circular Cylinders, 23-42, Springer, 2014 (only this
+  one shows the transition formula).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_vertical_cylinder_Eigenson_Morgan, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  IF turbulent = 1 THEN
+    sel = 2
+  ELSE
+    IF turbulent = 0 THEN
+      sel = 0
+    ELSE
+      IF Ra > 1.69E10 THEN
+        sel = 2
+      ELSE
+        IF Ra > 1E9 THEN
+          sel = 1
+        ELSE
+          sel = 0
+        ENDIF
+      ENDIF
+    ENDIF
+  ENDIF
+  IF sel = 2 THEN
+    Nu_vertical_cylinder_Eigenson_Morgan = 0.148*Ra^(1/3) - 127.6
+  ELSE
+    IF sel = 1 THEN
+      Nu_vertical_cylinder_Eigenson_Morgan = 51.5 + 0.0000726*Ra^0.63
+    ELSE
+      Nu_vertical_cylinder_Eigenson_Morgan = 0.48*Ra^0.25
+    ENDIF
+  ENDIF
+END
+
+FUNCTION Nu_vertical_cylinder_Touloukian_Morgan(Pr, Gr, turbulent)
+{NU_VERTICAL_CYLINDER_TOULOUKIAN_MORGAN - Nusselt number, natural convection from
+a vertical isothermal cylinder, results of Touloukian, Hawkins & Jakob (1948)
+correlated by Morgan (1975).
+
+  Nu_H = 0.726*Ra_H^0.25                 2E8 < Ra < 4E10
+  Nu_H = 0.0674*(Gr_H*Pr^1.29)^(1/3)      4E10 < Ra < 9E11,   Ra = Pr*Gr
+
+Note that the turbulent branch is written with Gr and Pr, not with Ra, as in
+the original.
+turbulent = -1 selects the branch from Ra (automatic, the ht default), 0 forces
+the laminar branch, 1 forces the turbulent one. The transition between the two
+ranges is not smooth (as in ht). Outside the range, no warning is given.
+Data: cylinder of diameter 2.75 inch with heights of 6, 18 and 36.25 inch,
+temperature controlled by separately controlled heating sections; fluids water
+and ethylene-glycol.
+Validity: the two Rayleigh-number ranges above.
+Original: Touloukian, Y. S., G. A. Hawkins and M. Jakob, "Heat Transfer by
+  Free Convection from Heated Vertical Surfaces to Liquids", Trans. ASME 70,
+  13-18, 1948; correlated by Morgan, V. T., "The Overall Convective Heat
+  Transfer from Smooth Circular Cylinders", in Advances in Heat Transfer, eds.
+  T. F. Irvin and J. P. Hartnett, 11, 199-264, 1975; as presented in Popiel,
+  C. O., "Free Convection Heat Transfer from Vertical Slender Cylinders: A
+  Review", Heat Transfer Engineering 29(6): 521-536, 1 June 2008, and in
+  Boetcher, S. K. S., "Natural Convection Heat Transfer From Vertical
+  Cylinders", in Natural Convection from Circular Cylinders, 23-42, Springer,
+  2014 (all three in complete agreement on this formulation).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_vertical_cylinder_Touloukian_Morgan, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  IF turbulent = 1 THEN
+    sel = 1
+  ELSE
+    IF turbulent = 0 THEN
+      sel = 0
+    ELSE
+      IF Ra > 4E10 THEN
+        sel = 1
+      ELSE
+        sel = 0
+      ENDIF
+    ENDIF
+  ENDIF
+  IF sel = 1 THEN
+    Nu_vertical_cylinder_Touloukian_Morgan = 0.0674*(Gr*Pr^1.29)^(1/3)
+  ELSE
+    Nu_vertical_cylinder_Touloukian_Morgan = 0.726*Ra^0.25
+  ENDIF
+END
+
+FUNCTION Nu_vertical_cylinder_McAdams_Weiss_Saunders(Pr, Gr, turbulent)
+{NU_VERTICAL_CYLINDER_MCADAMS_WEISS_SAUNDERS - Nusselt number, natural convection
+from a vertical isothermal cylinder, results of Weise (1935) and Saunders
+(1936) correlated by Morgan (1975).
+
+  Nu_H = 0.59*Ra_H^0.25   1E4 < Ra < 1E9
+  Nu_H = 0.13*Ra_H^(1/3)   1E9 < Ra < 1E12,   Ra = Pr*Gr
+
+turbulent = -1 selects the branch from Ra (automatic, the ht default), 0 forces
+the laminar branch, 1 forces the turbulent one. The transition between the two
+ranges is not smooth (as in ht). Outside the range, no warning is given; for
+Ra below 1E4 the original gives a graph, not reproduced here.
+Validity: the two Rayleigh-number ranges above.
+Original: Weise, R., "Warmeubergang durch freie Konvektion an quadratischen
+  Platten", Forschung auf dem Gebiet des Ingenieurwesens A 6(6): 281-292,
+  November 1935, and Saunders, O. A., "The Effect of Pressure Upon Natural
+  Convection in Air", Proceedings of the Royal Society of London A: Mathematical,
+  Physical and Engineering Sciences 157(891): 278-291, 2 November 1936,
+  correlated by Morgan, V. T., "The Overall Convective Heat Transfer from
+  Smooth Circular Cylinders", in Advances in Heat Transfer, eds. T. F. Irvin and
+  J. P. Hartnett, 11, 199-264, 1975, and in McAdams, W. H., Heat Transmission,
+  3E, Malabar, Fla: Krieger Pub Co, 1985; as presented in Popiel, C. O., "Free
+  Convection Heat Transfer from Vertical Slender Cylinders: A Review", Heat
+  Transfer Engineering 29(6): 521-536, 1 June 2008, and in Boetcher, S. K. S.,
+  "Natural Convection Heat Transfer From Vertical Cylinders", in Natural
+  Convection from Circular Cylinders, 23-42, Springer, 2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_vertical_cylinder_McAdams_Weiss_Saunders, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  IF turbulent = 1 THEN
+    sel = 1
+  ELSE
+    IF turbulent = 0 THEN
+      sel = 0
+    ELSE
+      IF Ra > 1E9 THEN
+        sel = 1
+      ELSE
+        sel = 0
+      ENDIF
+    ENDIF
+  ENDIF
+  IF sel = 1 THEN
+    Nu_vertical_cylinder_McAdams_Weiss_Saunders = 0.13*Ra^(1/3)
+  ELSE
+    Nu_vertical_cylinder_McAdams_Weiss_Saunders = 0.59*Ra^0.25
+  ENDIF
+END
+
+FUNCTION Nu_vertical_cylinder_Kreith_Eckert(Pr, Gr, turbulent)
+{NU_VERTICAL_CYLINDER_KREITH_ECKERT - Nusselt number, natural convection from a
+vertical isothermal cylinder, results of Eckert & Jackson (1950) correlated by
+Kreith, Manglik & Bohn.
+
+  Nu_H = 0.555*Ra_H^0.25   1E5 < Ra < 1E9
+  Nu_H = 0.021*Ra_H^0.4    1E9 < Ra < 1E12,   Ra = Pr*Gr
+
+turbulent = -1 selects the branch from Ra (automatic, the ht default), 0 forces
+the laminar branch, 1 forces the turbulent one. The transition between the two
+ranges is not smooth (as in ht). Outside the range, no warning is given.
+Validity: the two Rayleigh-number ranges above.
+Original: Eckert, E. R. G. and T. W. Jackson, "Analysis of Turbulent
+  Free-Convection Boundary Layer on Flat Plate", National Advisory Committee for
+  Aeronautics 2207, Washington, D.C.: National Advisory Committee for
+  Aeronautics, 1950, correlated by Kreith, F., R. Manglik and M. Bohn,
+  Principles of Heat Transfer, Cengage, 2010; as presented in Morgan, V. T.,
+  "The Overall Convective Heat Transfer from Smooth Circular Cylinders", in
+  Advances in Heat Transfer, eds. T. F. Irvin and J. P. Hartnett, 11, 199-264,
+  1975, in Popiel, C. O., "Free Convection Heat Transfer from Vertical Slender
+  Cylinders: A Review", Heat Transfer Engineering 29(6): 521-536, 1 June 2008,
+  and in Boetcher, S. K. S., "Natural Convection Heat Transfer From Vertical
+  Cylinders", in Natural Convection from Circular Cylinders, 23-42, Springer,
+  2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_vertical_cylinder_Kreith_Eckert, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  IF turbulent = 1 THEN
+    sel = 1
+  ELSE
+    IF turbulent = 0 THEN
+      sel = 0
+    ELSE
+      IF Ra > 1E9 THEN
+        sel = 1
+      ELSE
+        sel = 0
+      ENDIF
+    ENDIF
+  ENDIF
+  IF sel = 1 THEN
+    Nu_vertical_cylinder_Kreith_Eckert = 0.021*Ra^0.4
+  ELSE
+    Nu_vertical_cylinder_Kreith_Eckert = 0.555*Ra^0.25
+  ENDIF
+END
+
+FUNCTION Nu_vertical_cylinder_Hanesian_Kalish_Morgan(Pr, Gr)
+{NU_VERTICAL_CYLINDER_HANESIAN_KALISH_MORGAN - Nusselt number, natural convection
+from a vertical isothermal cylinder, results of Hanesian & Kalish (1970)
+correlated by Morgan (1975); laminar range only, so the function has no regime
+argument.
+
+  Nu_H = 0.48*Ra_H^0.23    1E6 < Ra < 1E8,   Ra = Pr*Gr
+
+Outside the range, no warning is given.
+Data: air and fluorocarbon gases.
+Validity: 1E6 < Ra < 1E8.
+Original: Hanesian, D. and R. Kalish, "Heat Transfer by Natural Convection
+  with Fluorocarbon Gases", IEEE Transactions on Parts, Materials and Packaging
+  6(4): 147-148, December 1970; correlated by Morgan, V. T., "The Overall
+  Convective Heat Transfer from Smooth Circular Cylinders", in Advances in Heat
+  Transfer, eds. T. F. Irvin and J. P. Hartnett, 11, 199-264, 1975; as
+  presented in Popiel, C. O., "Free Convection Heat Transfer from Vertical
+  Slender Cylinders: A Review", Heat Transfer Engineering 29(6): 521-536,
+  1 June 2008, and in Boetcher, S. K. S., "Natural Convection Heat Transfer
+  From Vertical Cylinders", in Natural Convection from Circular Cylinders,
+  23-42, Springer, 2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_vertical_cylinder_Hanesian_Kalish_Morgan, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  Nu_vertical_cylinder_Hanesian_Kalish_Morgan = 0.48*Ra^0.23
+END
+
+FUNCTION Nu_vertical_cylinder_Al_Arabi_Khamis(Pr, Gr, L, D, turbulent)
+{NU_VERTICAL_CYLINDER_AL_ARABI_KHAMIS - Nusselt number, natural convection from
+a vertical isothermal cylinder (air), Al-Arabi & Khamis.
+
+  Nu_H = 2.9*Ra_H^0.25/Gr_D^(1/12)     9.88E7 <= Ra <= 2.7E9
+  Nu_H = 0.47*Ra_H^(1/3)/Gr_D^(1/12)   2.7E9 <= Ra <= 2.95E10
+  Gr_D = Gr*(D/L)^3,   Ra = Pr*Gr,   Gr is taken on the cylinder height [m]
+
+The switch between the two forms is at Ra = 2.6E9 in the ht code and at
+2.7E9 in its docstring; the function follows the code, as the ranges of the two
+forms overlap. Outside the range, no warning is given.
+turbulent = -1 selects the branch from Ra (automatic, the ht default), 0 forces
+the first (lower-Rayleigh) form, 1 forces the second one.
+Data: D from 12.75 to 51 mm, height from 300 to 2000 mm; the temperature kept
+constant by steam condensing.
+Validity: 1.08E4 <= Gr_D <= 6.9E5 and the two Rayleigh-number ranges above.
+Original: Al-Arabi, M. and M. Khamis, "Natural Convection Heat Transfer from
+  Inclined Cylinders", International Journal of Heat and Mass Transfer 25(1):
+  3-15, January 1982; as presented in Popiel, C. O., "Free Convection Heat
+  Transfer from Vertical Slender Cylinders: A Review", Heat Transfer
+  Engineering 29(6): 521-536, 1 June 2008, and in Boetcher, S. K. S.,
+  "Natural Convection Heat Transfer From Vertical Cylinders", in Natural
+  Convection from Circular Cylinders, 23-42, Springer, 2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_vertical_cylinder_Al_Arabi_Khamis, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Gr_D = Gr*(D/L)^3
+  Ra = Pr*Gr
+  IF turbulent = 1 THEN
+    sel = 1
+  ELSE
+    IF turbulent = 0 THEN
+      sel = 0
+    ELSE
+      IF Ra > 2.6E9 THEN
+        sel = 1
+      ELSE
+        sel = 0
+      ENDIF
+    ENDIF
+  ENDIF
+  IF sel = 1 THEN
+    Nu_vertical_cylinder_Al_Arabi_Khamis = 0.47*Ra^(1/3)*Gr_D^(-1/12)
+  ELSE
+    Nu_vertical_cylinder_Al_Arabi_Khamis = 2.9*Ra^0.25*Gr_D^(-1/12)
+  ENDIF
+END
+
+FUNCTION Nu_vertical_cylinder_Popiel_Churchill(Pr, Gr, L, D)
+{NU_VERTICAL_CYLINDER_POPIEL_CHURCHILL - Nusselt number, natural convection from
+a vertical isothermal cylinder, as a correction of the vertical flat-plate
+Nusselt number (laminar; the correlation has no regime argument).
+
+  Nu      = Nu_fp*{1 + B*[32^0.5*Gr_L^(-0.25)*(L/D)]^C}
+  B       = 0.0571322 + 0.20305*Pr^(-0.43)
+  C       = 0.9165 - 0.0043*Pr^0.5 + 0.01333*LN(Pr) + 0.0004809/Pr
+  Nu_fp   = [0.825 + 0.387*Ra_L^(1/6)/{1+(0.492/Pr)^(9/16)}^(8/27)]^2
+
+Gr is taken on the cylinder height L [m] and Ra = Pr*Gr; L and D are the
+cylinder height and diameter [m]. Nu_fp is the Churchill-Chu correlation for a
+vertical plate, which ht computes internally by calling its
+Nu_vertical_plate_Churchill (see the reference below; it is a member of another
+family of the same module, HT-007); its equations are repeated here so that this
+function is self-contained.
+Validity: 0.01 < Pr < 100 (as in ht). Popiel's review and Boetcher's chapter
+print a power of 2 instead of 0.5 on the 32 of the equation; the original has
+the correct form, which is the one used here.
+Original: Popiel, C. O., J. Wojtkowiak and K. Bober, "Laminar Free Convective
+  Heat Transfer from Isothermal Vertical Slender Cylinder", Experimental
+  Thermal and Fluid Science 32(2): 607-613, November 2007; as presented in
+  Popiel, C. O., "Free Convection Heat Transfer from Vertical Slender
+  Cylinders: A Review", Heat Transfer Engineering 29(6): 521-536, 1 June 2008,
+  and in Boetcher, S. K. S., "Natural Convection Heat Transfer From Vertical
+  Cylinders", in Natural Convection from Circular Cylinders, 23-42, Springer,
+  2014.
+  Nu_fp as in Churchill, S. W. and H. H. S. Chu, "Correlating Equations for
+  Laminar and Turbulent Free Convection from a Vertical Plate", International
+  Journal of Heat and Mass Transfer 18(11): 1323-1329, 1 November 1975, and in
+  Bergman, T. L., A. S. Lavine, F. P. Incropera and D. P. DeWitt, Introduction
+  to Heat Transfer, 6E, Hoboken, NJ: Wiley, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_vertical_cylinder_Popiel_Churchill (with Nu_vertical_plate_Churchill),
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  Nu_fp = (0.825 + 0.387*Ra^(1/6)/(1 + (0.492/Pr)^(9/16))^(8/27))^2
+  B = 0.0571322 + 0.20305*Pr^(-0.43)
+  C = 0.9165 - 0.0043*Pr^0.5 + 0.01333*LN(Pr) + 0.0004809/Pr
+  Nu_vertical_cylinder_Popiel_Churchill = Nu_fp*(1 + B*(32^0.5*Gr^(-0.25)*L/D)^C)
+END
+
+FUNCTION Nu_horizontal_cylinder_Churchill_Chu(Pr, Gr)
+{NU_HORIZONTAL_CYLINDER_CHURCHILL_CHU - Nusselt number, natural convection from
+a horizontal isothermal cylinder, Churchill & Chu (1975); the equation gives a
+smooth transition from the laminar to the turbulent regime.
+
+  Nu_D = [0.60 + 0.387*Ra_D^(1/6)/{1+(0.559/Pr)^(9/16)}^(8/27)]^2
+  Ra = Pr*Gr,  Gr is taken on the cylinder diameter
+
+Checked with the original source, whose powers are unsimplified but equivalent.
+Validity: 1E-5 as lower limit of Ra with no upper limit in the original;
+Incropera et al. suggest an upper limit of 1E12. Outside the range, no warning
+is given.
+Original: Churchill, S. W. and H. H. S. Chu, "Correlating Equations for Laminar
+  and Turbulent Free Convection from a Horizontal Cylinder", International
+  Journal of Heat and Mass Transfer 18(9): 1049-1053, September 1975; as
+  presented in Bergman, T. L., A. S. Lavine, F. P. Incropera and D. P. DeWitt,
+  Introduction to Heat Transfer, 6E, Hoboken, NJ: Wiley, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_horizontal_cylinder_Churchill_Chu, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  Nu_horizontal_cylinder_Churchill_Chu = (0.6 + 0.387*Ra^(1/6)/(1 + (0.559/Pr)^(9/16))^(8/27))^2
+END
+
+FUNCTION Nu_horizontal_cylinder_Kuehn_Goldstein(Pr, Gr)
+{NU_HORIZONTAL_CYLINDER_KUEHN_GOLDSTEIN - Nusselt number, natural convection from
+a horizontal isothermal cylinder, Kuehn & Goldstein (1976).
+
+  2/Nu_D = LN[1 + 2/{[{0.518*Ra_D^0.25*[1+(0.559/Pr)^0.6]^(-5/12)}^15
+                          + (0.1*Ra_D^(1/3))^15]^(1/15)}]
+  Ra = Pr*Gr,  Gr is taken on the cylinder diameter
+
+Validity: the original suggests this expression is valid in all cases except
+for low-Prandtl-number fluids; Incropera et al. suggest no restriction
+(as in ht). Outside the range, no warning is given.
+Original: Kuehn, T. H. and R. J. Goldstein, "Correlating Equations for Natural
+  Convection Heat Transfer between Horizontal Circular Cylinders",
+  International Journal of Heat and Mass Transfer 19(10): 1127-1134,
+  October 1976; as presented in Boetcher, S. K. S., "Natural Convection Heat
+  Transfer From Vertical Cylinders", in Natural Convection from Circular
+  Cylinders, 23-42, Springer, 2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_horizontal_cylinder_Kuehn_Goldstein, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  Nu_horizontal_cylinder_Kuehn_Goldstein = 2/LN(1 + 2/((0.518*Ra^0.25*(1 + (0.559/Pr)^0.6)^(-5/12))^15 + (0.1*Ra^(1/3))^15)^(1/15))
+END
+
+FUNCTION Nu_horizontal_cylinder_Morgan(Pr, Gr)
+{NU_HORIZONTAL_CYLINDER_MORGAN - Nusselt number, natural convection from a
+horizontal isothermal cylinder, Morgan (1975): a power law per Rayleigh-number
+range, the most comprehensive review of the literature.
+
+  Nu_D = C*Ra_D^n,   Ra = Pr*Gr,  Gr is taken on the cylinder diameter
+
+  Ra range         C       n
+  Ra < 1E-2       0.675    0.058
+  1E-2 <= Ra < 1E2  1.020  0.148
+  1E2 <= Ra < 1E4  0.850  0.188
+  1E4 <= Ra < 1E7  0.480  0.250
+  Ra >= 1E7       0.125    0.333  (up to 1E12)
+
+The correlation is discontinuous at the range limits (as in ht); it runs outside
+of them without warning.
+Original: Morgan, V. T., "The Overall Convective Heat Transfer from Smooth
+  Circular Cylinders", in Advances in Heat Transfer, eds. T. F. Irvin and
+  J. P. Hartnett, 11, 199-264, 1975; as presented in Boetcher, S. K. S.,
+  "Natural Convection Heat Transfer From Vertical Cylinders", in Natural
+  Convection from Circular Cylinders, 23-42, Springer, 2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_horizontal_cylinder_Morgan, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  IF Ra < 1E-2 THEN
+    C = 0.675
+    n = 0.058
+  ELSE
+    IF Ra < 1E2 THEN
+      C = 1.02
+      n = 0.148
+    ELSE
+      IF Ra < 1E4 THEN
+        C = 0.85
+        n = 0.188
+      ELSE
+        IF Ra < 1E7 THEN
+          C = 0.48
+          n = 0.25
+        ELSE
+          C = 0.125
+          n = 0.333
+        ENDIF
+      ENDIF
+    ENDIF
+  ENDIF
+  Nu_horizontal_cylinder_Morgan = C*Ra^n
+END
+
+"!Demonstration program: every correlation is called at least once"
+"It is ignored by the future $INCLUDE library:free_conv_cylinders (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each correlation (published values)."
+"Case A_lam / A_turb: the same inputs with the laminar and the turbulent branch"
+"  forced, which exercises both sides of the non-smooth regime switches."
+"Case B: one second, uniform input set (Pr = 0.71, Gr = 1E10, L = 1.5 m, D = 0.15 m)."
+"All three sets are tabulated against ht in the README (verification table)."
+
+"Case A - input sets (the ht doctests)"
+Pr_A_vert = 0.7       "air, ht doctests of the six correlations of case A with Gr = 2E10"
+Gr_A_vert = 2E10
+Pr_A_Carne = 0.7
+Gr_A_Carne = 2E8
+Pr_A_Hanesian = 0.7
+Gr_A_Hanesian = 1E7
+Pr_A_Al_Arabi = 0.71
+Gr_A_Al_Arabi = 2E10
+L_A_Al_Arabi = 10     "cylinder height [m], as in the ht doctest"
+D_A_Al_Arabi = 1      "cylinder diameter [m], as in the ht doctest"
+Pr_A_Popiel = 0.7
+Gr_A_Popiel = 1E10
+L_A_Popiel = 2.5      "cylinder height [m], as in the ht doctest"
+D_A_Popiel = 1        "cylinder diameter [m], as in the ht doctest"
+Pr_A_horiz = 0.69
+Gr_A_horiz = 2.63E9
+
+"Nu_vertical_cylinder_Griffiths_Davis_Morgan"
+Nu_vertical_cylinder_Griffiths_Davis_Morgan_A = Nu_vertical_cylinder_Griffiths_Davis_Morgan(Pr_A_vert, Gr_A_vert, -1)
+"Nu_vertical_cylinder_Jakob_Linke_Morgan"
+Nu_vertical_cylinder_Jakob_Linke_Morgan_A = Nu_vertical_cylinder_Jakob_Linke_Morgan(Pr_A_vert, Gr_A_vert, -1)
+"Nu_vertical_cylinder_Carne_Morgan"
+Nu_vertical_cylinder_Carne_Morgan_A = Nu_vertical_cylinder_Carne_Morgan(Pr_A_Carne, Gr_A_Carne, -1)
+"Nu_vertical_cylinder_Eigenson_Morgan"
+Nu_vertical_cylinder_Eigenson_Morgan_A = Nu_vertical_cylinder_Eigenson_Morgan(Pr_A_vert, Gr_A_vert, -1)
+"Nu_vertical_cylinder_Touloukian_Morgan"
+Nu_vertical_cylinder_Touloukian_Morgan_A = Nu_vertical_cylinder_Touloukian_Morgan(Pr_A_vert, Gr_A_vert, -1)
+"Nu_vertical_cylinder_McAdams_Weiss_Saunders"
+Nu_vertical_cylinder_McAdams_Weiss_Saunders_A = Nu_vertical_cylinder_McAdams_Weiss_Saunders(Pr_A_vert, Gr_A_vert, -1)
+"Nu_vertical_cylinder_Kreith_Eckert"
+Nu_vertical_cylinder_Kreith_Eckert_A = Nu_vertical_cylinder_Kreith_Eckert(Pr_A_vert, Gr_A_vert, -1)
+"Nu_vertical_cylinder_Hanesian_Kalish_Morgan"
+Nu_vertical_cylinder_Hanesian_Kalish_Morgan_A = Nu_vertical_cylinder_Hanesian_Kalish_Morgan(Pr_A_Hanesian, Gr_A_Hanesian)
+"Nu_vertical_cylinder_Al_Arabi_Khamis"
+Nu_vertical_cylinder_Al_Arabi_Khamis_A = Nu_vertical_cylinder_Al_Arabi_Khamis(Pr_A_Al_Arabi, Gr_A_Al_Arabi, L_A_Al_Arabi, D_A_Al_Arabi, -1)
+"Nu_vertical_cylinder_Popiel_Churchill"
+Nu_vertical_cylinder_Popiel_Churchill_A = Nu_vertical_cylinder_Popiel_Churchill(Pr_A_Popiel, Gr_A_Popiel, L_A_Popiel, D_A_Popiel)
+"Nu_horizontal_cylinder_Churchill_Chu"
+Nu_horizontal_cylinder_Churchill_Chu_A = Nu_horizontal_cylinder_Churchill_Chu(Pr_A_horiz, Gr_A_horiz)
+"Nu_horizontal_cylinder_Kuehn_Goldstein"
+Nu_horizontal_cylinder_Kuehn_Goldstein_A = Nu_horizontal_cylinder_Kuehn_Goldstein(Pr_A_horiz, Gr_A_horiz)
+"Nu_horizontal_cylinder_Morgan"
+Nu_horizontal_cylinder_Morgan_A = Nu_horizontal_cylinder_Morgan(Pr_A_horiz, Gr_A_horiz)
+
+"Case A_lam / A_turb - both branches of the eight regime switches, forced"
+Nu_vertical_cylinder_Griffiths_Davis_Morgan_A_lam = Nu_vertical_cylinder_Griffiths_Davis_Morgan(Pr_A_vert, Gr_A_vert, 0)
+Nu_vertical_cylinder_Jakob_Linke_Morgan_A_lam = Nu_vertical_cylinder_Jakob_Linke_Morgan(Pr_A_vert, Gr_A_vert, 0)
+Nu_vertical_cylinder_Carne_Morgan_A_lam = Nu_vertical_cylinder_Carne_Morgan(Pr_A_Carne, Gr_A_Carne, 0)
+Nu_vertical_cylinder_Eigenson_Morgan_A_lam = Nu_vertical_cylinder_Eigenson_Morgan(Pr_A_vert, Gr_A_vert, 0)
+Nu_vertical_cylinder_Touloukian_Morgan_A_lam = Nu_vertical_cylinder_Touloukian_Morgan(Pr_A_vert, Gr_A_vert, 0)
+Nu_vertical_cylinder_McAdams_Weiss_Saunders_A_lam = Nu_vertical_cylinder_McAdams_Weiss_Saunders(Pr_A_vert, Gr_A_vert, 0)
+Nu_vertical_cylinder_Kreith_Eckert_A_lam = Nu_vertical_cylinder_Kreith_Eckert(Pr_A_vert, Gr_A_vert, 0)
+Nu_vertical_cylinder_Al_Arabi_Khamis_A_lam = Nu_vertical_cylinder_Al_Arabi_Khamis(Pr_A_Al_Arabi, Gr_A_Al_Arabi, L_A_Al_Arabi, D_A_Al_Arabi, 0)
+Nu_vertical_cylinder_Griffiths_Davis_Morgan_A_turb = Nu_vertical_cylinder_Griffiths_Davis_Morgan(Pr_A_vert, Gr_A_vert, 1)
+Nu_vertical_cylinder_Jakob_Linke_Morgan_A_turb = Nu_vertical_cylinder_Jakob_Linke_Morgan(Pr_A_vert, Gr_A_vert, 1)
+Nu_vertical_cylinder_Carne_Morgan_A_turb = Nu_vertical_cylinder_Carne_Morgan(Pr_A_Carne, Gr_A_Carne, 1)
+Nu_vertical_cylinder_Eigenson_Morgan_A_turb = Nu_vertical_cylinder_Eigenson_Morgan(Pr_A_vert, Gr_A_vert, 1)
+Nu_vertical_cylinder_Touloukian_Morgan_A_turb = Nu_vertical_cylinder_Touloukian_Morgan(Pr_A_vert, Gr_A_vert, 1)
+Nu_vertical_cylinder_McAdams_Weiss_Saunders_A_turb = Nu_vertical_cylinder_McAdams_Weiss_Saunders(Pr_A_vert, Gr_A_vert, 1)
+Nu_vertical_cylinder_Kreith_Eckert_A_turb = Nu_vertical_cylinder_Kreith_Eckert(Pr_A_vert, Gr_A_vert, 1)
+Nu_vertical_cylinder_Al_Arabi_Khamis_A_turb = Nu_vertical_cylinder_Al_Arabi_Khamis(Pr_A_Al_Arabi, Gr_A_Al_Arabi, L_A_Al_Arabi, D_A_Al_Arabi, 1)
+
+"Case B - second, uniform input set"
+Pr_B = 0.71        "air [-]"
+Gr_B = 1E10        "Grashof number [-]"
+L_B = 1.5          "cylinder height [m]"
+D_B = 0.15         "cylinder diameter [m]"
+
+"Nu_vertical_cylinder_Griffiths_Davis_Morgan"
+Nu_vertical_cylinder_Griffiths_Davis_Morgan_B = Nu_vertical_cylinder_Griffiths_Davis_Morgan(Pr_B, Gr_B, -1)
+"Nu_vertical_cylinder_Jakob_Linke_Morgan"
+Nu_vertical_cylinder_Jakob_Linke_Morgan_B = Nu_vertical_cylinder_Jakob_Linke_Morgan(Pr_B, Gr_B, -1)
+"Nu_vertical_cylinder_Carne_Morgan"
+Nu_vertical_cylinder_Carne_Morgan_B = Nu_vertical_cylinder_Carne_Morgan(Pr_B, Gr_B, -1)
+"Nu_vertical_cylinder_Eigenson_Morgan"
+Nu_vertical_cylinder_Eigenson_Morgan_B = Nu_vertical_cylinder_Eigenson_Morgan(Pr_B, Gr_B, -1)
+"Nu_vertical_cylinder_Touloukian_Morgan"
+Nu_vertical_cylinder_Touloukian_Morgan_B = Nu_vertical_cylinder_Touloukian_Morgan(Pr_B, Gr_B, -1)
+"Nu_vertical_cylinder_McAdams_Weiss_Saunders"
+Nu_vertical_cylinder_McAdams_Weiss_Saunders_B = Nu_vertical_cylinder_McAdams_Weiss_Saunders(Pr_B, Gr_B, -1)
+"Nu_vertical_cylinder_Kreith_Eckert"
+Nu_vertical_cylinder_Kreith_Eckert_B = Nu_vertical_cylinder_Kreith_Eckert(Pr_B, Gr_B, -1)
+"Nu_vertical_cylinder_Hanesian_Kalish_Morgan"
+Nu_vertical_cylinder_Hanesian_Kalish_Morgan_B = Nu_vertical_cylinder_Hanesian_Kalish_Morgan(Pr_B, Gr_B)
+"Nu_vertical_cylinder_Al_Arabi_Khamis"
+Nu_vertical_cylinder_Al_Arabi_Khamis_B = Nu_vertical_cylinder_Al_Arabi_Khamis(Pr_B, Gr_B, L_B, D_B, -1)
+"Nu_vertical_cylinder_Popiel_Churchill"
+Nu_vertical_cylinder_Popiel_Churchill_B = Nu_vertical_cylinder_Popiel_Churchill(Pr_B, Gr_B, L_B, D_B)
+"Nu_horizontal_cylinder_Churchill_Chu"
+Nu_horizontal_cylinder_Churchill_Chu_B = Nu_horizontal_cylinder_Churchill_Chu(Pr_B, Gr_B)
+"Nu_horizontal_cylinder_Kuehn_Goldstein"
+Nu_horizontal_cylinder_Kuehn_Goldstein_B = Nu_horizontal_cylinder_Kuehn_Goldstein(Pr_B, Gr_B)
+"Nu_horizontal_cylinder_Morgan"
+Nu_horizontal_cylinder_Morgan_B = Nu_horizontal_cylinder_Morgan(Pr_B, Gr_B)

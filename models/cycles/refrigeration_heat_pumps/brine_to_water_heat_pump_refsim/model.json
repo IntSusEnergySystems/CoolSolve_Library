@@ -1,0 +1,95 @@
+{
+  "id": "CSL-0078",
+  "name": "brine_to_water_heat_pump_refsim",
+  "title": "Brine-to-water heat pump reference model (RefSim)",
+  "summary": "Reference simulation model of a brine-to-water (ground-source) heat pump of the ULiège model bank: a scroll compressor described in five steps (suction heating-up, isentropic compression to an adapted pressure, isochoric compression to the discharge plenum, exhaust cooling-down and internal leakage through the scroll throat) with all its heat transfers referred to a fictitious envelope of uniform temperature, a brine evaporator and a water condenser, both described by three thermal resistances in series referred to their nominal flows; the brine properties come from the BrineProp library.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "brine_to_water_heat_pump_refsim.eescode",
+  "fluids": [
+    "R407C",
+    "Water",
+    "PG (propylene glycol, BrineProp library)"
+  ],
+  "tags": [
+    "heat pump",
+    "brine-to-water",
+    "ground source",
+    "scroll compressor",
+    "internal leakage",
+    "isochoric compression",
+    "compressor heat transfer",
+    "fictitious envelope",
+    "thermal resistances",
+    "glycol",
+    "secondary refrigerant",
+    "reference model",
+    "model bank"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "min/max",
+    "bisection suffix {_bis}",
+    "user-library procedure BRINEPROP (implicit library, copied in the file)",
+    "string arguments",
+    "IF/THEN/ELSE ladders closed by ENDIF;ENDIF groups",
+    "Uppercase$ string function",
+    "string arrays",
+    "lookup tables read inside a procedure",
+    "expression as CALL output argument"
+  ],
+  "stats": {
+    "n_equations": 252,
+    "largest_block": 31
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/Heat_and_Cool_Production_Systems/Heat_Production_by_Vapor_Compression/BrinetoWaterHeatPump_RefSim_Model_VL080108.zip!/BrinetoWaterHeatPump_RefSim_EES_Model_VL080108.EES",
+    "candidate_id": "TM-0495",
+    "authors": [
+      "Vincent Lemort (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en",
+    "course": "ULiège model bank (Laborelec toolkit lineage), heat production by vapour compression, reference simulation model, 8 January 2008"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (142 of its 146 variable records hold a value; the reference point is the operating point stored by EES); the comparison concerns the runnable variant brine_to_water_heat_pump_refsim_coolsolve.eescode, the native file being blocked",
+    "date": "2026-10-05",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 0.554,
+    "notes": "142 common variables, 73 differ above rtol=0.001, maximum relative difference 5.54e-01 (h_ex_cd). The largest differences are the absolute enthalpies and entropies of R407C, offset by +143405 J/kg and +763.4 J/kg-K between EES 7.888 and CoolProp (reference state); the derived results agree to 0.4-3.3 % (COP_heating 4.112 / 4.254, Q_dot_ev 11933 / 12232 W, Q_dot_cd 15463 / 15708 W, W_dot_cp 3760 / 3693 W) and the remaining differences follow the specific heat of R407C vapour at the suction (+10 %) and the R407C saturation line near 0 and 42 °C (t_ev -3.544 / -3.808 °C), where the zeotropic blend is described differently by EES and CoolProp. gamma_leak_cp is fixed at the default value 1.03 of the commented line of the original instead of being solved by the bisection relation (see the conversion log), which accounts for 1.40e-02 on that variable. No reference variable excluded from the comparison; the 110 CoolSolve-only variables are the state points of the diagrams, the internal variables of the two flattened BRINEPROP blocks, the six consistency checks and the string variable fluid$."
+  },
+  "missing_features": [
+    "CS-GAP-ELSEIF-CHAIN",
+    "CS-GAP-UPPERCASE",
+    "CS-GAP-STRING-ARRAY",
+    "CS-GAP-LOOKUP-PROC",
+    "CS-GAP-CALL-EXPR-OUT"
+  ],
+  "related": [
+    "CSL-0077",
+    "CSL-0079",
+    "CSL-0072",
+    "CSL-0007",
+    "CSL-0068",
+    "CSL-0081"
+  ],
+  "related_external": [
+    "BrineProp library of the ULiège model bank (Brineprop.lib, Brine1.lkt, Brine2.lkt; inventory candidate TM-0479)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-83, T-IMPORT of TM-0495; blocked native file, runnable _coolsolve variant)",
+      "by": "opencode worker (t78) for S. Quoilin"
+    }
+  ]
+}

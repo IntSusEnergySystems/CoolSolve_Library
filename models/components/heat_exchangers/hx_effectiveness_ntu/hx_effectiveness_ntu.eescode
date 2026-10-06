@@ -1,0 +1,539 @@
+{=============================================================================
+  Heat exchangers: effectiveness-NTU relations (function library)
+  CoolSolve Library model CSL-0090 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Relations of the effectiveness-NTU (epsilon-NTU) method for a heat
+  exchanger: the heat capacity rates Cmin, Cmax, their ratio Cr, the
+  conversion NTU <-> UA, and the effectiveness eps(NTU, Cr) and its inverse
+  NTU(eps, Cr) for counterflow, parallel flow, crossflow (both fluids unmixed
+  - exact integral formula, Triboix 2009; closed approximate formula; Cmin
+  mixed; Cmax mixed) and boiler/condenser (latent-heat exchanger) flow
+  arrangements.
+
+  All arguments are SI: mass flow rates [kg/s], heat capacities [J/kg-K],
+  heat capacity rates and UA [W/K]; NTU, Cr and eps are dimensionless.
+
+  The demonstration program at the end calls every function, once with the
+  inputs of the ht doctest of the corresponding relation ("A" case) and once
+  with a second input set ("B" case, the steam/oil crossflow rating of the ht
+  docstring). The ht values of both sets are tabulated in the README
+  (verification table).
+
+  The two dispatchers of ht (effectiveness_NTU_method, P_NTU_method) only map a
+  method name to a relation and are not translated; an EES caller calls the
+  chosen FUNCTION directly. The TEMA E shell-and-tube branches of the two ht
+  dispatchers ('S&T', several shells in series) are not translated here: they
+  belong to the P-NTU/TEMA family (card HT-016).
+
+  Inputs : m_dot_h, m_dot_c [kg/s], Cp_h, Cp_c [J/kg-K], UA [W/K], NTU [-],
+           Cr [-], eps [-], v [-], t0 [-]
+  Outputs: Cmin, Cmax [W/K], Cr [-], NTU [-], UA [W/K], eps [-], integrand [-]
+           (one FUNCTION per relation)
+  Units  : SI - kg/s, J/kg-K, W/K, dimensionless numbers
+  Source : ht (Caleb Bell), ht/hx.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; relations by the authors
+           cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION calc_Cmin(m_dot_h, m_dot_c, Cp_h, Cp_c)
+{CALC_CMIN - heat capacity rate of the stream with the smaller heat capacity
+rate [W/K].
+
+  C_h  = m_dot_h*Cp_h      [W/K]
+  C_c  = m_dot_c*Cp_c      [W/K]
+  Cmin = min(C_h, C_c)     [W/K]
+
+m_dot_h, m_dot_c are the mass flow rates of the hot and the cold stream
+[kg/s], Cp_h and Cp_c their averaged heat capacities [J/kg-K]. Which of the
+two streams is hot does not change the result; it is easiest to use the
+function when the order is given, as in the original.
+Validity: no limit quoted.
+Original: Bergman, T. L., A. S. Lavine, F. P. Incropera and D. P. DeWitt,
+  "Introduction to Heat Transfer", 6E, Wiley, Hoboken NJ, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, calc_Cmin,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  C_h = m_dot_h*Cp_h
+  C_c = m_dot_c*Cp_c
+  IF C_h < C_c THEN
+    calc_Cmin = C_h
+  ELSE
+    calc_Cmin = C_c
+  ENDIF
+END
+
+FUNCTION calc_Cmax(m_dot_h, m_dot_c, Cp_h, Cp_c)
+{CALC_CMAX - heat capacity rate of the stream with the larger heat capacity
+rate [W/K].
+
+  C_h  = m_dot_h*Cp_h      [W/K]
+  C_c  = m_dot_c*Cp_c      [W/K]
+  Cmax = max(C_h, C_c)     [W/K]
+
+Arguments and validity as in calc_Cmin; the original reference is the same
+(Bergman, Lavine, Incropera and DeWitt, Introduction to Heat Transfer, 6E,
+Wiley, 2011).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, calc_Cmax,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  C_h = m_dot_h*Cp_h
+  C_c = m_dot_c*Cp_c
+  IF C_h > C_c THEN
+    calc_Cmax = C_h
+  ELSE
+    calc_Cmax = C_c
+  ENDIF
+END
+
+FUNCTION calc_Cr(m_dot_h, m_dot_c, Cp_h, Cp_c)
+{CALC_CR - heat capacity rate ratio of a heat exchanger, the smaller heat
+capacity rate divided by the larger one [-].
+
+  C_h  = m_dot_h*Cp_h        [W/K]
+  C_c  = m_dot_c*Cp_c        [W/K]
+  Cr  = min(C_h, C_c)/max(C_h, C_c)   [-]
+
+Arguments and validity as in calc_Cmin; the original reference is the same
+(Bergman, Lavine, Incropera and DeWitt, Introduction to Heat Transfer, 6E,
+Wiley, 2011).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, calc_Cr,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  C_h = m_dot_h*Cp_h
+  C_c = m_dot_c*Cp_c
+  IF C_h < C_c THEN
+    calc_Cr = C_h/C_c
+  ELSE
+    calc_Cr = C_c/C_h
+  ENDIF
+END
+
+FUNCTION NTU_from_UA(UA, Cmin)
+{NTU_FROM_UA - number of transfer units of a heat exchanger of given UA and
+given minimum heat capacity rate [-].
+
+  NTU = UA/Cmin
+
+UA [W/K] is the combined area-heat transfer coefficient term (product of the
+overall heat transfer coefficient [W/m^2-K] and the transfer area [m^2]),
+Cmin [W/K] the heat capacity rate of the smaller stream (calc_Cmin).
+Validity: no limit quoted.
+Original: Bergman, T. L., A. S. Lavine, F. P. Incropera and D. P. DeWitt,
+  "Introduction to Heat Transfer", 6E, Wiley, Hoboken NJ, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, NTU_from_UA,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  NTU_from_UA = UA/Cmin
+END
+
+FUNCTION UA_from_NTU(NTU, Cmin)
+{UA_FROM_NTU - combined area-heat transfer coefficient term of a heat
+exchanger of given number of transfer units and given minimum heat capacity
+rate [W/K].
+
+  UA = NTU*Cmin
+
+NTU [-] is the number of transfer units, Cmin [W/K] the heat capacity rate of
+the smaller stream (calc_Cmin). Validity: no limit quoted.
+Original: Bergman, T. L., A. S. Lavine, F. P. Incropera and D. P. DeWitt,
+  "Introduction to Heat Transfer", 6E, Wiley, Hoboken NJ, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, UA_from_NTU,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  UA_from_NTU = NTU*Cmin
+END
+
+FUNCTION eps_counterflow(NTU, Cr)
+{EPS_COUNTERFLOW - thermal effectiveness of a counterflow (double-pipe) heat
+exchanger [-].
+
+  eps = (1 - exp(-NTU*(1 - Cr)))/(1 - Cr*exp(-NTU*(1 - Cr)))   Cr < 1
+  eps = NTU/(1 + NTU)                                        Cr = 1
+
+Cr = Cmin/Cmax [-] <= 1 is the heat capacity rate ratio of the smaller stream
+to the larger one. The closed form is singular at Cr = 1; the limiting
+expression of the original (equal capacity rates) is used there, as in the
+original.
+Validity: 0 <= Cr <= 1 (as in the original; the definition rejects Cr > 1).
+Original: Bergman, T. L., A. S. Lavine, F. P. Incropera and D. P. DeWitt,
+  "Introduction to Heat Transfer", 6E, Wiley, Hoboken NJ, 2011; Shah, R. K.
+  and D. P. Sekulic, "Fundamentals of Heat Exchanger Design", Wiley, 2002;
+  Holman, J., "Heat Transfer", 10th ed., McGraw-Hill, Boston, 2009 - the
+  three books the original confirms this equation with.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, effectiveness_from_NTU
+  (subtype 'counterflow'),
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF Cr = 1 THEN
+    eps_counterflow = NTU/(1 + NTU)
+  ELSE
+    eps_counterflow = (1 - exp(-NTU*(1 - Cr)))/(1 - Cr*exp(-NTU*(1 - Cr)))
+  ENDIF
+END
+
+FUNCTION eps_parallel(NTU, Cr)
+{EPS_PARALLEL - thermal effectiveness of a parallel-flow (co-current) heat
+exchanger [-].
+
+  eps = (1 - exp(-NTU*(1 + Cr)))/(1 + Cr)
+
+NTU [-] is the number of transfer units, Cr = Cmin/Cmax [-] the heat capacity
+rate ratio. This is the worst case of the flow arrangements; as in the
+original the flow arrangement does not matter for Cr = 0 (latent heat
+exchanger), where the expression reduces to eps = 1 - exp(-NTU).
+Validity: 0 <= Cr <= 1 (as in the original; the definition rejects Cr > 1).
+Original: as in eps_counterflow (Incropera et al. 2011; Shah and Sekulic
+  2002; Holman 2009).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, effectiveness_from_NTU
+  (subtype 'parallel'),
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  eps_parallel = (1 - exp(-NTU*(1 + Cr)))/(1 + Cr)
+END
+
+FUNCTION eps_crossflow_approx(NTU, Cr)
+{EPS_CROSSFLOW_APPROX - approximate thermal effectiveness of a single-pass
+crossflow heat exchanger with both fluids unmixed [-].
+
+  eps = 1 - exp[(NTU^0.22/Cr)*{exp(-Cr*NTU^0.78) - 1}]
+
+This closed formula is the approximate form of the exact crossflow relation
+(see the demonstration program of this file, which also evaluates the exact
+integral form with crossflow_effectiveness_to_int). It is monotonic in NTU, so
+it can also be inverted; the original solves that inversion with a
+secant/bisection solver, which is written here as a simultaneous equation
+(NTU as an unknown), see the demonstration program.
+Validity: 10^-7 < NTU < 10^5 for the inversion (as in the original); 0 < Cr
+  <= 1 for the effectiveness itself (the definition rejects Cr > 1).
+Original: Triboix, A., "Exact and Approximate Formulas for Cross Flow Heat
+  Exchangers with Unmixed Fluids", International Communications in Heat and
+  Mass Transfer 36(2): 121-124, February 2009,
+  doi:10.1016/j.icheatmasstransfer.2008.10.012 - the exact integral formula of
+  the original is developed there; the approximate closed form is the one the
+  original ships as 'crossflow approximate'.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, effectiveness_from_NTU
+  (subtype 'crossflow approximate'),
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  eps_crossflow_approx = 1 - exp(NTU^0.22/Cr*(exp(-Cr*NTU^0.78) - 1))
+END
+
+FUNCTION eps_crossflow_mixed_Cmin(NTU, Cr)
+{EPS_CROSSFLOW_MIXED_CMIN - thermal effectiveness of a single-pass crossflow
+heat exchanger with the Cmin stream (the smaller stream) mixed and the Cmax
+stream unmixed [-].
+
+  eps = 1 - exp[-(1/Cr)*{1 - exp(-Cr*NTU)}]
+
+Validity: 0 < Cr <= 1 (as in the original; the definition rejects Cr > 1).
+Original: as in eps_counterflow (Incropera et al. 2011; Shah and Sekulic
+  2002; Holman 2009).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, effectiveness_from_NTU
+  (subtype 'crossflow, mixed Cmin'),
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  eps_crossflow_mixed_Cmin = 1 - exp(-1/Cr*(1 - exp(-Cr*NTU)))
+END
+
+FUNCTION eps_crossflow_mixed_Cmax(NTU, Cr)
+{EPS_CROSSFLOW_MIXED_CMAX - thermal effectiveness of a single-pass crossflow
+heat exchanger with the Cmax stream (the larger stream) mixed and the Cmin
+stream unmixed [-].
+
+  eps = (1/Cr)*{1 - exp[-Cr*{1 - exp(-NTU)}]}
+
+Validity: 0 < Cr <= 1 (as in the original; the definition rejects Cr > 1).
+Original: as in eps_counterflow (Incropera et al. 2011; Shah and Sekulic
+  2002; Holman 2009).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, effectiveness_from_NTU
+  (subtype 'crossflow, mixed Cmax'),
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  eps_crossflow_mixed_Cmax = (1/Cr)*(1 - exp(-Cr*(1 - exp(-NTU))))
+END
+
+FUNCTION eps_boiler_condenser(NTU)
+{EPS_BOILER_CONDENSER - thermal effectiveness of a boiler (condenser), i.e.
+of a heat exchanger in which one stream exchanges heat at constant
+temperature (latent heat) [-].
+
+  eps = 1 - exp(-NTU)
+
+In that case the heat capacity rate ratio does not matter (Cr = 0), so NTU is
+the only argument.
+Validity: no limit quoted.
+Original: as in eps_counterflow (Incropera et al. 2011; Shah and Sekulic
+  2002; Holman 2009).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, effectiveness_from_NTU
+  (subtypes 'boiler' and 'condenser', which return the same expression),
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  eps_boiler_condenser = 1 - exp(-NTU)
+END
+
+FUNCTION NTU_counterflow(effectiveness, Cr)
+{NTU_COUNTERFLOW - number of transfer units of a counterflow (double-pipe)
+heat exchanger of given effectiveness [-].
+
+  NTU = ln[(effectiveness - 1)/(effectiveness*Cr - 1)]/(Cr - 1)   Cr < 1
+  NTU = effectiveness/(1 - effectiveness)                        Cr = 1
+
+The closed form is singular at Cr = 1; the limiting expression of the
+original (equal capacity rates) is used there, as in the original. The
+expression is the counterflow relation of eps_counterflow solved for NTU; the
+original notes that Shah and Sekulic give the same equation rearranged
+differently.
+Validity: 0 <= Cr <= 1 (as in the original; the definition rejects Cr > 1).
+Original: as in eps_counterflow (Incropera et al. 2011; Shah and Sekulic
+  2002; Holman 2009).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, NTU_from_effectiveness
+  (subtype 'counterflow'),
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF Cr = 1 THEN
+    NTU_counterflow = effectiveness/(1 - effectiveness)
+  ELSE
+    NTU_counterflow = LN((effectiveness - 1)/(effectiveness*Cr - 1))/(Cr - 1)
+  ENDIF
+END
+
+FUNCTION NTU_parallel(effectiveness, Cr)
+{NTU_PARALLEL - number of transfer units of a parallel-flow (co-current) heat
+exchanger of given effectiveness [-].
+
+  NTU = -LN[1 - effectiveness*(1 + Cr)]/(1 + Cr)
+
+The expression is the parallel-flow relation of eps_parallel solved for NTU.
+Validity: 0 <= Cr <= 1 (as in the original; the definition rejects Cr > 1);
+  the original raises an error when effectiveness*(1 + Cr) > 1, since no
+  exchanger of this arrangement can reach that effectiveness.
+Original: as in eps_counterflow (Incropera et al. 2011; Shah and Sekulic
+  2002; Holman 2009).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, NTU_from_effectiveness
+  (subtype 'parallel'),
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  NTU_parallel = -LN(1 - effectiveness*(1 + Cr))/(1 + Cr)
+END
+
+FUNCTION NTU_crossflow_mixed_Cmin(effectiveness, Cr)
+{NTU_CROSSFLOW_MIXED_CMIN - number of transfer units of a single-pass
+crossflow heat exchanger with the Cmin stream mixed and the Cmax stream
+unmixed, of given effectiveness [-].
+
+  NTU = -(1/Cr)*LN[Cr*LN(1 - effectiveness) + 1]
+
+The expression is the mixed-Cmin relation of eps_crossflow_mixed_Cmin solved
+for NTU.
+Validity: 0 < Cr <= 1 (as in the original; the definition rejects Cr > 1);
+  the maximum effectiveness of this arrangement is 1 - exp(-1/Cr), above
+  which the original raises an error.
+Original: as in eps_counterflow (Incropera et al. 2011; Shah and Sekulic
+  2002; Holman 2009).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, NTU_from_effectiveness
+  (subtype 'crossflow, mixed Cmin'),
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  NTU_crossflow_mixed_Cmin = -1/Cr*LN(Cr*LN(1 - effectiveness) + 1)
+END
+
+FUNCTION NTU_crossflow_mixed_Cmax(effectiveness, Cr)
+{NTU_CROSSFLOW_MIXED_CMAX - number of transfer units of a single-pass
+crossflow heat exchanger with the Cmax stream mixed and the Cmin stream
+unmixed, of given effectiveness [-].
+
+  NTU = -LN[1 + (1/Cr)*LN(1 - effectiveness*Cr)]
+
+The expression is the mixed-Cmax relation of eps_crossflow_mixed_Cmax solved
+for NTU.
+Validity: 0 < Cr <= 1 (as in the original; the definition rejects Cr > 1);
+  the maximum effectiveness of this arrangement is
+  [exp(Cr) - 1]*exp(-Cr)/Cr, above which the original raises an error.
+Original: as in eps_counterflow (Incropera et al. 2011; Shah and Sekulic
+  2002; Holman 2009).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, NTU_from_effectiveness
+  (subtype 'crossflow, mixed Cmax'),
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  NTU_crossflow_mixed_Cmax = -LN(1 + 1/Cr*LN(1 - effectiveness*Cr))
+END
+
+FUNCTION NTU_boiler_condenser(effectiveness)
+{NTU_BOILER_CONDENSER - number of transfer units of a boiler (condenser), i.e.
+of a heat exchanger in which one stream exchanges heat at constant
+temperature (latent heat), of given effectiveness [-].
+
+  NTU = -LN(1 - effectiveness)
+
+In that case the heat capacity rate ratio does not matter (Cr = 0), so the
+effectiveness is the only argument.
+Validity: no limit quoted.
+Original: as in eps_counterflow (Incropera et al. 2011; Shah and Sekulic
+  2002; Holman 2009).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, NTU_from_effectiveness
+  (subtypes 'boiler' and 'condenser', which return the same expression),
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  NTU_boiler_condenser = -LN(1 - effectiveness)
+END
+
+FUNCTION crossflow_effectiveness_to_int(v, NTU, t0)
+{CROSSFLOW_EFFECTIVENESS_TO_INT - integrand of the exact effectiveness formula
+of a single-pass crossflow heat exchanger with both fluids unmixed [-].
+
+  x0 = v^2*t0                                        [1]
+  I0(v) = sum_{k>=0} (v^2/4)^k/(k!)^2               [1]  (power series)
+  f(v) = (1 + NTU - x0)*exp(-x0)*v*I0(v)             [1]
+
+The effectiveness is (as in the original):
+
+  t0 = 1/(4*Cr*NTU)                                              [1]
+  eps = 1/Cr - exp(-Cr*NTU)/(2*(Cr*NTU)^2) *
+              integral_0^(2*NTU*sqrt(Cr)) f(v) dv                [-]
+
+t0 = 1/(4*Cr*NTU) [1] is the scaling of the integration variable, NTU [-] the
+number of transfer units and v [-] the integration variable. I0(v) is the
+modified Bessel function of the first kind of order zero, evaluated here by
+its power series (25 terms; the series converges for every v >= 0, the terms
+are below 1E-12 relative for the range of the demonstration program, v <= 8.4).
+CoolSolve has no Bessel function, and the integral itself has to be evaluated
+by the calling model (see the demonstration program: composite Simpson rule
+with 80 intervals). The 25 terms are enough for machine precision over the
+range of the demonstration program (1.9E-16 relative at v = 8.37).
+Validity: 0 < Cr <= 1 (as in the original; the definition rejects Cr > 1).
+Original: Triboix, A., "Exact and Approximate Formulas for Cross Flow Heat
+  Exchangers with Unmixed Fluids", International Communications in Heat and
+  Mass Transfer 36(2): 121-124, February 2009,
+  doi:10.1016/j.icheatmasstransfer.2008.10.012 (the original gives the
+  modified Bessel function I0(v) of this integral); the effectiveness-NTU
+  relations are confirmed in Incropera et al. 2011, Shah and Sekulic 2002 and
+  Holman 2009.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py,
+  crossflow_effectiveness_to_int,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  x0 = v^2*t0
+  t_term = 1
+  I0 = 1
+  DUPLICATE k = 1, 25
+    t_term = t_term*(v^2/4)/k^2
+    I0 = I0 + t_term
+  END
+  crossflow_effectiveness_to_int = (1 + NTU - x0)*exp(-x0)*v*I0
+END
+
+"!Demonstration program: every relation is called twice"
+"It is ignored by the future $INCLUDE library:hx_effectiveness_ntu (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctests (NTU = 5, Cr = 0.7, m_h = 22 kg/s, C_ph = 2200 J/kg-K,"
+"m_c = 5.5 kg/s, C_pc = 4400 J/kg-K, UA = 4400 W/K, Cmin = 22 W/K)."
+"Case B: the steam/oil crossflow rating of the ht docstring (m_h = 5.2 kg/s, C_ph = 1860 J/kg-K,"
+"m_c = 0.725 kg/s, C_pc = 1900 J/kg-K, U = 275 W/m^2-K, A = 10.82 m^2)."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case A - input set"
+m_dot_h_A = 22       "mass flow rate of the hot stream [kg/s]"
+m_dot_c_A = 5.5      "mass flow rate of the cold stream [kg/s]"
+Cp_h_A = 2200        "averaged heat capacity of the hot stream [J/kg-K]"
+Cp_c_A = 4400        "averaged heat capacity of the cold stream [J/kg-K]"
+UA_A = 4400          "combined area-heat transfer coefficient term [W/K]"
+Cmin_given_A = 22    "heat capacity rate of the smaller stream, for NTU_from_UA [W/K]"
+
+"Case B - input set"
+m_dot_h_B = 5.2      "mass flow rate of the hot stream (steam) [kg/s]"
+m_dot_c_B = 0.725    "mass flow rate of the cold stream (oil) [kg/s]"
+Cp_h_B = 1860        "averaged heat capacity of the hot stream [J/kg-K]"
+Cp_c_B = 1900        "averaged heat capacity of the cold stream [J/kg-K]"
+U_B = 275            "overall heat transfer coefficient [W/m^2-K]"
+A_B = 10.82          "transfer area [m^2]"
+
+"Case A - heat capacity rates, Cr and NTU"
+calc_Cmin_A = calc_Cmin(m_dot_h_A, m_dot_c_A, Cp_h_A, Cp_c_A)
+calc_Cmax_A = calc_Cmax(m_dot_h_A, m_dot_c_A, Cp_h_A, Cp_c_A)
+calc_Cr_A = calc_Cr(m_dot_h_A, m_dot_c_A, Cp_h_A, Cp_c_A)
+NTU_from_UA_A = NTU_from_UA(UA_A, Cmin_given_A)
+UA_from_NTU_A = UA_from_NTU(NTU_from_UA_A, Cmin_given_A)
+NTU_A = 5            "number of transfer units [-]"
+Cr_A = 0.7           "heat capacity rate ratio [-]"
+
+"Case A - effectiveness from NTU"
+eps_counterflow_A = eps_counterflow(NTU_A, Cr_A)
+eps_parallel_A = eps_parallel(NTU_A, Cr_A)
+eps_crossflow_approx_A = eps_crossflow_approx(NTU_A, Cr_A)
+eps_crossflow_mixed_Cmin_A = eps_crossflow_mixed_Cmin(NTU_A, Cr_A)
+eps_crossflow_mixed_Cmax_A = eps_crossflow_mixed_Cmax(NTU_A, Cr_A)
+eps_boiler_condenser_A = eps_boiler_condenser(NTU_A)
+
+"Case A - NTU from the same effectivenesses (round trip)"
+NTU_counterflow_A = NTU_counterflow(eps_counterflow_A, Cr_A)
+NTU_parallel_A = NTU_parallel(eps_parallel_A, Cr_A)
+NTU_crossflow_mixed_Cmin_A = NTU_crossflow_mixed_Cmin(eps_crossflow_mixed_Cmin_A, Cr_A)
+NTU_crossflow_mixed_Cmax_A = NTU_crossflow_mixed_Cmax(eps_crossflow_mixed_Cmax_A, Cr_A)
+NTU_boiler_condenser_A = NTU_boiler_condenser(eps_boiler_condenser_A)
+"the inversion of the approximate crossflow relation has no closed form: NTU is an unknown"
+eps_crossflow_approx_A = eps_crossflow_approx(NTU_crossflow_approx_A, Cr_A)
+
+"Case A - limit of the singular closed form: equal heat capacity rates (Cr = 1)"
+eps_counterflow_Cr1_A = eps_counterflow(NTU_A, 1)
+NTU_counterflow_Cr1_A = NTU_counterflow(eps_counterflow_Cr1_A, 1)
+
+"Case A - exact crossflow effectiveness (both fluids unmixed): composite Simpson quadrature"
+"of crossflow_effectiveness_to_int over v = 0 to 2*NTU*sqrt(Cr) with 80 intervals,"
+"as the integral cannot be evaluated by the function itself (see its comment block)."
+t0_A = 1/(4*Cr_A*NTU_A)   "scaling of the integration variable, as in the original [1]"
+h_int_A = 2*NTU_A*sqrt(Cr_A)/80  "width of one Simpson interval [1]"
+DUPLICATE i = 0, 80
+  v_A[i] = i*h_int_A
+  f_A[i] = crossflow_effectiveness_to_int(v_A[i], NTU_A, t0_A)
+END
+I_odd_A = f_A[1] + f_A[3] + f_A[5] + f_A[7] + f_A[9] + f_A[11] + f_A[13] + f_A[15] + f_A[17] + f_A[19] + f_A[21] + f_A[23] + f_A[25] + f_A[27] + f_A[29] + f_A[31] + f_A[33] + f_A[35] + f_A[37] + f_A[39] + f_A[41] + f_A[43] + f_A[45] + f_A[47] + f_A[49] + f_A[51] + f_A[53] + f_A[55] + f_A[57] + f_A[59] + f_A[61] + f_A[63] + f_A[65] + f_A[67] + f_A[69] + f_A[71] + f_A[73] + f_A[75] + f_A[77] + f_A[79]
+I_even_A = f_A[2] + f_A[4] + f_A[6] + f_A[8] + f_A[10] + f_A[12] + f_A[14] + f_A[16] + f_A[18] + f_A[20] + f_A[22] + f_A[24] + f_A[26] + f_A[28] + f_A[30] + f_A[32] + f_A[34] + f_A[36] + f_A[38] + f_A[40] + f_A[42] + f_A[44] + f_A[46] + f_A[48] + f_A[50] + f_A[52] + f_A[54] + f_A[56] + f_A[58] + f_A[60] + f_A[62] + f_A[64] + f_A[66] + f_A[68] + f_A[70] + f_A[72] + f_A[74] + f_A[76] + f_A[78]
+I_int_A = h_int_A/3*(f_A[0] + f_A[80] + 4*I_odd_A + 2*I_even_A)
+eps_crossflow_A = 1/Cr_A - exp(-Cr_A*NTU_A)/(2*(Cr_A*NTU_A)^2)*I_int_A
+
+"Case B - heat capacity rates, Cr and NTU"
+calc_Cmin_B = calc_Cmin(m_dot_h_B, m_dot_c_B, Cp_h_B, Cp_c_B)
+calc_Cmax_B = calc_Cmax(m_dot_h_B, m_dot_c_B, Cp_h_B, Cp_c_B)
+calc_Cr_B = calc_Cr(m_dot_h_B, m_dot_c_B, Cp_h_B, Cp_c_B)
+UA_B = U_B*A_B       "combined area-heat transfer coefficient term [W/K]"
+NTU_from_UA_B = NTU_from_UA(UA_B, calc_Cmin_B)
+UA_from_NTU_B = UA_from_NTU(NTU_from_UA_B, calc_Cmin_B)
+NTU_B = NTU_from_UA_B
+Cr_B = calc_Cr_B
+
+"Case B - effectiveness from NTU"
+eps_counterflow_B = eps_counterflow(NTU_B, Cr_B)
+eps_parallel_B = eps_parallel(NTU_B, Cr_B)
+eps_crossflow_approx_B = eps_crossflow_approx(NTU_B, Cr_B)
+eps_crossflow_mixed_Cmin_B = eps_crossflow_mixed_Cmin(NTU_B, Cr_B)
+eps_crossflow_mixed_Cmax_B = eps_crossflow_mixed_Cmax(NTU_B, Cr_B)
+eps_boiler_condenser_B = eps_boiler_condenser(NTU_B)
+
+"Case B - NTU from the same effectivenesses (round trip)"
+NTU_counterflow_B = NTU_counterflow(eps_counterflow_B, Cr_B)
+NTU_parallel_B = NTU_parallel(eps_parallel_B, Cr_B)
+NTU_crossflow_mixed_Cmin_B = NTU_crossflow_mixed_Cmin(eps_crossflow_mixed_Cmin_B, Cr_B)
+NTU_crossflow_mixed_Cmax_B = NTU_crossflow_mixed_Cmax(eps_crossflow_mixed_Cmax_B, Cr_B)
+NTU_boiler_condenser_B = NTU_boiler_condenser(eps_boiler_condenser_B)
+"the inversion of the approximate crossflow relation has no closed form: NTU is an unknown"
+eps_crossflow_approx_B = eps_crossflow_approx(NTU_crossflow_approx_B, Cr_B)
+
+"Case B - limit of the singular closed form: equal heat capacity rates (Cr = 1)"
+eps_counterflow_Cr1_B = eps_counterflow(NTU_B, 1)
+NTU_counterflow_Cr1_B = NTU_counterflow(eps_counterflow_Cr1_B, 1)
+
+"Case B - exact crossflow effectiveness (both fluids unmixed): composite Simpson quadrature"
+t0_B = 1/(4*Cr_B*NTU_B)   "scaling of the integration variable, as in the original [1]"
+h_int_B = 2*NTU_B*sqrt(Cr_B)/80  "width of one Simpson interval [1]"
+DUPLICATE i = 0, 80
+  v_B[i] = i*h_int_B
+  f_B[i] = crossflow_effectiveness_to_int(v_B[i], NTU_B, t0_B)
+END
+I_odd_B = f_B[1] + f_B[3] + f_B[5] + f_B[7] + f_B[9] + f_B[11] + f_B[13] + f_B[15] + f_B[17] + f_B[19] + f_B[21] + f_B[23] + f_B[25] + f_B[27] + f_B[29] + f_B[31] + f_B[33] + f_B[35] + f_B[37] + f_B[39] + f_B[41] + f_B[43] + f_B[45] + f_B[47] + f_B[49] + f_B[51] + f_B[53] + f_B[55] + f_B[57] + f_B[59] + f_B[61] + f_B[63] + f_B[65] + f_B[67] + f_B[69] + f_B[71] + f_B[73] + f_B[75] + f_B[77] + f_B[79]
+I_even_B = f_B[2] + f_B[4] + f_B[6] + f_B[8] + f_B[10] + f_B[12] + f_B[14] + f_B[16] + f_B[18] + f_B[20] + f_B[22] + f_B[24] + f_B[26] + f_B[28] + f_B[30] + f_B[32] + f_B[34] + f_B[36] + f_B[38] + f_B[40] + f_B[42] + f_B[44] + f_B[46] + f_B[48] + f_B[50] + f_B[52] + f_B[54] + f_B[56] + f_B[58] + f_B[60] + f_B[62] + f_B[64] + f_B[66] + f_B[68] + f_B[70] + f_B[72] + f_B[74] + f_B[76] + f_B[78]
+I_int_B = h_int_B/3*(f_B[0] + f_B[80] + 4*I_odd_B + 2*I_even_B)
+eps_crossflow_B = 1/Cr_B - exp(-Cr_B*NTU_B)/(2*(Cr_B*NTU_B)^2)*I_int_B
+
+"Case A - integrand of the exact crossflow formula at four values of v"
+v_eval_A_1 = 0.5
+v_eval_A_2 = 2
+v_eval_A_3 = 3.5
+v_eval_A_4 = 6
+crossflow_effectiveness_to_int_A_v05 = crossflow_effectiveness_to_int(v_eval_A_1, NTU_A, t0_A)
+crossflow_effectiveness_to_int_A_v2 = crossflow_effectiveness_to_int(v_eval_A_2, NTU_A, t0_A)
+crossflow_effectiveness_to_int_A_v35 = crossflow_effectiveness_to_int(v_eval_A_3, NTU_A, t0_A)
+crossflow_effectiveness_to_int_A_v6 = crossflow_effectiveness_to_int(v_eval_A_4, NTU_A, t0_A)
+
+"Case B - integrand of the exact crossflow formula at four values of v"
+v_eval_B_1 = 0.1
+v_eval_B_2 = 0.5
+v_eval_B_3 = 1
+v_eval_B_4 = 2
+crossflow_effectiveness_to_int_B_v01 = crossflow_effectiveness_to_int(v_eval_B_1, NTU_B, t0_B)
+crossflow_effectiveness_to_int_B_v05 = crossflow_effectiveness_to_int(v_eval_B_2, NTU_B, t0_B)
+crossflow_effectiveness_to_int_B_v1 = crossflow_effectiveness_to_int(v_eval_B_3, NTU_B, t0_B)
+crossflow_effectiveness_to_int_B_v2 = crossflow_effectiveness_to_int(v_eval_B_4, NTU_B, t0_B)

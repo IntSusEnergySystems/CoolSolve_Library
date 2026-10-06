@@ -1,0 +1,484 @@
+{=============================================================================
+  In-tube two-phase non-boiling heat-transfer coefficients
+  CoolSolve Library model CSL-0097 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Nine correlations for the forced-convection heat-transfer coefficient of a
+  liquid and a gas flowing inside a tube, without phase change (condensing or
+  evaporating): Davis-David, Elamvaluthi-Srinivas, Groothuis-Hendal, Hughmark,
+  Knott, Kudirka-Grosh-McFadden, Martin-Sims, Ravipudi-Godbold and Aggour.
+  Each of them returns h_tp [W/m^2/K] from the mass flow rate, the quality and
+  the properties of the liquid and of the gas; the caller evaluates the
+  properties (no property function is used inside a FUNCTION, rule 5 of
+  sources/ht/README.md §7).
+
+  h_Knott and h_Martin_Sims take the liquid-only heat-transfer coefficient hl
+  [W/m^2/K] as an input. In the original, hl is optional: when it is missing,
+  it is computed with the Sieder-Tate laminar thermal entry correlation
+  Nu_l = 1.86*(Di/L*Re*Pr)^(1/3)*(mu_b/mu_w)^0.14, with Re and Pr taken on the
+  liquid at the combined superficial velocity V_ls + V_gs. That correlation
+  belongs to another family (laminar internal convection), so the caller passes
+  hl; its equation is repeated in the comment block of both functions and the
+  demonstration program applies it to check the values of the original.
+
+  The demonstration program at the end calls every function, once with the
+  inputs of the ht doctest of the corresponding correlation ("A" cases) and
+  once with a second, uniform input set ("B" cases). The ht values of both sets
+  are tabulated in the README (verification table).
+
+  The constant pi is written as a local pi_val in the function bodies, because
+  CoolSolve does not resolve the pi constant inside a FUNCTION body and
+  evaluates it as 1 (CoolSolve CS-BUG-PI-FUNCTION; it evaluates as 1 silently,
+  a plain local assignment is valid in both EES and CoolSolve).
+
+  Two correlations of the family are only dispatchers in ht (h_two_phase,
+  h_two_phase_methods: they select a method by name) and are not translated; an
+  EES caller selects the function directly.
+
+  Inputs : m [kg/s], x [-], D [m], L [m], rhol / rhog [kg/m^3], Cpl [J/kg/K],
+           kl [W/m/K], mul / mug / mu_b / mu_w [Pa-s], alpha [-], hl [W/m^2/K],
+           water and turbulent flags [-]
+  Outputs: h_tp [W/m^2/K] (one FUNCTION per correlation)
+  Units  : SI - mass in kg, length in m, pressures in Pa, energies in J
+  Source : ht (Caleb Bell), ht/conv_two_phase.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; correlations by the authors
+           cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION h_Davis_David(m, x, D, rhol, rhog, Cpl, kl, mul)
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+{H_DAVIS_DAVID - Two-phase non-boiling heat-transfer coefficient of a liquid
+ and a gas flowing inside a tube of any inclination.
+
+  h_TP*D/k_l = 0.060*(rho_l/rho_g)^0.28*(D*G_TP*x/mu_l)^0.87*Pr_l^0.4
+  G_TP = m/(pi_val/4*D^2)      mass flux of the mixture [kg/m^2/s]
+  Pr_l  = Cpl*mul/kl
+
+ m [kg/s] mass flow rate, x [-] quality at the tube interval considered, D [m]
+ diameter of the tube, rhol / rhog [kg/m^3] densities of the liquid and of the
+ gas, Cpl [J/kg/K] constant-pressure heat capacity of the liquid, kl [W/m/K]
+ thermal conductivity of the liquid, mul [Pa-s] viscosity of the liquid.
+ Returns h [W/m^2/K].
+ Validity: developed for both vertical and horizontal flow and for annular or
+ mist annular flow patterns; steam-water and air-water were the only fluid
+ combinations considered, with a quality between 0.1 and 1 (as in the original).
+ The original claims an average absolute error of 17% (as in the original).
+ Original: Davis, E. J. and M. M. David, "Two-Phase Gas-Liquid Convection
+   Heat Transfer. A Correlation", Industrial & Engineering Chemistry
+   Fundamentals 3(2): 111-118, 1 May 1964, doi:10.1021/i160010a005.
+   (as quoted in ht: Kim, D., V. K. Ryali, A. J. Ghajar and R. L. Dougherty,
+   "Comparison of 20 Two-Phase Heat Transfer Correlations with Seven Sets of
+   Experimental Data, Including Flow Pattern and Tube Inclination Effects",
+   Heat Transfer Engineering 20(1): 15-40, 1 February 1999)
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_two_phase.py, Davis_David,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  G = m/(pi_val/4*D^2)
+  Pr_l = Cpl*mul/kl
+  Nu_TP = 0.060*(rhol/rhog)^0.28*(D*G*x/mul)^0.87*Pr_l^0.4
+  h_Davis_David = Nu_TP*kl/D
+END
+
+FUNCTION h_Elamvaluthi_Srinivas(m, x, D, rhol, rhog, Cpl, kl, mug, mu_b, mu_w)
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+{H_ELAMVALUTHI_SRINIVAS - Two-phase non-boiling heat-transfer coefficient of a
+ liquid and a gas flowing inside a tube of any inclination.
+
+  h_TP*D/k_l = 0.5*(mu_g/mu_l)^0.25*Re_M^0.7*Pr_l^(1/3)*(mu_b/mu_w)^0.14
+  Re_M = D*V_ls*rho_l/mu_l + D*V_gs*rho_g/mu_g
+  V_ls = m*(1-x)/(rho_l*pi_val/4*D^2)   superficial liquid velocity [m/s]
+  V_gs = m*x/(rho_g*pi_val/4*D^2)       superficial gas velocity [m/s]
+  Pr_l  = Cpl*mu_b/kl
+
+ m [kg/s] mass flow rate, x [-] quality, D [m] tube diameter, rhol / rhog
+ [kg/m^3] densities, Cpl [J/kg/K] heat capacity of the liquid, kl [W/m/K]
+ conductivity of the liquid, mug [Pa-s] viscosity of the gas, mu_b [Pa-s]
+ viscosity of the liquid at bulk conditions (average of the inlet/outlet
+ temperature), mu_w [Pa-s] viscosity of the liquid at the wall temperature
+ (pass mu_b = mu_w for the form without the wall correction).
+ Returns h [W/m^2/K].
+ Validity: developed for vertical flow and for bubbly and slug flow patterns;
+ gas/liquid superficial velocity ratios from 0.3 to 4.6, liquid mass fluxes
+ from 200 to 1600 kg/m^2/s, fluids air-water and air-aqueous glycerine
+ solutions, tube inner diameter 1 cm and L/D = 86 (as in the original).
+ Original: Elamvaluthi, G. and N. S. Srinivas, "Two-Phase Heat Transfer in Two
+   Component Vertical Flows", International Journal of Multiphase Flow 10(2):
+   237-242, 1 April 1984, doi:10.1016/0301-9322(84)90021-1.
+   (as quoted in ht: Kim, D., V. K. Ryali, A. J. Ghajar and R. L. Dougherty,
+   Heat Transfer Engineering 20(1): 15-40, 1 February 1999)
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_two_phase.py,
+  Elamvaluthi_Srinivas, MIT License, C. Bell - https://github.com/CalebBell/ht}
+  V_gs = m*x/(rhog*pi_val/4*D^2)
+  V_ls = m*(1-x)/(rhol*pi_val/4*D^2)
+  Pr_l = Cpl*mu_b/kl
+  Re_M = D*V_ls*rhol/mu_b + D*V_gs*rhog/mug
+  Nu_TP = 0.5*(mug/mu_b)^0.25*Re_M^0.7*Pr_l^(1/3)*(mu_b/mu_w)^0.14
+  h_Elamvaluthi_Srinivas = Nu_TP*kl/D
+END
+
+FUNCTION h_Groothuis_Hendal(m, x, D, rhol, rhog, Cpl, kl, mug, mu_b, mu_w, water)
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+{H_GROOTHUIS_HENDAL - Two-phase non-boiling heat-transfer coefficient of a
+ liquid and a gas flowing inside a tube of any inclination.
+
+  h_TP*D/k_l = 0.029*Re_M^0.87*Pr_l^(1/3)*(mu_b/mu_w)^0.14   air-water
+              2.6*Re_M^0.39*Pr_l^(1/3)*(mu_b/mu_w)^0.14     gas / air - oil
+  Re_M = D*V_ls*rho_l/mu_l + D*V_gs*rho_g/mu_g
+  V_ls = m*(1-x)/(rho_l*pi_val/4*D^2)   superficial liquid velocity [m/s]
+  V_gs = m*x/(rho_g*pi_val/4*D^2)       superficial gas velocity [m/s]
+  Pr_l  = Cpl*mu_b/kl
+
+ water = 1 for the air-water form, water = 0 for the gas / air - oil form
+ (the default of the original). The other arguments are as in
+ h_Elamvaluthi_Srinivas: m [kg/s], x [-], D [m], rhol / rhog [kg/m^3],
+ Cpl [J/kg/K], kl [W/m/K], mug [Pa-s], mu_b [Pa-s], mu_w [Pa-s] (pass mu_b = mu_w
+ for the form without the wall correction). Returns h [W/m^2/K].
+ Validity: developed for vertical pipes, with superficial velocity ratios of
+ 0.6 to 250; the fluids tested were air-water and gas / air - oil (as in the
+ original).
+ Original: Groothuis, H. and W. P. Hendal, "Heat Transfer in Two-Phase Flow",
+   Chemical Engineering Science 11(3): 212-220, 1 November 1959,
+   doi:10.1016/0009-2509(59)80089-0.
+   (as quoted in ht: Kim, D., V. K. Ryali, A. J. Ghajar and R. L. Dougherty,
+   Heat Transfer Engineering 20(1): 15-40, 1 February 1999)
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_two_phase.py, Groothuis_Hendal,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  V_gs = m*x/(rhog*pi_val/4*D^2)
+  V_ls = m*(1-x)/(rhol*pi_val/4*D^2)
+  Pr_l = Cpl*mu_b/kl
+  Re_M = D*V_ls*rhol/mu_b + D*V_gs*rhog/mug
+  IF water = 1 THEN
+    Nu_TP = 0.029*Re_M^0.87*Pr_l^(1/3)*(mu_b/mu_w)^0.14
+  ELSE
+    Nu_TP = 2.6*Re_M^0.39*Pr_l^(1/3)*(mu_b/mu_w)^0.14
+  ENDIF
+  h_Groothuis_Hendal = Nu_TP*kl/D
+END
+
+FUNCTION h_Hughmark(m, x, alpha, D, L, Cpl, kl, mu_b, mu_w)
+{H_HUGHMARK - Two-phase non-boiling laminar heat-transfer coefficient of a
+ liquid and a gas flowing inside a tube of any inclination.
+
+  h_TP*D/k_l = 1.75*(1-alpha)^(-0.5)*{m_l*Cpl/[(1-alpha)*kl*L]}^(1/3)
+                                       *(mu_b/mu_w)^0.14
+  m_l = m*(1-x)   liquid mass flow rate [kg/s]
+
+ m [kg/s] mass flow rate, x [-] quality, alpha [-] void fraction in the tube,
+ D [m] tube diameter, L [m] length of the tube, Cpl [J/kg/K] heat capacity of
+ the liquid, kl [W/m/K] conductivity of the liquid, mu_b [Pa-s] viscosity of
+ the liquid at bulk conditions (average of the inlet/outlet temperature),
+ mu_w [Pa-s] viscosity of the liquid at the wall temperature (pass mu_b = mu_w
+ for the form without the wall correction). Returns h [W/m^2/K].
+ Validity: developed for horizontal pipes in laminar slug flow; the data were
+ air-water, air-SAE 10 oil, gas-oil, air-diethylene glycol and air-aqueous
+ glycerine (as in the original). The model is based on a laminar entry-length
+ correlation: for a sufficiently long tube it predicts unrealistically low
+ heat-transfer coefficients (as in the original).
+ Original: Hughmark, G. A., "Holdup and Heat Transfer in Horizontal Slug
+   Gas-Liquid Flow", Chemical Engineering Science 20(12): 1007-1010,
+   1 December 1965, doi:10.1016/0009-2509(65)80101-4.
+   (as quoted in ht: Kim, D., V. K. Ryali, A. J. Ghajar and R. L. Dougherty,
+   Heat Transfer Engineering 20(1): 15-40, 1 February 1999)
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_two_phase.py, Hughmark,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  m_l = m*(1-x)
+  R_L = 1 - alpha
+  Nu_TP = 1.75*R_L^(-0.5)*(m_l*Cpl/R_L/kl/L)^(1/3)*(mu_b/mu_w)^0.14
+  h_Hughmark = Nu_TP*kl/D
+END
+
+FUNCTION h_Knott(m, x, D, rhol, rhog, hl)
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+{H_KNOTT - Two-phase non-boiling heat-transfer coefficient of a liquid and a
+ gas flowing inside a tube of any inclination.
+
+  h_TP/h_l = (1 + V_gs/V_ls)^(1/3)
+  V_gs = m*x/(rho_g*pi_val/4*D^2)       superficial gas velocity [m/s]
+  V_ls = m*(1-x)/(rho_l*pi_val/4*D^2)   superficial liquid velocity [m/s]
+
+ m [kg/s] mass flow rate, x [-] quality, D [m] tube diameter, rhol / rhog
+ [kg/m^3] densities, hl [W/m^2/K] liquid-phase heat-transfer coefficient.
+ Returns h [W/m^2/K].
+ hl is an input of this function. In the original it is optional and is then
+ computed with the Sieder-Tate laminar thermal entry correlation
+   Nu_l = 1.86*(Di/L*Re*Pr)^(1/3)*(mu_b/mu_w)^0.14,  hl = Nu_l*kl/D,
+ with Re = D*(V_ls + V_gs)*rho_l/mu_b and Pr = Cpl*mu_b/kl, i.e. with a
+ velocity equal to that determined with the combined volumetric flow of both
+ the liquid and the gas and with all other parameters those of the liquid (as
+ in the original). That correlation belongs to another family, so the caller
+ passes hl; the demonstration program below applies it, which reproduces the
+ value published for the correlation.
+ Validity: as in the original (no range is quoted).
+ Original: Knott, R. F., R. N. Anderson, A. Acrivos and E. E. Petersen, "An
+   Experimental Study of Heat Transfer to Nitrogen-Oil Mixtures", Industrial &
+   Engineering Chemistry 51(11): 1369-1372, 1 November 1959,
+   doi:10.1021/ie50599a032.
+   (as quoted in ht: Kim, D., V. K. Ryali, A. J. Ghajar and R. L. Dougherty,
+   Heat Transfer Engineering 20(1): 15-40, 1 February 1999)
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_two_phase.py, Knott,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  V_gs = m*x/(rhog*pi_val/4*D^2)
+  V_ls = m*(1-x)/(rhol*pi_val/4*D^2)
+  h_Knott = hl*(1 + V_gs/V_ls)^(1/3)
+END
+
+FUNCTION h_Kudirka_Grosh_McFadden(m, x, D, rhol, rhog, Cpl, kl, mug, mu_b, mu_w)
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+{H_KUDIRKA_GROSH_MCFADDEN - Two-phase non-boiling heat-transfer coefficient of
+ a liquid and a gas flowing inside a tube of any inclination.
+
+  Nu = h_TP*D/k_l = 125*(V_gs/V_ls)^0.125*(mu_g/mu_l)^0.6*Re_ls^0.25*Pr_l^(1/3)
+                            *(mu_b/mu_w)^0.14
+  Re_ls = D*V_ls*rho_l/mu_l
+  V_ls  = m*(1-x)/(rho_l*pi_val/4*D^2)   superficial liquid velocity [m/s]
+  V_gs  = m*x/(rho_g*pi_val/4*D^2)       superficial gas velocity [m/s]
+  Pr_l  = Cpl*mu_b/kl
+
+ The arguments are as in h_Elamvaluthi_Srinivas: m [kg/s], x [-], D [m],
+ rhol / rhog [kg/m^3], Cpl [J/kg/K], kl [W/m/K], mug [Pa-s], mu_b [Pa-s],
+ mu_w [Pa-s] (pass mu_b = mu_w for the form without the wall correction).
+ Returns h [W/m^2/K].
+ Validity: developed with air-water and air-ethylene glycol systems, a L/D of
+ 17.6 and low gas-liquid ratios; the flow regimes studied were bubble, slug
+ and froth flow (as in the original).
+ Original: Kudirka, A. A., R. J. Grosh and P. W. McFadden, "Heat Transfer in
+   Two-Phase Flow of Gas-Liquid Mixtures", Industrial & Engineering Chemistry
+   Fundamentals 4(3): 339-344, 1 August 1965, doi:10.1021/i160015a018.
+   (as quoted in ht: Kim, D., V. K. Ryali, A. J. Ghajar and R. L. Dougherty,
+   Heat Transfer Engineering 20(1): 15-40, 1 February 1999)
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_two_phase.py,
+  Kudirka_Grosh_McFadden, MIT License, C. Bell - https://github.com/CalebBell/ht}
+  V_gs = m*x/(rhog*pi_val/4*D^2)
+  V_ls = m*(1-x)/(rhol*pi_val/4*D^2)
+  Pr_l = Cpl*mu_b/kl
+  Re_ls = D*V_ls*rhol/mu_b
+  Nu_TP = 125*(V_gs/V_ls)^0.125*(mug/mu_b)^0.6*Re_ls^0.25*Pr_l^(1/3)*(mu_b/mu_w)^0.14
+  h_Kudirka_Grosh_McFadden = Nu_TP*kl/D
+END
+
+FUNCTION h_Martin_Sims(m, x, D, rhol, rhog, hl)
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+{H_MARTIN_SIMS - Two-phase non-boiling heat-transfer coefficient of a liquid
+ and a gas flowing inside a tube of any inclination.
+
+  h_TP/h_l = 1 + 0.64*(V_gs/V_ls)^0.5
+  V_gs = m*x/(rho_g*pi_val/4*D^2)       superficial gas velocity [m/s]
+  V_ls = m*(1-x)/(rho_l*pi_val/4*D^2)   superficial liquid velocity [m/s]
+
+ m [kg/s] mass flow rate, x [-] quality, D [m] tube diameter, rhol / rhog
+ [kg/m^3] densities, hl [W/m^2/K] liquid-phase heat-transfer coefficient.
+ Returns h [W/m^2/K].
+ hl is an input of this function. In the original it is optional and is then
+ computed exactly as in h_Knott, with the Sieder-Tate laminar thermal entry
+ correlation
+   Nu_l = 1.86*(Di/L*Re*Pr)^(1/3)*(mu_b/mu_w)^0.14,  hl = Nu_l*kl/D,
+ Re = D*(V_ls + V_gs)*rho_l/mu_b and Pr = Cpl*mu_b/kl (as in the original, which
+ gives no specific procedure of its own; the review quoted below suggests the
+ procedure of h_Knott). That correlation belongs to another family, so the
+ caller passes hl; the demonstration program below applies it, which reproduces
+ the value published for the correlation.
+ Validity: as in the original (no range is quoted).
+ Original: Martin, B. W. and G. E. Sims, "Forced Convection Heat Transfer to
+   Water with Air Injection in a Rectangular Duct", International Journal of
+   Heat and Mass Transfer 14(8): 1115-1134, 1 August 1971,
+   doi:10.1016/0017-9310(71)90208-0.
+   (as quoted in ht: Kim, D., V. K. Ryali, A. J. Ghajar and R. L. Dougherty,
+   Heat Transfer Engineering 20(1): 15-40, 1 February 1999)
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_two_phase.py, Martin_Sims,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  V_gs = m*x/(rhog*pi_val/4*D^2)
+  V_ls = m*(1-x)/(rhol*pi_val/4*D^2)
+  h_Martin_Sims = hl*(1 + 0.64*(V_gs/V_ls)^0.5)
+END
+
+FUNCTION h_Ravipudi_Godbold(m, x, D, rhol, rhog, Cpl, kl, mug, mu_b, mu_w)
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+{H_RAVIPUDI_GOLDBOLD - Two-phase non-boiling heat-transfer coefficient of a
+ liquid and a gas flowing inside a tube of any inclination.
+
+  Nu = h_TP*D/k_l = 0.56*(V_gs/V_ls)^0.3*(mu_g/mu_l)^0.2*Re_ls^0.6*Pr_l^(1/3)
+                           *(mu_b/mu_w)^0.14
+  Re_ls = D*V_ls*rho_l/mu_l
+  V_ls  = m*(1-x)/(rho_l*pi_val/4*D^2)   superficial liquid velocity [m/s]
+  V_gs  = m*x/(rho_g*pi_val/4*D^2)       superficial gas velocity [m/s]
+  Pr_l  = Cpl*mu_b/kl
+
+ The arguments are as in h_Elamvaluthi_Srinivas: m [kg/s], x [-], D [m],
+ rhol / rhog [kg/m^3], Cpl [J/kg/K], kl [W/m/K], mug [Pa-s], mu_b [Pa-s],
+ mu_w [Pa-s] (pass mu_b = mu_w for the form without the wall correction).
+ Returns h [W/m^2/K].
+ Validity: developed with a vertical pipe, superficial gas/liquid velocity
+ ratios of 1 to 90, in the froth regime, and with mixtures of air and water,
+ toluene, benzene and methanol (as in the original).
+ Original: Ravipudi, S. and T. Godbold, "The Effect of Mass Transfer on Heat
+   Transfer Rates for Two-Phase Flow in a Vertical Pipe", Proceedings of the
+   6th International Heat Transfer Conference, Toronto, Vol. 1, pp. 505-510,
+   1978.
+   (as quoted in ht: Kim, D., V. K. Ryali, A. J. Ghajar and R. L. Dougherty,
+   Heat Transfer Engineering 20(1): 15-40, 1 February 1999)
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_two_phase.py, Ravipudi_Godbold,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  V_gs = m*x/(rhog*pi_val/4*D^2)
+  V_ls = m*(1-x)/(rhol*pi_val/4*D^2)
+  Pr_l = Cpl*mu_b/kl
+  Re_ls = D*V_ls*rhol/mu_b
+  Nu_TP = 0.56*(V_gs/V_ls)^0.3*(mug/mu_b)^0.2*Re_ls^0.6*Pr_l^(1/3)*(mu_b/mu_w)^0.14
+  h_Ravipudi_Godbold = Nu_TP*kl/D
+END
+
+FUNCTION h_Aggour(m, x, alpha, D, rhol, Cpl, kl, mu_b, mu_w, L, turbulent)
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+{H_AGGOUR - Two-phase non-boiling heat-transfer coefficient of a liquid and a
+ gas flowing inside a tube of any inclination; a laminar and a turbulent form,
+ selected on the liquid Reynolds number.
+
+  laminar, for Re_l <= 2000:
+    h_TP = 1.615*(kl/D)*(Re_l*Pr_l*D/L)^(1/3)*(mu_b/mu_w)^0.14*(1-alpha)^(-1/3)
+  turbulent, for Re_l > 2000:
+    h_TP = 0.0155*(kl/D)*Re_l^0.83*Pr_l^0.5*(1-alpha)^(-0.83)
+  Re_l = rho_l*V_l*D/mu_l,   V_l = V_ls/(1-alpha)
+  V_ls = m*(1-x)/(rho_l*pi_val/4*D^2)   superficial liquid velocity [m/s]
+  Pr_l = Cpl*mu_b/kl
+
+ m [kg/s] mass flow rate, x [-] quality, alpha [-] void fraction in the tube,
+ D [m] tube diameter, rhol [kg/m^3] density of the liquid, Cpl [J/kg/K] heat
+ capacity of the liquid, kl [W/m/K] conductivity of the liquid, mu_b [Pa-s]
+ viscosity of the liquid at bulk conditions (average of the inlet/outlet
+ temperature), mu_w [Pa-s] viscosity of the liquid at the wall temperature
+ (pass mu_b = mu_w for the form without the wall correction; the correction is
+ only suggested for the laminar regime and is not used in the turbulent one),
+ L [m] length of the tube (used by the laminar form only).
+ turbulent = 1 forces the turbulent form, turbulent = 0 forces the laminar
+ form, turbulent = -1 selects the form on Re_l > 2000 (the default of the
+ original). Returns h [W/m^2/K].
+ Validity: developed with air-water, helium-water and freon-12-water mixtures
+ and vertical tests; the flow patterns studied were bubbly, slug, annular,
+ bubbly-slug and slug-annular, with superficial velocity ratios from 0.02 to
+ 470 (as in the original).
+ Original: Aggour, Mohamed A., "Hydrodynamics and Heat Transfer in Two-Phase
+   Two-Component Flows", Ph.D. thesis, University of Manitoba, Canada, 1978,
+   http://mspace.lib.umanitoba.ca/xmlui/handle/1993/14171.
+   (as quoted in ht: Kim, D., V. K. Ryali, A. J. Ghajar and R. L. Dougherty,
+   Heat Transfer Engineering 20(1): 15-40, 1 February 1999)
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_two_phase.py, Aggour,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  V_ls = m*(1-x)/(rhol*pi_val/4*D^2)
+  V_l = V_ls/(1 - alpha)
+  Pr_l = Cpl*mu_b/kl
+  Re_l = rhol*V_l*D/mu_b
+  IF turbulent = -1 THEN
+    IF Re_l > 2000 THEN
+      turbulent_flag = 1
+    ELSE
+      turbulent_flag = 0
+    ENDIF
+  ELSE
+    turbulent_flag = turbulent
+  ENDIF
+  IF turbulent_flag = 1 THEN
+    h_TP = 0.0155*(kl/D)*Re_l^0.83*Pr_l^0.5*(1 - alpha)^(-0.83)
+  ELSE
+    h_TP = 1.615*(kl/D)*(Re_l*Pr_l*D/L)^(1/3)*(mu_b/mu_w)^0.14*(1 - alpha)^(-1/3)
+  ENDIF
+  h_Aggour = h_TP
+END
+
+"!Demonstration program: every correlation is called twice"
+"It is ignored by the future $INCLUDE library:two_phase_nonboiling_in_tube (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each correlation (published values)."
+"Case B: one second, uniform input set (condenser-tube vapour and liquid of a hydrocarbon,"
+"  m = 0.2 kg/s, x = 0.35, D = 20 mm, L = 2 m)."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case A - input set"
+m_A = 1                "mass flow rate [kg/s]"
+x_A = 0.9              "quality [-]"
+D_A = 0.3              "tube diameter [m]"
+L_A = 0.5              "tube length [m] (the length of the h_Hughmark and h_Aggour calls)"
+alpha_A = 0.9          "void fraction [-]"
+rhol_A = 1000          "density of the liquid [kg/m^3]"
+rhog_A = 2.5           "density of the gas [kg/m^3]"
+Cpl_A = 2300           "heat capacity of the liquid [J/kg/K]"
+kl_A = 0.6             "conductivity of the liquid [W/m/K]"
+mul_A = 1E-3           "viscosity of the liquid [Pa-s]"
+mug_A = 1E-5           "viscosity of the gas [Pa-s]"
+mu_b_A = 1E-3          "viscosity of the liquid at bulk conditions [Pa-s]"
+mu_w_A = 1.2E-3        "viscosity of the liquid at the wall temperature [Pa-s]"
+L_Knott_A = 4          "tube length for the h_Knott call (length of its ht doctest) [m]"
+L_Martin_Sims_A = 24   "tube length for the h_Martin_Sims call (length of its ht doctest) [m]"
+
+"Case A - superficial velocities and liquid-only coefficient, as the original computes them internally"
+V_ls_A = m_A*(1 - x_A)/(rhol_A*pi/4*D_A^2)   "superficial liquid velocity [m/s]"
+V_gs_A = m_A*x_A/(rhog_A*pi/4*D_A^2)          "superficial gas velocity [m/s]"
+Re_l_A = D_A*(V_ls_A + V_gs_A)*rhol_A/mu_b_A  "liquid Reynolds number on the combined velocity [-]"
+Pr_l_A = Cpl_A*mu_b_A/kl_A                    "liquid Prandtl number [-]"
+Nu_ST_Knott_A = 1.86*(D_A/L_Knott_A*Re_l_A*Pr_l_A)^(1/3)*(mu_b_A/mu_w_A)^0.14  "Sieder-Tate laminar thermal entry Nusselt number [-]"
+hl_Knott_A = Nu_ST_Knott_A*kl_A/D_A          "liquid-only heat-transfer coefficient [W/m^2/K]"
+Nu_ST_Martin_Sims_A = 1.86*(D_A/L_Martin_Sims_A*Re_l_A*Pr_l_A)^(1/3)*(mu_b_A/mu_w_A)^0.14
+hl_Martin_Sims_A = Nu_ST_Martin_Sims_A*kl_A/D_A  "liquid-only heat-transfer coefficient [W/m^2/K]"
+
+"h_Davis_David"
+h_Davis_David_A = h_Davis_David(m_A, x_A, D_A, rhol_A, rhog_A, Cpl_A, kl_A, mul_A)
+"h_Elamvaluthi_Srinivas"
+h_Elamvaluthi_Srinivas_A = h_Elamvaluthi_Srinivas(m_A, x_A, D_A, rhol_A, rhog_A, Cpl_A, kl_A, mug_A, mu_b_A, mu_w_A)
+"h_Groothuis_Hendal - gas / air - oil form (0, the default of the original) and air-water form (1)"
+h_Groothuis_Hendal_A = h_Groothuis_Hendal(m_A, x_A, D_A, rhol_A, rhog_A, Cpl_A, kl_A, mug_A, mu_b_A, mu_w_A, 0)
+h_Groothuis_Hendal_water_A = h_Groothuis_Hendal(m_A, x_A, D_A, rhol_A, rhog_A, Cpl_A, kl_A, mug_A, mu_b_A, mu_w_A, 1)
+"h_Hughmark"
+h_Hughmark_A = h_Hughmark(m_A, x_A, alpha_A, D_A, L_A, Cpl_A, kl_A, mu_b_A, mu_w_A)
+"h_Knott - hl from the Sieder-Tate laminar thermal entry correlation of its comment block"
+h_Knott_A = h_Knott(m_A, x_A, D_A, rhol_A, rhog_A, hl_Knott_A)
+"h_Kudirka_Grosh_McFadden"
+h_Kudirka_Grosh_McFadden_A = h_Kudirka_Grosh_McFadden(m_A, x_A, D_A, rhol_A, rhog_A, Cpl_A, kl_A, mug_A, mu_b_A, mu_w_A)
+"h_Martin_Sims - with a prescribed liquid-only coefficient, then with the one the original computes"
+h_Martin_Sims_hl_A = h_Martin_Sims(m_A, x_A, D_A, rhol_A, rhog_A, 141.2)
+h_Martin_Sims_A = h_Martin_Sims(m_A, x_A, D_A, rhol_A, rhog_A, hl_Martin_Sims_A)
+"h_Ravipudi_Godbold"
+h_Ravipudi_Godbold_A = h_Ravipudi_Godbold(m_A, x_A, D_A, rhol_A, rhog_A, Cpl_A, kl_A, mug_A, mu_b_A, mu_w_A)
+"h_Aggour - Re_l = 4244 > 2000 selects the turbulent form; the laminar form is forced in the next call"
+h_Aggour_A = h_Aggour(m_A, x_A, alpha_A, D_A, rhol_A, Cpl_A, kl_A, mu_b_A, mu_w_A, L_A, -1)
+h_Aggour_laminar_A = h_Aggour(m_A, x_A, alpha_A, D_A, rhol_A, Cpl_A, kl_A, mu_b_A, mu_w_A, L_A, 0)
+
+"Case B - second, uniform input set"
+m_B = 0.2              "mass flow rate [kg/s]"
+x_B = 0.35             "quality [-]"
+D_B = 0.02             "tube diameter [m]"
+L_B = 2                "tube length [m]"
+alpha_B = 0.6          "void fraction [-]"
+rhol_B = 800           "density of the liquid [kg/m^3]"
+rhog_B = 20            "density of the gas [kg/m^3]"
+Cpl_B = 1500           "heat capacity of the liquid [J/kg/K]"
+kl_B = 0.12            "conductivity of the liquid [W/m/K]"
+mul_B = 2.8E-4         "viscosity of the liquid [Pa-s]"
+mug_B = 1.2E-5         "viscosity of the gas [Pa-s]"
+mu_b_B = 2.5E-4        "viscosity of the liquid at bulk conditions [Pa-s]"
+mu_w_B = 2.2E-4        "viscosity of the liquid at the wall temperature [Pa-s]"
+
+"Case B - superficial velocities and liquid-only coefficient"
+V_ls_B = m_B*(1 - x_B)/(rhol_B*pi/4*D_B^2)   "superficial liquid velocity [m/s]"
+V_gs_B = m_B*x_B/(rhog_B*pi/4*D_B^2)          "superficial gas velocity [m/s]"
+Re_l_B = D_B*(V_ls_B + V_gs_B)*rhol_B/mu_b_B  "liquid Reynolds number on the combined velocity [-]"
+Pr_l_B = Cpl_B*mu_b_B/kl_B                    "liquid Prandtl number [-]"
+Nu_ST_B = 1.86*(D_B/L_B*Re_l_B*Pr_l_B)^(1/3)*(mu_b_B/mu_w_B)^0.14
+hl_B = Nu_ST_B*kl_B/D_B                       "liquid-only heat-transfer coefficient [W/m^2/K]"
+
+"h_Davis_David"
+h_Davis_David_B = h_Davis_David(m_B, x_B, D_B, rhol_B, rhog_B, Cpl_B, kl_B, mul_B)
+"h_Elamvaluthi_Srinivas"
+h_Elamvaluthi_Srinivas_B = h_Elamvaluthi_Srinivas(m_B, x_B, D_B, rhol_B, rhog_B, Cpl_B, kl_B, mug_B, mu_b_B, mu_w_B)
+"h_Groothuis_Hendal - gas / air - oil form (0) and air-water form (1)"
+h_Groothuis_Hendal_B = h_Groothuis_Hendal(m_B, x_B, D_B, rhol_B, rhog_B, Cpl_B, kl_B, mug_B, mu_b_B, mu_w_B, 0)
+h_Groothuis_Hendal_water_B = h_Groothuis_Hendal(m_B, x_B, D_B, rhol_B, rhog_B, Cpl_B, kl_B, mug_B, mu_b_B, mu_w_B, 1)
+"h_Hughmark"
+h_Hughmark_B = h_Hughmark(m_B, x_B, alpha_B, D_B, L_B, Cpl_B, kl_B, mu_b_B, mu_w_B)
+"h_Knott"
+h_Knott_B = h_Knott(m_B, x_B, D_B, rhol_B, rhog_B, hl_B)
+"h_Kudirka_Grosh_McFadden"
+h_Kudirka_Grosh_McFadden_B = h_Kudirka_Grosh_McFadden(m_B, x_B, D_B, rhol_B, rhog_B, Cpl_B, kl_B, mug_B, mu_b_B, mu_w_B)
+"h_Martin_Sims"
+h_Martin_Sims_B = h_Martin_Sims(m_B, x_B, D_B, rhol_B, rhog_B, hl_B)
+"h_Ravipudi_Godbold"
+h_Ravipudi_Godbold_B = h_Ravipudi_Godbold(m_B, x_B, D_B, rhol_B, rhog_B, Cpl_B, kl_B, mug_B, mu_b_B, mu_w_B)
+"h_Aggour - Re_l = 8.3E4 selects the turbulent form; the laminar form is forced in the next call"
+h_Aggour_B = h_Aggour(m_B, x_B, alpha_B, D_B, rhol_B, Cpl_B, kl_B, mu_b_B, mu_w_B, L_B, -1)
+h_Aggour_laminar_B = h_Aggour(m_B, x_B, alpha_B, D_B, rhol_B, Cpl_B, kl_B, mu_b_B, mu_w_B, L_B, 0)

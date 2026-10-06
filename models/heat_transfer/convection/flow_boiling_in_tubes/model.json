@@ -1,0 +1,86 @@
+{
+  "id": "CSL-0098",
+  "name": "flow_boiling_in_tubes",
+  "title": "Flow and film boiling inside tubes: heat-transfer coefficients (function library)",
+  "summary": "Ten EES FUNCTIONs returning the two-phase (flow-boiling) heat-transfer coefficient h_tp [W/m^2/K] of a fluid flowing and boiling inside a tube: Lazarek-Black, Li-Wu, Sun-Mishima, Thome, Yun-Heo-Kim, Chen-Edelstein, Chen-Bennett and Liu-Winterton from ht, plus Shah 1982 and Gungor-Winterton 1987 from the ThermoCycle Modelica library (which ht does not have). Each returns h_tp from the mass flow rate, the quality, the tube diameter and the liquid and vapour properties, which are arguments: no property function is called inside the functions.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "flow_boiling_in_tubes.eescode",
+  "fluids": [],
+  "tags": [
+    "boiling",
+    "flow boiling",
+    "film boiling",
+    "two-phase",
+    "in-tube convection",
+    "heat-transfer coefficient",
+    "correlation",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "local constants"
+  ],
+  "stats": {
+    "n_equations": 156,
+    "largest_block": 2
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht (8 functions) + ThermoCycle/Modelica (Shah 1982, Gungor-Winterton 1987)",
+    "source_path": "",
+    "candidate_id": "HT-012",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "G. M. Lazarek and S. H. Black (Lazarek-Black correlation, 1982)",
+      "W. Li and Z. Wu (Li-Wu correlation, 2010)",
+      "L. Sun and K. Mishima (Sun-Mishima correlation, 2009)",
+      "J. R. Thome, V. Dupont and A. M. Jacobi (Thome flow-boiling model, 2004)",
+      "R. Yun, J. H. Heo and Y. Kim (Yun-Heo-Kim correlation, 2006)",
+      "J. C. Chen (Chen correlation, 1966) and S. Edelstein, A. J. Perez and J. C. Chen (analytic form, 1984)",
+      "D. L. Bennett and J. C. Chen (Bennett-Chen correlation, 1980)",
+      "Z. Liu and R. H. S. Winterton (Liu-Winterton correlation, 1991)",
+      "M. M. Shah (chart correlation, ASHRAE Transactions 88, 1982)",
+      "K. E. Gungor and R. H. S. Winterton (simplified correlation, Chem. Eng. Res. Des. 65, 1987)",
+      "Christoph C. Richter (smooth transition function of order 2, PhD thesis, 2008)",
+      "Jorrit Wronski (ThermoCycle correlation library, DTU)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/boiling_flow.py, MIT license, Copyright (C) 2016 Caleb Bell; Shah 1982 and Gungor-Winterton 1987 from ThermoCycle (Modelica, MIT, https://github.com/JeSoftware/Thermocycle-library), files TwoPhaseCorrelations/Shah1982.mo and GungorWinterton1987.mo, with Functions/transition_factor.mo and SinglePhaseCorrelations/DittusBoelter1930.mo; the coolProp R134a saturation properties of demonstration case B come from CoolProp 8.0.0. The scientific basis of each correlation is the original paper cited in its function comment block, as reviewed by Fang, Zhou & Li (Int. J. Refrigeration 36, 2013) and Bertsch, Groll & Garimella (Nanoscale Microscale Thermophys. Eng. 12, 2008). Translations published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/boiling_flow.py and the regression values of ht/tests/test_boiling_flow.py (case A), values computed with the same ht functions on the R134a input set (case B), and an independent Python transcription of the ThermoCycle Modelica equations of Shah 1982 and Gungor-Winterton 1987 (cases A, B, C); 37 output values in total",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 4.2e-12,
+    "notes": "compare_solution.py: 37 common variables, 0 differ (rtol=0.001); largest relative deviation 4.2e-12 (h_Lazarek_Black_Te_B), i.e. round-off only. The 119 'only in CoolSolve' variables are the input sets of the three demonstration cases, the local constant pi_val of the function bodies and the intermediate demonstration variables; the reference table holds only the 37 outputs."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0087",
+    "CSL-0088",
+    "CSL-0089",
+    "CSL-0096",
+    "CSL-0097",
+    "CSL-0090"
+  ],
+  "related_external": [
+    "sources/thermocycle THC-004 (flow and nucleate boiling HTC: Shah 1982 and Gungor-Winterton 1987 are translated here; its Cooper 1984 is CSL-0088 h_Cooper) - inventory row set to merged with CSL-0098",
+    "sources/labothappy LTP-034 (in-tube HTC correlations, quoting Thome and Gungor-Winterton flow boiling)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-FUNC card C-107, family HT-012 of the ht triage; covers inventory row THC-004, card C-92)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

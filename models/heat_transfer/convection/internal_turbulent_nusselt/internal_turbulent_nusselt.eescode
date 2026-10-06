@@ -1,0 +1,592 @@
+{=============================================================================
+  Internal turbulent convection: Nusselt-number correlations for pipe flow
+  CoolSolve Library model CSL-0087 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Twenty-three fully developed and turbulent-entry Nusselt-number correlations
+  for single-phase flow inside a circular pipe, from Dittus-Boelter (1930) to
+  Bhatti-Shah (1987), including the Colburn, von Karman, Prandtl, Friend-
+  Metzner, Petukhov-Kirillov-Popov, Webb, Sandall, Gnielinski (three forms),
+  Churchill-Zajic, ESDU, Martinelli, Nunner, Dipprey-Sabersky, Gowen-Smith,
+  Kawase-Ulbrecht and Kawase-De correlations.
+
+  All of them return the Nusselt number of the pipe; the wall heat-transfer
+  coefficient follows from h = Nu*k/Di, and is left to the caller. All inputs
+  are dimensionless: Re (Re_Di), Pr (bulk), the Darcy friction factor fd, the
+  relative roughness eD = epsilon/Di, viscosities mu and mu_w [Pa-s], the
+  inside diameter Di [m] and the distance x [m] from the pipe inlet.
+
+  The friction factors are inputs, not results: ht ships no friction-factor
+  correlation (they belong to the companion library fluids).
+
+  The demonstration program at the end calls every function, once with the
+  inputs of the ht doctest of the corresponding correlation ("A" cases) and
+  once with a second, uniform input set ("B" cases). The ht values of both
+  sets are tabulated in the README (verification table).
+
+  Two correlations of the family are only dispatchers in ht
+  (Nu_conv_internal, Nu_conv_internal_methods: they select a method by name)
+  and are not translated; an EES caller selects the function directly.
+
+  Inputs : Re [-], Pr [-], fd [-], eD [-], mu / mu_w [Pa-s], Di [m], x [m],
+           heating / revised flags [-]
+  Outputs: Nu [-] (one FUNCTION per correlation)
+  Units  : SI - dimensionless numbers, viscosities in Pa-s, lengths in m
+  Source : ht (Caleb Bell), ht/conv_internal.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; correlations by the authors
+           cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION Nu_Dittus_Boelter(Re, Pr, heating, revised)
+{NU_DITTUS_BOELTER - Nusselt number, turbulent flow in a pipe, heating or
+cooling fluid. heating = 1 (wall heating) or 0 (wall cooling); revised = 1 for
+the revised coefficient 0.023, 0 for the original coefficients 0.0243 (heating)
+and 0.0265 (cooling).
+
+  Nu = m*Re^0.8*Pr^n     m = 0.023 revised, 0.0243 / 0.0265 original
+                        n = 0.4 heating, 0.3 cooling
+
+Validity: 0.6 <= Pr <= 160, Re_Di >= 10000, L/Di >= 10 (as in ht).
+Original: Dittus, F. W. and L. M. K. Boelter, "Heat Transfer in Automobile
+  Radiators of the Tubular Type", University of California Publications in
+  Engineering, Vol. 2, No. 13, pp. 443-461, 17 October 1930; reprint Int.
+  Commun. Heat Mass Transfer 12(1): 3-22 (1985); as given in Rohsenow, W.,
+  J. Hartnett and Y. Cho, Handbook of Heat Transfer, 3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py,
+  turbulent_Dittus_Boelter, MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF heating = 1 THEN
+    n = 0.4
+  ELSE
+    n = 0.3
+  ENDIF
+  IF revised = 1 THEN
+    m = 0.023
+  ELSE
+    IF heating = 1 THEN
+      m = 0.0243
+    ELSE
+      m = 0.0265
+    ENDIF
+  ENDIF
+  Nu_Dittus_Boelter = m*Re^0.8*Pr^n
+END
+
+FUNCTION Nu_Sieder_Tate(Re, Pr, mu, mu_w)
+{NU_SIEDER_TATE - Nusselt number, turbulent flow in a pipe, with the viscosity
+correction for the wall temperature.
+
+  Nu = 0.027*Re^0.8*Pr^(1/3)*(mu/mu_w)^0.14
+
+mu [Pa-s] is the bulk viscosity, mu_w [Pa-s] the viscosity at the wall
+temperature. Passing mu = mu_w gives the form without the correction; the
+0.023 coefficient sometimes listed with this equation is not the source of this
+one (as in the original).
+Validity: as in ht (no limits quoted).
+Original: Sieder, E. N. and G. E. Tate, "Heat Transfer and Pressure Drop of
+  Liquids in Tubes", Industrial & Engineering Chemistry 28(12): 1429-1435,
+  1 December 1936; as given in Rohsenow, W., J. Hartnett and Y. Cho, Handbook
+  of Heat Transfer, 3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Sieder_Tate,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Sieder_Tate = 0.027*Re^0.8*Pr^(1/3)*(mu/mu_w)^0.14
+END
+
+FUNCTION Nu_Hausen_turbulent_entry(Re, Pr, Di, x)
+{NU_HAUSEN_TURBULENT_ENTRY - Nusselt number in the thermal entry region of a
+turbulent flow in a pipe, at the distance x [m] from the inlet of a pipe of
+inside diameter Di [m].
+
+  Nu = 0.037*(Re^0.75 - 180)*Pr^0.42*[1+(x/Di)^(-2/3)]
+
+Validity: 0.7 < Pr <= 3 and 1E4 <= Re <= 5E6 (as in ht).
+Original: H. Hausen, "Neue Gleichungen fuer die Waermeuebertragung bei freier
+  oder erzwungener Stroemung", Allgemeine Waermetechnik (9): 75-79, 1959; as
+  given in Rohsenow, W., J. Hartnett and Y. Cho, Handbook of Heat Transfer, 3E,
+  McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_entry_Hausen,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Hausen_turbulent_entry = 0.037*(Re^0.75 - 180)*Pr^0.42*(1 + (x/Di)^(-2/3))
+END
+
+FUNCTION Nu_Colburn(Re, Pr)
+{NU_COLBURN - Nusselt number, turbulent flow in a pipe.
+
+  Nu = 0.023*Re^0.8*Pr^(1/3)
+
+Validity: 0.5 < Pr < 3 and 1E4 < Re < 1E5 (as in ht).
+Original: Colburn, A. P., "A Method of Correlating Forced Convection
+  Heat-Transfer Data and a Comparison with Fluid Friction", Int. J. Heat Mass
+  Transfer 7(12): 1359-1384, December 1964; as given in Rohsenow, W.,
+  J. Hartnett and Y. Cho, Handbook of Heat Transfer, 3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Colburn,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Colburn = 0.023*Re^0.8*Pr^(1/3)
+END
+
+FUNCTION Nu_Drexel_McAdams(Re, Pr)
+{NU_DREXEL_MCADAMS - Nusselt number, turbulent flow in a pipe, low Prandtl
+number form.
+
+  Nu = 0.021*Re^0.8*Pr^0.4
+
+Validity: Pr <= 0.7 and 1E4 <= Re <= 5E6 (as in ht).
+Original: Drexel, R. E. and W. H. McAdams, "Heat-Transfer Coefficients for Air
+  Flowing in Round Tubes, in Rectangular Ducts, and around Finned Cylinders",
+  1 February 1945, NTRS report (ntrs.nasa.gov 19930090924); as given in
+  Rohsenow, W., J. Hartnett and Y. Cho, Handbook of Heat Transfer, 3E,
+  McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Drexel_McAdams,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Drexel_McAdams = 0.021*Re^0.8*Pr^0.4
+END
+
+FUNCTION Nu_von_Karman(Re, Pr, fd)
+{NU_VON_KARMAN - Nusselt number, turbulent flow in a pipe, from the Reynolds
+analogy with the Colburn form of the friction term (fd = Darcy friction factor).
+
+  Nu = (fd/8)*Re*Pr / {1 + 5*(fd/8)^0.5*[Pr - 1 + LN((5*Pr + 1)/6)]}
+
+Validity: 0.5 <= Pr <= 3 and 1E4 <= Re <= 1E5 (as in ht).
+Original: T. von Karman, "The Analogy Between Fluid Friction and Heat
+  Transfer", Trans. ASME 61: 705-710, 1939; as given in Rohsenow, W.,
+  J. Hartnett and Y. Cho, Handbook of Heat Transfer, 3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_von_Karman,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_von_Karman = (fd/8)*Re*Pr/(1 + 5*(fd/8)^0.5*(Pr - 1 + LN((5*Pr + 1)/6)))
+END
+
+FUNCTION Nu_Prandtl(Re, Pr, fd)
+{NU_PRANDTL - Nusselt number, turbulent flow in a pipe, Prandtl analogy with
+the friction term (fd = Darcy friction factor).
+
+  Nu = (fd/8)*Re*Pr / {1 + 8.7*(fd/8)^0.5*(Pr - 1)}
+
+Validity: 0.5 <= Pr <= 5 and 1E4 <= Re <= 5E6 (as in ht).
+Original: L. Prandtl, Fuehrer durch die Stroemungslehre, Vieweg, Braunschweig,
+  p. 359, 1944; as given in Rohsenow, W., J. Hartnett and Y. Cho, Handbook of
+  Heat Transfer, 3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Prandtl,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Prandtl = (fd/8)*Re*Pr/(1 + 8.7*(fd/8)^0.5*(Pr - 1))
+END
+
+FUNCTION Nu_Friend_Metzner(Re, Pr, fd)
+{NU_FRIEND_METZNER - Nusselt number, turbulent flow in a pipe, viscous fluid
+form of the Reynolds analogy (fd = Darcy friction factor).
+
+  Nu = (fd/8)*Re*Pr / {1.2 + 11.8*(fd/8)^0.5*(Pr - 1)*Pr^(-1/3)}
+
+Validity: 50 < Pr <= 600 and 5E4 <= Re <= 5E6; the extreme limits of the range
+should be considered (as in ht).
+Original: Friend, W. L. and A. B. Metzner, "Turbulent Heat Transfer inside
+  Tubes and the Analogy among Heat, Mass, and Momentum Transfer", AIChE
+  Journal 4(4): 393-402, 1 December 1958; as given in Rohsenow, W.,
+  J. Hartnett and Y. Cho, Handbook of Heat Transfer, 3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Friend_Metzner,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Friend_Metzner = (fd/8)*Re*Pr/(1.2 + 11.8*(fd/8)^0.5*(Pr - 1)*Pr^(-1/3))
+END
+
+FUNCTION Nu_Petukhov_Kirillov_Popov(Re, Pr, fd)
+{NU_PETUKHOV_KIRILLOV_POPOV - Nusselt number, turbulent flow in a pipe,
+Petukhov-Kirillov equation with the Popov wall correction
+(fd = Darcy friction factor).
+
+  Nu = (fd/8)*Re*Pr / {C + 12.7*(fd/8)^0.5*(Pr^(2/3) - 1)}
+  C  = 1.07 + 900/Re - 0.63/(1 + 10*Pr)
+
+Validity: 0.5 < Pr <= 1E6 and 4000 <= Re <= 5E6 (as in ht).
+Original: B. S. Petukhov and V. V. Kirillov, "The Problem of Heat Exchange in
+  the Turbulent Flow of Liquids in Tubes", Teploenergetika (4): 63-68, 1958;
+  B. S. Petukhov and V. N. Popov, "Theoretical Calculation of Heat Exchange in
+  Turbulent Flow in Tubes of an Incompressible Fluid with Variable Physical
+  Properties", High Temp. (111): 69-83, 1963; as given in Rohsenow, W.,
+  J. Hartnett and Y. Cho, Handbook of Heat Transfer, 3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py,
+  turbulent_Petukhov_Kirillov_Popov, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  C = 1.07 + 900/Re - 0.63/(1 + 10*Pr)
+  Nu_Petukhov_Kirillov_Popov = (fd/8)*Re*Pr/(C + 12.7*(fd/8)^0.5*(Pr^(2/3) - 1))
+END
+
+FUNCTION Nu_Webb(Re, Pr, fd)
+{NU_WEBB - Nusselt number, turbulent flow in a pipe, critical evaluation of the
+Reynolds analogy equations for smooth tubes (fd = Darcy friction factor).
+
+  Nu = (fd/8)*Re*Pr / {1.07 + 9*(fd/8)^0.5*(Pr - 1)*Pr^0.25}
+
+Validity: 0.5 < Pr <= 100 and 1E4 <= Re <= 5E6 (as in ht).
+Original: Webb, R. L., "A Critical Evaluation of Analytical Solutions and
+  Reynolds Analogy Equations for Turbulent Heat and Mass Transfer in Smooth
+  Tubes", Waerme - und Stoffuebertragung 4(4): 197-204, 1 December 1971; as
+  given in Rohsenow, W., J. Hartnett and Y. Cho, Handbook of Heat Transfer, 3E,
+  McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Webb,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Webb = (fd/8)*Re*Pr/(1.07 + 9*(fd/8)^0.5*(Pr - 1)*Pr^0.25)
+END
+
+FUNCTION Nu_Sandall(Re, Pr, fd)
+{NU_SANDALL - Nusselt number, turbulent flow in a pipe, with gases or liquids in
+tube flow (fd = Darcy friction factor).
+
+  Nu = (fd/8)^0.5*Re*Pr /
+       {12.48*Pr^(2/3) - 7.853*Pr^(1/3) + 3.613*LN(Pr) + 5.8 + C}
+  C  = 2.78*LN((fd/8)^0.5*Re/45)
+
+The square root of fd/8 in the numerator is the form implemented in ht (it
+reproduces its doctest values); the equation printed in the ht docstring shows
+(fd/8) there instead - as in the original.
+Validity: 0.5 < Pr <= 2000 and 1E4 <= Re <= 5E6 (as in ht).
+Original: Sandall, O. C., O. T. Hanna and P. R. Mazet, "A New Theoretical
+  Formula for Turbulent Heat and Mass Transfer with Gases or Liquids in Tube
+  Flow", The Canadian Journal of Chemical Engineering 58(4): 443-447,
+  1 August 1980; as given in Rohsenow, W., J. Hartnett and Y. Cho, Handbook of
+  Heat Transfer, 3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Sandall,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  C = 2.78*LN((fd/8)^0.5*Re/45)
+  Nu_Sandall = (fd/8)^0.5*Re*Pr/(12.48*Pr^(2/3) - 7.853*Pr^(1/3) + 3.613*LN(Pr) + 5.8 + C)
+END
+
+FUNCTION Nu_Gnielinski(Re, Pr, fd)
+{NU_GNIELINSKI - Nusselt number, turbulent flow in a pipe or channel
+(fd = Darcy friction factor). ht notes this as the most recent general
+equation and recommends it strongly.
+
+  Nu = (fd/8)*(Re - 1000)*Pr / {1 + 12.7*(fd/8)^0.5*(Pr^(2/3) - 1)}
+
+Validity: 0.5 < Pr <= 2000 and 2300 <= Re <= 5E6 (as in ht).
+Original: Gnielinski, V., "New Equation for Heat and Mass Transfer in Turbulent
+  Pipe and Channel Flow", International Chemical Engineering 16: 359-368, 1976;
+  as given in Rohsenow, W., J. Hartnett and Y. Cho, Handbook of Heat Transfer,
+  3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Gnielinski,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Gnielinski = (fd/8)*(Re - 1000)*Pr/(1 + 12.7*(fd/8)^0.5*(Pr^(2/3) - 1))
+END
+
+FUNCTION Nu_Gnielinski_smooth_1(Re, Pr)
+{NU_GNIELINSKI_SMOOTH_1 - Nusselt number, turbulent flow in a smooth pipe, the
+simplified form of Gnielinski for low Prandtl numbers (no friction factor).
+
+  Nu = 0.0214*(Re^0.8 - 100)*Pr^0.4
+
+Validity: 0.5 < Pr <= 1.5 and 1E4 <= Re <= 5E6 (as in ht).
+Original: Gnielinski, V., "New Equation for Heat and Mass Transfer in Turbulent
+  Pipe and Channel Flow", International Chemical Engineering 16: 359-368, 1976;
+  as given in Rohsenow, W., J. Hartnett and Y. Cho, Handbook of Heat Transfer,
+  3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py,
+  turbulent_Gnielinski_smooth_1, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Nu_Gnielinski_smooth_1 = 0.0214*(Re^0.8 - 100)*Pr^0.4
+END
+
+FUNCTION Nu_Gnielinski_smooth_2(Re, Pr)
+{NU_GNIELINSKI_SMOOTH_2 - Nusselt number, turbulent flow in a smooth pipe, the
+simplified form of Gnielinski for high Prandtl numbers (no friction factor).
+
+  Nu = 0.012*(Re^0.87 - 280)*Pr^0.4
+
+Validity: 1.5 < Pr <= 500 and 3E3 <= Re <= 1E6 (as in ht).
+Original: Gnielinski, V., "New Equation for Heat and Mass Transfer in Turbulent
+  Pipe and Channel Flow", International Chemical Engineering 16: 359-368, 1976;
+  as given in Rohsenow, W., J. Hartnett and Y. Cho, Handbook of Heat Transfer,
+  3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py,
+  turbulent_Gnielinski_smooth_2, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Nu_Gnielinski_smooth_2 = 0.012*(Re^0.87 - 280)*Pr^0.4
+END
+
+FUNCTION Nu_Churchill_Zajic(Re, Pr, fd)
+{NU_CHURCHILL_ZAJIC - Nusselt number, turbulent flow in a pipe, minimal explicit
+empiricism (fd = Darcy friction factor).
+
+  Nu = 1/{ (Pr_T/Pr)/Nu_di + [1 - (Pr_T/Pr)^(2/3)]/Nu_Dinf }
+  Nu_di  = Re*(fd/8) / {1 + 145*(8/fd)^(-5/4)}
+  Nu_Dinf = 0.07343*Re*(Pr/Pr_T)^(1/3)*(fd/8)^0.5
+  Pr_T   = 0.85 + 0.015/Pr
+
+Validity: no restrictions on range (as in ht).
+Original: Churchill, S. W. and S. C. Zajic, "Prediction of Fully Developed
+  Turbulent Convection with Minimal Explicit Empiricism", AIChE Journal 48(5):
+  927-940, 1 May 2002; as developed in Plawsky, J. L., Transport Phenomena
+  Fundamentals, Third Edition, CRC Press, 2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Churchill_Zajic,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Pr_T = 0.85 + 0.015/Pr
+  Nu_di = Re*(fd/8)/(1 + 145*(8/fd)^(-5/4))
+  Nu_Dinf = 0.07343*Re*(Pr/Pr_T)^(1/3)*(fd/8)^0.5
+  Nu_Churchill_Zajic = 1/((Pr_T/Pr)/Nu_di + (1 - (Pr_T/Pr)^(2/3))/Nu_Dinf)
+END
+
+FUNCTION Nu_ESDU(Re, Pr)
+{NU_ESDU - Nusselt number, turbulent flow in a pipe, ESDU expression (no
+friction factor).
+
+  Nu = 0.0225*Re^0.795*Pr^0.495*EXP(-0.0225*LN(Pr)^2)
+
+Validity: 4000 < Re < 1E6, 0.3 < Pr < 3000 and L/Di > 60 (as in ht).
+Original: the ESDU correlation, as shown in Hewitt, G. L., T. R. Bott and
+  J. R. V. R. Bott, Process Heat Transfer, 1E, CRC Press, Boca Raton, 1994.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_ESDU,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_ESDU = 0.0225*Re^0.795*Pr^0.495*EXP(-0.0225*LN(Pr)^2)
+END
+
+FUNCTION Nu_Martinelli(Re, Pr, fd)
+{NU_MARTINELLI - Nusselt number, turbulent flow in a pipe, liquid metals
+(fd = Darcy friction factor).
+
+  Nu = Re*Pr*(fd/8)^0.5 /
+       {5*[Pr + LN(1 + 5*Pr) + 0.5*LN(Re*(fd/8)^0.5/60)]}
+
+Validity: no range is given in the original; liquid metals are probably its only
+applicability (as in ht).
+Original: Martinelli, R. C., "Heat transfer to molten metals", Trans. ASME 69:
+  947-959, 1947; as given in Rohsenow, W., J. Hartnett and Y. Cho, Handbook of
+  Heat Transfer, 3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Martinelli,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Martinelli = Re*Pr*(fd/8)^0.5/(5*(Pr + LN(1 + 5*Pr) + 0.5*LN(Re*(fd/8)^0.5/60)))
+END
+
+FUNCTION Nu_Nunner(Re, Pr, fd, fd_smooth)
+{NU_NUNNER - Nusselt number, turbulent flow in a rough pipe, fd = Darcy
+friction factor of the rough pipe, fd_smooth = Darcy friction factor of a smooth
+pipe.
+
+  Nu = Re*Pr*(fd/8) /
+       {1 + 1.5*Re^(-1/8)*Pr^(-1/6)*[Pr*(fd/fd_smooth) - 1]}
+
+Validity: Pr ~ 0.7; the original gives bad results for Pr > 1 (as in ht).
+Original: W. Nunner, "Waermeuebergang und Druckabfall in rauhen Rohren",
+  VDI-Forschungsheft 445, Reihe B (22): 5-39, 1956; as given in Rohsenow, W.,
+  J. Hartnett and Y. Cho, Handbook of Heat Transfer, 3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Nunner,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Nunner = Re*Pr*fd/8/(1 + 1.5*Re^(-1/8)*Pr^(-1/6)*(Pr*fd/fd_smooth - 1))
+END
+
+FUNCTION Nu_Dipprey_Sabersky(Re, Pr, fd, eD)
+{NU_DIPPREY_SABERSKY - Nusselt number, turbulent flow in a smooth or rough
+pipe, fd = Darcy friction factor, eD = relative roughness [-].
+
+  Nu = Re*Pr*(fd/8) /
+       {1 + (fd/8)^0.5*[5.19*Re_e^0.2*Pr^0.44 - 8.48]}
+  Re_e = Re*eD*(fd/8)^0.5
+
+Validity: 1.2 <= Pr <= 5.94, 1.4E4 <= Re <= 5E5 and 0.0024 <= eD <= 0.049
+(as in ht).
+Original: Dipprey, D. F. and R. H. Sabersky, "Heat and Momentum Transfer in
+  Smooth and Rough Tubes at Various Prandtl Numbers", Int. J. Heat Mass
+  Transfer 6(5): 329-353, May 1963; as given in Rohsenow, W., J. Hartnett and
+  Y. Cho, Handbook of Heat Transfer, 3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Dipprey_Sabersky,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Re_e = Re*eD*(fd/8)^0.5
+  Nu_Dipprey_Sabersky = Re*Pr*fd/8/(1 + (fd/8)^0.5*(5.19*Re_e^0.2*Pr^0.44 - 8.48))
+END
+
+FUNCTION Nu_Gowen_Smith(Re, Pr, fd)
+{NU_GOWEN_SMITH - Nusselt number, turbulent flow in a smooth or rough surface
+(fd = Darcy friction factor).
+
+  Nu = Re*Pr*(fd/8)^0.5 /
+       {4.5 + [0.155*(Re*(fd/8)^0.5)^0.54 + (8/fd)^0.5]*Pr^0.5}
+
+Validity: 0.7 <= Pr <= 14.3, 1E4 <= Re <= 5E4 and 0.0021 <= eD <= 0.095
+(as in ht).
+Original: Gowen, R. A. and J. W. Smith, "Turbulent Heat Transfer from Smooth
+  and Rough Surfaces", Int. J. Heat Mass Transfer 11(11): 1657-1674,
+  November 1968; as given in Rohsenow, W., J. Hartnett and Y. Cho, Handbook of
+  Heat Transfer, 3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Gowen_Smith,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Gowen_Smith = Re*Pr*(fd/8)^0.5/(4.5 + (0.155*(Re*(fd/8)^0.5)^0.54 + (8/fd)^0.5)*Pr^0.5)
+END
+
+FUNCTION Nu_Kawase_Ulbrecht(Re, Pr, fd)
+{NU_KAWASE_ULBRECHT - Nusselt number, turbulent flow in a pipe, dilute polymer
+solutions (fd = Darcy friction factor).
+
+  Nu = 0.0523*Re*Pr^0.5*(fd/4)^0.5
+
+Validity: no limits are provided (as in ht).
+Original: Kawase, Y. and J. J. Ulbrecht, "Turbulent Heat and Mass Transfer in
+  Dilute Polymer Solutions", Chemical Engineering Science 37(7): 1039-1046,
+  1982; as given in Rohsenow, W., J. Hartnett and Y. Cho, Handbook of Heat
+  Transfer, 3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Kawase_Ulbrecht,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Kawase_Ulbrecht = 0.0523*Re*Pr^0.5*(fd/4)^0.5
+END
+
+FUNCTION Nu_Kawase_De(Re, Pr, fd)
+{NU_KAWASE_DE - Nusselt number, turbulent flow in a pipe, Newtonian and dilute
+polymer solutions in rough pipes (fd = Darcy friction factor).
+
+  Nu = 0.0471*Re*Pr^0.5*(fd/4)^0.5*(1.11 + 0.44*Pr^(-1/3) - 0.7*Pr^(-1/6))
+
+Validity: 5.1 <= Pr <= 390, 5000 <= Re <= 5E5 and 0.0024 <= eD <= 0.165
+(as in ht).
+Original: Kawase, Y. and A. De, "Turbulent Heat and Mass Transfer in Newtonian
+  and Dilute Polymer Solutions Flowing through Rough Pipes", Int. J. Heat Mass
+  Transfer 27(1): 140-142, January 1984; as given in Rohsenow, W.,
+  J. Hartnett and Y. Cho, Handbook of Heat Transfer, 3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Kawase_De,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Kawase_De = 0.0471*Re*Pr^0.5*(fd/4)^0.5*(1.11 + 0.44*Pr^(-1/3) - 0.7*Pr^(-1/6))
+END
+
+FUNCTION Nu_Bhatti_Shah(Re, Pr, fd, eD)
+{NU_BHATTI_SHAH - Nusselt number, turbulent flow in a rough pipe, the most
+widely used rough-pipe turbulent correlation; fd = Darcy friction factor,
+eD = relative roughness [-].
+
+  Nu = Re*Pr*(fd/8) /
+       {1 + (fd/8)^0.5*[4.5*Re_e^0.2*Pr^0.5 - 8.48]}
+  Re_e = Re*eD*(fd/8)^0.5
+
+Validity: 0.5 <= Pr <= 10, 0.002 <= eD <= 0.05 and 10000 <= Re_Di (as in ht).
+Original: M. S. Bhatti and R. K. Shah, "Turbulent and transition flow
+  convective heat transfer in ducts", in S. Kakac, R. K. Shah and W. Aung
+  (eds), Handbook of Single-Phase Convective Heat Transfer, chapter 4,
+  Wiley-Interscience, New York, 1987; as given in Rohsenow, W., J. Hartnett and
+  Y. Cho, Handbook of Heat Transfer, 3E, McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, turbulent_Bhatti_Shah,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Re_e = Re*eD*(fd/8)^0.5
+  Nu_Bhatti_Shah = Re*Pr*fd/8/(1 + (fd/8)^0.5*(4.5*Re_e^0.2*Pr^0.5 - 8.48))
+END
+
+"!Demonstration program: every correlation is called twice"
+"It is ignored by the future $INCLUDE library:internal_turbulent_nusselt (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each correlation (published values)."
+"Case B: one second, uniform input set (Re = 2.5E5, Pr = 5, fd = 0.0215, eD = 0.0025)."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case A - input set"
+Re_A = 1E5
+Pr_A = 1.2
+fd_A = 0.0185
+eD_A = 1E-3
+Di_A = 0.154
+x_A = 0.05
+mu_A = 0.01
+mu_w_A = 0.067
+fd_smooth_A = 0.005
+
+"Nu_Dittus_Boelter - heating (revised) and cooling (revised), then original coefficient"
+Nu_Dittus_Boelter_A = Nu_Dittus_Boelter(Re_A, Pr_A, 1, 1)
+Nu_Dittus_Boelter_cool_A = Nu_Dittus_Boelter(Re_A, Pr_A, 0, 1)
+Nu_Dittus_Boelter_orig_A = Nu_Dittus_Boelter(Re_A, Pr_A, 1, 0)
+"Nu_Sieder_Tate - with the viscosity ratio and with mu = mu_w"
+Nu_Sieder_Tate_A = Nu_Sieder_Tate(Re_A, Pr_A, mu_A, mu_w_A)
+Nu_Sieder_Tate_equalmu_A = Nu_Sieder_Tate(Re_A, Pr_A, mu_A, mu_A)
+"Nu_Hausen_turbulent_entry - 5 cm from the inlet of a 154 mm pipe"
+Nu_Hausen_turbulent_entry_A = Nu_Hausen_turbulent_entry(Re_A, Pr_A, Di_A, x_A)
+"Nu_Colburn"
+Nu_Colburn_A = Nu_Colburn(Re_A, Pr_A)
+"Nu_Drexel_McAdams - low Prandtl number (Pr = 0.6)"
+Nu_Drexel_McAdams_A = Nu_Drexel_McAdams(Re_A, 0.6)
+"Nu_von_Karman"
+Nu_von_Karman_A = Nu_von_Karman(Re_A, Pr_A, fd_A)
+"Nu_Prandtl"
+Nu_Prandtl_A = Nu_Prandtl(Re_A, Pr_A, fd_A)
+"Nu_Friend_Metzner - viscous fluid (Pr = 100)"
+Nu_Friend_Metzner_A = Nu_Friend_Metzner(Re_A, 100, fd_A)
+"Nu_Petukhov_Kirillov_Popov"
+Nu_Petukhov_Kirillov_Popov_A = Nu_Petukhov_Kirillov_Popov(Re_A, Pr_A, fd_A)
+"Nu_Webb"
+Nu_Webb_A = Nu_Webb(Re_A, Pr_A, fd_A)
+"Nu_Sandall"
+Nu_Sandall_A = Nu_Sandall(Re_A, Pr_A, fd_A)
+"Nu_Gnielinski"
+Nu_Gnielinski_A = Nu_Gnielinski(Re_A, Pr_A, fd_A)
+"Nu_Gnielinski_smooth_1 - low Prandtl number"
+Nu_Gnielinski_smooth_1_A = Nu_Gnielinski_smooth_1(Re_A, Pr_A)
+"Nu_Gnielinski_smooth_2 - high Prandtl number (Pr = 7)"
+Nu_Gnielinski_smooth_2_A = Nu_Gnielinski_smooth_2(Re_A, 7)
+"Nu_Churchill_Zajic"
+Nu_Churchill_Zajic_A = Nu_Churchill_Zajic(Re_A, Pr_A, fd_A)
+"Nu_ESDU"
+Nu_ESDU_A = Nu_ESDU(Re_A, Pr_A)
+"Nu_Martinelli - liquid metal (Pr = 100)"
+Nu_Martinelli_A = Nu_Martinelli(Re_A, 100, fd_A)
+"Nu_Nunner - rough pipe, smooth-pipe friction factor given"
+Nu_Nunner_A = Nu_Nunner(Re_A, 0.7, fd_A, fd_smooth_A)
+"Nu_Dipprey_Sabersky - rough pipe, eD = 1E-3"
+Nu_Dipprey_Sabersky_A = Nu_Dipprey_Sabersky(Re_A, Pr_A, fd_A, eD_A)
+"Nu_Gowen_Smith"
+Nu_Gowen_Smith_A = Nu_Gowen_Smith(Re_A, Pr_A, fd_A)
+"Nu_Kawase_Ulbrecht"
+Nu_Kawase_Ulbrecht_A = Nu_Kawase_Ulbrecht(Re_A, Pr_A, fd_A)
+"Nu_Kawase_De"
+Nu_Kawase_De_A = Nu_Kawase_De(Re_A, Pr_A, fd_A)
+"Nu_Bhatti_Shah - rough pipe, eD = 1E-3"
+Nu_Bhatti_Shah_A = Nu_Bhatti_Shah(Re_A, Pr_A, fd_A, eD_A)
+
+"Case B - second, uniform input set"
+Re_B = 2.5E5
+Pr_B = 5
+fd_B = 0.0215
+eD_B = 0.0025
+Di_B = 0.03
+x_B = 0.25
+mu_B = 4E-4
+mu_w_B = 6E-4
+fd_smooth_B = 0.0155
+
+"Nu_Dittus_Boelter - heating (revised) and cooling (revised), then original coefficient"
+Nu_Dittus_Boelter_B = Nu_Dittus_Boelter(Re_B, Pr_B, 1, 1)
+Nu_Dittus_Boelter_cool_B = Nu_Dittus_Boelter(Re_B, Pr_B, 0, 1)
+Nu_Dittus_Boelter_orig_B = Nu_Dittus_Boelter(Re_B, Pr_B, 1, 0)
+"Nu_Sieder_Tate - with the viscosity ratio and with mu = mu_w"
+Nu_Sieder_Tate_B = Nu_Sieder_Tate(Re_B, Pr_B, mu_B, mu_w_B)
+Nu_Sieder_Tate_equalmu_B = Nu_Sieder_Tate(Re_B, Pr_B, mu_B, mu_B)
+"Nu_Hausen_turbulent_entry - 25 cm from the inlet of a 30 mm pipe"
+Nu_Hausen_turbulent_entry_B = Nu_Hausen_turbulent_entry(Re_B, Pr_B, Di_B, x_B)
+"Nu_Colburn"
+Nu_Colburn_B = Nu_Colburn(Re_B, Pr_B)
+"Nu_Drexel_McAdams"
+Nu_Drexel_McAdams_B = Nu_Drexel_McAdams(Re_B, Pr_B)
+"Nu_von_Karman"
+Nu_von_Karman_B = Nu_von_Karman(Re_B, Pr_B, fd_B)
+"Nu_Prandtl"
+Nu_Prandtl_B = Nu_Prandtl(Re_B, Pr_B, fd_B)
+"Nu_Friend_Metzner"
+Nu_Friend_Metzner_B = Nu_Friend_Metzner(Re_B, Pr_B, fd_B)
+"Nu_Petukhov_Kirillov_Popov"
+Nu_Petukhov_Kirillov_Popov_B = Nu_Petukhov_Kirillov_Popov(Re_B, Pr_B, fd_B)
+"Nu_Webb"
+Nu_Webb_B = Nu_Webb(Re_B, Pr_B, fd_B)
+"Nu_Sandall"
+Nu_Sandall_B = Nu_Sandall(Re_B, Pr_B, fd_B)
+"Nu_Gnielinski"
+Nu_Gnielinski_B = Nu_Gnielinski(Re_B, Pr_B, fd_B)
+"Nu_Gnielinski_smooth_1"
+Nu_Gnielinski_smooth_1_B = Nu_Gnielinski_smooth_1(Re_B, Pr_B)
+"Nu_Gnielinski_smooth_2"
+Nu_Gnielinski_smooth_2_B = Nu_Gnielinski_smooth_2(Re_B, Pr_B)
+"Nu_Churchill_Zajic"
+Nu_Churchill_Zajic_B = Nu_Churchill_Zajic(Re_B, Pr_B, fd_B)
+"Nu_ESDU"
+Nu_ESDU_B = Nu_ESDU(Re_B, Pr_B)
+"Nu_Martinelli"
+Nu_Martinelli_B = Nu_Martinelli(Re_B, Pr_B, fd_B)
+"Nu_Nunner - rough pipe, smooth-pipe friction factor given"
+Nu_Nunner_B = Nu_Nunner(Re_B, Pr_B, fd_B, fd_smooth_B)
+"Nu_Dipprey_Sabersky - rough pipe, eD = 2.5E-3"
+Nu_Dipprey_Sabersky_B = Nu_Dipprey_Sabersky(Re_B, Pr_B, fd_B, eD_B)
+"Nu_Gowen_Smith"
+Nu_Gowen_Smith_B = Nu_Gowen_Smith(Re_B, Pr_B, fd_B)
+"Nu_Kawase_Ulbrecht"
+Nu_Kawase_Ulbrecht_B = Nu_Kawase_Ulbrecht(Re_B, Pr_B, fd_B)
+"Nu_Kawase_De"
+Nu_Kawase_De_B = Nu_Kawase_De(Re_B, Pr_B, fd_B)
+"Nu_Bhatti_Shah - rough pipe, eD = 2.5E-3"
+Nu_Bhatti_Shah_B = Nu_Bhatti_Shah(Re_B, Pr_B, fd_B, eD_B)

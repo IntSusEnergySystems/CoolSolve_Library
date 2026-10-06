@@ -314,3 +314,6 @@ statement with the values of the manufacturer and the equations that check them.
   the (P, H) pair by the same decision D11.
 - `CSL-0001` *refrigeration_cycle_simple_compressor*: R134a / R22 / propane
   cycle with a reciprocating-compressor model (clearance volume).
+- `CSL-0078` *brine_to_water_heat_pump_refsim*: scroll-compressor heat pump of
+  the ULiège model bank on R407C, whose scroll model is described in the same
+  five steps and with the same internal-leakage relations.

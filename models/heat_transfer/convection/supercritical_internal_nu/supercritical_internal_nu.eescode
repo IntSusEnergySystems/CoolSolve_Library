@@ -1,0 +1,763 @@
+{=============================================================================
+  Near-supercritical internal convection: Nusselt-number correlations for
+  vertical upward pipe flow
+  CoolSolve Library model CSL-0104 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Eighteen Nusselt-number correlations for turbulent vertical upward flow in a
+  pipe at near-supercritical pressure, from McAdams (1942) to
+  Krasnoshchekov-Protopopov (1959) and Petukhov-Kurganov-Ankudinov (1983):
+  McAdams, Shitsman, Griem, Jackson, Gupta, Swenson, Xu, Mokry, Bringer-Smith,
+  Ornatsky, Gorban, Zhu, Bishop, Yamagata, Kitoh,
+  Krasnoshchekov-Protopopov, Petukhov and Krasnoshchekov.
+
+  Each of them returns the Nusselt number of the pipe; the wall
+  heat-transfer coefficient follows from h = Nu*k/Di and is left to the caller.
+  They take the Reynolds number Re [-], the Prandtl number Pr [-] and the
+  property and temperature values the correction factors of the original
+  correlation need: densities rho_w and rho_b [kg/m^3], viscosities mu_w and
+  mu_b [Pa-s], conductivities k_w and k_b [W/m-K], mean and bulk heat
+  capacities Cp_avg and Cp_b [J/kg-K], the bulk, wall and pseudo-critical
+  temperatures T_b, T_w and T_pc [K], the enthalpy H_b of water [J/kg], the
+  mass flux G [kg/m^2-s], the heat flux to the wall q [W/m^2] and, for
+  Bishop, the tube diameter Di [m] and the axial distance x [m]. The
+  correlations themselves handle the pressure and the position of the wall
+  temperature with respect to the pseudo-critical point; no property function
+  is called inside a function, the calling model passes the values (rule 5 of
+  sources/ht/README.md, section 7).
+
+  Correlations whose original form has optional corrections (the property
+  ratios, and the regime-dependent exponents of Jackson, Yamagata and
+  Krasnoshchekov) take a last integer argument corr: corr = 1 applies the
+  corrections, corr = 0 returns the bare correlation. EES has no optional
+  arguments, and the non-smooth regime switches (the enthalpy branches of Griem
+  and Kitoh, the temperature branches of Jackson, Yamagata and
+  Krasnoshchekov) are nested block IF statements.
+
+  The demonstration program at the end calls every function: case "A" with the
+  input set of the ht doctest of the correlation (the published values) and case
+  "B" with a second, uniform input set, each time with and without the
+  corrections; a third case "C" calls the branches of the non-smooth switches
+  that the cases A and B do not take. The ht values of the three sets are
+  tabulated in the README (verification table).
+
+  Inputs : Re [-], Pr / Pr_w / Pr_pc [-], rho_w / rho_b [kg/m^3],
+           mu_w / mu_b [Pa-s], k_w / k_b [W/m-K], Cp_avg / Cp_b [J/kg-K],
+           T_b / T_w / T_pc [K], H_b [J/kg], G [kg/m^2-s], q [W/m^2],
+           Di / x [m], corr [-]
+  Outputs: Nu [-] (one FUNCTION per correlation)
+  Units  : SI - dimensionless numbers, densities in kg/m^3, viscosities in
+           Pa-s, conductivities in W/m-K, heat capacities in J/kg-K,
+           temperatures in K, enthalpy in J/kg, fluxes in kg/m^2-s and W/m^2
+  Source : ht (Caleb Bell), ht/conv_supercritical.py, version 1.2.0,
+           commit 85e0ee6, MIT - https://github.com/CalebBell/ht ; correlations
+           by the authors cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION Nu_McAdams(Re, Pr)
+{NU_MCADAMS - Nusselt number, turbulent vertical upward flow in a pipe under
+ supercritical conditions. ht notes that this correlation fits the enhanced
+ heat transfer regime and that this form was also one of the Dittus-Boelter
+ correlations; it is claimed to fit data for high pressures and low heat fluxes.
+
+   Nu = 0.0243*Re^0.8*Pr^0.4
+
+ Validity: no range is given in the original (as in ht).
+ Original: McAdams, W. H., Heat Transmission, McGraw-Hill, New York and
+   London, 1942; as given in Chen, W., X. Fang, Y. Xu and X. Su, "An
+   Assessment of Correlations of Forced Convection Heat Transfer to Water at
+   Supercritical Pressure", Annals of Nuclear Energy 76 (February 2015):
+   451-460, doi:10.1016/j.anucene.2014.10.027.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py, Nu_McAdams,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_McAdams = 0.0243*Re^0.8*Pr^0.4
+END
+
+FUNCTION Nu_Shitsman(Re, Pr_b, Pr_w)
+{NU_SHITSMAN - Nusselt number, turbulent vertical upward flow in a pipe under
+ supercritical conditions.
+
+   Nu = 0.023*Re^0.8*min(Pr_b, Pr_w)^0.8
+
+ Re_b is the Reynolds number with bulk fluid properties, Pr_b the bulk and
+ Pr_w the wall Prandtl number. The source correlation was developed with
+ D = 7.8 and 8.2 mm and a Pr of approximately 1 (as in ht).
+ Validity: no range is given in the original (as in ht).
+ Original: Shitsman, M. E., "Impairment of the heat transmission at
+   supercritical pressures", High Temperature 1(2): 237-244, 1963;
+   Miropol'skii, Z. L. and Shitsman, M. E., "Heat transfer to water and steam
+   at variable specific heat", J. Tech. Phys. XXVII(10): 2359-2372, 1957; as
+   given in Chen, W., X. Fang, Y. Xu and X. Su (2015), above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py, Nu_Shitsman,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Shitsman = 0.023*Re^0.8*MIN(Pr_b, Pr_w)^0.8
+END
+
+FUNCTION Nu_Griem(Re, Pr, H_b, corr)
+{NU_GRIEM - Nusselt number, turbulent vertical upward flow in a pipe under
+ supercritical conditions, with the fluid properties to be evaluated as
+ described below.
+
+   Nu = 0.0169*Re^0.8356*Pr_sel^0.432*w
+   w  = 0.82                        if H_b < 1540 kJ/kg
+   w  = 0.82 + 9E-7*(H_b - 1.54E6)  if 1540 <= H_b <= 1740 kJ/kg [J/kg]
+   w  = 1                           if H_b > 1740 kJ/kg
+   w  = 1                           if corr = 0
+
+ H_b [J/kg] is the enthalpy of water; the enthalpy reference is the one of the
+ 1967 IFC formulation, as in the original. Property evaluation rules of the
+ original: the heat capacity is calculated at five points - T_w, (T_w+T_f)/2,
+ T_f, (T_b+T_f)/2, T_b - and the lowest three are averaged; the viscosity is
+ the bulk viscosity; the thermal conductivity is the average of the bulk and
+ wall values; the density is the bulk density.
+ Validity: developed with D = 10, 14 and 20 mm, P from 22 to 27 MPa,
+   G from 300 to 2500 kg/m^2/s and q from 200 to 700 kW/m^2 (as in ht).
+ Original: Griem, H., "A New Procedure for the Prediction of Forced Convection
+   Heat Transfer at near- and Supercritical Pressure", Heat and Mass Transfer
+   31(5): 301-305, 1996, doi:10.1007/BF02184042; as given in Chen, W.,
+   X. Fang, Y. Xu and X. Su (2015), above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py, Nu_Griem,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  w = 1
+  IF corr = 1 THEN
+    IF H_b < 1.54E6 THEN
+      w = 0.82
+    ELSE
+      IF H_b > 1.74E6 THEN
+        w = 1
+      ELSE
+        w = 0.82 + 9E-7*(H_b - 1.54E6)
+      ENDIF
+    ENDIF
+  ENDIF
+  Nu_Griem = 0.0169*Re^0.8356*Pr^0.432*w
+END
+
+FUNCTION Nu_Jackson(Re, Pr, rho_w, rho_b, Cp_avg, Cp_b, T_b, T_w, T_pc, corr)
+{NU_JACKSON - Nusselt number, turbulent vertical upward flow in a pipe under
+ supercritical conditions (also called the Jackson-Hall correlation).
+
+   Nu = 0.0183*Re^0.82*Pr^0.5*(rho_w/rho_b)^0.3*(Cp_avg/Cp_b)^n
+   n = 0.4                                          if T_b < T_w < T_pc
+                                                    or 1.2*T_pc < T_b < T_w
+   n = 0.4 + 0.2*(T_w/T_pc - 1)                     if T_b < T_pc < T_w
+   n = 0.4 + 0.2*(T_w/T_pc - 1)*[1 - 5*(T_b/T_pc - 1)]   otherwise
+   n = 0.4 and no correction                        if corr = 0
+   Cp_avg = (H_w - H_b)/(T_w - T_b)
+
+ T_b, T_w and T_pc [K] are the bulk, wall and pseudo-critical temperatures,
+ T_pc being the temperature at which the heat capacity is maximum at the
+ pressure of the fluid; corr = 1 applies the density and heat-capacity
+ corrections and the temperature-dependent exponent, corr = 0 returns the bare
+ correlation.
+ Validity: P from 23.4 to 29.3 MPa; G from 700 to 3600 kg/m^2/s;
+   q from 46 to 2600 kW/m^2; Re from 8E4 to 5E5; D from 1.6 to 20 mm.
+ Original: Jackson, J. D., "Consideration of the Heat Transfer Properties of
+   Supercritical Pressure Water in Connection with the Cooling of Advanced
+   Nuclear Reactors", 2002; as given in Chen, W., X. Fang, Y. Xu and X. Su
+   (2015), above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py, Nu_Jackson,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  F = 1
+  IF corr = 1 THEN
+    IF T_b < T_w AND T_w < T_pc THEN
+      n = 0.4
+    ELSE
+      IF T_b > 1.2*T_pc AND T_b < T_w THEN
+        n = 0.4
+      ELSE
+        IF T_b < T_pc AND T_pc < T_w THEN
+          n = 0.4 + 0.2*(T_w/T_pc - 1)
+        ELSE
+          n = 0.4 + 0.2*(T_w/T_pc - 1)*(1 - 5*(T_b/T_pc - 1))
+        ENDIF
+      ENDIF
+    ENDIF
+    F = (rho_w/rho_b)^0.3*(Cp_avg/Cp_b)^n
+  ENDIF
+  Nu_Jackson = 0.0183*Re^0.82*Pr^0.5*F
+END
+
+FUNCTION Nu_Gupta(Re, Pr, rho_w, rho_b, mu_w, mu_b, corr)
+{NU_GUPTA - Nusselt number, turbulent vertical upward flow in a pipe under
+ supercritical conditions, with the wall properties.
+
+   Nu_w = 0.004*Re_w^0.923*Pr_bar_w^0.773*(rho_w/rho_b)^0.186*(mu_w/mu_b)^0.366
+   Pr_bar_w uses the heat capacity averaged between the wall and the bulk
+   temperatures, Cp_avg = (H_w - H_b)/(T_w - T_b)
+   corr = 0 returns the bare correlation (0.004*Re^0.923*Pr^0.773)
+
+ Validity: P = 24 MPa and D = 10 mm; G from 200 to 1500 kg/m^2/s and
+   q from 0 to 1250 kW/m^2 (as in ht).
+ Original: Gupta, S., A. Farah, K. King, S. Mokry and I. Pioro, "Developing
+   New Heat-Transfer Correlation for SuperCritical-Water Flow in Vertical Bare
+   Tubes", ICONE18-30024, 2010, doi:10.1115/ICONE18-30024; as given in
+   Chen, W., X. Fang, Y. Xu and X. Su (2015), above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py, Nu_Gupta,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  F = 1
+  IF corr = 1 THEN
+    F = (rho_w/rho_b)^0.186*(mu_w/mu_b)^0.366
+  ENDIF
+  Nu_Gupta = 0.004*Re^0.923*Pr^0.773*F
+END
+
+FUNCTION Nu_Swenson(Re, Pr, rho_w, rho_b, corr)
+{NU_SWENSON - Nusselt number, turbulent vertical upward flow in a pipe under
+ supercritical conditions, with the wall properties.
+
+   Nu_w = 0.00459*Re_w^0.923*Pr_bar_w^0.613*(rho_w/rho_b)^0.231
+   Pr_bar_w uses the heat capacity averaged between the wall and the bulk
+   temperatures, Cp_avg = (H_w - H_b)/(T_w - T_b)
+   corr = 0 returns the bare correlation
+
+ Validity: P from 22.8 to 27.6 MPa; G from 542 to 2150 kg/m^2/s;
+   Re from 7.5E4 to 3.16E6; T_b from 75 to 576 degC and T_w from 93 to
+   649 degC (as in ht).
+ Original: Swenson, H. S., J. R. Carver and C. R. Kakarala, "Heat Transfer to
+   Supercritical Water in Smooth-Bore Tubes", Journal of Heat Transfer 87(4):
+   477-483, 1 November 1965, doi:10.1115/1.3689139; as given in Chen, W.,
+   X. Fang, Y. Xu and X. Su (2015), above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py, Nu_Swenson,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  F = 1
+  IF corr = 1 THEN
+    F = (rho_w/rho_b)^0.231
+  ENDIF
+  Nu_Swenson = 0.00459*Re^0.923*Pr^0.613*F
+END
+
+FUNCTION Nu_Xu(Re, Pr, rho_w, rho_b, mu_w, mu_b, corr)
+{NU_XU - Nusselt number, turbulent vertical upward flow in a pipe under
+ supercritical conditions.
+
+   Nu_b = 0.02269*Re_b^0.8079*Pr_bar_b^0.9213*(rho_w/rho_b)^0.6638
+                                       *(mu_w/mu_b)^0.8687
+   Pr_bar_b uses the heat capacity averaged between the wall and the bulk
+   temperatures, Cp_avg = (H_w - H_b)/(T_w - T_b)
+   corr = 0 returns the bare correlation
+
+ Validity: P from 23 to 30 MPa and D = 12 mm; G from 600 to 1200 kg/m^2/s and
+   q from 100 to 600 kW/m^2 (as in ht).
+ Original: Xu, F., L. J. Guo, Y. F. Mao and X. E. Jiang, "Experimental
+   investigation to the heat transfer characteristics of water in vertical
+   pipes under supercritical pressure", Journal of Xi'an Jiaotong University
+   39: 468-471, 2005; as given in Chen, W., X. Fang, Y. Xu and X. Su (2015),
+   above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py, Nu_Xu,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  F = 1
+  IF corr = 1 THEN
+    F = (rho_w/rho_b)^0.6638*(mu_w/mu_b)^0.8687
+  ENDIF
+  Nu_Xu = 0.02269*Re^0.8079*Pr^0.9213*F
+END
+
+FUNCTION Nu_Mokry(Re, Pr, rho_w, rho_b, corr)
+{NU_MOKRY - Nusselt number, turbulent vertical upward flow in a pipe under
+ supercritical conditions.
+
+   Nu_b = 0.0061*Re_b^0.904*Pr_bar_b^0.684*(rho_w/rho_b)^0.564
+   Pr_bar_b uses the heat capacity averaged between the wall and the bulk
+   temperatures, Cp_avg = (H_w - H_b)/(T_w - T_b)
+   corr = 0 returns the bare correlation
+
+ Validity: P = 20 MPa and D = 10 mm; G from 200 to 1500 kg/m^2/s and
+   q from 0 to 1250 kW/m^2 (as in ht).
+ Original: Mokry, S., I. Pioro, A. Farah, K. King, S. Gupta, W. Peiman and
+   P. Kirillov, "Development of Supercritical Water Heat-Transfer Correlation
+   for Vertical Bare Tubes", Nuclear Engineering and Design 241(4): 1126-1136,
+   April 2011, doi:10.1016/j.nucengdes.2010.06.012; as given in Chen, W.,
+   X. Fang, Y. Xu and X. Su (2015), above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py, Nu_Mokry,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  F = 1
+  IF corr = 1 THEN
+    F = (rho_w/rho_b)^0.564
+  ENDIF
+  Nu_Mokry = 0.0061*Re^0.904*Pr^0.684*F
+END
+
+FUNCTION Nu_Bringer_Smith(Re, Pr)
+{NU_BRINGER_SMITH - Nusselt number, turbulent vertical upward flow in a pipe
+ under near-supercritical conditions.
+
+   Nu_x = 0.0266*Re_x^0.77*Pr_w^0.55
+
+ Re_x uses the fluid properties at T_ref and Pr_w the wall Prandtl number;
+ T_ref = T_b if (T_pc - T_b)/(T_w - T_b) < 0, T_pc if 0 < that ratio < 1,
+ T_w if it is larger than 1 (as in the original).
+ Validity: fit to data somewhat distant from the critical and pseudo-critical
+   regions (as in ht); no numerical range is given.
+ Original: Bringer, R. P. and J. M. Smith, "Heat Transfer in the Critical
+   Region", AIChE Journal 3(1): 49-55, 1 March 1957, doi:10.1002/aic.690030110;
+   as given in Chen, W., X. Fang, Y. Xu and X. Su (2015), above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py,
+   Nu_Bringer_Smith, MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Bringer_Smith = 0.0266*Re^0.77*Pr^0.55
+END
+
+FUNCTION Nu_Ornatsky(Re, Pr_b, Pr_w, rho_w, rho_b, corr)
+{NU_ORNATSKY - Nusselt number, turbulent vertical upward flow in a pipe under
+ supercritical conditions.
+
+   Nu_b = 0.023*Re_b^0.8*min(Pr_b, Pr_w)^0.8*(rho_w/rho_b)^0.3
+   corr = 0 returns the bare correlation
+
+ Re_b is the Reynolds number with bulk fluid properties, Pr_b the bulk and
+ Pr_w the wall Prandtl number.
+ Validity: no range is given in the original (as in ht).
+ Original: Ornatsky, A. P., L. P. Glushchenko and E. T. Siomin, "The research
+   of temperature conditions of small diameter parallel tubes cooled by water
+   under supercritical pressures", Proceedings of the 4th International Heat
+   Transfer Conference, Paris-Versailles, vol. VI, paper B, Elsevier, 8 November
+   1970; as given in Chen, W., X. Fang, Y. Xu and X. Su (2015), above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py, Nu_Ornatsky,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  F = 1
+  IF corr = 1 THEN
+    F = (rho_w/rho_b)^0.3
+  ENDIF
+  Nu_Ornatsky = 0.023*Re^0.8*MIN(Pr_b, Pr_w)^0.8*F
+END
+
+FUNCTION Nu_Gorban(Re, Pr)
+{NU_GORBAN - Nusselt number, turbulent vertical upward flow in a pipe under
+ supercritical conditions. ht does not recommend this correlation.
+
+   Nu_b = 0.0059*Re_b^0.90*Pr_b^(-0.12)
+
+ Validity: no range is given in the original (as in ht).
+ Original: Gorban, L. M., R. S. Pomet'ko and O. A. Khryaschev, "Modeling of
+   water heat transfer with Freon of supercritical pressure", report 1766,
+   Institute of Physics and Power Engineering, Obninsk, 1990; as given in
+   Chen, W., X. Fang, Y. Xu and X. Su (2015), above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py, Nu_Gorban,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Gorban = 0.0059*Re^0.90*Pr^(-0.12)
+END
+
+FUNCTION Nu_Zhu(Re, Pr, rho_w, rho_b, k_w, k_b, corr)
+{NU_ZHU - Nusselt number, turbulent vertical upward flow in a pipe under
+ supercritical conditions.
+
+   Nu_b = 0.0068*Re_b^0.9*Pr_bar_b^0.63*(rho_w/rho_b)^0.17*(k_w/k_b)^0.29
+   Pr_bar_b uses the heat capacity averaged between the wall and the bulk
+   temperatures, Cp_avg = (H_w - H_b)/(T_w - T_b)
+   corr = 0 returns the bare correlation
+
+ Validity: P from 22 to 30 MPa and D = 26 mm; G from 600 to 1200 kg/m^2/s and
+   q from 200 to 600 kW/m^2 (as in ht).
+ Original: Zhu, X., Q. Bi, D. Yang and T. Chen, "An Investigation on Heat
+   Transfer Characteristics of Different Pressure Steam-Water in Vertical
+   Upward Tube", Nuclear Engineering and Design 239(2): 381-388, February 2009,
+   doi:10.1016/j.nucengdes.2008.10.026; as given in Chen, W., X. Fang, Y. Xu
+   and X. Su (2015), above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py, Nu_Zhu,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  F = 1
+  IF corr = 1 THEN
+    F = (rho_w/rho_b)^0.17*(k_w/k_b)^0.29
+  ENDIF
+  Nu_Zhu = 0.0068*Re^0.9*Pr^0.63*F
+END
+
+FUNCTION Nu_Bishop(Re, Pr, rho_w, rho_b, Di, x, corr)
+{NU_BISHOP - Nusselt number, turbulent vertical upward flow in a pipe under
+ supercritical conditions, with the adjustment of the thermal entry length.
+ ht calls it one of the most common correlations for supercritical convection.
+
+   Nu_b = 0.0069*Re_b^0.9*Pr_bar_b^0.66*(rho_w/rho_b)^0.43*(1 + 2.4*Di/x)
+   Pr_bar_b uses the heat capacity averaged between the wall and the bulk
+   temperatures, Cp_avg = (H_w - H_b)/(T_w - T_b)
+   corr = 0 returns the bare correlation without the entry correction
+
+ Di [m] is the tube diameter and x [m] the axial distance along the tube.
+ Validity: P from 22.8 to 27.6 MPa; x/D from 30 to 365; G from 651 to
+   3662 kg/m^2/s and q from 310 to 3460 kW/m^2; T_b from 282 to 527 degC.
+ Original: Bishop, A. A., R. O. Sandberg and L. S. Tong, "Forced convection
+   heat transfer to water at near-critical temperature and supercritical
+   pressures", AIChE Chemical Engineering Symposium Series no. 2, Institute of
+   Chemical Engineers, London, 1965; as given in Chen, W., X. Fang, Y. Xu and
+   X. Su (2015), above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py, Nu_Bishop,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  F = 1
+  IF corr = 1 THEN
+    F = (rho_w/rho_b)^0.43*(1 + 2.4*Di/x)
+  ENDIF
+  Nu_Bishop = 0.0069*Re^0.9*Pr^0.66*F
+END
+
+FUNCTION Nu_Yamagata(Re, Pr, Pr_pc, Cp_avg, Cp_b, T_b, T_w, T_pc, corr)
+{NU_YAMAGATA - Nusselt number, turbulent vertical upward flow in a pipe under
+ supercritical conditions.
+
+   Nu_b = 0.0138*Re_b^0.85*Pr_b^0.8*F
+   E = (T_pc - T_b)/(T_w - T_b)
+   F = (Cp_avg/Cp_b)^n2                                    if E < 0
+   F = 0.67*Pr_pc^(-0.05)*(Cp_avg/Cp_b)^n1                 if 0 <= E < 1
+   F = 1                                                   if E >= 1
+   n1 = -0.77*(1 + 1/Pr_pc) + 1.49
+   n2 =  1.44*(1 + 1/Pr_pc) - 0.53
+   F = 1 and no correction                                if corr = 0
+
+ Pr_pc [-] is the Prandtl number at the pseudo-critical temperature, Cp_avg
+ [J/kg-K] the heat capacity averaged between the wall and the bulk
+ temperatures, Cp_b [J/kg-K] the heat capacity at the bulk temperature;
+ T_b, T_w and T_pc [K] are the bulk, wall and pseudo-critical temperatures.
+ Validity: P from 22.6 to 29.4 MPa; D = 7.5 and 10 mm; G from 310 to
+   1830 kg/m^2/s and q from 116 to 930 kW/m^2; T_b from 230 to 540 degC.
+ Original: Yamagata, K., K. Nishikawa, S. Hasegawa, T. Fujii and S. Yoshida,
+   "Forced Convective Heat Transfer to Supercritical Water Flowing in Tubes",
+   International Journal of Heat and Mass Transfer 15(12): 2575-2593,
+   1 December 1972, doi:10.1016/0017-9310(72)90148-2; as given in Chen, W.,
+   X. Fang, Y. Xu and X. Su (2015), above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py, Nu_Yamagata,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  F = 1
+  IF corr = 1 THEN
+    E = (T_pc - T_b)/(T_w - T_b)
+    IF E < 0 THEN
+      n2 = 1.44*(1 + 1/Pr_pc) - 0.53
+      F = (Cp_avg/Cp_b)^n2
+    ELSE
+      IF E < 1 THEN
+        n1 = -0.77*(1 + 1/Pr_pc) + 1.49
+        F = 0.67*Pr_pc^(-0.05)*(Cp_avg/Cp_b)^n1
+      ENDIF
+    ENDIF
+  ENDIF
+  Nu_Yamagata = 0.0138*Re^0.85*Pr^0.8*F
+END
+
+FUNCTION Nu_Kitoh(Re, Pr, H_b, G, q, corr)
+{NU_KITOH - Nusselt number, turbulent vertical upward flow in a pipe under
+ supercritical conditions, with the exponent corrected by the fluid enthalpy,
+ the mass flux and the heat flux.
+
+   Nu_b = 0.015*Re_b^0.85*Pr_b^m
+   q_dht = 200*G^1.2
+   m = 0.69 - 81000/q_dht + f_c*q
+   f_c =  2.9E-8 + 0.11/q_dht       if H_b < 1500 kJ/kg
+   f_c = -8.7E-8 - 0.65/q_dht       if 1500 <= H_b <= 3300 kJ/kg
+   f_c = -9.7E-7 +  1.3/q_dht       if H_b > 3300 kJ/kg
+   m = 0.69                         if corr = 0
+
+ H_b [J/kg] is the enthalpy of water; its reference point is not stated in the
+ original (as in ht). G [kg/m^2/s] is the mass flux of the fluid and q [W/m^2]
+ the heat flux to the wall. The upper and lower enthalpy limits of the
+ correlation are 4000 kJ/kg and 0 kJ/kg but are not enforced here.
+ Validity: G from 100 to 1750 kg/m^2/s, q from 0 to 1800 kW/m^2 and T_b from
+   20 to 550 degC (as in ht); ht notes that the correlation does not behave
+   realistically outside these and should not be used there.
+ Original: Kitoh, K., S. Koshizuka and Y. Oka, "Refinement of Transient
+   Criteria and Safety Analysis for a High-Temperature Reactor Cooled by
+   Supercritical Water", Nuclear Technology 135(3): 252-264,
+   1 September 2001; as given in Chen, W., X. Fang, Y. Xu and X. Su (2015),
+   above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py, Nu_Kitoh,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  m = 0.69
+  IF corr = 1 THEN
+    q_dht = 200*G^1.2
+    IF H_b < 1.5E6 THEN
+      f_c = 2.9E-8 + 0.11/q_dht
+    ELSE
+      IF H_b <= 3.3E6 THEN
+        f_c = -8.7E-8 - 0.65/q_dht
+      ELSE
+        f_c = -9.7E-7 + 1.3/q_dht
+      ENDIF
+    ENDIF
+    m = 0.69 - 81000/q_dht + f_c*q
+  ENDIF
+  Nu_Kitoh = 0.015*Re^0.85*Pr^m
+END
+
+FUNCTION Nu_Krasnoshchekov_Protopopov(Re, Pr, Cp_avg, Cp_b, k_w, k_b, mu_w, mu_b, corr)
+{NU_KRASNOSHCHEKOV_PROTOPOPOV - Nusselt number, turbulent vertical upward flow
+ in a pipe under supercritical conditions, with the viscosity, thermal
+ conductivity and heat-capacity corrections.
+
+   Nu_0 = (fd/8)*Re*Pr_bar / {1.07 + 12.7*(fd/8)^0.5*(Pr_bar^(2/3) - 1)}
+   fd  = [1.82*LOG10(Re) - 1.64]^(-2)
+   Nu  = Nu_0*(mu_w/mu_b)^0.11*(k_w/k_b)^(-0.33)*(Cp_avg/Cp_b)^0.35
+   corr = 0 returns Nu_0
+
+ Validity: P from 22.3 to 32 MPa; Re from 2E4 to 8.6E6; Pr from 0.86 to 86;
+   viscosity ratio from 0.9 to 3.6, thermal conductivity ratio from 1 to 6
+   and heat capacity ratio from 0.07 to 4.5 (as in ht).
+ Original: Krasnoshchekov, E. A. and Protopopov, V. S., "Heat transfer at
+   supercritical region in flow of carbon dioxide and water in tubes",
+   Therm. Eng. 12: 26-30, 1959; as given in Chen, W., X. Fang, Y. Xu and
+   X. Su (2015), above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py,
+   Nu_Krasnoshchekov_Protopopov, MIT License, C. Bell -
+   https://github.com/CalebBell/ht}
+  fd = (1.82*LOG10(Re) - 1.64)^(-2)
+  Nu_0 = (fd/8)*Re*Pr/(1.07 + 12.7*(fd/8)^0.5*(Pr^(2/3) - 1))
+  F = 1
+  IF corr = 1 THEN
+    F = (mu_w/mu_b)^0.11*(k_w/k_b)^(-0.33)*(Cp_avg/Cp_b)^0.35
+  ENDIF
+  Nu_Krasnoshchekov_Protopopov = Nu_0*F
+END
+
+FUNCTION Nu_Petukhov(Re, Pr, rho_w, rho_b, mu_w, mu_b, corr)
+{NU_PETUKHOV - Nusselt number, turbulent vertical upward flow in a pipe under
+ supercritical conditions, with the friction factor corrected by the density
+ and viscosity ratios.
+
+   Nu_b = (f/8)*Re*Pr_bar / {1 + 900/Re + 12.7*(f/8)^0.5*(Pr_bar^(2/3) - 1)}
+   f   = fd*(rho_w/rho_b)^0.4*(mu_w/mu_b)^0.2
+   fd  = [1.82*LOG10(Re) - 1.64]^(-2)
+   corr = 0 returns the bare correlation with fd
+
+ Validity: no range is given in the original (as in ht).
+ Original: Petukhov, B. S., V. A. Kurganov and V. B. Ankudinov, "Heat Transfer
+   and Flow Resistance in the Turbulent Pipe Flow of a Fluid with Near-Critical
+   State Parameters", High Temperature 21(1): 81-89, 1983; as given in
+   Chen, W., X. Fang, Y. Xu and X. Su (2015), above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py, Nu_Petukhov,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  fd = (1.82*LOG10(Re) - 1.64)^(-2)
+  f = fd
+  IF corr = 1 THEN
+    f = fd*(rho_w/rho_b)^0.4*(mu_w/mu_b)^0.2
+  ENDIF
+  Nu_Petukhov = (f/8)*Re*Pr/(1 + 900/Re + 12.7*(f/8)^0.5*(Pr^(2/3) - 1))
+END
+
+FUNCTION Nu_Krasnoshchekov(Re, Pr, rho_w, rho_b, Cp_avg, Cp_b, T_b, T_w, T_pc, corr)
+{NU_KRASNOSHCHEKOV - Nusselt number, turbulent vertical upward flow in a pipe
+ under supercritical conditions, with the density correction and the
+ temperature-dependent heat-capacity exponent.
+
+   Nu_0 = (fd/8)*Re*Pr_bar / {1.07 + 12.7*(fd/8)^0.5*(Pr_bar^(2/3) - 1)}
+   fd  = [1.82*LOG10(Re) - 1.64]^(-2)
+   Nu  = Nu_0*(rho_w/rho_b)^0.3*(Cp_avg/Cp_b)^n
+   n1  = 0.22 + 0.18*T_w/T_pc
+   n = 0.4                          if T_b < T_w < T_pc
+                                     or 1.2*T_pc < T_b < T_w
+   n = n1                           if 1 < T_w/T_pc < 2.5
+   n = n1 + (5*n1 - 2)*(1 - T_b/T_pc)   otherwise
+   n = 0.4 and no correction        if corr = 0
+
+ T_b, T_w and T_pc [K] are the bulk, wall and pseudo-critical temperatures;
+ Cp_avg [J/kg-K] is the heat capacity averaged between the wall and the bulk
+ temperatures and Cp_b [J/kg-K] the heat capacity at the bulk temperature.
+ Validity: P from 23.4 to 29.3 MPa; G from 700 to 3600 kg/m^2/s;
+   q from 46 to 2600 kW/m^2; Re from 8E4 to 5E5; D from 1.6 to 20 mm.
+ Original: Krasnoshchekov, E. A., Protopopov, V. S. and Kuraeva, I. V.,
+   "Experimental investigation of heat transfer for carbon dioxide in the
+   supercritical region", Proceedings of the Second All-Soviet Union
+   Conference on Heat and Mass Transfer, Minsk, May 1967; as given in
+   Chen, W., X. Fang, Y. Xu and X. Su (2015), above.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_supercritical.py,
+   Nu_Krasnoshchekov, MIT License, C. Bell - https://github.com/CalebBell/ht}
+  n = 0.4
+  F = 1
+  IF corr = 1 THEN
+    n1 = 0.22 + 0.18*T_w/T_pc
+    IF T_b < T_w AND T_w < T_pc THEN
+      n = 0.4
+    ELSE
+      IF T_b > 1.2*T_pc AND T_b < T_w THEN
+        n = 0.4
+      ELSE
+        IF T_w/T_pc > 1 AND T_w/T_pc < 2.5 THEN
+          n = n1
+        ELSE
+          n = n1 + (5*n1 - 2)*(1 - T_b/T_pc)
+        ENDIF
+      ENDIF
+    ENDIF
+    F = (rho_w/rho_b)^0.3*(Cp_avg/Cp_b)^n
+  ENDIF
+  fd = (1.82*LOG10(Re) - 1.64)^(-2)
+  Nu_0 = (fd/8)*Re*Pr/(1.07 + 12.7*(fd/8)^0.5*(Pr^(2/3) - 1))
+  Nu_Krasnoshchekov = Nu_0*F
+END
+
+"!Demonstration program: every correlation is called twice per input set"
+"It is ignored by the future $INCLUDE library:supercritical_internal_nu (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each correlation (published values)."
+"Case B: one second, uniform input set (Re = 3E5, Pr = 2.5, T_b = 390 K,"
+"        T_w = 420 K, T_pc = 400 K, G = 1400 kg/m^2-s, q = 650 kW/m^2)."
+"Each function is called without (corr = 0) and with (corr = 1) its optional"
+"corrections. Both cases are tabulated against ht in the README."
+
+"Case A - input set (ht doctests)"
+Re_A = 1E5
+Pr_A = 1.2
+Pr_w_A = 1.6
+Pr_pc_A = 1.5
+rho_w_A = 330
+rho_b_A = 290
+mu_w_A = 8E-4
+mu_b_A = 9E-4
+k_w_A = 0.63
+k_b_A = 0.69
+Cp_avg_A = 2080.845
+Cp_b_A = 2048.621
+T_b_A = 650
+T_w_A = 700
+T_pc_A = 600
+Di_A = 0.01
+x_A = 1.2
+H_b_A = 1.3E6
+G_A = 1500
+q_A = 5E6
+"the doctest of Nu_Krasnoshchekov_Protopopov passes other heat capacities and conductivities"
+k_w_P_A = 0.62
+k_b_P_A = 0.52
+Cp_avg_P_A = 330
+Cp_b_P_A = 290
+
+"Nu_McAdams"
+Nu_McAdams_A = Nu_McAdams(Re_A, Pr_A)
+"Nu_Shitsman - bulk and wall Prandtl numbers"
+Nu_Shitsman_A = Nu_Shitsman(Re_A, Pr_A, Pr_w_A)
+"Nu_Griem - bare form, and with the enthalpy correction"
+Nu_Griem_A = Nu_Griem(Re_A, Pr_A, H_b_A, 0)
+Nu_Griem_corr_A = Nu_Griem(Re_A, Pr_A, H_b_A, 1)
+"Nu_Jackson - bare form, and with the density and heat-capacity corrections"
+Nu_Jackson_A = Nu_Jackson(Re_A, Pr_A, rho_w_A, rho_b_A, Cp_avg_A, Cp_b_A, T_b_A, T_w_A, T_pc_A, 0)
+Nu_Jackson_corr_A = Nu_Jackson(Re_A, Pr_A, rho_w_A, rho_b_A, Cp_avg_A, Cp_b_A, T_b_A, T_w_A, T_pc_A, 1)
+"Nu_Gupta - bare form, and with the density and viscosity corrections"
+Nu_Gupta_A = Nu_Gupta(Re_A, Pr_A, rho_w_A, rho_b_A, mu_w_A, mu_b_A, 0)
+Nu_Gupta_corr_A = Nu_Gupta(Re_A, Pr_A, rho_w_A, rho_b_A, mu_w_A, mu_b_A, 1)
+"Nu_Swenson - bare form, and with the density correction"
+Nu_Swenson_A = Nu_Swenson(Re_A, Pr_A, rho_w_A, rho_b_A, 0)
+Nu_Swenson_corr_A = Nu_Swenson(Re_A, Pr_A, rho_w_A, rho_b_A, 1)
+"Nu_Xu - bare form, and with the density and viscosity corrections"
+Nu_Xu_A = Nu_Xu(Re_A, Pr_A, rho_w_A, rho_b_A, mu_w_A, mu_b_A, 0)
+Nu_Xu_corr_A = Nu_Xu(Re_A, Pr_A, rho_w_A, rho_b_A, mu_w_A, mu_b_A, 1)
+"Nu_Mokry - bare form, and with the density correction"
+Nu_Mokry_A = Nu_Mokry(Re_A, Pr_A, rho_w_A, rho_b_A, 0)
+Nu_Mokry_corr_A = Nu_Mokry(Re_A, Pr_A, rho_w_A, rho_b_A, 1)
+"Nu_Bringer_Smith"
+Nu_Bringer_Smith_A = Nu_Bringer_Smith(Re_A, Pr_A)
+"Nu_Ornatsky - bare form, and with the density correction"
+Nu_Ornatsky_A = Nu_Ornatsky(Re_A, Pr_A, Pr_w_A, rho_w_A, rho_b_A, 0)
+Nu_Ornatsky_corr_A = Nu_Ornatsky(Re_A, Pr_A, Pr_w_A, rho_w_A, rho_b_A, 1)
+"Nu_Gorban"
+Nu_Gorban_A = Nu_Gorban(Re_A, Pr_A)
+"Nu_Zhu - bare form, and with the density and conductivity corrections"
+Nu_Zhu_A = Nu_Zhu(Re_A, Pr_A, rho_w_A, rho_b_A, k_w_A, k_b_A, 0)
+Nu_Zhu_corr_A = Nu_Zhu(Re_A, Pr_A, rho_w_A, rho_b_A, k_w_A, k_b_A, 1)
+"Nu_Bishop - bare form, and with the density and entry-length corrections"
+Nu_Bishop_A = Nu_Bishop(Re_A, Pr_A, rho_w_A, rho_b_A, Di_A, x_A, 0)
+Nu_Bishop_corr_A = Nu_Bishop(Re_A, Pr_A, rho_w_A, rho_b_A, Di_A, x_A, 1)
+"Nu_Yamagata - bare form, and with the heat-capacity correction"
+Nu_Yamagata_A = Nu_Yamagata(Re_A, Pr_A, Pr_pc_A, Cp_avg_A, Cp_b_A, T_b_A, T_w_A, T_pc_A, 0)
+Nu_Yamagata_corr_A = Nu_Yamagata(Re_A, Pr_A, Pr_pc_A, Cp_avg_A, Cp_b_A, T_b_A, T_w_A, T_pc_A, 1)
+"Nu_Kitoh - bare form, and with the enthalpy, mass-flux and heat-flux correction"
+Nu_Kitoh_A = Nu_Kitoh(Re_A, Pr_A, H_b_A, G_A, q_A, 0)
+Nu_Kitoh_corr_A = Nu_Kitoh(Re_A, Pr_A, H_b_A, G_A, q_A, 1)
+"Nu_Krasnoshchekov_Protopopov - bare form, and with the viscosity, conductivity and heat-capacity corrections"
+Nu_Krasnoshchekov_Protopopov_A = Nu_Krasnoshchekov_Protopopov(Re_A, Pr_A, Cp_avg_P_A, Cp_b_P_A, k_w_P_A, k_b_P_A, mu_w_A, mu_b_A, 0)
+Nu_Krasnoshchekov_Protopopov_corr_A = Nu_Krasnoshchekov_Protopopov(Re_A, Pr_A, Cp_avg_P_A, Cp_b_P_A, k_w_P_A, k_b_P_A, mu_w_A, mu_b_A, 1)
+"Nu_Petukhov - bare form, and with the density and viscosity corrections"
+Nu_Petukhov_A = Nu_Petukhov(Re_A, Pr_A, rho_w_A, rho_b_A, mu_w_A, mu_b_A, 0)
+Nu_Petukhov_corr_A = Nu_Petukhov(Re_A, Pr_A, rho_w_A, rho_b_A, mu_w_A, mu_b_A, 1)
+"Nu_Krasnoshchekov - bare form, and with the density and heat-capacity corrections"
+Nu_Krasnoshchekov_A = Nu_Krasnoshchekov(Re_A, Pr_A, rho_w_A, rho_b_A, Cp_avg_A, Cp_b_A, T_b_A, T_w_A, T_pc_A, 0)
+Nu_Krasnoshchekov_corr_A = Nu_Krasnoshchekov(Re_A, Pr_A, rho_w_A, rho_b_A, Cp_avg_A, Cp_b_A, T_b_A, T_w_A, T_pc_A, 1)
+
+"Case B - second, uniform input set"
+Re_B = 3E5
+Pr_B = 2.5
+Pr_w_B = 4
+Pr_pc_B = 2.2
+rho_w_B = 420
+rho_b_B = 280
+mu_w_B = 5.5E-5
+mu_b_B = 7.5E-5
+k_w_B = 0.095
+k_b_B = 0.078
+Cp_avg_B = 5200
+Cp_b_B = 4100
+T_b_B = 390
+T_w_B = 420
+T_pc_B = 400
+Di_B = 0.016
+x_B = 2
+H_b_B = 1.6E6
+G_B = 1400
+q_B = 650E3
+k_w_P_B = 0.088
+k_b_P_B = 0.092
+Cp_avg_P_B = 6100
+Cp_b_P_B = 4600
+
+"Nu_McAdams"
+Nu_McAdams_B = Nu_McAdams(Re_B, Pr_B)
+"Nu_Shitsman - bulk and wall Prandtl numbers"
+Nu_Shitsman_B = Nu_Shitsman(Re_B, Pr_B, Pr_w_B)
+"Nu_Griem - bare form, and with the enthalpy correction"
+Nu_Griem_B = Nu_Griem(Re_B, Pr_B, H_b_B, 0)
+Nu_Griem_corr_B = Nu_Griem(Re_B, Pr_B, H_b_B, 1)
+"Nu_Jackson - bare form, and with the density and heat-capacity corrections"
+Nu_Jackson_B = Nu_Jackson(Re_B, Pr_B, rho_w_B, rho_b_B, Cp_avg_B, Cp_b_B, T_b_B, T_w_B, T_pc_B, 0)
+Nu_Jackson_corr_B = Nu_Jackson(Re_B, Pr_B, rho_w_B, rho_b_B, Cp_avg_B, Cp_b_B, T_b_B, T_w_B, T_pc_B, 1)
+"Nu_Gupta - bare form, and with the density and viscosity corrections"
+Nu_Gupta_B = Nu_Gupta(Re_B, Pr_B, rho_w_B, rho_b_B, mu_w_B, mu_b_B, 0)
+Nu_Gupta_corr_B = Nu_Gupta(Re_B, Pr_B, rho_w_B, rho_b_B, mu_w_B, mu_b_B, 1)
+"Nu_Swenson - bare form, and with the density correction"
+Nu_Swenson_B = Nu_Swenson(Re_B, Pr_B, rho_w_B, rho_b_B, 0)
+Nu_Swenson_corr_B = Nu_Swenson(Re_B, Pr_B, rho_w_B, rho_b_B, 1)
+"Nu_Xu - bare form, and with the density and viscosity corrections"
+Nu_Xu_B = Nu_Xu(Re_B, Pr_B, rho_w_B, rho_b_B, mu_w_B, mu_b_B, 0)
+Nu_Xu_corr_B = Nu_Xu(Re_B, Pr_B, rho_w_B, rho_b_B, mu_w_B, mu_b_B, 1)
+"Nu_Mokry - bare form, and with the density correction"
+Nu_Mokry_B = Nu_Mokry(Re_B, Pr_B, rho_w_B, rho_b_B, 0)
+Nu_Mokry_corr_B = Nu_Mokry(Re_B, Pr_B, rho_w_B, rho_b_B, 1)
+"Nu_Bringer_Smith"
+Nu_Bringer_Smith_B = Nu_Bringer_Smith(Re_B, Pr_B)
+"Nu_Ornatsky - bare form, and with the density correction"
+Nu_Ornatsky_B = Nu_Ornatsky(Re_B, Pr_B, Pr_w_B, rho_w_B, rho_b_B, 0)
+Nu_Ornatsky_corr_B = Nu_Ornatsky(Re_B, Pr_B, Pr_w_B, rho_w_B, rho_b_B, 1)
+"Nu_Gorban"
+Nu_Gorban_B = Nu_Gorban(Re_B, Pr_B)
+"Nu_Zhu - bare form, and with the density and conductivity corrections"
+Nu_Zhu_B = Nu_Zhu(Re_B, Pr_B, rho_w_B, rho_b_B, k_w_B, k_b_B, 0)
+Nu_Zhu_corr_B = Nu_Zhu(Re_B, Pr_B, rho_w_B, rho_b_B, k_w_B, k_b_B, 1)
+"Nu_Bishop - bare form, and with the density and entry-length corrections"
+Nu_Bishop_B = Nu_Bishop(Re_B, Pr_B, rho_w_B, rho_b_B, Di_B, x_B, 0)
+Nu_Bishop_corr_B = Nu_Bishop(Re_B, Pr_B, rho_w_B, rho_b_B, Di_B, x_B, 1)
+"Nu_Yamagata - bare form, and with the heat-capacity correction"
+Nu_Yamagata_B = Nu_Yamagata(Re_B, Pr_B, Pr_pc_B, Cp_avg_B, Cp_b_B, T_b_B, T_w_B, T_pc_B, 0)
+Nu_Yamagata_corr_B = Nu_Yamagata(Re_B, Pr_B, Pr_pc_B, Cp_avg_B, Cp_b_B, T_b_B, T_w_B, T_pc_B, 1)
+"Nu_Kitoh - bare form, and with the enthalpy, mass-flux and heat-flux correction"
+Nu_Kitoh_B = Nu_Kitoh(Re_B, Pr_B, H_b_B, G_B, q_B, 0)
+Nu_Kitoh_corr_B = Nu_Kitoh(Re_B, Pr_B, H_b_B, G_B, q_B, 1)
+"Nu_Krasnoshchekov_Protopopov - bare form, and with the viscosity, conductivity and heat-capacity corrections"
+Nu_Krasnoshchekov_Protopopov_B = Nu_Krasnoshchekov_Protopopov(Re_B, Pr_B, Cp_avg_P_B, Cp_b_P_B, k_w_P_B, k_b_P_B, mu_w_B, mu_b_B, 0)
+Nu_Krasnoshchekov_Protopopov_corr_B = Nu_Krasnoshchekov_Protopopov(Re_B, Pr_B, Cp_avg_P_B, Cp_b_P_B, k_w_P_B, k_b_P_B, mu_w_B, mu_b_B, 1)
+"Nu_Petukhov - bare form, and with the density and viscosity corrections"
+Nu_Petukhov_B = Nu_Petukhov(Re_B, Pr_B, rho_w_B, rho_b_B, mu_w_B, mu_b_B, 0)
+Nu_Petukhov_corr_B = Nu_Petukhov(Re_B, Pr_B, rho_w_B, rho_b_B, mu_w_B, mu_b_B, 1)
+"Nu_Krasnoshchekov - bare form, and with the density and heat-capacity corrections"
+Nu_Krasnoshchekov_B = Nu_Krasnoshchekov(Re_B, Pr_B, rho_w_B, rho_b_B, Cp_avg_B, Cp_b_B, T_b_B, T_w_B, T_pc_B, 0)
+Nu_Krasnoshchekov_corr_B = Nu_Krasnoshchekov(Re_B, Pr_B, rho_w_B, rho_b_B, Cp_avg_B, Cp_b_B, T_b_B, T_w_B, T_pc_B, 1)
+"!Case C - the branches of the non-smooth switches not taken by the cases A and B"
+"Only the argument that picks the branch changes (a temperature or the enthalpy of"
+"the water); every other argument is the one of case B. The section titles give the"
+"branch of the original, as written in the comment block of the function."
+"Nu_Griem - the lower enthalpy branch, w = 0.82 (H_b < 1540 kJ/kg)"
+Nu_Griem_w1_C = Nu_Griem(Re_B, Pr_B, 1.2E6, 1)
+"Nu_Jackson - the branch n = 0.4 for T_b < T_w < T_pc"
+Nu_Jackson_n1_C = Nu_Jackson(Re_B, Pr_B, rho_w_B, rho_b_B, Cp_avg_B, Cp_b_B, 380, 390, 400, 1)
+"Nu_Jackson - the branch n = 0.4 for 1.2*T_pc < T_b < T_w"
+Nu_Jackson_n2_C = Nu_Jackson(Re_B, Pr_B, rho_w_B, rho_b_B, Cp_avg_B, Cp_b_B, 500, 600, 400, 1)
+"Nu_Krasnoshchekov - the branch n = 0.4 for T_b < T_w < T_pc"
+Nu_Krasnoshchekov_n0p4_C = Nu_Krasnoshchekov(Re_B, Pr_B, rho_w_B, rho_b_B, Cp_avg_B, Cp_b_B, 380, 390, 400, 1)
+"Nu_Krasnoshchekov - the last branch n = n1 + (5*n1-2)*(1-T_b/T_pc) for T_w/T_pc > 2.5"
+Nu_Krasnoshchekov_n3_C = Nu_Krasnoshchekov(Re_B, Pr_B, rho_w_B, rho_b_B, Cp_avg_B, Cp_b_B, 380, 1100, 400, 1)
+"Nu_Yamagata - the branch F = 1 for (T_pc-T_b)/(T_w-T_b) >= 1"
+Nu_Yamagata_F1_C = Nu_Yamagata(Re_B, Pr_B, Pr_pc_B, Cp_avg_B, Cp_b_B, 380, 385, 400, 1)
+"Nu_Kitoh - the upper enthalpy branch of f_c (H_b > 3300 kJ/kg)"
+Nu_Kitoh_fc3_C = Nu_Kitoh(Re_B, Pr_B, 3.6E6, G_B, q_B, 1)

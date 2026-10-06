@@ -1,0 +1,1261 @@
+{=============================================================================
+  Heat exchangers: P-NTU temperature effectiveness (function library)
+  CoolSolve Library model CSL-0102 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Temperature effectiveness (the P-NTU method) of a heat exchanger: the
+  temperature effectiveness P1 of each stream (1) with respect to the number of
+  transfer units NTU1 and the heat capacity ratio R1 referred to the same
+  stream, and the inverse relations NTU1(P1, R1).
+
+  The file holds the two common helper terms of the plate formulas, the basic
+  (double-pipe and single-pass crossflow) arrangements, the TEMA E, G, H and J
+  shell-and-tube arrangements, the finned-bundle air cooler and the multipass
+  plate heat exchanger, plus the inverse relations NTU_from_P_*.
+
+  All arguments are dimensionless: R1 and NTU1 [-], P1 [-], the number of tube
+  passes Ntp or the number of passes Np1/Np2 of a plate exchanger [-], and the
+  flow-arrangement flags (1 = true, 0 = false) [-].
+
+  The demonstration program at the end calls every function twice: once with
+  the input set of the ht doctest of the corresponding relation ("case A") and
+  once with a second input set ("case B": the steam/oil crossflow rating of the
+  ht docstring, stream 1 = process stream, R1 = 0.14242, NTU1 = 2.16007), plus
+  one call per remaining branch. The ht values of all the cases are tabulated
+  in the README (verification table).
+
+  The two dispatchers of ht (P_NTU_method, effectiveness_NTU_method) only map a
+  method name to a relation and are not translated; an EES caller calls the
+  chosen FUNCTION directly. The private iterative helpers of ht
+  (_NTU_from_P_solver, _NTU_from_P_objective, _NTU_from_P_erf,
+  _NTU_max_for_P_solver) are not translated either: in EES the number of
+  transfer units is an unknown of the calling model and the effectiveness
+  equation is a second simultaneous equation (the *_residual functions below
+  carry it). The Pade approximation of _NTU_max_for_P_solver, which only gives
+  the bracket of the ht iteration, is dropped.
+
+  Inputs : R1, NTU1, P1, Ntp, Np1, Np2, rows, passes, coerce, subtype,
+           counterflow, passes_counterflow [-]
+  Outputs: P1, Pp, Pc, NTU1, residual [-] (one FUNCTION per relation)
+  Units  : dimensionless (SI-K-Pa-J unit system, no physical unit here)
+  Source : ht (Caleb Bell), ht/hx.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; relations by the authors
+           cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION P_NTU_Pp(x, y)
+{P_NTU_PP - common term of the P-NTU method for plate exchangers, normally used
+ in the calculation of P1 before it is evaluated [-].
+
+  P_p(x, y) = (1 - exp[-x*(1 + y)])/(1 + y)                    y not -1
+  P_p(x, y) = x                                               y = -1
+
+ x is a modification of NTU1 (the thermal number of transfer units) and y a
+ modification of R1 (the heat capacity ratio) [-].
+ Validity: no limit quoted.
+ Original: Shah, R. K. and D. P. Sekulic, "Fundamentals of Heat Exchanger
+   Design", 1st ed., Wiley, Hoboken NJ, 2002; Rohsenow, W., J. Hartnett and
+   Y. Cho, "Handbook of Heat Transfer", 3E, McGraw-Hill, New York, 1998.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, P_NTU_Pp,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF y = -1 THEN
+    P_NTU_Pp = x   "limit of the original, as in the original"
+  ELSE
+    P_NTU_Pp = (1 - exp(-x*(1 + y)))/(1 + y)
+  ENDIF
+END
+
+FUNCTION P_NTU_Pc(x, y)
+{P_NTU_PC - common term of the P-NTU method for plate exchangers, nominally
+ used in counterflow calculations [-].
+
+  P_c(x, y) = (1 - exp[-x*(1 - y)])/(1 - y*exp[-x*(1 - y)])  1 - y*exp[...] not 0
+  P_c(x, y) = x/(1 + x)                                        1 - y*exp[...] = 0
+
+ x and y are the modified NTU1 and R1 [-] of P_NTU_Pp.
+ Validity: no limit quoted.
+ Original: as in P_NTU_Pp (Shah and Sekulic 2002; Rohsenow, Hartnett and Cho
+   1998).
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, P_NTU_Pc,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  term = exp(-x*(1 - y))
+  IF (1 - y*term) = 0 THEN
+    P_NTU_Pc = x/(1 + x)  "limit of the original, as in the original"
+  ELSE
+    P_NTU_Pc = (1 - term)/(1 - y*term)
+  ENDIF
+END
+
+FUNCTION temperature_effectiveness_air_cooler(R1, NTU1, rows, passes, coerce)
+{TEMPERATURE_EFFECTIVENESS_AIR_COOLER - temperature effectiveness P1 of an air
+ cooler with a given heat capacity ratio R1, number of transfer units NTU1,
+ number of rows of tubes and number of passes of the process stream [-].
+
+ The supported cases are as follows (as in the original):
+   N rows, 1 pass                (general formula below)
+   N rows, N passes, N = 2, 3, 4, 5
+   4 rows, 2 passes
+ For N rows 1 pass:
+  P1 = (1/R)*{{1 - [N*exp(NKR)/{1 + sum_{i=1}^{N-1} sum_{j=0}^i
+         binom(i,j)*K^j*exp(-(i-j)NTU/N)
+         *sum_{k=0}^j (NKR)^k/k!}]}^{-1}}
+ For 2 rows 2 passes:  xi = K/2 + (1 - K/2)*exp(2KR),  P1 = (1/R)*(1 - 1/xi)
+ For 3 rows 3 passes:  xi = K*[1 - K/4 - RK*(1 - K/2)]*exp(KR)
+                            + exp(3KR)*(1 - K/2)^2
+ For 4 rows 4 passes:  xi = K/2*(1 - K/2 + K^2/4)
+                            + K*(1 - K/2)*[1 - R/8*K*(1 - K/2)*exp(2KR)]
+                            + exp(4KR)*(1 - K/2)^3
+ For 5 rows 5 passes:  xi = {K*(1 - 3K/4 + K^2/2 - K^3/8)
+                            - RK^2*[1 - K + 3K^2/4 - K^3/4
+                            - R/2*K^2*(1 - K/2)^2]}*exp(KR)
+                            + [K*(1 - 3K/4 + K^3/16) - 3RK^2*(1 - K/2)^3]*exp(3KR)
+                            + (1 - K/2)^4*exp(5KR)
+ For 4 rows 2 passes:  xi = {R/2*K^3*[4 - K + 2RK^2] + exp(4KR)
+                            + K*[1 - K/2 + K^2/8]*[1 - exp(4KR)]}/(1 + RK^2)^2
+ with K = 1 - exp(-NTU/N) and N the number of rows of the case considered.
+
+ R1 [-] is the heat capacity ratio of the heat exchanger in the P-NTU method,
+ calculated with respect to stream 1 (the process fluid side), NTU1 [-] the
+ number of transfer units on the same side, rows [-] the number of rows of
+ tubes, passes [-] the number of passes of the process fluid.
+ coerce [-] is 1 when a number of passes or rows that is otherwise unsupported
+ must be replaced by a similar number to allow the calculation to proceed (the
+ domain reduction of the original: passes are capped at the number of rows and
+ at 5, rows at 5, and (rows = passes + 1) or (rows >= 4 with 2, 3 or 5 passes)
+ are replaced by the supported 4 rows 2 passes case); it is 0 when the original
+ raises an error instead, which in EES means that only a supported combination
+ may be passed.
+ Validity: the 1-pass formula needs a factorial of the number of rows, which
+   overflows a double precision beyond about 20 rows (as noted in the
+   original); no other limit quoted.
+ Original: Thulukkanam, K., "Heat Exchanger Design Handbook", 2nd ed., CRC
+   Press, 2013 (the formulas of all the cases); Schedwill, H., "Thermische
+   Auslegung von Kreuzstromwarmeaustauschern", Fortschr.-Ber. VDI Reihe 6, 19,
+   VDI, Germany, 1968 (N rows 1 pass); Schlunder, E. U. and International
+   Center for Heat and Mass Transfer, "Heat Exchanger Design Handbook",
+   Hemisphere, Washington DC, 1983 (N rows 1 pass); Nicole, F. J. L., "Mean
+   temperature difference for heat exchanger design", CSIR Special Report
+   Chem. 223, Pretoria, South Africa, 1972 (the N rows N passes and the
+   4 rows 2 passes cases).
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py,
+   temperature_effectiveness_air_cooler,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  support = 0
+  IF passes = 1 THEN
+    support = 1
+  ENDIF
+  IF (rows = passes AND rows >= 2 AND rows <= 5) THEN
+    support = 1
+  ENDIF
+  IF (rows = 4 AND passes = 2) THEN
+    support = 1
+  ENDIF
+  rows_e = rows      "number of rows actually used, after the domain reduction"
+  passes_e = passes  "number of passes actually used, after the domain reduction"
+  IF (support = 0 AND coerce = 1) THEN
+    IF passes_e > rows_e THEN
+      passes_e = rows_e
+    ENDIF
+    IF passes_e > 5 THEN
+      passes_e = 5
+    ENDIF
+    IF rows_e > 5 THEN
+      rows_e = 5
+    ENDIF
+    IF rows_e - 1 = passes_e THEN
+      rows_e = rows_e - 1
+    ELSE
+    IF ((passes_e = 2 OR passes_e = 3 OR passes_e = 5) AND rows_e >= 4) THEN
+      rows_e = 4
+      passes_e = 2
+    ENDIF
+    ENDIF
+  ENDIF
+  IF passes_e = 1 THEN
+    N = rows_e
+    K = 1 - exp(-NTU1/N)
+    NKR1 = N*K*R1
+    NTU1_N = NTU1/N
+    top = N*exp(N*K*R1)
+    tot = 0
+    "double sum of the general N rows 1 pass formula; the powers of K, the"
+    "cumulative sums of (NKR)^k/k! and the binomial coefficients are advanced"
+    "along the loops, as in the original"
+    DUPLICATE i = 1, N - 1
+      K_pow = 1
+      NKR1_pow = 1
+      NKR1_pow_over_fact = 1
+      fact_j = 1
+      sum_over_fact = 1
+      binom = 1
+      DUPLICATE j = 0, i
+        IF j > 0 THEN
+          K_pow = K_pow*K
+          NKR1_pow = NKR1_pow*NKR1
+          fact_j = fact_j*j
+          NKR1_pow_over_fact = NKR1_pow/fact_j
+          sum_over_fact = sum_over_fact + NKR1_pow_over_fact
+          binom = binom*(i - j + 1)/j
+        ENDIF
+        tot = tot + binom*exp(-(i - j)*NTU1_N)*K_pow*sum_over_fact
+      END
+    END
+    P1 = 1/R1*(1 - 1/(top/(1 + tot)))
+  ELSE
+  IF (rows_e = 2 AND passes_e = 2) THEN
+    K = 1 - exp(-0.5*NTU1)
+    xi = 0.5*K + (1 - 0.5*K)*exp(2*K*R1)
+    P1 = 1/R1*(1 - 1/xi)
+  ELSE
+  IF (rows_e = 3 AND passes_e = 3) THEN
+    K = 1 - exp(-NTU1/3)
+    xi = (K*(1 - 0.25*K - R1*K*(1 - 0.5*K))*exp(K*R1) + exp(3*K*R1)*(1 - 0.5*K)^2)
+    P1 = 1/R1*(1 - 1/xi)
+  ELSE
+  IF (rows_e = 4 AND passes_e = 4) THEN
+    K = 1 - exp(-0.25*NTU1)
+    xi = (0.5*K*(1 - 0.5*K + 0.25*K^2) + K*(1 - 0.5*K)*(1 - 0.125*R1*K*(1 - 0.5*K)*exp(2*K*R1)) + exp(4*K*R1)*(1 - 0.5*K)^3)
+    P1 = 1/R1*(1 - 1/xi)
+  ELSE
+  IF (rows_e = 5 AND passes_e = 5) THEN
+    K = 1 - exp(-0.2*NTU1)
+    K2 = K*K
+    K3 = K2*K
+    xi = (K*(1 - 0.75*K + 0.5*K2 - 0.125*K3) - R1*K2*(1 - K + 0.75*K2 - 0.25*K3 - 0.5*R1*K2*(1 - 0.5*K)^2))*exp(K*R1)
+    xi = xi + ((K*(1 - 0.75*K + K3/16) - 3*R1*K2*(1 - 0.5*K)^3)*exp(3*K*R1) + (1 - 0.5*K)^4*exp(5*K*R1))
+    P1 = 1/R1*(1 - 1/xi)
+  ELSE
+  IF (rows_e = 4 AND passes_e = 2) THEN
+    K = 1 - exp(-0.25*NTU1)
+    xi = (0.5*R1*K^3*(4 - K + 2*R1*K^2) + exp(4*K*R1) + K*(1 - 0.5*K + 0.125*K^2)*(1 - exp(4*K*R1)))/(1 + R1*K^2)^2
+    P1 = 1/R1*(1 - 1/xi)
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  temperature_effectiveness_air_cooler = P1
+END
+
+FUNCTION temperature_effectiveness_basic(R1, NTU1, subtype)
+{TEMPERATURE_EFFECTIVENESS_BASIC - temperature effectiveness P1 of a heat
+ exchanger of the basic (non shell-and-tube) flow arrangements, referred to
+ stream 1 [-].
+
+ The supported cases (subtype argument, integer [-]) are as follows:
+   1  counterflow (ex. double pipe)      P1 = (1 - exp[-NTU1*(1-R1)])/(1 - R1*exp[-NTU1*(1-R1)])
+                                         P1 = NTU1/(1 + NTU1)   if R1 = 1
+   2  parallel (ex. double pipe, inefficient configuration)
+                                         P1 = (1 - exp[-NTU1*(1+R1)])/(1 + R1)
+   3  crossflow, single pass, fluids unmixed (approximate)
+                                         P1 = 1 - exp[(NTU1^0.22/R1)*(exp(-R1*NTU1^0.78) - 1)]
+   4  crossflow, single pass, fluids unmixed (exact, with a numerical
+      integration, as in the original)
+              1      2*NTU1*sqrt(R1)
+      eps = ---- - exp(-R1*NTU1)/(2*(R1*NTU1)^2)*integral  (1 + NTU1
+      R1           0                              - v^2/(4*R1*NTU1))*exp(-v^2/(4*R1*NTU1))*v*I0(v) dv
+   5  crossflow, single pass, fluid 1 mixed, fluid 2 unmixed
+                                         P1 = 1 - exp(-K/R1),   K = 1 - exp(-R1*NTU1)
+   6  crossflow, single pass, fluid 2 mixed, fluid 1 unmixed
+                                         P1 = (1 - exp(-K*R1))/R1,   K = 1 - exp(-NTU1)
+   7  crossflow, single pass, both fluids mixed
+                                         P1 = (1/K1 + R1/K2 - 1/NTU1)^-1,  K1 = 1 - exp(-NTU1),
+                                                                             K2 = 1 - exp(-R1*NTU1)
+ I0(v) of the exact crossflow formula is the modified Bessel function of the
+ first kind of order zero, evaluated here by its power series (25 terms); the
+ integral is evaluated by the composite Simpson rule with 80 intervals, as
+ CoolSolve cannot integrate inside a FUNCTION body.
+ R1 [-] is the heat capacity ratio in the P-NTU method referred to stream 1,
+ NTU1 [-] the number of transfer units on the same side.
+ Validity: the exact crossflow case (subtype 4) is a numerical integration and
+   the crossflow case of the original is only an approximation (as noted in the
+   original); no other limit quoted.
+ Original: Shah, R. K. and D. P. Sekulic, "Fundamentals of Heat Exchanger
+   Design", 1st ed., Wiley, Hoboken NJ, 2002; Thulukkanam, K., "Heat
+   Exchanger Design Handbook", 2nd ed., CRC Press, 2013; Rohsenow, W., J.
+   Hartnett and Y. Cho, "Handbook of Heat Transfer", 3E, McGraw-Hill, New
+   York, 1998; Triboix, A., "Exact and Approximate Formulas for Cross Flow Heat
+   Exchangers with Unmixed Fluids", International Communications in Heat and
+   Mass Transfer 36(2): 121-124, February 2009,
+   doi:10.1016/j.icheatmasstransfer.2008.10.012 (the exact formula and the
+   modified Bessel function of subtype 4).
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, temperature_effectiveness_basic,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF subtype = 1 THEN
+    IF R1 = 1 THEN
+      P1 = -NTU1/(-NTU1 - 1)   "limit of the closed form, as in the original"
+    ELSE
+      P1 = (1 - exp(-NTU1*(1 - R1)))/(1 - R1*exp(-NTU1*(1 - R1)))
+    ENDIF
+  ELSE
+  IF subtype = 2 THEN
+    P1 = (1 - exp(-NTU1*(1 + R1)))/(1 + R1)
+  ELSE
+  IF subtype = 3 THEN
+    P1 = 1 - exp(NTU1^0.22/R1*(exp(-R1*NTU1^0.78) - 1))
+  ELSE
+  IF subtype = 4 THEN
+    t0 = 1/(4*R1*NTU1)        "scaling of the integration variable [1]"
+    h_int = 2*NTU1*sqrt(R1)/80 "width of one Simpson interval [1]"
+    I_int = 0
+    DUPLICATE i = 0, 80
+      v = i*h_int
+      x0 = v^2*t0
+      term_k = 1
+      I0 = 1
+      DUPLICATE k = 1, 25
+        term_k = term_k*(v^2/4)/k^2
+        I0 = I0 + term_k
+      END
+      f_int = (1 + NTU1 - x0)*exp(-x0)*v*I0
+      IF (i = 0 OR i = 80) THEN
+        weight = 1
+      ELSE
+      IF MOD(i, 2) = 1 THEN
+        weight = 4
+      ELSE
+        weight = 2
+      ENDIF
+      ENDIF
+      I_int = I_int + weight*f_int
+    END
+    P1 = 1/R1 - exp(-R1*NTU1)/(2*(R1*NTU1)^2)*h_int/3*I_int
+  ELSE
+  IF subtype = 5 THEN
+    K = 1 - exp(-R1*NTU1)
+    P1 = 1 - exp(-K/R1)
+  ELSE
+  IF subtype = 6 THEN
+    K = 1 - exp(-NTU1)
+    P1 = (1 - exp(-K*R1))/R1
+  ELSE
+  IF subtype = 7 THEN
+    K1 = 1 - exp(-NTU1)
+    K2 = 1 - exp(-R1*NTU1)
+    P1 = (1/K1 + R1/K2 - 1/NTU1)^-1
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  temperature_effectiveness_basic = P1
+END
+
+FUNCTION temperature_effectiveness_TEMA_J(R1, NTU1, Ntp)
+{TEMPERATURE_EFFECTIVENESS_TEMA_J - temperature effectiveness P1 of a TEMA J
+ type shell-and-tube heat exchanger, referred to stream 1 [-].
+
+ 1-1, shell and tube fluids mixed:
+  P1 = (1/R1)*[1 - (2-R1)*(2E + R1*B)/{(2+R1)*(2E - R1/B)}]
+  P1 = 0.5*[1 - (1 + A^-2)/2/(1 + NTU1)]      if R1 = 2
+  with A = exp(NTU1) and B = exp(-NTU1*R1/2)
+ 1-2, shell and tube fluids mixed (same equation for both arrangements):
+  P1 = [1 + R1/2 + lambda*B - 2*lambda*C*D]^-1
+  with lambda = (1 + R1^2/4)^0.5, A = exp(NTU1),
+       B = (A^lambda + 1)/(A^lambda - 1),
+       C = A^((1+lambda)/2)/(lambda - 1 + (1+lambda)*A^lambda),
+       D = 1 + lambda*A^((lambda-1)/2)/(A^lambda - 1)
+ 1-4, shell and tube fluids mixed:
+  P1 = [1 + R1/4*(1 + 3E)/(1 + E) + lambda*B - 2*lambda*C*D]^-1
+  with lambda = (1 + R1^2/16)^0.5, A = exp(NTU1), E = exp(R1*NTU1/2) and
+       B, C, D as above (with that lambda)
+
+ R1 [-] is the heat capacity ratio in the P-NTU method referred to stream 1
+ (shell side = 1, tube side = 2), NTU1 [-] the number of transfer units on
+ stream 1, Ntp [-] the number of tube passes (1, 2 or 4). The original raises
+ an error for any other number of passes; only these three cases are evaluated
+ here (the output is left undefined otherwise).
+ Validity: no limit quoted.
+ Original: Shah, R. K. and D. P. Sekulic, "Fundamentals of Heat Exchanger
+   Design", 1st ed., Wiley, Hoboken NJ, 2002; Thulukkanam, K., "Heat
+   Exchanger Design Handbook", 2nd ed., CRC Press, 2013 (formulas with the
+   opposite stream convention); Rohsenow, W., J. Hartnett and Y. Cho,
+   "Handbook of Heat Transfer", 3E, McGraw-Hill, New York, 1998.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, temperature_effectiveness_TEMA_J,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF Ntp = 1 THEN
+    A = exp(NTU1)
+    B = exp(-NTU1*R1/2)
+    IF R1 = 2 THEN
+      P1 = 0.5*(1 - (1 + A^-2)/2/(1 + NTU1))   "limit of the original, as in the original"
+    ELSE
+      P1 = 1/R1*(1 - (2 - R1)*(2*A + R1*B)/(2 + R1)/(2*A - R1/B))
+    ENDIF
+  ELSE
+  IF Ntp = 2 THEN
+    lambda1 = (1 + R1*R1/4)^0.5
+    A = exp(NTU1)
+    D = 1 + lambda1*A^((lambda1 - 1)/2)/(A^lambda1 - 1)
+    C = A^((1 + lambda1)/2)/(lambda1 - 1 + (1 + lambda1)*A^lambda1)
+    B = (A^lambda1 + 1)/(A^lambda1 - 1)
+    P1 = 1/(1 + R1/2 + lambda1*B - 2*lambda1*C*D)
+  ELSE
+  IF Ntp = 4 THEN
+    lambda1 = (1 + R1^2/16)^0.5
+    E = exp(R1*NTU1/2)
+    A = exp(NTU1)
+    D = 1 + lambda1*A^((lambda1 - 1)/2)/(A^lambda1 - 1)
+    C = A^((1 + lambda1)/2)/(lambda1 - 1 + (1 + lambda1)*A^lambda1)
+    B = (A^lambda1 + 1)/(A^lambda1 - 1)
+    P1 = 1/(1 + R1/4*(1 + 3*E)/(1 + E) + lambda1*B - 2*lambda1*C*D)
+  ENDIF
+  ENDIF
+  ENDIF
+  temperature_effectiveness_TEMA_J = P1
+END
+
+FUNCTION temperature_effectiveness_TEMA_H(R1, NTU1, Ntp, optimal)
+{TEMPERATURE_EFFECTIVENESS_TEMA_H - temperature effectiveness P1 of a TEMA H
+ type shell-and-tube heat exchanger, referred to stream 1 [-].
+
+ 1-1, tube fluid split into two streams individually mixed, shell fluid mixed:
+  P1 = E*[1 + (1 - BR1/2)*(1 - AR1/2 + ABR1)] - AB*(1 - BR1/2)
+  with A = (1/{1 + R1/2})*[1 - exp(-NTU1*(1 + R1/2)/2)],
+       D = exp[-NTU1*(1 - R1/2)/2], B = (1 - D)/(1 - R1*D/2)
+       (B = NTU1/(2 + NTU1) if R1 = 2), E = (A + B - ABR1/2)/2
+ 1-2, shell and tube fluids mixed in each pass at the cross section, inlets
+ arranged to give a countercurrent-like (optimal) case:
+  P1 = (1/R1)*[1 - (1 - D)^4/(B - 4G/R1)]
+  with alpha = NTU1*(4 + R1)/8, beta = NTU1*(4 - R1)/8,
+       D = [1 - exp(-alpha)]/(4/R1 + 1),
+       E = [1 - exp(-beta)]/(4/R1 - 1) (E = NTU1/2 if R1 = 4),
+       H = [1 - exp(-2*beta)]/(4/R1 - 1) (H = NTU1 if R1 = 4),
+       G = (1 - D)^2*(D^2 + E^2) + D^2*(1 + E)^2, B = (1 + H)*(1 + E)^2
+ 1-2, the same arrangement with the tube-side inlet next to the shell-side
+ inlet, i.e. the inefficient (parallel-like) case (optimal = 0):
+  P1 = [1 - (B + 4*G*R2)/(1 - D)^4]/R1
+  with NTU2 = NTU1*R1, R2 = 1/R1,
+       beta = NTU2*(4*R2 + 1)/8, alpha = NTU2*(4*R2 - 1)/8,
+       H = [exp(-2*beta) - 1]/(4*R2 + 1),
+       E = [exp(-beta) - 1]/(4*R2 + 1),
+       B = (1 + H)*(1 + E)^2,
+       D = [1 - exp(-alpha)]/(1 - 4*R2) (D = -NTU2/8 if R2 = 0.25),
+       G = (1 - D)^2*(D^2 + E^2) + D^2*(1 + E)^2
+
+ R1 [-] is the heat capacity ratio in the P-NTU method referred to stream 1
+ (shell side = 1, tube side = 2), NTU1 [-] the number of transfer units on
+ stream 1, Ntp [-] the number of tube passes (1 or 2), optimal [-] 1 for the
+ countercurrent-like arrangement of the two-pass case and 0 for the
+ parallel-like one (as in the original: the 1-pass case ignores the flag). The
+ original raises an error for any other number of passes; only these cases are
+ evaluated here (the output is left undefined otherwise).
+ Validity: no limit quoted.
+ Original: Shah, R. K. and D. P. Sekulic, "Fundamentals of Heat Exchanger
+   Design", 1st ed., Wiley, Hoboken NJ, 2002; Thulukkanam, K., "Heat
+   Exchanger Design Handbook", 2nd ed., CRC Press, 2013 (the inefficient
+   two-pass case, with the opposite stream convention); Rohsenow, W., J.
+   Hartnett and Y. Cho, "Handbook of Heat Transfer", 3E, McGraw-Hill, New
+   York, 1998.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, temperature_effectiveness_TEMA_H,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF Ntp = 1 THEN
+    A = 1/(1 + R1/2)*(1 - exp(-NTU1*(1 + R1/2)/2))
+    D = exp(-NTU1*(1 - R1/2)/2)
+    IF R1 = 2 THEN
+      B = NTU1/(2 + NTU1)   "limit of the original, as in the original"
+    ELSE
+      B = (1 - D)/(1 - R1*D/2)
+    ENDIF
+    E = (A + B - A*B*R1/2)/2
+    P1 = E*(1 + (1 - B*R1/2)*(1 - A*R1/2 + A*B*R1)) - A*B*(1 - B*R1/2)
+  ELSE
+  IF (Ntp = 2 AND optimal = 1) THEN
+    alpha = NTU1*(4 + R1)/8
+    beta = NTU1*(4 - R1)/8
+    D = (1 - exp(-alpha))/(4/R1 + 1)
+    IF R1 = 4 THEN
+      E = NTU1/2   "limit of the original, as in the original"
+      H = NTU1
+    ELSE
+      E = (1 - exp(-beta))/(4/R1 - 1)
+      H = (1 - exp(-2*beta))/(4/R1 - 1)
+    ENDIF
+    G = (1 - D)^2*(D^2 + E^2) + D^2*(1 + E)^2
+    B = (1 + H)*(1 + E)^2
+    P1 = 1/R1*(1 - (1 - D)^4/(B - 4*G/R1))
+  ELSE
+    NTU2 = NTU1*R1   "switch 1 of the original: NTU2 = NTU1*R1"
+    R2 = 1/R1        "switch 2 of the original: R2 = 1/R1"
+    beta = NTU2*(4*R2 + 1)/8
+    alpha = NTU2/8*(4*R2 - 1)
+    H = (exp(-2*beta) - 1)/(4*R2 + 1)
+    E = (exp(-beta) - 1)/(4*R2 + 1)
+    B = (1 + H)*(1 + E)^2
+    IF R2 = 0.25 THEN
+      D = -NTU2/8      "limit of the original, as in the original"
+    ELSE
+      D = (1 - exp(-alpha))/(1 - 4*R2)
+    ENDIF
+    G = (1 - D)^2*(D^2 + E^2) + D^2*(1 + E)^2
+    P1_sw = (1 - (B + 4*G*R2)/(1 - D)^4)/R1
+    P1 = P1_sw        "switch 3 of the original: P1 = P2/R1"
+  ENDIF
+  ENDIF
+  temperature_effectiveness_TEMA_H = P1
+END
+
+FUNCTION temperature_effectiveness_TEMA_G(R1, NTU1, Ntp, optimal)
+{TEMPERATURE_EFFECTIVENESS_TEMA_G - temperature effectiveness P1 of a TEMA G
+ type shell-and-tube heat exchanger, referred to stream 1 [-].
+
+ 1-1, tube fluid split into two streams individually mixed, shell fluid mixed
+ (this configuration is symmetric):
+  P1 = A + B - AB*(1 + R1) + R1*AB^2
+  with A = (1/{1 + R1})*[1 - exp(-NTU1*(1 + R1)/2)],
+       D = exp[-NTU1*(1 - R1)/2], B = (1 - D)/(1 - R1*D)
+       (B = NTU1/(2 + NTU1) if R1 = 1)
+ 1-2, shell and tube fluids mixed in each pass at the cross section,
+ counterflow arrangement (optimal = 1):
+  P1 = (B - alpha^2)/(A + 2 + R1*B)
+  with alpha = exp[-NTU1*(2 + R1)/4], beta = exp[-NTU1*(2 - R1)/2],
+       B = [4 - beta*(2 + R1)]/(2 - R1), A = -2*R1*(1 - alpha)^2/(2 + R1)
+       (P1 = (1 + 2*NTU1 - alpha^2)/(4 + 4*NTU1 - (1 - alpha)^2) with
+        alpha = exp(-NTU1) if R1 = 2)
+ 1-2, the same exchanger in overall parallelflow arrangement (optimal = 0):
+  P1 = (B - alpha^2)/{R2*[A - alpha^2/R2 + 2]}/R1
+  with NTU2 = NTU1*R1, R2 = 1/R1,
+       alpha = exp[-NTU2*(2*R2 - 1)/4], beta = exp[-NTU2*(2*R2 + 1)/2],
+       B = [4*R2 - beta*(2*R2 - 1)]/(2*R2 + 1), A = (1 - alpha)^2/(R2 - 0.5)
+       (P1_sw = (1 + 2*R2*NTU2 - beta)/R2/(4 + 4*R2*NTU2 + R2^2*NTU2^2) with
+        beta = exp(-2*R2*NTU2) if R2 = 0.5)
+
+ R1 [-] is the heat capacity ratio in the P-NTU method referred to stream 1
+ (shell side = 1, tube side = 2), NTU1 [-] the number of transfer units on
+ stream 1, Ntp [-] the number of tube passes (1 or 2), optimal [-] 1 for the
+ counterflow arrangement of the two-pass case and 0 for the parallelflow one
+ (as in the original: the 1-pass case ignores the flag). The original raises an
+ error for any other number of passes; only these cases are evaluated here (the
+ output is left undefined otherwise).
+ Validity: no limit quoted.
+ Original: Shah, R. K. and D. P. Sekulic, "Fundamentals of Heat Exchanger
+   Design", 1st ed., Wiley, Hoboken NJ, 2002; Thulukkanam, K., "Heat
+   Exchanger Design Handbook", 2nd ed., CRC Press, 2013 (the parallelflow
+   arrangement, with the opposite stream convention); Rohsenow, W., J. Hartnett
+   and Y. Cho, "Handbook of Heat Transfer", 3E, McGraw-Hill, New York, 1998.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, temperature_effectiveness_TEMA_G,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF Ntp = 1 THEN
+    D = exp(-NTU1*(1 - R1)/2)
+    IF R1 = 1 THEN
+      B = NTU1/(2 + NTU1)   "limit of the original, as in the original"
+    ELSE
+      B = (1 - D)/(1 - R1*D)
+    ENDIF
+    A = 1/(1 + R1)*(1 - exp(-NTU1*(1 + R1)/2))
+    P1 = A + B - A*B*(1 + R1) + R1*A*B^2
+  ELSE
+  IF (Ntp = 2 AND optimal = 1) THEN
+    IF R1 = 2 THEN
+      alpha = exp(-NTU1)
+      P1 = (1 + 2*NTU1 - alpha^2)/(4 + 4*NTU1 - (1 - alpha)^2)  "limit of the original, as in the original"
+    ELSE
+      beta = exp(-NTU1*(2 - R1)/2)
+      alpha = exp(-NTU1*(2 + R1)/4)
+      B = (4 - beta*(2 + R1))/(2 - R1)
+      A = -2*R1*(1 - alpha)^2/(2 + R1)
+      P1 = (B - alpha^2)/(A + 2 + R1*B)
+    ENDIF
+  ELSE
+    NTU2 = NTU1*R1   "switch 1 of the original: NTU2 = NTU1*R1"
+    R2 = 1/R1        "switch 2 of the original: R2 = 1/R1"
+    IF R2 = 0.5 THEN
+      beta = exp(-2*R2*NTU2)
+      P1_sw = (1 + 2*R2*NTU2 - beta)/R2/(4 + 4*R2*NTU2 + R2^2*NTU2^2)  "limit of the original, as in the original"
+    ELSE
+      beta = exp(-NTU2*(2*R2 + 1)/2)
+      alpha = exp(-NTU2*(2*R2 - 1)/4)
+      B = (4*R2 - beta*(2*R2 - 1))/(2*R2 + 1)
+      A = (1 - alpha)^2/(R2 - 0.5)
+      P1_sw = (B - alpha^2)/(R2*(A - alpha^2/R2 + 2))
+    ENDIF
+    P1 = P1_sw/R1     "switch 3 of the original: P1 = P2/R1"
+  ENDIF
+  ENDIF
+  temperature_effectiveness_TEMA_G = P1
+END
+
+FUNCTION temperature_effectiveness_TEMA_E(R1, NTU1, Ntp, optimal)
+{TEMPERATURE_EFFECTIVENESS_TEMA_E - temperature effectiveness P1 of a TEMA E
+ type shell-and-tube heat exchanger, referred to stream 1 [-].
+
+ 1-1, shell fluid mixed: the basic counterflow case
+  P1 = (1 - exp[-NTU1*(1-R1)])/(1 - R1*exp[-NTU1*(1-R1)])       (P1 = NTU1/(1 + NTU1) if R1 = 1)
+ 1-2, shell fluid mixed (this configuration is symmetric), countercurrent-like
+ arrangement (optimal = 1):
+  P1 = 2/{1 + R1 + E*coth(E*NTU1/2)},   E = (1 + R1^2)^0.5
+  (P1 = 1/{1 + coth(NTU1*2^-0.5)*2^-0.5} if R1 = 1)
+ 1-2, shell fluid split into two streams individually mixed, parallel-like
+ arrangement (optimal = 0): the TEMA J 1-1 formula with E = A and B = B
+  P1 = (1/R1)*[1 - (2-R1)*(2A + R1*B)/{(2+R1)*(2A - R1/B)}]
+  (P1 = 0.5*[1 - (1 + A^-2)/2/(1 + NTU1)] if R1 = 2), A = exp(NTU1), B = exp(-NTU1*R1/2)
+ 1-3, shell and tube fluids mixed, one parallel pass and two counterflow
+ passes (efficient, optimal = 1):
+  P1 = (1/R1)*[1 - C/(A*C + B^2)]
+  with lambda3 = R1,
+       lambda2 = -3/2 - (9/4 + R1*(R1 - 1))^0.5,
+       lambda1 = -3/2 + (9/4 + R1*(R1 - 1))^0.5,
+       delta = lambda1 - lambda2, X_i = exp(lambda_i*NTU1/3)/(2*delta),
+       A = X1*(R1 + lambda1)*(R1 - lambda2)/(2*lambda1) - X3*delta
+           - X2*(R1 + lambda2)*(R1 - lambda1)/(2*lambda2) + 1/(1 - R1)
+           (A = -exp(-NTU1)/18 - exp(NTU1/3)/2 + (NTU1 + 5)/9 if R1 = 1),
+       B = X1*(R1 - lambda2) - X2*(R1 - lambda1) + X3*delta,
+       C = X2*(3*R1 + lambda1) - X1*(3*R1 + lambda2) + X3*delta
+ 1-3, shell and tube fluids mixed, two parallel passes and one counterflow
+ pass (inefficient, optimal = 0):
+  P1 = [1 - C/(A*C + B^2)]/R1
+  with NTU2 = NTU1*R1, R2 = 1/R1,
+       delta = {[9*R2^2 + 4*(1 - R2)]}^0.5/R2,
+       l1 = (-3 + delta)/2, l2 = (-3 - delta)/2,
+       chi1 = exp(l1*R2*NTU2/3)/(2*delta), chi2 = exp(l2*R2*NTU2/3)/(2*delta),
+       E = 0.5*exp(NTU2/3),
+       A = chi1*(1 + R2*l1)*(1 - R2*l2)/(2*R2^2*l1) - E
+           - chi2*(1 + R2*l2)*(1 - R2*l1)/(2*R2^2*l2) + R2*(R2 - 1),
+       B = chi1*(1 - R2*l2)/R2 - chi2*(1 - R2*l1)/R2 + E,
+       C = -chi1*(3 + R2*l2)/R2 + chi2*(3 + R2*l1)/R2 + E
+ 1-N, shell and tube fluids mixed, efficient counterflow orientation, N even
+ (N = Ntp):
+  P1 = 2/(A + B + C)/R1
+  with NTU2 = NTU1*R1, R2 = 1/R1, N1 = N/2,
+       A = 1 + R2 + coth(NTU2/2),
+       B = -(1/N1)*coth(NTU2/(2*N1)),
+       C = (1/N1)*(1 + N1^2*R2^2)^0.5*coth(NTU2/(2*N1)*(1 + N1^2*R2^2)^0.5)
+
+ R1 [-] is the heat capacity ratio in the P-NTU method referred to stream 1
+ (shell side = 1, tube side = 2), NTU1 [-] the number of transfer units on
+ stream 1, Ntp [-] the number of tube passes (1, 2, 3 or any even number),
+ optimal [-] 1 for the countercurrent-like arrangement and 0 for the
+ parallel-like one (as in the original: it only applies to the 2 and 3 pass
+ cases). The original raises an error for an odd number of tube passes larger
+ than 3; only the cases listed here are evaluated (the output is left undefined
+ otherwise).
+ Validity: no limit quoted.
+ Original: Shah, R. K. and D. P. Sekulic, "Fundamentals of Heat Exchanger
+   Design", 1st ed., Wiley, Hoboken NJ, 2002; Thulukkanam, K., "Heat
+   Exchanger Design Handbook", 2nd ed., CRC Press, 2013 (the 5-pass formula and
+   the opposite stream convention); Rohsenow, W., J. Hartnett and Y. Cho,
+   "Handbook of Heat Transfer", 3E, McGraw-Hill, New York, 1998.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, temperature_effectiveness_TEMA_E,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF Ntp = 1 THEN
+    IF R1 = 1 THEN
+      P1 = NTU1/(1 + NTU1)   "limit of the original, as in the original"
+    ELSE
+      P1 = (1 - exp(-NTU1*(1 - R1)))/(1 - R1*exp(-NTU1*(1 - R1)))
+    ENDIF
+  ELSE
+  IF (Ntp = 2 AND optimal = 1) THEN
+    IF R1 = 1 THEN
+      P1 = 1/(1 + 1/TANH(NTU1*2^-0.5)*2^-0.5)   "limit of the original, as in the original"
+    ELSE
+      E = (1 + R1^2)^0.5
+      P1 = 2/(1 + R1 + E/TANH(E*NTU1/2))
+    ENDIF
+  ELSE
+  IF (Ntp = 2 AND optimal = 0) THEN
+    A = exp(NTU1)
+    B = exp(-NTU1*R1/2)
+    IF R1 = 2 THEN
+      P1 = 0.5*(1 - (1 + A^-2)/2/(1 + NTU1))   "limit of the original, as in the original"
+    ELSE
+      P1 = 1/R1*(1 - (2 - R1)*(2*A + R1*B)/(2 + R1)/(2*A - R1/B))
+    ENDIF
+  ELSE
+  IF (Ntp = 3 AND optimal = 1) THEN
+    lambda3 = R1
+    lambda2 = -1.5 - (2.25 + R1*(R1 - 1))^0.5
+    lambda1 = -1.5 + (2.25 + R1*(R1 - 1))^0.5
+    delta = lambda1 - lambda2
+    X1 = exp(lambda1*NTU1/3)/2/delta
+    X2 = exp(lambda2*NTU1/3)/2/delta
+    X3 = exp(lambda3*NTU1/3)/2/delta
+    C = X2*(3*R1 + lambda1) - X1*(3*R1 + lambda2) + X3*delta
+    B = X1*(R1 - lambda2) - X2*(R1 - lambda1) + X3*delta
+    IF R1 = 1 THEN
+      A = -exp(-NTU1)/18 - exp(NTU1/3)/2 + (NTU1 + 5)/9   "limit of the original, as in the original"
+    ELSE
+      A = X1*(R1 + lambda1)*(R1 - lambda2)/2/lambda1 - X3*delta - X2*(R1 + lambda2)*(R1 - lambda1)/2/lambda2 + 1/(1 - R1)
+    ENDIF
+    P1 = 1/R1*(1 - C/(A*C + B*B))
+  ELSE
+  IF (Ntp = 3 AND optimal = 0) THEN
+    NTU2 = NTU1*R1   "switch 1 of the original: NTU2 = NTU1*R1"
+    R2 = 1/R1        "switch 2 of the original: R2 = 1/R1"
+    delta = (9*R2^2 + 4*(1 - R2))^0.5/R2
+    l1 = (-3 + delta)/2
+    l2 = (-3 - delta)/2
+    chi1 = exp(l1*R2*NTU2/3)/2/delta
+    chi2 = exp(l2*R2*NTU2/3)/2/delta
+    E = 0.5*exp(NTU2/3)
+    C = -chi1*(3 + R2*l2)/R2 + chi2*(3 + R2*l1)/R2 + E
+    B = chi1*(1 - R2*l2)/R2 - chi2*(1 - R2*l1)/R2 + E
+    A = chi1*(1 + R2*l1)*(1 - R2*l2)/(2*R2^2*l1) - E - chi2*(1 + R2*l2)*(1 - R2*l1)/(2*R2^2*l2) + R2*(R2 - 1)
+    P1_sw = 1 - C/(A*C + B^2)
+    P1 = P1_sw/R1        "switch 3 of the original: P1 = P2/R1"
+  ELSE
+  IF (Ntp = 4 OR MOD(Ntp, 2) = 0) THEN
+    NTU2 = NTU1*R1   "switch 1 of the original: NTU2 = NTU1*R1"
+    R2 = 1/R1        "switch 2 of the original: R2 = 1/R1"
+    N1 = Ntp/2
+    C = 1/N1*(1 + N1^2*R2^2)^0.5/TANH(NTU2/(2*N1)*(1 + N1^2*R2^2)^0.5)
+    B = -1/N1/TANH(NTU2/(2*N1))
+    A = 1 + R2 + 1/TANH(NTU2/2)
+    P1_sw = 2/(A + B + C)
+    P1 = P1_sw/R1        "switch 3 of the original: P1 = P2/R1"
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  temperature_effectiveness_TEMA_E = P1
+END
+
+FUNCTION temperature_effectiveness_plate(R1, NTU1, Np1, Np2, counterflow, passes_counterflow)
+{TEMPERATURE_EFFECTIVENESS_PLATE - temperature effectiveness P1 of a plate
+ heat exchanger, referred to stream 1 [-].
+
+ R1 [-] is the heat capacity ratio of side 1 in the P-NTU method, NTU1 [-] the
+ number of transfer units of side 1, Np1 and Np2 [-] the number of passes of
+ sides 1 and 2, counterflow [-] 1 when the overall flow through the exchanger is
+ counterflow (0: parallelflow), passes_counterflow [-] 1 when the individual
+ passes are counterflow. The 20 supported cases are, as in the original (the
+ first number of passes refers to side 1, the second to side 2):
+   1/1 parallelflow, 1/1 counterflow, 1/2, 1/3 counterflow (the two end passes
+   in parallelflow), 1/3 parallelflow, 1/4, 2/2 overall parallelflow with the
+   passes parallelflow, 2/2 overall parallelflow with the passes counterflow,
+   2/2 overall counterflow with the passes parallelflow, 2/2 overall
+   counterflow with the passes counterflow, 2/3 and 3/2 overall parallelflow,
+   2/3 and 3/2 overall counterflow, 2/4 and 4/2 overall parallelflow,
+   2/4 and 4/2 overall counterflow
+ with the common terms P_NTU_Pp and P_NTU_Pc of the plate formulas:
+   1/1 parallelflow          P1 = P_p(NTU1, R1)
+   1/1 counterflow           P1 = P_c(NTU1, R1)
+   1/2                       P1 = 0.5*(A + B - 0.5*AB*R1), A = P_p(NTU1, 0.5*R1), B = P_c(NTU1, 0.5*R1)
+   1/3 counterflow           P1 = (1/3)*[A + B*(1 - R1*A/3)*(2 - R1*B/3)], A = P_p(NTU1, R1/3), B = P_c(NTU1, R1/3)
+   1/3 parallelflow         P1 = (1/3)*[B + A*(1 - R1*B/3)*(2 - R1*A/3)], A, B as above
+   1/4                       P1 = (1 - Q)/R1, Q = (1 - A*R1/4)^2*(1 - B*R1/4)^2,
+                             A = P_p(NTU1, 0.25*R1), B = P_c(NTU1, 0.25*R1)
+   2/2 overall parallelflow, passes counterflow
+                             P1 = B*(2 - B*(1 + R1)), B = P_c(NTU1/2, R1)
+   2/2 overall counterflow, passes parallelflow
+                             P1 = (2*A - A^2*(1 + R1))/(1 - R1*A^2), A = P_p(NTU1/2, R1)
+   2/3 overall parallelflow  P1 = A + B - (2/9 + D/3)*(A^2 + B^2) - (5/9 + 4D/3)*AB
+                                    + D*(1 + D)*AB*(A + B)/3 - D^2*A^2*B^2/9
+                             A = P_p(NTU1/2, D), B = P_c(NTU1/2, D), D = 2*R1/3
+   2/3 overall counterflow   P1 = (A + 0.5*B + 0.5*C + D)/R1,
+                             A = (2*R1*E*F^2 - 2*E*F + F - F^2)/(2*R1*E^2*F^2 - E^2 - F^2 - 2*E*F + E + F),
+                             B = A*(E - 1)/F, C = (1 - A)/E, D = R1*E^2*C - R1*E + R1 - C/2,
+                             E = 3/(2*R1*G), F = 3/(2*R1*H), G = P_c(NTU1/2, 2*R1/3),
+                             H = P_p(NTU1/2, 2*R1/3)
+   2/4 overall parallelflow  P1 = 2*D - (1 + R1)*D^2, D = (A + B - 0.5*AB*R1)/2,
+                             A = P_p(NTU1/2, 0.5*R1), B = P_c(NTU1/2, 0.5*R1)
+   2/4 overall counterflow   P1 = (2*D - (1 + R1)*D^2)/(1 - D^2*R1), D, A, B as above
+ The six asymmetric combinations of that list (2/1, 3/1, 3/2, 4/1, 4/2 and the
+ 1/1, 1/2, 1/3, 1/4, 2/3, 2/4 arrangements read the other way round) have no
+ branch here: the original obtains them by exchanging the two sides and calling
+ itself again, with R1 -> 1/R1, NTU1 -> NTU1*R1 and the passes exchanged, and by
+ multiplying its result by 1/R1. EES has no recursive FUNCTION here (CoolSolve
+ 0.3.0 mis-evaluates and crashes on a self-recursive function, see the
+ README), so the caller performs that exchange explicitly:
+   P1 = temperature_effectiveness_plate(1/R1, NTU1*R1, Np2, Np1, counterflow,
+          passes_counterflow)*(1/R1)
+ which is what the demonstration program of this file does for its case A.
+
+ Validity: in every case each pass is assumed to be made up of an infinite
+   number of plates, the fluid velocities are uniform across the plate
+   channels, the flow is uniformly distributed between the channels and the heat
+   transfer coefficient is constant (as noted in the original).
+ Original: Shah, R. K. and D. P. Sekulic, "Fundamentals of Heat Exchanger
+   Design", 1st ed., Wiley, Hoboken NJ, 2002; Rohsenow, W., J. Hartnett and
+   Y. Cho, "Handbook of Heat Transfer", 3E, McGraw-Hill, New York, 1998;
+   Kandlikar, S. G. and R. K. Shah, "Asymptotic Effectiveness-NTU Formulas for
+   Multipass Plate Heat Exchangers", Journal of Heat Transfer 111(2): 314-321,
+   May 1989, doi:10.1115/1.3250679; Kandlikar, S. G. and R. K. Shah,
+   "Multipass Plate Heat Exchangers Effectiveness-NTU Results and Guidelines
+   for Selecting Pass Arrangements", Journal of Heat Transfer 111(2): 300-313,
+   May 1989, doi:10.1115/1.3250678.
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, temperature_effectiveness_plate,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF (Np1 = 1 AND Np2 = 1 AND counterflow = 1) THEN
+    P1 = P_NTU_Pc(NTU1, R1)
+  ELSE
+  IF (Np1 = 1 AND Np2 = 1) THEN
+    P1 = P_NTU_Pp(NTU1, R1)
+  ELSE
+  IF (Np1 = 1 AND Np2 = 2) THEN
+    A = P_NTU_Pp(NTU1, 0.5*R1)
+    B = P_NTU_Pc(NTU1, 0.5*R1)
+    P1 = 0.5*(A + B - 0.5*A*B*R1)
+  ELSE
+  IF (Np1 = 1 AND Np2 = 3 AND counterflow = 1) THEN
+    A = P_NTU_Pp(NTU1, R1/3)
+    B = P_NTU_Pc(NTU1, R1/3)
+    P1 = 1/3*(A + B*(1 - R1*A/3)*(2 - R1*B/3))
+  ELSE
+  IF (Np1 = 1 AND Np2 = 3) THEN
+    A = P_NTU_Pp(NTU1, R1/3)
+    B = P_NTU_Pc(NTU1, R1/3)
+    P1 = 1/3*(B + A*(1 - R1*B/3)*(2 - R1*A/3))
+  ELSE
+  IF (Np1 = 1 AND Np2 = 4) THEN
+    A = P_NTU_Pp(NTU1, 0.25*R1)
+    B = P_NTU_Pc(NTU1, 0.25*R1)
+    t1 = 1 - 0.25*A*R1
+    t2 = 1 - 0.25*B*R1
+    P1 = (1 - (t1*t2)^2)/R1
+  ELSE
+  IF (Np1 = 2 AND Np2 = 2) THEN
+    IF (counterflow = 1 AND passes_counterflow = 1) THEN
+      P1 = P_NTU_Pc(NTU1, R1)
+    ELSE
+    IF counterflow = 1 THEN
+      A = P_NTU_Pp(0.5*NTU1, R1)
+      P1 = (2*A - A*A*(1 + R1))/(1 - R1*A*A)
+    ELSE
+    IF passes_counterflow = 1 THEN
+      B = P_NTU_Pc(0.5*NTU1, R1)
+      P1 = B*(2 - B*(1 + R1))
+    ELSE
+      P1 = P_NTU_Pp(NTU1, R1)   "1 pass/1 pass parallelflow, as in the original"
+    ENDIF
+    ENDIF
+    ENDIF
+  ELSE
+  IF (Np1 = 2 AND Np2 = 3) THEN
+    IF counterflow = 1 THEN
+      H = P_NTU_Pp(0.5*NTU1, 2/3*R1)
+      G = P_NTU_Pc(0.5*NTU1, 2/3*R1)
+      E = 1/(2/3*R1*G)
+      F = 1/(2/3*R1*H)
+      E2 = E*E
+      F2 = F*F
+      A = (2*R1*E*F2 - 2*E*F + F - F2)/(2*R1*E2*F2 - E2 - F2 - 2*E*F + E + F)
+      C = (1 - A)/E
+      D = R1*E*E*C - R1*E + R1 - 0.5*C
+      B = A*(E - 1)/F
+      P1 = (A + 0.5*B + 0.5*C + D)/R1
+    ELSE
+      D = 2*R1/3
+      A = P_NTU_Pp(NTU1/2, D)
+      B = P_NTU_Pc(NTU1/2, D)
+      P1 = A + B - (2/9 + D/3)*(A*A + B*B) - (5/9 + 4/3*D)*A*B + D*(1 + D)*A*B*(A + B)/3 - D*D*A*A*B*B/9
+    ENDIF
+  ELSE
+  IF (Np1 = 2 AND Np2 = 4) THEN
+    A = P_NTU_Pp(0.5*NTU1, 0.5*R1)
+    B = P_NTU_Pc(0.5*NTU1, 0.5*R1)
+    D = 0.5*(A + B - 0.5*A*B*R1)
+    IF counterflow = 1 THEN
+      P1 = (2*D - (1 + R1)*D*D)/(1 - D*D*R1)
+    ELSE
+      P1 = 2*D - (1 + R1)*D*D
+    ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  temperature_effectiveness_plate = P1
+END
+
+FUNCTION NTU_from_P_basic(P1, R1, subtype)
+{NTU_FROM_P_BASIC - number of transfer units NTU1 of the basic (non
+ shell-and-tube) flow arrangements for a given temperature effectiveness P1 and
+ heat capacity ratio R1 [-].
+
+ The analytical inverses of the original are:
+   counterflow (subtype 1)   NTU1 = -1/(R1 - 1)*LN[(P1*R1 - 1)/(P1 - 1)]
+   parallel (subtype 2)      NTU1 = 1/(R1 + 1)*LN[-1/{P1*(R1 + 1) - 1}]
+   crossflow, fluid 1 mixed (subtype 5)
+                            NTU1 = -1/R1*LN[R1*LN(-(P1 - 1)*exp(1/R1))]
+   crossflow, fluid 2 mixed (subtype 6)
+                            NTU1 = -LN[(1/R1)*LN(-(P1*R1 - 1)*exp(R1))]
+ The three other cases of the original (crossflow approximate, exact crossflow
+ and both fluids mixed) have no analytical inverse: the original solves them
+ with a bounded secant/bisection solver. In EES the inversion is a simultaneous
+ equation, NTU1 is an unknown of the calling model and the second equation is
+ temperature_effectiveness_basic(NTU1, R1, subtype) = P1 (see the
+ demonstration program of this file, case B of the crossflow subtypes).
+
+ P1 [-] is the temperature effectiveness referred to stream 1, R1 [-] the heat
+ capacity ratio on the same side, subtype [-] the integer code of the flow
+ arrangement (1, 2, 5 or 6 here, see temperature_effectiveness_basic).
+ Validity: the original raises an error when no NTU1 can give the requested P1
+   (e.g. P1 above the maximum effectiveness of the arrangement); the
+   expressions here then have a negative logarithm or a negative base, which
+   CoolSolve reports as an error.
+ Original: as in temperature_effectiveness_basic (Shah and Sekulic 2002;
+   Thulukkanam 2013; Rohsenow, Hartnett and Cho 1998).
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, NTU_from_P_basic,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF subtype = 1 THEN
+    NTU1 = -LN((P1*R1 - 1)/(P1 - 1))/(R1 - 1)
+  ELSE
+  IF subtype = 2 THEN
+    NTU1 = LN(-1/(P1*(R1 + 1) - 1))/(R1 + 1)
+  ELSE
+  IF subtype = 5 THEN
+    NTU1 = -LN(R1*LN(-(P1 - 1)*exp(1/R1)))/R1
+  ELSE
+  IF subtype = 6 THEN
+    NTU1 = -LN(LN(-(P1*R1 - 1)*exp(R1))/R1)
+  ENDIF
+  ENDIF
+  ENDIF
+  ENDIF
+  NTU_from_P_basic = NTU1
+END
+
+FUNCTION NTU_from_P_E(P1, R1, Ntp, optimal)
+{NTU_FROM_P_E - number of transfer units NTU1 of a TEMA E shell-and-tube heat
+ exchanger for a given temperature effectiveness P1 and heat capacity ratio R1
+ [-].
+
+   1 tube pass     NTU1 = -1/(R1 - 1)*LN[(P1*R1 - 1)/(P1 - 1)]
+                   (the analytical counterflow inverse of the original)
+   2 tube passes, countercurrent arrangement (optimal = 1), with
+   x1 = R1^2 + 1:
+                   NTU1 = 2*LN[{(P1*R1 - P1*sqrt(x1) + P1 - 2)/
+                                (P1*R1 + P1*sqrt(x1) + P1 - 2)}^0.5]/sqrt(x1)
+                   (the original notes that this expression has two roots, one
+                   of them complex)
+ The other cases of the original (2 passes parallel-like, 3 passes, any even
+ number of passes) have no analytical inverse: the original solves them with a
+ bounded secant/bisection solver. In EES the inversion is a simultaneous
+ equation, NTU1 is an unknown of the calling model and the second equation is
+ temperature_effectiveness_TEMA_E(NTU1, R1, Ntp, optimal) = P1.
+
+ P1 [-] is the temperature effectiveness referred to stream 1, R1 [-] the heat
+ capacity ratio on the same side, Ntp [-] the number of tube passes and
+ optimal [-] the flow arrangement flag.
+ Validity: no NTU1 can give a P1 above the maximum effectiveness of the
+   arrangement; the original raises an error then, and the closed forms here
+   have a negative base (reported by CoolSolve as an error).
+ Original: as in temperature_effectiveness_TEMA_E (Shah and Sekulic 2002;
+   Thulukkanam 2013; Rohsenow, Hartnett and Cho 1998).
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, NTU_from_P_E,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF Ntp = 1 THEN
+    NTU1 = -LN((P1*R1 - 1)/(P1 - 1))/(R1 - 1)
+  ELSE
+  IF (Ntp = 2 AND optimal = 1) THEN
+    x1 = R1*R1 + 1
+    NTU1 = 2*LN(((P1*R1 - P1*sqrt(x1) + P1 - 2)/(P1*R1 + P1*sqrt(x1) + P1 - 2))^0.5)/sqrt(x1)
+  ENDIF
+  ENDIF
+  NTU_from_P_E = NTU1
+END
+
+FUNCTION NTU_from_P_G_residual(NTU1, R1, P1, Ntp, optimal)
+{NTU_FROM_P_G_RESIDUAL - equation of the inverse relation NTU_from_P_G of a TEMA
+ G shell-and-tube heat exchanger, written as a residual for EES [-].
+
+   residual(NTU1, R1, P1, Ntp, optimal) =
+       temperature_effectiveness_TEMA_G(R1, NTU1, Ntp, optimal) - P1 = 0
+
+ The original returns the number of transfer units directly, by solving this
+ equation with a secant/bisection solver bounded between 1E-11 and 1E4 (1 pass
+ and optimal 2 pass) or between 1E-11 and a Pade approximation of the NTU1 that
+ gives the maximum P1 (the inefficient 2 pass case). The bound is only the
+ bracket of that iteration and is dropped here: in EES the caller makes NTU1 an
+ unknown of its system and writes
+   NTU_from_P_G_residual(NTU1, R1, P1, Ntp, optimal) = 0
+ as the second equation (see the demonstration program of this file).
+
+ Arguments as in temperature_effectiveness_TEMA_G, plus the requested
+ temperature effectiveness P1 [-].
+ Validity: the NTU1 range of the original is quoted above; outside it the
+ equation may have no root or several ones (the function is not monotonic for
+ the inefficient 2 pass case).
+ Original: as in temperature_effectiveness_TEMA_G (Shah and Sekulic 2002;
+   Thulukkanam 2013; Rohsenow, Hartnett and Cho 1998).
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, NTU_from_P_G,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  NTU_from_P_G_residual = temperature_effectiveness_TEMA_G(R1, NTU1, Ntp, optimal) - P1
+END
+
+FUNCTION NTU_from_P_J_residual(NTU1, R1, P1, Ntp)
+{NTU_FROM_P_J_RESIDUAL - equation of the inverse relation NTU_from_P_J of a TEMA
+ J shell-and-tube heat exchanger, written as a residual for EES [-].
+
+   residual(NTU1, R1, P1, Ntp) =
+       temperature_effectiveness_TEMA_J(R1, NTU1, Ntp) - P1 = 0
+
+ The original solves this equation numerically (a bounded solver between 1E-11
+ and 1E3 for the 1 pass case, whose NTU1 diverges to infinity at the maximum
+ P1; between 1E-11 and a Pade approximation of that limit for the 2 and 4 pass
+ cases). The bracket of the iteration is dropped here: the caller makes NTU1 an
+ unknown of its system and writes
+   NTU_from_P_J_residual(NTU1, R1, P1, Ntp) = 0
+ as the second equation (see the demonstration program of this file).
+
+ Arguments as in temperature_effectiveness_TEMA_J, plus the requested
+ temperature effectiveness P1 [-].
+ Validity: the NTU1 range of the original is quoted above.
+ Original: as in temperature_effectiveness_TEMA_J (Shah and Sekulic 2002;
+   Thulukkanam 2013; Rohsenow, Hartnett and Cho 1998).
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, NTU_from_P_J,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  NTU_from_P_J_residual = temperature_effectiveness_TEMA_J(R1, NTU1, Ntp) - P1
+END
+
+FUNCTION NTU_from_P_H_residual(NTU1, R1, P1, Ntp, optimal)
+{NTU_FROM_P_H_RESIDUAL - equation of the inverse relation NTU_from_P_H of a TEMA
+ H shell-and-tube heat exchanger, written as a residual for EES [-].
+
+   residual(NTU1, R1, P1, Ntp, optimal) =
+       temperature_effectiveness_TEMA_H(R1, NTU1, Ntp, optimal) - P1 = 0
+
+ The original solves this equation numerically with a bounded solver between
+ 1E-11 and 100 (1 pass and optimal 2 pass); for the inefficient 2 pass case the
+ function is not monotonic and the upper bound is a Pade approximation of the
+ NTU1 that gives the maximum P1. The bracket is dropped here: the caller makes
+ NTU1 an unknown of its system and writes
+   NTU_from_P_H_residual(NTU1, R1, P1, Ntp, optimal) = 0
+ as the second equation (see the demonstration program of this file).
+
+ Arguments as in temperature_effectiveness_TEMA_H, plus the requested
+ temperature effectiveness P1 [-].
+ Validity: the NTU1 range of the original is quoted above.
+ Original: as in temperature_effectiveness_TEMA_H (Shah and Sekulic 2002;
+   Thulukkanam 2013; Rohsenow, Hartnett and Cho 1998).
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, NTU_from_P_H,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  NTU_from_P_H_residual = temperature_effectiveness_TEMA_H(R1, NTU1, Ntp, optimal) - P1
+END
+
+FUNCTION NTU_from_P_plate_residual(NTU1, R1, P1, Np1, Np2, counterflow, passes_counterflow)
+{NTU_FROM_P_PLATE_RESIDUAL - equation of the inverse relation NTU_from_P_plate of
+ a plate heat exchanger, written as a residual for EES [-].
+
+   residual(NTU1, R1, P1, Np1, Np2, counterflow, passes_counterflow) =
+       temperature_effectiveness_plate(R1, NTU1, Np1, Np2, counterflow,
+       passes_counterflow) - P1 = 0
+
+ The original solves this equation numerically with a bounded solver between
+ 1E-11 and 100 (counterflow arrangements), or between 1E-11 and a Pade
+ approximation of the NTU1 that gives the maximum P1 (the parallelflow
+ multipass cases). The bracket is dropped here: the caller makes NTU1 an unknown
+ of its system and writes
+   NTU_from_P_plate_residual(NTU1, R1, P1, Np1, Np2, counterflow, passes_counterflow) = 0
+ as the second equation (see the demonstration program of this file).
+
+ Arguments as in temperature_effectiveness_plate, plus the requested temperature
+ effectiveness P1 [-].
+ Validity: the NTU1 range of the original is quoted above; the original notes
+ that the requested P1 is not always obtainable.
+ Original: as in temperature_effectiveness_plate (Shah and Sekulic 2002;
+   Rohsenow, Hartnett and Cho 1998; Kandlikar and Shah 1989).
+ Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, NTU_from_P_plate,
+   MIT License, C. Bell - https://github.com/CalebBell/ht}
+  NTU_from_P_plate_residual = temperature_effectiveness_plate(R1, NTU1, Np1, Np2, counterflow, passes_counterflow) - P1
+END
+
+"!Demonstration program: every function is called at least twice"
+"It is ignored by the future $INCLUDE library:hx_temperature_effectiveness_pntu (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctests (R1 = 1/3, NTU1 = 1 for the TEMA and"
+"plate relations, R1 = 0.1 and NTU1 = 4 for the basic counterflow relation,"
+"R1 = 0.5, NTU1 = 2, 2 rows and 2 passes for the air cooler, x = 5 and y = 0.4"
+"for P_NTU_Pp, x = 5 and y = 0.7 for P_NTU_Pc)."
+"Case B: the steam/oil crossflow rating of the ht docstring (m1 = 0.725 kg/s,"
+"Cp1 = 1900 J/kg-K, m2 = 5.2 kg/s, Cp2 = 1860 J/kg-K, U = 275 W/m^2-K,"
+"A = 10.82 m^2, stream 1 = the process stream): R1 = 0.14242, NTU1 = 2.16007."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case A - input set"
+x_A = 5               "modified NTU1 of the plate helper terms [-]"
+y_A = 0.4             "modified R1 of the plate helper terms [-]"
+y_B_helper = 0.7      "modified R1 of P_NTU_Pc, case A [-]"
+R1_A = 1/3            "heat capacity ratio referred to stream 1 [-]"
+NTU1_A = 1            "number of transfer units referred to stream 1 [-]"
+R1_B_basic = 0.1      "heat capacity ratio, case A of the basic relation [-]"
+NTU1_B_basic = 4      "number of transfer units, case A of the basic relation [-]"
+R1_A_air = 0.5        "heat capacity ratio, case A of the air cooler [-]"
+NTU1_A_air = 2        "number of transfer units, case A of the air cooler [-]"
+R1_B_air = 4          "heat capacity ratio, case B of the air cooler [-]"
+NTU1_B_air = 1.2      "number of transfer units, case B of the air cooler [-]"
+rows_A = 2            "number of rows of tubes, case A of the air cooler [-]"
+passes_A = 2          "number of passes, case A of the air cooler [-]"
+Ntp_A = 1             "number of tube passes of the TEMA relations [-]"
+Np1_A = 3             "number of passes of side 1, plate relation [-]"
+Np2_A = 1             "number of passes of side 2, plate relation [-]"
+Np1_B = 1             "number of passes of side 1, case B of the plate relation [-]"
+Np2_B = 3             "number of passes of side 2, case B of the plate relation [-]"
+counterflow_A = 1     "overall flow of the plate exchanger, case A: counterflow [-]"
+optimal_A = 1         "flow arrangement of the TEMA relations, case A: countercurrent-like [-]"
+coerce_A = 1          "domain reduction of the air cooler, case A: allowed [-]"
+Ntp_2_A = 2           "number of tube passes of the case A call of NTU_from_P_E [-]"
+P1_basic_A = 0.975    "requested temperature effectiveness, basic relation [-]"
+P1_E_A = 0.58         "requested temperature effectiveness, TEMA E relation [-]"
+P1_G_A = 0.573        "requested temperature effectiveness, TEMA G relation [-]"
+P1_J_A = 0.57         "requested temperature effectiveness, TEMA J relation [-]"
+P1_H_A = 0.573        "requested temperature effectiveness, TEMA H relation [-]"
+P1_plate_A = 0.5743   "requested temperature effectiveness, plate relation [-]"
+
+"Case A - common helper terms of the plate formulas"
+P_NTU_Pp_A = P_NTU_Pp(x_A, y_A)
+P_NTU_Pc_A = P_NTU_Pc(x_A, y_B_helper)
+
+"Case A - basic flow arrangements"
+temperature_effectiveness_basic_A = temperature_effectiveness_basic(R1_B_basic, NTU1_B_basic, 1)
+
+"Case A - air cooler (2 rows, 2 passes)"
+temperature_effectiveness_air_cooler_A = temperature_effectiveness_air_cooler(R1_A_air, NTU1_A_air, rows_A, passes_A, coerce_A)
+
+"Case A - TEMA shell-and-tube relations, one tube pass"
+temperature_effectiveness_TEMA_J_A = temperature_effectiveness_TEMA_J(R1_A, NTU1_A, Ntp_A)
+temperature_effectiveness_TEMA_H_A = temperature_effectiveness_TEMA_H(R1_A, NTU1_A, Ntp_A, optimal_A)
+temperature_effectiveness_TEMA_G_A = temperature_effectiveness_TEMA_G(R1_A, NTU1_A, Ntp_A, optimal_A)
+temperature_effectiveness_TEMA_E_A = temperature_effectiveness_TEMA_E(R1_A, NTU1_A, Ntp_A, optimal_A)
+
+"Case A - plate exchanger, three passes on side 1 and one pass on side 2"
+"the ht doctest case is three passes on side 1 and one pass on side 2, an"
+"asymmetric combination: the sides are exchanged explicitly, as in the original"
+"(R2 = 1/R1_A = 3, NTU2 = NTU1_A*R1_A = 1/3 and P1 = R2*P2); the exchanged"
+"values are written as literals of the ht doctest input set because CoolSolve"
+"0.3.0 does not evaluate this function correctly when its arguments are"
+"variables (README, Limitations)"
+temperature_effectiveness_plate_A = temperature_effectiveness_plate(3, 1/3, Np2_A, Np1_A, counterflow_A, optimal_A)*3
+
+"Case A - inverse relations (the number of transfer units is an unknown of this"
+"program where the original solves the equation numerically)"
+NTU_from_P_basic_A = NTU_from_P_basic(P1_basic_A, R1_B_basic, 1)
+NTU_from_P_E_A = NTU_from_P_E(P1_E_A, R1_A, Ntp_2_A, optimal_A)
+"the EES idiom of the two equations below (a residual set to zero) is what makes"
+"NTU_from_P_G_A, NTU_from_P_J_A, NTU_from_P_H_A and NTU_from_P_plate_A the"
+"unknowns of this program; it is the pattern of CSL-0090"
+resid_G_A = 0
+resid_G_A = NTU_from_P_G_residual(NTU_from_P_G_A, R1_A, P1_G_A, Ntp_A, optimal_A)
+resid_J_A = 0
+resid_J_A = NTU_from_P_J_residual(NTU_from_P_J_A, R1_A, P1_J_A, Ntp_A)
+resid_H_A = 0
+resid_H_A = NTU_from_P_H_residual(NTU_from_P_H_A, R1_A, P1_H_A, Ntp_A, optimal_A)
+resid_plate_A = 0
+"the two asymmetric arrangements are not equivalent (as noted in the original),"
+"so this inverse is demonstrated on the direct one pass/three passes branch"
+resid_plate_A = NTU_from_P_plate_residual(NTU_from_P_plate_A, R1_A, P1_plate_A, Np2_A, Np1_A, counterflow_A, optimal_A)
+P1_TEMA_G_check_A = temperature_effectiveness_TEMA_G(R1_A, NTU_from_P_G_A, Ntp_A, optimal_A)
+P1_TEMA_J_check_A = temperature_effectiveness_TEMA_J(R1_A, NTU_from_P_J_A, Ntp_A)
+P1_TEMA_H_check_A = temperature_effectiveness_TEMA_H(R1_A, NTU_from_P_H_A, Ntp_A, optimal_A)
+P1_plate_check_A = temperature_effectiveness_plate(R1_A, NTU_from_P_plate_A, Np2_A, Np1_A, counterflow_A, optimal_A)
+
+"Case B - input set (steam/oil crossflow rating of the ht docstring)"
+R1_B = 0.1424214227   "heat capacity ratio of the process stream [-]"
+NTU1_B = 2.1600725953  "number of transfer units of the process stream [-]"
+optimal_B = 1          "flow arrangement of the TEMA relations: countercurrent-like [-]"
+P1_basic_B = 0.6       "requested temperature effectiveness, case B [-]"
+P1_basic_par_B = 0.5   "requested temperature effectiveness, parallel relation [-]"
+P1_basic_mix2_B = 0.3  "requested temperature effectiveness, mixed stream 2 [-]"
+P1_G_B = 0.5           "requested temperature effectiveness, TEMA G relation [-]"
+P1_J_B = 0.5           "requested temperature effectiveness, TEMA J relation [-]"
+P1_H_B = 0.5           "requested temperature effectiveness, TEMA H relation [-]"
+P1_plate_B = 0.5       "requested temperature effectiveness, plate relation [-]"
+
+"Case B - common helper terms of the plate formulas"
+P_NTU_Pp_B = P_NTU_Pp(NTU1_B, R1_B)
+P_NTU_Pc_B = P_NTU_Pc(NTU1_B, R1_B)
+
+"Case B - basic flow arrangements: counterflow (1), parallel (2), crossflow"
+"approximate (3), exact crossflow (4), crossflow mixed stream 1 (5), mixed"
+"stream 2 (6), both mixed (7)"
+temperature_effectiveness_basic_B = temperature_effectiveness_basic(R1_B, NTU1_B, 1)
+temperature_effectiveness_basic_extra2 = temperature_effectiveness_basic(R1_B, NTU1_B, 2)
+temperature_effectiveness_basic_extra3 = temperature_effectiveness_basic(R1_B, NTU1_B, 3)
+temperature_effectiveness_basic_extra4 = temperature_effectiveness_basic(R1_B, NTU1_B, 4)
+temperature_effectiveness_basic_extra5 = temperature_effectiveness_basic(R1_B, NTU1_B, 5)
+temperature_effectiveness_basic_extra6 = temperature_effectiveness_basic(R1_B, NTU1_B, 6)
+temperature_effectiveness_basic_extra7 = temperature_effectiveness_basic(R1_B, NTU1_B, 7)
+
+"Case B - the same seven arrangements for the input set of the ht unit test"
+"test_temperature_effectiveness_basic (R1 = 3.5107078, NTU1 = 0.2978667)"
+R1_test = 3.5107078039927404  "heat capacity ratio [-]"
+NTU1_test = 0.29786672449248663  "number of transfer units [-]"
+temperature_effectiveness_basic_test1 = temperature_effectiveness_basic(R1_test, NTU1_test, 1)
+temperature_effectiveness_basic_test2 = temperature_effectiveness_basic(R1_test, NTU1_test, 2)
+temperature_effectiveness_basic_test3 = temperature_effectiveness_basic(R1_test, NTU1_test, 3)
+temperature_effectiveness_basic_test4 = temperature_effectiveness_basic(R1_test, NTU1_test, 4)
+temperature_effectiveness_basic_test5 = temperature_effectiveness_basic(R1_test, NTU1_test, 5)
+temperature_effectiveness_basic_test6 = temperature_effectiveness_basic(R1_test, NTU1_test, 6)
+temperature_effectiveness_basic_test7 = temperature_effectiveness_basic(R1_test, NTU1_test, 7)
+
+"Case B - air cooler: 4 rows, 1 pass (the general N rows 1 pass formula)"
+temperature_effectiveness_air_cooler_B = temperature_effectiveness_air_cooler(4, 1.2, 4, 1, coerce_A)
+
+"Case B - remaining air cooler branches: 4 rows 4 passes, 4 rows 2 passes,"
+"the general formula with 6 rows, and the domain reduction of 4 rows 3 passes"
+temperature_effectiveness_air_cooler_extra_4x4 = temperature_effectiveness_air_cooler(R1_B, NTU1_B, 4, 4, coerce_A)
+temperature_effectiveness_air_cooler_extra_4x2 = temperature_effectiveness_air_cooler(R1_B, NTU1_B, 4, 2, coerce_A)
+temperature_effectiveness_air_cooler_extra_6x1 = temperature_effectiveness_air_cooler(R1_B, NTU1_B, 6, 1, coerce_A)
+temperature_effectiveness_air_cooler_coerced = temperature_effectiveness_air_cooler(R1_B, NTU1_B, 4, 3, coerce_A)
+
+"Case B - TEMA J: the R1 = 2 branch of the 1 pass case, then the 2 and 4 pass cases"
+temperature_effectiveness_TEMA_J_B = temperature_effectiveness_TEMA_J(2, 1, Ntp_A)
+temperature_effectiveness_TEMA_J_extra_2p = temperature_effectiveness_TEMA_J(R1_A, NTU1_A, 2)
+temperature_effectiveness_TEMA_J_extra_4p = temperature_effectiveness_TEMA_J(R1_A, NTU1_A, 4)
+
+"Case B - TEMA H: the R1 = 4 branch of the optimal 2 pass case, the R1 = 2"
+"branch of the 1 pass case, then the two inefficient 2 pass cases"
+temperature_effectiveness_TEMA_H_B = temperature_effectiveness_TEMA_H(4, 1, 2, optimal_B)
+temperature_effectiveness_TEMA_H_extra_1p_R2 = temperature_effectiveness_TEMA_H(2, 1, Ntp_A, optimal_B)
+temperature_effectiveness_TEMA_H_extra_2p_unopt = temperature_effectiveness_TEMA_H(R1_A, NTU1_A, 2, 0)
+temperature_effectiveness_TEMA_H_extra_2p_unopt_R4 = temperature_effectiveness_TEMA_H(4, 1, 2, 0)
+
+"Case B - TEMA G: the R1 = 1 branch of the 1 pass case, then the two optimal"
+"and the two inefficient 2 pass cases"
+temperature_effectiveness_TEMA_G_B = temperature_effectiveness_TEMA_G(1, 7, Ntp_A, optimal_B)
+temperature_effectiveness_TEMA_G_extra_2p = temperature_effectiveness_TEMA_G(R1_A, NTU1_A, 2, optimal_B)
+temperature_effectiveness_TEMA_G_extra_2p_R2 = temperature_effectiveness_TEMA_G(2, 7, 2, optimal_B)
+temperature_effectiveness_TEMA_G_extra_2p_unopt = temperature_effectiveness_TEMA_G(R1_A, NTU1_A, 2, 0)
+temperature_effectiveness_TEMA_G_extra_2p_unopt_R2 = temperature_effectiveness_TEMA_G(2, 1, 2, 0)
+
+"Case B - TEMA E: the 2 pass countercurrent arrangement, its parallel-like"
+"form, the two 3 pass cases, the 4 pass and the general 6 pass formula"
+temperature_effectiveness_TEMA_E_B = temperature_effectiveness_TEMA_E(R1_A, NTU1_A, 2, optimal_B)
+temperature_effectiveness_TEMA_E_extra_2p_unopt = temperature_effectiveness_TEMA_E(R1_A, NTU1_A, 2, 0)
+temperature_effectiveness_TEMA_E_extra_2p_unopt_R2 = temperature_effectiveness_TEMA_E(2, 1, 2, 0)
+temperature_effectiveness_TEMA_E_extra_3p = temperature_effectiveness_TEMA_E(R1_A, NTU1_A, 3, optimal_B)
+temperature_effectiveness_TEMA_E_extra_3p_unopt = temperature_effectiveness_TEMA_E(3, 1, 3, 0)
+temperature_effectiveness_TEMA_E_extra_4p = temperature_effectiveness_TEMA_E(R1_A, NTU1_A, 4, optimal_B)
+temperature_effectiveness_TEMA_E_extra_6p = temperature_effectiveness_TEMA_E(R1_B, NTU1_B, 6, optimal_B)
+
+"Case B - plate exchanger: one pass on side 1 and three passes on side 2, the"
+"four 2/2 and 2/4 arrangements and the 2/3 parallelflow case"
+temperature_effectiveness_plate_B = temperature_effectiveness_plate(R1_A, NTU1_A, Np1_B, Np2_B, counterflow_A, optimal_A)
+temperature_effectiveness_plate_extra_2x2_par = temperature_effectiveness_plate(R1_B, NTU1_B, 2, 2, 0, 0)
+temperature_effectiveness_plate_extra_2x2_cf_par = temperature_effectiveness_plate(R1_B, NTU1_B, 2, 2, 1, 0)
+temperature_effectiveness_plate_extra_2x4_cf = temperature_effectiveness_plate(R1_B, NTU1_B, 2, 4, 1, optimal_A)
+"four passes on side 1 and two on side 2 is an asymmetric combination: the"
+"sides are exchanged explicitly, as in the original"
+temperature_effectiveness_plate_extra_4x2_cf = temperature_effectiveness_plate(1/0.1424214227, 2.1600725953*0.1424214227, 2, 4, 1, optimal_A)/0.1424214227
+temperature_effectiveness_plate_extra_2x3_par = temperature_effectiveness_plate(R1_B, NTU1_B, 2, 3, 0, optimal_A)
+
+"Case B - analytical inverse relations"
+NTU_from_P_basic_B = NTU_from_P_basic(P1_basic_B, R1_B, 1)
+NTU_from_P_basic_extra_par = NTU_from_P_basic(P1_basic_par_B, R1_B, 2)
+NTU_from_P_basic_extra_mix1 = NTU_from_P_basic(P1_basic_B, R1_B, 5)
+NTU_from_P_basic_extra_mix2 = NTU_from_P_basic(P1_basic_mix2_B, R1_B, 6)
+NTU_from_P_E_B = NTU_from_P_E(P1_basic_B, R1_B, 2, optimal_B)
+NTU_from_P_E_extra_1p = NTU_from_P_E(P1_basic_B, R1_B, Ntp_A, optimal_B)
+
+"Case B - inverse relations solved as a simultaneous equation: NTU1 is an"
+"unknown of this program and the residual below is the second equation"
+resid_G_B = 0
+resid_G_B = NTU_from_P_G_residual(NTU_from_P_G_B, R1_B, P1_G_B, Ntp_A, optimal_B)
+resid_J_B = 0
+resid_J_B = NTU_from_P_J_residual(NTU_from_P_J_B, R1_B, P1_J_B, Ntp_A)
+resid_H_B = 0
+resid_H_B = NTU_from_P_H_residual(NTU_from_P_H_B, R1_B, P1_H_B, Ntp_A, optimal_B)
+resid_plate_B = 0
+resid_plate_B = NTU_from_P_plate_residual(NTU_from_P_plate_B, R1_B, P1_plate_B, 1, 2, counterflow_A, optimal_A)
+P1_TEMA_G_check_B = temperature_effectiveness_TEMA_G(R1_B, NTU_from_P_G_B, Ntp_A, optimal_B)
+P1_TEMA_J_check_B = temperature_effectiveness_TEMA_J(R1_B, NTU_from_P_J_B, Ntp_A)
+P1_TEMA_H_check_B = temperature_effectiveness_TEMA_H(R1_B, NTU_from_P_H_B, Ntp_A, optimal_B)
+P1_plate_check_B = temperature_effectiveness_plate(R1_B, NTU_from_P_plate_B, 1, 2, counterflow_A, optimal_A)

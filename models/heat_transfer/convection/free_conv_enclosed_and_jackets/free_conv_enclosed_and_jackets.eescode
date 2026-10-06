@@ -1,0 +1,617 @@
+{=============================================================================
+  Natural convection in enclosures and vessels: plates, critical Rayleigh
+  numbers, helical coils in tanks and vessel jackets
+  CoolSolve Library model CSL-0100 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Ten functions of the ht family ht/conv_free_enclosed.py,
+  ht/conv_free_immersed.py (Nu_coil_Xin_Ebadian) and ht/conv_jacket.py:
+
+    - Nusselt numbers between parallel horizontal plates (Rayleigh-Benard):
+      Holling-Herwig, Probert, Hollands (aspect-ratio dependent)
+    - Nusselt number between vertical plates: Thess (aspect-ratio dependent)
+    - critical Rayleigh number of parallel horizontal disks: Rac_Nusselt_Rayleigh_disk
+    - Nusselt numbers around a helical coil in a tank: Ali,
+      Prabhanjan-Rennie-Raghavan, Xin-Ebadian (vertical and horizontal coil)
+    - average heat-transfer coefficient in a vessel jacket: Lehrer,
+      Stein-Schmidt
+
+  Two members of the ht family are NOT translated, see README.md:
+    - Nu_Nusselt_Rayleigh_Holling_Herwig is implicit in Nu; its residual
+      Nu_Nusselt_Rayleigh_Holling_Herwig_err is translated below and the
+      demonstration program solves it as a simultaneous equation (as ht solves
+      it with a secant iteration)
+    - Rac_Nusselt_Rayleigh is a bivariate B-spline fit of Catton's table
+    The dispatcher Nu_free_vertical_plate(_methods) is not a correlation either.
+
+  Optional arguments of ht (buoyancy, Rac, H, L, muw, rhow, dT,
+  isobaric_expansion, inlettype, inletlocation) are 1/0 flags or arguments in
+  SI units here: see the comment block of each function.
+
+  pi and g are written as local constants pi_val and g_acc in the function
+  bodies: CoolSolve does not resolve the constant pi inside a FUNCTION body
+  (CS-BUG-PI-FUNCTION), as does its companion model CSL-0089.
+
+  The demonstration program at the end calls every function once with the
+  inputs of the ht doctest of the corresponding correlation ("A" cases) and
+  once with a second input set ("B" cases). The ht values of both sets are
+  tabulated in the README (verification table).
+
+  Inputs : Pr, Gr [-], Rac [-], H, L, D [m], insulated / buoyancy / horizontal /
+           radial_inlet / bottom_inlet / geometry flags [-], jacket geometry and
+           flow [m, m^3/s, kg/s, kg/m^3, J/kg/K, W/m/K, Pa-s, K], fd [-]
+  Outputs: Nu [-], Rac [-], h [W/m^2/K] (one FUNCTION per correlation)
+  Units  : SI - dimensionless numbers, lengths in m, h in W/m^2/K
+  Source : ht (Caleb Bell), ht/conv_free_enclosed.py, ht/conv_free_immersed.py,
+           ht/conv_jacket.py, version 1.2.0, commit 85e0ee6, MIT -
+           https://github.com/CalebBell/ht ; correlations by the authors cited
+           in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION Nu_Nusselt_Rayleigh_Holling_Herwig_err(Nu, Ra, D2)
+{NU_NUSSELT_RAYLEIGH_HOLLING_HERWIG_ERR - residual of the Holling-Herwig
+ correlation of the Nusselt number between two theoretical flat horizontal
+ plates (the Rayleigh-Benard problem), to be set to zero by the caller. ht
+ solves it for Nu by a secant iteration (Nu_Nusselt_Rayleigh_Holling_Herwig);
+ CoolSolve iterates an equation of the main program instead, so the caller
+ writes the residual as a simultaneous equation:
+     Nu = Nu + Nu_Nusselt_Rayleigh_Holling_Herwig_err(Nu, Ra, D2)   "err = 0"
+
+   err = Ra^(1/3)*[0.05*ln(Ra*Nu/16) + D2]^(-4/3) - Nu
+   Ra^(1/3) = Ra_third,  D2 = 2*D = 2*(-14.94/Ra^0.25 + 3.43)
+
+ Nu [-] is the Nusselt number (unknown, the root of err = 0), Ra [-] the
+ Rayleigh number and D2 [-] the quantity D2 above. The equation printed in the
+ ht docstring,
+   Nu = Ra^(1/3)/[0.05*ln(0.078/16*Ra^1.323) + 2D]^(4/3),
+ is the initial guess of ht, not the solved form; the solved form used here is
+ the one of the ht code (it is implicit in Nu: no closed-form solution exists,
+ as noted in ht).
+Validity: as in ht, Ra >= Rac = 1708 and 1E5 < Ra < 1E5 recommended.
+Original: Hoelling, M. and H. Herwig, "Asymptotic Analysis of Heat Transfer in
+  Turbulent Rayleigh-Benard Convection", International Journal of Heat and Mass
+  Transfer 49, no. 5 (March 1, 2006): 1129-36;
+  doi:10.1016/j.ijheatmasstransfer.2005.09.002.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_enclosed.py,
+  Nu_Nusselt_Rayleigh_Holling_Herwig_err, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Nu_Nusselt_Rayleigh_Holling_Herwig_err = Ra^(1/3)*(0.05*LN(Ra*Nu/16) + D2)^(-4/3) - Nu
+END
+
+FUNCTION Nu_Nusselt_Rayleigh_Probert(Pr, Gr, buoyancy)
+{NU_NUSSELT_RAYLEIGH_PROBERT - Nusselt number of the heat transfer between two
+ theoretical flat horizontal plates (the Rayleigh-Benard problem); the height
+ between the plates is infinite and one of the other plate dimensions is much
+ larger than the other (not for real, finite plates).
+
+   laminar, 1708 < Ra <= 2.2E4 :  Nu = 0.208*Ra^0.25
+   turbulent, Ra > 2.2E4       :  Nu = 0.092*Ra^(1/3)
+
+ Ra = Gr*Pr. buoyancy = 1 for a buoyancy-assisted (hot lower plate) case,
+ 0 otherwise; Nu = 1 if buoyancy = 0 or Ra < Rac = 1708 (as in ht).
+Validity: as in ht (recommended as a rough model in the VDI Heat Atlas).
+Original: Probert, S. D., R. G. Brooks and M. Dixon, "Heat Transfer across
+  Rectangular Cavities", CHEMICAL AND PROCESS ENGINEERING, 1970, 35;
+  Gesellschaft, V. D. I., ed. VDI Heat Atlas. 2nd ed. 2010 edition, Berlin;
+  New York: Springer, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_enclosed.py,
+  Nu_Nusselt_Rayleigh_Probert, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Gr*Pr
+  IF buoyancy = 0 OR Ra < 1708 THEN
+    Nu_Nusselt_Rayleigh_Probert = 1
+  ELSE
+    IF Ra < 2.2E4 THEN
+      Nu_Nusselt_Rayleigh_Probert = 0.208*Ra^0.25
+    ELSE
+      Nu_Nusselt_Rayleigh_Probert = 0.092*Ra^(1/3)
+    ENDIF
+  ENDIF
+END
+
+FUNCTION Nu_Nusselt_Rayleigh_Hollands(Pr, Gr, buoyancy, Rac)
+{NU_NUSSELT_RAYLEIGH_HOLLANDS - Nusselt number of the heat transfer between two
+ horizontal plates of finite dimensions (aspect ratio), after Hollands; the
+ influence of the aspect ratio comes from the critical Rayleigh number Rac,
+ which is passed in (in ht it is computed by Rac_Nusselt_Rayleigh or
+ Rac_Nusselt_Rayleigh_disk; see README.md).
+
+   Nu = 1 + [1 - Rac/Ra]^+*[k1 + 2*(Ra^(1/3)/k2)^(1 - ln(Ra^(1/3)/k2))]^+
+         + [(Ra/5803)^(1/3) - 1]^+*t5
+   k1 = 1.44/(1 + 0.018/Pr + 0.00136/Pr^2)
+   k2 = 75*exp(1.5*Pr^-0.5)
+   t5 = 1 if Rac = 1708 (infinite plates), else 1 - exp(-0.95*[(Ra/Rac)^(1/3) - 1]^+)
+
+ [.]^+ means max(0, .). Ra = Gr*Pr. buoyancy = 1 for a buoyancy-assisted
+ (hot lower plate) case, 0 otherwise; Nu = 1 if buoyancy = 0 or Ra < Rac.
+Validity: as in ht (supports real, finite plates through Rac).
+Original: Hollands, K. G. T., "Multi-Prandtl Number Correlation Equations for
+  Natural Convection in Layers and Enclosures", International Journal of Heat
+  and Mass Transfer 27, no. 3 (March 1, 1984): 466-68;
+  doi:10.1016/0017-9310(84)90295-3; Gesellschaft, V. D. I., ed. VDI Heat Atlas.
+  2nd ed. 2010 edition, Berlin; New York: Springer, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_enclosed.py,
+  Nu_Nusselt_Rayleigh_Hollands, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Gr*Pr
+  IF buoyancy = 0 OR Ra < Rac THEN
+    Nu_Nusselt_Rayleigh_Hollands = 1
+  ELSE
+    k1 = 1.44/(1 + 0.018/Pr + 0.00136/Pr^2)
+    k2 = 75*EXP(1.5*Pr^-0.5)
+    t1 = 1 - Rac/Ra
+    t2 = k1 + 2*(Ra^(1/3)/k2)^(1 - LN(Ra^(1/3)/k2))
+    t3 = (Ra/5803)^(1/3) - 1
+    IF Rac = 1708 THEN
+      t5 = 1
+    ELSE
+      t4 = max(0, (Ra/Rac)^(1/3) - 1)
+      t5 = 1 - EXP(-0.95*t4)
+    ENDIF
+    Nu_Nusselt_Rayleigh_Hollands = 1 + max(0, t1)*max(0, t2) + max(0, t3)*t5
+  ENDIF
+END
+
+FUNCTION Nu_Nusselt_vertical_Thess(Pr, Gr, H, L, geometry)
+{NU_NUSSELT_VERTICAL_THESS - Nusselt number of the natural convection between
+ two theoretical vertical flat plates after Thess (a variant of the
+ Rayleigh-Benard problem); it supports finite plates of different aspect
+ ratios through the geometry.
+
+   1E4 < Ra < 1E7 and geometry known : Nu = 0.42*Pr^0.012*Ra^0.25*(L/H)^0.25
+   Ra > 1E7 or geometry unknown     : Nu = 0.049*Ra^0.33
+
+ H [m] is the height of the vertical plate, L [m] its length; Nu is with
+ respect to the distance between the two plates. Ra = Gr*Pr. geometry = 1 when
+ H and L are known, 0 when the geometry is unknown. The equation printed in the
+ ht docstring shows (H/L)^-0.25; its code uses (L/H)^0.25, which is what
+ reproduces the doctest values, and is followed here (see README.md).
+Validity: as in ht: H/L < 80 recommended; the second branch for Ra above 1E7
+  (or when the geometry is unknown).
+Original: Gesellschaft, V. D. I., ed. VDI Heat Atlas. 2nd ed. 2010 edition,
+  Berlin; New York: Springer, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_enclosed.py,
+  Nu_Nusselt_vertical_Thess, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Gr*Pr
+  IF Ra < 1E7 AND geometry = 1 THEN
+    Nu_Nusselt_vertical_Thess = 0.42*Pr^0.012*Ra^0.25*(L/H)^0.25
+  ELSE
+    Nu_Nusselt_vertical_Thess = 0.049*Ra^0.33
+  ENDIF
+END
+
+FUNCTION Rac_Nusselt_Rayleigh_disk(H, D, insulated)
+{RAC_NUSSELT_RAYLEIGH_DISK - critical Rayleigh number at which free convection
+ starts between two parallel horizontal disks. Two cases are given: the top
+ disk is insulated (adiabatic, insulated = 1) or it has an infinite thermal
+ conductivity / is infinitely thin or absent (perfectly conducting,
+ insulated = 0); all real cases lie between the two.
+
+   x = min(max(D/H, 0.4), 6)
+   Rac = exp(1/p(x)),  p(x) the 17-coefficient polynomial evaluated at
+   x_ = 0.357142857142857151*(x - 3.2) with the coefficients of the insulated
+   or uninsulated table (written out in the body, Horner scheme)
+
+ H [m] is the distance between the two disks, D [m] their diameter. The
+ coefficients are a fit of the table of values of Rohsenow et al.; the source
+ of the coefficients is Buell and Catton (1983) (as cited in ht).
+Validity: as in ht: D/H from 0.4 to infinity; since infinity is not suited to a
+  polynomial form the upper limit is 6, values outside that range are rounded
+  to the limits.
+Original: Rohsenow, Warren and James Hartnett and Young Cho, Handbook of Heat
+  Transfer, 3E. New York: McGraw-Hill, 1998; Buell, J. C. and I. Catton, "The
+  Effect of Wall Conduction on the Stability of a Fluid in a Right Circular
+  Cylinder Heated From Below", Journal of Heat Transfer 105, no. 2 (May 1,
+  1983): 255-60, doi:10.1115/1.3245571.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_enclosed.py,
+  Rac_Nusselt_Rayleigh_disk, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  x = min(max(D/H, 0.4), 6)
+  IF insulated = 1 THEN
+    c1 = 0.2173851248644496
+    c2 = 0.09672312658254612
+    c3 = -1.0800494968302843
+    c4 = -0.3323452633903514
+    c5 = 2.1789014174652115
+    c6 = 0.43391756058946473
+    c7 = -2.275756526433769
+    c8 = -0.29309565826688255
+    c9 = 1.3153930583762103
+    c10 = 0.14707146242791974
+    c11 = -0.44891166228441826
+    c12 = -0.045070571352735386
+    c13 = 0.08693822836596571
+    c14 = 0.010343944709216
+    c15 = -0.01325209778273359
+    c16 = 0.0035707992137628142
+    c17 = 0.13258956599554672
+  ELSE
+    c1 = 1.3624571738082523
+    c2 = -0.24301326192178863
+    c3 = -6.152310426160362
+    c4 = 1.1950540229805053
+    c5 = 11.401090141352329
+    c6 = -2.405543860763877
+    c7 = -11.091871509655324
+    c8 = 2.519761389270987
+    c9 = 5.992609902331248
+    c10 = -1.4345227368881952
+    c11 = -1.7445130176764998
+    c12 = 0.42892571421446996
+    c13 = 0.22897205478499438
+    c14 = -0.042179780698649895
+    c15 = -0.01904413256783342
+    c16 = 0.006771075600246057
+    c17 = 0.13171026423861615
+  ENDIF
+  z = 0.357142857142857151*(x - 3.2)
+  p = c1
+  p = p*z + c2
+  p = p*z + c3
+  p = p*z + c4
+  p = p*z + c5
+  p = p*z + c6
+  p = p*z + c7
+  p = p*z + c8
+  p = p*z + c9
+  p = p*z + c10
+  p = p*z + c11
+  p = p*z + c12
+  p = p*z + c13
+  p = p*z + c14
+  p = p*z + c15
+  p = p*z + c16
+  p = p*z + c17
+  Rac_Nusselt_Rayleigh_disk = EXP(1/p)
+END
+
+FUNCTION Nu_vertical_helical_coil_Ali(Pr, Gr)
+{NU_VERTICAL_HELICAL_COIL_ALI - Nusselt number of the natural convection around
+ a vertical helical coil inside a tank or other vessel, after Ali.
+
+   Nu_L = 0.555*Gr_L^0.301*Pr^0.314
+
+ Pr [-] and Gr [-] are the Prandtl and Grashof numbers of the fluid surrounding
+ the coil; Nu is with respect to the total length of the helical coil (and the
+ bulk thermal conductivity). In the original the properties surrounding the
+ coil are evaluated at an unusual temperature: the average temperature of the
+ fluid inside the coil, (T_in + T_out)/2, is averaged with the fluid
+ temperature outside the coil.
+Validity: as in ht: 4.4 <= Pr <= 345 and 10 <= tank diameter / coil outer
+  diameter <= 30.
+Original: Ali, Mohamed E., "Natural Convection Heat Transfer from Vertical
+  Helical Coils in Oil", Heat Transfer Engineering 27, no. 3 (April 1, 2006):
+  79-85.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_enclosed.py,
+  Nu_vertical_helical_coil_Ali, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Nu_vertical_helical_coil_Ali = 0.555*Gr^0.301*Pr^0.314
+END
+
+FUNCTION Nu_vertical_helical_coil_Prabhanjan_Rennie_Raghavan(Pr, Gr)
+{NU_VERTICAL_HELICAL_COIL_PRABHJAN_RENNIE_RAGHAVAN - Nusselt number of the
+ natural convection around a vertical helical coil inside a tank or other
+ vessel, after Prabhanjan, Rennie and Raghavan.
+
+   Nu_H = 0.0749*Ra_H^0.3421,   Ra = Gr*Pr
+
+ Pr [-] and Gr [-] are calculated with the film temperature (wall temperature
+ and temperature very far from the coil, averaged), Gr with the total height of
+ the coil; Nu uses the total height of the coil and the film temperature. The
+ original also gives several other equations using different characteristic
+ lengths (not translated here).
+Validity: as in ht: 9E9 < Ra < 4E11.
+Original: Prabhanjan, Devanahalli G., Timothy J. Rennie and G. S. Vijaya
+  Raghavan, "Natural Convection Heat Transfer from Helical Coiled Tubes",
+  International Journal of Thermal Sciences 43, no. 4 (April 1, 2004): 359-65.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_enclosed.py,
+  Nu_vertical_helical_coil_Prabhanjan_Rennie_Raghavan, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  Nu_vertical_helical_coil_Prabhanjan_Rennie_Raghavan = 0.0749*Ra^0.3421
+END
+
+FUNCTION Nu_coil_Xin_Ebadian(Pr, Gr, horizontal)
+{NU_COIL_XIN_EBADIAN - Nusselt number of the natural convection around a
+ vertical or horizontal helical coil suspended in a fluid without forced
+ convection.
+
+   horizontal coil : Nu_D = 0.318*Ra_D^0.293
+   vertical coil   : Nu_D = 0.290*Ra_D^0.293
+
+ horizontal = 1 for a horizontal coil, 0 for a vertical one. Pr [-] and Gr [-]
+ are calculated with the film temperature - wall temperature and temperature
+ very far from the coil, averaged - Gr using the outer diameter of the coil;
+ Nu uses the outer diameter of the coil.
+Validity: as in ht: 5E3 < Ra < 1E5.
+Original: Xin, R. C. and M. A. Ebadian, "Natural Convection Heat Transfer from
+  Helicoidal Pipes", Journal of Thermophysics and Heat Transfer 10, no. 2
+  (1996): 297-302; reviewed in Prabhanjan, Rennie and Raghavan (2004), above.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_free_immersed.py,
+  Nu_coil_Xin_Ebadian, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Ra = Pr*Gr
+  IF horizontal = 1 THEN
+    Nu_coil_Xin_Ebadian = 0.318*Ra^0.293
+  ELSE
+    Nu_coil_Xin_Ebadian = 0.290*Ra^0.293
+  ENDIF
+END
+
+FUNCTION h_jacket_Lehrer(m, Dtank, Djacket, H, Dinlet, rho, Cp, k, mu, muw, isobaric_expansion, dT, radial_inlet, bottom_inlet)
+{H_JACKET_LEHRER - average heat-transfer coefficient inside a jacket around a
+ vessel, after Lehrer (as described in the VDI Heat Atlas).
+
+   d_g = (8/3)^0.5*delta
+   v_h = (v_s*v_inlet)^0.5 + v_A
+   v_inlet = Q/[(pi_val/4)*d_inlet^2]
+   v_s = Q/[(pi/4)*(D_jacket^2 - D_tank^2)]
+   Nu_S,L = [0.03*Re_S^0.75*Pr/(1 + 1.74*(Pr - 1)/Re_S^0.125)]*(mu/mu_w)^0.14
+   Re_S = v_h*d_g*rho/mu,  Pr = Cp*mu/k,  Q = m/rho
+
+ radial inlet: v_A = 0.5*(2*g*H*beta*|dT|)^0.5 if the buoyancy assists the
+ forced flow, -0.5*(...) if it opposes it; tangential inlet: v_A = 0. In ht,
+ v_A is positive when the fluid is heated and enters at the bottom (or cooled
+ and enters at the top), which is what the flag bottom_inlet selects.
+ m [kg/s] mass flow rate of the jacket fluid, Dtank [m] outer diameter of the
+ tank surrounded by the jacket, Djacket [m] inner diameter of the jacket,
+ H [m] height of the vessel, Dinlet [m] inner diameter of the jacket inlet,
+ rho [kg/m^3], Cp [J/kg/K], k [W/m/K] and mu [Pa-s] of the fluid at Tm,
+ muw [Pa-s] at Tw (pass muw = 0 for the form without the viscosity correction),
+ isobaric_expansion [m^3/mol/K] and dT [K] the temperature difference of the
+ fluid in the jacket (only used for a radial inlet; both may be 0 for a
+ tangential inlet), radial_inlet = 1 for a radial and 0 for a tangential
+ inlet, bottom_inlet = 1 if the jacket fluid enters at the bottom.
+Notes: as in ht, if the fluid is heated and enters from the bottom natural
+ convection assists the heat transfer and the buoyancy velocity is added; if it
+ enters from the top it is subtracted (the situation is reversed for a cooling
+ fluid). The correlation requires v_h > 0 (as in the original); otherwise the
+ velocity becomes negative and the formula has no real value (ht returns a
+ complex number there).
+Validity: as in ht (no limits quoted).
+Original: Lehrer, Isaac H., "Jacket-Side Nusselt Number", Industrial &
+  Engineering Chemistry Process Design and Development 9, no. 4 (October 1,
+  1970): 553-58, doi:10.1021/i260036a010; Gesellschaft, V. D. I., ed. VDI
+  Heat Atlas. 2nd edition. Berlin; New York: Springer, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_jacket.py, Lehrer, MIT License,
+  C. Bell - https://github.com/CalebBell/ht}
+  g_acc = 9.80665
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+  delta = (Djacket - Dtank)/2
+  Q = m/rho
+  Pr = Cp*mu/k
+  v_s = Q/H/delta
+  v_inlet = Q/(pi_val/4*Dinlet^2)
+  IF radial_inlet = 1 THEN
+    IF dT > 0 THEN
+      IF bottom_inlet = 1 THEN
+        v_A = 0.5*(2*g_acc*H*isobaric_expansion*abs(dT))^0.5
+      ELSE
+        v_A = -0.5*(2*g_acc*H*isobaric_expansion*abs(dT))^0.5
+      ENDIF
+    ELSE
+      IF bottom_inlet = 0 THEN
+        v_A = 0.5*(2*g_acc*H*isobaric_expansion*abs(dT))^0.5
+      ELSE
+        v_A = -0.5*(2*g_acc*H*isobaric_expansion*abs(dT))^0.5
+      ENDIF
+    ENDIF
+  ELSE
+    v_A = 0
+  ENDIF
+  v_h = (v_s*v_inlet)^0.5 + v_A
+  d_g = (8/3)^0.5*delta
+  Re_S = v_h*d_g*rho/mu
+  IF muw > 0 THEN
+    Nu_S_L = (0.03*Re_S^0.75*Pr)/(1 + 1.74*(Pr - 1)/Re_S^0.125)*(mu/muw)^0.14
+  ELSE
+    Nu_S_L = (0.03*Re_S^0.75*Pr)/(1 + 1.74*(Pr - 1)/Re_S^0.125)
+  ENDIF
+  h_jacket_Lehrer = Nu_S_L*k/d_g
+END
+
+FUNCTION h_jacket_Stein_Schmidt(m, Dtank, Djacket, H, Dinlet, rho, Cp, k, mu, muw, rhow, radial_inlet, bottom_inlet, fd)
+{H_JACKET_STEIN_SCHMIDT - average heat-transfer coefficient inside a jacket
+ around a vessel, after Stein and Schmidt (as described in the VDI Heat Atlas).
+
+   l_ch = [(pi/2)^2*D_tank^2 + H^2]^0.5
+   d_ch = 2*delta
+   Re_j = v_ch*d_ch*rho/mu
+   Gr_J = g*rho*(rho - rho_w)*d_ch^3/mu^2
+   Re_J,eq = [Re_J^2 +/- (|Gr_J|*H/d_ch/50)]^0.5
+   Nu_J = (Nu_A^3 + Nu_B^3 + Nu_C^3 + Nu_D^3)^(1/3)*(mu/mu_w)^0.14
+   Nu_A = 3.66
+   Nu_B = 1.62*Pr^(1/3)*Re_J,eq^(1/3)*(d_ch/l_ch)^(1/3)
+   Nu_C = 0.664*Pr^(1/3)*(Re_J,eq*d_ch/l_ch)^0.5
+   Nu_D = 0 if Re_J,eq < 2300, else
+        0.0115*Pr^(1/3)*Re_J,eq^0.9*(1 - (2300/Re_J,eq)^2.5)*(1 + (d_ch/l_ch)^(2/3))
+   h = Nu_J*k/d_ch
+
+ radial inlet:  v_ch = v_Mit*ln(b_Mit/b_Ein)/(1 - b_Ein/b_Mit)
+                b_Ein = (pi/8)*D_inlet^2/delta
+                b_Mit = (pi/2)*D_tank*[1 + (pi^2/4)*D_tank^2/H^2]^0.5
+                v_Mit = Q/(2*delta*b_Mit)
+ tangential inlet: v_ch = (v_x^2 + v_z^2)^0.5
+                v_x = v_inlet*ln([1 + f_d*D_tank*H/D_inlet^2*v_x(0)/v_inlet])
+                        /[f_d*D_tank*H/D_inlet^2]
+                v_x(0) = K_3 + (K_3^2 + K_4)^0.5
+                K_3 = v_inlet/4 - D_inlet^2*v_inlet/(4*f_d*D_tank*H)
+                K_4 = D_inlet^2*v_inlet^2/(2*f_d*D_tank*H)
+                v_z = Q/(pi*D_tank*delta)
+                v_inlet = Q/[(pi/4)*D_inlet^2]
+ m [kg/s] mass flow rate of the jacket fluid, Dtank [m] outer diameter of the
+ tank surrounded by the jacket, Djacket [m] inner diameter of the jacket,
+ H [m] height of the vessel, Dinlet [m] inner diameter of the jacket inlet,
+ rho [kg/m^3], Cp [J/kg/K], k [W/m/K] and mu [Pa-s] of the fluid at Tm, muw
+ [Pa-s] at Tw (pass muw = 0 for the form without the viscosity correction),
+ rhow [kg/m^3] density of the fluid at Tw (pass rhow = 0 for the purely forced
+ case), radial_inlet = 1 for a radial and 0 for a tangential inlet,
+ bottom_inlet = 1 if the jacket fluid enters at the bottom, fd [-] the Darcy
+ friction factor used for a tangential inlet. ht starts from
+ friction_factor(1E5, roughness/d_ch) and refines it with the Colebrook factor of
+ the current jacket Reynolds number once per pass (five passes); the factor of
+ the fourth pass is the one that produces the reported value, and it is passed
+ in here, because ht ships no friction-factor correlation (the calling model
+ computes it, e.g. with the Colebrook-White correlation of CSL-0018). The wall
+ roughness of ht is 0 (smooth) by default, and the tangential branch is the only
+ one that uses fd.
+Notes: as in ht, the Grashof term is added when the buoyancy assists the forced
+ flow (heated fluid entering at the bottom, cooled fluid entering at the top)
+ and subtracted otherwise.
+Validity: as in ht (no limits quoted).
+Original: Stein, Prof Dr-Ing Werner Alexander and Dipl-Ing (FH) Wolfgang
+  Schmidt, "Waermeuebergang auf der Waermetraegerseite eines Ruehrbehaelters
+  mit einem einfachen Mantel", Forschung im Ingenieurwesen 59, no. 5 (May
+  1993): 73-90, doi:10.1007/BF02561203; Gesellschaft, V. D. I., ed. VDI Heat
+  Atlas. 2nd edition. Berlin; New York: Springer, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_jacket.py, Stein_Schmidt, MIT
+  License, C. Bell - https://github.com/CalebBell/ht}
+  g_acc = 9.80665
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+  Q = m/rho
+  Pr = Cp*mu/k
+  delta = (Djacket - Dtank)/2
+  l_ch = (pi_val^2/4*Dtank^2 + H^2)^0.5
+  d_ch = 2*delta
+  IF radial_inlet = 1 THEN
+    b_Ein = pi_val/8*Dinlet^2/delta
+    b_Mit = pi_val/2*Dtank*(1 + pi_val^2/4*Dtank^2/H^2)^0.5
+    v_Mit = Q/(2*delta*b_Mit)
+    v_ch = v_Mit*LN(b_Mit/b_Ein)/(1 - b_Ein/b_Mit)
+    Re_J = v_ch*d_ch*rho/mu
+  ELSE
+    v_inlet = Q/(pi_val/4*Dinlet^2)
+    v_z = Q/(pi_val*Dtank*delta)
+    K4 = Dinlet^2*v_inlet^2/(2*fd*Dtank*H)
+    K3 = v_inlet/4 - Dinlet^2*v_inlet/(4*fd*Dtank*H)
+    v_x0 = K3 + (K3^2 + K4)^0.5
+    v_x = v_inlet*LN(1 + fd*Dtank*H/Dinlet^2*v_x0/v_inlet)/(fd*Dtank*H/Dinlet^2)
+    v_ch = (v_x^2 + v_z^2)^0.5
+    Re_J = v_ch*d_ch*rho/mu
+  ENDIF
+  IF rhow > 0 THEN
+    Gr_J = g_acc*rho*(rho - rhow)*d_ch^3/mu^2
+    IF rhow < rho THEN
+      IF bottom_inlet = 1 THEN
+        Re_J_eq = (Re_J^2 + Gr_J*H/d_ch/50)^0.5
+      ELSE
+        Re_J_eq = (Re_J^2 - Gr_J*H/d_ch/50)^0.5
+      ENDIF
+    ELSE
+      IF bottom_inlet = 0 THEN
+        Re_J_eq = (Re_J^2 + Gr_J*H/d_ch/50)^0.5
+      ELSE
+        Re_J_eq = (Re_J^2 - Gr_J*H/d_ch/50)^0.5
+      ENDIF
+    ENDIF
+  ELSE
+    Re_J_eq = Re_J
+  ENDIF
+  Nu_A = 3.66
+  Nu_B = 1.62*Pr^(1/3)*Re_J_eq^(1/3)*(d_ch/l_ch)^(1/3)
+  Nu_C = 0.664*Pr^(1/3)*(Re_J_eq*d_ch/l_ch)^0.5
+  IF Re_J_eq < 2300 THEN
+    Nu_D = 0
+  ELSE
+    Nu_D = 0.0115*Pr^(1/3)*Re_J_eq^0.9*(1 - (2300/Re_J_eq)^2.5)*(1 + (d_ch/l_ch)^(2/3))
+  ENDIF
+  IF muw > 0 THEN
+    Nu_J = (Nu_A^3 + Nu_B^3 + Nu_C^3 + Nu_D^3)^(1/3)*(mu/muw)^0.14
+  ELSE
+    Nu_J = (Nu_A^3 + Nu_B^3 + Nu_C^3 + Nu_D^3)^(1/3)
+  ENDIF
+  h_jacket_Stein_Schmidt = Nu_J*k/d_ch
+END
+
+"!Demonstration program: every function is called twice"
+"It is ignored by the future $INCLUDE library:free_conv_enclosed_and_jackets (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each correlation (published values)."
+"Case B: one second input set (Pr = 1, Gr = 1E6 for the plates; Pr = 100 for the"
+"coils; a 5 kg/s water jacket of 1 m height)."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case A - input set: parallel horizontal plates (ht doctests)"
+Pr_A = 5.54
+Gr_A = 3.21E8
+Ra_A = Pr_A*Gr_A
+D2_A = 2*(-14.94*Ra_A^-0.25 + 3.43)   "D2 of the Holling-Herwig correlation"
+"Nu_Nusselt_Rayleigh_Holling_Herwig - implicit in Nu: the root of the residual"
+Nu_HH_A = Nu_HH_A + Nu_Nusselt_Rayleigh_Holling_Herwig_err(Nu_HH_A, Ra_A, D2_A)   "err = 0"
+Nu_Nusselt_Rayleigh_Holling_Herwig_err_A = Nu_Nusselt_Rayleigh_Holling_Herwig_err(Nu_HH_A, Ra_A, D2_A)
+"buoyancy = 0: ht returns Nu = 1 without solving the residual"
+Nu_Nusselt_Rayleigh_Holling_Herwig_noboy_A = 1
+"Nu_Nusselt_Rayleigh_Probert - buoyancy assisted, and the two Nu = 1 branches"
+Nu_Nusselt_Rayleigh_Probert_A = Nu_Nusselt_Rayleigh_Probert(Pr_A, Gr_A, 1)
+Nu_Nusselt_Rayleigh_Probert_noboy_A = Nu_Nusselt_Rayleigh_Probert(Pr_A, Gr_A, 0)
+Nu_Nusselt_Rayleigh_Probert_sub_A = Nu_Nusselt_Rayleigh_Probert(1, 100, 1)
+"Nu_Nusselt_Rayleigh_Hollands - infinite plates (Rac = 1708) and two finite boxes"
+"Nu_Nusselt_Rayleigh_Hollands - Rac = 606001 (1 x 2 x 0.2 m) and 6974 (1 m^3): values"
+"of ht Rac_Nusselt_Rayleigh, which is not translated here (see README.md)"
+Nu_Nusselt_Rayleigh_Hollands_A = Nu_Nusselt_Rayleigh_Hollands(Pr_A, Gr_A, 1, 1708)
+Nu_Nusselt_Rayleigh_Hollands_Rac_A1 = Nu_Nusselt_Rayleigh_Hollands(0.7, 3.21E6, 1, 606001)
+Nu_Nusselt_Rayleigh_Hollands_Rac_A2 = Nu_Nusselt_Rayleigh_Hollands(0.7, 3.21E6, 1, 6974)
+"Nu_Nusselt_vertical_Thess - geometry unknown, and H = 1 m / L = 10 m"
+Nu_Nusselt_vertical_Thess_A = Nu_Nusselt_vertical_Thess(0.7, 3.21E6, 1, 10, 0)
+Nu_Nusselt_vertical_Thess_geom_A = Nu_Nusselt_vertical_Thess(0.7, 3.21E6, 1, 10, 1)
+"Rac_Nusselt_Rayleigh_disk - D = 0.4 m uninsulated, and D = 1 m insulated"
+Rac_Nusselt_Rayleigh_disk_A = Rac_Nusselt_Rayleigh_disk(1, 0.4, 0)
+Rac_Nusselt_Rayleigh_disk_ins_A = Rac_Nusselt_Rayleigh_disk(2, 1, 1)
+"Helical coils in a tank"
+Nu_vertical_helical_coil_Ali_A = Nu_vertical_helical_coil_Ali(4.4, 1E11)
+Nu_vertical_helical_coil_Prabhanjan_Rennie_Raghavan_A = Nu_vertical_helical_coil_Prabhanjan_Rennie_Raghavan(4.4, 1E11)
+Nu_coil_Xin_Ebadian_A = Nu_coil_Xin_Ebadian(0.7, 2E4, 0)
+Nu_coil_Xin_Ebadian_horiz_A = Nu_coil_Xin_Ebadian(0.7, 2E4, 1)
+"Vessel jackets - the example of the VDI Heat Atlas (ht doctests)"
+m_A = 2.5
+Dtank_A = 0.6
+Djacket_A = 0.65
+H_A = 0.6
+Dinlet_A = 0.025
+rho_A = 995.7
+Cp_A = 4178.1
+k_A = 0.615
+mu_A = 798E-6
+muw_A = 355E-6
+dT_A = 20
+beta_A = 3.03E-4
+rhow_A = 971.8
+fd_A = 0.020546184803580985   "Darcy friction factor of the smooth tank wall at the jacket Reynolds number of case A (Colebrook, Re = 5.39E4)"
+h_jacket_Lehrer_A = h_jacket_Lehrer(m_A, Dtank_A, Djacket_A, H_A, Dinlet_A, rho_A, Cp_A, k_A, mu_A, muw_A, beta_A, dT_A, 0, 1)
+h_jacket_Lehrer_radial_A = h_jacket_Lehrer(m_A, Dtank_A, Djacket_A, H_A, Dinlet_A, rho_A, Cp_A, k_A, mu_A, muw_A, beta_A, dT_A, 1, 1)
+h_jacket_Lehrer_novisc_A = h_jacket_Lehrer(m_A, Dtank_A, Djacket_A, H_A, Dinlet_A, rho_A, Cp_A, k_A, mu_A, 0, beta_A, dT_A, 0, 1)
+h_jacket_Stein_Schmidt_A = h_jacket_Stein_Schmidt(m_A, Dtank_A, Djacket_A, H_A, Dinlet_A, rho_A, Cp_A, k_A, mu_A, muw_A, rhow_A, 0, 1, fd_A)
+h_jacket_Stein_Schmidt_nograv_A = h_jacket_Stein_Schmidt(m_A, Dtank_A, Djacket_A, H_A, Dinlet_A, rho_A, Cp_A, k_A, mu_A, muw_A, 0, 0, 1, fd_A)
+
+"Case B - second input set"
+Pr_B = 1
+Gr_B = 1E6
+Ra_B = Pr_B*Gr_B
+D2_B = 2*(-14.94*Ra_B^-0.25 + 3.43)   "D2 of the Holling-Herwig correlation"
+Nu_HH_B = Nu_HH_B + Nu_Nusselt_Rayleigh_Holling_Herwig_err(Nu_HH_B, Ra_B, D2_B)   "err = 0"
+Nu_Nusselt_Rayleigh_Holling_Herwig_err_B = Nu_Nusselt_Rayleigh_Holling_Herwig_err(Nu_HH_B, Ra_B, D2_B)
+Nu_Nusselt_Rayleigh_Probert_B = Nu_Nusselt_Rayleigh_Probert(Pr_B, Gr_B, 1)
+Nu_Nusselt_Rayleigh_Hollands_B = Nu_Nusselt_Rayleigh_Hollands(Pr_B, Gr_B, 1, 1708)
+Nu_Nusselt_vertical_Thess_geom_B = Nu_Nusselt_vertical_Thess(1, 2E6, 1, 4, 1)
+Rac_Nusselt_Rayleigh_disk_B = Rac_Nusselt_Rayleigh_disk(1, 2, 1)
+Nu_vertical_helical_coil_Ali_B = Nu_vertical_helical_coil_Ali(100, 1E10)
+Nu_vertical_helical_coil_Prabhanjan_Rennie_Raghavan_B = Nu_vertical_helical_coil_Prabhanjan_Rennie_Raghavan(100, 1E9)
+Nu_coil_Xin_Ebadian_B = Nu_coil_Xin_Ebadian(7, 1E4, 0)
+"Case B - a cooling water jacket (5 kg/s) on a 0.6 m tank of 1 m height"
+m_B = 5
+Dtank_B = 0.6
+Djacket_B = 0.7
+H_B = 1
+Dinlet_B = 0.05
+rho_B = 995.7
+Cp_B = 4178.1
+k_B = 0.615
+mu_B = 798E-6
+muw_B = 355E-6
+dT_B = -20
+beta_B = 3.03E-4
+rhow_B = 1000
+fd_B = 0.020546184803580985   "same friction factor; unused by the radial-inlet call of case B"
+h_jacket_Lehrer_radial_B = h_jacket_Lehrer(m_B, Dtank_B, Djacket_B, H_B, Dinlet_B, rho_B, Cp_B, k_B, mu_B, muw_B, beta_B, dT_B, 1, 1)
+h_jacket_Stein_Schmidt_radial_B = h_jacket_Stein_Schmidt(m_B, Dtank_B, Djacket_B, H_B, Dinlet_B, rho_B, Cp_B, k_B, mu_B, muw_B, rhow_B, 1, 1, fd_B)

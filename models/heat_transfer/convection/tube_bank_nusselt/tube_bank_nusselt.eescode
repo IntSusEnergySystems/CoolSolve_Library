@@ -1,0 +1,499 @@
+{=============================================================================
+  Crossflow tube banks: Nusselt-number correlations and row / angle
+  correction factors
+  CoolSolve Library model CSL-0095 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Six correlations and correction factors of the forced convection across a bank
+  of plain tubes: the Nusselt number of the bundle (Zukauskas with the Bejan
+  fit, ESDU 73031 as given by Hewitt, the Heat Exchanger Design Handbook) and
+  the tube-row correction factor of Zukauskas and of ESDU 73031 with its
+  tube-bank inclination correction factor.
+
+  Every function returns the Nusselt number with respect to the tube OUTSIDE
+  diameter; the heat-transfer coefficient follows from h = Nu*k/Do and is left
+  to the caller. All arguments are dimensionless except the tube outside
+  diameter Do [m] and the two pitches [m]; Re, Pr, Pr_wall and the number of
+  tube rows are inputs (no property function is called inside the functions).
+
+  Two Python arguments that are optional in ht are mandatory here, because EES
+  has no optional arguments: Pr_wall (Zukauskas, ESDU) - pass Pr_wall = Pr for
+  the uncorrected form - and the flags staggered (Zukauskas, ESDU row factor)
+  and, for the inclination angle, the angle itself in degrees.
+
+  The seventh function of the ht family, Nu_Grimison_tube_bank, is NOT
+  translated: in ht the two tabulated Grimison coefficients C1 and m are read
+  from a bivariate least-squares spline surface fitted to the digitised tables
+  (ht/conv_tube_bank.py, bisplev on pre-generated splines of degree (3,3) inline
+  and (1,1) staggered); it is not a closed-form correlation, CoolSolve cannot
+  read a lookup table inside a FUNCTION body (CS-GAP-LOOKUP-PROC) and a linear
+  interpolation of the published tables is a different function. See README.md.
+
+  The demonstration program at the end calls every function, once with the
+  inputs of the ht doctest of the corresponding correlation ("A" cases) and
+  once with a second, uniform input set ("B" cases). The ht values of both sets
+  are tabulated in the README (verification table).
+
+  Inputs : Re [-], Pr [-], Pr_wall [-], tube_rows [-], staggered flag [-],
+           pitch_parallel [m], pitch_normal [m], Do [m], angle [deg]
+  Outputs: Nu [-], F [-] (one FUNCTION per correlation / correction factor)
+  Units  : SI - dimensionless numbers, lengths in m, angles in degrees
+  Source : ht (Caleb Bell), ht/conv_tube_bank.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; correlations by the authors
+           cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION Zukauskas_tube_row_correction(tube_rows, staggered, Re)
+{ZUKAUSKAS_TUBE_ROW_CORRECTION - tube row count correction factor for crossflow
+across a tube bundle, read from a graph digitised from [1]. The factors are
+slightly different for the staggered and for the in-line configuration; for the
+staggered configuration, factors are given separately for Re below and above
+1000. The basis of the method is that an infinitely long tube bank has a factor
+of 1, in practice reached at 20 rows (as in ht).
+
+  F = F(n)   n = tube rows, F = 1 for n >= 20, F(1) for n < 1
+
+  n    staggered, Re < 1000    staggered, Re >= 1000    in-line
+  1         0.8295                 0.6273              0.6768
+  2         0.8792                 0.7689              0.8089
+  3         0.9151                 0.8473              0.8687
+  4         0.9402                 0.8942              0.9054
+  5         0.9570                 0.9254              0.9303
+  6         0.9677                 0.9450              0.9465
+  7         0.9745                 0.9570              0.9569
+  8         0.9785                 0.9652              0.9647
+  9         0.9808                 0.9716              0.9712
+  10        0.9823                 0.9765              0.9766
+  11        0.9838                 0.9803              0.9811
+  12        0.9855                 0.9834              0.9847
+  13        0.9873                 0.9862              0.9877
+  14        0.9891                 0.9890              0.9900
+  15        0.9910                 0.9918              0.9920
+  16        0.9929                 0.9943              0.9937
+  17        0.9948                 0.9965              0.9953
+  18        0.9967                 0.9980              0.9969
+  19        0.9987                 0.9986              0.9986
+
+tube_rows [-] is the number of tube rows per bundle, staggered = 1 for a
+staggered and 0 for an in-line bank, Re [-] is the Reynolds number of the flow
+through the bundle on the bare tube outside diameter and the minimum flow area.
+Validity: as in ht, no limits quoted.
+Original: Zukauskas, A. Heat transfer from tubes in crossflow. In T.F. Irvine,
+  Jr. and J. P. Hartnett, editors, Advances in Heat Transfer, volume 8,
+  pages 93-160. Academic Press, Inc., New York, 1972.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_tube_bank.py,
+  Zukauskas_tube_row_correction, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  IF tube_rows < 1 THEN
+    n = 1
+  ELSE
+    n = tube_rows
+  ENDIF
+  F = 1
+  IF staggered = 1 THEN
+    IF Re < 1000 THEN
+      F = 0.8295
+      IF n = 2 THEN F = 0.8792
+      IF n = 3 THEN F = 0.9151
+      IF n = 4 THEN F = 0.9402
+      IF n = 5 THEN F = 0.957
+      IF n = 6 THEN F = 0.9677
+      IF n = 7 THEN F = 0.9745
+      IF n = 8 THEN F = 0.9785
+      IF n = 9 THEN F = 0.9808
+      IF n = 10 THEN F = 0.9823
+      IF n = 11 THEN F = 0.9838
+      IF n = 12 THEN F = 0.9855
+      IF n = 13 THEN F = 0.9873
+      IF n = 14 THEN F = 0.9891
+      IF n = 15 THEN F = 0.991
+      IF n = 16 THEN F = 0.9929
+      IF n = 17 THEN F = 0.9948
+      IF n = 18 THEN F = 0.9967
+      IF n = 19 THEN F = 0.9987
+    ELSE
+      F = 0.6273
+      IF n = 2 THEN F = 0.7689
+      IF n = 3 THEN F = 0.8473
+      IF n = 4 THEN F = 0.8942
+      IF n = 5 THEN F = 0.9254
+      IF n = 6 THEN F = 0.945
+      IF n = 7 THEN F = 0.957
+      IF n = 8 THEN F = 0.9652
+      IF n = 9 THEN F = 0.9716
+      IF n = 10 THEN F = 0.9765
+      IF n = 11 THEN F = 0.9803
+      IF n = 12 THEN F = 0.9834
+      IF n = 13 THEN F = 0.9862
+      IF n = 14 THEN F = 0.989
+      IF n = 15 THEN F = 0.9918
+      IF n = 16 THEN F = 0.9943
+      IF n = 17 THEN F = .9965
+      IF n = 18 THEN F = .998
+      IF n = 19 THEN F = .9986
+    ENDIF
+  ELSE
+    F = 0.6768
+    IF n = 2 THEN F = 0.8089
+    IF n = 3 THEN F = 0.8687
+    IF n = 4 THEN F = 0.9054
+    IF n = 5 THEN F = 0.9303
+    IF n = 6 THEN F = 0.9465
+    IF n = 7 THEN F = 0.9569
+    IF n = 8 THEN F = 0.9647
+    IF n = 9 THEN F = 0.9712
+    IF n = 10 THEN F = 0.9766
+    IF n = 11 THEN F = 0.9811
+    IF n = 12 THEN F = 0.9847
+    IF n = 13 THEN F = 0.9877
+    IF n = 14 THEN F = 0.99
+    IF n = 15 THEN F = 0.992
+    IF n = 16 THEN F = 0.9937
+    IF n = 17 THEN F = 0.9953
+    IF n = 18 THEN F = 0.9969
+    IF n = 19 THEN F = 0.9986
+  ENDIF
+  Zukauskas_tube_row_correction = F
+END
+
+FUNCTION Nu_Zukauskas_Bejan(Re, Pr, tube_rows, pitch_parallel, pitch_normal, Pr_wall)
+{NU_ZUKAUSKAS_BEJAN - Nusselt number for crossflow across a tube bank of tube
+number n at a specified Re, according to the method of Zukauskas [1]; a fit to
+graphs of [1] published by Bejan [2] is used for the correlation, the tube row
+correction factor is read from digitised graphs of [1] (see
+Zukauskas_tube_row_correction).
+
+  Aligned tube banks:   Nu = C*Re^m*Pr^0.36*(Pr/Pr_wall)^0.25*Cn
+    C = 0.9   m = 0.4    for Re < 100
+    C = 0.52  m = 0.05   for 100 <= Re < 1000
+    C = 0.27  m = 0.63   for 1000 <= Re < 2E5
+    C = 0.033 m = 0.8    for Re >= 2E5
+
+  Staggered tube banks: Nu = C*Re^m*Pr^0.36*(Pr/Pr_wall)^0.25*(Xt/Xl)^0.2*Cn
+    C = 1.04  m = 0.4    (Xt/Xl)^0.2 omitted, for Re < 500
+    C = 0.71  m = 0.5    (Xt/Xl)^0.2 omitted, for 500 <= Re < 1000
+    C = 0.35  m = 0.6    for 1000 <= Re < 2E5
+    C = 0.031 m = 0.8    for Re >= 2E5
+
+  Xt = pitch_normal [m], Xl = pitch_parallel [m], Cn = tube row correction
+
+Re [-] is on the tube outside diameter and the average (bulk) fluid properties,
+Pr [-] and Pr_wall [-] are the Prandtl numbers at the average and at the wall
+temperature; passing Pr_wall = Pr gives the form without the Prandtl number
+correction (an exponent of 0.25 is recommended in [1] for heating and cooling,
+for both liquids and gases). The configuration is staggered when
+|pitch_normal/pitch_parallel - 1| > 0.05, as in ht.
+Validity: 1 < Re < 200000 (as in ht, the four regimes above).
+Original: Zukauskas, A. Heat transfer from tubes in crossflow. In T.F. Irvine,
+  Jr. and J. P. Hartnett, editors, Advances in Heat Transfer, volume 8,
+  pages 93-160. Academic Press, Inc., New York, 1972; presented by Bejan, A.,
+  Convection Heat Transfer, 4E, Hoboken, New Jersey: Wiley, 2013.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_tube_bank.py, Nu_Zukauskas_Bejan,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  staggered = IF(ABS(1 - pitch_normal/pitch_parallel) > 0.05, 1, 0)
+  f_pitch = 1
+  IF staggered = 1 THEN
+    IF Re < 500 THEN
+      C = 1.04
+      m = 0.4
+    ELSE
+      IF Re < 1000 THEN
+        C = 0.71
+        m = 0.5
+      ELSE
+        f_pitch = (pitch_normal/pitch_parallel)^0.2
+        IF Re < 2E5 THEN
+          C = 0.35
+          m = 0.6
+        ELSE
+          C = 0.031
+          m = 0.8
+        ENDIF
+      ENDIF
+    ENDIF
+  ELSE
+    IF Re < 100 THEN
+      C = 0.9
+      m = 0.4
+    ELSE
+      IF Re < 1000 THEN
+        C = 0.52
+        m = 0.05
+      ELSE
+        IF Re < 2E5 THEN
+          C = 0.27
+          m = 0.63
+        ELSE
+          C = 0.033
+          m = 0.8
+        ENDIF
+      ENDIF
+    ENDIF
+  ENDIF
+  Nu = C*Re^m*Pr^0.36*f_pitch*(Pr/Pr_wall)^0.25
+  Cn = Zukauskas_tube_row_correction(tube_rows, staggered, Re)
+  Nu_Zukauskas_Bejan = Nu*Cn
+END
+
+FUNCTION ESDU_tube_row_correction(tube_rows, staggered)
+{ESDU_TUBE_ROW_CORRECTION - tube row count correction factor for heat transfer
+across a tube bundle according to [1], as shown in [2]; also used for finned
+bundles. The factors are slightly different for the staggered and the in-line
+configuration. Tabular lookup, with a value of 1 for 10 tube rows or more.
+
+  F2 = F2(n)   n = tube rows; F2(3) for n <= 2, 1 for n >= 10, F2(n) for 3..9
+
+  n     staggered    in-line
+  2, 3    0.8593      0.8479
+  4       0.8984      0.8957
+  5       0.9268      0.9306
+  6       0.9482      0.9551
+  7       0.9650      0.9724
+  8       0.9777      0.9839
+  9       0.9868      0.9902
+
+tube_rows [-] is the number of tube rows per bundle, staggered = 1 for a
+staggered and 0 for an in-line bank. Passing tube_rows = 10 disables the
+correction.
+Validity: as in ht, no limits quoted. For tube counts 1-7, [3] claims the
+  factors of [1] are on average 0.65, 0.77, 0.84, 0.9, 0.94, 0.97, 0.99.
+Original: "Convective Heat Transfer During Crossflow of Fluids Over Plain Tube
+  Banks." ESDU 73031 (November 1, 1973); as shown in Hewitt, G. L. Shires, T.
+  Reg Bott G. F., G. L. Shires and T. R. Bott, Process Heat Transfer. 1st
+  edition. Boca Raton: CRC Press, 1994.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_tube_bank.py,
+  ESDU_tube_row_correction, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  F2 = 1
+  IF tube_rows <= 2 THEN
+    IF staggered = 1 THEN
+      F2 = 0.8593
+    ELSE
+      F2 = 0.8479
+    ENDIF
+  ELSE
+    IF tube_rows < 10 THEN
+      IF staggered = 1 THEN
+        F2 = 0.8593
+        IF tube_rows = 4 THEN F2 = 0.8984
+        IF tube_rows = 5 THEN F2 = 0.9268
+        IF tube_rows = 6 THEN F2 = 0.9482
+        IF tube_rows = 7 THEN F2 = 0.965
+        IF tube_rows = 8 THEN F2 = 0.9777
+        IF tube_rows = 9 THEN F2 = 0.9868
+      ELSE
+        F2 = 0.8479
+        IF tube_rows = 4 THEN F2 = 0.8957
+        IF tube_rows = 5 THEN F2 = 0.9306
+        IF tube_rows = 6 THEN F2 = 0.9551
+        IF tube_rows = 7 THEN F2 = 0.9724
+        IF tube_rows = 8 THEN F2 = 0.9839
+        IF tube_rows = 9 THEN F2 = 0.9902
+      ENDIF
+    ENDIF
+  ENDIF
+  ESDU_tube_row_correction = F2
+END
+
+FUNCTION ESDU_tube_angle_correction(angle)
+{ESDU_TUBE_ANGLE_CORRECTION - tube bank inclination correction factor for heat
+transfer across a tube bundle according to [1].
+
+  F3 = Nu_theta/Nu_theta=90deg = (SIN(theta))^0.6
+
+angle [deg] is the angle of inclination of the tube bank with respect to the
+longitudinal axis (90 deg for a straight tube bank); SIN takes its argument in
+degrees, as everywhere in CoolSolve and EES.
+Validity: 1E2 < Re < 1E6 (as in ht). For angles below 10 deg the problem should
+  be considered internal flow, not flow across a tube bank (as in ht).
+Original: "Convective Heat Transfer During Crossflow of Fluids Over Plain Tube
+  Banks." ESDU 73031 (November 1, 1973).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_tube_bank.py,
+  ESDU_tube_angle_correction, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  ESDU_tube_angle_correction = SIN(angle)^0.6
+END
+
+FUNCTION Nu_ESDU_73031(Re, Pr, tube_rows, pitch_parallel, pitch_normal, Pr_wall, angle)
+{NU_ESDU_73031 - Nusselt number for crossflow across a tube bank with a
+specified number of tube rows, at a specified Re according to [1], also shown
+in [2].
+
+  Nu = a*Re^m*Pr^0.34*F1*F2*F3
+
+  In-line tube banks:      Staggered tube banks:
+  Re       a      m        Re       a      m
+  10-300   0.742  0.431    10-300   1.309  0.360
+  300-2E5  0.211  0.651    300-2E5  0.273  0.635
+  2E5-2E6  0.116  0.700    2E5-2E6  0.124  0.700
+
+  F1 = (Pr/Pr_wall)^0.26   property correction factor (1 if Pr_wall = Pr)
+  F2 = ESDU_tube_row_correction(tube_rows, staggered)
+  F3 = ESDU_tube_angle_correction(angle)
+
+Re [-] is on the tube outside diameter and the average (bulk) fluid properties,
+Pr [-] and Pr_wall [-] are the bulk and wall Prandtl numbers; pitch_normal [m]
+and pitch_parallel [m] are the transverse and the longitudinal pitch (the
+configuration is staggered when |pitch_normal/pitch_parallel - 1| > 0.05, as
+in ht), tube_rows [-] is the number of tube rows (10 disables F2) and angle
+[deg] the inclination of the bank (90 deg for a straight bank).
+Validity: in-line coefficients for a transverse pitch to tube diameter ratio of
+  1.2 to 4, staggered ones from 1 to 4; the overall accuracy of the method is
+  claimed to be 15%; Re from 10 to 2E6 (as in ht). A Prandtl number exponent of
+  0.26 is recommended in [1] for heating and cooling, for both liquids and gases.
+Original: "High-Fin Staggered Tube Banks: Heat Transfer and Pressure Drop for
+  Turbulent Single Phase Gas Flow." ESDU 86022 (October 1, 1986); the same
+  expressions for plain tube banks are given in ESDU 73031 (November 1, 1973);
+  as shown in Hewitt, G. L. Shires, T. Reg Bott G. F., G. L. Shires and T. R.
+  Bott, Process Heat Transfer. 1st edition. Boca Raton: CRC Press, 1994.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_tube_bank.py, Nu_ESDU_73031,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  staggered = IF(ABS(1 - pitch_normal/pitch_parallel) > 0.05, 1, 0)
+  IF staggered = 1 THEN
+    IF Re <= 300 THEN
+      a = 1.309
+      m = 0.36
+    ELSE
+      IF Re <= 2E5 THEN
+        a = 0.273
+        m = 0.635
+      ELSE
+        a = 0.124
+        m = 0.7
+      ENDIF
+    ENDIF
+  ELSE
+    IF Re <= 300 THEN
+      a = 0.742
+      m = 0.431
+    ELSE
+      IF Re <= 2E5 THEN
+        a = 0.211
+        m = 0.651
+      ELSE
+        a = 0.116
+        m = 0.7
+      ENDIF
+    ENDIF
+  ENDIF
+  F1 = (Pr/Pr_wall)^0.26
+  F2 = ESDU_tube_row_correction(tube_rows, staggered)
+  F3 = ESDU_tube_angle_correction(angle)
+  Nu_ESDU_73031 = a*Re^m*Pr^0.34*F1*F2*F3
+END
+
+FUNCTION Nu_HEDH_tube_bank(Re, Pr, Do, tube_rows, pitch_parallel, pitch_normal)
+{NU_HEDH_TUBE_BANK - Nusselt number for crossflow across a tube bank of tube
+rows at a specified Re, Pr and D, using the Heat Exchanger Design Handbook
+(HEDH) methodology presented in [1].
+
+  Nu = Nu_m*f_N
+
+  Nu_m     = 0.3 + SQRT(Nu_m,lam^2 + Nu_m,turb^2)
+  Nu_m,turb= 0.037*Re^0.8*Pr / {1 + 2.443*Re^(-0.1)*(Pr^(2/3) - 1)}
+  Nu_m,lam = 0.664*Re^0.5*Pr^(1/3)
+  psi     = 1 - pi/(4a)      if b >= 1
+  psi     = 1 - pi/(4ab)     if b < 1
+  f_A     = 1 + 0.7/psi^1.5*(b/a - 0.3)/(b/a + 0.7)^2   in-line
+  f_A     = 1 + 2/(3b)                                   staggered
+  f_N     = {1 + (n-1)*f_A}/n                           n < 10 rows
+  f_N     = f_A                                          n >= 10 rows
+
+  a = pitch_normal/Do, b = pitch_parallel/Do, Re on the corrected value
+  Re of the equation above is Re/psi (Re here is the Reynolds number on the
+  bare tube outside diameter and the minimum flow area through the bundle)
+
+Do [m] is the tube outside diameter, pitch_parallel [m] the longitudinal pitch
+and pitch_normal [m] the transverse pitch; the configuration is staggered when
+|pitch_normal/pitch_parallel - 1| > 0.05, as in ht. A further partly staggered
+tube bank correlation exists in ht, using another pitch; it is not implemented
+there either.
+Validity: 10 < Re < 1E5 and 0.6 < Pr < 1000 (as in ht). The Prandtl number
+  correction is left to an outside function, because the coefficients given in
+  [1] depend on whether heating or cooling happens and use a temperature ratio
+  instead of a Prandtl number for gases.
+Original: Schlunder, Ernst U, and International Center for Heat and Mass
+  Transfer. Heat Exchanger Design Handbook. Washington: Hemisphere Pub. Corp.,
+  1987. Example 3.11 (Re = 10263.37, Pr = 0.708, 11 rows, both pitches 0.05 m,
+  Do = 0.025 m) is from Baehr, H. D. and K. Stephan, Heat and Mass Transfer,
+  Springer, 2013.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_tube_bank.py, Nu_HEDH_tube_bank,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  staggered = IF(ABS(1 - pitch_normal/pitch_parallel) > 0.05, 1, 0)
+  a = pitch_normal/Do
+  b = pitch_parallel/Do
+  IF b >= 1 THEN
+    psi = 1 - pi()/4/a
+  ELSE
+    psi = 1 - pi()/4/a/b
+  ENDIF
+  Re_psi = Re/psi
+  Nu_laminar = 0.664*Re_psi^0.5*Pr^(1/3)
+  Nu_turbulent = 0.037*Re_psi^0.8*Pr/(1 + 2.443*Re_psi^(-0.1)*(Pr^(2/3) - 1))
+  Nu_m = 0.3 + (Nu_laminar^2 + Nu_turbulent^2)^0.5
+  IF staggered = 1 THEN
+    f_A = 1 + 2/3/b
+  ELSE
+    f_A = 1 + 0.7/psi^1.5*(b/a - 0.3)/(b/a + 0.7)^2
+  ENDIF
+  IF tube_rows < 10 THEN
+    f_N = (1 + (tube_rows - 1)*f_A)/tube_rows
+  ELSE
+    f_N = f_A
+  ENDIF
+  Nu_HEDH_tube_bank = Nu_m*f_N
+END
+
+"!============================================================================="
+"!Demonstration program: every correlation is called twice"
+"It is ignored by the future $INCLUDE library:tube_bank_nusselt (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each correlation (published values)."
+"Case B: one second, uniform input set (shell side of an air-cooled bundle:"
+"Re = 1.2E4, Pr = 0.71, Pr_wall = 0.8, Do = 0.025 m, 8 rows, ST = 0.07 m,"
+"SL = 0.05 m, bank inclined at 60 degrees)."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case B - input set"
+Re_B = 1.2E4
+Pr_B = 0.71
+Pr_wall_B = 0.8
+Do_B = 0.025
+tube_rows_B = 8
+pitch_normal_B = 0.07
+pitch_parallel_B = 0.05
+angle_B = 60
+
+"Zukauskas tube row correction - 4 staggered rows, then 6 in-line rows"
+Zukauskas_row_A = Zukauskas_tube_row_correction(4, 1, 1E4)
+Zukauskas_row_inline_A = Zukauskas_tube_row_correction(6, 0, 1E4)
+Zukauskas_row_B = Zukauskas_tube_row_correction(tube_rows_B, 1, Re_B)
+Zukauskas_row_inline_B = Zukauskas_tube_row_correction(tube_rows_B, 0, Re_B)
+
+"Nu_Zukauskas_Bejan - without and with the Prandtl number correction"
+Nu_Zukauskas_Bejan_A = Nu_Zukauskas_Bejan(1E4, 7, 10, 0.05, 0.05, 7)
+Nu_Zukauskas_Bejan_Prwall_A = Nu_Zukauskas_Bejan(1E4, 7, 10, 0.05, 0.05, 5)
+Nu_Zukauskas_Bejan_B = Nu_Zukauskas_Bejan(Re_B, Pr_B, tube_rows_B, pitch_parallel_B, pitch_normal_B, Pr_B)
+Nu_Zukauskas_Bejan_Prwall_B = Nu_Zukauskas_Bejan(Re_B, Pr_B, tube_rows_B, pitch_parallel_B, pitch_normal_B, Pr_wall_B)
+
+"ESDU tube row correction - 4 staggered rows, then 6 in-line rows"
+ESDU_row_A = ESDU_tube_row_correction(4, 1)
+ESDU_row_inline_A = ESDU_tube_row_correction(6, 0)
+ESDU_row_B = ESDU_tube_row_correction(tube_rows_B, 1)
+ESDU_row_inline_B = ESDU_tube_row_correction(tube_rows_B, 0)
+
+"ESDU tube inclination correction factor"
+ESDU_angle_A = ESDU_tube_angle_correction(75)
+ESDU_angle_B = ESDU_tube_angle_correction(angle_B)
+
+"Nu_ESDU_73031 - its doctest, then the uniform input set"
+"Nu_ESDU_73031 - uniform input set with the wall Prandtl number and the angle"
+Nu_ESDU_A = Nu_ESDU_73031(1.32E4, 0.71, 8, 0.09, 0.05, 0.71, 90)
+Nu_ESDU_B = Nu_ESDU_73031(Re_B, Pr_B, tube_rows_B, pitch_parallel_B, pitch_normal_B, Pr_B, 90)
+Nu_ESDU_Prwall_angle_B = Nu_ESDU_73031(Re_B, Pr_B, tube_rows_B, pitch_parallel_B, pitch_normal_B, Pr_wall_B, angle_B)
+
+"Nu_HEDH_tube_bank - its doctest, the example 3.11 of Baehr and Stephan, then"
+"the uniform input set"
+Nu_HEDH_A = Nu_HEDH_tube_bank(1E4, 7, 0.03, 10, 0.05, 0.05)
+Nu_HEDH_ex311_A = Nu_HEDH_tube_bank(10263.37, 0.708, 0.025, 11, 0.05, 0.05)
+Nu_HEDH_B = Nu_HEDH_tube_bank(Re_B, Pr_B, Do_B, tube_rows_B, pitch_parallel_B, pitch_normal_B)

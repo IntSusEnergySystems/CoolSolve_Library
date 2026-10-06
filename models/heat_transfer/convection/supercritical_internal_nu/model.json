@@ -1,0 +1,79 @@
+{
+  "id": "CSL-0104",
+  "name": "supercritical_internal_nu",
+  "title": "Near-supercritical internal convection: Nusselt-number correlations for vertical upward pipe flow (function library)",
+  "summary": "Eighteen EES FUNCTIONs returning the Nusselt number of turbulent vertical upward flow in a pipe at near-supercritical pressure: McAdams, Shitsman, Griem, Jackson, Gupta, Swenson, Xu, Mokry, Bringer-Smith, Ornatsky, Gorban, Zhu, Bishop, Yamagata, Kitoh, Krasnoshchekov-Protopopov, Petukhov and Krasnoshchekov. Most of them correct the Reynolds-analogy form with the wall-to-bulk density, viscosity, conductivity and heat-capacity ratios, or with a temperature-dependent exponent fixed by the position of the wall temperature relative to the pseudo-critical point. The heat-transfer coefficient follows from h = Nu*k/Di and is left to the caller.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "supercritical_internal_nu.eescode",
+  "fluids": [],
+  "tags": [
+    "internal convection",
+    "near-supercritical",
+    "supercritical pressure",
+    "nusselt number",
+    "correlation",
+    "pipe flow",
+    "vertical upflow",
+    "wall properties",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE (nested blocks)",
+    "MIN / LOG10",
+    "SI property arguments"
+  ],
+  "stats": {
+    "n_equations": 119,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-018",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "W. H. McAdams (McAdams correlation)",
+      "J. D. Jackson (Jackson correlation)",
+      "H. S. Swenson, J. R. Carver and C. R. Kakarala (Swenson correlation)",
+      "H. Griem (Griem correlation)",
+      "R. P. Bringer and J. M. Smith (Bringer-Smith correlation)",
+      "K. Kitoh, S. Koshizuka and Y. Oka (Kitoh correlation)",
+      "B. S. Petukhov, V. A. Kurganov and V. B. Ankudinov (Petukhov correlation)",
+      "E. A. Krasnoshchekov, V. S. Protopopov and I. V. Kuraeva (Krasnoshchekov and Krasnoshchekov-Protopopov correlations)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/conv_supercritical.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each correlation is the original paper or book cited in its function comment block; all eighteen are quoted by ht together with the assessment of Chen, Fang, Xu and Su, Annals of Nuclear Energy 76 (2015) 451-460. Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/conv_supercritical.py (case A) and additional values computed with the same ht functions in a throw-away virtualenv (cases B and C, including the branches of the non-smooth switches not taken by case A); 71 output values in total",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 4.4e-13,
+    "notes": "compare_solution.py: 71 common variables, 0 differ (rtol=0.001); largest relative deviation 4.4e-13 (Nu_Zhu_B), i.e. round-off only."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0038",
+    "CSL-0087"
+  ],
+  "related_external": [
+    "sources/labothappy LTP-034 (in-tube HTC correlations; no near-supercritical correlation there, the ht family is the only source of these equations)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-FUNC card C-113, family HT-018 of the ht triage)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

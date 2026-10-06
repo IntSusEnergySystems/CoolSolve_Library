@@ -210,6 +210,9 @@ Source file (plain-text EES library, comments in French):
   of reaction per kmol of fuel (J/kmol), although the original comments call it
   J/kg of fuel.
 ## Related models
+- `CSL-0087` *internal_turbulent_nusselt*: the other `ht`-translation
+  function library of the library (same layout: functions + demonstration
+  program), here for heat transfer rather than for combustion properties.
 - `CSL-0006` *boiler_mean_specific_heat*: first user — its `cpbar`
   procedure is a copy of this one, in a block marked
   `{--- Library functions copied from CSL-0005 ---}`, until `$INCLUDE library:…`

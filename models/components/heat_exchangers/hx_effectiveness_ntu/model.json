@@ -1,0 +1,89 @@
+{
+  "id": "CSL-0090",
+  "name": "hx_effectiveness_ntu",
+  "title": "Heat exchangers: effectiveness-NTU relations (function library)",
+  "summary": "Seventeen EES FUNCTIONs for the effectiveness-NTU (epsilon-NTU) method of a heat exchanger: the heat capacity rates Cmin and Cmax, their ratio Cr, the conversions NTU = UA/Cmin and UA = NTU*Cmin, and the effectiveness eps(NTU, Cr) and its inverse NTU(eps, Cr) for counterflow, parallel flow, crossflow (both fluids unmixed, exact integral formula and closed approximate formula; Cmin mixed; Cmax mixed) and boiler/condenser flow arrangements.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "hx_effectiveness_ntu.eescode",
+  "fluids": [],
+  "tags": [
+    "heat exchanger",
+    "effectiveness-NTU",
+    "counterflow",
+    "parallel flow",
+    "crossflow",
+    "condenser",
+    "boiler",
+    "relation",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "LN / EXP",
+    "DUPLICATE loop (inside a FUNCTION body and in the main program)",
+    "arrays",
+    "simultaneous equations for the implicit inversion"
+  ],
+  "stats": {
+    "n_equations": 407,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-004",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "A. Triboix (exact and approximate crossflow formulas)",
+      "T. L. Bergman, A. S. Lavine, F. P. Incropera and D. P. DeWitt (Introduction to Heat Transfer, 6E)",
+      "R. K. Shah and D. P. Sekulic (Fundamentals of Heat Exchanger Design)",
+      "J. P. Holman (Heat Transfer, 10th ed.)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/hx.py, functions calc_Cmin, calc_Cmax, calc_Cr, NTU_from_UA, UA_from_NTU, effectiveness_from_NTU, NTU_from_effectiveness and crossflow_effectiveness_to_int, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each relation is the original paper or book cited in its function comment block. Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/hx.py (case A: NTU = 5, Cr = 0.7, m_h = 22 kg/s, C_ph = 2200 J/kg-K, m_c = 5.5 kg/s, C_pc = 4400 J/kg-K, UA = 4400 W/K, Cmin = 22 W/K) and additional values computed with the same ht functions (case B: the steam/oil crossflow rating of the ht docstring, U = 275 W/m^2-K, A = 10.82 m^2); 50 output values in total",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 8.3e-08,
+    "notes": "compare_solution.py: 50 common variables, 0 differ (rtol=0.001). The largest relative deviation, 8.3e-8, is on eps_crossflow_B and comes from the composite Simpson quadrature (80 intervals) of the exact crossflow integral, which CoolSolve cannot evaluate inside the function; 1.4e-8 on eps_crossflow_A. Over the other 48 values the largest deviation is 5.1e-10, on NTU_crossflow_approx_A (convergence tolerance of the implicit inversion); the other 47 agree to 3.1e-13, i.e. round-off."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0002",
+    "CSL-0026",
+    "CSL-0027",
+    "CSL-0087",
+    "CSL-0089",
+    "CSL-0094",
+    "CSL-0096",
+    "CSL-0097",
+    "CSL-0098",
+    "CSL-0099",
+    "CSL-0102"
+  ],
+  "related_external": [
+    "sources/ht HT-016 (P-NTU / TEMA temperature effectiveness, the card that holds the shell-and-tube branches left out here)",
+    "sources/ht HT-019 (LMTD and F correction factors, the other way of rating a heat exchanger)",
+    "sources/thermo_models TSP-030 (TESPy eps-NTU relations, cross-validated against ht by the TESPy test suite)",
+    "sources/labothappy LTP-014 and LTP-042 (LaboThapPy eps-NTU with geometry and F-LMTD)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-FUNC card C-99, family HT-004 of the ht triage)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

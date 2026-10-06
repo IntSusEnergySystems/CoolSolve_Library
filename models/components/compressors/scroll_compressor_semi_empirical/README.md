@@ -227,3 +227,7 @@ Source files (collection of S. Quoilin):
 - `CSL-0037` *scroll_expander_semi_empirical*: the expander counterpart of
   this model (same semi-empirical methodology: supply losses, leakage,
   mechanical losses, global isentropic effectiveness).
+- `CSL-0078` *brine_to_water_heat_pump_refsim*: the same scroll machine inside a
+  brine-to-water heat pump of the ULiège model bank, where it is described step
+  by step (suction heating-up, isentropic compression to an adapted pressure,
+  isochoric compression, exhaust cooling-down, leakage through the throat).

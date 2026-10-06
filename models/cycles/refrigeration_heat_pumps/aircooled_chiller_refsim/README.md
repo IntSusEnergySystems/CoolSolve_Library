@@ -329,3 +329,6 @@ their own triage.
 - `CSL-0001` *refrigeration_cycle_simple_compressor*: same category; the same
   compressor concept (volumetric efficiency from a clearance volume, constant
   losses) at a much simpler level, on a R22/R134a/propane comparison.
+- `CSL-0078` *brine_to_water_heat_pump_refsim*: another machine of the same
+  model bank with the same four-step scroll compressor and fictitious
+  envelope, driving a brine evaporator and a water condenser (R407C).

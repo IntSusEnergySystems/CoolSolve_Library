@@ -1,0 +1,77 @@
+{
+  "id": "CSL-0101",
+  "name": "external_forced_conv_plates",
+  "title": "External forced convection over a flat plate (function library)",
+  "summary": "Four EES FUNCTIONs returning the average Nusselt number of an isothermal flat plate in crossflow at constant surface temperature: Baehr-Stephan (laminar, piecewise in the Prandtl number), Churchill-Ozoe (laminar, one equation for the whole range), Schlichting (turbulent, with the surface-friction term of that formulation) and Kreith (turbulent). Re on the plate length and the bulk Prandtl number are arguments; the average heat-transfer coefficient follows from h = Nu*k/L and is left to the caller.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "external_forced_conv_plates.eescode",
+  "fluids": [],
+  "tags": [
+    "external convection",
+    "forced convection",
+    "flat plate",
+    "nusselt number",
+    "correlation",
+    "laminar boundary layer",
+    "turbulent boundary layer",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "dimensionless arguments"
+  ],
+  "stats": {
+    "n_equations": 19,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-015",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "H. D. Baehr and K. Stephan (Baehr-Stephan correlation)",
+      "S. W. Churchill and H. Ozoe (Churchill-Ozoe correlation)",
+      "H. Schlichting and K. Gersten (Schlichting correlation)",
+      "F. Kreith, R. Manglik and M. Bohn (Kreith correlation)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/conv_external.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each correlation is the original paper or book cited in its function comment block (Baehr & Stephan, Heat and Mass Transfer, Springer 2013, with the 0.664 equation as in Bergman et al. 6E and VDI Heat Atlas G4; Churchill & Ozoe 1973; Schlichting & Gersten, Grenzschicht-Theorie, 9th ed. 1997, with the VDI Heat Atlas; Kreith, Manglik & Bohn 2010). The Prandtl branch limits of Nu_horizontal_plate_laminar_Baehr are those of the ht code (Pr < 0.005, < 0.05, < 10), which reproduces the published values; its docstring quotes 0.6 < Pr < 10 for the 0.664 equation (as in the original). The selectors Nu_external_horizontal_plate(_methods), the conv_horizontal_plate_*_methods dictionaries and the LAMINAR_TRANSITION_HORIZONTAL_PLATE constant are not translated (dispatchers / a constant of the calling model). Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "case A: the eight values published by ht 1.2.0 - the four doctests of ht/conv_external.py (one per correlation) and the four Prandtl branches of the ht/tests/test_conv_external.py regression test of Nu_horizontal_plate_laminar_Baehr - plus one further call at Pr = 0.01 (the 0.005 to 0.05 branch, for which ht publishes no value) and the values of case B, computed with the same ht functions in a throw-away virtualenv (local clone); 13 output values in total",
+    "date": "2026-10-06",
+    "coolsolve_version": "0.3.0@536d427",
+    "max_rel_diff": 2.5e-13,
+    "notes": "compare_solution.py: 13 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 6 (the six inputs of the demonstration program). Largest relative deviation 2.5e-13 (Nu_horizontal_plate_laminar_Baehr_B), i.e. round-off in the double-precision evaluation only."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0087",
+    "CSL-0092",
+    "CSL-0093",
+    "CSL-0094",
+    "CSL-0095",
+    "CSL-0100"
+  ],
+  "related_external": [
+    "sources/labothappy LTP-038 (external tube bundles, bundle-scale correlations and the component integration; the ht families are the reference for the equations)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-06",
+      "action": "added (T-FUNC card C-110, family HT-015 of the ht triage)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

@@ -151,6 +151,8 @@ Source files (MIT, collection of S. Quoilin):
 
 - `CSL-0007` *scroll_compressor_semi_empirical*: same semi-empirical
   methodology for the compressor of the same family.
+- `CSL-0084` *orc_expander_pump_empirical_maps*: the map-based alternative
+  to this semi-empirical expander (ThermoCycle efficiency/filling-factor fits).
 - `CSL-0036` *orc_extraction_r134a*: ORC with two-stage scroll expanders —
   the application the module was written for.
 - See also the CoolSolve example `expander_module.eescode` (kept in CoolSolve

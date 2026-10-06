@@ -184,4 +184,98 @@ Selection: representative, documented, one per distinct topic, mix of simple smo
 * Licences: superseded by the maintainer decision (box at the top): all rows `own`, published under MIT with credits to the authors listed in the provenance notes.
 * Student exam submissions (MCI exam, June 2019; 42 rows) are classified by a rule of `sweep.py` (`PERSONAL_DIRS`) and their **file names are redacted** in `inventory.csv` (`[redacted TM-xxxx]`); `curation.csv` contains no personal data. Keep it that way when adding curation rows.
 * Several teaching files embed textbook statements (Çengel/Boles; Pulkrabek in MCI): paraphrase and keep only data/solution structure.
-* Candidate ids depend on the sorted path list: re-running on the same tree gives the same ids; `curation.csv` is keyed by path (not by id). If the tree changes, check the warnings printed for unknown keys.
+* Candidate ids are **stable** (since 2026-10-06): when `inventory.csv` exists, a path already inventoried keeps its TM id (personal files: the k-th file of a folder keeps the k-th redacted id), a zip member dropped as a copy of a new disk file passes its id to that file, and new files get the next free ids (appended at the end). Duplicate groups keep their DG id (a new group gets the next free DG id) and their representative. Rows already in the inventory are kept as they are (workers' notes and decisions included); only a duplicate-group change is recorded in `notes`. Blank runs in paths are collapsed when matching. `curation.csv` is keyed by path (not by id). If the tree changes, check the warnings printed for unknown keys and lost ids. First incremental run: 2026-10-06 (+50 rows TM-0553…TM-0602, see B-10 in the roadmap).
+
+## 8. 2026-10-06 additions (TM-0553…TM-0602)
+
+Triage of the 50 rows the re-run of `sweep.py` appended for the folders `procedures EES/`
+(32 rows), `Steady-state models/` (10), `optim/` (4) and `solar/` (4). Every row was compared
+by its **equations** (comments and blanks stripped, `tools/ees_extract.py` output in
+`work/triage/`, deleted afterwards) with the rows of its duplicate group, with the earlier
+copies of the same files (`Model data bank/`, `modeles/`) and with the 80 library models
+(`library.csv`, `functions.csv`). No model folder is created by this card.
+
+### Counts
+
+| Decision | Rows | Members |
+|---|---:|---|
+| `todo` (worth importing) | 22 | TM-0554, 0558, 0559, 0560, 0563, 0564, 0565, 0566, 0569, 0570, 0571, 0574, 0575, 0579, 0581, 0582, 0585, 0587, 0588, 0589, 0593, 0596 |
+| `duplicate` | 18 | TM-0555, 0556 (of TM-0268), 0561 (of TM-0496), 0562 (of TM-0563), 0576/0577/0578 (of TM-0255/0256/0257 → CSL-0075), 0583, 0584 (of TM-0585), 0590, 0592 (of TM-0316/0317), 0594 (of TM-0564), 0595 (of TM-0569), 0598 (of TM-0275), 0599 (of TM-0272 → CSL-0037), 0600 (of TM-0314), 0601 (of TM-0319), 0602 (of TM-0324 → CSL-0019) |
+| `discarded` | 8 | TM-0553, 0567, 0568, 0586 (binary `.lkt` lookup tables, not models), 0557 (generic statistics helper on the lab data), 0572 (trivial moist-air density, covered by CoolProp `AirH2O`), 0573 (throat `SUBPROGRAM` fragment, superseded by CSL-0037 / TM-0593), 0580 (LMTD experiment file: the alternatives are noted as non-working in the file) |
+| `merged` | 1 | TM-0597 → CSL-0037 |
+| `parked` | 1 | TM-0591 (SETP library, third party) |
+
+Per folder: `procedures EES/` (32) 18 `todo`, 7 `duplicate`, 7 `discarded`;
+`Steady-state models/` (10) 2 `todo`, 7 `duplicate`, 1 `merged`; `optim/` (4) 1 `todo`,
+2 `duplicate`, 1 `discarded`; `solar/` (4) 1 `todo`, 2 `duplicate`, 1 `parked`.
+
+### Proposed cards (roadmap §6, B-10)
+
+```
+[ ] C-122 T-FUNC   TM-0585,TM-0496                       → components/heat_exchangers/plate_hx_correlations   — plate-HX correlations: 10 procedures (bogaerts, han, hsieh, kumar, kuo, martin, muley, thonon, wanniarachchi, yan); verification: TM-0585 stored solution + ht HT-005/HT-010 Python values
+[ ] C-123 T-FUNC   TM-0564,TM-0569,TM-0579,TM-0566,TM-0571 → components/heat_exchangers/three_zone_hx_procedures — 7 procedures (hx_cd, hx_ev, lmtd, single_phase_HX, EV, CD, evaporator2); verification: stored demo cases of TM-0564/TM-0569 (energy balance) + ht HT-004 epsilon-NTU
+[ ] C-124 T-IMPORT TM-0563                               → components/heat_exchangers/condenser_3_zones_plate_correlations — three-zone plate condenser, Thonon/Kuo, R123+glycol (REFPROP variant TM-0562 described); verification: EES stored solution
+[ ] C-125 T-IMPORT TM-0570 (auto-size variant TM-0582)   → components/heat_exchangers/evaporator_3_zones_plate_correlations — three-zone plate evaporator, Thonon/Hsieh, R245fa+glycol+oil; verification: EES stored solution + TM-0582 parametric table
+[ ] C-126 T-IMPORT TM-0575                               → components/heat_exchangers/hx_fem_evaporator_discretised — discretised hxfem evaporator, the smoothed revision of TM-0275; verification: EES stored solution
+[ ] C-127 T-IMPORT TM-0596                               → cycles/refrigeration_heat_pumps/heat_pump_vitocal_300g — scroll compressor + two plate HXs, glycol/water (needs CSL-0079 and the expander of TM-0597/CSL-0037); verification: EES stored solution
+[ ] C-128 T-IMPORT TM-0565                               → components/expanders_turbines/double_stage_scroll_expander — two-stage hermetic scroll expander (Lemort/Quoilin/Pire correlations, MODULE); verification: EES stored solution
+[ ] C-129 T-IMPORT TM-0593                               → components/valves_nozzles_piping/air_nozzle_ejector — air ejector with choked primary nozzle and entrainment; verification: EES stored solution
+[ ] C-130 T-IMPORT TM-0589                               → renewables/solar_thermal/solar_geometry_sun_path — solar geometry (declination, hour angle, altitude, azimuth, sunrise); verification: EES stored solution
+[ ] C-131 T-IMPORT TM-0588                               → components/valves_nozzles_piping/ball_valve_authority — equivalent opening diameter and valve authority from the ball angle; verification: EES stored solution + Idel'cik Memento p.339
+[ ] C-132 T-FUNC   TM-0574                               → fundamentals/properties/heat_transfer_fluid_properties — prop_htf: MEG, Therminol VP-1/66, oil (companion of CSL-0079); verification: HEDH HTF-VP1 data sheet values
+[ ] C-133 T-FUNC   TM-0558,TM-0559,TM-0587,TM-0581         → components/instrumentation/nozzle_discharge_coefficients — ASHRAE 41.2 / ISO R859 (4 nozzles), ISO 5167 long radius, admission procedure, range checker; verification: shared ISO 5167 part vs CSL-0075 + ASHRAE 41.2 tables
+[ ] C-134 T-FUNC   TM-0560                               → components/compressors/copeland_catalogue_correlation — third-order ARI/Copeland polynomial for ZH38K4E-TFD (W, M coefficients + Vs in five 242x2 tables); verification: EES stored solution
+[ ] C-135 T-IMPORT TM-0554                               → heat_transfer/pressure_drop/plate_hx_pressure_drop_identification — plate-HX pressure drops identified with REFPROP mixtures (likely blocked); verification: EES stored solution
+```
+
+### Notes for the import cards
+
+* **Function names must be unique in the library** (workflow §4.4). `warning_error`
+  (CSL-0075), `fluidprop` (CSL-0075), `single_phase_HX`, `lmtd`, `hx_cd`, `hx_ev`, `thonon`,
+  `kuo`, `hsieh`, `martin`, `prop_htf`, `copeland` are already used by other models or by
+  copied library blocks: rename them per file (`warning_error_ashrae`, `lmtd_xi1000`, …) or
+  prefix them with the file name.
+* **C-122 overlaps the `ht` batch** (cards C-105/HT-010 plate-HX correlations, C-107
+  two-phase). The lab file adds Thonon, Kuo-Lie-Hsieh-Lin, Han, Wanniarachchi, Yan and
+  Bogaerts, which `ht` does not have; the Martin, Kumar and Muley-Manglik formulas are
+  common. Decide whether the lab procedures are merged into the `ht` plate-HX file or kept
+  as a lab function model (the two libraries then coexist).
+* **C-123** contains a genuine bug of TM-0566 (`cp_cf = specheat(hf$,…)` — the cold-fluid
+  capacity is taken on the hot fluid) and three procedures with no demonstration program
+  (the stored solution could not be decoded, EES X8.198 layout): write the main program and
+  verify against a CoolProp recomputation.
+* **C-127** needs `BrineProp` (CSL-0079, blocked), the `Expander` procedure of TM-0597
+  (merged into CSL-0037 → copy the block, `CS-FEAT-IMPORT`) and the external `ev` lookup
+  tables (`TM-0567`, `TM-0568`, which are data files of the models, not models themselves).
+* **C-130** calls the EES built-in `nDay_(month, day)`; if CoolSolve has no equivalent,
+  replace it by an explicit day-number expression (log it in the conversion log).
+* **C-126 is the preferred revision of TM-0275** (whose copy TM-0598 is an exact duplicate):
+  it smooths the three U-value transitions over `width = 0.1` of the length, which the file
+  itself names as the fix for the non-convergence problems, and its demo case is the
+  validated R245fa/air_ha one. When C-126 is done, TM-0275 should become a duplicate.
+
+### Open questions for the maintainer
+
+1. **TM-0591 (`solar/SETP.LIB`) is parked**: the file is the SETP library (Duffie &
+   Beckman, *Solar Engineering of Thermal Processes*) with renamed functions
+   (`EqnTime_`, `AveDay_`, `CheckTemp_`, …), 69 procedures in 2724 lines of commercial code
+   distributed with the textbook — the licence does not allow publication under MIT.
+   Confirm, or ask the author of the derived file for permission.
+2. **PV models (TM-0316/0317 = TM-0590/0592)**: the two copies of `PV_model.EES` /
+   `TandS_Imput_IV_Model_Output_RsAdjust.EES` are identical, and one of them carries the
+   *Solar Energy Laboratory, University of Wisconsin* licence stamp, so the origin is
+   third party. Nothing new in the 2026-10-06 copies; the licence question of TM-0316 is
+   still open (kept `todo`, no card proposed here).
+3. **`optim/R245fa SQ101129` (TM-0555, TM-0556)** are byte-equivalent to TM-0268 apart from
+   `;`/`,` separators in `$COMMON`; the three REFPROP-based ORC rows (TM-0268, TM-0555,
+   TM-0556) remain one candidate. Importing it means a `blocked` model (`CALL EES_REFPROP`).
+4. **TM-0574 (`prop_htf`)** overlaps CSL-0079 (brines, `blocked`): do we want two
+   secondary-fluid property models, or should the Therminol/oil correlations be added to
+   CSL-0079?
+5. **Authors**: the `procedures EES/`, `optim/` and `Steady-state models/` files carry the
+   *J. Lebrun lab* licence stamp only; `TBD (<ULiège, J. Lebrun laboratory>)` would have to
+   be completed by the maintainer (TM-0565/TM-0575/TM-0561/TM-0574 name S. Quoilin in the
+   file or are signed `SQ`).
+6. **`identification pressure drops` (TM-0554)** is kept `todo` but ranked last: it needs
+   REFPROP mixtures (`R245fa+R134a`) that CoolProp cannot provide, so an import would be a
+   `blocked` model with no faithful runnable variant.
