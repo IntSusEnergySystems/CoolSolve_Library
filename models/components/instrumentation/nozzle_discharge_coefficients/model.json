@@ -1,0 +1,71 @@
+{
+  "id": "CSL-0122",
+  "name": "nozzle_discharge_coefficients",
+  "title": "Nozzle discharge coefficients and airflow-rate procedures (ASHRAE 41.2 / ISO 5167)",
+  "summary": "Function library for air flow metering: ASHRAE 41.2 / ISO R859 nozzle bank (throat velocity, discharge coefficient c_d = 0.8263 + 0.0131 ln Re, up to four nozzles), ISO 5167 long-radius nozzle (Stolz C_D, expansibility factor), compressible choked/subsonic admission procedure and three validity-range checkers.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "nozzle_discharge_coefficients.eescode",
+  "fluids": [
+    "AirH2O"
+  ],
+  "tags": [
+    "nozzle",
+    "discharge coefficient",
+    "ASHRAE 41.2",
+    "ISO R859",
+    "ISO 5167",
+    "flow metering",
+    "airflow measurement",
+    "choked flow",
+    "instrumentation",
+    "humid air"
+  ],
+  "language_features": [
+    "procedure calls",
+    "DUPLICATE",
+    "humid-air properties",
+    "MODULE flattened"
+  ],
+  "stats": {
+    "n_equations": 97,
+    "largest_block": 6
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/procedures EES/",
+    "candidate_id": "TM-0558",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory, procedures EES/ toolkit)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.793 / X8.198",
+    "language": "en/fr",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solution of TM-0558 (7 state variables consistent with the current inputs) and its stored M_dot_ah_cd = 0.1565179395 of the matching run; equation identity of the ISO 5167 part with the sibling TM-0256 of the CSL-0075 family plus recomputation (TM-0559 stored solution is stale, CS-BUG-EXTRACT-STALE); published ideal-gas isentropic nozzle equations for admission (exact)",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.0043,
+    "notes": "compare_solution.py: 7 common variables, 3 differ (rtol=0.001): w 4.27e-03 and viscosity 2.42e-03 (CoolProp vs EES humid-air backend); densities within 5.1e-5. M_dot_ah_cd 2.3e-5 vs the stored matching-run value. ISO demo point recomputed to 2e-5. Admission: diff_choked_adm = diff_sub_adm = 0."
+  },
+  "missing_features": [
+    "CS-GAP-SUM-INDEXED",
+    "CS-GAP-CALL-WARNING"
+  ],
+  "related": ["CSL-0075", "CSL-0118"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added (card C-133, T-FUNC; TM-0558, TM-0559, TM-0587, TM-0581)",
+      "by": "worker for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,576 @@
+{=============================================================================
+  Plate heat exchangers: heat-transfer and pressure-drop correlations
+  CoolSolve Library model CSL-0111 (function library)
+ -----------------------------------------------------------------------------
+  Ten EES PROCEDUREs for the corrugated channel of a chevron plate heat
+  exchanger, as used by the ULiège plate-HX models: single-phase correlations
+  (Kumar, Thonon, Muley, Bogaerts, Martin, Wanniarachchi) and two-phase
+  condensation/evaporation correlations (Kuo, Hsieh, Yan, Han), each returning
+  a heat-transfer coefficient and a pressure drop. All fluid properties are
+  evaluated inside the procedures from fluid$, the state and the quality; the
+  chevron angle beta is the angle between the axial flow and the corrugations
+  (beta = 0: parallel, beta = 90: perpendicular), as in the original file.
+
+  Inputs : fluid$ and the state (P, T or quality), M_dot, geometry
+           (N_p, b, W, L, beta, phi), q for the flow-boiling/condensing ones
+  Outputs: h_xxx and DELTAp_xxx per correlation; A_hex, R_f for Martin
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège collection, S. Quoilin (procedures), ~/Nextcloud/thermo_models/
+           "procedures EES/PHEX correlations SQ150128.EES" (TM-0585) and
+           "procedures EES/single phase hx  martin - SQ080229.EES" (TM-0496)
+           - see README.md. Related: CSL-0096 (same correlations from ht).
+=============================================================================}
+
+"!1. Kuo-Lie-Hsieh-Lin condensation correlation
+This correlation has been developed by using experimental data on R-410A in vertical plate heat exchangers with a chevron angle of 60°. Condensation heat transfer coefficient is calculated from the saturated liquid heat transfer coefficient.
+W.S. Kuo, Y.M. Lie, Y.Y. Hsieh, T.F. Lin, Condensation heat transfer and pressure drop of refrigerant R410a flow in a vertical plate heat exchanger, International Journal of Heat and Mass Transfer 48 (2005) 5205-5220.
+Source: TM-0585, procedure kuo."
+procedure kuo(fluid$,P,M_dot,q,N_p,b,W,L:h_tp_cd,DELTAp)
+	rho_g=density(fluid$,P=P,x=1)
+	rho_l=density(fluid$,P=P,x=0)
+	mu_g=viscosity(fluid$,P=P,x=1)
+	mu_l=viscosity(fluid$,P=P,x=0)
+	k_l=conductivity(fluid$,P=P,x=0)
+	Pr_l=Prandtl(fluid$,P=P,x=0)
+	G=M_dot/(b*W*N_p)
+	D_h = 2*b
+	Re_l=G*D_h/mu_l
+	h_r_l=0.2092*(k_l/D_h)*Re_l^0.78*Pr_l^(1/3)     "Heat exchange coefficient on the saturated liquid, identified experimentally with water (as in the original)"
+	Fr_l=G^2/(rho_l^2*9.80665*D_h)                  "gravitational acceleration written 9.80665 m/s^2: the EES constant g# is not resolved in a procedure body (CS-BUG-PI-FUNCTION)"
+	i_fg=enthalpy(fluid$,P=P,x=1)-enthalpy(fluid$,P=P,x=0)
+	Bo=q/(G*i_fg)
+
+	dx=0.05
+	x_0=0.01
+	x=x_0
+	Int=0
+	repeat
+		Co=(rho_g/rho_l)*((1-x)/x)^0.8
+		h_r=h_r_l*(0.25*Co^(-0.45)*Fr_l^0.25+75*Bo^0.75)
+		Int=Int+h_r*dx
+		x:=x+dx
+	until (x>0.95)
+	h_tp_cd=Int/(x-x_0)
+
+	 v_m = volume(fluid$,p=p,x=x)
+	G_eq = G * ((1 - X) + X * (rho_l/rho_g)^0.5)
+	Re_eq = (G_eq * D_h) / mu_l
+	f_tp = 21500 * Re_eq^(-1.14) * Bo^(-0.085)
+	DELTAp = (f_tp*2*G^2*v_m * L)/D_h
+END
+
+"!2. Hsieh-Lin evaporation correlation
+The correlation proposed by Hsieh and Lin is based on the experimental data obtained for R-410A. The experiments were performed for several mass flow rates, heat fluxes, and system pressures in a heat exchanger characterised by a chevron angle of pi/3. The all-liquid non-boiling heat transfer coefficient is determined from an empirical correlation proposed for R-410A.
+Y.Y. Hsieh, T.F. Lin, Saturated flow boiling heat transfer and pressure drop of refrigerant R410a in a vertical plate heat exchanger, International Journal of Heat and Mass Transfer 45 (2002) 1033-1044.
+Source: TM-0585, procedure Hsieh."
+Procedure Hsieh(fluid$,P,M_dot,q,N_p,b,W,L:h_tp_ev,DELTAp)
+	rho_g=density(fluid$,P=P,x=1)
+	rho_l=density(fluid$,P=P,x=0)
+	mu_g=viscosity(fluid$,P=P,x=1)
+	mu_l=viscosity(fluid$,P=P,x=0)
+	k_l=conductivity(fluid$,P=P,x=0)
+	Pr_l=Prandtl(fluid$,P=P,x=0)
+	G=M_dot/(b*W*(N_p-1)/2)
+	D_h= 2*b
+	Re_l=G*D_h/mu_l
+	h_l=0.2092*(k_l/D_h)*Re_l^0.78*Pr_l^(1/3)     "Heat exchange coefficient on the saturated liquid, identified experimentally with water (as in the original)"
+	i_fg=enthalpy(fluid$,P=P,x=1)-enthalpy(fluid$,P=P,x=0)
+	Bo=q/(G*i_fg)
+	h_tp_ev=88*Bo^0.5*h_l
+
+	"pressure drop:"
+	X_m = 0.5      "average quality value between inlet and outlet [-]"
+	v_m = volume(fluid$,p=p,x=0.3)
+	G_eq = G * ((1 - X_m) + X_m * (rho_l/rho_g)^0.5)
+	Re_eq = (G_eq * D_h) / mu_l
+	f_tp = 61000 * Re_eq^(-1.25)
+	DELTAp = (f_tp*2*G^2*v_m * L)/D_h
+END
+
+"!3. Kumar single-phase correlation, tested for various chevron angles. Obtained with water for phi = 1.17.
+Kumar, The Plate Heat Exchanger: Construction and Design, Institute of Chemical Engineering Symposium Series, 1984.
+Values taken from: 2003 - Ayub - Plate Heat Exchanger Literature Survey and New Heat Transfer and Pressure correlation for refrigerant evaporators.
+Source: TM-0585, procedure Kumar."
+Procedure Kumar(fluid$,P,T,M_dot,N_p,b,W,L,beta,mu_ratio,phi:h,DELTAp)
+rho = density(fluid$,t=t,p=p)
+mu = viscosity(fluid$,p=p,t=t)
+k = conductivity(fluid$,t=t,p=p)
+Pr = prandtl(fluid$,t=t,p=p)
+G = M_dot /(b*W*(N_p-1)/2)
+D_h = 2*b/phi
+Re = G*D_h/mu
+if beta >= 60 then
+	if Re < 10 then
+		C_1 = 0.718
+			m=0.349
+		C_2 = 50
+			p = 1.0
+	endif
+	if (Re >= 10) and (Re < 100) then
+		C_1 = 0.348
+		m=0.663
+		C_2 = 19.4
+			p = 0.589
+	endif
+	if Re >= 100 then
+		C_1 = 0.348
+		m=0.663
+		C_2 = 2.99
+			p = 0.183
+	endif
+endif
+
+if beta = 45 then
+	if Re < 10 then
+		C_1 = 0.718
+		m=0.349
+		C_2 = 47
+			p = 1.0
+	endif
+	if (Re >= 10) and (Re < 100) then
+		C_1 = 0.4
+		m=0.598
+		C_2 = 18.39
+			p = 0.652
+	endif
+	if Re >= 100 then
+		C_1 = 0.3
+		m=0.663
+		C_2 = 1.441
+			p = 0.206
+	endif
+	if Re < 15 then
+		C_2 = 47
+			p = 1.0
+	endif
+	if (Re >= 15) and (Re < 300) then
+		C_2 = 18.39
+			p = 0.652
+	endif
+	if Re >= 300 then
+		C_2 = 1.441
+			p = 0.206
+	endif
+endif
+
+if beta = 40 then
+	if Re < 20 then
+		C_1 =0.63
+			m=0.333
+		C_2 = 34
+			p = 1.0
+	endif
+	if (Re >= 20) and (Re < 300) then
+		C_1 =0.291
+		m=0.591
+		C_2 = 11.25
+			p = 0.631
+	endif
+	if Re >= 300 then
+		C_1 = 0.130
+		m=0.732
+		C_2 = 0.772
+			p = 0.161
+	endif
+endif
+
+if beta = 30 then
+	if Re < 20 then
+		C_1 = 0.562
+			m=0.326
+		C_2 = 24
+			p = 1.0
+	endif
+	if (Re >= 20) and (Re < 400) then
+		C_1 = 0.306
+		m=0.529
+		C_2 = 3.24
+			p = 0.457
+	endif
+	if Re >= 400 then
+		C_1 = 0.108
+		m=0.703
+		C_2 = 0.760
+			p = 0.215
+	endif
+endif
+
+if beta <= 25 then
+	if Re < 20 then
+		C_1 = 0.562
+			m=0.326
+		C_2 = 24
+			p = 1.0
+	endif
+	if (Re >= 20) and (Re < 500) then
+		C_1 = 0.331
+		m=0.503
+		C_2 = 2.80
+			p = 0.451
+	endif
+	if Re >= 500 then
+		C_1 = 0.087
+		m=0.718
+		C_2 = 0.639
+			p = 0.213
+	endif
+endif
+
+
+Nu = C_1 * Re^m*Pr^(1/3)*mu_ratio^0.17
+f = C_2 * Re^(-p)
+
+h = Nu * k / D_h
+DELTAp = (f*2*G^2/rho * L)/D_h
+end
+
+"!4. Thonon single-phase correlation, tested for various chevron angles.
+Thonon, B., Design Method for Plate Evaporators and Condensers, 1st International Conference on Process Intensification for the Chemical Industry, BHR Group Conference Series Publication, no. 18, pp. 37-47, 1995.
+Correlation reported by: Ayub - Plate Heat Exchanger Literature Survey and New Heat Transfer and Pressure correlation for refrigerant evaporators, 2003.
+Source: TM-0585, procedure Thonon."
+Procedure Thonon(fluid$,P,T,M_dot,N_p,b,W,L,beta,mu_ratio,phi:h,DELTAp)
+rho = density(fluid$,t=t,p=p)
+mu = viscosity(fluid$,p=p,t=t)
+k = conductivity(fluid$,t=t,p=p)
+Pr = prandtl(fluid$,t=t,p=p)
+G = M_dot /(b*W*(N_p-1)/2)
+D_h = 2*b/phi
+Re = G*D_h/mu
+if beta = 15 then
+	C_1 = 0.1
+	m = 0.687
+	if Re < 1000 then
+		C_2 = 28.21
+		pp= 0.9
+	endif
+	if Re >= 1000 then
+		C_2 = 0.872
+		pp = 0.392
+	endif
+endif
+
+if beta = 30 then
+	C_1 = 0.2267
+	m = 0.631
+	if Re < 550 then
+		C_2 = 26.34
+		pp= 0.830
+	endif
+	if Re >= 550 then
+		C_2 = 0.572
+		pp = 0.217
+	endif
+endif
+
+if beta = 45 then
+	C_1 = 0.2998
+	m = 0.645
+	if Re < 200 then
+		C_2 = 18.19
+		pp= 0.682
+	endif
+	if Re >= 200 then
+		C_2 = 0.6857
+		pp = 0.172
+	endif
+endif
+
+if beta = 60 then
+	C_1 = 0.2946
+	m = 0.7
+	if Re < 160 then
+		C_2 = 45.57
+		pp= 0.67
+	endif
+	if Re >= 160 then
+		C_2 = 0.370
+		pp = 0.172
+	endif
+endif
+
+Nu = C_1 * Re^m*Pr^(1/3)
+f = C_2 * Re^(-pp)
+
+h = Nu * k / D_h
+DELTAp = (f*2*G^2/rho * L)/D_h
+end
+
+"!5. Muley-Manglik single-phase correlation. Established for 3 chevron angles (30 and 60 degrees), turbulent flow (Re > 1000), and different enlargement factors (1<phi<1.5).
+Muley A., Manglik R.M., Experimental Study of Turbulent Flow Heat Transfer and Pressure Drop in a Plate Heat Exchanger With Chevron Plates, Transactions of the ASME, 1999.
+Source: TM-0585, procedure Muley."
+Procedure Muley(fluid$,P,T,M_dot,N_p,b,W,L,beta,mu_ratio,phi:h,DELTAp)
+rho = density(fluid$,t=t,p=p)
+mu = viscosity(fluid$,p=p,t=t)
+mu_w = mu/mu_ratio
+k = conductivity(fluid$,t=t,p=p)
+Pr = prandtl(fluid$,t=t,p=p)
+G = M_dot /(b*W*(N_p-1)/2)
+D_h = 2*b     "Muley does not divide by phi (as in the original)"
+Re = G*D_h/mu
+if Re >= 400 then
+	Nu = (0.2668 - 0.006967 * beta + 7.244e-5 * beta^2)*(20.78 - 50.94 * phi + 41.16 * phi^2 - 10.51 * phi^3) * Re^(0.728 + 0.05433*sin(4 * beta + 3.7*180/pi())) * Pr^(1/3) * (mu/mu_w)^0.14     "pi() is used because pi is not resolved in a procedure body (CS-BUG-PI-FUNCTION)"
+	f = (2.917 - 0.1277 * beta + 2.016e-3 * beta^2) * (5.474 - 19.02 * phi + 18.93 * phi^2 - 5.341 * phi^3) * Re^(-0.2 - 0.0577*sin(4 * beta + 2.1*180/pi()))
+else
+	Nu = 0.44* (beta/30)^0.38 * Re^0.5 * Pr^(1/3)*(mu/mu_w)^0.14
+	f = ((30.2/Re)^5 + (6.28/Re^0.5)^5)^0.2*(beta/30)^0.83
+endif
+
+h = Nu * k / D_h
+DELTAp = (f*2*G^2/rho * L)/D_h
+end
+
+"!6. Bogaerts correlation: developed for the following conditions: W = 0.113 m, L = 0.236 m, e=0.002 or 0.0016 m, phi = 1.2, beta = 78 degrees, cold fluid: water, hot fluid: mineral oil. The heat exchanger is a SWEP B10 heat exchanger.
+R. Bogaert, A. Boles, Global Performance of a Prototype Brazed Plate Heat Exchanger in a Large Reynolds Number Range, Experimental Heat Transfer 8, pp 293 - 311, 1995.
+Source: TM-0585, procedure Bogaerts."
+Procedure Bogaerts(fluid$,P,T,M_dot,N_p,b,W,L,mu_ratio:h,DELTAp)
+rho = density(fluid$,t=t,p=p)
+mu = viscosity(fluid$,p=p,t=t)
+mu_w = mu/mu_ratio
+k = conductivity(fluid$,t=t,p=p)
+Pr = prandtl(fluid$,t=t,p=p)
+G = M_dot /(b*W*(N_p-1)/2)
+D_h = 2*b      "Bogaerts does not divide by phi (as in the original)"
+Re = G*D_h/mu
+
+B_1 = 0.4621
+B_2 = 0.4370
+if Re = 20 then
+	B_1 = 1.730
+	B_2 = 0
+endif
+if Re > 20 then
+	B_1 = 0.0875
+	B_2 = 1
+endif
+if Re = 50 then
+	B_1 = 4.4
+	B_2 = 0
+endif
+if Re > 50 then
+	B_1 = 0.4223
+	B_2 = 0.6012
+endif
+if Re = 80 then
+	B_1 = 5.95
+	B_2 = 0
+endif
+if Re > 80 then
+	B_1 = 0.26347
+	B_2 = 0.7152
+endif
+
+c = 0.333*exp(6.4/(Pr+30))
+Nu = B_1 * Re^B_2 * Pr^c * (mu/mu_w)^1.14     "exponents for Pr and mu are simplified (as in the original)"
+
+f=111.797/Re
+if (Re > 10) then
+	f=58.5/Re^0.757
+endif
+if (Re = 30) then
+	f=5
+endif
+if (Re > 30) then
+	f=14.994/Re^0.308
+endif
+if (Re > 200) then
+	f=2.6 + 120.8/Re^1.051
+endif
+
+h = Nu * k / D_h
+DELTAp = (f*2*G^2/rho * L)/D_h
+end
+
+"!7. Martin (1996) single-phase correlation with the VDI Heat Atlas friction factor.
+H. Martin, A theoretical approach to predict the performance of chevron-type plate heat exchangers, Chemical Engineering and Processing 35 (1996) 301-310.
+Returns the heat-transfer coefficient, the pressure drop, the heat-transfer area and the thermal resistance of one side; not a plate heat exchanger model itself (as in TM-0496).
+Source: TM-0585, procedure martin; the near-identical procedure of TM-0496 differs only by its wall-viscosity handling (no mu_ratio argument) and argument names (L_w instead of W) - see README."
+procedure martin(fluid$,A_bar,lambda,beta,k_w,t,L_p,W,N_p,T_m,T_w,P_m,M_dot_f,mu_ratio:R_f,DELTAp,h_f,A_hex)
+
+"Fluid"
+rho_f= DENSITY(fluid$,T=T_m,P=P_m)
+mu_f=VISCOSITY(fluid$,T=T_m,P=P_m)
+mu_w=VISCOSITY(fluid$,T=T_w,P=P_m)/mu_ratio     "at the wall"
+k_f=CONDUCTIVITY(fluid$,T=T_m,P=P_m)
+Pr_f=PRANDTL(fluid$,T=T_m,P=P_m)
+c_p_f=SPECHEAT(fluid$,T=T_m,P=P_m)
+
+"Average flow cross section: A_cs = number of gaps of one side * plate width between gaskets * 2 * A_bar"
+A_cs=W*2*A_bar
+
+"velocity: superficial velocity = volumetric flow rate / average flow cross-section [m/s]"
+V_dot_f_p = M_dot_f/N_p/rho_f
+u_f=V_dot_f_p/A_cs
+
+"corrugation parameter"
+X=2*pi()*A_bar/lambda     "pi() is used because pi is not resolved in a procedure body (CS-BUG-PI-FUNCTION)"
+
+"area enlargement factor"
+PHI=1/6*(1+sqrt(1+X^2)+4*sqrt(1+X^2/2))
+
+"hydraulic diameter"
+d_h=4*A_bar/PHI
+
+"Reynolds number"
+Re_f=rho_f*u_f*d_h/mu_f
+
+"friction factor"
+IF Re_f<2000 THEN
+xi_0=64/Re_f
+xi_1=597/Re_f+3.85
+Regime$='LAMINAR'
+ELSE
+xi_0=(1.8*log10(Re_f)-1.5)^(-2)
+xi_1=39/Re_f^0.289
+Regime$='TURBULENT'
+ENDIF
+
+"Standard set of empirical parameters for the friction factor:"
+a = 3.8
+b= 0.18
+c = 0.36
+
+"Darcy friction factor"
+xi = ((cos(beta)/(b *tan(beta) + c*sin(beta) + xi_0/cos(beta))^0.5 + (1-cos(beta))/sqrt(a*xi_1)))^(-2)
+
+"Fanning friction factor:"
+f = xi/4
+
+"Nusselt number"
+Nu_f=Pr_f^(1/3)*(mu_f/mu_w)^(1/6)*0.122*(xi*Re_f^2*sin(2*beta))^(0.374)     "renamed Nu_f (original: Nu#_f): an identifier containing # is not parsed in CoolSolve (CS-BUG-HASH-IDENT)"
+
+"Heat transfer coefficient"
+h_f = Nu_f * k_f / d_h
+"Heat transfer area"
+A_hex=W*L_p*PHI*N_p
+"Thermal resistance"
+R_f=1/(h_f*A_hex)
+
+"Pressure drop"
+DELTAP=(2* f *rho_f*u_f^2*L_p)/(d_h)
+
+end
+
+"!8. Wanniarachchi single-phase correlation for chevron-type plate heat exchangers, suitable both for laminar and turbulent flow.
+AS Wanniarachchi, U Ratnam, BE Tilton, K Dutta, Approximate correlations for chevron-type plate heat exchangers, ASME 1995.
+Note: this procedure redefines its beta argument as 90-beta (Wanniarachchi uses another definition of the beta angle, as in the original).
+Source: TM-0585, procedure Wanniarachchi."
+procedure Wanniarachchi(fluid$,T,p,M_dot,N_p,b,W,L,phi,mu_ratio,beta:h,DELTAp)
+
+beta = 90-beta     "Wanniarachchi uses another definition of the beta angle (as in the original)"
+D_h = 2 * b/phi     "Wanniarachchi divides by phi in his paper (as in the original)"
+Pr = prandtl(fluid$,T=T,p=p)
+rho = density(fluid$,T=T,P=p)
+mu = viscosity(fluid$,T=T,p=p)
+k = conductivity(fluid$,T=T,p=p)
+G = M_dot /(b*w*(N_p-1)/2)
+Re = G*D_h/mu
+m_wan=0.646+0.0011*beta
+p_wan=0.00423*beta+0.0000223*beta^2
+Nus_1=3.65*beta^(-0.445)*phi^(0.661)*Re^(0.339)
+Nus_t=12.6*beta^(-1.142)*phi^(1-m_wan)*Re^m_wan
+Nus=(Nus_1^3+Nus_t^3)^(1/3)*Pr^(1/3)*mu_ratio^0.17
+h = Nus * k / D_h
+
+"Pressure drop"
+f_1=1774*beta^(-1.026)*(phi)^2*Re^(-1)
+f_2=46.6*beta^(-1.08)*phi^(1+p_wan)*Re^(-p_wan)
+f=(f_1^3+f_2^3)^(1/3)
+u=G/rho
+DELTAP=(2*f*L*rho*u^2)/D_h*mu_ratio^(-0.17)
+
+end
+
+"!9. Han-Lee-Kim condensation correlation in brazed plate heat exchangers with different chevron angles.
+Han, Lee, Kim (2003), The characteristics of condensation in brazed plate heat exchangers with different chevron angles.
+The beta dependency of the Ge coefficients is removed by the original file, since the expression does not make sense (as in the original comments).
+Source: TM-0585, procedure Han."
+Procedure Han(fluid$,P,M_dot,N_p,b,W,L,beta,phi:h,DELTAp)
+	rho_g=density(fluid$,p=p,x=1)
+	rho_l=density(fluid$,p=p,x=0)
+	mu_l=viscosity(fluid$,p=p,x=0)
+	k_l=conductivity(fluid$,p=p,x=0)
+	Pr_l=Prandtl(fluid$,p=p,x=0)
+	D_h = 2*b/phi
+	G=M_dot/(b*W*(N_p-1)/2)
+	G_eq = G * (0.5 + 0.5 * (rho_l/rho_g)^0.5)
+	Re_eq = G_eq * D_h/mu_l
+
+	beta_rad = 2*pi() * beta/360     "pi() is used because pi is not resolved in a procedure body (CS-BUG-PI-FUNCTION)"
+	Ge_1 = 11.22 * (p/D_h)^(-2.83)            "the beta dependency is removed, since the expression does not make sense (as in the original)"
+	Ge_2 = 0.35 * (p/D_h)^0.23
+	Nus = Ge_1 * Re_eq^Ge_2*Pr_l^0.333
+	Ge_3 = 3521.1 * (p/D_h)^4.17
+	Ge_4 = -1.024 * (p/D_h)^0.0925
+	f = Ge_3 * Re_eq^Ge_4
+
+	h = Nus * k_l/ D_h
+	DELTAp = f * (L * G_eq^2) / (D_h * rho_l)
+
+end
+
+"!10. Yan-Lio-Lin condensation correlation.
+Y.-Y. Yan, H.-C. Lio, T.-F. Lin, Condensation heat transfer and pressure drop of refrigerant R134a in a plate heat exchanger, International Journal of Heat and Mass Transfer 42 (1999) 31.
+Source: TM-0585, procedure Yan."
+Procedure Yan(fluid$,P,M_dot,q,N_p,b,W,L:h,DELTAp)
+
+	rho_g=density(fluid$,p=p,x=1)
+	rho_l=density(fluid$,p=p,x=0)
+	mu_l=viscosity(fluid$,p=p,x=0)
+	k_l=conductivity(fluid$,p=p,x=0)
+	Pr_l=Prandtl(fluid$,p=p,x=0)
+	D_h = 2*b
+	G=M_dot/(b*W*(N_p-1)/2)
+	G_eq = G * (0.5 + 0.5 * (rho_l/rho_g)^0.5)
+	i_fg=enthalpy(fluid$,P=P,x=1)-enthalpy(fluid$,P=P,x=0)
+	Bo=q/(G*i_fg)
+	Re_eq = G_eq * D_h/mu_l
+	h = 4.118 * k_l/ D_h * Re_eq^0.4 * Pr_l^0.333
+	v_m = 0.5/rho_l + 0.5/rho_g
+	P_c = p_crit(fluid$)
+	Re = G * D_h/mu_l
+	f_tp = 94.75 * Re_eq^(-0.0467) * Re^(-0.4) * Bo^0.5 * (p/p_c)^0.8
+	DELTAp = 2 * G^2 * v_m * L * f_tp /D_h
+end
+
+
+"!Main program: default operating point of the source file (TM-0585)"
+Fluid$ = 'R410A'
+
+M_dot = 0.3          "mass flow rate [kg/s]"
+p = 1E6              "pressure [Pa]"
+q = 10000            "heat flux [W/m^2]"
+N_p = 25             "number of plates [-]"
+b = 0.002            "channel spacing [m]"
+W = 0.21             "plate width [m]"
+L = 0.5              "effective plate length [m]"
+PHI = 1.2            "enlargement factor [-]"
+beta = 60            "chevron angle [degrees]"
+k = 14               "plate thermal conductivity [W/m-K]"
+thick= 0.001         "plate thickness [m]"
+lambda = 0.0065      "corrugation wavelength [m]"
+
+T = 10               "fluid temperature [°C]"
+T_sat = temperature(fluid$,x=0.5,p=p)     "saturation temperature at p [°C]"
+
+"Two phase correlations (output names as in the original main program):"
+call kuo(fluid$,P,M_dot,q,N_p,b,W,L:h_ev,DELTAp_ev)
+call Hsieh(fluid$,P,M_dot,q,N_p,b,W,L:h_cd,DELTAp_cd)
+call yan(fluid$,P,M_dot,q,N_p,b,W,L:h_yan,DELTAp_yan)
+{The original main program leaves the Han call commented out: its pressure-drop
+ coefficients (built on (p/D_h)^4.17 with p the fluid pressure, as in the
+ original) give absurd values at this operating point; the procedure is
+ transcribed unchanged above.}
+
+"Single phase correlations:"
+call Thonon(fluid$,P,T,M_dot,N_p,b,W,L,beta,1,PHI:h_thonon,DELTAp_thonon)
+call Kumar(fluid$,P,T,M_dot,N_p,b,W,L,beta,1,PHI:h_kumar,DELTAp_kumar)
+call Muley(fluid$,P,T,M_dot,N_p,b,W,L,beta,1,PHI:h_Muley,DELTAp_Muley)
+call Bogaerts(fluid$,P,T,M_dot,N_p,b,W,L,1:h_bogaerts,DELTAp_bogaerts)
+call martin(fluid$,b/2,lambda,beta,k,thick,L,W,N_p,T,T,P,M_dot,1:R_f,DELTAp_martin,h_martin,A_hex)
+call Wanniarachchi(fluid$,T,p,M_dot,N_p,b,W,L,PHI,1,beta:h_wan,DELTAp_wan)
+
+"Operating-point quantities of the original main program:"
+mu = viscosity(fluid$,p=p,t=t)
+G = M_dot /(b*W*(N_p-1)/2)
+D_h = 2*b
+Re = G*D_h/mu

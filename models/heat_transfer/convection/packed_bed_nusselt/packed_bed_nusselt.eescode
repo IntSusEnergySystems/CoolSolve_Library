@@ -1,0 +1,181 @@
+{=============================================================================
+  Packed-bed forced convection: Nusselt-number correlations
+  CoolSolve Library model CSL-0108 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Four correlations for the particle-to-fluid heat transfer in a packed
+  (fixed) bed, from Wakao-Kagei (1982) to Achenbach (1995). All of them
+  return the particle Nusselt number; the wall heat-transfer coefficient
+  follows from h = Nu*k/dp, and is left to the caller. The particle
+  Reynolds number is an argument of the three Re-based functions; the
+  Gnielinski function takes the bed operating point instead (particle
+  diameter, void fraction, superficial velocity and fluid properties) and
+  forms Re = rho*vs*dp/(mu*voidage) itself, as in ht.
+
+  The demonstration program at the end calls every function, once with the
+  inputs of the ht doctest of the corresponding correlation ("A" cases) and
+  once with a second, uniform input set describing one air bed ("B" cases).
+  The ht values of both sets are tabulated in the README (verification
+  table).
+
+  Inputs : dp [m], voidage [-], vs [m/s], rho [kg/m3], mu [Pa-s], Pr [-],
+           fa [-], Re [-]
+  Outputs: Nu [-] (one FUNCTION per correlation)
+  Units  : SI - lengths in m, velocities in m/s, densities in kg/m3,
+           viscosities in Pa-s, dimensionless numbers dimensionless
+  Source : ht (Caleb Bell), ht/conv_packed_bed.py, version 1.2.0,
+           commit 85e0ee6, MIT - https://github.com/CalebBell/ht ;
+           correlations by the authors cited in each function block -
+           see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION Nu_packed_bed_Gnielinski(dp, voidage, vs, rho, mu, Pr, fa)
+{NU_PACKED_BED_GNIELINSKI - Nusselt number of a fluid passing over a bed of
+particles, after the single-sphere correlation scaled by the shape factor fa.
+
+  Nu = fa*Nu_sphere
+  Nu_sphere = 2 + (Nu_lam^2 + Nu_turb^2)^0.5
+  Nu_lam = 0.664*Re^0.5*Pr^(1/3)
+  Nu_turb = 0.037*Re^0.8*Pr / [1 + 2.443*Re^(-0.1)*(Pr^(2/3) - 1)]
+  Re = rho*vs*dp/(mu*voidage)
+
+dp [m] is the equivalent spherical particle diameter, voidage [-] the void
+fraction of the bed, vs [m/s] the superficial fluid velocity, rho [kg/m3]
+the fluid density, mu [Pa-s] the fluid viscosity and Pr [-] the fluid
+Prandtl number. fa [-] scales the single-sphere value to the packing shape:
+fa <= 0 selects the sphere relation fa = 1 + 1.5*(1 - voidage) (EES has no
+optional arguments; ht defaults fa to None with the same relation); explicit
+values quoted in ht are 1.6 for cylinders (l/d of 0.24 to 1.2) and cubes,
+2.1 for Raschig rings and 2.3 for Berl saddles.
+Validity: confirmed with experimental data for 1E-1 < Re < 1E3 and
+0.4 < Pr < 1000 for spheres; smaller limits for other shapes (as in ht).
+Original: Gnielinski, V., "Equations for the calculation of heat and mass
+  transfer during flow through stationary spherical packings at moderate and
+  high Peclet numbers", International Chemical Engineering 21(3): 378-383,
+  1981; Gnielinski, V., "Berechnung des Waerme- und Stoffaustauschs in
+  durchstroemten ruhenden Schuettungen", Verfahrenstechnik 16(1): 36-39,
+  1982; as given in VDI Heat Atlas, 2nd ed., Springer, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_packed_bed.py,
+  Nu_packed_bed_Gnielinski, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Re = rho*vs*dp/mu/voidage
+  Nu_lam = 0.664*Re^0.5*Pr^(1/3)
+  Nu_turb = 0.037*Re^0.8*Pr/(1 + 2.443*Re^(-0.1)*(Pr^(2/3) - 1))
+  Nu_sphere = 2 + (Nu_lam^2 + Nu_turb^2)^0.5
+  IF fa <= 0 THEN
+    fa_use = 1 + 1.5*(1 - voidage)
+  ELSE
+    fa_use = fa
+  ENDIF
+  Nu_packed_bed_Gnielinski = fa_use*Nu_sphere
+END
+
+FUNCTION Nu_Wakao_Kagei(Re, Pr)
+{NU_WAKAO_KAGEI - Nusselt number of a fluid passing over a bed of particles,
+rough form without voidage dependence.
+
+  Nu = 2 + 1.1*Pr^(1/3)*Re^0.6
+
+Re [-] is the Reynolds number with the pebble diameter as the characteristic
+dimension, Pr [-] the fluid Prandtl number.
+Validity: fit for 3 <= Re <= 3000; claimed reasonable up to 1E6 (as in ht).
+Original: Wakao, N. and S. Kagei, Heat and Mass Transfer in Packed Beds,
+  Taylor & Francis, 1982; as cited in Abdulmohsin, R. S. and M. H. Al-Dahhan,
+  "Characteristics of Convective Heat Transport in a Packed Pebble-Bed
+  Reactor", Nuclear Engineering and Design 284: 143-152, 2015.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_packed_bed.py,
+  Nu_Wakao_Kagei, MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Wakao_Kagei = 2 + 1.1*Pr^(1/3)*Re^0.6
+END
+
+FUNCTION Nu_Achenbach(Re, Pr_unused, voidage)
+{NU_ACHENBACH - Nusselt number of a fluid passing over a bed of particles,
+fourth-power blending of a low- and a high-Reynolds branch.
+
+  Nu = [(1.18*Re^0.58)^4 + (0.23*(Re/(1 - voidage))^0.75)^4]^0.25
+
+Re [-] is the Reynolds number with the pebble diameter as the characteristic
+dimension, voidage [-] the void fraction of the bed. Pr_unused [-] is
+accepted for API consistency but does not enter the equation, as in ht
+(neither the ht docstring formula nor its code uses Pr).
+Validity: Re/voidage < 7.7E5; developed in a wind tunnel at up to 30 bar
+(as in ht).
+Original: Achenbach, E., "Heat and Flow Characteristics of Packed Beds",
+  Experimental Thermal and Fluid Science 10(1): 17-27, 1995; as cited in
+  Abdulmohsin, R. S. and M. H. Al-Dahhan, "Characteristics of Convective
+  Heat Transport in a Packed Pebble-Bed Reactor", Nuclear Engineering and
+  Design 284: 143-152, 2015.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_packed_bed.py,
+  Nu_Achenbach, MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Achenbach = ((1.18*Re^0.58)^4 + (0.23*(Re/(1 - voidage))^0.75)^4)^0.25
+END
+
+FUNCTION Nu_KTA(Re, Pr, voidage)
+{NU_KTA - Nusselt number of a fluid passing over a bed of spherical fuel
+elements, KTA rule for high-temperature gas-cooled reactors.
+
+  Nu = 1.27*Pr^(1/3)*Re^0.36/voidage^1.18
+     + 0.033*Pr^0.5*Re^0.86/voidage^1.07
+
+Re [-] is the Reynolds number with the pebble diameter as the characteristic
+dimension, Pr [-] the fluid Prandtl number, voidage [-] the void fraction
+of the bed.
+Validity: 100 < Re < 1E5, 0.36 < voidage < 0.42, bed-to-particle diameter
+ratio D/d > 20, bed height H > 4*d (as in ht).
+Original: Reactor Core Design of High-Temperature Gas-Cooled Reactors,
+  Part 2: Heat Transfer in Spherical Fuel Elements, KTA 3102.2, June 1983;
+  as cited in Abdulmohsin, R. S. and M. H. Al-Dahhan, "Characteristics of
+  Convective Heat Transport in a Packed Pebble-Bed Reactor", Nuclear
+  Engineering and Design 284: 143-152, 2015.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_packed_bed.py,
+  Nu_KTA, MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_KTA = 1.27*Pr^(1/3)*Re^0.36/voidage^1.18 + 0.033*Pr^0.5*Re^0.86/voidage^1.07
+END
+
+"!Demonstration program: every correlation is called twice"
+"It is ignored by the future $INCLUDE library:packed_bed_nusselt (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each correlation (published values)."
+"Case B: one second, uniform input set (one air bed: dp = 5 mm, voidage = 0.38,"
+"vs = 0.5 m/s, rho = 1.2 kg/m3, mu = 1.8E-5 Pa-s, Pr = 0.71; Re follows from"
+"the Gnielinski definition Re = rho*vs*dp/(mu*voidage))."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case A - input set"
+dp_A = 8E-4 [m]  "0.8 mm particles in the original"
+voidage_A = 0.4 [-]  "as in the original"
+vs_A = 1 [m/s]  "as in the original"
+rho_A = 1E3 [kg/m3]  "as in the original"
+mu_A = 1E-3 [Pa-s]  "as in the original"
+Pr_A = 0.7 [-]  "as in the original"
+Re_A = 2000 [-]  "as in the original"
+Pr_Wakao_A = 0.7 [-]  "as in the original"
+
+"Nu_packed_bed_Gnielinski - default sphere factor (fa <= 0) and explicit fa = 2"
+Nu_Gnielinski_A = Nu_packed_bed_Gnielinski(dp_A, voidage_A, vs_A, rho_A, mu_A, Pr_A, 0)
+Nu_Gnielinski_fa2_A = Nu_packed_bed_Gnielinski(dp_A, voidage_A, vs_A, rho_A, mu_A, Pr_A, 2)
+"Nu_Wakao_Kagei"
+Nu_Wakao_Kagei_A = Nu_Wakao_Kagei(Re_A, Pr_Wakao_A)
+"Nu_Achenbach - Pr accepted but unused, as in ht"
+Nu_Achenbach_A = Nu_Achenbach(Re_A, Pr_Wakao_A, voidage_A)
+"Nu_KTA"
+Nu_KTA_A = Nu_KTA(Re_A, Pr_Wakao_A, voidage_A)
+
+"Case B - second, uniform input set (one air bed)"
+dp_B = 0.005 [m]  "5 mm particles"
+voidage_B = 0.38 [-]  "bed void fraction"
+vs_B = 0.5 [m/s]  "superficial air velocity"
+rho_B = 1.2 [kg/m3]  "air density"
+mu_B = 1.8E-5 [Pa-s]  "air viscosity"
+Pr_B = 0.71 [-]  "air Prandtl number"
+Re_B = rho_B*vs_B*dp_B/mu_B/voidage_B  "particle Reynolds number, Gnielinski definition [-]"
+
+"Nu_packed_bed_Gnielinski - default sphere factor (fa <= 0) and Raschig rings (fa = 2.1)"
+Nu_Gnielinski_B = Nu_packed_bed_Gnielinski(dp_B, voidage_B, vs_B, rho_B, mu_B, Pr_B, 0)
+Nu_Gnielinski_fa21_B = Nu_packed_bed_Gnielinski(dp_B, voidage_B, vs_B, rho_B, mu_B, Pr_B, 2.1)
+"Nu_Wakao_Kagei"
+Nu_Wakao_Kagei_B = Nu_Wakao_Kagei(Re_B, Pr_B)
+"Nu_Achenbach - Pr accepted but unused, as in ht"
+Nu_Achenbach_B = Nu_Achenbach(Re_B, Pr_B, voidage_B)
+"Nu_KTA"
+Nu_KTA_B = Nu_KTA(Re_B, Pr_B, voidage_B)

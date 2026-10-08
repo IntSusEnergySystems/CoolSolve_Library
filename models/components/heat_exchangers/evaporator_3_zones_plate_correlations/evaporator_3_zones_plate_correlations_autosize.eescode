@@ -1,0 +1,326 @@
+{=============================================================================
+  Auto-size variant of the three-zone plate evaporator (Thonon/Hsieh)
+  CoolSolve Library model CSL-0114 - variant "autosize"
+ -----------------------------------------------------------------------------
+  Rating/size variant of evaporator_3_zones_plate_correlations.eescode, from
+  the source file "PHE auto size SQ101020.EES" (S. Quoilin, 2010-10-20,
+  file name signature SQ+YYMMDD). Same three-zone plate-evaporator model and
+  correlations (Thonon single phase, Hsieh & Lin boiling, LMTD), with three
+  differences of the original files themselves (native EES, no CoolSolve
+  syntax): the secondary-fluid path is enthalpy-based (property calls
+  temperature(fluidev$, h=..., p=...) instead of a constant cp), the total
+  pressure drop is normalised by the plate length L_h, and the Thonon calls
+  pass the real plate length instead of a unit length. The demo operating
+  point is an R123/water test case (the plate geometry is sized with the
+  parametric table of the original file, left undocumented: its 851x2 decoded
+  content is mostly empty - see README).
+  Valid EES; no unit conversion (already SI-degC-Pa-J).
+
+  Inputs : p_ev, T_r_su_ev, T_r_ex_ev, M_dot_r (R123); T_sf_su_ev, M_dot_sf,
+           p_sf (water); N_p, b, L_w, L_h, PHI, beta
+  Outputs: h_sf_ex_ev, Q_dot_ev, A_ev, DELTAp, DELTAp_sf
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège Thermodynamics Laboratory (S. Quoilin) - see README.md
+  =============================================================================}
+
+
+$bookmark LMTD
+Procedure LMTD(T_hf_su,T_hf_ex,T_cf_su,T_cf_ex:DELTAT_log)
+
+xi = 1E3
+
+if T_cf_su < T_hf_ex - 1 then
+	if T_cf_ex < T_hf_su-1 then
+		if (T_hf_su-T_cf_ex) <> (T_hf_ex-T_cf_su) then
+			DELTAT_log = ((T_hf_su - T_cf_ex) - (T_hf_ex - T_cf_su))/ln((T_hf_su-T_cf_ex)/(T_hf_ex-T_cf_su))
+		else
+			DELTAT_log = T_hf_su - T_cf_ex
+		endif
+	else
+		DELTAT_log = (T_hf_ex - T_cf_su - 1)/ln(T_hf_ex - T_cf_su) * 1/(1 + xi*(T_cf_ex + 1 - T_hf_su))
+	endif
+else
+	if T_cf_ex < T_hf_su-1 then
+		DELTAT_log = (T_hf_su - T_cf_ex - 1)/ln(T_hf_su - T_cf_ex) * 1/(1+xi*(T_cf_su + 1 - T_hf_ex))
+	else
+		DELTAT_log = 1/( (1+xi * (T_cf_su + 1 - T_hf_ex)) * (1 + xi*(T_cf_ex + 1 - T_hf_su)))
+	endif
+endif
+end
+
+
+
+
+$Bookmark Thonon
+"Thonon correlation : Single phase correlation, tested for various chevron angles"
+Procedure Thonon(fluid$,P,T,M_dot,b,L_w_tot,L_h,beta:h,DELTAp)
+rho = density(fluid$,t=t,p=p)
+mu = viscosity(fluid$,p=p,t=t)
+k = conductivity(fluid$,t=t,p=p)
+Pr = prandtl(fluid$,t=t,p=p)
+G = M_dot /(b*L_w_tot)
+D_h = 2*b   "or 2*b/phi  ??????"
+Re = G*D_h/mu
+if beta = 25 then
+	C_1 = 0.1
+	m = 0.687
+	if Re < 1000 then
+		C_2 = 28.21
+		pp= 0.9
+	endif
+	if Re >= 1000 then
+		C_2 = 0.872
+		pp = 0.392
+	endif
+endif
+
+if beta = 30 then
+	C_1 = 0.2267
+	m = 0.631
+	if Re < 550 then
+		C_2 = 26.34
+		pp= 0.830
+	endif
+	if Re >= 550 then
+		C_2 = 0.572
+		pp = 0.217
+	endif
+endif
+
+if beta = 45 then
+	C_1 = 0.2998
+	m = 0.645
+	if Re < 200 then
+		C_2 = 18.19
+		pp= 0.682
+	endif
+	if Re >= 200 then
+		C_2 = 0.6857
+		pp = 0.172
+	endif
+endif
+
+if beta = 60 then
+	C_1 = 0.2946
+	m = 0.7
+	if Re < 160 then
+		C_2 = 45.57
+		pp= 0.67
+	endif
+	if Re >= 160 then
+		C_2 = 0.370
+		pp = 0.172
+	endif
+endif
+
+Nu = C_1 * Re^m*Pr^(1/3)
+f = C_2 * Re^(-pp)
+
+h = Nu * k / D_h
+DELTAp = (f*2*G^2/rho * L_h)/D_h
+end
+
+
+
+
+$bookmark Hsieh
+Procedure Hsieh(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h:DELTAp,h_tp_ev)
+
+
+"Hsieh YY, Lin TF. Saturated flow boiling heat transfer and pressure drop of
+refrigerant R410a in a vertical plate heat exchanger. Int J Heat Mass Trans
+2002;45:033-1044"
+
+	"average heat transfer coefficient:"
+	rho_g=density(fluid$,T=T_sat,x=1)
+	rho_l=density(fluid$,T=T_sat,x=0)
+	mu_g=viscosity(fluid$,T=T_sat,x=1)
+	mu_l=viscosity(fluid$,T=T_sat,x=0)	
+	k_l=conductivity(fluid$,T=T_sat,x=0)
+	Pr_l=Prandtl(fluid$,T=T_sat,x=0)
+	G=M_dot/(b*L_W_tot)
+	D_h= 2*b
+	Re_l=G*D_h/mu_l	
+	h_l=0.2092*(k_l/D_h)*Re_l^0.78*Pr_l^(1/3)	
+	i_fg=enthalpy(fluid$,T=T_sat,x=1)-enthalpy(fluid$,T=T_sat,x=0)
+	{Bo=Max(q/(G*i_fg), 1)}
+	Bo=q/(G*i_fg)
+	h_tp_ev=88*Bo^0.5*h_l
+
+	"Pressure drop:"
+	X_m = 0.5	"average value of the vapor quality between inlet and outlet"
+	v_m = 0.5/rho_l + 0.5/rho_g
+	G_eq = G * ( (1 - X_m) + X_m * (rho_l/rho_g)^0.5)
+	Re_eq = G_eq * D_h/mu_l
+	f_tp = 61000 * Re_eq^(-1.25)
+	DELTAp = 2 * G^2 * v_m * L_h * f_tp /D_h
+	
+end
+
+
+
+
+
+
+
+
+
+
+procedure hx_ev(fluid$,fluidev$,T_sf_su_ev,M_dot_sf,T_r_su_ev,T_r_ex_ev,M_dot_r,p_ev,p_sf,b,L_w_tot,L_h,beta:h_sf_ex_ev,Q_dot_ev,A_ev,DELTAp,DELTAp_sf)
+
+"Saturation properties : "
+h_r_sat_v = enthalpy(fluid$,p=p_ev,x=1)
+h_r_sat_l = enthalpy(fluid$,p=p_ev,x=0)
+T_r_sat = temperature(fluid$,p=p_ev,x=0.5)
+
+"Supply-exhaust conditions for each zone :"
+h_r_su_ev = enthalpy(fluid$,t=t_r_su_ev,p=p_ev)
+h_r_ex_ev = enthalpy(fluid$,t=t_r_ex_ev,p=p_ev)
+
+
+	h_r_su_l = h_r_su_ev
+	h_r_ex_l = h_r_sat_l
+	h_r_su_tp = h_r_sat_l
+	h_r_ex_tp = h_r_sat_v
+	h_r_su_v = h_r_sat_v
+	h_r_ex_v = h_r_ex_ev
+
+"Heat flow rate for each zone :"
+Q_dot_tp = M_dot_r * (h_r_ex_tp - h_r_su_tp)
+Q_dot_v = M_dot_r * (h_r_ex_v - h_r_su_v)
+Q_dot_l = M_dot_r*(h_r_ex_l - h_r_su_l)
+
+Q_dot_ev = Q_dot_tp + Q_dot_v + Q_dot_l
+
+"Secondary fluid side :"
+h_sf_su_ev = enthalpy(fluid$,t=t_sf_su_ev,p=p_sf)
+h_sf_su_v = h_sf_su_ev
+h_sf_ex_v = h_sf_su_ev - Q_dot_v/M_dot_sf
+h_sf_su_tp = h_sf_ex_v
+h_sf_ex_tp = h_sf_su_tp - Q_dot_tp/M_dot_sf
+h_sf_su_l = h_sf_ex_tp
+h_sf_ex_l = h_sf_ex_tp - Q_dot_l/M_dot_sf
+
+h_sf_ex_ev = h_sf_su_ev - Q_dot_ev/M_dot_sf
+
+"Secondary fluid temperatures :"
+T_sf_su_l = temperature(fluidev$,h=h_sf_su_l,p=p_sf)
+T_sf_ex_l = temperature(fluidev$,h=h_sf_ex_l,p=p_sf)
+T_sf_su_tp = temperature(fluidev$,h=h_sf_su_tp,p=p_sf)
+T_sf_ex_tp = temperature(fluidev$,h=h_sf_ex_tp,p=p_sf)
+T_sf_su_v = temperature(fluidev$,h=h_sf_su_v,p=p_sf)
+T_sf_ex_v = temperature(fluidev$,h=h_sf_ex_v,p=p_sf)
+
+"Primary fluid temperatures :"
+T_r_su_l = temperature(fluid$,h=h_r_su_l,p=p_ev)
+T_r_ex_l = temperature(fluid$,h=h_r_ex_l,p=p_ev)
+T_r_su_tp = temperature(fluid$,h=h_r_su_tp,p=p_ev)
+T_r_ex_tp = temperature(fluid$,h=h_r_ex_tp,p=p_ev)
+T_r_su_v = temperature(fluid$,h=h_r_su_v,p=p_ev)
+T_r_ex_v = temperature(fluid$,h=h_r_ex_v,p=p_ev)
+
+"! Vapor zone"
+	call LMTD(T_sf_su_v,T_sf_ex_v,T_r_su_v,T_r_ex_v:DELTAT_log_v)
+	AU_v = Q_dot_v/DELTAT_log_v
+	pinch = min(T_sf_su_l - T_r_ex_l,T_sf_ex_l-T_r_su_l)
+
+"! Two-phase zone :"
+	call LMTD(T_sf_su_tp,T_sf_ex_tp,T_r_su_tp,T_r_ex_tp:DELTAT_log_tp)
+	AU_tp = Q_dot_tp/DELTAT_log_tp
+	pinch = min(pinch,T_sf_ex_tp - T_r_sat)
+
+"! Liquid zone :"
+	call LMTD(T_sf_su_l,T_sf_ex_l,T_r_su_l,T_r_ex_l:DELTAT_log_l)
+	AU_l = Q_dot_l/DELTAT_log_l
+	pinch=min(pinch,min(T_sf_su_l - T_r_ex_l,T_sf_ex_l - T_r_su_l))
+
+
+
+"Actual heat transfer coefficient and heat transfer area :"
+call Thonon(fluid$,P_ev,(T_r_su_ev+T_r_sat)/2,M_dot_r,b,L_w_tot,L_h,beta:h_l,DELTAp_l)
+call Thonon(fluid$,P_ev,(T_r_ex_ev+T_r_sat)/2,M_dot_r,b,L_w_tot,L_h,beta:h_v,DELTAp_v)
+call Thonon(fluidev$,P_ev,(T_sf_su_ev+T_sf_ex_l)/2,M_dot_sf,b,L_w_tot,L_h,beta:h_sf,DELTAp_sf)
+call Hsieh(fluid$,T_r_sat,M_dot_r,10000,b,L_w_tot,L_h:DELTAp_tp,h_tp)
+
+
+
+U_ev_l = (1/h_sf + 1/h_l)^(-1)
+A_l = AU_l / U_ev_l
+
+U_ev_tp = (1/h_sf + 1/h_tp)^(-1)
+A_tp = AU_tp / U_ev_tp
+
+U_ev_v = (1/h_sf + 1/h_v)^(-1)
+A_v = AU_v / U_ev_v
+
+L_l = A_l/L_w_tot
+L_v = A_v/L_w_tot
+L_tp = A_tp/L_w_tot
+
+"Total area :"
+A_ev = A_v + A_l + A_tp
+DELTAp = DELTAp_l*L_l/L_h + DELTAp_v*L_v/L_h + DELTAp_tp*L_tp/L_h
+
+
+
+
+"Write data into lookup table : "
+lookup('ev',1,1) = M_dot_r*h_r_su_l
+lookup('ev',2,1) = M_dot_r * h_r_ex_l
+lookup('ev',3,1) = M_dot_r * h_r_su_tp
+lookup('ev',4,1) = M_dot_r * h_r_ex_tp
+lookup('ev',5,1) = M_dot_r * h_r_su_v
+lookup('ev',6,1) = M_dot_r * h_r_ex_v
+
+lookup('ev',1,2) = T_r_su_l
+lookup('ev',2,2) = T_r_ex_l
+lookup('ev',3,2) = T_r_su_tp
+lookup('ev',4,2) = T_r_ex_tp
+lookup('ev',5,2) = T_r_su_v
+lookup('ev',6,2) = T_r_ex_v
+
+lookup('ev',1,3) = T_sf_ex_l
+lookup('ev',2,3) = T_sf_su_l
+lookup('ev',3,3) = T_sf_ex_tp
+lookup('ev',4,3) = T_sf_su_tp
+lookup('ev',5,3) = T_sf_ex_v
+lookup('ev',6,3) = T_sf_su_v
+
+end
+
+
+"!########################################################################################################"
+"!####################################    Main program    #####################################################"
+"!########################################################################################################"
+
+"Inputs :"
+fluid$='r123'
+fluidev$ = 'water'
+
+p_ev = 2E5
+M_dot_sf = 0.1
+M_dot_r = 0.1
+
+T_r_su_ev = 50
+T_r_ex_ev = 100
+T_sf_su_ev = 170
+p_sf= 10E5
+
+h_r_su_ev = 2E5
+h_r_ex_ev = 5E5
+
+h_sf_su_ev = enthalpy(fluidev$,p=p_sf,t=t_sf_su_ev)
+
+
+
+N_p = 25	"Number of plates"
+b = 0.002  [m]	"Channel spacing"
+L_w = 0.21   [m]	"Plate width"
+L_h = 0.5 [m]	"Plate hight"
+PHI = 1.2	"Enlargement factor"
+beta = 45	"Chevron angle"
+
+
+L_w_tot = L_w * (N_p - 1)/2	"Total width: parameter to be optimized"
+
+call hx_ev(fluid$,fluidev$,T_sf_su_ev,M_dot_sf,T_r_su_ev,T_r_ex_ev,M_dot_r,p_ev,p_sf,b,L_w_tot,L_h,beta:h_sf_ex_ev,Q_dot_ev,A_ev,DELTAp,DELTAp_sf)

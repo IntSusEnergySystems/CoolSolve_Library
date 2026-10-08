@@ -1,0 +1,272 @@
+{=============================================================================
+  Circular-fin efficiency and wall correction factors (function library)
+  CoolSolve Library model CSL-0109 (kind = function)
+  -----------------------------------------------------------------------------
+  Three functions from the ht library (ht/core.py):
+  - fin_efficiency_Kern_Kraus: efficiency eta_f [-] of a circular fin of
+    constant thickness on a circular tube (Kern-Kraus closed form).
+  - wall_factor_Nu: wall correction factor [-] multiplying the Nusselt number
+    (or heat-transfer coefficient): (mu/mu_wall)^n, exponents of Kays &
+    Crawford by regime and phase, heating/cooling detected from mu vs mu_wall.
+  - wall_factor_fd: the same correction for the Darcy friction factor or the
+    frictional pressure drop.
+  CoolSolve has no Bessel function: the I0, I1, K0, K1 values of the fin
+  formula are evaluated in the function body by their 13-term power series
+  (exact to machine precision for m*r_e <= 2; same series as CSL-0099,
+  inlined here so the function is self-contained and its name unique).
+  Inputs : Do, D_fin, t_fin [m], k_fin [W/m-K], h [W/m^2-K];
+           mu, mu_wall [Pa-s], turbulent, liquid (1/0 flags) [-]
+  Outputs: eta_f [-], factor [-]
+  Units  : SI
+  Source : ht (Caleb Bell), ht/core.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; correlations by the authors
+           cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION fin_efficiency_Kern_Kraus(Do, D_fin, t_fin, k_fin, h)
+{FIN_EFFICIENCY_KERN_KRAUS - efficiency eta_f of a circular fin of constant
+thickness attached to a circular tube [-], from the 1-D radial-conduction
+solution of the fin equation.
+
+  m     = SQRT(2*h/(k_fin*t_fin))
+  r_e   = D_fin/2                    (radius of the fin edge)
+  r_o   = Do/2                       (radius of the tube/fin base)
+  eta_f = 2*r_o/(m*(r_e^2 - r_o^2)) *
+          [I_1(m r_e)*K_1(m r_o) - K_1(m r_e)*I_1(m r_o)] /
+          [I_0(m r_o)*K_1(m r_e) + I_1(m r_e)*K_0(m r_o)]
+
+I_0, I_1 and K_0, K_1 are the modified Bessel functions of the first and
+second kind, of order 0 and 1. CoolSolve has no Bessel function, so each
+value is evaluated here by its 13-term power series (Abramowitz & Stegun
+formulas 9.6.2 and 9.6.11); the series is exact to machine precision for
+m*r_e <= 2, where the neglected term is below 1E-20 relative - the caller
+should check m*r_e for larger fins.
+Validity: no limits quoted in the original; the assumptions of the solution
+  are (as in ht): 1-D radial conduction, steady state, no radiative heat
+  transfer, temperature-independent k_fin, constant h over the fin, constant
+  base temperature, no bond resistance between tube and fin, fluid at a
+  constant temperature. h is the heat-transfer coefficient on the fin
+  surface [W/m^2-K] (the ht docstring prints "[W/K]", inconsistent with
+  m = SQRT(2h/(k_fin t_fin)) [1/m]).
+Original: Kern, D. Q. and A. D. Kraus, "Extended Surface Heat Transfer",
+  McGraw-Hill, 1972; the same solution in Thulukkanam, K., "Heat Exchanger
+  Design Handbook", 2nd edition, CRC Press, 2013, in Bergman, T. L., A. S.
+  Lavine, F. P. Incropera and D. P. DeWitt, "Introduction to Heat Transfer",
+  6th edition, Wiley, 2011, and in Kraus, A. D., A. Aziz and J. Welty,
+  "Extended Surface Heat Transfer", Wiley-Interscience, 2001 (as given in ht).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/core.py, fin_efficiency_Kern_Kraus,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  r_e = D_fin/2
+  r_o = Do/2
+  m = SQRT(2*h/(k_fin*t_fin))
+  gamma = 0.577215664901533
+  "modified Bessel values at the fin edge, z_e = m*r_e (13-term series)"
+  z_e = m*r_e
+  q = z_e^2/4
+  a = 1
+  H = 0
+  I0_e = 1
+  I1s = 1
+  S0 = 0
+  S1 = 0
+  DUPLICATE k = 1, 12
+    a = a*q/(k*k)
+    H = H + 1/k
+    I0_e = I0_e + a
+    I1s = I1s + a/(k + 1)
+    S0 = S0 + H*a
+    S1 = S1 + k*H*a
+  END
+  I1_e = z_e/2*I1s
+  K0_e = -(LN(z_e/2) + gamma)*I0_e + S0
+  K1_e = I0_e/z_e + (LN(z_e/2) + gamma)*I1_e - 2*S1/z_e
+  "modified Bessel values at the fin base, z_o = m*r_o (13-term series)"
+  z_o = m*r_o
+  q = z_o^2/4
+  a = 1
+  H = 0
+  I0_o = 1
+  I1s = 1
+  S0 = 0
+  S1 = 0
+  DUPLICATE k = 1, 12
+    a = a*q/(k*k)
+    H = H + 1/k
+    I0_o = I0_o + a
+    I1s = I1s + a/(k + 1)
+    S0 = S0 + H*a
+    S1 = S1 + k*H*a
+  END
+  I1_o = z_o/2*I1s
+  K0_o = -(LN(z_o/2) + gamma)*I0_o + S0
+  K1_o = I0_o/z_o + (LN(z_o/2) + gamma)*I1_o - 2*S1/z_o
+  fin_efficiency_Kern_Kraus = 2*r_o/(m*(r_e^2 - r_o^2))*(I1_e*K1_o - K1_e*I1_o)/(I0_o*K1_e + I1_e*K0_o)
+END
+
+FUNCTION wall_factor_Nu(mu, mu_wall, turbulent, liquid)
+{WALL_FACTOR_NU - wall correction factor for heat transfer, to be multiplied
+by the Nusselt number or the heat-transfer coefficient computed at constant
+properties [-]:
+
+  factor = (mu/mu_wall)^n
+
+mu [Pa-s] is the viscosity of the fluid away from the wall, mu_wall [Pa-s]
+the viscosity at the wall; turbulent = 1 (turbulent flow) or 0 (laminar);
+liquid = 1 (liquid) or 0 (gas). As in ht, the heating/cooling direction is
+detected inside: heating when mu > mu_wall (the wall is hotter than the
+bulk fluid), cooling otherwise. Exponents (Kays & Crawford, as quoted in ht;
+heating/cooling):
+
+  turbulent liquid: n = 0.11 (heating), 0.25 (cooling)
+  turbulent gas:    n = 0.5 (heating),  0 (cooling)
+  laminar liquid:   n = 0.14 (heating), 0.14 (cooling)
+  laminar gas:      n = 0 (heating),    0 (cooling)
+
+Validity: coefficients derived for internal flow inside a pipe, but usable
+elsewhere where appropriate data is missing (as in ht); ht flags the
+turbulent-liquid and laminar-gas values as uncertain.
+Original: Kays, W. M. and M. E. Crawford, "Convective Heat and Mass
+  Transfer", 3rd edition, McGraw-Hill, New York, 1993.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/core.py, wall_factor_Nu (which
+  dispatches through wall_factor), MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  IF turbulent = 1 THEN
+    IF liquid = 1 THEN
+      IF mu > mu_wall THEN
+        n = 0.11
+      ELSE
+        n = 0.25
+      ENDIF
+    ELSE
+      IF mu > mu_wall THEN
+        n = 0.5
+      ELSE
+        n = 0
+      ENDIF
+    ENDIF
+  ELSE
+    IF liquid = 1 THEN
+      n = 0.14
+    ELSE
+      n = 0
+    ENDIF
+  ENDIF
+  wall_factor_Nu = (mu/mu_wall)^n
+END
+
+FUNCTION wall_factor_fd(mu, mu_wall, turbulent, liquid)
+{WALL_FACTOR_FD - wall correction factor for the pressure drop due to
+friction, to be multiplied by the friction factor or the frictional pressure
+drop computed at constant properties [-]:
+
+  factor = (mu/mu_wall)^n
+
+mu [Pa-s] is the viscosity of the fluid away from the wall, mu_wall [Pa-s]
+the viscosity at the wall; turbulent = 1 (turbulent flow) or 0 (laminar);
+liquid = 1 (liquid) or 0 (gas). As in ht, the heating/cooling direction is
+detected inside: heating when mu > mu_wall (the wall is hotter than the
+bulk fluid), cooling otherwise. Exponents (Kays & Crawford, as quoted in ht;
+heating/cooling):
+
+  turbulent liquid: n = -0.25 (heating), -0.25 (cooling)
+  turbulent gas:    n = 0.1 (heating),   0.1 (cooling)
+  laminar liquid:   n = -0.58 (heating), -0.5 (cooling)
+  laminar gas:      n = -1 (heating),    -1 (cooling)
+
+Validity: coefficients derived for internal flow inside a pipe, but usable
+elsewhere where appropriate data is missing (as in ht).
+Original: Kays, W. M. and M. E. Crawford, "Convective Heat and Mass
+  Transfer", 3rd edition, McGraw-Hill, New York, 1993.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/core.py, wall_factor_fd (which
+  dispatches through wall_factor), MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  IF turbulent = 1 THEN
+    IF liquid = 1 THEN
+      n = -0.25
+    ELSE
+      n = 0.1
+    ENDIF
+  ELSE
+    IF liquid = 1 THEN
+      IF mu > mu_wall THEN
+        n = -0.58
+      ELSE
+        n = -0.5
+      ENDIF
+    ELSE
+      n = -1
+    ENDIF
+  ENDIF
+  wall_factor_fd = (mu/mu_wall)^n
+END
+
+"!Demonstration program: every function is called on realistic input sets"
+"It is ignored by the future $INCLUDE library:fin_efficiency_and_wall_factors (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each function (published values;"
+"the wall factors are called for all four regime/phase combinations, in the"
+"heating direction of the doctests)."
+"Case B: one second input set; the eight function x regime/phase combinations"
+"are evaluated in both directions (the cooling call swaps mu and mu_wall)."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case A - input set of the ht doctests"
+Do_A = 0.0254
+D_fin_A = 0.05715
+t_fin_A = 3.8E-4
+k_fin_A = 200
+h_A = 58
+mu_liq_A = 8E-4
+mu_wall_liq_A = 3E-4
+mu_gas_A = 1.5E-5
+mu_wall_gas_A = 1.3E-5
+
+"fin_efficiency_Kern_Kraus - stainless-steel fin on a 1 in tube, air side"
+eta_fin_Kern_Kraus_A = fin_efficiency_Kern_Kraus(Do_A, D_fin_A, t_fin_A, k_fin_A, h_A)
+"wall_factor_Nu - the four regime/phase combinations (heating, doctests)"
+wall_factor_Nu_A_TL = wall_factor_Nu(mu_liq_A, mu_wall_liq_A, 1, 1)
+wall_factor_Nu_A_LL = wall_factor_Nu(mu_liq_A, mu_wall_liq_A, 0, 1)
+wall_factor_Nu_A_TG = wall_factor_Nu(mu_gas_A, mu_wall_gas_A, 1, 0)
+wall_factor_Nu_A_LG = wall_factor_Nu(mu_gas_A, mu_wall_gas_A, 0, 0)
+"wall_factor_fd - the four regime/phase combinations (heating)"
+wall_factor_fd_A_TL = wall_factor_fd(mu_liq_A, mu_wall_liq_A, 1, 1)
+wall_factor_fd_A_LL = wall_factor_fd(mu_liq_A, mu_wall_liq_A, 0, 1)
+wall_factor_fd_A_TG = wall_factor_fd(mu_gas_A, mu_wall_gas_A, 1, 0)
+wall_factor_fd_A_LG = wall_factor_fd(mu_gas_A, mu_wall_gas_A, 0, 0)
+
+"Case B - second input set, all combinations in both directions"
+Do_B = 0.0254
+D_fin_B = 0.057
+t_fin_B = 4.0E-4
+k_fin_B = 385
+h_B = 250
+mu_liq_B = 8E-4
+mu_wall_liq_B = 5E-4
+mu_gas_B = 2.4E-5
+mu_wall_gas_B = 2.0E-5
+
+"fin_efficiency_Kern_Kraus - copper fin on a 1 in tube, water side"
+eta_fin_Kern_Kraus_B = fin_efficiency_Kern_Kraus(Do_B, D_fin_B, t_fin_B, k_fin_B, h_B)
+"wall_factor_Nu - turbulent and laminar liquid, heating (mu > mu_wall)"
+wall_factor_Nu_B_TL = wall_factor_Nu(mu_liq_B, mu_wall_liq_B, 1, 1)
+wall_factor_Nu_B_LL = wall_factor_Nu(mu_liq_B, mu_wall_liq_B, 0, 1)
+"wall_factor_Nu - turbulent and laminar gas, heating"
+wall_factor_Nu_B_TG = wall_factor_Nu(mu_gas_B, mu_wall_gas_B, 1, 0)
+wall_factor_Nu_B_LG = wall_factor_Nu(mu_gas_B, mu_wall_gas_B, 0, 0)
+"wall_factor_Nu - the same four combinations, cooling (arguments swapped)"
+wall_factor_Nu_B_TL_cool = wall_factor_Nu(mu_wall_liq_B, mu_liq_B, 1, 1)
+wall_factor_Nu_B_LL_cool = wall_factor_Nu(mu_wall_liq_B, mu_liq_B, 0, 1)
+wall_factor_Nu_B_TG_cool = wall_factor_Nu(mu_wall_gas_B, mu_gas_B, 1, 0)
+wall_factor_Nu_B_LG_cool = wall_factor_Nu(mu_wall_gas_B, mu_gas_B, 0, 0)
+"wall_factor_fd - turbulent and laminar liquid, heating"
+wall_factor_fd_B_TL = wall_factor_fd(mu_liq_B, mu_wall_liq_B, 1, 1)
+wall_factor_fd_B_LL = wall_factor_fd(mu_liq_B, mu_wall_liq_B, 0, 1)
+"wall_factor_fd - turbulent and laminar gas, heating"
+wall_factor_fd_B_TG = wall_factor_fd(mu_gas_B, mu_wall_gas_B, 1, 0)
+wall_factor_fd_B_LG = wall_factor_fd(mu_gas_B, mu_wall_gas_B, 0, 0)
+"wall_factor_fd - the same four combinations, cooling (arguments swapped)"
+wall_factor_fd_B_TL_cool = wall_factor_fd(mu_wall_liq_B, mu_liq_B, 1, 1)
+wall_factor_fd_B_LL_cool = wall_factor_fd(mu_wall_liq_B, mu_liq_B, 0, 1)
+wall_factor_fd_B_TG_cool = wall_factor_fd(mu_wall_gas_B, mu_gas_B, 1, 0)
+wall_factor_fd_B_LG_cool = wall_factor_fd(mu_wall_gas_B, mu_gas_B, 0, 0)

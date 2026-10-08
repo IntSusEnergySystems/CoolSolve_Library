@@ -387,3 +387,4 @@ come from in `ht` are Rohsenow, Hartnett & Cho, *Handbook of Heat Transfer*,
   h_Chen_Bennett and h_Liu_Winterton write out h_Forster_Zuber and h_Cooper of
   this file, and the Shah 1982 chart correlation extends this pool-boiling
   family to flowing, boiling tubes.
+- `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.

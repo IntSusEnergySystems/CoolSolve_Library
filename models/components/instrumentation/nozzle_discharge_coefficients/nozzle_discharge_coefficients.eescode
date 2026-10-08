@@ -1,0 +1,212 @@
+{=============================================================================
+  Nozzle discharge coefficients and airflow-rate procedures
+  (ASHRAE 41.2 / ISO R859 nozzle bank, ISO 5167 long-radius nozzle,
+  valve admission, range checkers)
+  CoolSolve Library model CSL-0122 - function library
+ -----------------------------------------------------------------------------
+  Procedure library for air flow metering with the ASHRAE 41.2 / ISO R859
+  discharge nozzles (four nozzles, used simultaneously or separately) and
+  with an ISO 5167 long-radius nozzle, plus a compressible-flow admission
+  procedure and validity-range checkers:
+    velo                  throat velocity of one nozzle
+    coeficiente           ASHRAE 41.2 / ISO R859 nozzle discharge coefficient
+    admission             choked / subsonic mass flow rate through a valve
+                          or nozzle opening (theta outside the admission
+                          window or p_valve > p_0: zero flow)
+    warning_error_ashrae  throat velocity between 15 and 35 m/s
+    warning_error_iso5167 pipe diameter, beta and Reynolds ranges
+    warning_error_6       generic six-input range checker
+  The main program calls each of them. Demonstrations 1 and 2 are the
+  MODULE flowrate of their source files flattened into the main program
+  (CoolSolve does not implement MODULE; library decision D10).
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège collection, folder "procedures EES/" - see README.md
+  Status : function library, verified (see README.md)
+=============================================================================}
+
+"!ASHRAE 41.2 / ISO R859 nozzle-bank procedures (source: airflow rate - ashrae 41.2.EES)"
+PROCEDURE velo(d, M_dot_a, rho, A : V)
+  "throat velocity of one nozzle [m/s]; an unused nozzle (d = 0) has V = 0, as in the original"
+  If d=0 then
+    V:=0
+  else
+    V:=M_dot_a/(rho*A)
+  ENDif
+END
+
+PROCEDURE coeficiente(Re : c_d)
+  "ASHRAE 41.2 / ISO R859 nozzle discharge coefficient [-], as in the original"
+  if (Re>0) then
+    c_d:=0.826270423  + 0.0130803659 * ln(Re)
+  else
+    c_d:=0
+  ENDif
+END
+
+PROCEDURE warning_error_ashrae(var1_in : var1_out)
+  "throat velocity of the ASHRAE 41.2 nozzles should be between 15 and 35 m/s; the CALL WARNING
+   branch of the original is not implemented in CoolSolve (CS-GAP-CALL-WARNING), it fires only
+   for out-of-range values"
+  if(var1_in < 15) and (var1_in <> 0)  or (var1_in  > 35) then call warning(' Throat velocity should be between 15 and 35.  A value of  xxxE4 was supplied',var1_in)
+  var1_out := var1_in
+END
+
+"!ISO 5167 long-radius nozzle procedure (source: airflowrate - long radius.EES)"
+PROCEDURE warning_error_iso5167(var1_in,var2_in,var3_in:var1_out,var2_out,var3_out)
+  "ISO 5167 validity ranges of the long-radius nozzle: pipe diameter, diameter ratio, pipe Reynolds
+   number, as in the original; the CALL WARNING branches are not implemented in CoolSolve
+   (CS-GAP-CALL-WARNING), they fire only for out-of-range values"
+  if(var1_in < 0.05) or (var1_in  > 0.63) then call warning(' De_noz  should be between 0.05 and 0.63.  A value of  xxxE4 was supplied',var1_in)
+  if(var2_in< 0.2) or (var2_in  > 0.8) then call warning(' beta_noz  should be between 0.2 and 0.8.  A value of  xxxE4 was supplied',var2_in)
+  if(var3_in < 1E4) or (var3_in > 1E7) then call warning(' Re_d_noz  should be between 1E4 and 1E7.  A value of  xxxE4 was supplied',var3_in)
+  var1_out := var1_in
+  var2_out := var2_in
+  var3_out := var3_in
+END
+
+"!Generic range checker (source: Out of range warning.EES)"
+PROCEDURE warning_error_6(var1_in,var2_in,var3_in, var4_in,var5_in,var6_in:var1_out,var2_out,var3_out,var4_out,var5_out,var6_out)
+  "generates an error if one of the six inputs is out of its hard-coded validity range (ranges of
+   the original file's nozzle/orifice model); renamed: the name warning_error of the original is
+   already used by CSL-0075 and CSL-0118. CALL ERROR is supported by CoolSolve"
+  if(var1_in < 0.0764) or (var1_in  > 0.122) then call error(' var1_in  must be between 0.07649 and 0.1219.  A value of  xxxE4 was supplied',var1_in)
+  if(var2_in< 0.0451) or (var2_in  > 0.0863) then call error(' var2_in  must be between 0.04513 and 0.08625.  A value of  xxxE4 was supplied',var2_in)
+  if(var3_in < 13.8) or (var3_in > 16.58) then call error(' var3_in  must be between 13.9 and 16.57.  A value of  xxxE4 was supplied',var3_in)
+  if(var4_in < 176.7) or (var4_in  >191.9) then call error(' var4_in  must be between 176.8 and 191.8.  A value of  xxxE4 was supplied',var4_in)
+  if(var6_in < 120.0) or (var6_in  > 173.9) then call error(' var6_in  must be between 120.1 and 173.8.  A value of  xxxE4 was supplied',var6_in)
+  if(var5_in < 5.4e5) or (var5_in  > 11.06e5) then call error(' var5_in  must be between 5.4e5 and 11.05e5.  A value of  xxxE4 was supplied',var5_in)
+  var1_out := var1_in
+  var2_out := var2_in
+  var3_out := var3_in
+  var4_out := var4_in
+  var5_out := var5_in
+  var6_out := var6_in
+END
+
+"!Admission of a valve or nozzle opening (source: tuyere.EES)"
+PROCEDURE admission(theta,theta_ivo,theta_ivc,rho_0,C_d,A_v,c_0,gamma_a,p_0,p_valve:m_dot,choked)
+  "mass flow rate through the valve or nozzle opening during the admission [kg/s]: zero when the
+   valve is closed (theta outside theta_ivo..theta_ivc) or the flow reversed (p_valve > p_0);
+   choked (p_valve/p_0 below the critical ratio (2/(gamma_a+1))^(gamma_a/(gamma_a-1))) or subsonic,
+   as in the original. The dead assignments m_dot_old and M_dot_bis of the original body are not
+   kept: the equivalent published forms are recomputed in demonstration 3 (README)"
+  IF ((theta < theta_ivo) or  (theta > theta_ivc)) or (p_valve>p_0) THEN
+    m_dot = 0
+    choked = 0
+  Else
+    aa = (2/(gamma_a+1))^(gamma_a/(gamma_a-1))
+    IF (p_valve/p_0<aa) THEN
+      m_dot = C_d * A_v * p_0/c_0 * gamma_a * (2/(gamma_a + 1))^((gamma_a + 1)/(2 * (gamma_a - 1)))
+      choked = 1
+    Else
+      m_dot = rho_0*C_d*A_v*c_0*(2/(gamma_a-1)*((p_valve/p_0)^(2/gamma_a)-(p_valve/p_0)^((gamma_a+1)/(gamma_a))))^(1/2)
+      choked = 0
+    Endif
+  Endif
+END
+
+"!Demonstration 1: ASHRAE 41.2 / ISO R859 four-nozzle air flow rate (flattened MODULE of the source)"
+"four nozzles can be used simultaneously or separately (d_nz = 0 for an unused nozzle), as in the original"
+d_nz[1]=0                     "nozzle throat diameter [m] (190 mm in an earlier run of the original)"
+d_nz[2]=0                     "nozzle throat diameter [m] (190 mm in an earlier run of the original)"
+d_nz[3]=80/1000               "nozzle throat diameter [m]"
+d_nz[4]=0                     "nozzle throat diameter [m]"
+P_atm=1E5                     "atmospheric pressure [Pa] (1 bar in the original)"
+RH_amb=0.5                    "ambient relative humidity [-]"
+Dp_nz=500                     "pressure difference across the nozzles [Pa]"
+t_a_su_nz=70                  "air temperature at the nozzle supply [°C]"
+t_amb = 20                    "ambient temperature [°C]"
+
+"Determination of the air flow rate with the nozzle measurements (as in the original)"
+w_amb=HUMRAT(AirH2O,T=t_amb,P=P_atm,R=RH_amb)                   "ambient humidity ratio [-]"
+w_a_su_nz=w_amb                                                 "humidity ratio at the nozzle supply [-]"
+v_a_su_nz=VOLUME(AirH2O,T=t_a_su_nz,P=P_atm,w=w_a_su_nz)        "specific volume per kg of dry air [m^3/kg]"
+rho_a_su_nz=1/VOLUME(AirH2O,T=t_a_su_nz,P=P_atm,w=w_a_su_nz)    "density per kg of dry air (DENSITY in the original, CS-BUG-HUMIDAIR-PROPS) [kg/m^3]"
+v_ha_su_nz=v_a_su_nz/(1+w_a_su_nz)                              "specific volume per kg of mixture [m^3/kg]"
+rho_ah_su_nz=1/v_ha_su_nz                                       "density per kg of mixture [kg/m^3]"
+mu_a_su_nz=viscosity(AirH2O,T=t_a_su_nz,P=P_atm,w=w_a_su_nz)    "viscosity [Pa-s]"
+
+K_nz=sqrt(2)
+duplicate i=1,4
+  A_nz[i]=pi/4*d_nz[i]^2                                        "nozzle throat area [m^2]"
+  CALL velo(d_nz[i],M_dot_a_nz[i],rho_a_su_nz,A_nz[i]:C_nz[i])
+  Re_nz[i]=C_nz[i]*d_nz[i]*rho_a_su_nz/mu_a_su_nz               "Reynolds number in the throat (Re[i] in the original) [-]"
+  CALL coeficiente(Re_nz[i]:c_d_nz[i])
+  M_dot_a_nz[i]=K_nz*c_d_nz[i]*A_nz[i]*sqrt(Dp_nz/v_ha_su_nz)   "dry-air mass flow rate through the nozzle [kg/s]"
+  call warning_error_ashrae(C_nz[i]:aaa[i])
+end
+
+M_dot_ah_cd=M_dot_a_nz[1]+M_dot_a_nz[2]+M_dot_a_nz[3]+M_dot_a_nz[4]   "humid-air mass flow rate through the bank (sum(M_dot_a_nz[i],i=1,4) in the original, CS-GAP-SUM-INDEXED) [kg/s]"
+M_dot_ah_cd=(1+w_a_su_nz)*M_dot_a_cd                            "dry-air mass flow rate [kg/s]"
+
+"!Demonstration 2: ISO 5167 long-radius nozzle (flattened MODULE of the source)"
+T_a_su_noz=70                   "air temperature upstream of the nozzle [°C]"
+P_a_su_noz=1E5                  "upstream pressure [Pa]"
+DELTAP_noz=500                  "pressure difference across the nozzle [Pa]"
+RH_su_noz = 0.5                 "relative humidity at the ambient state [-]"
+De_noz = 0.8                    "pipe diameter [m]"
+Di_noz=0.08                     "nozzle throat diameter [m]"
+t_amb_noz = 20                  "ambient temperature (t_amb in the original, renamed: already used above) [°C]"
+
+w_a_su_noz=humrat(airH2O,T=t_amb_noz,P=P_a_su_noz,R=RH_su_noz)  "humidity ratio at the ambient state [-]"
+
+"Calculs preliminaires (as in the original)"
+
+"Sections"
+A_De_noz= (pi*De_noz^2)/4                   "pipe cross-section [m^2]"
+A_di_noz= (pi*Di_noz^2)/4                   "nozzle throat cross-section [m^2]"
+
+" Reynolds number"
+vit_noz=(V_dot_noz)/A_De_noz                "mean velocity in the pipe [m/s]"
+vit_noz_int=(V_dot_noz)/A_di_noz            "mean velocity in the throat [m/s]"
+M_dot_a_noz=V_dot_noz*rho_a_su_noz          "volume flow rate x density, as in the original [kg/s]"
+V_dot_mh_noz=V_dot_noz*3600                 "volume flow rate [m^3/h]"
+G_noz=M_dot_a_noz/A_De_noz                  "mass flux [kg/m^2-s]"
+Re_D_noz=G_noz*De_noz/mu_noz                "pipe Reynolds number [-]"
+mu_noz=viscosity(airH2O,T=T_a_su_noz,P=P_a_su_noz,w=w_a_su_noz)  "viscosity [Pa-s]"
+rho_a_su_noz=(1+w_a_su_noz)/volume(airH2O,T=T_a_su_noz,P=P_a_su_noz,w=w_a_su_noz)  "density per kg of mixture (DENSITY in the original, CS-BUG-HUMIDAIR-PROPS) [kg/m^3]"
+t_dp_a_su_noz=dewpoint(airH2O,T=T_a_su_noz,P=P_a_su_noz,w=w_a_su_noz)  "dew-point temperature [°C]"
+
+" E - factor"
+beta_noz =Di_noz/De_noz                     "diameter ratio [-]"
+E_noz=(1-beta_noz^4)^(-0.5)                 "velocity of approach factor [-]"
+m_noz=beta_noz^2                            "[-]"
+
+"Discharge coefficient, C_D - Stolz equation (ISO 5167 long-radius nozzle)"
+C_D_noz=0.9965 - 0.00653 * beta_noz^0.5 * (1E6/Re_D_noz)^0.5   "[-]"
+
+"expansibility factor"
+epsilon_noz=((gamma*tau_noz^(2/gamma))/(gamma-1)*(1-beta_noz^4)/(1-beta_noz^4*tau_noz^(2/gamma))*(1-tau_noz^((gamma-1)/gamma))/(1-tau_noz))^0.5   "[-]"
+tau_noz=(P_a_su_noz-DELTAP_noz)/P_a_su_noz  "pressure ratio [-]"
+gamma=1.4                                   "isentropic exponent of air [-]"
+
+"Mass flow rate"
+M_dot_a_noz*(1+w_a_su_noz)=E_noz*C_D_noz*epsilon_noz*A_di_noz*sqrt(2*DELTAP_noz*rho_a_su_noz)   "dry-air mass flow rate [kg/s]"
+
+"Validity check (as in the original): at this operating point the branches of the checker would
+ fire (De_noz = 0.8 > 0.63, beta_noz = 0.1 < 0.2): EES prints a warning, CoolSolve raises an
+ error on CALL WARNING (CS-GAP-CALL-WARNING); the checker is demonstrated on in-range values"
+call warning_error_iso5167(0.05,0.4,1E5:var1_out,var2_out,var3_out)
+
+"!Demonstration 3: admission procedure (choked, subsonic and closed cases)"
+gamma_a_adm=1.4                 "isentropic exponent [-]"
+R_a_adm=287.05                  "gas constant of air [J/kg-K]"
+T_0_adm=300                     "upstream temperature [K]"
+p_0_adm=10E5                    "upstream pressure [Pa]"
+c_0_adm=sqrt(gamma_a_adm*R_a_adm*T_0_adm)   "upstream speed of sound [m/s]"
+rho_0_adm=p_0_adm/(R_a_adm*T_0_adm)         "upstream density [kg/m^3]"
+C_d_adm=0.8                     "discharge coefficient [-]"
+A_v_adm=1E-4                    "valve opening area [m^2]"
+
+CALL admission(90,10,200,rho_0_adm,C_d_adm,A_v_adm,c_0_adm,gamma_a_adm,p_0_adm,1E5:m_dot_choked_adm,choked_adm)
+CALL admission(90,10,200,rho_0_adm,C_d_adm,A_v_adm,c_0_adm,gamma_a_adm,p_0_adm,8E5:m_dot_sub_adm,choked_sub_adm)
+CALL admission(5,10,200,rho_0_adm,C_d_adm,A_v_adm,c_0_adm,gamma_a_adm,p_0_adm,1E5:m_dot_closed_adm,choked_closed_adm)
+
+"checks against the ideal-gas isentropic nozzle equations (published form, with p_0 = rho_0*R_a*T_0)"
+m_dot_choked_ref_adm=C_d_adm*A_v_adm*sqrt(gamma_a_adm*p_0_adm*rho_0_adm)*(2/(gamma_a_adm+1))^((gamma_a_adm+1)/(2*(gamma_a_adm-1)))   "[kg/s]"
+m_dot_sub_ref_adm=C_d_adm*A_v_adm*sqrt(2*gamma_a_adm/(gamma_a_adm-1)*p_0_adm*rho_0_adm*((8E5/p_0_adm)^(2/gamma_a_adm)-(8E5/p_0_adm)^((gamma_a_adm+1)/gamma_a_adm)))   "[kg/s]"
+diff_choked_adm=abs(m_dot_choked_adm-m_dot_choked_ref_adm)/m_dot_choked_ref_adm   "relative difference [-]"
+diff_sub_adm=abs(m_dot_sub_adm-m_dot_sub_ref_adm)/m_dot_sub_ref_adm   "relative difference [-]"
+
+"!Demonstration 4: generic range checker with in-range values"
+call warning_error_6(0.1,0.06,15,185,8E5,150:chk1,chk2,chk3,chk4,chk5,chk6)

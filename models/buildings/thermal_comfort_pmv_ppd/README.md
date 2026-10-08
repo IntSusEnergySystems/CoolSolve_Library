@@ -235,3 +235,4 @@ recorded as `duplicate`).
 - `CSL-0042` *3R2C building thermal network with weather lookup*: the other
   `buildings/` model, from the same CLIM course; also a blocked native file
   with a verified runnable `_coolsolve` variant.
+- `CSL-0106` *conduction_resistances_and_shapes*: the conduction function library of the `ht` source (wall resistances, shape factors, R-value conversions); the envelope U-value/R-value bookkeeping of this model could be fed from its conversion functions.

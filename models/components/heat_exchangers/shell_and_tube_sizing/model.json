@@ -1,0 +1,79 @@
+{
+  "id": "CSL-0110",
+  "name": "shell_and_tube_sizing",
+  "title": "Shell-and-tube mechanical sizing: tube counts, bundle diameters and TEMA rules (function library)",
+  "summary": "Thirteen EES FUNCTIONs for the mechanical sizing of a shell-and-tube heat exchanger: TEMA tubing check (NPS/BWG), minimum bundle diameter, shell-bundle clearance, baffle and support-plate thickness, baffle hole diameter, maximum unsupported tube length, the rough tube counts of Perry's Handbook, VDI Heat Atlas and HEDH with their bundle-diameter inverses, and the two method dispatchers Ntubes and size_bundle_from_tubecount. Geometric estimates and TEMA table rules, no properties needed.",
+  "kind": "function",
+  "level": 1,
+  "status": "verified",
+  "main_file": "shell_and_tube_sizing.eescode",
+  "fluids": [],
+  "tags": [
+    "shell-and-tube",
+    "sizing",
+    "design",
+    "tube count",
+    "bundle diameter",
+    "TEMA",
+    "baffles",
+    "geometry",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "functions calling functions",
+    "IF/THEN/ELSE (single-line and block)",
+    "AND/OR conditions",
+    "FLOOR"
+  ],
+  "stats": {
+    "n_equations": 43,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "~/git/ht/ht/hx.py",
+    "candidate_id": "HT-024",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "D. W. Green and R. H. Perry (Perry's Chemical Engineers' Handbook, eq. 11-74)",
+      "E. U. Schlunder (HEDH, bundle sizing)",
+      "TBD (VDI Heat Atlas, bundle-sizing chapter authors)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/hx.py, MIT license, Copyright (C) 2016 Caleb Bell. The tabulated rules are those of TEMA, Standards of the Tubular Exchanger Manufacturers Association, 9th edition, 2007 (organization standard, not a personal author), Perry's Chemical Engineers' Handbook 8E (2007), VDI Heat Atlas 2E (2010) and HEDH (1983), as cited per function. Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/hx.py (case A) and additional values computed with the same ht functions in a throw-away virtualenv from the local clone (case B); 43 output values in total",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 2.4e-13,
+    "notes": "compare_solution.py: 43 common variables, 0 differ (rtol=0.001); largest relative deviation 2.4e-13 (size_bundle_VDI_A), i.e. round-off only; all table values and tube counts exact."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0027",
+    "CSL-0087",
+    "CSL-0090",
+    "CSL-0095",
+    "CSL-0103",
+    "CSL-0105"
+  ],
+  "related_external": [
+    "sources/labothappy LTP-069/LTP-070 (LaboThapPy shell-and-tube sizing by PSO; same intent, different method, the ht functions are the correlation reference)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (T-FUNC card C-119, family HT-024 of the ht triage)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

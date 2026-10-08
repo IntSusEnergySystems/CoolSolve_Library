@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0108",
+  "name": "packed_bed_nusselt",
+  "title": "Packed-bed forced convection: Nusselt-number correlations (function library)",
+  "summary": "Four EES FUNCTIONs returning the particle Nusselt number of forced convection in a packed bed: Nu_packed_bed_Gnielinski (single-sphere form scaled by the packing shape factor fa, sphere default selected with fa <= 0), Nu_Wakao_Kagei, Nu_Achenbach (Pr accepted but unused, as in ht) and Nu_KTA. The heat-transfer coefficient follows from h = Nu*k/dp and is left to the caller.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "packed_bed_nusselt.eescode",
+  "fluids": [],
+  "tags": [
+    "packed bed",
+    "forced convection",
+    "nusselt number",
+    "correlation",
+    "porous media",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "dimensionless arguments"
+  ],
+  "stats": {
+    "n_equations": 25,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-022",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "V. Gnielinski (packed-bed Gnielinski correlation)",
+      "N. Wakao and S. Kagei (Wakao-Kagei correlation)",
+      "E. Achenbach (Achenbach correlation)",
+      "TBD (KTA 3102.2 rule authors)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/conv_packed_bed.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each correlation is the original paper or book cited in its function comment block (Gnielinski 1981/1982 and VDI Heat Atlas 2010; Wakao & Kagei 1982; Achenbach 1995; KTA 3102.2, 1983 - the last three as cited in Abdulmohsin & Al-Dahhan 2015). Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/conv_packed_bed.py (case A, including the fa=2 regression value of tests/test_conv_packed_bed.py) and additional values computed with the same ht functions in a throw-away virtualenv (case B); 10 output values in total",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 1.4e-12,
+    "notes": "compare_solution.py: 10 common variables, 0 differ (rtol=0.001); largest relative deviation 1.4e-12 (Nu_Achenbach_B), i.e. round-off only."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0087"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added (T-FUNC card C-117, family HT-022 of the ht triage)",
+      "by": "opencode worker (muse-spark) for S. Quoilin"
+    }
+  ]
+}

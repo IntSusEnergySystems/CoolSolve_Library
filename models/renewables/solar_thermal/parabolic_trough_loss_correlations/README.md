@@ -235,6 +235,9 @@ library).
 - `CSL-0082` *parabolic_trough_receiver_forristal*: the first-principles
   1D radial receiver balance of the same collector family (Forristal/NREL);
   the cross-check between the two models is discussed in *Verification*.
+- `CSL-0119` *solar_geometry_sun_path*: solar geometry (declination, hour
+  angle, sun position) of the same sub-category; provides the sun-position
+  inputs such collector models need.
 - The Dickes–Lemort–Quoilin parabolic-trough collector models (LaboThapPy
   inventory rows `LTP-020`/`LTP-050`, including the independent Soponova
   correlation used in the demo) are not in the library yet; the function

@@ -1,0 +1,77 @@
+{
+  "id": "CSL-0106",
+  "name": "conduction_resistances_and_shapes",
+  "title": "Conduction: thermal resistances, shape factors and R-value conversions (function library)",
+  "summary": "Fourteen conduction relations as EES FUNCTIONs/PROCEDURE: plane-wall resistance <-> conductivity, thermal resistivity conversions, R-value <-> k in SI and imperial conventions, the cylindrical-wall resistance, the six isothermal conduction shape factors (sphere/pipe to plane, pipe normal to a plane, pipe to pipe, pipe between two planes, eccentric pipe in pipe) and the layered cylindrical-wall heat transfer with inner and outer convection coefficients (two layers, heat rate, overall coefficients and temperature profile).",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "conduction_resistances_and_shapes.eescode",
+  "fluids": [],
+  "tags": [
+    "conduction",
+    "thermal resistance",
+    "shape factor",
+    "R-value",
+    "cylindrical wall",
+    "insulation",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "procedure",
+    "IF/THEN/ELSE",
+    "LN / ArcCosH",
+    "local pi constant (CS-BUG-PI-FUNCTION workaround)"
+  ],
+  "stats": {
+    "n_equations": 129,
+    "largest_block": 10
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "~/git/ht/ht/conduction.py",
+    "candidate_id": "HT-020",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "T. L. Bergman, A. S. Lavine, F. P. Incropera and D. P. DeWitt (Introduction to Heat Transfer, 6E)",
+      "F. Kreith, R. Manglik and M. Bohn (Principles of Heat Transfer)",
+      "J. E. Sunderland and K. R. Johnson (ASHRAE Transactions 70, 1964)",
+      "V. D. I. (VDI Heat Atlas, 2E)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/conduction.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each relation is the book or paper cited in its function comment block (Bergman et al. 6E 2011, Kreith-Manglik-Bohn 2010, VDI Heat Atlas 2E 2010, Sunderland & Johnson 1964). Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/conduction.py (case A) and additional values computed with the same ht functions in a throw-away virtualenv (case B); 50 output values in total",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 8.0e-11,
+    "notes": "compare_solution.py: 50 common variables, 0 differ (rtol=0.001); largest relative deviation 8.0e-11 (Rl1_B, the smallest output of the iteratively solved PROCEDURE block; every other value below 5e-13). The 79 'only in CoolSolve' variables are the inputs of the demonstration program."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0089",
+    "CSL-0107",
+    "CSL-0087",
+    "CSL-0042",
+    "CSL-0012"
+  ],
+  "related_external": [
+    "sources/labothappy LTP-047 (pipe heat loss; could use R_cylinder and S_isothermal_pipe_to_plane)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (T-FUNC card C-115, family HT-020 of the ht triage)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

@@ -192,3 +192,6 @@ rating, different fluids and values) and is left at `todo`.
   in-tube heat-transfer coefficients of the `ht` family (Davis-David,
   Groothuis-Hendal, Hughmark, Knott, Aggour, 9 functions), which a condenser
   or evaporator design can use for a tube carrying a condensing mixture.
+- `CSL-0105` *lmtd_and_f_correction*: the LMTD relations (`LMTD`,
+  `F_LMTD_Fakheri`, `Ft_aircooler`) as EES functions, the alternative rating
+  method of a shell-and-tube condenser.

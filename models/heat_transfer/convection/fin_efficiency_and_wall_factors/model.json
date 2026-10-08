@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0109",
+  "name": "fin_efficiency_and_wall_factors",
+  "title": "Circular-fin efficiency and wall correction factors for Nu and frictional dP (function library)",
+  "summary": "Three EES FUNCTIONs from the ht library core: the Kern-Kraus closed-form efficiency of a circular fin of constant thickness on a circular tube (modified Bessel functions evaluated by their 13-term power series, exact to machine precision for m*r_e <= 2, since CoolSolve has no Bessel function), and the Kays-Crawford wall correction factors (mu/mu_wall)^n multiplying the Nusselt number or the friction factor / frictional pressure drop, with exponents by flow regime and phase and the heating/cooling direction detected from mu vs mu_wall.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "fin_efficiency_and_wall_factors.eescode",
+  "fluids": [],
+  "tags": [
+    "fin efficiency",
+    "circular fin",
+    "extended surface",
+    "wall correction",
+    "viscosity ratio",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "DUPLICATE",
+    "IF/THEN/ELSE",
+    "LN / EXP / SQRT",
+    "power series (no Bessel built-in)"
+  ],
+  "stats": {
+    "n_equations": 44,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-023",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "D. Q. Kern and A. D. Kraus (circular-fin efficiency)",
+      "W. M. Kays and M. E. Crawford (wall correction factors)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/core.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each function is the original book cited in its comment block (Kern & Kraus 1972; Kays & Crawford 1993). Translation published under the CoolSolve_Library MIT license (decision D3). The Bessel functions of the fin formula are evaluated by their 13-term power series (Abramowitz & Stegun), the approach of CSL-0090 and CSL-0099."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/core.py (case A) and additional values computed with the same ht functions (case B, installed from the local clone, core.py identical to commit 85e0ee6); 26 output values in total",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 4.0e-12,
+    "notes": "compare_solution.py: 26 common variables, 0 differ (rtol=0.001); largest relative deviation 4.0e-12 (wall_factor_fd_A_LG), i.e. the print precision of the .sol baseline."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0087",
+    "CSL-0099"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (T-FUNC card C-118, family HT-023 of the ht triage)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

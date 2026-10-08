@@ -218,3 +218,7 @@ Source file (EES 7.793), collection of S. Quoilin:
 - none yet in the library (first model of `components/instrumentation`);
   the nozzle variants TM-0256/TM-0257 of the same source family are natural
   follow-ups (see *Source and attribution*).
+- `CSL-0122` *nozzle_discharge_coefficients*: the long-radius member of the
+  same ISO 5167 source family (TM-0256) plus the ASHRAE 41.2 / ISO R859
+  nozzle bank, as a function library; its ISO 5167 part is
+  character-identical to the TM-0256 equations described above.

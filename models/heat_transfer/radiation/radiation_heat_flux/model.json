@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0107",
+  "name": "radiation_heat_flux",
+  "title": "Radiation heat flux: blackbody emission, grey-surface exchange, transmittance (function library)",
+  "summary": "Three EES FUNCTIONs for thermal radiation: blackbody_spectral_radiance (Planck spectral radiance of a blackbody), q_rad (net radiant heat flux of a grey surface exchanging with isothermal surroundings, with back-radiation) and grey_transmittance (Beer-Lambert transmittance of a grey absorbing medium). Temperatures are in °C with T + 273.15 formed inside the functions.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "radiation_heat_flux.eescode",
+  "fluids": [],
+  "tags": [
+    "radiation",
+    "blackbody",
+    "planck law",
+    "grey surface",
+    "transmittance",
+    "correlation",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "EXP"
+  ],
+  "stats": {
+    "n_equations": 8,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-021",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "M. Planck (blackbody spectral radiance)",
+      "J. Stefan and L. Boltzmann (radiant heat flux)",
+      "P. Bouguer, J. H. Lambert and A. Beer (grey transmittance)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/radiation.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each relation is the original paper or book cited in its function comment block (Planck 1901; Stefan 1879 / Boltzmann 1884; Bouguer 1729 / Lambert 1760 / Beer 1852). Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/radiation.py (case A) and additional values computed with the same ht functions in a throw-away virtualenv (case B); 8 output values in total",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 7.2e-14,
+    "notes": "compare_solution.py: 8 common variables, 0 differ (rtol=0.001); largest relative deviation 7.1e-14 (I_blackbody_A), i.e. round-off only."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0087",
+    "CSL-0106"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added (T-FUNC card C-116, family HT-021 of the ht triage)",
+      "by": "opencode worker (muse-spark) for S. Quoilin"
+    }
+  ]
+}

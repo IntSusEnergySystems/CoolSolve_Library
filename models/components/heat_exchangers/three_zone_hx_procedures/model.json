@@ -1,0 +1,85 @@
+{
+  "id": "CSL-0112",
+  "name": "three_zone_hx_procedures",
+  "title": "Heat exchangers: three-zone and epsilon-NTU zone procedures (function library)",
+  "summary": "Seven EES PROCEDUREs that rate a heat exchanger zone by zone: a regularised log-mean temperature difference (lmtd_xi1000), a three-zone condenser built on it (hx_cd_three_zones), a three-zone evaporator that decides the phase zones itself (hx_ev_three_zones), the effectiveness-NTU zone procedures of an automotive condenser (single_phase_HX_eps_ntu, EV_eps_ntu, CD_eps_ntu) and an epsilon-NTU evaporator with a vapour and a two-phase zone (evaporator2_eps_ntu).",
+  "kind": "function",
+  "level": 3,
+  "status": "runs",
+  "main_file": "three_zone_hx_procedures.eescode",
+  "fluids": [
+    "R245fa",
+    "R123",
+    "R134a",
+    "Water",
+    "Air"
+  ],
+  "tags": [
+    "heat exchanger",
+    "three zones",
+    "condenser",
+    "evaporator",
+    "plate heat exchanger",
+    "log-mean temperature difference",
+    "effectiveness-NTU",
+    "pinch",
+    "function library"
+  ],
+  "language_features": [
+    "PROCEDURE",
+    "CALL",
+    "IF/THEN/ELSE",
+    "LOOKUP (write statements)",
+    "property calls (enthalpy, temperature, cp, specheat, p_crit, pressure)"
+  ],
+  "stats": {
+    "n_equations": 139,
+    "largest_block": 6
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/procedures EES/condenseur 3 zones.EES",
+    "candidate_id": "TM-0564,TM-0569,TM-0579,TM-0566,TM-0571",
+    "authors": [
+      "Sylvain Quoilin",
+      "TBD (ULiege, J. Lebrun laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.991",
+    "language": "en",
+    "course": "",
+    "notes": "Five EES files of the Laboratoire de Thermodynamique, Universite de Liege collection, all in the SI MASS DEG PA C J unit system (no manual unit conversion needed). TM-0564 condenseur 3 zones.EES (X8.652) and TM-0579 LMTD.EES (X8.652) carry only the lab licence tag (author TBD); TM-0569 evaporator 1 2 & 3 zones SQ110729.EES (X9.249), TM-0566 epsilon NTU single phase - EV - CD SQ081222.EES (X8.198) and TM-0571 Evaporator epsilon-NTU SQ080311.EES (X7.991) are signed SQ. Procedures renamed for library-wide uniqueness: lmtd -> lmtd_xi1000, hx_cd -> hx_cd_three_zones, hx_ev -> hx_ev_three_zones, single_phase_HX -> single_phase_HX_eps_ntu, EV -> EV_eps_ntu, CD -> CD_eps_ntu, evaporator2 -> evaporator2_eps_ntu. The LMTD procedure is byte-identical in TM-0579, TM-0564 and TM-0569 and is transcribed once."
+  },
+  "verification": {
+    "reference": "stored EES solutions of the four source files that carry one: procedures EES/LMTD.EES (TM-0579, 2 values), condenseur 3 zones.EES (TM-0564, 3 values), evaporator 1 2 & 3 zones SQ110729.EES (TM-0569, 3 values compared, 6 stale values excluded) and Evaporator epsilon-NTU SQ080311.EES (TM-0571, 6 values); plus an independent Python recomputation of the five lmtd_xi1000 branches and the exact energy balance of each procedure",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.084,
+    "notes": "compare_solution.py: 14 common variables, 12 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 135. lmtd_xi1000 is exact (case 2 of the stored solution: DELTAT 1.5 K, AU 0.666667 W/K; the five demonstration cases recomputed in Python agree to 10 significant digits). The energy balance of hx_cd_three_zones (Q_dot_cd = 53620.97039 W on both sides) and of hx_ev_three_zones (14000 W on both sides) closes exactly. Status runs, not verified: the deviations from the stored solutions (max 8.4e-02 on AU_ev_v2) exceed the <= 0.5 % of CoolSolve docs/ees_import.md section 11. Causes: (i) the hx_cd demonstration point of TM-0564 sits exactly on the R245fa saturation line (T_ex_cd = 49.99 degC = T_sat at 343220 Pa in EES) and CoolProp's saturation line is 0.09 K lower, so a 1 K subcooling is imposed (area +3.5 %, charge +6.6 %, pinch -3.7 %); (ii) R123/R245fa saturation properties differ between the EES and CoolProp databases (CSL-0019 documents +0.4-0.5 % on the R245fa saturation pressures); (iii) TM-0571 uses humid air, whose enthalpy reference and cp differ between EES Air_ha and CoolProp AirH2O (-1.7 % on the duty, -0.11 % on the air exhaust temperature, +3.0 % on the pressure that meets the imposed 800 W/K); the vapour-zone UA of TM-0571 divides a duty by a log-mean difference whose end points are 30 K apart but differ by less than 1 K, hence its -8.4 %. Excluded from the comparison: the stored A_l, A_tp, A_v, A_ev_l, A_ev_tp, A_ev_v, h_sf_n, M_dot_sf_ref and M_dot_r_ref of TM-0569, which are stale (they belong to a previous revision of the file). EV/CD and single_phase_HX have no stored solution (EES X8.198 layout), their demonstration program was written from the operating points of CSL-0008."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0008",
+    "CSL-0090",
+    "CSL-0096",
+    "CSL-0097",
+    "CSL-0098",
+    "CSL-0114"
+  ],
+  "related_external": [
+    "sources/ht HT-004 (eps-NTU relations, already in the library as CSL-0090)",
+    "sources/thermo_models TM-0594 and TM-0595 (byte-identical copies of TM-0564 and TM-0569 in 'Steady-state models/')",
+    "sources/thermo_models TM-0567 and TM-0568 (external lookup tables ev.lkt and evaporator 1 2 & 3 zones SQ080603.lkt, written by hx_ev_three_zones)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added (T-FUNC card C-123; candidates TM-0564, TM-0569, TM-0579, TM-0566, TM-0571)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

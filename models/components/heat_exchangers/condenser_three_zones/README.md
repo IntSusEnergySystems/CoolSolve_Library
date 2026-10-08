@@ -193,9 +193,22 @@ model (its `.initials` were used to start the crossflow variant).
 
 ## Related models
 
+- `CSL-0112` *three_zone_hx_procedures*: the procedure set of the J. Lebrun
+  laboratory files this model descends from (`single_phase_HX` ->
+  `single_phase_HX_eps_ntu`, `two_phase_CD` -> `CD_eps_ntu`), with the
+  counterflow eps-NTU relation, no pressure drops and the three-zone
+  condenser and evaporator of the same family.
+
 - `CSL-0002` *counterflow_hx_oil_water*: single-zone ε-NTU exchanger
   (introductory level).
 - `CSL-0014` *hx_constant_pinch*: three-zone condenser (desuperheating,
   condensation, subcooling) closed by an imposed pinch instead of fitted
   conductances.
 - See also the CoolSolve example `condenser_3zones.eescode`.
+- `CSL-0113` *condenser_3_zones_plate_correlations*: three-zone plate
+  condenser sized with plate heat-transfer correlations (Thonon/Kuo) instead
+  of fitted epsilon-NTU conductances; water-cooled R123.
+
+- `CSL-0115` *hx_fem_evaporator_discretised*: the same two-phase heat
+  exchanger treated fully discretised (N finite-volume cells, cell-by-cell U
+  switching smoothed over a quality window) instead of three lumped zones.

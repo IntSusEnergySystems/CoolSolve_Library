@@ -1,0 +1,155 @@
+{=============================================================================
+  Two-stage hermetic scroll expander (correlation model)
+  CoolSolve Library model CSL-0117
+ -----------------------------------------------------------------------------
+  Correlation model of the two-stage hermetic scroll expander of V. Lemort,
+  S. Quoilin and C. Pire, "Experimental Investigation on a Hermetic Scroll
+  Expander", 7th International Conference on Compressors, Papiernicka, 2009.
+  The filling factor and the isentropic effectiveness of each stage are
+  polynomial correlations in ln(r_p) and ln(rho_su) (PROCEDURE
+  hermeticexpander, fitted on 770 points of the validated single-stage model;
+  validity 30 < rho_su < 200 kg/m3, 1.2 < r_p < 12, CALL WARNING outside).
+  der_rp/der_rho are the partial derivatives of the effectiveness.
+  The intermediate pressure ratio r_p_1_mod is solved from xi_mod = 0 (zero
+  derivative of the overall effectiveness w.r.t. r_p_1_mod; earlier design
+  variant: r_p_1_mod = r_p_1_nom_mod = sqrt(r_p_mod)).
+  The EES MODULE 'doubleexpander' is flattened into the main program (library
+  decision D10, CS-GAP-MODULE): every module-internal variable carries the
+  suffix '_mod'; see README.md for the full mapping. The dead FUNCTION gamma
+  of the original (never called) is removed.
+  Inputs : fluid$, T_sat, T_su_exp, p_ex_exp, N_rot_exp, M_dot
+  Outputs: epsilon_overall, epsilon_1_mod, epsilon_2_mod, V_s_1_mod, V_s_2_mod
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. Quoilin (ULiège), ~/Nextcloud/thermo_models/procedures EES/
+           double stage expander SQ101012.EES - see README.md
+  Status : verified against the EES stored solution (README.md)
+=============================================================================}
+
+"!Correlations of the hermetic scroll expander (Lemort/Quoilin/Pire 2009)"
+Procedure hermeticexpander(r_p, rho_su: phi, epsilon)
+
+"These correlations are based on the experimental data obtained on the Hermetic scroll expander described in the following paper:
+Vincent Lemort, Sylvain Quoilin and Christophe Pire, Experimental Investigation on a Hermetic Scroll Expander, in Proceedings ot the 7th International Conference on Compressors, Papiernicka, October 2009 
+The testing conditions were limited to the following boundaries:
+6.3 < p_su < 18 bars;   89  < T_su < 139°C  ;  0.036 < M_dot < 0.121   ;    2.4 < r_p < 6.8 ;   31 < rho_su < 105   ;  1 < FF < 1.1    ;     177 < W_dot < 2037
+However, the proposed model allows the extrapolation of the performance outside ot the testing conditions defined above.  This model has been run on 770 different working conditions taking as input r_p and rho_su.  The supply temperature was set 10 degrees higher than the saturation temperature at the supply pressure.  The filling factor is computed as if the expander speed was 3000 rpm, although this speed is higher because of the glide of the asynchronous generator, and depends on the output power.
+The correlations have been establish on the basis of the validated model inside the following operating conditions:
+30 < rho_su < 200    ;    1.2 < r_p < 12
+S. Quoilin, 30 September 2010 "
+
+If (r_p < 1.2) or (r_p > 12) Then CALL WARNING('The expander correlation is used outside of its validity range: r_p = XXXA1', r_p)
+If (rho_su < 30) or (rho_su > 200) Then CALL WARNING('The expander correlation is used outside of its validity range: rho_su = XXXA1', rho_su)
+
+
+ln_rp = ln(r_p)
+ln_rho = ln(rho_su)
+
+phi=7.57680390E-01+1.03377082E-01*ln_rho-9.44421504E-03*ln_rho^2-9.77306474E-04*ln_rho^3+1.21317764E-01*ln_rp-3.37184749E-02*ln_rp^2+2.66140555E-03*ln_rp^3-4.37896534E-02*ln_rho*ln_rp+9.10515577E-03*ln_rho*ln_rp^2+6.54874695E-03*ln_rho^2*ln_rp-1.34144803E-03*ln_rho^2*ln_rp^2
+"!R^2 = 99.98"
+
+epsilon=-5.64118460E+01+3.82342846E+01*ln_rho-1.02619531E+01*ln_rho^2+1.25366844E+00*ln_rho^3-7.25999469E-02*ln_rho^4+2.32160879E-03*ln_rho^5+8.78565797E+01*ln_rp-5.94370452E+01*ln_rp^2+1.93242308E+01*ln_rp^3-2.99537977E+00*ln_rp^4+1.91534139E-01*ln_rp^5-4.76602687E+01*ln_rho*ln_rp+2.38778349E+01*ln_rho*ln_rp^2-4.14484550E+00*ln_rho*ln_rp^3+3.27260533E-02*ln_rho*ln_rp^4+8.93554087E+00*ln_rho^2*ln_rp-1.52076070E+00*ln_rho^2*ln_rp^2-1.22278613E+00*ln_rho^2*ln_rp^3+3.73428452E-01*ln_rho^2*ln_rp^4-2.85797998E-01*ln_rho^3*ln_rp-7.54213782E-01*ln_rho^3*ln_rp^2+5.80137678E-01*ln_rho^3*ln_rp^3-1.14378777E-01*ln_rho^3*ln_rp^4-4.22939970E-02*ln_rho^4*ln_rp+9.66480501E-02*ln_rho^4*ln_rp^2-5.44383937E-02*ln_rho^4*ln_rp^3+9.63087826E-03*ln_rho^4*ln_rp^4
+"!R^2 = 99.96"
+
+epsilon = min(0.65,epsilon)
+epsilon = max(0,epsilon)
+
+end
+
+"!Partial derivatives of the effectiveness (d epsilon / d ln r_p, d epsilon / d ln rho)"
+Procedure der_rp(r_p,rho_su:der_lnrp_epsilon)
+
+ln_rp = ln(r_p)
+ln_rho = ln(rho_su)
+
+
+der_lnrp_epsilon=8.78565797E+01-2*5.94370452E+01*ln_rp+3*1.93242308E+01*ln_rp^2-4*2.99537977E+00*ln_rp^3+5*1.91534139E-01*ln_rp^4-4.76602687E+01*ln_rho+2*2.38778349E+01*ln_rho*ln_rp-3*4.14484550E+00*ln_rho*ln_rp^2+4*3.27260533E-02*ln_rho*ln_rp^3+8.93554087E+00*ln_rho^2-2*1.52076070E+00*ln_rho^2*ln_rp-3*1.22278613E+00*ln_rho^2*ln_rp^2+4*3.73428452E-01*ln_rho^2*ln_rp^3-2.85797998E-01*ln_rho^3-2*7.54213782E-01*ln_rho^3*ln_rp+3*5.80137678E-01*ln_rho^3*ln_rp^2-4*1.14378777E-01*ln_rho^3*ln_rp^3-4.22939970E-02*ln_rho^4+2*9.66480501E-02*ln_rho^4*ln_rp-3*5.44383937E-02*ln_rho^4*ln_rp^2+4*9.63087826E-03*ln_rho^4*ln_rp^3
+"!R^2 = 99.96"
+
+end
+
+Procedure der_rho(r_p,rho_su:der_lnrho_epsilon)
+
+ln_rp = ln(r_p)
+ln_rho = ln(rho_su)
+
+
+der_lnrho_epsilon=3.82342846E+01-2*1.02619531E+01*ln_rho+3*1.25366844E+00*ln_rho^2-4*7.25999469E-02*ln_rho^3+5*2.32160879E-03*ln_rho^4-4.76602687E+01*ln_rp+2.38778349E+01*ln_rp^2-4.14484550E+00*ln_rp^3+3.27260533E-02*ln_rp^4+2*8.93554087E+00*ln_rho*ln_rp-2*1.52076070E+00*ln_rho*ln_rp^2-2*1.22278613E+00*ln_rho*ln_rp^3+2*3.73428452E-01*ln_rho*ln_rp^4-3*2.85797998E-01*ln_rho^2*ln_rp-3*7.54213782E-01*ln_rho^2*ln_rp^2+3*5.80137678E-01*ln_rho^2*ln_rp^3-3*1.14378777E-01*ln_rho^2*ln_rp^4-4*4.22939970E-02*ln_rho^3*ln_rp+4*9.66480501E-02*ln_rho^3*ln_rp^2-4*5.44383937E-02*ln_rho^3*ln_rp^3+4*9.63087826E-03*ln_rho^3*ln_rp^4
+
+
+end
+
+"!Operating point of the original file (default run)"
+fluid$='r245fa'
+p_su_exp = p_sat(fluid$,t=t_sat)
+T_sat = 130
+T_su_exp = T_sat + 10
+p_ex_exp = 2E5
+N_rot_exp = 3000
+M_dot = 0.1
+
+r_p = p_su_exp/p_ex_exp                    "overall pressure ratio [-]"
+rho_su_exp = density(fluid$,p=p_su_exp,t=t_su_exp) "supply density [kg/m^3]"
+
+"!Single-stage comparison: correlations applied to the overall pressure ratio"
+
+call hermeticexpander(r_p,rho_su_exp:phi_single,epsilon_single)
+
+"!Two-stage expander: flattened MODULE 'doubleexpander' (decision D10, tag _mod)"
+r_p_mod = p_su_exp/p_ex_exp
+rho_su_exp_mod = density(fluid$,p=p_su_exp,t=t_su_exp)
+s_su_exp_mod = entropy(fluid$,p=p_su_exp,t=t_su_exp)
+h_su_exp_mod = enthalpy(fluid$,p=p_su_exp,t=t_su_exp)
+
+r_p_2_mod = r_p_mod/r_p_1_mod              "pressure ratio of stage 2 [-]"
+p_int_exp_mod = p_su_exp/r_p_1_mod         "intermediate pressure [Pa]"
+call hermeticexpander(r_p_1_mod,rho_su_exp_mod:FF_exp_mod,epsilon_s_exp_1_mod)
+epsilon_s_exp_1_mod = (h_su_exp_mod - h_int_exp_mod)/(h_su_exp_mod - h_int_exp_s_mod)   "stage 1 isentropic effectiveness [-]"
+h_int_exp_s_mod = enthalpy(fluid$,p=p_int_exp_mod,s=s_su_exp_mod)
+rho_int_exp_mod = density(fluid$,p=p_int_exp_mod,h=h_int_exp_mod)
+s_int_exp_mod = entropy(fluid$,h=h_int_exp_mod,p=p_int_exp_mod)
+M_dot = FF_exp_mod * N_rot_exp/60 * V_s_1_mod * rho_su_exp_mod   "mass flow: stage 1 swept volume V_s_1_mod [m^3], FF = filling factor [-]"
+
+call hermeticexpander(r_p_2_mod,rho_int_exp_mod:FF_exp_2_mod,epsilon_s_exp_2_mod)
+epsilon_s_exp_2_mod = (h_int_exp_mod - h_ex_exp_mod)/(h_int_exp_mod - h_ex_exp_s_2_mod)   "stage 2 isentropic effectiveness [-]"
+h_ex_exp_s_2_mod = enthalpy(fluid$,p=p_ex_exp,s=s_int_exp_mod)
+M_dot = FF_exp_2_mod * N_rot_exp/60 * V_s_2_mod * rho_int_exp_mod   "stage 2 swept volume V_s_2_mod [m^3]"
+
+W_dot_exp_1_mod = M_dot*(h_su_exp_mod - h_int_exp_mod)   "stage 1 power [W]"
+W_dot_exp_2_mod = M_dot*(h_int_exp_mod - h_ex_exp_mod)   "stage 2 power [W]"
+
+h_ex_exp_s_mod =(1- beta_mod) * h_su_exp_mod
+h_int_exp_s_bis_mod = h_su_exp_mod*(1-beta_1_mod)
+h_ex_exp_s_2_bis_mod = h_int_exp_mod*(1-beta_2_mod)
+
+//beta_mod = 1 - r_p_mod^((1-gamma_mod)/gamma_mod)
+gamma_mod = 1 / (1 + ln(1- beta_mod)/ln(r_p_mod))
+beta_1_mod = 1 - r_p_1_mod^((1-gamma_mod)/gamma_mod)
+beta_2_mod =1 - r_p_2_mod^((1-gamma_mod)/gamma_mod)
+
+epsilon_appr_mod = (epsilon_s_exp_1_mod * beta_1_mod + epsilon_s_exp_2_mod * beta_2_mod - epsilon_s_exp_1_mod * epsilon_s_exp_2_mod * beta_1_mod * beta_2_mod)/beta_mod
+
+beta_1_der_mod = (gamma_mod - 1)/gamma_mod * r_p_1_mod^((1-2*gamma_mod)/gamma_mod)
+beta_2_der_mod = (1-gamma_mod)/gamma_mod * r_p_mod^((1-gamma_mod)/gamma_mod) * r_p_1_mod^(-1/gamma_mod)
+
+call der_rp(r_p_1_mod,rho_su_exp_mod:der_lnrp_epsilon_1_mod)
+call der_rp(r_p_2_mod,rho_int_exp_mod:der_lnrp_epsilon_2_mod)
+call der_rho(r_p_2_mod,rho_int_exp_mod:der_lnrho_epsilon_2_mod)
+
+der_rp_epsilon_1_mod = der_lnrp_epsilon_1_mod * 1/r_p_1_mod
+der_rp_epsilon_2_mod = der_lnrp_epsilon_2_mod * 1/r_p_2_mod
+der_rho_epsilon_2_mod = der_lnrho_epsilon_2_mod * 1/rho_int_exp_mod
+
+epsilon_1_mod = epsilon_s_exp_1_mod
+epsilon_2_mod = epsilon_s_exp_2_mod
+epsilon_1_der_mod = der_rp_epsilon_1_mod
+epsilon_2_der_mod = -r_p_mod/r_p_1_mod^2 * der_rp_epsilon_2_mod - rho_su_exp_mod/gamma_mod * r_p_1_mod^((-gamma_mod - 1)/gamma_mod) * der_rho_epsilon_2_mod
+
+xi_mod = epsilon_1_der_mod  * beta_1_mod + epsilon_1_mod * beta_1_der_mod+ epsilon_2_der_mod * beta_2_mod + epsilon_2_mod * beta_2_der_mod - epsilon_1_der_mod * epsilon_2_mod * beta_1_mod * beta_2_mod - epsilon_1_mod * epsilon_2_der_mod * beta_1_mod * beta_2_mod - epsilon_1_mod * epsilon_2_mod * beta_1_der_mod * beta_2_mod - epsilon_1_mod * epsilon_2_mod * beta_1_mod * beta_2_der_mod
+
+{earlier design variant, as in the original: r_p_1_mod = r_p_1_nom_mod
+ (now r_p_1_mod is solved from xi_mod = 0)}
+xi_mod = 0
+r_p_1_nom_mod = sqrt(r_p_mod)
+
+epsilon_overall = (h_su_exp_mod - h_ex_exp_mod)/(h_su_exp_mod - h_ex_exp_s_mod)   "overall isentropic effectiveness [-]"
+h_ex_exp_s_mod = enthalpy(fluid$,p=p_ex_exp,s=s_su_exp_mod)

@@ -1,0 +1,343 @@
+{=============================================================================
+  Log-mean temperature difference and its correction factors (function library)
+  CoolSolve Library model CSL-0105 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Three EES FUNCTIONs for the rating of heat exchangers by the LMTD method:
+  LMTD (log-mean temperature difference of an ideal counterflow or co-current
+  exchanger), F_LMTD_Fakheri (Fakheri correction factor of a shell-and-tube
+  exchanger with one or several shell passes) and Ft_aircooler (Roetzel-Nicole
+  Ft factor of a crossflow air cooler with given tube passes and tube rows).
+
+  All arguments are SI: the four end temperatures [C] (any consistent unit
+  gives the same result, since only differences and ratios enter) and the
+  dimensionless flags and counts (counterflow 1/0, shells, Ntp, rows).
+
+  The demonstration program at the end calls every function, once with the
+  inputs of the ht doctest of the corresponding relation ("A" case) and once
+  with a second input set ("B" case, one coherent shell-and-tube/air-cooler
+  rating point). The ht values of both sets are tabulated in the README
+  (verification table).
+
+  No dispatcher of ht is involved: ht ships no selector over these three
+  relations; the caller chooses the FUNCTION directly.
+
+  Inputs : Thi, Tho, Tci, Tco [C], counterflow [-], shells [-], Ntp [-],
+           rows [-]
+  Outputs: LMTD [K], F_LMTD_Fakheri [-], Ft_aircooler [-]
+           (one FUNCTION per relation)
+  Units  : SI - temperatures in C (differences only), the rest dimensionless
+  Source : ht (Caleb Bell), ht/core.py (LMTD), ht/hx.py (F_LMTD_Fakheri),
+           ht/air_cooler.py (Ft_aircooler), version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; relations by the authors
+           cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION LMTD(Thi, Tho, Tci, Tco, counterflow)
+{LMTD - log-mean temperature difference of an ideal counterflow or co-current
+heat exchanger [K].
+
+  counterflow (counterflow = 1):
+    dT_1 = Thi - Tco   [K]
+    dT_2 = Tho - Tci   [K]
+  co-current (counterflow = 0):
+    dT_1 = Thi - Tci   [K]
+    dT_2 = Tho - Tco   [K]
+  LMTD = (dT_2 - dT_1)/LN(dT_2/dT_1)   [K]
+
+Thi, Tho are the inlet and outlet temperatures of the hot fluid [C], Tci, Tco
+those of the cold fluid [C]; counterflow is 1 for counterflow, 0 for
+co-current (EES has no boolean arguments, so the Python flag is an integer).
+Any consistent temperature unit gives the same result, since only differences
+and their ratio enter.
+Limit cases, as in the original: when dT_2/dT_1 <= 0 or = 1 the closed form is
+singular, so the counterflow branch returns dT_1 (the arithmetic mean, the
+limit of the formula) and the co-current branch returns 0 (the limit of the
+co-current formula).
+Validity: no limit quoted.
+Original: Bergman, T. L., A. S. Lavine, F. P. Incropera and D. P. DeWitt,
+  "Introduction to Heat Transfer", 6E, Wiley, Hoboken NJ, 2011 (Example 11.1,
+  the doctest of the original).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/core.py, LMTD,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF (counterflow = 1) THEN
+    dT_1 = Thi - Tco
+    dT_2 = Tho - Tci
+  ELSE
+    dT_1 = Thi - Tci
+    dT_2 = Tho - Tco
+  ENDIF
+  ratio = dT_2/dT_1
+  IF (counterflow = 1) THEN
+    IF (ratio <= 0) OR (ratio = 1) THEN
+      LMTD = dT_1
+    ELSE
+      LMTD = (dT_2 - dT_1)/LN(dT_2/dT_1)
+    ENDIF
+  ELSE
+    IF (ratio <= 0) OR (ratio = 1) THEN
+      LMTD = 0
+    ELSE
+      LMTD = (dT_2 - dT_1)/LN(dT_2/dT_1)
+    ENDIF
+  ENDIF
+END
+
+FUNCTION F_LMTD_Fakheri(Thi, Tho, Tci, Tco, shells)
+{F_LMTD_FAKHERI - log-mean temperature difference correction factor Ft of a
+shell-and-tube heat exchanger with one or an even number of tube passes and a
+given number of shell passes [-].
+
+  R = (Thi - Tho)/(Tco - Tci)   [-]
+  P = (Tco - Tci)/(Thi - Tci)   [-]
+  W = ((1 - P*R)/(1 - P))^(1/shells)   [-]
+  S = SQRT(R^2 + 1)/(R - 1)   [-]
+  Ft = S*LN(W)/LN((1 + W - S + S*W)/(1 + W + S - S*W))   [-]
+
+  R = 1 (singular logarithms):
+  W2 = (shells - shells*P)/(shells - shells*P + P)   [-]
+  Ft = SQRT(2)*(1 - W2)/W2/LN((W2/(1 - W2) + 1/SQRT(2))/(W2/(1 - W2) - 1/SQRT(2)))
+
+Thi, Tho are the inlet and outlet temperatures of the hot fluid [C], Tci, Tco
+those of the cold fluid [C]; shells is the number of shell-side passes [-].
+The expression is symmetric (hot and cold sides can be swapped) and does not
+depend on the temperature unit, as in the original.
+Validity: one or an even number of tube passes; no temperature limit quoted.
+Original: Fakheri, A., "A General Expression for the Determination of the Log
+  Mean Temperature Correction Factor for Shell and Tube Heat Exchangers",
+  Journal of Heat Transfer 125(3): 527-530, 2003, doi:10.1115/1.1571078 (also
+  shown in Hall, S., "Rules of Thumb for Chemical Engineers", 5E,
+  Butterworth-Heinemann, 2012).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, F_LMTD_Fakheri,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  R_F = (Thi - Tho)/(Tco - Tci)
+  P_F = (Tco - Tci)/(Thi - Tci)
+  IF (R_F = 1) THEN
+    W2_F = (shells - shells*P_F)/(shells - shells*P_F + P_F)
+    F_LMTD_Fakheri = SQRT(2)*(1 - W2_F)/W2_F/LN((W2_F/(1 - W2_F) + 1/SQRT(2))/(W2_F/(1 - W2_F) - 1/SQRT(2)))
+  ELSE
+    W_F = ((1 - P_F*R_F)/(1 - P_F))^(1/shells)
+    S_F = SQRT(R_F*R_F + 1)/(R_F - 1)
+    F_LMTD_Fakheri = S_F*LN(W_F)/LN((1 + W_F - S_F + S_F*W_F)/(1 + W_F + S_F - S_F*W_F))
+  ENDIF
+END
+
+FUNCTION Ft_aircooler(Thi, Tho, Tci, Tco, Ntp, rows)
+{FT_AIRCOOLER - log-mean temperature difference correction factor Ft of a
+crossflow air cooler [-].
+
+  Ft = 1 - sum_{k=1..4} {q^k * sum_{i=1..4} {c_{k,i}*SIN(i*phi)}}   [-]
+  q = 1 - r_lm   [-],  r_lm = dT_lm/(Thi - Tci)   [-]
+  dT_lm = counterflow LMTD of the same four temperatures [K]
+  R = (Thi - Tho)/(Tco - Tci)   [-]
+  phi = 2*ARCTAN(R)   [degrees]
+
+Thi, Tho are the inlet and outlet temperatures of the hot (tubeside) fluid
+[C], Tci, Tco those of the cold fluid [C]; Ntp is the number of tube passes
+[-], rows the number of tube rows [-]. The model is not symmetric: the hot
+fluid is tubeside, as in an air cooler. dT_lm is evaluated with the LMTD
+relation of this file (counterflow = 1), as in the original. SIN takes
+degrees and ARCTAN returns degrees (EES and CoolSolve convention), so the
+composition SIN(i*2*ARCTAN(R)) is the sine of the radian expression of the
+original. The 16 coefficients c_{k,i} (k = power of q, i = harmonic of phi)
+are the fit of the original for the given tube passes and rows; Ntp = rows =
+1, 2, 3 and 4 select their own set, Ntp = 1 with rows > 4 and Ntp = rows > 4
+reuse the 4-row sets, Ntp = 2 with rows = 4 and any other combination reuse
+the 4-rows-2-passes set, as in the original.
+Validity: fitted crossflow air coolers with up to 4 rows and 4 passes (other
+  combinations reuse the nearest set, as in the original); fit error < 0.1 %
+  (as quoted by the original).
+Original: Roetzel, W. and F. J. L. Nicole, "Mean Temperature Difference for
+  Heat Exchanger Design - A General Approximate Explicit Equation", Journal of
+  Heat Transfer 97(1): 5-8, 1975, doi:10.1115/1.3450288.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/air_cooler.py, Ft_aircooler,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  dT_lm = LMTD(Thi, Tho, Tci, Tco, 1)
+  r_lm = dT_lm/(Thi - Tci)
+  R_Ft = (Thi - Tho)/(Tco - Tci)
+  IF (Ntp = 1) AND (rows = 1) THEN
+    c_11 = -4.62E-1
+    c_12 = -3.13E-2
+    c_13 = -1.74E-1
+    c_14 = -4.2E-2
+    c_21 = 5.08E0
+    c_22 = 5.29E-1
+    c_23 = 1.32E0
+    c_24 = 3.47E-1
+    c_31 = -1.57E1
+    c_32 = -2.37E0
+    c_33 = -2.93E0
+    c_34 = -8.53E-1
+    c_41 = 1.72E1
+    c_42 = 3.18E0
+    c_43 = 1.99E0
+    c_44 = 6.49E-1
+  ELSE
+    IF (Ntp = 1) AND (rows = 2) THEN
+      c_11 = -3.34E-1
+      c_12 = -1.54E-1
+      c_13 = -8.65E-2
+      c_14 = 5.53E-2
+      c_21 = 3.3E0
+      c_22 = 1.28E0
+      c_23 = 5.46E-1
+      c_24 = -4.05E-1
+      c_31 = -8.7E0
+      c_32 = -3.35E0
+      c_33 = -9.29E-1
+      c_34 = 9.53E-1
+      c_41 = 8.7E0
+      c_42 = 2.83E0
+      c_43 = 4.71E-1
+      c_44 = -7.17E-1
+    ELSE
+      IF (Ntp = 1) AND (rows = 3) THEN
+        c_11 = -8.74E-2
+        c_12 = -3.18E-2
+        c_13 = -1.83E-2
+        c_14 = 7.1E-3
+        c_21 = 1.05E0
+        c_22 = 2.74E-1
+        c_23 = 1.23E-1
+        c_24 = -4.99E-2
+        c_31 = -2.45E0
+        c_32 = -7.46E-1
+        c_33 = -1.56E-1
+        c_34 = 1.09E-1
+        c_41 = 3.21E0
+        c_42 = 6.68E-1
+        c_43 = 6.17E-2
+        c_44 = -7.46E-2
+      ELSE
+        IF ((Ntp = 1) AND (rows = 4)) OR ((Ntp = 1) AND (rows > 4)) THEN
+          c_11 = -4.14E-2
+          c_12 = -1.39E-2
+          c_13 = -7.23E-3
+          c_14 = 6.1E-3
+          c_21 = 6.15E-1
+          c_22 = 1.23E-1
+          c_23 = 5.66E-2
+          c_24 = -4.68E-2
+          c_31 = -1.2E0
+          c_32 = -3.45E-1
+          c_33 = -4.37E-2
+          c_34 = 1.07E-1
+          c_41 = 2.06E0
+          c_42 = 3.18E-1
+          c_43 = 1.11E-2
+          c_44 = -7.57E-2
+        ELSE
+          IF (Ntp = 2) AND (rows = 2) THEN
+            c_11 = -2.35E-1
+            c_12 = -7.73E-2
+            c_13 = -5.98E-2
+            c_14 = 5.25E-3
+            c_21 = 2.28E0
+            c_22 = 6.32E-1
+            c_23 = 3.64E-1
+            c_24 = -1.27E-2
+            c_31 = -6.44E0
+            c_32 = -1.63E0
+            c_33 = -6.13E-1
+            c_34 = -1.14E-2
+            c_41 = 6.24E0
+            c_42 = 1.35E0
+            c_43 = 2.76E-1
+            c_44 = 2.72E-2
+          ELSE
+            IF (Ntp = 3) AND (rows = 3) THEN
+              c_11 = -8.43E-1
+              c_12 = 3.02E-2
+              c_13 = 4.8E-1
+              c_14 = 8.12E-2
+              c_21 = 5.85E0
+              c_22 = -9.64E-3
+              c_23 = -3.28E0
+              c_24 = -8.34E-1
+              c_31 = -1.28E1
+              c_32 = -2.28E-1
+              c_33 = 7.11E0
+              c_34 = 2.19E0
+              c_41 = 9.24E0
+              c_42 = 2.66E-1
+              c_43 = -4.9E0
+              c_44 = -1.69E0
+            ELSE
+              IF ((Ntp = 4) AND (rows = 4)) OR ((Ntp > 4) AND (rows > 4) AND (Ntp = rows)) THEN
+                c_11 = -3.39E-1
+                c_12 = 2.77E-2
+                c_13 = 1.79E-1
+                c_14 = -1.99E-2
+                c_21 = 2.38E0
+                c_22 = -9.99E-2
+                c_23 = -1.21E0
+                c_24 = 4E-2
+                c_31 = -5.26E0
+                c_32 = 9.04E-2
+                c_33 = 2.62E0
+                c_34 = 4.94E-2
+                c_41 = 3.9E0
+                c_42 = -8.45E-4
+                c_43 = -1.81E0
+                c_44 = -9.81E-2
+              ELSE
+                c_11 = -6.05E-1
+                c_12 = 2.31E-2
+                c_13 = 2.94E-1
+                c_14 = 1.98E-2
+                c_21 = 4.34E0
+                c_22 = 5.9E-3
+                c_23 = -1.99E0
+                c_24 = -3.05E-1
+                c_31 = -9.72E0
+                c_32 = -2.48E-1
+                c_33 = 4.32E0
+                c_34 = 8.97E-1
+                c_41 = 7.54E0
+                c_42 = 2.87E-1
+                c_43 = -3E0
+                c_44 = -7.31E-1
+              ENDIF
+            ENDIF
+          ENDIF
+        ENDIF
+      ENDIF
+    ENDIF
+  ENDIF
+  phi = 2*ARCTAN(R_Ft)
+  s_1 = SIN(phi)
+  s_2 = SIN(2*phi)
+  s_3 = SIN(3*phi)
+  s_4 = SIN(4*phi)
+  q_Ft = 1 - r_lm
+  t_1 = c_11*s_1 + c_12*s_2 + c_13*s_3 + c_14*s_4
+  t_2 = c_21*s_1 + c_22*s_2 + c_23*s_3 + c_24*s_4
+  t_3 = c_31*s_1 + c_32*s_2 + c_33*s_3 + c_34*s_4
+  t_4 = c_41*s_1 + c_42*s_2 + c_43*s_3 + c_44*s_4
+  Ft_aircooler = 1 - (t_1*q_Ft + t_2*q_Ft^2 + t_3*q_Ft^3 + t_4*q_Ft^4)
+END
+
+"!Demonstration program - case A: input sets of the ht doctests"
+LMTD_cf_A = LMTD(100, 60, 30, 40.2, 1)   "counterflow LMTD of Example 11.1 [K]"
+LMTD_coc_A = LMTD(100, 60, 30, 40.2, 0)   "co-current LMTD of Example 11.1 [K]"
+LMTD_eq_A = LMTD(100, 60, 20, 60, 1)   "counterflow LMTD, equal end differences [K]"
+LMTD_eqcoc_A = LMTD(100, 60, 20, 60, 0)   "co-current LMTD, equal end differences [K]"
+F_Fakheri_A = F_LMTD_Fakheri(130, 110, 15, 85, 1)   "Fakheri factor, one shell pass [-]"
+Ft_aircooler_A = Ft_aircooler(125, 45, 25, 95, 1, 4)   "air-cooler Ft, 1 pass and 4 rows [-]"
+
+"!Demonstration program - case B: one coherent rating point (Python values)"
+Thi_B = 150   "hot inlet temperature [C]"
+Tho_B = 90   "hot outlet temperature [C]"
+Tci_B = 20   "cold inlet temperature [C]"
+Tco_B = 60   "cold outlet temperature [C]"
+LMTD_cf_B = LMTD(Thi_B, Tho_B, Tci_B, Tco_B, 1)   "counterflow LMTD [K]"
+LMTD_coc_B = LMTD(Thi_B, Tho_B, Tci_B, Tco_B, 0)   "co-current LMTD [K]"
+F_Fakheri_B = F_LMTD_Fakheri(Thi_B, Tho_B, Tci_B, Tco_B, 1)   "Fakheri factor, one shell pass [-]"
+F_Fakheri_2shells_B = F_LMTD_Fakheri(Thi_B, Tho_B, Tci_B, Tco_B, 2)   "Fakheri factor, two shell passes [-]"
+F_Fakheri_R1_B = F_LMTD_Fakheri(130, 95, 15, 50, 1)   "Fakheri factor, singular branch R = 1 [-]"
+Ft_1r1p_B = Ft_aircooler(Thi_B, Tho_B, Tci_B, Tco_B, 1, 1)   "air-cooler Ft, 1 pass and 1 row [-]"
+Ft_2r2p_B = Ft_aircooler(Thi_B, Tho_B, Tci_B, Tco_B, 2, 2)   "air-cooler Ft, 2 passes and 2 rows [-]"
+Ft_3r3p_B = Ft_aircooler(Thi_B, Tho_B, Tci_B, Tco_B, 3, 3)   "air-cooler Ft, 3 passes and 3 rows [-]"
+Ft_4r2p_B = Ft_aircooler(Thi_B, Tho_B, Tci_B, Tco_B, 2, 4)   "air-cooler Ft, 2 passes and 4 rows [-]"
+Ft_6r1p_B = Ft_aircooler(Thi_B, Tho_B, Tci_B, Tco_B, 1, 6)   "air-cooler Ft, 1 pass and 6 rows (4-row set) [-]"

@@ -284,3 +284,4 @@ K. J. Bell (1963, 1988), E. U. Schlünder (1987), R. W. Serth (2014).
 - `CSL-0095` *tube_bank_nusselt*: the tube-bank Nusselt-number family of the
   same `ht` module; a shell-side model pairs its bundle coefficient with the
   factors of this file.
+- `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.

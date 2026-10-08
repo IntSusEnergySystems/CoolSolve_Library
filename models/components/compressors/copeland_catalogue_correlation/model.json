@@ -1,0 +1,72 @@
+{
+  "id": "CSL-0123",
+  "name": "copeland_catalogue_correlation",
+  "title": "ARI/Copeland catalogue polynomial for scroll compressors (function library)",
+  "summary": "FUNCTION copeland_ari(table$, coef$, T_ev, T_cd): ARI 10-coefficient third-order polynomial of a Copeland ZH scroll compressor catalogue (power W, mass flow M, swept volume Vs), with the five catalogue tables recovered from the source file; the compressor correlation of the Vitocal 300-G heat pump model CSL-0116.",
+  "kind": "function",
+  "level": 1,
+  "status": "blocked",
+  "main_file": "copeland_catalogue_correlation.eescode",
+  "fluids": [
+    "R134a"
+  ],
+  "tags": [
+    "compressor",
+    "scroll compressor",
+    "ARI catalogue correlation",
+    "Copeland",
+    "ZH38K4E-TFD",
+    "catalogue polynomial",
+    "lookup tables"
+  ],
+  "language_features": [
+    "string variables",
+    "string function arguments (table$, coef$)",
+    "repeat/until loops",
+    "arrays",
+    "lookup tables read inside functions",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 19,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/procedures EES/ARI compressor correlation.EES",
+    "candidate_id": "TM-0560",
+    "authors": [
+      "Sylvain Quoilin (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.493",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file for the property states (T_ev, T_cd, T_su_cp, v_su_cp within 0.03 %, h_su_cp shifted by the 148.16 kJ/kg R134a reference-state offset) and exactness self-checks for the function (W_err = 0; M polynomial recomputed in Python from the shipped tables). The catalogue-dependent outputs are not comparable: the stored run used an older external version of the ZH38K4E-TFD table (Vs = 82.61 cm^3, factor 3-4 in W) that is absent from the collection. Comparison run on the runnable variant.",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.029,
+    "notes": "T_ev rel. diff 2.9e-2 as printed by compare_solution.py (0.019 K absolute on a 0.65 C saturation temperature); h_su_cp differs by the documented reference-state offset; W_dot/M_dot/Vs/epsilon_v differ by the documented catalogue vintage."
+  },
+  "missing_features": [
+    "CS-BUG-LOOKUP-COL-ARG"
+  ],
+  "related": [
+    "CSL-0116",
+    "CSL-0007"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added (function library; catalogue tables hand-decoded from the binary; native file blocked by CS-BUG-LOOKUP-COL-ARG, verified runnable variant copeland_catalogue_correlation_coolsolve.eescode)",
+      "by": "glm-5.3-flash for S. Quoilin"
+    }
+  ]
+}

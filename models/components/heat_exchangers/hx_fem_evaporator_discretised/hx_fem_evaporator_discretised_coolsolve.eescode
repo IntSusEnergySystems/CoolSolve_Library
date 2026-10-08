@@ -1,0 +1,107 @@
+{=============================================================================
+  Discretised (finite-volume) evaporator with three U-value zones - runnable
+  CoolSolve variant of CSL-0115 (native file blocked)
+ -----------------------------------------------------------------------------
+  Same model as hx_fem_evaporator_discretised.eescode. Changes forced by
+  CoolSolve gaps (each one logged in the README conversion log), valid EES
+  throughout, no CoolSolve-only syntax:
+   1. the REPEAT loop ends with 'until (i>=N)' (parentheses required by
+      CoolSolve, CS-GAP-REPEAT-UNTIL-BARE);
+   2. the 7 Lookup('tprofile',...) profile writes of the procedure are
+      removed (CS-BUG-LOOKUP-WRITE); they are diagnostic output only.
+  A 2-point state array is appended for the CoolSolve diagrams (verified:
+  the other results are unchanged).
+=============================================================================}
+
+"Finite volumes model of an evaporator. 3 different heat exchange coefficients
+are defined, one for each zone. The model was validated with Evaporator 1, 2 &
+3 zone SQ080603 (validation case and numbers in the README)."
+
+procedure hxfem(fluid$,hf$,A,U_l,U_tp,U_v,N,C_dot_hf,T_hf_ex,M_dot,h_su,p:T_hf_su,h_ex)
+
+Ai = A/N
+
+i=1
+T_hf = T_hf_ex
+h=h_su
+T= temperature(fluid$,h=h,p=p)
+x = quality(fluid$,h=h_su,p=p)
+width = 0.1			"quality width of the transition between two different heat exchange coefficients in order to avoid any convergence problem"
+
+repeat
+U = U_tp
+if x<width then
+	U = U_l + (U_tp - U_l) * max(x,0)/width
+endif
+
+if x>(1 - width) then
+	U = U_v + (U_v - U_tp) * (min(x,1)-1)/width
+endif
+
+Q_dot = (T_hf - T) * Ai * U
+h=h + Q_dot/M_dot
+T= temperature(fluid$,h=h,p=p)
+x= quality(fluid$,h=h,p=p)
+T_hf = T_hf + Q_dot/C_dot_hf
+
+i := i+1
+
+until (i>=N)
+
+t_hf_su = T_hf
+h_ex=h
+end
+
+"! #################################### Main program #################################### "
+
+hf$='water'
+fluid$ = 'r245Fa'
+
+T_hf_su = 170
+M_dot_hf = 0.3
+
+M_dot=0.1
+p = 20e5
+t_su =90.9
+
+// alternative mode of the original: imposed superheat at the refrigerant outlet
+//DELTAt_ex_sp = 10
+//h_ex_sp = enthalpy(fluid$,p=p,T=T_sat + DELTAt_ex_sp)
+//h_ex = h_ex_sp
+
+C_dot_hf = cp(hf$,T=(T_hf_ex + T_hf_su)/2,p=16E5) * M_dot_hf
+
+h_su = enthalpy(fluid$,t=t_su,p=p)
+t_sat = t_sat(fluid$,p=p)
+
+A = 3
+{U_l = 300
+U_tp = 400
+U_v = 200}          "U values of the validated air/R245fa case, see README"
+
+U_l=289
+U_tp=85.25
+U_v=119.1
+
+1/U_lbis = 1/578 + 1/578
+1/U_tpbis =  1/578 + 1/100
+1/U_vbis =  1/578 + 1/150
+N =10
+
+call hxfem(fluid$,hf$,A,U_l,U_tp,U_v,N,C_dot_hf,T_hf_ex,M_dot,h_su,p:T_hf_su,h_ex)
+
+T_ex = temperature(fluid$,h=h_ex,p=p)
+DELTAT_ex = T_ex - T_sat
+
+Q_dot = M_dot * (h_ex - h_su)
+
+"! ############## State points for the thermodynamic diagrams (refrigerant) ############## "
+N_pt = 2
+P[1] = p
+h[1] = h_su
+T[1] = t_su
+s[1] = entropy(fluid$,h=h_su,p=p)
+P[2] = p
+h[2] = h_ex
+T[2] = T_ex
+s[2] = entropy(fluid$,h=h_ex,p=p)

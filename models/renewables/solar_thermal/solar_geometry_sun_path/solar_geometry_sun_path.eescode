@@ -1,0 +1,70 @@
+{=============================================================================
+  Solar geometry and sun path
+  CoolSolve Library model CSL-0119
+  -----------------------------------------------------------------------------
+  Sun-path calculation for Port-au-Prince, Haiti: solar declination (day of
+  year from month and day), hour angle, angle of incidence on a south-facing
+  vertical surface, zenith angle, solar altitude and azimuth, sunrise/sunset
+  hour angle and times, plus the solar-noon point used for the sun-path plot.
+
+  Inputs : phi (site latitude), month, day (date), t (solar time),
+           t_solaire (plot time, solar noon by default)
+  Outputs: delta, omega, theta_s, theta_z, alpha_s, gamma_s, omega_s,
+           t_coucher, t_lever
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+           (angles in degrees, times in hours)
+  Source : ULiège collection, solar/angles.EES (inventory TM-0589) - see README.md
+  Status : blocked (native file) - CS-GAP-NDAY, CS-GAP-IF-DIRECTIVE;
+           runnable variant solar_geometry_sun_path_coolsolve.eescode
+=============================================================================}
+
+"Sun-path calculation, Haiti, Port-au-Prince (as in the original)"
+
+"Site latitude [deg] (diagram-window input in the original; default = stored EES run)"
+phi = 18.53 [deg]
+
+"Site longitude [deg] (as in the original; documents the site, unused in the equations)"
+L_loc = -72.335 [deg]
+
+"Date: month [-] and day [-] (diagram-window inputs in the original; defaults = stored EES run)"
+month = 12
+day = 4
+n = nDay_(month, day)  "day of the year [-] (EES date function)"
+
+"Solar time [h] (parametric-table column in the original; default run t = 0 at midnight)"
+$ifnot parametrictable
+t = 0
+$endif
+
+"Solar declination [deg], as in the original"
+delta = 23.45 * sin(360 * (284 + n)/365)
+
+"Hour angle [deg], as in the original"
+omega = 15 * (t - 12)
+
+"Angle between the sun rays and a south-facing vertical surface [deg], as in the original"
+cos(theta_s) = -sin(delta) * cos(phi) + cos(delta) * sin(phi) * cos(omega)
+
+"Angle between the vertical and the sun rays (zenith angle) [deg], as in the original"
+cos(theta_z) = sin(delta) * sin(phi) + cos(delta) * cos(phi) * cos(omega)
+
+"Solar altitude [deg], as in the original"
+alpha_s = max(0,90 - theta_z)
+
+"Solar azimuth [deg] (equated to the hour angle, as in the original)"
+gamma_s = omega
+
+"Sunrise/sunset: sunset hour angle [deg], sunset and sunrise solar times [h], as in the original"
+omega_s = arccos(-tan(phi) * tan(delta))
+omega_s = 15 * (t_coucher - 12)
+-omega_s = 15 * (t_lever - 12)
+
+"Sun-path plot point: solar time [h] and altitude [deg] at the plot time (solar noon by default)"
+t[1] = t_solaire
+alpha_s[1] = alpha_s_t
+
+t_solaire = 12  "plot time [h] (diagram-window input in the original; default = solar noon)"
+omega_t = 15 * (t_solaire-12)  "hour angle at the plot time [deg], as in the original"
+cos(theta_z_t) = sin(delta) * sin(phi) + cos(delta) * cos(phi) * cos(omega_t)  "zenith angle at the plot time [deg]"
+alpha_s_t = max(0,90 - theta_z_t)  "solar altitude at the plot time [deg]"
+gamma_s_t= omega_t  "solar azimuth at the plot time [deg] (as in the original)"

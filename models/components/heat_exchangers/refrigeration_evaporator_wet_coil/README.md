@@ -301,3 +301,7 @@ mentions these five rows and states that they stay `todo` for their own cards;
   in-tube heat-transfer coefficients of the `ht` family (9 functions), an
   alternative rating of the same evaporator coil when the two-phase flow is
   treated without phase change.
+
+- `CSL-0115` *hx_fem_evaporator_discretised*: the same two-phase heat
+  exchanger treated fully discretised (N finite-volume cells, cell-by-cell U
+  switching smoothed over a quality window) instead of three lumped zones.

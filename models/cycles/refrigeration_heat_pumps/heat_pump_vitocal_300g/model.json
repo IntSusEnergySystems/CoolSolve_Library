@@ -1,0 +1,88 @@
+{
+  "id": "CSL-0116",
+  "name": "heat_pump_vitocal_300g",
+  "title": "Vitocal 300G brine-to-water heat pump (scroll compressor, two plate heat exchangers)",
+  "summary": "Water-to-water R134a heat pump of the Vaillant Vitocal 300G type: scroll compressor by the Winandy et al. (2002) semi-empirical model or the ARI/Copeland catalogue polynomial, plate evaporator on 30 % ethylene-glycol brine (Thonon + Hsieh) and plate condenser on the water circuit (Thonon + Kuo), both sized from their area with pressure drops, pinch points and hold-up as outputs.",
+  "kind": "steady",
+  "level": 3,
+  "status": "blocked",
+  "main_file": "heat_pump_vitocal_300g.eescode",
+  "fluids": [
+    "R134a",
+    "EG brine 30 % (EES incompressible library / BrineProp2)"
+  ],
+  "tags": [
+    "heat pump",
+    "brine-to-water",
+    "scroll compressor",
+    "ARI catalogue correlation",
+    "Winandy semi-empirical model",
+    "internal leakage",
+    "adapted pressure",
+    "isochoric compression",
+    "plate heat exchanger",
+    "Thonon correlation",
+    "Hsieh correlation",
+    "Kuo correlation",
+    "design",
+    "glycol",
+    "secondary refrigerant"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "procedures with call-by-reference outputs",
+    "repeat/until loops",
+    "lookup tables read and written inside procedures",
+    "external lookup table by name (ZH38K4E-TFD, missing from the collection)",
+    "$if/$else compile-time directives",
+    "pipe-character variable names (v_in_cp|star)",
+    "unquoted convert(lbm/hr,kg/s)",
+    "EES incompressible-substance library calls (cp('EG',T=...,C=30))",
+    "user-library procedure BRINEPROP2 (implicit library)"
+  ],
+  "stats": {"n_equations": 392, "largest_block": null},
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Steady-state models/HeatPump_Vitocal 300G -110_CGSQ1112288.EES",
+    "candidate_id": "TM-0596",
+    "authors": [
+      "Sylvain Quoilin (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.940",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solution shipped in the source file (234 variables; key values in the README). Not reproduced by CoolSolve: the native file is blocked and no runnable variant exists. Re-check after C-134: the catalogue table of CSL-0123 (recovered from TM-0560) is a different vintage than the stored run's table (Vs 211.22 vs 82.61 cm3, factor 3-4 in W at the stored point), so it cannot reproduce the stored solution either.",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": null,
+    "notes": "Blocked: documented reference values only (COP 3.0747, W_dot_cp 3004.20 W, Q_dot_cd 9237.10 W, M_dot_r 0.052602 kg/s). No variant: see README 'How to run' (re-check after C-134)."
+  },
+  "missing_features": [
+    "CS-GAP-NAME-PIPE",
+    "CS-GAP-IF-DIRECTIVE",
+    "CS-GAP-PROP-SV",
+    "CS-GAP-LOOKUP-PROC",
+    "CS-GAP-CONVERT-UNQUOTED",
+    "CS-GAP-LKT",
+    "CS-GAP-INCLUDE",
+    "CS-GAP-INCOMPRESSIBLE",
+    "CS-GAP-GE-ARROW",
+    "CS-GAP-REPEAT-UNTIL-BARE"
+  ],
+  "related": ["CSL-0007", "CSL-0037", "CSL-0078", "CSL-0079", "CSL-0123"],
+  "related_external": [
+    "Winandy, Saavedra & Lebrun (2002), Applied Thermal Engineering 22, 107-120 (compressor model cited in the file)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-07", "action": "added (blocked native file, no runnable variant: the ZH38K4E-TFD catalogue lookup table is missing from the source collection)", "by": "Claude (Opus 5.5) for S. Quoilin"},
+    {"date": "2026-10-07", "action": "re-checked after C-134/CSL-0123 (catalogue tables recovered from TM-0560 are a different vintage than the stored run's table: no faithful variant possible, status stays blocked)", "by": "glm-5.3-flash for S. Quoilin"}
+  ]
+}

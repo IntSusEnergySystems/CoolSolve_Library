@@ -325,3 +325,11 @@ of the same function library, by a follow-up card.
 - `CSL-0078` *brine_to_water_heat_pump_refsim* — brine evaporator of the same
   model bank; calls the library for the density and the specific heat of a 25 %
   propylene glycol solution (copy of the procedure in its file, tables shipped).
+- `CSL-0113` *condenser_3_zones_plate_correlations*: plate condenser whose
+  `prop_htf` procedure carries a glycol polynomial for the secondary fluid;
+  this library is the more complete property source for the same fluids.
+- `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.
+- `CSL-0114` *evaporator_3_zones_plate_correlations*: three-zone plate evaporator whose `prop_htf` procedure carries the same glycol polynomial for the secondary fluid.
+- `CSL-0121` *heat_transfer_fluid_properties*: companion function library for the pure
+  heat-transfer fluids (monoethylene glycol, Therminol VP-1/66, thermal oil); the two
+  libraries cover the secondary fluids of the library between them.

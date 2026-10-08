@@ -379,3 +379,4 @@ each function and in `model.json` (`origin.authors`).
   evaporator and condenser cross the pseudo-critical point of R744; it is the
   kind of model that calls the functions of this file for the near-supercritical
   branches of its heat exchangers.
+- `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.

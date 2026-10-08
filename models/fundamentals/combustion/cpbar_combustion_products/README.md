@@ -226,3 +226,4 @@ Source file (plain-text EES library, comments in French):
   same course, combustion chamber of the air assumed unchanged (no `cpbar`).
 - `CSL-0058` *diesel_engine_excess_air_exhaust_analysis*: exhaust-gas analysis
   of a diesel engine (real-fluid product enthalpies, no `cpbar`).
+- `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.

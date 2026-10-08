@@ -269,3 +269,4 @@ each function and in `model.json` (`origin.authors`).
 - `CSL-0100` *free_conv_enclosed_and_jackets* and `CSL-0089`
   *condensation_film*: the other `ht` convection families of the library, same
   layout (definitions + demonstration program).
+- `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.

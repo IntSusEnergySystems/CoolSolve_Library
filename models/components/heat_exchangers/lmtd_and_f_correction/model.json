@@ -1,0 +1,80 @@
+{
+  "id": "CSL-0105",
+  "name": "lmtd_and_f_correction",
+  "title": "Log-mean temperature difference and its correction factors (function library)",
+  "summary": "Three EES FUNCTIONs for the rating of heat exchangers by the LMTD method: LMTD (log-mean temperature difference of an ideal counterflow or co-current exchanger, with the singular limit branches), F_LMTD_Fakheri (Fakheri correction factor of a shell-and-tube exchanger with one or several shell passes, with the singular branch R = 1) and Ft_aircooler (Roetzel-Nicole Ft factor of a crossflow air cooler with given tube passes and tube rows, eight 16-coefficient sets). End temperatures and dimensionless flags/counts are arguments.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "lmtd_and_f_correction.eescode",
+  "fluids": [],
+  "tags": [
+    "heat exchanger",
+    "LMTD",
+    "correction factor",
+    "shell-and-tube",
+    "air cooler",
+    "crossflow",
+    "counterflow",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "LN / SQRT",
+    "SIN / ARCTAN (degrees)",
+    "function-to-function call"
+  ],
+  "stats": {
+    "n_equations": 20,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-019",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "T. L. Bergman, A. S. Lavine, F. P. Incropera and D. P. DeWitt (LMTD relation)",
+      "A. Fakheri (F_LMTD_Fakheri relation)",
+      "W. Roetzel and F. J. L. Nicole (Ft_aircooler relation)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), files ht/core.py (LMTD), ht/hx.py (F_LMTD_Fakheri) and ht/air_cooler.py (Ft_aircooler), MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each relation is the original paper or book cited in its function comment block (Bergman et al., Introduction to Heat Transfer, 6E, Wiley, 2011; Fakheri, Journal of Heat Transfer 125(3), 2003; Roetzel and Nicole, Journal of Heat Transfer 97(1), 1975). Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "case A: the six doctest values published by ht 1.2.0 (LMTD counterflow and co-current of Example 11.1, the two equal-difference limits, F_LMTD_Fakheri with one shell, Ft_aircooler with 1 pass and 4 rows) plus the values of case B (one coherent rating point with 1/2 shells, the singular branch R = 1, and five (Ntp, rows) sets), computed with the same ht functions in a throw-away virtualenv (local clone); 16 output values in total",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 5.4e-14,
+    "notes": "compare_solution.py: 16 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 4 (the four end-temperature inputs of the demonstration program). Largest relative deviation 5.4e-14 (Ft_aircooler_A), i.e. round-off in the double-precision evaluation only."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0090",
+    "CSL-0102",
+    "CSL-0099",
+    "CSL-0087",
+    "CSL-0002",
+    "CSL-0026",
+    "CSL-0027",
+    "CSL-0110"
+  ],
+  "related_external": [
+    "sources/ht HT-019 (log-mean temperature difference, shell-and-tube F correction factor (Fakheri) and air-cooler Ft correction factor)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added (T-FUNC card C-114, family HT-019 of the ht triage)",
+      "by": "opencode worker (muse-spark) for S. Quoilin"
+    }
+  ]
+}

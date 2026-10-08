@@ -1,0 +1,539 @@
+{=============================================================================
+  Shell-and-tube mechanical sizing: tube counts, bundle diameters, TEMA rules
+  CoolSolve Library model CSL-0110 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Thirteen EES FUNCTIONs for the mechanical sizing of a shell-and-tube heat
+  exchanger, transcribed from the Python library ht: TEMA tubing check,
+  minimum bundle diameter, shell-bundle clearance, baffle and support-plate
+  thickness, baffle hole diameter, maximum unsupported tube length, tube
+  counts of Perry's Handbook, VDI Heat Atlas and HEDH with their bundle-
+  diameter inverses, and the two method dispatchers Ntubes and
+  size_bundle_from_tubecount.
+
+  Lengths are in m; Ntp (tube passes), angle (layout, degrees) and the tube
+  counts are dimensionless. The string options of ht (service, material,
+  Method) became integer flags, documented at each function. Python int()
+  truncation became FLOOR (the counts are positive). The methods needing
+  data files are excluded: get_tube_TEMA (BWG table), Ntubes_Phadkeb and
+  DBundle_for_Ntubes_Phadkeb (binary .npy coefficient tables).
+
+  The demonstration program calls every function, once with the inputs of
+  the ht doctest ("A" cases) and once with a second input set ("B"); the ht
+  values of both sets are tabulated in the README (verification table).
+
+  Inputs : Do, DBundle, DShell, pitch, L_unsupported [m], N, Ntp [-],
+           angle [degrees], flags [-]
+  Outputs: lengths/diameters [m], tube counts [-]
+  Source : ht (Caleb Bell), ht/hx.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; original sources cited in
+           each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION check_tubing_TEMA(NPS, BWG)
+{CHECK_TUBING_TEMA - Is the (NPS, BWG) tubing combination listed by TEMA?
+Returns 1 (listed) or 0 (not listed); ht returns a Boolean.
+
+  NPS: nominal pipe size designation [inch, per the TEMA tables: 0.25, 0.375,
+       0.5, 0.625, 0.75, 0.875, 1, 1.25, 2]
+  BWG: Birmingham wire gauge of the wall [-] (10..24 as listed per NPS)
+The listed combinations are the TEMA_tubing table of ht, one test per row.
+
+Validity: as in the TEMA tables (no formula; pure table check).
+Original: Standards of the Tubular Exchanger Manufacturers Association,
+  Ninth edition, 2007, TEMA, New York.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, check_tubing_TEMA,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  check_tubing_TEMA = 0
+  IF (NPS = 0.25 AND BWG = 22) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.25 AND BWG = 24) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.375 AND BWG = 18) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.375 AND BWG = 20) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.375 AND BWG = 22) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.5 AND BWG = 18) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.5 AND BWG = 20) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.625 AND BWG = 16) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.625 AND BWG = 18) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.625 AND BWG = 20) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.75 AND BWG = 12) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.75 AND BWG = 14) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.75 AND BWG = 16) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.75 AND BWG = 18) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.75 AND BWG = 20) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.875 AND BWG = 14) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.875 AND BWG = 16) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.875 AND BWG = 18) THEN check_tubing_TEMA = 1
+  IF (NPS = 0.875 AND BWG = 20) THEN check_tubing_TEMA = 1
+  IF (NPS = 1 AND BWG = 12) THEN check_tubing_TEMA = 1
+  IF (NPS = 1 AND BWG = 14) THEN check_tubing_TEMA = 1
+  IF (NPS = 1 AND BWG = 16) THEN check_tubing_TEMA = 1
+  IF (NPS = 1 AND BWG = 18) THEN check_tubing_TEMA = 1
+  IF (NPS = 1.25 AND BWG = 10) THEN check_tubing_TEMA = 1
+  IF (NPS = 1.25 AND BWG = 12) THEN check_tubing_TEMA = 1
+  IF (NPS = 1.25 AND BWG = 14) THEN check_tubing_TEMA = 1
+  IF (NPS = 1.25 AND BWG = 16) THEN check_tubing_TEMA = 1
+  IF (NPS = 2 AND BWG = 12) THEN check_tubing_TEMA = 1
+  IF (NPS = 2 AND BWG = 14) THEN check_tubing_TEMA = 1
+END
+
+FUNCTION DBundle_min(Do)
+{DBUNDLE_MIN - Roughly, a good initial choice of bundle diameter for a given
+tube outer diameter, from figure 1, section 3.3.5 of the HEDH (a lookup, not a
+correlation); the shell size is adjusted later once the area is known.
+
+  Do <= 0.006 or <= 0.010 m -> DBundle_min = 0.1 m
+  Do <= 0.014 m -> 0.3 m; Do <= 0.020 m -> 0.5 m; Do <= 0.030 m -> 1.0 m;
+  Do > 0.030 m -> 1.5 m
+
+Validity: rough guidance only, as in the original (essentially a lookup).
+Original: Schlunder, E. U. and International Center for Heat and Mass
+  Transfer, Heat Exchanger Design Handbook (HEDH), Hemisphere, Washington,
+  1983, section 3.3.5, figure 1.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, DBundle_min,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  DBundle_min = 0.1
+  IF (Do > 0.010) THEN DBundle_min = 0.3
+  IF (Do > 0.014) THEN DBundle_min = 0.5
+  IF (Do > 0.020) THEN DBundle_min = 1.0
+  IF (Do > 0.030) THEN DBundle_min = 1.5
+END
+
+FUNCTION shell_clearance(mode, D)
+{SHELL_CLEARANCE - Recommended clearance between the shell and the tube
+bundle of a TEMA exchanger (limits extended up to the next limit where
+intermediate limits are not provided, as in ht).
+
+  mode = 1: D is the shell inner diameter DShell [m]
+  mode = 0: D is the outer bundle diameter DBundle [m]
+  returns the clearance c [m]
+
+DShell thresholds: < 0.457 -> 0.0032, < 1.016 -> 0.0048, < 1.397 -> 0.0064,
+< 1.778 -> 0.0079, < 2.159 -> 0.0095, otherwise 0.011. The DBundle
+thresholds are the DShell ones minus the clearance of the next limit:
+0.4522, 1.0096, 1.3891, 1.7685, 2.148, otherwise 0.011.
+Validity: TEMA shell sizes; pure table, no formula.
+Original: Standards of the Tubular Exchanger Manufacturers Association,
+  Ninth edition, 2007, TEMA, New York.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, shell_clearance,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  c = 0.0095
+  IF (D < 1.778) THEN c = 0.0079
+  IF (D < 1.397) THEN c = 0.0064
+  IF (D < 1.016) THEN c = 0.0048
+  IF (D < 0.457) THEN c = 0.0032
+  IF (D >= 2.159) THEN c = 0.011
+  IF (mode = 0) THEN
+    c = 0.0095
+    IF (D < 1.7685) THEN c = 0.0079
+    IF (D < 1.3891) THEN c = 0.0064
+    IF (D < 1.0096) THEN c = 0.0048
+    IF (D < 0.4522) THEN c = 0.0032
+    IF (D >= 2.148) THEN c = 0.011
+  ENDIF
+  shell_clearance = c
+END
+
+FUNCTION baffle_thickness(Dshell, L_unsupported, service)
+{BAFFLE_THICKNESS - Thickness of (latitudinal) baffles and support plates of
+a TEMA exchanger; not for longitudinal baffles parallel to the tubes. The
+pressure is almost the same on both sides of a baffle; L_unsupported is a
+design choice (more baffles = higher pressure drop), as in the original.
+
+  Dshell [m] shell inner diameter, L_unsupported [m] distance between tube
+  supports, service = 1 for TEMA "R" (refinery), 0 for "C" and "B" (ht: any
+  other string). Returns the baffle thickness [m].
+
+Shell class j: Dshell < 0.381 -> 0, < 0.737 -> 1, < 0.991 -> 2,
+< 1.524 -> 3, otherwise 4. Support class i (R): L <= 0.61 -> 0,
+<= 0.914 -> 1, <= 1.219 -> 2, <= 1.524 -> 3, else 4. Support class i (C/B):
+<= 0.305 -> 0, <= 0.610 -> 1, <= 0.914 -> 2, <= 1.219 -> 3, <= 1.524 -> 4,
+else 5. Thickness tables (m), rows j, columns i:
+  R: [0.0032 0.0048 0.0064 0.0095 0.0095; 0.0048 0.0064 0.0095 0.0095
+      0.0127; 0.0064 0.0075 0.0095 0.0127 0.0159; 0.0064 0.0095 0.0127
+      0.0159 0.0159; 0.0095 0.0127 0.0159 0.0191 0.0191]
+  C/B: [0.0016 0.0032 0.0048 0.0064 0.0095 0.0095; 0.0032 0.0048 0.0064
+        0.0095 0.0095 0.0127; 0.0048 0.0064 0.0075 0.0095 0.0127 0.0159;
+        0.0064 0.0064 0.0095 0.0127 0.0159 0.0159; 0.0064 0.0095 0.0127
+        0.0127 0.0191 0.0191]
+Validity: TEMA shell sizes (no check implemented, as in ht).
+Original: Standards of the Tubular Exchanger Manufacturers Association,
+  Ninth edition, 2007, TEMA, New York.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, baffle_thickness,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  j = 0
+  IF (Dshell >= 0.381) THEN j = 1
+  IF (Dshell >= 0.737) THEN j = 2
+  IF (Dshell >= 0.991) THEN j = 3
+  IF (Dshell >= 1.524) THEN j = 4
+  IF (service = 1) THEN
+    i = 0
+    IF (L_unsupported > 0.61) THEN i = 1
+    IF (L_unsupported > 0.914) THEN i = 2
+    IF (L_unsupported > 1.219) THEN i = 3
+    IF (L_unsupported > 1.524) THEN i = 4
+  ELSE
+    i = 0
+    IF (L_unsupported > 0.305) THEN i = 1
+    IF (L_unsupported > 0.610) THEN i = 2
+    IF (L_unsupported > 0.914) THEN i = 3
+    IF (L_unsupported > 1.219) THEN i = 4
+    IF (L_unsupported > 1.524) THEN i = 5
+  ENDIF
+  k = 5*j + i
+  IF (service = 0) THEN k = 6*j + i
+  IF (service = 1) THEN
+    baffle_thickness = 0.0032
+    IF (k >= 1) THEN baffle_thickness = 0.0048
+    IF (k >= 2) THEN baffle_thickness = 0.0064
+    IF (k >= 3) THEN baffle_thickness = 0.0095
+    IF (k >= 4) THEN baffle_thickness = 0.0095
+    IF (k >= 5) THEN baffle_thickness = 0.0048
+    IF (k >= 6) THEN baffle_thickness = 0.0064
+    IF (k >= 7) THEN baffle_thickness = 0.0095
+    IF (k >= 8) THEN baffle_thickness = 0.0095
+    IF (k >= 9) THEN baffle_thickness = 0.0127
+    IF (k >= 10) THEN baffle_thickness = 0.0064
+    IF (k >= 11) THEN baffle_thickness = 0.0075
+    IF (k >= 12) THEN baffle_thickness = 0.0095
+    IF (k >= 13) THEN baffle_thickness = 0.0127
+    IF (k >= 14) THEN baffle_thickness = 0.0159
+    IF (k >= 15) THEN baffle_thickness = 0.0064
+    IF (k >= 16) THEN baffle_thickness = 0.0095
+    IF (k >= 17) THEN baffle_thickness = 0.0127
+    IF (k >= 18) THEN baffle_thickness = 0.0159
+    IF (k >= 19) THEN baffle_thickness = 0.0159
+    IF (k >= 20) THEN baffle_thickness = 0.0095
+    IF (k >= 21) THEN baffle_thickness = 0.0127
+    IF (k >= 22) THEN baffle_thickness = 0.0159
+    IF (k >= 23) THEN baffle_thickness = 0.0191
+    IF (k >= 24) THEN baffle_thickness = 0.0191
+  ELSE
+    baffle_thickness = 0.0016
+    IF (k >= 1) THEN baffle_thickness = 0.0032
+    IF (k >= 2) THEN baffle_thickness = 0.0048
+    IF (k >= 3) THEN baffle_thickness = 0.0064
+    IF (k >= 4) THEN baffle_thickness = 0.0095
+    IF (k >= 5) THEN baffle_thickness = 0.0095
+    IF (k >= 6) THEN baffle_thickness = 0.0032
+    IF (k >= 7) THEN baffle_thickness = 0.0048
+    IF (k >= 8) THEN baffle_thickness = 0.0064
+    IF (k >= 9) THEN baffle_thickness = 0.0095
+    IF (k >= 10) THEN baffle_thickness = 0.0095
+    IF (k >= 11) THEN baffle_thickness = 0.0127
+    IF (k >= 12) THEN baffle_thickness = 0.0048
+    IF (k >= 13) THEN baffle_thickness = 0.0064
+    IF (k >= 14) THEN baffle_thickness = 0.0075
+    IF (k >= 15) THEN baffle_thickness = 0.0095
+    IF (k >= 16) THEN baffle_thickness = 0.0127
+    IF (k >= 17) THEN baffle_thickness = 0.0159
+    IF (k >= 18) THEN baffle_thickness = 0.0064
+    IF (k >= 19) THEN baffle_thickness = 0.0064
+    IF (k >= 20) THEN baffle_thickness = 0.0095
+    IF (k >= 21) THEN baffle_thickness = 0.0127
+    IF (k >= 22) THEN baffle_thickness = 0.0159
+    IF (k >= 23) THEN baffle_thickness = 0.0159
+    IF (k >= 24) THEN baffle_thickness = 0.0064
+    IF (k >= 25) THEN baffle_thickness = 0.0095
+    IF (k >= 26) THEN baffle_thickness = 0.0127
+    IF (k >= 27) THEN baffle_thickness = 0.0127
+    IF (k >= 28) THEN baffle_thickness = 0.0191
+    IF (k >= 29) THEN baffle_thickness = 0.0191
+  ENDIF
+END
+
+FUNCTION D_baffle_holes(Do, L_unsupported)
+{D_BAFFLE_HOLES - Diameter of the tube holes in baffles, TEMA (applies for
+all geometries): the clearance is 0.8 mm for tubes over 1-1/4 inch
+(Do > 0.0318 m) or short unsupported spans (L_unsupported <= 0.914 m), and
+0.4 mm otherwise, as in the original.
+
+  Do [m] tube outer diameter, L_unsupported [m] distance between tube
+  supports; returns the baffle hole diameter [m].
+
+Validity: TEMA, all geometries (no range quoted).
+Original: Standards of the Tubular Exchanger Manufacturers Association,
+  Ninth edition, 2007, TEMA, New York.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, D_baffle_holes,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF (Do > 0.0318 OR L_unsupported <= 0.914) THEN
+    extra = 0.0008
+  ELSE
+    extra = 0.0004
+  ENDIF
+  D_baffle_holes = Do + extra
+END
+
+FUNCTION L_unsupported_max(Do, material)
+{L_UNSUPPORTED_MAX - Maximum length a tube may span without a support, TEMA
+limits for the worst-case temperature of the material.
+
+  Do [m] tube outer diameter, material = 0 for "CS" (also high/low alloy
+  steel, Ni-Cu, Ni, Ni-Cr-Fe alloys), 1 for "aluminium" (also Cu and Cu
+  alloys, Ti alloys). Returns the maximum unsupported length [m].
+
+The tabulated diameters [inch] are 0.25, 0.375, 0.5, 0.628, 0.75, 0.875, 1,
+1.25, 1.5, 2, 2.5, 3; the result is that of the largest tabulated diameter
+equal or smaller than Do (limits then not optimistic); below 1/4 inch the
+result IS optimistic, above 3 inch the 3 inch limit applies (as in ht).
+Tabulated lengths [m]: CS 0.66, 0.889, 1.118, 1.321, 1.524, 1.753, 1.88,
+2.235, 2.54, 3.175, 3.175, 3.175; aluminium 0.559, 0.762, 0.965, 1.143,
+1.321, 1.524, 1.626, 1.93, 2.21, 2.794, 2.794, 2.794.
+Validity: 1/4 inch <= Do <= 3 inch (optimistic outside, as in ht).
+Original: Standards of the Tubular Exchanger Manufacturers Association,
+  Ninth edition, 2007, TEMA, New York, p 5.4-5.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, L_unsupported_max,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Do_inch = Do/0.0254
+  Lcs = 0.66
+  IF (Do_inch >= 0.375) THEN Lcs = 0.889
+  IF (Do_inch >= 0.5) THEN Lcs = 1.118
+  IF (Do_inch >= 0.628) THEN Lcs = 1.321
+  IF (Do_inch >= 0.75) THEN Lcs = 1.524
+  IF (Do_inch >= 0.875) THEN Lcs = 1.753
+  IF (Do_inch >= 1.0) THEN Lcs = 1.88
+  IF (Do_inch >= 1.25) THEN Lcs = 2.235
+  IF (Do_inch >= 1.5) THEN Lcs = 2.54
+  IF (Do_inch >= 2.0) THEN Lcs = 3.175
+  Lalum = 0.559
+  IF (Do_inch >= 0.375) THEN Lalum = 0.762
+  IF (Do_inch >= 0.5) THEN Lalum = 0.965
+  IF (Do_inch >= 0.628) THEN Lalum = 1.143
+  IF (Do_inch >= 0.75) THEN Lalum = 1.321
+  IF (Do_inch >= 0.875) THEN Lalum = 1.524
+  IF (Do_inch >= 1.0) THEN Lalum = 1.626
+  IF (Do_inch >= 1.25) THEN Lalum = 1.93
+  IF (Do_inch >= 1.5) THEN Lalum = 2.21
+  IF (Do_inch >= 2.0) THEN Lalum = 2.794
+  IF (material = 0) THEN
+    L_unsupported_max = Lcs
+  ELSE
+    L_unsupported_max = Lalum
+  ENDIF
+END
+
+FUNCTION Ntubes_Perrys(DBundle, Do, Ntp, angle)
+{NTUBES_PERRYS - Rough tube count of Perry's Chemical Engineers' Handbook
+(equation 11-74), claimed accuracy 24 tubes (ht: experience suggests 40,
+often ~20 off). Pitch = 1.25*Do. C is a dimensionless bundle-size measure:
+C = 0.75*DBundle/Do - 36 for the 30 and 60 degree layouts, C = DBundle/Do-36
+for 45 and 90 degrees; then a quartic in C per number of tube passes Ntp:
+  30/60 deg: Ntp=1: ((((a1*C+a2)*C+a3)*C+a4)*C+a5) with (a1..a5) =
+    (-0.0006, -0.0078, 1.283, 74.86, 1298); Ntp=2: (-0.0005, -0.0071,
+    1.234, 73.58, 1266); Ntp=4: (-0.0004, -0.0059, 1.180, 70.79, 1196);
+    Ntp=6: (-0.0006, -0.0074, 1.269, 70.72, 1166)
+  45/90 deg: Ntp=1: (0.0001, -0.0012, 0.3782, 33.52, 593.6); Ntp=2:
+    (0.0001, -0.0013, 0.3847, 33.36, 578.8); Ntp=4: (0.0002, -0.0016,
+    0.3661, 33.04, 562.0); Ntp=6: (0.0001, -0.0013, 0.3873, 32.49, 550.4)
+  returns FLOOR(Nt), the Python int() truncation of ht.
+Validity: Ntp = 1, 2, 4 or 6; angle = 30, 45, 60 or 90 degrees.
+Original: Green, D. W. and R. H. Perry, Perry's Chemical Engineers'
+  Handbook, Eighth Edition, McGraw-Hill, New York, 2007, equation 11-74.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, Ntubes_Perrys,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  tri = 0
+  IF (angle = 30) THEN tri = 1
+  IF (angle = 60) THEN tri = 1
+  IF (tri = 1) THEN
+    C = 0.75*DBundle/Do - 36
+    IF (Ntp = 1) THEN Nt = ((((-0.0006)*C - 0.0078)*C + 1.283)*C + 74.86)*C + 1298
+    IF (Ntp = 2) THEN Nt = ((((-0.0005)*C - 0.0071)*C + 1.234)*C + 73.58)*C + 1266
+    IF (Ntp = 4) THEN Nt = ((((-0.0004)*C - 0.0059)*C + 1.180)*C + 70.79)*C + 1196
+    IF (Ntp = 6) THEN Nt = ((((-0.0006)*C - 0.0074)*C + 1.269)*C + 70.72)*C + 1166
+  ELSE
+    C = DBundle/Do - 36
+    IF (Ntp = 1) THEN Nt = ((((0.0001)*C - 0.0012)*C + 0.3782)*C + 33.52)*C + 593.6
+    IF (Ntp = 2) THEN Nt = ((((0.0001)*C - 0.0013)*C + 0.3847)*C + 33.36)*C + 578.8
+    IF (Ntp = 4) THEN Nt = ((((0.0002)*C - 0.0016)*C + 0.3661)*C + 33.04)*C + 562.0
+    IF (Ntp = 6) THEN Nt = ((((0.0001)*C - 0.0013)*C + 0.3873)*C + 32.49)*C + 550.4
+  ENDIF
+  Ntubes_Perrys = FLOOR(Nt)
+END
+
+FUNCTION Ntubes_VDI(DBundle, Ntp, Do, pitch, angle)
+{NTUBES_VDI - Rough tube count of the VDI Heat Atlas (rearranged form of the
+original equation; the count is rounded down). Layout factor f1 = 1.1 for
+the 30 and 60 degree layouts, 1.3 for 45 and 90; pass factor f2 = 0, 22, 70,
+90, 105 for Ntp = 1, 2, 4, 6, 8 (the f2 = 90 of Ntp = 6 is an estimate added
+by ht, the original has 1, 2, 4 and 8 only). With DBundle, Do, pitch in mm
+(the equation is dimensional):
+  S  = (-4*f1*t^4*f2^2*Do + 4*f1*t^4*f2^2*DBundle^2 + t^4*f2^4)^0.5
+  N  = (-S - 2*f1*t^2*Do + 2*f1*t^2*DBundle^2 + t^2*f2^2)/(2*f1^2*t^4)
+  returns FLOOR(N)
+Validity: Ntp = 1, 2, 4, 6 (estimated) or 8; angle = 30, 45, 60, 90 degrees.
+Original: Gesellschaft, V. D. I., ed., VDI Heat Atlas, 2nd edition,
+  Springer, Berlin; New York, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, Ntubes_VDI,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  f2 = 0
+  IF (Ntp = 2) THEN f2 = 22
+  IF (Ntp = 4) THEN f2 = 70
+  IF (Ntp = 8) THEN f2 = 105
+  IF (Ntp = 6) THEN f2 = 90
+  f1 = 1.1
+  IF (angle = 45 OR angle = 90) THEN f1 = 1.3
+  DB_mm = DBundle*1000
+  Do_mm = Do*1000
+  t = pitch*1000
+  S = (-4*f1*t^4*f2^2*Do_mm + 4*f1*t^4*f2^2*DB_mm^2 + t^4*f2^4)^0.5
+  Nt = (-S - 2*f1*t^2*Do_mm + 2*f1*t^2*DB_mm^2 + t^2*f2^2)/(2*f1^2*t^4)
+  Ntubes_VDI = FLOOR(Nt)
+END
+
+FUNCTION D_for_Ntubes_VDI(N, Ntp, Do, pitch, angle)
+{D_FOR_NTUBES_VDI - Bundle diameter (outer tube limit) fitted to N tubes by
+the VDI Heat Atlas equation, the inverse of Ntubes_VDI. Same factors f1
+(layout) and f2 (passes) as Ntubes_VDI; with Do, pitch in mm:
+  DBundle = (f1*N*t^2 + f2*N^0.5*t + Do)^0.5, in m after /1000
+Note: the ht code adds Do inside the root; the equation printed in its
+docstring shows a subtraction there - the code is what reproduces its
+doctest (0.5003600119829544) and is followed here, as in the original code.
+Validity: Ntp = 1, 2, 4, 6 (estimated) or 8; angle = 30, 45, 60, 90 degrees.
+Original: Gesellschaft, V. D. I., ed., VDI Heat Atlas, 2nd edition,
+  Springer, Berlin; New York, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, D_for_Ntubes_VDI,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  f2 = 0
+  IF (Ntp = 2) THEN f2 = 22
+  IF (Ntp = 4) THEN f2 = 70
+  IF (Ntp = 8) THEN f2 = 105
+  IF (Ntp = 6) THEN f2 = 90
+  f1 = 1.1
+  IF (angle = 45 OR angle = 90) THEN f1 = 1.3
+  Do_mm = Do*1000
+  t = pitch*1000
+  D_for_Ntubes_VDI = (f1*N*t^2 + f2*N^0.5*t + Do_mm)^0.5/1000
+END
+
+FUNCTION Ntubes_HEDH(DBundle, Do, pitch, angle)
+{NTUBES_HEDH - Rough tube count of the HEDH, one pass (ht: seems reasonably
+accurate):
+  N = FLOOR(0.78*(DBundle - Do)^2/(C1*pitch^2))
+C1 = 13/15 (0.866) for the 30 and 60 degree layouts, 1 for 45 and 90.
+Validity: single-pass bundles; angle = 30, 45, 60 or 90 degrees.
+Original: Schlunder, E. U. and International Center for Heat and Mass
+  Transfer, Heat Exchanger Design Handbook (HEDH), Hemisphere, Washington,
+  1983.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, Ntubes_HEDH,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  C1 = 13/15
+  IF (angle = 45 OR angle = 90) THEN C1 = 1
+  Dctl = DBundle - Do
+  Ntubes_HEDH = FLOOR(0.78*Dctl*Dctl/(C1*pitch*pitch))
+END
+
+FUNCTION DBundle_for_Ntubes_HEDH(N, Do, pitch, angle)
+{DBUNDLE_FOR_NTUBES_HEDH - Bundle diameter fitted to N tubes by the HEDH
+relation, the inverse of Ntubes_HEDH (one pass), easily reversed from the
+main formulation as in ht:
+  DBundle = Do + (1/0.78)^0.5*pitch*(C1*N)^0.5
+C1 = 13/15 (0.866) for the 30 and 60 degree layouts, 1 for 45 and 90.
+Validity: single-pass bundles; angle = 30, 45, 60 or 90 degrees.
+Original: Schlunder, E. U. and International Center for Heat and Mass
+  Transfer, Heat Exchanger Design Handbook (HEDH), Hemisphere, Washington,
+  1983.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, DBundle_for_Ntubes_HEDH,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  C1 = 13/15
+  IF (angle = 45 OR angle = 90) THEN C1 = 1
+  DBundle_for_Ntubes_HEDH = Do + (1/0.78)^0.5*pitch*(C1*N)^0.5
+END
+
+FUNCTION Ntubes(DBundle, Do, pitch, Ntp, angle, Method)
+{NTUBES - Tube count of a bundle by the method chosen with the Method flag
+(the string dispatcher of ht; its default "Phadkeb" method needs binary
+coefficient tables and is not translated):
+  Method = 1: HEDH  (Ntubes_HEDH, one pass)
+  Method = 2: VDI   (Ntubes_VDI, f2 = 90 for 6 passes is an estimate)
+  Method = 3: Perry (Ntubes_Perrys, claimed accuracy 24 tubes)
+  returns the tube count [-] of the chosen method.
+Validity: those of the chosen method.
+Original: see the three functions above (Perry 2007, VDI Heat Atlas 2010,
+  HEDH 1983).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py, Ntubes (dispatcher),
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF (Method = 1) THEN
+    Ntubes = Ntubes_HEDH(DBundle, Do, pitch, angle)
+  ELSE
+    IF (Method = 2) THEN
+      Ntubes = Ntubes_VDI(DBundle, Ntp, Do, pitch, angle)
+    ELSE
+      Ntubes = Ntubes_Perrys(DBundle, Do, Ntp, angle)
+    ENDIF
+  ENDIF
+END
+
+FUNCTION size_bundle_from_tubecount(N, Do, pitch, Ntp, angle, Method)
+{SIZE_BUNDLE_FROM_TUBECOUNT - Bundle diameter fitted to N tubes by the
+method chosen with the Method flag (the string dispatcher of ht):
+  Method = 1: HEDH  (DBundle_for_Ntubes_HEDH, one pass)
+  Method = 2: VDI   (D_for_Ntubes_VDI)
+The "Phadkeb" method of ht needs binary coefficient tables (not translated)
+and its "Perry" method solves Ntubes_Perrys by iteration, which an EES
+FUNCTION cannot do: in EES, make DBundle an unknown of the main program and
+write Ntubes_Perrys(DBundle, Do, Ntp, angle) = N (implicit solve).
+  returns the bundle diameter DBundle [m].
+Validity: those of the chosen method.
+Original: see the two functions above (VDI Heat Atlas 2010, HEDH 1983).
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/hx.py,
+  size_bundle_from_tubecount (dispatcher), MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  IF (Method = 1) THEN
+    size_bundle_from_tubecount = DBundle_for_Ntubes_HEDH(N, Do, pitch, angle)
+  ELSE
+    size_bundle_from_tubecount = D_for_Ntubes_VDI(N, Ntp, Do, pitch, angle)
+  ENDIF
+END
+
+"!Demonstration program: every function is called twice"
+"It is ignored by the future $INCLUDE library:shell_and_tube_sizing (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each function (published values)."
+"Case B: a second input set, computed with the same ht functions."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case A - ht doctest inputs"
+check_tubing_TEMA_A = check_tubing_TEMA(2, 22)
+check_tubing_TEMA_ok_A = check_tubing_TEMA(0.375, 22)
+DBundle_min_A = DBundle_min(0.0254)
+shell_clearance_A = shell_clearance(0, 1.245)
+shell_clearance_DShell_A = shell_clearance(1, 1.9)
+baffle_thickness_R_A = baffle_thickness(0.3, 50, 1)
+D_baffle_holes_A1 = D_baffle_holes(0.0508, 0.75)
+D_baffle_holes_A2 = D_baffle_holes(0.01905, 0.3)
+D_baffle_holes_A3 = D_baffle_holes(0.01905, 1.5)
+L_unsupported_max_A = L_unsupported_max(0.0254, 0)
+Ntubes_Perrys_A = Ntubes_Perrys(1.184, 0.028, 2, 45)
+Ntubes_VDI_A = Ntubes_VDI(1.184, 2, 0.028, 0.036, 30)
+D_for_Ntubes_VDI_A = D_for_Ntubes_VDI(970, 2, 0.00735, 0.015, 30)
+Ntubes_HEDH_A = Ntubes_HEDH(1.184, 0.028, 0.036, 30)
+DBundle_for_Ntubes_HEDH_A = DBundle_for_Ntubes_HEDH(928, 0.028, 0.036, 30)
+Ntubes_Perry_A = Ntubes(1.2, 0.025, 0.03125, 1, 30, 3)
+Ntubes_VDIm_A = Ntubes(1.2, 0.025, 0.03125, 1, 30, 2)
+Ntubes_HEDHm_A = Ntubes(1.2, 0.025, 0.03125, 1, 30, 1)
+size_bundle_VDI_A = size_bundle_from_tubecount(1285, 0.025, 0.03125, 1, 30, 2)
+size_bundle_HEDH_A = size_bundle_from_tubecount(1285, 0.025, 0.03125, 1, 30, 1)
+
+"Case B - second input set"
+check_tubing_TEMA_B = check_tubing_TEMA(1.25, 18)
+check_tubing_TEMA_ok_B = check_tubing_TEMA(0.75, 16)
+DBundle_min_B = DBundle_min(0.015)
+shell_clearance_B = shell_clearance(0, 0.5)
+shell_clearance_DShell_B = shell_clearance(1, 0.61)
+baffle_thickness_C_B = baffle_thickness(1.2, 0.7, 0)
+baffle_thickness_R_B = baffle_thickness(1.2, 0.7, 1)
+D_baffle_holes_B = D_baffle_holes(0.0254, 1.2)
+L_unsupported_max_alum_B = L_unsupported_max(0.01905, 1)
+L_unsupported_max_cs_B = L_unsupported_max(0.03, 0)
+Ntubes_Perrys_B = Ntubes_Perrys(0.8, 0.01905, 4, 30)
+Ntubes_Perrys_90_B = Ntubes_Perrys(0.8, 0.01905, 2, 90)
+Ntubes_VDI_B = Ntubes_VDI(0.8, 4, 0.01905, 0.025, 45)
+Ntubes_VDI_1p_B = Ntubes_VDI(0.5, 1, 0.01905, 0.0238, 60)
+D_for_Ntubes_VDI_B = D_for_Ntubes_VDI(500, 4, 0.01905, 0.0238, 60)
+Ntubes_HEDH_B = Ntubes_HEDH(0.8, 0.01905, 0.0238, 90)
+Ntubes_HEDH_tri_B = Ntubes_HEDH(0.5, 0.01905, 0.0238, 30)
+DBundle_for_Ntubes_HEDH_B = DBundle_for_Ntubes_HEDH(600, 0.01905, 0.0238, 60)
+Ntubes_Perry_B = Ntubes(0.8, 0.01905, 0.0238, 2, 30, 3)
+Ntubes_VDIm_B = Ntubes(0.8, 0.01905, 0.0238, 2, 30, 2)
+Ntubes_HEDHm_B = Ntubes(0.8, 0.01905, 0.0238, 2, 30, 1)
+size_bundle_VDI_B = size_bundle_from_tubecount(800, 0.01905, 0.0238, 1, 30, 2)
+size_bundle_HEDH_B = size_bundle_from_tubecount(800, 0.01905, 0.0238, 1, 30, 1)

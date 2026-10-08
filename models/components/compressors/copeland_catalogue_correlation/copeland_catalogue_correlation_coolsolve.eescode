@@ -1,0 +1,63 @@
+{=============================================================================
+  copeland_ari: ARI 3rd-order catalogue polynomial for Copeland ZH scroll
+            compressors - runnable variant (CoolSolve)
+  CoolSolve Library model CSL-0123, variant of copeland_catalogue_correlation
+ -----------------------------------------------------------------------------
+  Same function, demonstration program and catalogue tables as the native
+  file; the ONLY change is inside FUNCTION copeland (shipped as copeland_ari, see below): CoolSolve ignores the
+  column-name string of lookup() inside a FUNCTION body and returns the first
+  column (CS-BUG-LOOKUP-COL-ARG, silently wrong values), so the variant maps
+  coef$ to the column NUMBER of the shipped tables (W=1, A=2, M=3, Vs=4)
+  with four single-line IFs before the loop. The native file keeps the
+  original call lookup(table$, i+1, coef$).
+  See copeland_catalogue_correlation.eescode and README.md.
+ =============================================================================}
+
+FUNCTION copeland_ari(table$, coef$, T_ev, T_cd)
+  "ARI/Copeland 3rd-order catalogue polynomial; result in the unit of column coef$"
+  T_ev = T_ev * 9/5 + 32                "conversion to Fahrenheit"
+  T_cd = T_cd * 9/5 + 32                "conversion to Fahrenheit"
+  i = 0
+  IF (coef$='W') THEN colc=1            "variant only: column number (CoolSolve reads lookup(,,col$) in a FUNCTION body as column 1, CS-BUG-LOOKUP-COL-ARG)"
+  IF (coef$='A') THEN colc=2
+  IF (coef$='M') THEN colc=3
+  IF (coef$='Vs') THEN colc=4
+  repeat
+    C[i] = lookup(table$, i+1, colc)    "coefficients from rows 1..10 of the catalogue"
+    i = i + 1
+  "the original writes 'until i>9' without parentheses (CS-GAP-REPEAT-UNTIL-BARE)"
+  until (i>9)
+  copeland_ari = C[0] + C[1]*T_ev + C[2]*T_cd + C[3]*T_ev^2 + C[4]*T_ev*T_cd + C[5]*T_cd^2 + C[6]*T_ev^3 + C[7]*T_cd*T_ev^2 + C[8]*T_ev*T_cd^2 + C[9]*T_cd^3
+END
+
+"!Demonstration program (main program of the source file)"
+DELTAT_ex_ev = 5                       "superheating at the compressor supply [K]"
+p_su_cp = 3E5                          "supply pressure [Pa]"
+p_ex_cp = 20E5                         "exhaust pressure [Pa]"
+comp$ = 'ZH38K4E-TFD'                  "compressor catalogue table"
+fluid$ = 'r134a'                       "refrigerant"
+
+T_ev = temperature(fluid$, p=p_su_cp, x=0.5)    "evaporation temperature [°C]"
+T_cd = temperature(fluid$, p=p_ex_cp, x=0.5)    "condensation temperature [°C]"
+T_su_cp = T_ev + DELTAT_ex_ev                   "supply temperature [°C]"
+h_su_cp = enthalpy(fluid$, t=T_su_cp, p=p_su_cp)        "supply enthalpy [J/kg]"
+v_su_cp = volume(fluid$, t=T_su_cp, p=p_su_cp)          "supply specific volume [m^3/kg]"
+
+W_dot = copeland_ari(comp$, 'W', T_ev, T_cd)                "catalogue electrical power [W]"
+M_lbmhr = copeland_ari(comp$, 'M', T_ev, T_cd)              "catalogue mass flow [lbm/hr]"
+M_dot = M_lbmhr*0.0001259978805556                      "mass flow [kg/s]; 1 lbm/hr = 0.45359237 kg / 3600 s, the value of convert('lbm/hr','kg/s') in EES - the original writes convert(lbm/hr,kg/s) (CS-BUG-CONVERT-UNIT: CoolSolve returns 1 for it)"
+Vs = lookup(comp$, 1, 'Vs')                             "swept volume per revolution [cm^3]"
+epsilon_v = M_dot/(Vs*50/1E6/v_su_cp)                   "volumetric effectiveness at 3000 rpm (as in the original) [-]"
+
+"The original demo also computes the exhaust state (h_ex_cp = h_su_cp + W_dot/M_dot,
+ T_ex_cp = temperature(fluid$,p=p_ex_cp,h=h_ex_cp)); it is left out here because
+ with the catalogues embedded in the source file the catalogue power is about 3x
+ the stored-run power and W/M leaves the range of the fluid (README, Verification)."
+
+W_dot_zh45 = copeland_ari('ZH45K4E-TFD', 'W', T_ev, T_cd)   "second catalogue of the library, same operating point [W]"
+
+"Self-check: the polynomial recomputed in the main program must equal W_dot exactly"
+TevF = T_ev*9/5 + 32                                    "Fahrenheit conversions of the demo point [°F]"
+TcdF = T_cd*9/5 + 32                                    "[°F]"
+W_chk = lookup(comp$,1,'W') + lookup(comp$,2,'W')*TevF + lookup(comp$,3,'W')*TcdF + lookup(comp$,4,'W')*TevF^2 + lookup(comp$,5,'W')*TevF*TcdF + lookup(comp$,6,'W')*TcdF^2 + lookup(comp$,7,'W')*TevF^3 + lookup(comp$,8,'W')*TcdF*TevF^2 + lookup(comp$,9,'W')*TevF*TcdF^2 + lookup(comp$,10,'W')*TcdF^3   "independent recomputation [W]"
+W_err = W_dot - W_chk                                   "must be 0 [W]"

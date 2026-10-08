@@ -13,22 +13,22 @@ in [docs/taxonomy.md](docs/taxonomy.md).
 
 ## 1. Status at a glance
 
-| Library (2026-10-06, 09:30) | Count |
+| Library (2026-10-08, 01:00) | Count |
 |---|---:|
-| Models (`library.csv`) | 103 |
-| … verified / runs / blocked | 76 / 5 / 22 |
-| … steady / function / dynamic / optimization | 75 / 22 / 5 / 1 |
-| Functions and procedures (`functions.csv`) | 245 |
-| Regression (`test_models.py`, `CSL-0009:coolsolve` excluded) | 105 targets (81 main files + 24 variants), 0 failure |
-| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md) §4–§5) | 69 (41 gaps, 26 bugs, 2 doc issues) |
+| Models (`library.csv`) | 123 |
+| … verified / runs / blocked | 88 / 7 / 28 |
+| … steady / function / dynamic / optimization | 83 / 34 / 5 / 1 |
+| Functions and procedures (`functions.csv`) | 347 |
+| Regression (`test_models.py`, `CSL-0009:coolsolve` excluded) | 125 targets (95 main files + 30 variants), 0 failure |
+| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md) §4–§5) | 80 (48 gaps, 30 bugs, 2 doc issues) |
 | … closed (§7) | 9 (3 gaps, 5 bugs, 1 doc issue) |
-| … unverified suggestions (§8 *Unverified by a reviewer*) | 8 |
+| … unverified suggestions (§8 *Unverified by a reviewer*) | 10 |
 
 | Backlog (source inventories) | Candidates | todo | added | merged | duplicate | discarded | parked |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| ULiège collection `thermo_models` (+50 files on 2026-10-06) | 602 | 365 | 62 | 34 | 90 | 50 | 1 |
+| ULiège collection `thermo_models` | 602 | 342 | 83 | 35 | 91 | 50 | 1 |
 | CoolSolve examples | 47 | 1 | 33 | 9 | 1 | 3 | 0 |
-| `ht` (Caleb Bell), one row per correlation family | 24 | 7 | 17 | 0 | 0 | 0 | 0 |
+| `ht` (Caleb Bell), one row per correlation family | 24 | 0 | 24 | 0 | 0 | 0 | 0 |
 | ThermoCycle | 21 | 2 | 4 | 1 | 0 | 14 | 0 |
 | LaboThapPy | 74 | 73 | 1 | 0 | 0 | 0 | 0 |
 | TESPy | 52 | 51 | 1 | 0 | 0 | 0 | 0 |
@@ -48,28 +48,26 @@ Refresh with `python3 tools/build_index.py` (models) and
 
 ### Where to resume (handover, 2026-10-06, 09:30)
 
-- **State:** B-01 … B-08 are closed (B-07 and B-08 by the light scripted reviews
-  `C-87`, `C-94` of 2026-10-06). In progress:
-  - **B-09** (`ht` correlations): 17 of 24 families translated and verified against
-    `ht` 1.2.0 (`C-96` … `C-113` except `C-100`); open `C-100`, `C-114` … `C-119`, then
-    the light review `C-120`. Pattern to follow: `CSL-0087`
-    (`models/heat_transfer/convection/internal_turbulent_nusselt`).
-  - **B-10** (files added to the ULiège collection on 2026-10-06): triage `C-121`
-    done, `C-131` added; open `C-122` … `C-130`, `C-132` … `C-135` (`C-129` back in
-    the queue after a rejected attempt), then `C-136`.
-- **Work interrupted** by the maintainer on 2026-10-06 at about 09:00: every
-  usable free worker had exhausted its opencode free quota. No task is running and
-  the supervisor is stopped (`python3 ~/llm/scripts/oc-orch.py up` to restart it;
-  `down --server` also stops the opencode server). Partial attempts are archived in
-  `~/git/csl-lanes/_results/` (`C-100_bunny_t115`, `C-122_mimo_t99`: no model folder
-  yet — restart these cards from scratch).
+- **State (2026-10-08, 01:00):** every card of B-01 … B-10 is done and every batch is closed by its review
+  (`C-120` B-09, `C-136` B-10: light scripted reviews). All 24 `ht` correlation families are in the library
+  (`CSL-0087` … `CSL-0110`); B-10 imported the 14 cards of the 2026-10-06 additions. **No batch is open**: the next
+  batches are to be planned from the backlog (`thermo_models` 342 `todo` rows, of which wave1/high first;
+  LaboThapPy 73; TESPy 51; ThermoCycle 2) — e.g. a T-PLAN card given to a worker that proposes B-11 from
+  `backlog_stats.py` and the inventories.
+- **Last session (2026-10-07 18:30 → 2026-10-08 01:00):** glm-5.3-flash did the hard cards and, once the opencode
+  free quota was exhausted (19:09, shared by all free models), all the rest; the supervisor is still up (`python3
+  ~/llm/scripts/oc-orch.py down` to stop it). Next free IDs: `CSL-0125`, card `C-137`.
 - **Worker models, in order of priority** (details, benchmark and lessons:
   `~/Nextcloud/llm/opencode-model-comparison.md`):
-  1. z.ai `glm-5.3-flash` — main worker; weekly z.ai limit until **2026-10-07 09:25
-     CEST** (15:25 UTC+8);
+  1. z.ai `glm-5.3-flash` — main worker, given the hardest cards (maintainer, 2026-10-07: **never the full
+     `glm-5.3`, only the flash model**); weekly z.ai limit (last reset 2026-10-07 09:25
+     CEST = 15:25 UTC+8);
   2. opencode `space-bunny-free` — best free worker (`ht` cards in 6–30 min, honest
      verification); check its gap claims (C-85: two invalid gaps) and its inventory
      edits;
+  **Only one free model at a time (maintainer, 2026-10-07): space-bunny.** The free quota is an opencode account
+  limit shared by all free models (all five hit "Free usage exceeded" in the same minute on 2026-10-07), so the
+  models below are replacements only, if bunny is unavailable:
   3. opencode `mimo-v2.6-flash-free`, `longcat-2.5-preview-free`,
      `ling-3.1-flash-free` — qualified by the C-10 benchmark (exact reproduction of
      `CSL-0011`); good quality but free quota throttled hard (6–18 limit pauses a
@@ -581,7 +579,7 @@ correct and document are listed in `sources/thermocycle/README.md` §8. Worker n
 [x] C-94  T-REVIEW     B-08                                                                                      — light scripted review (orchestrator)
 ```
 
-### B-09 — Heat-transfer and pressure-drop correlations from `ht` (Caleb Bell) 🔄
+### B-09 — Heat-transfer and pressure-drop correlations from `ht` (Caleb Bell) ✅
 
 Maintainer request (2026-10-05): import all the correlations of the Python library
 [`ht`](https://github.com/CalebBell/ht) (C. Bell, MIT; local clone `~/git/ht`, commit `85e0ee6`) — convection,
@@ -605,7 +603,7 @@ family); the translation cards C-96…C-119 come from its result (2026-10-05: 24
 [x] C-97  T-FUNC       HT-002   → heat_transfer/convection/nucleate_boiling_and_chf              — pool nucleate boiling heat flux (9) + critical heat flux (Zuber, Serth-HEDH, HEDH-Montinsky) (12 functions, wave1); verify vs ht doctests + Python — CSL-0088
 [x] C-98  T-FUNC       HT-003   → heat_transfer/convection/condensation_film                     — film condensation: Nusselt plate, Boyko-Kruzhilin, Akers-Deans-Crosser, kinetic correction, Cavallini, Shah (6 functions, wave1); verify vs ht doctests + Python — CSL-0089
 [x] C-99  T-FUNC       HT-004   → components/heat_exchangers/hx_effectiveness_ntu                — Cmin/Cmax/Cr, NTU↔UA, eps(NTU, Cr) and NTU(eps, Cr) for counterflow, parallel, crossflow, boiler/condenser (8 functions, wave1); verify vs ht doctests + Python — CSL-0090
-[ ] C-100 T-FUNC       HT-005   → heat_transfer/convection/internal_laminar_and_curved_nu        — laminar (T_wall and q_wall), thermal entry region, rectangular duct, spiral/helical curved ducts (10 functions, high); verify vs ht doctests + Python — CSL-0091
+[x] C-100 T-FUNC       HT-005   → heat_transfer/convection/internal_laminar_and_curved_nu        — laminar (T_wall and q_wall), thermal entry region, rectangular duct, spiral/helical curved ducts (10 functions, high); verify vs ht doctests + Python — CSL-0091
 [x] C-101 T-FUNC       HT-006   → heat_transfer/convection/free_conv_cylinders                   — 10 vertical-cylinder + 3 horizontal-cylinder free-convection correlations (13 functions, high); verify vs ht doctests + Python — CSL-0092
 [x] C-102 T-FUNC       HT-007   → heat_transfer/convection/free_conv_plates_and_sphere           — Churchill-Chu vertical plate, McAdams/VDI/Rohsenow horizontal plate, Churchill sphere (5 functions, high); verify vs ht doctests + Python — CSL-0093
 [x] C-103 T-FUNC       HT-008   → heat_transfer/convection/external_crossflow_cylinder           — single-cylinder crossflow (Zukauskas … Whitaker, Perkins-Leppert) (8 functions, high); verify vs ht doctests + Python — CSL-0094
@@ -619,13 +617,13 @@ family); the translation cards C-96…C-119 come from its result (2026-10-05: 24
 [x] C-111 T-FUNC       HT-016   → components/heat_exchangers/hx_temperature_effectiveness_pntu   — P-NTU temperature effectiveness: TEMA E/G/H/J, plate, air cooler + the inverse NTU(P) relations (15 functions, medium); verify vs ht doctests + Python — CSL-0102
 [x] C-112 T-FUNC       HT-017   → heat_transfer/pressure_drop/tube_bank_dp_bell_delaware         — shell-side dP (Kern, Zukauskas) + Bell-Delaware Jc, Jl, Jb, Js, Jr (7 functions, medium); verify vs ht doctests + Python — CSL-0103
 [x] C-113 T-FUNC       HT-018   → heat_transfer/convection/supercritical_internal_nu             — near-supercritical internal convection (McAdams, Jackson, Swenson, Kitoh, Petukhov …) (18 functions, medium); verify vs ht doctests + Python — CSL-0104
-[ ] C-114 T-FUNC       HT-019   → components/heat_exchangers/lmtd_and_f_correction               — LMTD, Fakheri F correction, air-cooler Ft (3 functions, medium); verify vs ht doctests + Python — CSL-0105
-[ ] C-115 T-FUNC       HT-020   → heat_transfer/conduction/conduction_resistances_and_shapes     — cylindrical/plane-wall resistance, 6 shape factors, R-value conversions (14 functions, medium); verify vs ht doctests + Python — CSL-0106
-[ ] C-116 T-FUNC       HT-021   → heat_transfer/radiation/radiation_heat_flux                    — blackbody spectral radiance, radiant heat flux with back-radiation, grey transmittance (3 functions, medium); verify vs ht doctests + Python — CSL-0107
-[ ] C-117 T-FUNC       HT-022   → heat_transfer/convection/packed_bed_nusselt                    — packed-bed forced convection (4 functions, low); verify vs ht doctests + Python — CSL-0108
-[ ] C-118 T-FUNC       HT-023   → heat_transfer/convection/fin_efficiency_and_wall_factors       — circular-fin efficiency, wall correction factors for Nu and for frictional dP (3 functions, low); verify vs ht doctests + Python — CSL-0109
-[ ] C-119 T-FUNC       HT-024   → components/heat_exchangers/shell_and_tube_sizing               — tube counts, bundle diameters, TEMA clearances, baffle thickness, unsupported length (13 functions, low); verify vs ht doctests + Python — CSL-0110
-[ ] C-120 T-REVIEW     B-09                                                                                      — light scripted review (orchestrator)
+[x] C-114 T-FUNC       HT-019   → components/heat_exchangers/lmtd_and_f_correction               — LMTD, Fakheri F correction, air-cooler Ft (3 functions, medium); verify vs ht doctests + Python — CSL-0105
+[x] C-115 T-FUNC       HT-020   → heat_transfer/conduction/conduction_resistances_and_shapes     — cylindrical/plane-wall resistance, 6 shape factors, R-value conversions (14 functions, medium); verify vs ht doctests + Python — CSL-0106
+[x] C-116 T-FUNC       HT-021   → heat_transfer/radiation/radiation_heat_flux                    — blackbody spectral radiance, radiant heat flux with back-radiation, grey transmittance (3 functions, medium); verify vs ht doctests + Python — CSL-0107
+[x] C-117 T-FUNC       HT-022   → heat_transfer/convection/packed_bed_nusselt                    — packed-bed forced convection (4 functions, low); verify vs ht doctests + Python — CSL-0108
+[x] C-118 T-FUNC       HT-023   → heat_transfer/convection/fin_efficiency_and_wall_factors       — circular-fin efficiency, wall correction factors for Nu and for frictional dP (3 functions, low); verify vs ht doctests + Python — CSL-0109
+[x] C-119 T-FUNC       HT-024   → components/heat_exchangers/shell_and_tube_sizing               — tube counts, bundle diameters, TEMA clearances, baffle thickness, unsupported length (13 functions, low); verify vs ht doctests + Python — CSL-0110
+[x] C-120 T-REVIEW     B-09                                                                                      — light scripted review (orchestrator)
 ```
 
 
@@ -637,7 +635,7 @@ family); the translation cards C-96…C-119 come from its result (2026-10-05: 24
 
 ---
 
-### B-10 — New files in the ULiège collection (2026-10-06) 🔄
+### B-10 — New files in the ULiège collection (2026-10-06) ✅
 
 The maintainer added EES files to `~/Nextcloud/thermo_models` (2026-10-06). `sweep.py` now keeps the TM/DG IDs stable
 (a path already inventoried keeps its ID, existing rows are kept as they are, new files are appended): 50 new rows
@@ -648,21 +646,21 @@ skipped (duplicates and variants are frequent), and proposes the import cards C-
 
 ```
 [x] C-121 T-TRIAGE     TM-0553…TM-0602                     → sources/thermo_models/                                 — triage of the 2026-10-06 additions (duplicate / merged / discarded / todo); 22 todo / 18 duplicate / 8 discarded / 1 merged / 1 parked (SETP.LIB, licence) → C-122…C-135
-[ ] C-122 T-FUNC   TM-0585,TM-0496                          → components/heat_exchangers/plate_hx_correlations        — plate-HX correlations: 10 procedures (bogaerts, han, hsieh, kumar, kuo, martin, muley, thonon, wanniarachchi, yan); verification: TM-0585 stored solution + ht HT-005/HT-010 Python values — CSL-0111
-[ ] C-123 T-FUNC   TM-0564,TM-0569,TM-0579,TM-0566,TM-0571  → components/heat_exchangers/three_zone_hx_procedures      — 7 procedures (hx_cd, hx_ev, lmtd, single_phase_HX, EV, CD, evaporator2); verification: TM-0564/TM-0569 demo cases (energy balance) + ht HT-004 epsilon-NTU — CSL-0112
-[ ] C-124 T-IMPORT TM-0563 → components/heat_exchangers/condenser_3_zones_plate_correlations — three-zone plate condenser, Thonon/Kuo, R123+glycol (REFPROP variant TM-0562 described); verification: EES stored solution — CSL-0113
-[ ] C-125 T-IMPORT TM-0570 (TM-0582 auto-size variant)      → components/heat_exchangers/evaporator_3_zones_plate_correlations — three-zone plate evaporator, Thonon/Hsieh, R245fa+glycol+oil; verification: EES stored solution + TM-0582 parametric table — CSL-0114
-[ ] C-126 T-IMPORT TM-0575                                  → components/heat_exchangers/hx_fem_evaporator_discretised  — discretised hxfem evaporator, smoothed revision of TM-0275; verification: EES stored solution — CSL-0115
-[ ] C-127 T-IMPORT TM-0596                                  → cycles/refrigeration_heat_pumps/heat_pump_vitocal_300g  — scroll compressor + two plate HXs (needs CSL-0079 + expander of TM-0597/CSL-0037); verification: EES stored solution — CSL-0116
-[ ] C-128 T-IMPORT TM-0565                                  → components/expanders_turbines/double_stage_scroll_expander — two-stage hermetic scroll expander (Lemort/Quoilin/Pire correlations, MODULE); verification: EES stored solution — CSL-0117
-[ ] C-129 T-IMPORT TM-0593                                  → components/valves_nozzles_piping/air_nozzle_ejector      — air ejector, choked primary nozzle + entrainment; verification: EES stored solution — CSL-0118
-[ ] C-130 T-IMPORT TM-0589                                  → renewables/solar_thermal/solar_geometry_sun_path         — solar geometry (declination, hour angle, altitude, azimuth, sunrise; `nDay_` to check); verification: EES stored solution — CSL-0119
+[x] C-122 T-FUNC   TM-0585,TM-0496                          → components/heat_exchangers/plate_hx_correlations        — plate-HX correlations: 10 procedures (bogaerts, han, hsieh, kumar, kuo, martin, muley, thonon, wanniarachchi, yan); verification: TM-0585 stored solution + ht HT-005/HT-010 Python values — CSL-0111
+[x] C-123 T-FUNC   TM-0564,TM-0569,TM-0579,TM-0566,TM-0571  → components/heat_exchangers/three_zone_hx_procedures      — 7 procedures (hx_cd, hx_ev, lmtd, single_phase_HX, EV, CD, evaporator2); verification: TM-0564/TM-0569 demo cases (energy balance) + ht HT-004 epsilon-NTU — CSL-0112
+[x] C-124 T-IMPORT TM-0563 → components/heat_exchangers/condenser_3_zones_plate_correlations — three-zone plate condenser, Thonon/Kuo, R123+glycol (REFPROP variant TM-0562 described); verification: EES stored solution — CSL-0113
+[x] C-125 T-IMPORT TM-0570 (TM-0582 auto-size variant)      → components/heat_exchangers/evaporator_3_zones_plate_correlations — three-zone plate evaporator, Thonon/Hsieh, R245fa+glycol+oil; verification: EES stored solution + TM-0582 parametric table — CSL-0114
+[x] C-126 T-IMPORT TM-0575                                  → components/heat_exchangers/hx_fem_evaporator_discretised  — discretised hxfem evaporator, smoothed revision of TM-0275; verification: EES stored solution — CSL-0115
+[x] C-127 T-IMPORT TM-0596                                  → cycles/refrigeration_heat_pumps/heat_pump_vitocal_300g  — scroll compressor + two plate HXs (needs CSL-0079 + expander of TM-0597/CSL-0037); verification: EES stored solution — CSL-0116
+[x] C-128 T-IMPORT TM-0565                                  → components/expanders_turbines/double_stage_scroll_expander — two-stage hermetic scroll expander (Lemort/Quoilin/Pire correlations, MODULE); verification: EES stored solution — CSL-0117
+[x] C-129 T-IMPORT TM-0593                                  → components/valves_nozzles_piping/air_nozzle_ejector      — air ejector, choked primary nozzle + entrainment; verification: EES stored solution — CSL-0118
+[x] C-130 T-IMPORT TM-0589                                  → renewables/solar_thermal/solar_geometry_sun_path         — solar geometry (declination, hour angle, altitude, azimuth, sunrise; `nDay_` to check); verification: EES stored solution — CSL-0119
 [x] C-131 T-IMPORT TM-0588                                  → components/valves_nozzles_piping/ball_valve_authority   — equivalent opening diameter / valve authority from the ball angle; verification: EES stored solution + Idel'cik p.339 — CSL-0120
-[ ] C-132 T-FUNC   TM-0574                                  → fundamentals/properties/heat_transfer_fluid_properties     — prop_htf: MEG, Therminol VP-1/66, oil (companion of CSL-0079); verification: HEDH HTF-VP1 sheet values — CSL-0121
-[ ] C-133 T-FUNC   TM-0558,TM-0559,TM-0587,TM-0581           → components/instrumentation/nozzle_discharge_coefficients  — ASHRAE 41.2/ISO R859 (4 nozzles), ISO 5167 long radius, admission, range checker; verification: ISO 5167 part vs CSL-0075 + ASHRAE 41.2 — CSL-0122
-[ ] C-134 T-FUNC   TM-0560                                  → components/compressors/copeland_catalogue_correlation   — 3rd-order ARI/Copeland polynomial ZH38K4E-TFD (five 242×2 tables); verification: EES stored solution — CSL-0123
-[ ] C-135 T-IMPORT TM-0554                                  → heat_transfer/pressure_drop/plate_hx_pressure_drop_identification — REFPROP mixtures, likely blocked; verification: EES stored solution — CSL-0124
-[ ] C-136 T-REVIEW     B-10                                                                                      — light scripted review (orchestrator)
+[x] C-132 T-FUNC   TM-0574                                  → fundamentals/properties/heat_transfer_fluid_properties     — prop_htf: MEG, Therminol VP-1/66, oil (companion of CSL-0079); verification: HEDH HTF-VP1 sheet values — CSL-0121
+[x] C-133 T-FUNC   TM-0558,TM-0559,TM-0587,TM-0581           → components/instrumentation/nozzle_discharge_coefficients  — ASHRAE 41.2/ISO R859 (4 nozzles), ISO 5167 long radius, admission, range checker; verification: ISO 5167 part vs CSL-0075 + ASHRAE 41.2 — CSL-0122
+[x] C-134 T-FUNC   TM-0560                                  → components/compressors/copeland_catalogue_correlation   — 3rd-order ARI/Copeland polynomial ZH38K4E-TFD (five 242×2 tables); verification: EES stored solution — CSL-0123  **Then:** CSL-0116 (Vitocal 300-G, C-127) is blocked partly by this missing catalogue table — add its runnable `_coolsolve` variant once the table is in the library.
+[x] C-135 T-IMPORT TM-0554                                  → heat_transfer/pressure_drop/plate_hx_pressure_drop_identification — REFPROP mixtures, likely blocked; verification: EES stored solution — CSL-0124
+[x] C-136 T-REVIEW     B-10                                                                                      — light scripted review (orchestrator)
 ```
 
 ## 7. Dispatching a batch to agents
@@ -707,6 +705,8 @@ Rules:
   without such evidence, describe it in your final message as "unverified suggestion" and do not register it.
 - model.json `missing_features` lists every registered gap ID that blocks the native file (those of the card included).
   In the inventory, also write a one-line reason in the `notes` cell of every row you decide on.
+- Keep the explanatory comment at the top of the .eescode file short (about 10-20 lines); the details go in the
+  README.md (maintainer, 2026-10-07).
 - Comments must not invent physical meaning: paraphrase the original's own comments or write "as in the original";
   give dimensional quantities their SI unit (never `[-]`).
 - EES fluid names: chemical formulas (CO2, N2, O2, H2O, Air) are IDEAL-GAS substances (enthalpy includes the
@@ -860,3 +860,25 @@ and adds the log line in §8.
 | 2026-10-06 | C-87 review B-07 | Light scripted review (orchestrator): build_index 103 models / 245 functions / 0 errors; test_models 105 targets (81 main files + 24 variants), 0 failure (CSL-0009:coolsolve excluded); inventories cross-checked against the library (every model has its added row, after repairing the ht/thermocycle rows reset by workers); invalid gap rows of C-85 rejected; B-07 closed |
 | 2026-10-06 | C-94 review B-08 | Light scripted review (orchestrator): same checks as C-87; B-08 closed (C-89…C-91, C-93 added; C-92 folded into C-107); every translation verified against an independent Python re-implementation of the Modelica sources |
 | 2026-10-06 | handover | Work interrupted by the maintainer (all usable free opencode quotas exhausted; GLM weekly limit until 2026-10-07). Free-model benchmark (C-10 re-run): mimo-v2.6-flash, longcat-2.5-preview, ling-3.1-flash qualified; nemotron-3-ultra, nemotron-3.5-lightning rejected; fledge-alpha, ling-3.0-flash-fin unavailable. Repairs: `sweep.py` made ID-stable (+50 rows TM-0553…0602); `ht`/ThermoCycle inventory decisions reset by workers restored (22 rows) and `csl.py merge` now merges inventories row by row; thermo_models inventory restored after a worker rewrote it (C-131). CoolSolve pending suggestions moved to §8 of the register. 103 models, 245 functions, regression 105/105 |
+| 2026-10-07 | C-130 `CSL-0119` | Added *solar_geometry_sun_path* (TM-0589, solar angles, L1) — native file blocked by CS-GAP-NDAY (new: EES date function nDay_, evidence: stored n = 338) and CS-GAP-IF-DIRECTIVE; verified `_coolsolve` variant (22/22 vs the EES stored solution, orchestrator src_check: 18/18 source equations); worker muse-spark (9 min) |
+| 2026-10-07 | C-124 `CSL-0113` | Added *condenser_3_zones_plate_correlations* (TM-0563, three-zone plate condenser, Thonon/Kuo, R123 + glycol) — native file runs; vs the EES stored solution 17 common variables, 5 outputs within 5.6 % (R123 superheated-region properties of EES 8 vs CoolProp, CoolProp checked against published tables); orchestrator src_check: 163/164 source equations (+ D5 unit tag, + logged state arrays); worker glm-5.3-flash (11 min) |
+| 2026-10-07 | C-114 `CSL-0105` | Added *lmtd_and_f_correction* (ht HT-019: LMTD, Fakheri F correction, air-cooler Ft) — verified vs ht 1.2.0 (16/16, max 5.4e-14); worker muse-spark (8 min) |
+| 2026-10-07 | C-123 `CSL-0112` | Added *three_zone_hx_procedures* (TM-0564/0569/0579/0566/0571: hx_cd, hx_ev, lmtd, single_phase_HX, EV, CD, evaporator2) — runs; vs the stored solutions max 8.4e-2, explained in the README (status runs); new bug CS-BUG-LOOKUP-WRITE (writing a lookup cell counted as an equation in the main program, silently dropped in a procedure; evidence: EES X9.249 source); worker space-bunny (23 min) |
+| 2026-10-07 | C-116 `CSL-0107` | Added *radiation_heat_flux* (ht HT-021: blackbody spectral radiance, radiant heat flux, grey transmittance) — verified vs ht 1.2.0 (8/8, max 7.1e-14); worker muse-spark (5 min) |
+| 2026-10-07 | C-100 `CSL-0091` | Added *internal_laminar_and_curved_nu* (ht HT-005: laminar, thermal entry region, rectangular duct, spiral/helical curved ducts) — verified vs ht 1.2.0 (max 3.2e-13); worker longcat-2.5-preview (28 min) |
+| 2026-10-07 | C-127 `CSL-0116` | Added *heat_pump_vitocal_300g* (TM-0596, Viessmann Vitocal 300-G brine/water heat pump: Copeland scroll compressor + two plate HXs, L3) — blocked: missing catalogue table and 9 gap IDs, 3 new and evidenced (CS-GAP-INCOMPRESSIBLE: EES glycol/brine libraries with concentration; CS-GAP-GE-ARROW: `=>`; CS-GAP-REPEAT-UNTIL-BARE); no variant yet (revisit after C-134, Copeland catalogue); worker glm-5.3-flash (24 min) |
+| 2026-10-07 | C-128 `CSL-0117` | Added *double_stage_scroll_expander* (TM-0565, two-stage hermetic scroll expander, Lemort/Quoilin/Pire, L3) — MODULE flattened per D10 (`_mod` suffix); vs the EES stored solution 46/51 variables matched after the renaming, max 3.1e-2 on derivative diagnostics (explained), the 2 unmatched swept volumes are unsolved EES guesses (= 1); orchestrator check; worker glm-5.3-flash (21 min) |
+| 2026-10-07 | C-117 `CSL-0108` | Added *packed_bed_nusselt* (ht HT-022: Gnielinski, Wakao-Kagei, Achenbach, KTA packed-bed correlations) — verified vs ht 1.2.0 (10 values, max 1.4e-12); worker muse-spark (stopped by the opencode free limit before its final report; checked and merged by the orchestrator) |
+| 2026-10-07 | C-129 `CSL-0118` | Added *air_nozzle_ejector* (TM-0593, air ejector with choked primary nozzle, L3) — native file blocked (CS-GAP-CALL-WARNING, new CS-GAP-AIR-ENTHALPY-REF: EES references ideal-gas Air enthalpy to 0 at 0 K, ratios of absolute enthalpies are reference-dependent); verified `_coolsolve` variant (offset-corrected ratio equations; remaining differences = reference offsets and stale stored cells, provenance audited on orchestrator request: stored run at FF = 0.1); 59/59 source equations; an earlier nemotron-lightning attempt was rejected; worker glm-5.3-flash (29 min) |
+| 2026-10-07 | C-126 `CSL-0115` | Added *hx_fem_evaporator_discretised* (TM-0575, discretised hx-fem evaporator, smoothed revision of TM-0275 → duplicate) — native file blocked (writes a profile to a lookup table inside a PROCEDURE: CS-BUG-LOOKUP-WRITE; the worker's duplicate row CS-GAP-LOOKUP-WRITE folded into it by the orchestrator); verified `_coolsolve` variant (max 2.2e-3 vs the EES stored solution); worker glm-5.3-flash (20 min) |
+| 2026-10-07 | C-135 `CSL-0124` | Added *plate_hx_pressure_drop_identification* (TM-0554, optim/, Thonon/Kuo/Hsieh pressure-drop identification) — native file blocked by the new CS-GAP-REFPROP (CALL EES_REFPROP with the R245fa + R134a mixture); `_coolsolve` variant faithful at the stored run (mixture fraction 1 = pure R245fa, the original's commented pure-fluid calls): 29/34 variables agree, 3 q-dependent stored cells shown stale; worker glm-5.3-flash (29 min) |
+| 2026-10-07 | C-134 `CSL-0123` | Added *copeland_catalogue_correlation* (TM-0560, ARI/Copeland 3rd-order polynomial ZH38K4E-TFD, tables recovered from the EES binary) — native file blocked by the new CS-BUG-LOOKUP-COL-ARG (lookup with a column name inside a FUNCTION silently returns column 1); verified `_coolsolve` variant; new CS-BUG-CONVERT-UNIT (convert('lbm/hr','kg/s') = 1, silent; reproduced by the orchestrator); CSL-0116 re-checked: stays blocked (catalogue vintage differs from TM-0596's, no faithful variant); worker glm-5.3-flash (45 min) |
+| 2026-10-07 | C-125 `CSL-0114` | Added *evaporator_3_zones_plate_correlations* (TM-0570, three-zone plate evaporator, Thonon/Hsieh; TM-0582 autosize as `_autosize` variant) — runs; native file = 164/164 source equations (+ logged state points), variant = 154/154 of TM-0582 (orchestrator src_check; a first review compared the wrong file — src_check fixed); 4 of 19 stored values differ, explained in the README; worker glm-5.3-flash (21 min) |
+| 2026-10-07 | C-122 `CSL-0111` | Added *plate_hx_correlations* (TM-0585 + TM-0496: 10 plate-HX procedures — Bogaerts, Han, Hsieh, Kumar, Kuo, Martin, Muley, Thonon, Wanniarachchi, Yan) — verified vs the EES stored solutions and ht; new bug CS-BUG-HASH-IDENT (identifier with # silently dropped inside a procedure body; evidence TM-0585/TM-0496, EES X9.721); worker glm-5.3-flash (23 min) |
+| 2026-10-07 | C-132 `CSL-0121` | Added *heat_transfer_fluid_properties* (TM-0574, prop_htf: MEG, Therminol VP-1/66, oil; companion of CSL-0079) — verified vs the EES stored solution (6/6, max 1.9e-10); the HEDH data-sheet cross-check is pending (host unreachable); worker glm-5.3-flash (11 min) |
+| 2026-10-07 | C-133 `CSL-0122` | Added *nozzle_discharge_coefficients* (TM-0558/0559/0587/0581: ASHRAE 41.2 / ISO R859 nozzles, ISO 5167 long-radius nozzle, admission, range checker) — verified; new gap CS-GAP-SUM-INDEXED (indexed SUM(x[i], i=1, N); ees_vs_coolsolve.csv lists SUM as supported, only the variadic form is); worker glm-5.3-flash (68 min) |
+| 2026-10-07 | C-136 review B-10 | Light scripted review (orchestrator): build_index 120 models / 317 functions / 0 errors; test_models 122 targets (92 main files + 30 variants), 0 failure (CSL-0009:coolsolve excluded); inventories cross-checked (HT-022 row of CSL-0108 set, worker stopped by the quota); every import of the batch checked with src_check (equation overlap with the EES source); B-10 closed: 14 cards, 9 new CoolSolve bugs/gaps registered with evidence, 2 worker claims corrected (C-125 review error on my side, C-126 duplicate gap folded) |
+| 2026-10-08 | C-115 `CSL-0106` | Added *conduction_resistances_and_shapes* (ht HT-020: cylindrical and plane-wall resistance, 6 shape factors, R-value conversions) — verified vs ht 1.2.0 (50/50, max 8.0e-11); worker glm-5.3-flash (24 min) |
+| 2026-10-08 | C-118 `CSL-0109` | Added *fin_efficiency_and_wall_factors* (ht HT-023: circular-fin efficiency, wall correction factors for Nu and frictional dP) — verified vs ht 1.2.0 (26 values, max 4.0e-12); worker glm-5.3-flash (18 min) |
+| 2026-10-08 | C-119 `CSL-0110` | Added *shell_and_tube_sizing* (ht HT-024: 13 tube-count, bundle-diameter, TEMA clearance, baffle and unsupported-length functions) — verified vs ht 1.2.0 (43 values, max 2.4e-13); worker glm-5.3-flash (24 min) |
+| 2026-10-08 | C-120 review B-09 | Light scripted review (orchestrator): all 24 ht families translated (CSL-0087…0110, 347 functions in the library); each file cites ht 1.2.0 and the original references and has a verification table vs ht; build_index 123 models / 347 functions / 0 errors; test_models 125 targets (95 main files + 30 variants), 0 failure; inventories consistent; B-09 closed |

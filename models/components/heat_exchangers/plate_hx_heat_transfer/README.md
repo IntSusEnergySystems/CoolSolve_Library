@@ -303,6 +303,10 @@ function is the original paper quoted in the `ht` docstring.
 
 ## Related models
 
+- `CSL-0112` *three_zone_hx_procedures*: the three-zone condenser and
+  evaporator procedures whose zone areas a plate rating model combines
+  with the coefficients of this model.
+
 - `CSL-0087` *internal_turbulent_nusselt*: the pattern of this file (first `ht`
   T-FUNC card); its turbulent pipe correlations are the same physics in a
   circular duct instead of a corrugated channel.
@@ -323,3 +327,11 @@ function is the original paper quoted in the `ht` docstring.
   coefficients (Lazarek-Black, Li-Wu, Sun-Mishima, Thome, Yun-Heo-Kim, Chen,
   Liu-Winterton, Shah 1982, Gungor-Winterton 1987), same layout; a corrugated
   channel boils with both this file's plate correlations and those.
+- `CSL-0113` *condenser_3_zones_plate_correlations*: three-zone plate
+  condenser using the Thonon single-phase and Kuo two-phase correlations of
+  the same family for a water-cooled R123 condenser.
+- `CSL-0111` *plate_hx_correlations*: the ULiège EES procedure library of the
+  same plate channel (Kumar, Martin, Muley among its ten procedures,
+  transcription independent of `ht`); its Muley polynomial keeps the
+  `10.51·phi^3` typo of the source file, which this file's `ht`-based
+  `Nu_Muley_Manglik` does not carry.

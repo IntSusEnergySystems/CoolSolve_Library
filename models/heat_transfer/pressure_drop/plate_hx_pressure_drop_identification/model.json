@@ -1,0 +1,79 @@
+{
+  "id": "CSL-0124",
+  "name": "plate_hx_pressure_drop_identification",
+  "title": "Plate heat exchanger: two-phase pressure drops and heat-transfer coefficients, with a fictitious-orifice condenser pressure drop",
+  "summary": "Plate-HX pressure-drop and heat-transfer correlations for a chevron plate pack (Thonon single-phase, Kuo condensation, Hsieh & Lin flow boiling) plus an identified fictitious orifice reproducing the measured condenser pressure drop; properties from the EES REFPROP interface for the mixture R245fa+R134a (stored run: pure R245fa).",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "plate_hx_pressure_drop_identification.eescode",
+  "fluids": [
+    "R245fa+R134a (REFPROP)",
+    "R245fa"
+  ],
+  "tags": [
+    "plate heat exchanger",
+    "pressure drop",
+    "heat transfer coefficient",
+    "two-phase",
+    "condensation",
+    "flow boiling",
+    "Thonon",
+    "Kuo",
+    "Hsieh and Lin",
+    "parameter identification",
+    "REFPROP"
+  ],
+  "language_features": [
+    "procedures",
+    "$common",
+    "EES_REFPROP external call",
+    "REPEAT-UNTIL",
+    ":= assignment",
+    "string variables",
+    "$bookmark"
+  ],
+  "stats": {
+    "n_equations": 37,
+    "largest_block": 2
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/optim/Identification pressure drops.EES",
+    "candidate_id": "TM-0554",
+    "authors": [
+      "TBD (ULiège, J. Lebrun laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.652",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solution (34 variables), variant file; 29 of 34 common variables agree at the stored operating point, the three q-dependent two-phase outputs of the stored solution are stale (reproduced only at q = 62.5 kW / ~74 kW, see README)",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.641,
+    "notes": "Default run: q-independent variables agree (Thonon h 5.12e-03, DELTAp 6.0e-05, orifice block <= 5.6e-04); stale q-dependent outputs differ (alpha_tp_cd 6.41e-01, DELTAp_tp 1.44e-01, h_tp_ev 6.33e-01) — evidence of a stale stored solution (CS-BUG-EXTRACT-STALE)."
+  },
+  "missing_features": [
+    "CS-GAP-REFPROP",
+    "CS-BUG-COMMON-PROC"
+  ],
+  "related": [
+    "CSL-0113",
+    "CSL-0115"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added (blocked native file, runnable R245fa variant, card C-135)",
+      "by": "GLM (Z.ai) for S. Quoilin"
+    }
+  ]
+}

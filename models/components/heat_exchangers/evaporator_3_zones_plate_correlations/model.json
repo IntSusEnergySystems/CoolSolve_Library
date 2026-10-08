@@ -1,0 +1,75 @@
+{
+  "id": "CSL-0114",
+  "name": "evaporator_3_zones_plate_correlations",
+  "title": "Three-zone plate evaporator with heat-transfer correlations (Thonon/Hsieh)",
+  "summary": "Plate evaporator for R245fa heated by thermal oil (or glycol): three refrigerant zones (subcooled liquid, boiling two-phase, superheated vapour) sized with LMTD and plate-heat-exchanger correlations (Thonon single phase, Hsieh & Lin boiling); computes area, pressure drops and writes the zone boundary data into the 'ev' lookup table. Ships the auto-size source file of the same family as a variant (R123/water demo case).",
+  "kind": "steady",
+  "level": 2,
+  "status": "runs",
+  "main_file": "evaporator_3_zones_plate_correlations.eescode",
+  "fluids": [
+    "R245fa",
+    "oil",
+    "glycol"
+  ],
+  "tags": [
+    "plate heat exchanger",
+    "evaporator",
+    "three zones",
+    "Thonon correlation",
+    "Hsieh correlation",
+    "pressure drop",
+    "design"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "procedures",
+    "IF/THEN/ELSE",
+    "lookup table write statements (dropped by CoolSolve, CS-BUG-LOOKUP-WRITE)"
+  ],
+  "stats": {
+    "n_equations": 37,
+    "largest_block": 3
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/procedures EES/evaporator 3zones with correlations for PHX.EES",
+    "candidate_id": "TM-0570",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory)",
+      "Sylvain Quoilin (autosize variant)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.940",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solutions of both source files (TM-0570: 21 variables; TM-0582 autosize variant: 30 variables). The stored values of the hx_ev outputs are stale in both files (call outputs stored as the EES guess 1; TM-0582 record internally inconsistent: A_ev = -0.948 vs A_l+A_tp+A_v = 9.610), so the reference covers the inputs and the simple computed quantities only.",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.00769,
+    "notes": "Main file: 19 common variables, 4 differ (rtol=0.001) - p_ev 7.69e-03 (R245fa saturation pressure, EES 8 (2008) vs CoolProp backend, within the 'older EES fluid models' tolerance of ees_import.md section 11, consistent with CSL-0019/CSL-0112) and the three call outputs where the EES file stores 1 (stale guess, no reference). All inputs and identities (A, W_tot, L_w_tot) agree exactly. Outputs checked by energy balance (30.79 kW on both fluid sides) and a positive two-phase pinch of 6.4 K. Variant: 22 common variables, 5 differ (rtol=0.001) - all 17 agreeing variables are inputs, exact identities and h_sf_su_ev (water enthalpy, <= 0.1 %); the 5 differing outputs inherit the stale EES record and a demo case 1.95 K superheated at inlet (T_sat(2 bar) = 48.05 degC vs T_r_su_ev = 50 degC) whose zone duties cancel to a small residual, sensitive to the R123 backend. TM-0582's decoded 851x2 parametric table is mostly empty (leftover, not reproducible)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0079",
+    "CSL-0112",
+    "CSL-0113",
+    "CSL-0115"
+  ,
+    "CSL-0121"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    }
+  ]
+}

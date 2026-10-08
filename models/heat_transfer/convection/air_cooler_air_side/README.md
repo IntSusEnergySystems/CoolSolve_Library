@@ -323,10 +323,15 @@ library license with full credit (decision D3 of the `ht` triage).
 - `CSL-0087` *internal_turbulent_nusselt*: the first `ht` function library of
   the batch; same layout, comment blocks and demonstration program.
 - `CSL-0105` *lmtd_and_f_correction* (roadmap card C-114): the
-  `Ft_aircooler` temperature-effectiveness factor of the same `ht` module, to
-  be translated there.
+  `Ft_aircooler` temperature-effectiveness factor of the same `ht` module,
+  translated there.
 - `CSL-0008`, `CSL-0077`: air-cooled condenser models that would use the
   air-side functions of this library.
 - `sources/labothappy` LTP-039 (finned-tube air-side heat-transfer
   coefficient) and LTP-032 (finned-tube air-side pressure drop): the
   correlations these models need.
+- `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.
+- `CSL-0109` *fin_efficiency_and_wall_factors*: the standalone function library
+  of the same `ht` core module (`HT-023`), with the same Kern-Kraus fin
+  efficiency as a reusable `FUNCTION` (this model keeps its inlined helper
+  `eta_fin_Kern_Kraus_aircooler` and the `bessel_mod_*_series` evaluators).

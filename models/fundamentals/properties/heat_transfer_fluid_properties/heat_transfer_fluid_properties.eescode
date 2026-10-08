@@ -1,0 +1,93 @@
+{=============================================================================
+  Heat-transfer fluid properties: MEG, Therminol VP-1, Therminol 66, oil
+  CoolSolve Library model CSL-0121 (function library)
+ -----------------------------------------------------------------------------
+  EES PROCEDURE prop_heat_transfer_fluid (renamed prop_htf of the source file,
+  see README): density, specific heat, thermal conductivity and dynamic
+  viscosity of four heat-transfer/secondary fluids against temperature, by the
+  empirical correlations of the source file (unchanged):
+    'glycol'         monoethylene glycol (MEG)
+    'TherminolVP-1'  Therminol VP-1 (fit of the HEDH heat-transfer-fluid data
+                     sheet http://twt.mpei.ac.ru/TTHB/HEDH/HTF-VP1.PDF)
+    'therminol66'    Therminol 66
+    'oil'            thermal oil (constant properties, nu = 1.85 cSt)
+  Any other fluid$ is routed to the built-in property functions with the
+  (T, P) input pair.
+
+  Inputs : fluid$, T [degC], p [Pa] (p is used by the built-in branch only)
+  Outputs: mu [Pa-s], rho [kg/m^3], cp [J/kg-K], k [W/m-K]
+  Units  : SI - temperatures in degC, pressures in Pa, energies in J
+  Source : ULiege, J. Lebrun laboratory collection, "procedures EES/
+           heat transfer fluids.EES" (EES X8.962) - see README.md
+============================================================================}
+
+"!Procedure prop_heat_transfer_fluid (prop_htf in the source file)"
+
+PROCEDURE prop_heat_transfer_fluid(fluid$, T, p : mu, rho, cp, k)
+
+if (fluid$='glycol') or (fluid$='TherminolVP-1') or (fluid$='oil') or (fluid$='therminol66') then
+
+  if fluid$='glycol' then
+    "Correlation for monoethylene glycol; T is in °C (as in the original)"
+    mu=-0.00197505085+0.450245894/T-1.01338701/T^2          "dynamic viscosity [Pa-s]"
+    rho=1148.28275 - 0.675538335*T - 0.000198964867*T^2     "density [kg/m^3]"
+    Cp=2329.09926 + 4.81933829*T                            "specific heat capacity [J/kg-K]"
+    k=0.304902525 - 0.000771015939*T                        "thermal conductivity [W/m-K]"
+  endif
+
+  if fluid$='TherminolVP-1' then
+    "Correlations of the HEDH heat-transfer-fluid data sheet HTF-VP1 (as in the original)"
+    nu = exp(544.149/(T + 114.43) - 2.59578) * 1e-6         "kinematic viscosity [m^2/s]"
+    rho=-0.90797 * T + 0.00078116*T^2 - 2.367e-6 * T^3 + 1083.25        "density [kg/m^3]"
+    Cp=1000 * (0.002414 * T + 5.9591e-6 * T^2 - 2.9879e-8 * T^3 + 4.4172e-11*T^4 + 1.498)  "specific heat capacity [J/kg-K]"
+    k=-8.19477e-5 * T - 1.92257e-7*T^2+2.5034e-11*T^3-7.2974e-15*T^4+0.137742  "thermal conductivity [W/m-K]"
+    mu = nu * rho                                           "dynamic viscosity [Pa-s]"
+  endif
+
+  if fluid$='therminol66' then
+    rho=-0.614254*T-0.000321*T^2+1020.62                    "density [kg/m^3]"
+    cp=(0.003313*T+0.0000008970785*T^2 + 1.496005)*1000     "specific heat capacity [J/kg-K]"
+    k=-0.000033*T - 0.00000015*T^2 + 0.118294               "thermal conductivity [W/m-K]"
+    nu=(exp(586.375/(T+62.5)-2.2809))*10^(-6)               "kinematic viscosity [m^2/s]"
+    mu = nu*rho                                             "dynamic viscosity [Pa-s]"
+  endif
+
+  if fluid$='oil' then
+    rho = 800                                               "density [kg/m^3]"
+    cp=2290                                                 "specific heat capacity [J/kg-K]"
+    nu_cst=1.85                                             "kinematic viscosity, as in the original [cSt]"
+    nu=nu_cst/1E5                                           "kinematic viscosity [m^2/s]"
+    mu = nu*rho                                             "dynamic viscosity [Pa-s]"
+    k=0.125                                                 "thermal conductivity [W/m-K]"
+  endif
+
+else
+  "Built-in property branch for any other fluid (real fluid$)"
+  mu=viscosity(fluid$,t=t,p=p)      "dynamic viscosity [Pa-s]"
+  rho=density(fluid$,t=t,p=p)       "density [kg/m^3]"
+  Cp=cp(fluid$,t=t,p=p)             "specific heat capacity [J/kg-K]"
+  k=conductivity(fluid$,t=t,p=p)    "thermal conductivity [W/m-K]"
+endif
+
+END
+
+"!Demonstration program"
+
+"Default operating point: the run stored in the EES source file"
+fluid$ = 'therminol66'
+T = 180                   "temperature [°C]"
+p = 1E5                   "pressure [Pa], used by the built-in branch only"
+CALL prop_heat_transfer_fluid(fluid$, T, p : mu, rho, cp, k)
+
+"Demonstration of the other fluids (not part of the EES stored solution)"
+fluid_meg$ = 'glycol'
+CALL prop_heat_transfer_fluid(fluid_meg$, 40, p : mu_meg, rho_meg, cp_meg, k_meg)
+
+fluid_vp1$ = 'TherminolVP-1'
+CALL prop_heat_transfer_fluid(fluid_vp1$, 100, p : mu_vp1, rho_vp1, cp_vp1, k_vp1)
+
+fluid_oil$ = 'oil'
+CALL prop_heat_transfer_fluid(fluid_oil$, 60, p : mu_oil, rho_oil, cp_oil, k_oil)
+
+fluid_w$ = 'Water'
+CALL prop_heat_transfer_fluid(fluid_w$, 50, p : mu_w, rho_w, cp_w, k_w)

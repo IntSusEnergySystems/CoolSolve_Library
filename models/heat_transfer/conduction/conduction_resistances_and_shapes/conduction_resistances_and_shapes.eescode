@@ -1,0 +1,459 @@
+{=============================================================================
+  Conduction: thermal resistances, shape factors and R-value conversions
+  CoolSolve Library model CSL-0106 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Fourteen conduction relations of the Python library ht: the plane-wall and
+  cylindrical-wall thermal resistances, the six isothermal shape factors
+  (sphere/pipe to plane, pipe to pipe, eccentric pipe in pipe, pipe between
+  two planes), the k <-> thermal-resistivity and R-value <-> k conversions
+  (SI and imperial R-value), and the layered cylindrical-wall heat transfer
+  with inner and outer convection coefficients (PROCEDURE, two layers).
+
+  Q = S*k*(T1 - T2) for the shape factors, R_shape = 1/(S*k); distances and
+  diameters in [m], conductivities k in [W/m-K], coefficients h in
+  [W/m^2-K], temperatures in [deg C] (the ht cylindrical-wall function takes
+  K, but only temperature differences enter its equations, so the results in
+  W and K are identical and its T outputs shift by 273.15).
+
+  The demonstration program at the end calls every function, once with the
+  inputs of the ht doctest of the corresponding function ("A" cases) and once
+  with a second, uniform input set ("B" cases). The ht values of both sets
+  are tabulated in the README (verification table). No ht selector exists in
+  this module (ht/conduction.py has none), so nothing is left out.
+
+  Translation convention: the pi constant is written as a local pi_val in the
+  subprogram bodies, because CoolSolve does not resolve the pi constant inside
+  a FUNCTION/PROCEDURE body (CoolSolve CS-BUG-PI-FUNCTION, already
+  registered: it silently evaluates as 1 there; a local literal is valid EES
+  and identical in value).
+
+  Inputs : lengths and diameters [m], k [W/m-K], h [W/m^2-K], T [deg C],
+           R [K/W] or [m^2-K/W], R_value [m^2-K/(W-inch)] or
+           [ft^2-deg F-h/(Btu-inch)], SI flag (1 = SI, 0 = imperial)
+  Outputs: R [K/W], S [m], k [W/m-K], Q [W], q_ext [W/m^2], UA [W/K],
+           U [W/m^2-K], layer resistances and temperatures
+  Source : ht (Caleb Bell), ht/conduction.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; relations attributed to the
+           books cited in each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION R_to_k(R, t, A)
+{R_TO_K - Thermal conductivity of a substance from its thermal resistance,
+thickness and area.
+
+  k = t/(A*R)
+
+R [K/W] is the thermal resistance of the substance, t [m] its thickness,
+A [m^2] the area the resistance refers to (pass A = 1 when the R value is
+already per square metre, the case of most material tables - as in the
+original). Validity: none quoted (as in ht).
+Original: Bergman, T. L., A. S. Lavine, F. P. Incropera and D. P. DeWitt,
+  Introduction to Heat Transfer, 6E, Wiley, Hoboken, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conduction.py, R_to_k,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  R_to_k = t/(A*R)
+END
+
+FUNCTION k_to_R(k, t, A)
+{K_TO_R - Thermal resistance of a substance from its thermal conductivity,
+thickness and area (inverse of R_to_k).
+
+  R = t/(k*A)
+
+k [W/m-K], t [m], A [m^2] (pass A = 1 for a per-square-metre resistance).
+Validity: none quoted (as in ht).
+Original: Bergman, T. L., A. S. Lavine, F. P. Incropera and D. P. DeWitt,
+  Introduction to Heat Transfer, 6E, Wiley, Hoboken, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conduction.py, k_to_R,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  k_to_R = t/(k*A)
+END
+
+FUNCTION k_to_thermal_resistivity(k)
+{K_TO_THERMAL_RESISTIVITY - Thermal resistivity of a substance from its
+thermal conductivity (not to be confused with the thermal resistance, as in
+the original).
+
+  r = 1/k
+
+k [W/m-K]; r [m-K/W]. Validity: none quoted (as in ht).
+Original: Gesellschaft, V. D. I., ed., VDI Heat Atlas, 2nd edition, Springer,
+  Berlin/New York, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conduction.py,
+  k_to_thermal_resistivity, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  k_to_thermal_resistivity = 1/k
+END
+
+FUNCTION thermal_resistivity_to_k(r)
+{THERMAL_RESISTIVITY_TO_K - Thermal conductivity of a substance from its
+thermal resistivity (inverse of k_to_thermal_resistivity).
+
+  k = 1/r
+
+r [m-K/W]; k [W/m-K]. Validity: none quoted (as in ht).
+Original: Gesellschaft, V. D. I., ed., VDI Heat Atlas, 2nd edition, Springer,
+  Berlin/New York, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conduction.py,
+  thermal_resistivity_to_k, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  thermal_resistivity_to_k = 1/r
+END
+
+FUNCTION R_value_to_k(R_value, SI)
+{R_VALUE_TO_K - Thermal conductivity of a substance from its R-value.
+SI = 1: R_value in SI units [m^2-K/(W-inch)]; SI = 0: imperial R-value
+[ft^2-deg F-h/(Btu-inch)].
+
+  k = 1/r     r = R_value/0.0254          (SI, inch = 0.0254 m)
+              r = R_value*6.933471798515978 (imperial)
+
+The imperial factor is ft^2*deg F*h/(Btu*inch) expressed in [m-K/W]
+(fluids.constants: Btu = 1055.05585262 J, foot = 0.3048 m, hour = 3600 s,
+inch = 0.0254 m, deg F difference = K/1.8); ht notes "multiplied by 6.93347
+and then inversed". Validity: none quoted (as in ht).
+Original: Gesellschaft, V. D. I., ed., VDI Heat Atlas, 2nd edition, Springer,
+  Berlin/New York, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conduction.py, R_value_to_k,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  IF SI = 1 THEN
+    r = R_value/0.0254
+  ELSE
+    r = R_value*6.933471798515978
+  ENDIF
+  R_value_to_k = 1/r
+END
+
+FUNCTION k_to_R_value(k, SI)
+{K_TO_R_VALUE - R-value of a substance from its thermal conductivity
+(inverse of R_value_to_k). SI = 1: R_value in SI units [m^2-K/(W-inch)];
+SI = 0: imperial R-value [ft^2-deg F-h/(Btu-inch)].
+
+  R_value = (1/k)*0.0254               (SI, inch = 0.0254 m)
+  R_value = (1/k)/6.933471798515978    (imperial, factor as in R_value_to_k)
+
+Validity: none quoted (as in ht).
+Original: Gesellschaft, V. D. I., ed., VDI Heat Atlas, 2nd edition, Springer,
+  Berlin/New York, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conduction.py, k_to_R_value,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  r = 1/k
+  IF SI = 1 THEN
+    k_to_R_value = r*0.0254
+  ELSE
+    k_to_R_value = r/6.933471798515978
+  ENDIF
+END
+
+FUNCTION R_cylinder(Di, Do, k, L)
+{R_CYLINDER - Thermal resistance of a cylindrical wall of constant thermal
+conductivity (a pipe wall), inner diameter Di, outer diameter Do, length L.
+
+  R_cylinder = LN(Do/Di)/(2*PI*L*k)
+
+Di, Do, L [m]; k [W/m-K]; R_cylinder [K/W]. Validity: none quoted (as in ht).
+Original: Bergman, T. L., A. S. Lavine, F. P. Incropera and D. P. DeWitt,
+  Introduction to Heat Transfer, 6E, Wiley, Hoboken, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conduction.py, R_cylinder,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+  R_cylinder = LN(Do/Di)/(2*pi_val*L*k)
+END
+
+FUNCTION S_isothermal_sphere_to_plane(D, Z)
+{S_ISOTHERMAL_SPHERE_TO_PLANE - Conduction shape factor of an isothermal
+sphere of diameter D with its centre at the distance Z from an isothermal
+infinite plane.
+
+  S = 2*PI*D/(1 - D/(4*Z))
+
+D, Z [m]; S [m]; use with Q = S*k*(T1 - T2) (R_shape = 1/(S*k)).
+Validity: no restrictions (as in ht).
+Original: Kreith, F., R. Manglik and M. Bohn, Principles of Heat Transfer,
+  Cengage, 2010; as given in Bergman, T. L., A. S. Lavine, F. P. Incropera
+  and D. P. DeWitt, Introduction to Heat Transfer, 6E, Wiley, Hoboken, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conduction.py,
+  S_isothermal_sphere_to_plane, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+  S_isothermal_sphere_to_plane = 2*pi_val*D/(1 - D/(4*Z))
+END
+
+FUNCTION S_isothermal_pipe_to_plane(D, Z, L)
+{S_ISOTHERMAL_PIPE_TO_PLANE - Conduction shape factor of an isothermal pipe
+of outer diameter D, its axis at the distance Z from an isothermal infinite
+plane, over the length L (L = 1 m gives the per-metre factor used with some
+sources, as in the original).
+
+  S = 2*PI*L/ArcCosH(2*Z/D)
+
+D, Z, L [m]; S [m]; use with Q = S*k*(T1 - T2). Validity: L >> D (as in ht).
+Original: Kreith, F., R. Manglik and M. Bohn, Principles of Heat Transfer,
+  Cengage, 2010; as given in Bergman, T. L., A. S. Lavine, F. P. Incropera
+  and D. P. DeWitt, Introduction to Heat Transfer, 6E, Wiley, Hoboken, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conduction.py,
+  S_isothermal_pipe_to_plane, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+  S_isothermal_pipe_to_plane = 2*pi_val*L/ArcCosH(2*Z/D)
+END
+
+FUNCTION S_isothermal_pipe_normal_to_plane(D, L)
+{S_ISOTHERMAL_PIPE_NORMAL_TO_PLANE - Conduction shape factor of an isothermal
+pipe of diameter D extending normal to an isothermal infinite plane, into an
+infinite medium, over the buried length L.
+
+  S = 2*PI*L/LN(4*L/D)
+
+D, L [m]; S [m]; use with Q = S*k*(T1 - T2). Validity: L >> D (as in ht).
+Original: Kreith, F., R. Manglik and M. Bohn, Principles of Heat Transfer,
+  Cengage, 2010; as given in Bergman, T. L., A. S. Lavine, F. P. Incropera
+  and D. P. DeWitt, Introduction to Heat Transfer, 6E, Wiley, Hoboken, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conduction.py,
+  S_isothermal_pipe_normal_to_plane, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+  S_isothermal_pipe_normal_to_plane = 2*pi_val*L/LN(4*L/D)
+END
+
+FUNCTION S_isothermal_pipe_to_isothermal_pipe(D1, D2, W, L)
+{S_ISOTHERMAL_PIPE_TO_ISOTHERMAL_PIPE - Conduction shape factor of two long
+isothermal pipes of outer diameters D1 and D2 with their axes a distance W
+apart, in an infinite medium, over the length L (L = 1 m gives the
+per-metre factor, as in the original).
+
+  S = 2*PI*L/ArcCosH((4*W^2 - D1^2 - D2^2)/(2*D1*D2))
+
+D1, D2, W, L [m]; S [m]; use with Q = S*k*(T1 - T2). Validity: L >> W and
+L >> both diameters (as in ht).
+Original: Kreith, F., R. Manglik and M. Bohn, Principles of Heat Transfer,
+  Cengage, 2010; as given in Bergman, T. L., A. S. Lavine, F. P. Incropera
+  and D. P. DeWitt, Introduction to Heat Transfer, 6E, Wiley, Hoboken, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conduction.py,
+  S_isothermal_pipe_to_isothermal_pipe, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+  S_isothermal_pipe_to_isothermal_pipe = 2*pi_val*L/ArcCosH((4*W^2 - D1^2 - D2^2)/(2*D1*D2))
+END
+
+FUNCTION S_isothermal_pipe_to_two_planes(D, Z, L)
+{S_ISOTHERMAL_PIPE_TO_TWO_PLANES - Conduction shape factor of an isothermal
+pipe of outer diameter D between two isothermal parallel planes of equal
+temperature enclosing it, its axis at the distance Z from either plane, over
+the length L (L = 1 m gives the per-metre factor, as in the original).
+
+  S = 2*PI*L/LN(8*Z/(PI*D))
+
+D, Z, L [m]; S [m]; use with Q = S*k*(T1 - T2). Validity: L >> D and L >> Z
+(as in ht).
+Original: Sunderland, J. E. and K. R. Johnson, "Shape Factors for Heat
+  Conduction Through Bodies with Isothermal or Convective Boundary
+  Conditions", ASHRAE Transactions, Vol. 70, 1964; as given in Bergman,
+  T. L., A. S. Lavine, F. P. Incropera and D. P. DeWitt, Introduction to Heat
+  Transfer, 6E, Wiley, Hoboken, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conduction.py,
+  S_isothermal_pipe_to_two_planes, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+  S_isothermal_pipe_to_two_planes = 2*pi_val*L/LN(8*Z/(pi_val*D))
+END
+
+FUNCTION S_isothermal_pipe_eccentric_to_isothermal_pipe(D1, D2, Z, L)
+{S_ISOTHERMAL_PIPE_ECCENTRIC_TO_ISOTHERMAL_PIPE - Conduction shape factor of
+an isothermal pipe of outer diameter D1 eccentric by the distance Z (between
+axes) inside an isothermal pipe of outer diameter D2, over the length L
+(L = 1 m gives the per-metre factor, as in the original).
+
+  S = 2*PI*L/ArcCosH((D2^2 + D1^2 - 4*Z^2)/(2*D1*D2))
+
+D1, D2, Z, L [m]; S [m]; use with Q = S*k*(T1 - T2). Validity: L >> both
+diameters and D2 > D1 (as in ht).
+Original: Kreith, F., R. Manglik and M. Bohn, Principles of Heat Transfer,
+  Cengage, 2010; as given in Bergman, T. L., A. S. Lavine, F. P. Incropera
+  and D. P. DeWitt, Introduction to Heat Transfer, 6E, Wiley, Hoboken, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conduction.py,
+  S_isothermal_pipe_eccentric_to_isothermal_pipe, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+  S_isothermal_pipe_eccentric_to_isothermal_pipe = 2*pi_val*L/ArcCosH((D2^2 + D1^2 - 4*Z^2)/(2*D1*D2))
+END
+
+PROCEDURE cylindrical_heat_transfer(Ti, To, hi, ho, Di, t1, k1, t2, k2: Q, q_ext, UA, U_inner, U_outer, To1, To2, To3, R1, R2)
+{CYLINDRICAL_HEAT_TRANSFER - Heat rate and temperature profile through a
+cylindrical wall (pipe or vessel) with an inside and an outside convection
+coefficient and two solid layers (a single layer: pass t2 = 0; the ht helper
+takes a Python list of layers, the PROCEDURE fixes two - log in README).
+EES names being case-insensitive, the ht result names q, T1, T2, T3 are
+renamed q_ext, To1, To2, To3 here (they would collide with the inputs t1, t2
+and with each other in the caller).
+
+On a 1 m length basis (as in ht): Q [W] heat rate, q_ext = Q/(PI*D_ext)
+[W/m^2] flux on the external area, UA [W/K], U_outer = U_external and
+U_inner = UA/(PI*Di) [W/m^2-K] overall coefficients on the external and
+internal areas, R1, R2 = 0.5*D_ext*LN(Do/Di)/k [m^2-K/W] layer resistances
+used as q_ext*Ri = layer temperature drop (the ht docstring calls them m-K/W
+and calls q W/m^3; its code and doctest give the quantities written here), and
+To1 = Ti, To2, To3 the temperatures at the outside of each layer [deg C] (ht
+takes K; only differences enter, so its T outputs shift by 273.15).
+Validity: none quoted (as in ht).
+Original: the layered cylindrical-wall resistance with inner and outer
+  convection coefficients (standard result, e.g. Bergman, T. L., A. S.
+  Lavine, F. P. Incropera and D. P. DeWitt, Introduction to Heat Transfer,
+  6E, Wiley, Hoboken, 2011); ht gives no reference for this helper.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conduction.py,
+  cylindrical_heat_transfer, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  pi_val = 3.141592653589793  "pi, as a local constant (see the header)"
+  D_ext = Di + 2*(t1 + t2)
+  A_ext = pi_val*D_ext
+  A_int = pi_val*Di
+  Do1 = Di + 2*t1
+  R1 = 0.5*D_ext*LN(Do1/Di)/k1
+  Do2 = Do1 + 2*t2
+  R2 = 0.5*D_ext*LN(Do2/Do1)/k2
+  U_outer = 1/((D_ext/Di)/hi + R1 + R2 + 1/ho)
+  UA = A_ext*U_outer
+  Q = UA*(Ti - To)
+  q_ext = Q/A_ext
+  U_inner = UA/A_int
+  To1 = Ti
+  To2 = To1 - q_ext*R1
+  To3 = To2 - q_ext*R2
+END
+
+"!Demonstration program: every function is called twice"
+"It is ignored by the future $INCLUDE library:conduction_resistances_and_shapes (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each function (published values)."
+"Case B: one second, uniform input set (insulated pipe: steel layer + insulation)."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case A - input set (values of the ht doctests)"
+R_A = 0.05
+t_A = 0.025
+A_A = 1
+k_A = 0.5
+k_res_A = 0.25
+R_value_A = 0.12
+R_value_imp_A = 0.71
+k_Rv_A = 0.2116666666666667
+k_Rv_imp_A = 0.20313787163983463
+Di_A = 0.9
+Do_A = 1.0
+k_cyl_A = 20
+L_A = 10
+D_sp_A = 1
+Z_sp_A = 100
+D_pp_A = 1
+Z_pp_A = 100
+L_pp_A = 3
+D_pn_A = 1
+L_pn_A = 100
+D1_pp_A = 0.1
+D2_pp_A = 0.2
+W_pp_A = 1
+L_ppp_A = 1
+D_2p_A = 0.1
+Z_2p_A = 5
+L_2p_A = 1
+D1_ec_A = 0.1
+D2_ec_A = 0.4
+Z_ec_A = 0.05
+L_ec_A = 10
+Ti_A = 180
+To_A = 28
+hi_A = 1E12
+ho_A = 22.697193
+Di_ch_A = 0.0779272
+t1_A = 0.0054864
+k1_A = 56.045
+t2_A = 0.05
+k2_A = 0.0598535265
+
+"R_to_k / k_to_R - per square metre (A = 1)"
+R_to_k_A = R_to_k(R_A, t_A, A_A)
+k_to_R_A = k_to_R(k_A, t_A, A_A)
+"thermal resistivity conversions"
+k_to_thermal_resistivity_A = k_to_thermal_resistivity(k_res_A)
+thermal_resistivity_to_k_A = thermal_resistivity_to_k(4)
+"R-value conversions - SI and imperial"
+R_value_to_k_A = R_value_to_k(R_value_A, 1)
+R_value_to_k_imp_A = R_value_to_k(R_value_imp_A, 0)
+k_to_R_value_A = k_to_R_value(k_Rv_A, 1)
+k_to_R_value_imp_A = k_to_R_value(k_Rv_imp_A, 0)
+"cylindrical-wall resistance"
+R_cylinder_A = R_cylinder(Di_A, Do_A, k_cyl_A, L_A)
+"shape factors"
+S_isothermal_sphere_to_plane_A = S_isothermal_sphere_to_plane(D_sp_A, Z_sp_A)
+S_isothermal_pipe_to_plane_A = S_isothermal_pipe_to_plane(D_pp_A, Z_pp_A, L_pp_A)
+S_isothermal_pipe_normal_to_plane_A = S_isothermal_pipe_normal_to_plane(D_pn_A, L_pn_A)
+S_isothermal_pipe_to_isothermal_pipe_A = S_isothermal_pipe_to_isothermal_pipe(D1_pp_A, D2_pp_A, W_pp_A, L_ppp_A)
+S_isothermal_pipe_to_two_planes_A = S_isothermal_pipe_to_two_planes(D_2p_A, Z_2p_A, L_2p_A)
+S_isothermal_pipe_eccentric_to_isothermal_pipe_A = S_isothermal_pipe_eccentric_to_isothermal_pipe(D1_ec_A, D2_ec_A, Z_ec_A, L_ec_A)
+"layered cylindrical-wall heat transfer (ht doctest: hi = 1E12 W/m^2-K, i.e. the inner face held at Ti)"
+CALL cylindrical_heat_transfer(Ti_A, To_A, hi_A, ho_A, Di_ch_A, t1_A, k1_A, t2_A, k2_A: Q_A, q_ext_A, UA_A, U_inner_A, U_outer_A, To1_A, To2_A, To3_A, Rl1_A, Rl2_A)
+
+"Case B - second, uniform input set (insulated pipe: 3 mm steel + 40 mm insulation, 50 mm inner diameter)"
+R_B = 0.72
+t_B = 0.04
+A_B = 2.5
+k_B = 1.4
+k_res_B = 0.037
+R_value_B = 0.75
+R_value_imp_B = 5.0
+k_Rv_B = 0.034
+Di_B = 0.1
+Do_B = 0.12
+k_cyl_B = 0.5
+L_B = 3
+D_sp_B = 0.5
+Z_sp_B = 2
+D_pp_B = 0.2
+Z_pp_B = 1.5
+L_pp_B = 10
+D_pn_B = 0.05
+L_pn_B = 8
+D1_pp_B = 0.15
+D2_pp_B = 0.25
+W_pp_B = 0.8
+L_ppp_B = 2
+D_2p_B = 0.3
+Z_2p_B = 1.2
+L_2p_B = 4
+D1_ec_B = 0.15
+D2_ec_B = 0.5
+Z_ec_B = 0.1
+L_ec_B = 5
+Ti_B = 180
+To_B = 28
+hi_B = 250
+ho_B = 12
+Di_ch_B = 0.05
+t1_B = 0.003
+k1_B = 45
+t2_B = 0.04
+k2_B = 0.04
+
+"R_to_k / k_to_R - over A = 2.5 m^2"
+R_to_k_B = R_to_k(R_B, t_B, A_B)
+k_to_R_B = k_to_R(k_B, t_B, A_B)
+"thermal resistivity conversions"
+k_to_thermal_resistivity_B = k_to_thermal_resistivity(k_res_B)
+thermal_resistivity_to_k_B = thermal_resistivity_to_k(27)
+"R-value conversions - SI and imperial"
+R_value_to_k_B = R_value_to_k(R_value_B, 1)
+R_value_to_k_imp_B = R_value_to_k(R_value_imp_B, 0)
+k_to_R_value_B = k_to_R_value(k_Rv_B, 1)
+k_to_R_value_imp_B = k_to_R_value(k_Rv_B, 0)
+"cylindrical-wall resistance"
+R_cylinder_B = R_cylinder(Di_B, Do_B, k_cyl_B, L_B)
+"shape factors"
+S_isothermal_sphere_to_plane_B = S_isothermal_sphere_to_plane(D_sp_B, Z_sp_B)
+S_isothermal_pipe_to_plane_B = S_isothermal_pipe_to_plane(D_pp_B, Z_pp_B, L_pp_B)
+S_isothermal_pipe_normal_to_plane_B = S_isothermal_pipe_normal_to_plane(D_pn_B, L_pn_B)
+S_isothermal_pipe_to_isothermal_pipe_B = S_isothermal_pipe_to_isothermal_pipe(D1_pp_B, D2_pp_B, W_pp_B, L_ppp_B)
+S_isothermal_pipe_to_two_planes_B = S_isothermal_pipe_to_two_planes(D_2p_B, Z_2p_B, L_2p_B)
+S_isothermal_pipe_eccentric_to_isothermal_pipe_B = S_isothermal_pipe_eccentric_to_isothermal_pipe(D1_ec_B, D2_ec_B, Z_ec_B, L_ec_B)
+"layered cylindrical-wall heat transfer"
+CALL cylindrical_heat_transfer(Ti_B, To_B, hi_B, ho_B, Di_ch_B, t1_B, k1_B, t2_B, k2_B: Q_B, q_ext_B, UA_B, U_inner_B, U_outer_B, To1_B, To2_B, To3_B, Rl1_B, Rl2_B)

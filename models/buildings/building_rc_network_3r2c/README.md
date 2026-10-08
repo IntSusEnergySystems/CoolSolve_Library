@@ -242,3 +242,4 @@ CoolSolve gaps (`../CoolSolve/docs/model_library_support.md`):
 - `CSL-0012` *thermal_comfort_pmv_ppd*: the other model of the `buildings/`
   category (also from the CLIM course, also blocked, with a runnable
   `_coolsolve` variant).
+- `CSL-0106` *conduction_resistances_and_shapes*: the conduction function library of the `ht` source (plane-wall resistance, cylindrical-wall resistance, shape factors, R-value conversions) - the wall resistances written inline in this model as `R = t/(k*A)` are available there as reusable functions.

@@ -1,0 +1,420 @@
+{=============================================================================
+   Internal laminar convection and curved ducts: Nusselt-number correlations
+   CoolSolve Library model CSL-0091 (function library, kind = function)
+   -----------------------------------------------------------------------------
+   Ten EES FUNCTIONs returning the Nusselt number Nu of single-phase internal
+   flow at low Reynolds number or in non-circular / curved ducts:
+
+   - fully developed laminar pipe flow, constant wall temperature (Nu = 3.66)
+     and constant wall heat flux (Nu = 48/11 = 4.354);
+   - laminar thermal entry region of a circular pipe (Hausen, Sieder-Tate,
+     Baehr-Stephan), average Nu over the pipe length L;
+   - fully developed laminar flow in a rectangular duct of aspect ratio a_r
+     (Shah-London, constant wall heat flux);
+   - turbulent flow in a spiral (Morimoto-Hotta) and in helical coils
+     (Mori-Nakayama, Schmidt, Xin-Ebadian).
+
+   As in the source library, the wall heat-transfer coefficient follows from
+   h = Nu*k/Dh and is left to the caller; the friction factor is not an input
+   of these correlations. The demonstration program at the end calls every
+   function twice: once (case A) with the input set of the ht doctest of the
+   corresponding correlation, once (case B) with a second input set that
+   exercises the other branch of the two-branch correlations. The ht values
+   of both sets are tabulated in the README (verification table).
+
+   Inputs : Re [-], Pr [-], L [m], Di [m], mu / mu_w [Pa-s], a_r [-],
+            Dh [m], Rm [m], Dc [m]
+   Outputs: Nu [-] (one FUNCTION per correlation)
+   Units  : SI - dimensionless numbers, viscosities in Pa-s, lengths in m
+   Source : ht (Caleb Bell), ht/conv_internal.py, version 1.2.0, commit 85e0ee6,
+            MIT - https://github.com/CalebBell/ht ; correlations by the authors
+            cited in each function block - see README.md
+   Status : VERIFIED against the doctests and the values of ht 1.2.0
+            (README.md, "Verification")
+ =============================================================================}
+
+FUNCTION Nu_laminar_T_const(dummy)
+{NU_LAMINAR_T_CONST - Nusselt number of fully developed laminar flow in a
+circular pipe at constant wall temperature. Theoretically derived and
+reproduced experimentally.
+
+  Nu = 3.66
+
+dummy [-] is an unused dummy argument: ht's function takes no arguments,
+while EES requires at least one argument in a FUNCTION statement; the value
+is always 3.66 whatever dummy is.
+
+Validity: fully thermally and hydraulically developed laminar flow, constant
+wall temperature (as in ht).
+Original: Green, D. and R. Perry, Perry's Chemical Engineers' Handbook, 8E,
+  McGraw-Hill, 2007; Bergman, T. L., A. S. Lavine, F. P. Incropera and
+  D. P. DeWitt, Introduction to Heat Transfer, 6E, Wiley, 2011; VDI Heat
+  Atlas, 2E, Springer, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, laminar_T_const,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_laminar_T_const = 3.66
+END
+
+FUNCTION Nu_laminar_Q_const(dummy)
+{NU_LAMINAR_Q_CONST - Nusselt number of fully developed laminar flow in a
+circular pipe at constant wall heat flux. Theoretically derived and
+reproduced experimentally.
+
+  Nu = 48/11 = 4.354
+
+dummy [-] is an unused dummy argument: ht's function takes no arguments,
+while EES requires at least one argument in a FUNCTION statement; the value
+is always 48/11 whatever dummy is. Many sources round to 4.36, but the VDI
+Heat Atlas does not (as in ht).
+
+Validity: fully thermally and hydraulically developed laminar flow, constant
+wall heat flux (as in ht).
+Original: Green, D. and R. Perry, Perry's Chemical Engineers' Handbook, 8E,
+  McGraw-Hill, 2007; Bergman, T. L., A. S. Lavine, F. P. Incropera and
+  D. P. DeWitt, Introduction to Heat Transfer, 6E, Wiley, 2011; VDI Heat
+  Atlas, 2E, Springer, 2010.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, laminar_Q_const,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_laminar_Q_const = 48/11
+END
+
+FUNCTION Nu_laminar_entry_thermal_Hausen(Re, Pr, L, Di)
+{NU_LAMINAR_ENTRY_THERMAL_HAUSEN - average Nusselt number of laminar flow in
+a circular pipe in the thermal entry region, over the pipe length L [m] of a
+pipe of inside diameter Di [m].
+
+  Gz = Di/L*Re*Pr
+  Nu = 3.66 + 0.0668*Gz/(1 + 0.04*Gz^(2/3))
+
+Re [-] is the Reynolds number on Di, Pr [-] the Prandtl number.
+Validity: as in ht (no explicit range); if Pr >> 1 (5 is a common
+  requirement) the equation also applies to flows with a developing velocity
+  profile; as L grows, Nu becomes the constant-temperature value 3.66.
+Original: Hausen, H., "Darstellung des Warmeuberganges in Rohren durch
+  verallgeminerte Potenzbeziehungen", Z. Ver. deutsch. Ing. Beih.
+  Verfahrenstech. 4: 91-98, 1943; as shown in Kays, W. M., "Numerical
+  Solutions for Laminar Flow Heat Transfer in Circular Tubes", 1953; cited by
+  Bergman, T. L., A. S. Lavine, F. P. Incropera and D. P. DeWitt,
+  Introduction to Heat Transfer, 6E, Wiley, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py,
+  laminar_entry_thermal_Hausen, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Gz_Hausen = Di/L*Re*Pr
+  Nu_laminar_entry_thermal_Hausen = 3.66 + 0.0668*Gz_Hausen/(1 + 0.04*Gz_Hausen^(2/3))
+END
+
+FUNCTION Nu_laminar_entry_Seider_Tate(Re, Pr, L, Di, mu, mu_w)
+{NU_LAMINAR_ENTRY_SIEDER_TATE - average Nusselt number of laminar flow in a
+circular pipe in the thermal entry region, over the pipe length L [m] of a
+pipe of inside diameter Di [m], with the viscosity correction for the wall
+temperature.
+
+  Nu = 1.86*(Di/L*Re*Pr)^(1/3)*(mu/mu_w)^0.14
+
+Re [-] is the Reynolds number on Di, Pr [-] the Prandtl number, mu [Pa-s]
+the bulk viscosity and mu_w [Pa-s] the viscosity at the wall temperature.
+Passing mu = mu_w gives the form without the correction (both calls are
+exercised in the demonstration program).
+Validity: Reynolds number should be less than 10000 (as in ht); Prandtl
+  number between that of air and that of liquid metals, 0.7 < Pr < 16700 (as
+  in ht); outside the boundaries the equation gives very false results.
+Original: Sieder, E. N. and G. E. Tate, "Heat Transfer and Pressure Drop of
+  Liquids in Tubes", Industrial & Engineering Chemistry 28(12): 1429-1435,
+  1936; also shown in Serth, R. W., Process Heat Transfer: Principles,
+  Applications and Rules of Thumb, 2E, Academic Press, 2014.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py,
+  laminar_entry_Seider_Tate, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Nu_laminar_entry_Seider_Tate = 1.86*(Di/L*Re*Pr)^(1/3)*(mu/mu_w)^0.14
+END
+
+FUNCTION Nu_laminar_entry_Baehr_Stephan(Re, Pr, L, Di)
+{NU_LAMINAR_ENTRY_BAEHR_STEPHAN - average Nusselt number of laminar flow in
+a circular pipe in the thermal and velocity entry region, over the pipe
+length L [m] of a pipe of inside diameter Di [m].
+
+  Gz = Di/L*Re*Pr
+  Nu = (3.657/tanh(2.264*Gz^(-1/3) + 1.7*Gz^(-2/3))
+        + 0.0499*Gz*tanh(Gz^(-1)))/tanh(2.432*Pr^(1/6)*Gz^(-1/6))
+
+Re [-] is the Reynolds number on Di, Pr [-] the Prandtl number.
+Validity: as in ht (no explicit range); as L grows, Nu becomes the
+  constant-temperature value 3.66.
+Original: Baehr, H. D. and K. Stephan, Heat and Mass Transfer, Springer,
+  2013; as shown in Bergman, T. L., A. S. Lavine, F. P. Incropera and
+  D. P. DeWitt, Introduction to Heat Transfer, 6E, Wiley, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py,
+  laminar_entry_Baehr_Stephan, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Gz_BS = Di/L*Re*Pr
+  Nu_laminar_entry_Baehr_Stephan = (3.657/tanh(2.264*Gz_BS^(-1/3) + 1.7*Gz_BS^(-2/3)) + 0.0499*Gz_BS*tanh(Gz_BS^(-1)))/tanh(2.432*Pr^(1/6)*Gz_BS^(-1/6))
+END
+
+FUNCTION Nu_laminar_rectangular_Shan_London(a_r)
+{NU_LAMINAR_RECTANGULAR_SHAN_LONDON - Nusselt number of fully developed
+laminar flow in a rectangular duct of aspect ratio a_r [-], from 0 to 1,
+derived assuming a constant wall heat flux from all sides. Theoretically
+derived and reproduced experimentally.
+
+  Nu = 8.235*(1 - 2.0421*a_r + 3.0853*a_r^2 - 2.4765*a_r^3
+              + 1.0578*a_r^4 - 0.1861*a_r^5)
+
+Validity: as in ht (no explicit range); at an aspect ratio of 1 (square
+  channel) Nu converges to 3.610224.
+Original: Shah, R. K. and A. L. London, Supplement 1: Laminar Flow Forced
+  Convection in Ducts: A Source Book for Compact Heat Exchanger Analytical
+  Data, Academic Press, 1978; checked against Shah, R. K. and A. L. London,
+  "Laminar Flow Forced Convection Heat Transfer and Flow Friction in Straight
+  and Curved Ducts - A Summary of Analytical Solutions", Stanford Univ.,
+  1971.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py,
+  Nu_laminar_rectangular_Shan_London, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Nu_laminar_rectangular_Shan_London = 8.235*(1 - 2.0421*a_r + 3.0853*a_r^2 - 2.4765*a_r^3 + 1.0578*a_r^4 - 0.1861*a_r^5)
+END
+
+FUNCTION Nu_Morimoto_Hotta(Re, Pr, Dh, Rm)
+{NU_MORIMOTO_HOTTA - Nusselt number of turbulent flow inside a spiral heat
+exchanger of average spiral radius Rm [m] and average hydraulic diameter
+Dh [m] (Dh = 2*H*S/(H+S) for a channel of height H and spacing S;
+Rm = (R_min + R_max)/2).
+
+  Nu = 0.0239*(1 + 5.54*Dh/Rm)*Re^0.806*Pr^0.268
+
+Re [-] is the Reynolds number with bulk properties (on Dh), Pr [-] the
+Prandtl number with bulk properties; Nu is with respect to Dh.
+Validity: as in ht (no explicit range).
+Original: Morimoto, E. and K. Hotta, "Study of Geometric Structure and Heat
+  Transfer Characteristics of Spiral Plate Heat Exchanger", Transactions of
+  the Japan Society of Mechanical Engineers Series B 52(474): 926-933, 1986
+  (in Japanese); also shown in Bidabadi, M., A. Sadaghiani and A. Azad,
+  "Spiral heat exchanger optimization using genetic algorithm", Int. J.
+  Science and Technology 20(5): 1445-1454, 2013, and Turgut, O. E. and
+  M. T. Coban, "Thermal Design of Spiral Heat Exchangers and Heat Pipes
+  through Global Best Algorithm", Heat and Mass Transfer, 2016.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py, Morimoto_Hotta,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  Nu_Morimoto_Hotta = 0.0239*(1 + 5.54*Dh/Rm)*Re^0.806*Pr^0.268
+END
+
+FUNCTION Nu_helical_Mori_Nakayama(Re, Pr, Di, Dc)
+{NU_HELICAL_MORI_NAKAYAMA - Nusselt number of turbulent flow inside a curved
+pipe such as a helical coil, with the method of Mori and Nakayama.
+
+  For Pr < 1:
+  Nu = Pr/(26.2*(Pr^(2/3) - 0.074))*Re^0.8*(Di/Dc)^0.1
+       * (1 + 0.098/(Re*(Di/Dc)^2)^0.2)
+  For Pr >= 1:
+  Nu = Pr^0.4/41*Re^(5/6)*(Di/Dc)^(1/12)
+       * (1 + 0.061/(Re*(Di/Dc)^2.5)^(1/6))
+
+Re [-] is the Reynolds number on Di, Pr [-] the Prandtl number with bulk
+properties, Di [m] the inner diameter of the coil and Dc [m] the diameter of
+the helix measured from the center of the tube on one side to the center of
+the tube on the other side; Nu is with respect to Di.
+Validity: applicable for Re*(Di/Dc)^2 > 0.1 (as in ht); at very low
+  curvatures the predicted heat-transfer coefficient grows unbounded.
+Original: Mori, Y. and W. Nakayama, "Study on Forced Convective Heat Transfer
+  in Curved Pipes", Int. J. Heat and Mass Transfer 10(5): 681-695, 1967; also
+  shown in El-Genk, M. S. and T. M. Schriener, "A Review and Correlations for
+  Convection Heat Transfer and Pressure Losses in Toroidal and Helically
+  Coiled Tubes", Heat Transfer Engineering, 2016, and Hardik, B. K.,
+  P. K. Baburajan and S. V. Prabhu, "Local Heat Transfer Coefficient in
+  Helical Coils with Single Phase Flow", Int. J. Heat and Mass Transfer 89:
+  522-538, 2015.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py,
+  helical_turbulent_Nu_Mori_Nakayama, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  IF Pr < 1 THEN
+    Nu_helical_Mori_Nakayama = Pr/(26.2*(Pr^(2/3) - 0.074))*Re^0.8*(Di/Dc)^0.1*(1 + 0.098/(Re*(Di/Dc)^2)^0.2)
+  ELSE
+    Nu_helical_Mori_Nakayama = Pr^0.4/41*Re^(5/6)*(Di/Dc)^(1/12)*(1 + 0.061/(Re*(Di/Dc)^2.5)^(1/6))
+  ENDIF
+END
+
+FUNCTION Nu_helical_Schmidt(Re, Pr, Di, Dc)
+{NU_HELICAL_SCHMIDT - Nusselt number of turbulent flow inside a curved pipe
+such as a helical coil, with the method of Schmidt.
+
+  For Re_crit < Re < 2.2E4:
+  Nu = 0.023*(1 + 14.8*(1 + Di/Dc)*(Di/Dc)^(1/3))
+       * Re^(0.8 - 0.22*(Di/Dc)^0.1)*Pr^(1/3)
+  For 2.2E4 < Re < 1.5E5:
+  Nu = 0.023*(1 + 3.6*(1 - Di/Dc)*(Di/Dc)^0.8)*Re^0.8*Pr^(1/3)
+
+Re [-] is the Reynolds number on Di, Pr [-] the Prandtl number with bulk
+properties, Di [m] the inner diameter of the coil and Dc [m] the diameter of
+the helix measured from the center of the tube on one side to the center of
+the tube on the other side; Nu is with respect to Di.
+Validity: the two Reynolds-number ranges above (as in ht); for very low
+  curvatures, reasonable results are returned by both cases.
+Original: Schmidt, E. F., "Warmeubergang und Druckverlust in Rohrschlangen",
+  Chemie Ingenieur Technik 39(13): 781-789, 1967; also shown in El-Genk, M. S.
+  and T. M. Schriener, "A Review and Correlations for Convection Heat
+  Transfer and Pressure Losses in Toroidal and Helically Coiled Tubes", Heat
+  Transfer Engineering, 2016, Hardik, B. K., P. K. Baburajan and
+  S. V. Prabhu, "Local Heat Transfer Coefficient in Helical Coils with
+  Single Phase Flow", Int. J. Heat and Mass Transfer 89: 522-538, 2015, and
+  Rohsenow, W., J. Hartnett and Y. Cho, Handbook of Heat Transfer, 3E,
+  McGraw-Hill, 1998.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py,
+  helical_turbulent_Nu_Schmidt, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  IF Re <= 2.2E4 THEN
+    Nu_helical_Schmidt = 0.023*(1 + 14.8*(1 + Di/Dc)*(Di/Dc)^(1/3))*Re^(0.8 - 0.22*(Di/Dc)^0.1)*Pr^(1/3)
+  ELSE
+    Nu_helical_Schmidt = 0.023*(1 + 3.6*(1 - Di/Dc)*(Di/Dc)^0.8)*Re^0.8*Pr^(1/3)
+  ENDIF
+END
+
+FUNCTION Nu_helical_Xin_Ebadian(Re, Pr, Di, Dc)
+{NU_HELICAL_XIN_EBADIAN - Nusselt number of turbulent flow inside a curved
+pipe such as a helical coil, with the method of Xin and Ebadian.
+
+  For Re_crit < Re < 1E5:
+  Nu = 0.00619*Re^0.92*Pr^0.4*(1 + 3.455*Di/Dc)
+
+Re [-] is the Reynolds number on Di, Pr [-] the Prandtl number with bulk
+properties, Di [m] the inner diameter of the coil and Dc [m] the diameter of
+the helix measured from the center of the tube on one side to the center of
+the tube on the other side; Nu is with respect to Di.
+Validity: the correlation was developed with data in the range
+  0.7 < Pr < 5 and 0.0267 < Di/Dc < 0.0884 (as in ht); for very low
+  curvatures, reasonable results are returned.
+Original: Xin, R. C. and M. A. Ebadian, "The Effects of Prandtl Numbers on
+  Local and Average Convective Heat Transfer Characteristics in Helical
+  Pipes", Journal of Heat Transfer 119(3): 467-473, 1997; also shown in
+  El-Genk, M. S. and T. M. Schriener, "A Review and Correlations for
+  Convection Heat Transfer and Pressure Losses in Toroidal and Helically
+  Coiled Tubes", Heat Transfer Engineering, 2016, and Hardik, B. K.,
+  P. K. Baburajan and S. V. Prabhu, "Local Heat Transfer Coefficient in
+  Helical Coils with Single Phase Flow", Int. J. Heat and Mass Transfer 89:
+  522-538, 2015.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_internal.py,
+  helical_turbulent_Nu_Xin_Ebadian, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  Nu_helical_Xin_Ebadian = 0.00619*Re^0.92*Pr^0.4*(1 + 3.455*Di/Dc)
+END
+
+"Demonstration program - case A: inputs of the ht doctests"
+
+"Nu_laminar_T_const and Nu_laminar_Q_const - constants, no inputs"
+Nu_laminar_T_const_A = Nu_laminar_T_const(0)
+Nu_laminar_Q_const_A = Nu_laminar_Q_const(0)
+
+"Nu_laminar_entry_thermal_Hausen - Re = 1E5, Pr = 1.1, L = 5 m, Di = 0.5 m"
+Re_Hausen_A = 1E5
+Pr_Hausen_A = 1.1
+L_Hausen_A = 5
+Di_Hausen_A = 0.5
+Nu_laminar_entry_thermal_Hausen_A = Nu_laminar_entry_thermal_Hausen(Re_Hausen_A, Pr_Hausen_A, L_Hausen_A, Di_Hausen_A)
+
+"Nu_laminar_entry_Seider_Tate - Re = 1E5, Pr = 1.1, L = 5 m, Di = 0.5 m; without (mu = mu_w) and with the viscosity correction"
+Re_ST_A = 1E5
+Pr_ST_A = 1.1
+L_ST_A = 5
+Di_ST_A = 0.5
+mu_ST_A = 1E-4
+mu_w_ST_A = 1E-4
+Nu_laminar_entry_Seider_Tate_A = Nu_laminar_entry_Seider_Tate(Re_ST_A, Pr_ST_A, L_ST_A, Di_ST_A, mu_ST_A, mu_w_ST_A)
+Nu_laminar_entry_Seider_Tate_visc_A = Nu_laminar_entry_Seider_Tate(Re_ST_A, Pr_ST_A, L_ST_A, Di_ST_A, 8E-5, 1E-4)
+
+"Nu_laminar_entry_Baehr_Stephan - Re = 1E5, Pr = 1.1, L = 5 m, Di = 0.5 m"
+Re_BS_A = 1E5
+Pr_BS_A = 1.1
+L_BS_A = 5
+Di_BS_A = 0.5
+Nu_laminar_entry_Baehr_Stephan_A = Nu_laminar_entry_Baehr_Stephan(Re_BS_A, Pr_BS_A, L_BS_A, Di_BS_A)
+
+"Nu_laminar_rectangular_Shan_London - aspect ratio 0.7"
+a_r_A = 0.7
+Nu_laminar_rectangular_Shan_London_A = Nu_laminar_rectangular_Shan_London(a_r_A)
+
+"Nu_Morimoto_Hotta - Re = 1E5, Pr = 5.7, Dh = 0.05 m, Rm = 0.5 m"
+Re_MH_A = 1E5
+Pr_MH_A = 5.7
+Dh_MH_A = 0.05
+Rm_MH_A = 0.5
+Nu_Morimoto_Hotta_A = Nu_Morimoto_Hotta(Re_MH_A, Pr_MH_A, Dh_MH_A, Rm_MH_A)
+
+"Nu_helical_Mori_Nakayama - Re = 2E5, Pr = 0.7 (Pr < 1 branch), Di = 0.01 m, Dc = 0.2 m"
+Re_MN_A = 2E5
+Pr_MN_A = 0.7
+Di_MN_A = 0.01
+Dc_MN_A = 0.2
+Nu_helical_Mori_Nakayama_A = Nu_helical_Mori_Nakayama(Re_MN_A, Pr_MN_A, Di_MN_A, Dc_MN_A)
+
+"Nu_helical_Schmidt - Re = 2E5 (Re > 2.2E4 branch), Pr = 0.7, Di = 0.01 m, Dc = 0.2 m"
+Re_Sch_A = 2E5
+Pr_Sch_A = 0.7
+Di_Sch_A = 0.01
+Dc_Sch_A = 0.2
+Nu_helical_Schmidt_A = Nu_helical_Schmidt(Re_Sch_A, Pr_Sch_A, Di_Sch_A, Dc_Sch_A)
+
+"Nu_helical_Xin_Ebadian - Re = 2E5, Pr = 0.7, Di = 0.01 m, Dc = 0.2 m"
+Re_XE_A = 2E5
+Pr_XE_A = 0.7
+Di_XE_A = 0.01
+Dc_XE_A = 0.2
+Nu_helical_Xin_Ebadian_A = Nu_helical_Xin_Ebadian(Re_XE_A, Pr_XE_A, Di_XE_A, Dc_XE_A)
+
+"Demonstration program - case B: second input set (other branches)"
+
+"Nu_laminar_T_const and Nu_laminar_Q_const - constants, no inputs"
+Nu_laminar_T_const_B = Nu_laminar_T_const(0)
+Nu_laminar_Q_const_B = Nu_laminar_Q_const(0)
+
+"Nu_laminar_entry_thermal_Hausen - Re = 5000, Pr = 7, L = 2 m, Di = 0.02 m"
+Re_Hausen_B = 5000
+Pr_Hausen_B = 7
+L_Hausen_B = 2
+Di_Hausen_B = 0.02
+Nu_laminar_entry_thermal_Hausen_B = Nu_laminar_entry_thermal_Hausen(Re_Hausen_B, Pr_Hausen_B, L_Hausen_B, Di_Hausen_B)
+
+"Nu_laminar_entry_Seider_Tate - Re = 5000, Pr = 7, L = 2 m, Di = 0.02 m, with the viscosity correction"
+Re_ST_B = 5000
+Pr_ST_B = 7
+L_ST_B = 2
+Di_ST_B = 0.02
+mu_ST_B = 4E-4
+mu_w_ST_B = 6E-4
+Nu_laminar_entry_Seider_Tate_B = Nu_laminar_entry_Seider_Tate(Re_ST_B, Pr_ST_B, L_ST_B, Di_ST_B, mu_ST_B, mu_w_ST_B)
+
+"Nu_laminar_entry_Baehr_Stephan - Re = 5000, Pr = 7, L = 2 m, Di = 0.02 m"
+Re_BS_B = 5000
+Pr_BS_B = 7
+L_BS_B = 2
+Di_BS_B = 0.02
+Nu_laminar_entry_Baehr_Stephan_B = Nu_laminar_entry_Baehr_Stephan(Re_BS_B, Pr_BS_B, L_BS_B, Di_BS_B)
+
+"Nu_laminar_rectangular_Shan_London - aspect ratio 0.5"
+a_r_B = 0.5
+Nu_laminar_rectangular_Shan_London_B = Nu_laminar_rectangular_Shan_London(a_r_B)
+
+"Nu_Morimoto_Hotta - Re = 5E4, Pr = 3, Dh = 0.03 m, Rm = 0.3 m"
+Re_MH_B = 5E4
+Pr_MH_B = 3
+Dh_MH_B = 0.03
+Rm_MH_B = 0.3
+Nu_Morimoto_Hotta_B = Nu_Morimoto_Hotta(Re_MH_B, Pr_MH_B, Dh_MH_B, Rm_MH_B)
+
+"Nu_helical_Mori_Nakayama - Re = 1E5, Pr = 5 (Pr >= 1 branch), Di = 0.02 m, Dc = 0.1 m"
+Re_MN_B = 1E5
+Pr_MN_B = 5
+Di_MN_B = 0.02
+Dc_MN_B = 0.1
+Nu_helical_Mori_Nakayama_B = Nu_helical_Mori_Nakayama(Re_MN_B, Pr_MN_B, Di_MN_B, Dc_MN_B)
+
+"Nu_helical_Schmidt - Re = 1E4 (Re <= 2.2E4 branch), Pr = 3, Di = 0.02 m, Dc = 0.1 m"
+Re_Sch_B = 1E4
+Pr_Sch_B = 3
+Di_Sch_B = 0.02
+Dc_Sch_B = 0.1
+Nu_helical_Schmidt_B = Nu_helical_Schmidt(Re_Sch_B, Pr_Sch_B, Di_Sch_B, Dc_Sch_B)
+
+"Nu_helical_Xin_Ebadian - Re = 5E4, Pr = 3, Di = 0.02 m, Dc = 0.1 m"
+Re_XE_B = 5E4
+Pr_XE_B = 3
+Di_XE_B = 0.02
+Dc_XE_B = 0.1
+Nu_helical_Xin_Ebadian_B = Nu_helical_Xin_Ebadian(Re_XE_B, Pr_XE_B, Di_XE_B, Dc_XE_B)

@@ -1,0 +1,70 @@
+{
+  "id": "CSL-0117",
+  "name": "double_stage_scroll_expander",
+  "title": "Two-stage hermetic scroll expander (correlation model)",
+  "summary": "Correlation model of the two-stage hermetic scroll expander of Lemort, Quoilin and Pire: filling factor and stage isentropic effectiveness as polynomial fits in ln(r_p) and ln(rho_su) applied to each stage, swept volumes of both stages from the imposed mass flow, and the intermediate pressure ratio solved from the zero-derivative condition xi = d(epsilon_overall)/d(r_p_1) = 0. Originally written as an EES MODULE; the equations are flattened into the main program (library decision D10).",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "double_stage_scroll_expander.eescode",
+  "fluids": [
+    "R245fa"
+  ],
+  "tags": [
+    "expander",
+    "scroll expander",
+    "two-stage expansion",
+    "hermetic",
+    "filling factor",
+    "isentropic effectiveness",
+    "polynomial correlation",
+    "intermediate pressure",
+    "ORC component",
+    "part load"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "procedures",
+    "MODULE flattened"
+  ],
+  "stats": {
+    "n_equations": 55,
+    "largest_block": 24
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/procedures EES/double stage expander SQ101012.EES",
+    "candidate_id": "TM-0565",
+    "authors": [
+      "Sylvain Quoilin (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.652",
+    "language": "en",
+    "course": "ULiège laboratory correlation model (30 September 2010), based on the Lemort/Quoilin/Pire hermetic scroll expander measurements"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (module variables compared under their flattened '_mod' names; 54 common variables). Variables cleared in the EES store are compared with the guess values EES kept from its last solve; epsilon_overall, V_s_1_mod and V_s_2_mod were cleared without guess and are compared with values recomputed from the stored enthalpies, filling factors and densities",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.0312,
+    "notes": "Root cause of every deviation: the R245fa property difference between EES 8.652 (2010) and CoolProp at the fixed state T_sat = 130 C (p_sat 0.44 %, supply density 0.88 %, enthalpy 0.04 %), amplified by the correlation polynomials to 0.16-0.18 % on the effectiveness values and up to 3.12e-02 on the derivative diagnostics (der_rp_epsilon_2_mod); enthalpies, entropies, betas and W_dot_exp_1_mod agree within 1e-3 (ees_import.md §11, older EES fluid models: up to a few %, explained)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0037", "CSL-0084"],
+  "related_external": [
+    "V. Lemort, S. Quoilin and C. Pire, Experimental Investigation on a Hermetic Scroll Expander, 7th International Conference on Compressors (as cited in the source file)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added (roadmap card C-128, batch B-10; MODULE flattened per decision D10)",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    }
+  ]
+}

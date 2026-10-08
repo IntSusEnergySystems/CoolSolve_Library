@@ -1,0 +1,83 @@
+{
+  "id": "CSL-0121",
+  "name": "heat_transfer_fluid_properties",
+  "title": "Heat-transfer fluids: MEG, Therminol VP-1/66 and oil properties (function library)",
+  "summary": "Single EES PROCEDURE returning density, specific heat, thermal conductivity and dynamic viscosity of four heat-transfer/secondary fluids (monoethylene glycol, Therminol VP-1, Therminol 66, a constant-property thermal oil) against temperature by the empirical correlations of the source file; any other fluid name is routed to the built-in property functions with the (T, P) input pair.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "heat_transfer_fluid_properties.eescode",
+  "fluids": [
+    "monoethylene glycol (MEG)",
+    "Therminol VP-1",
+    "Therminol 66",
+    "thermal oil",
+    "Water"
+  ],
+  "tags": [
+    "heat-transfer fluid",
+    "secondary fluid",
+    "glycol",
+    "Therminol",
+    "thermal oil",
+    "density",
+    "specific heat",
+    "thermal conductivity",
+    "dynamic viscosity",
+    "kinematic viscosity",
+    "empirical correlation",
+    "function library"
+  ],
+  "language_features": [
+    "PROCEDURE",
+    "CALL",
+    "string variables",
+    "IF/THEN/ELSE with OR conditions",
+    "built-in property calls inside a procedure"
+  ],
+  "stats": {
+    "n_equations": 27,
+    "largest_block": 4
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/procedures EES/heat transfer fluids.EES",
+    "candidate_id": "TM-0574",
+    "authors": [
+      "Sylvain Quoilin",
+      "TBD (ULiège, J. Lebrun laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.962",
+    "language": "en",
+    "course": "",
+    "notes": "The file carries only the J. Lebrun laboratory licence tag; the S. Quoilin attribution follows the C-121 triage note (sources/thermo_models/README.md §8). Already in SI-°C-Pa-J: no unit conversion. Procedure renamed prop_htf -> prop_heat_transfer_fluid: the name prop_htf is already used by the copied blocks of CSL-0113 and CSL-0114 and function names must be unique across the library. The $bookmark directive (EES GUI tag) was removed. No equation was changed."
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (therminol66 at T = 180 °C, 6 variables)",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 1.9e-10,
+    "notes": "compare_solution.py: 6 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 21 (the demonstration calls of the other fluids). The correlations are recomputed identically: cp differs by 1.9e-10 (the stored EES value is rounded to 10 significant digits), mu by 3.3e-11, and rho, k, T, p are exact. The HEDH heat-transfer-fluid data sheet of the VP-1 branch (http://twt.mpei.ac.ru/TTHB/HEDH/HTF-VP1.PDF, cited in the source file) could not be reached from the import environment (no network access), so the sheet-value check of that branch is pending; its coefficients are transcribed unchanged from the source file."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0079",
+    "CSL-0113",
+    "CSL-0114"
+  ],
+  "related_external": [
+    "HEDH heat-transfer-fluid data sheet Therminol VP-1: http://twt.mpei.ac.ru/TTHB/HEDH/HTF-VP1.PDF (cited in the source file)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added (T-FUNC card C-132 of batch B-10; candidate TM-0574)",
+      "by": "opencode worker (glm-5.3-flash) for S. Quoilin"
+    }
+  ]
+}

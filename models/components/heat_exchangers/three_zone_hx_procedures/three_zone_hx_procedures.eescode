@@ -1,0 +1,828 @@
+{=============================================================================
+  Heat exchangers: three-zone and epsilon-NTU zone procedures
+  CoolSolve Library model CSL-0112
+ -----------------------------------------------------------------------------
+  Seven EES PROCEDUREs of the J. Lebrun laboratory (ULiege) files of the
+  source collection, grouped in the library file three_zone_hx_procedures:
+
+    * lmtd_xi1000            regularised log-mean temperature difference
+                              (TM-0579, also in TM-0564 and TM-0569)
+    * hx_cd_three_zones      three-zone condenser: subcooled liquid, condensing
+                              two-phase and desuperheated vapour zones
+                              (TM-0564)
+    * hx_ev_three_zones      three-zone evaporator: liquid, boiling two-phase
+                              and vapour zones, from supply and exhaust
+                              enthalpies (TM-0569)
+    * single_phase_HX_eps_ntu  single-phase zone, effectiveness-NTU with the
+                              counterflow relation (TM-0566)
+    * EV_eps_ntu             two-phase (boiling) zone, latent-heat
+                              effectiveness-NTU (TM-0566)
+    * CD_eps_ntu             two-phase (condensing) zone, latent-heat
+                              effectiveness-NTU (TM-0566)
+    * evaporator2_eps_ntu    epsilon-NTU evaporator with a vapour zone and a
+                              two-phase zone on the secondary side (TM-0571)
+
+  All seven are transcribed from the EES source files (see the comment block
+  of each procedure and README.md); no equation was changed.  The program after
+  the definitions calls each of them with the operating point stored in its
+  source file and checks the results against that stored solution.
+
+  Inputs : the zone temperatures/enthalpies, mass flow rates, pressures and
+           heat-transfer correlations of each source file
+  Outputs: zone heat duties, UA and area of each zone, effectiveness, NTU,
+           pinch temperatures
+  Units  : SI - temperatures in degC, pressures in Pa, energies in J
+  Source : ULiege, J. Lebrun laboratory (S. Quoilin) - see README.md
+============================================================================}
+
+"!###############################################################"
+"!#### 1. Regularised log-mean temperature difference ###########"
+"!###############################################################"
+
+" LMTD of a counterflow exchanger from the four terminal temperatures
+  (as in the original).  When two terminal temperatures are within 1 K of
+  each other, the singular expression of the log-mean difference is replaced
+  by a regularised form with xi = 1000 [K^-1] (as in the original), so that
+  the block stays solvable when a zone approaches its pinch point.  The 1 K
+  and the xi are the values of the original procedure."
+PROCEDURE lmtd_xi1000(T_hf_su, T_hf_ex, T_cf_su, T_cf_ex : DELTAT_log)
+
+xi = 1E3
+
+if T_cf_su < T_hf_ex - 1 then
+	if T_cf_ex < T_hf_su - 1 then
+		if (T_hf_su - T_cf_ex) <> (T_hf_ex - T_cf_su) then
+			DELTAT_log = ((T_hf_su - T_cf_ex) - (T_hf_ex - T_cf_su))/ln((T_hf_su - T_cf_ex)/(T_hf_ex - T_cf_su))
+		else
+			DELTAT_log = T_hf_su - T_cf_ex
+		endif
+	else
+		DELTAT_log = (T_hf_ex - T_cf_su - 1)/ln(T_hf_ex - T_cf_su) * 1/(1 + xi*(T_cf_ex + 1 - T_hf_su))
+	endif
+else
+	if T_cf_ex < T_hf_su - 1 then
+		DELTAT_log = (T_hf_su - T_cf_ex - 1)/ln(T_hf_su - T_cf_ex) * 1/(1 + xi*(T_cf_su + 1 - T_hf_ex))
+	else
+		DELTAT_log = 1/((1 + xi*(T_cf_su + 1 - T_hf_ex))*(1 + xi*(T_cf_ex + 1 - T_hf_su)))
+	endif
+endif
+
+end
+
+"!###############################################################"
+"!#### 2. Three-zone condenser  (hx_cd, TM-0564) ################"
+"!###############################################################"
+
+" Three-zone condenser of the J. Lebrun laboratory files.
+  Source: ~/Nextcloud/thermo_models/procedures EES/condenseur 3 zones.EES
+  (EES X8.652, S. Quoilin); identical copy at TM-0594.
+  The refrigerant enters as superheated vapour, condenses at p_cd and leaves
+  as (subcooled) liquid; the secondary fluid is heated from zone to zone.
+  The three zones are, in the order of the original:
+     liquid (subcooling), two-phase (condensation), vapour (desuperheating).
+  Inputs : fluid$ = refrigerant, fluidcd$ = secondary fluid, T_sf_su [degC]
+           supply temperature of the secondary fluid, M_dot_sf [kg/s] its mass
+           flow rate, T_r_su/T_r_ex [degC] refrigerant supply/exhaust
+           temperatures, M_dot_r [kg/s] refrigerant mass flow rate,
+           p_cd [Pa] condensing pressure, p_sf [Pa] secondary pressure,
+           b [m] channel width, L_w_tot [m] total channel length,
+           beta [deg] plate angle (not used by the equations of the original).
+  Outputs: A_cd [m^2] total heat-transfer area, M_fluid [kg] refrigerant
+           charge, pinch [K] minimum approach temperature, Q_dot_cd [W] total
+           duty (added to the outputs of the original so that the
+           demonstration program can check the energy balance).
+  Reference: the nominal heat-transfer coefficients and mass flow rates are
+  those of the original file (R245fa/water)."
+PROCEDURE hx_cd_three_zones(fluid$, fluidcd$, T_sf_su, M_dot_sf, T_r_su, T_r_ex, M_dot_r, p_cd, p_sf, b, L_w_tot, beta : A_cd, M_fluid, pinch, Q_dot_cd)
+
+" Enthalpies for each zone: "
+cp_sf = cp(fluidcd$, t = T_sf_su, p = p_sf)
+T_r_sat = T_sat(fluid$, p = p_cd)
+h_r_sat_v = enthalpy(fluid$, p = p_cd, x = 1)
+h_r_sat_l = enthalpy(fluid$, p = p_cd, x = 0)
+rho_l = density(fluid$, p = p_cd, x = 0)
+h_r_su = enthalpy(fluid$, t = T_r_su, p = p_cd)
+h_r_ex = enthalpy(fluid$, t = T_r_ex, p = p_cd)
+
+h_r_ex_l = h_r_ex
+h_r_su_l = h_r_sat_l
+h_r_ex_tp = h_r_sat_l
+h_r_su_tp = h_r_sat_v
+h_r_ex_v = h_r_sat_v
+h_r_su_v = h_r_su
+
+" Heat flow rate for each zone: "
+Q_dot_tp = M_dot_r*(h_r_su_tp - h_r_ex_tp)
+Q_dot_v = M_dot_r*(h_r_su_v - h_r_ex_v)
+Q_dot_l = M_dot_r*(h_r_su_l - h_r_ex_l)
+
+Q_dot_cd = Q_dot_tp + Q_dot_v + Q_dot_l
+
+" Secondary fluid side: "
+C_dot_sf = cp_sf*M_dot_sf
+T_sf_su_l = T_sf_su
+T_sf_ex_l = T_sf_su_l + Q_dot_l/C_dot_sf
+T_sf_su_tp = T_sf_ex_l
+T_sf_ex_tp = T_sf_su_tp + Q_dot_tp/C_dot_sf
+T_sf_su_v = T_sf_ex_tp
+T_sf_ex_v = T_sf_su_v + Q_dot_v/C_dot_sf
+T_sf_ex = T_sf_ex_v
+
+" Primary fluid temperatures: "
+T_r_su_l = T_r_sat
+T_r_ex_l = T_r_ex
+T_r_su_tp = T_r_sat
+T_r_ex_tp = T_r_sat
+T_r_su_v = T_r_su
+T_r_ex_v = T_r_sat
+
+" Mean logarithmic temperature differences: "
+"! Vapor zone"
+call lmtd_xi1000(T_r_su_v, T_r_ex_v, T_sf_su_v, T_sf_ex_v : DELTAT_log_v)
+AU_v = Q_dot_v/DELTAT_log_v
+pinch = min(-T_sf_su_l + T_r_ex_l, -T_sf_ex_l + T_r_su_l)
+
+"! Two-phase zone :"
+call lmtd_xi1000(T_r_su_tp, T_r_ex_tp, T_sf_su_tp, T_sf_ex_tp : DELTAT_log_tp)
+AU_tp = Q_dot_tp/DELTAT_log_tp
+pinch = min(pinch, -T_sf_ex_tp + T_r_sat)
+
+"! Liquid zone :"
+call lmtd_xi1000(T_r_su_l, T_r_ex_l, T_sf_su_l, T_sf_ex_l : DELTAT_log_l)
+AU_l = Q_dot_l/DELTAT_log_l
+pinch = min(pinch, min(-T_sf_su_l + T_r_ex_l, -T_sf_ex_l + T_r_su_l))
+
+" Actual heat transfer coefficient and heat transfer area: "
+M_dot_nom = 0.3706
+M_dot_sf_nom = 2
+h_l_nom = 425.8
+h_v_nom = 477.4
+h_sf_nom = 5159
+h_tp_nom = 1453
+
+h_l = h_l_nom*(M_dot_r/M_dot_nom)^0.7
+h_v = h_v_nom*(M_dot_r/M_dot_nom)^0.7
+h_tp = h_tp_nom*(M_dot_r/M_dot_nom)^0.4
+h_sf = h_sf_nom*(M_dot_sf/M_dot_sf_nom)^0.7
+
+" Heat exchange areas: "
+U_ev_l = (1/h_sf + 1/h_l)^(-1)
+A_l = AU_l/U_ev_l
+
+U_ev_tp = (1/h_sf + 1/h_tp)^(-1)
+A_tp = AU_tp/U_ev_tp
+
+U_ev_v = (1/h_sf + 1/h_v)^(-1)
+A_v = AU_v/U_ev_v
+
+L_l = A_l/(L_w_tot*2)
+L_v = A_v/(L_w_tot*2)
+L_tp = A_tp/(L_w_tot*2)
+
+" Total area and fluid mass :"
+A_cd = A_v + A_l + A_tp
+M_fluid = (A_l + A_tp/2)*b*rho_l
+
+end
+
+"!###############################################################"
+"!#### 3. Three-zone evaporator  (hx_ev, TM-0569) ###############"
+"!###############################################################"
+
+" Three-zone evaporator of the J. Lebrun laboratory files.
+  Source: ~/Nextcloud/thermo_models/procedures EES/evaporator 1 2 & 3 zones
+  SQ110729.EES (EES X9.249, S. Quoilin); identical copy at TM-0595.
+  The refrigerant evaporates at p_ev; the number of zones that are actually
+  active follows from the supply and exhaust enthalpies h_r_su_ev and h_r_ex_ev
+  (a zone with no heat duty is given UA = 0 and does not update the pinch).
+  The zones are, in the order of the original:
+     liquid (sensible heating of the supercooled liquid), two-phase
+     (boiling) and vapour (superheating).
+  Inputs : fluid$ = refrigerant, fluidev$ = secondary fluid,
+           h_sf_su_ev [J/kg] supply enthalpy of the secondary fluid,
+           M_dot_sf [kg/s] its mass flow rate, h_r_su_ev/h_r_ex_ev [J/kg]
+           refrigerant supply/exhaust enthalpies, M_dot_r [kg/s] refrigerant
+           mass flow rate, p_ev [Pa] evaporating pressure, p_sf [Pa]
+           secondary pressure.
+  Outputs: h_sf_ex_ev [J/kg] exhaust enthalpy of the secondary fluid,
+           Q_dot_ev [W] evaporator duty, A_l/A_tp/A_v [m^2] area of each
+           zone, pinch [K] minimum approach temperature.
+  The last block of the original writes the six zone enthalpies and
+  temperatures into the external lookup table 'ev' (data file of the
+  laboratory); it is kept as the statement lookup('ev',i,j) = <expression>,
+  which CoolSolve ignores inside a procedure body (CS-BUG-LOOKUP-WRITE)."
+PROCEDURE hx_ev_three_zones(fluid$, fluidev$, h_sf_su_ev, M_dot_sf, h_r_su_ev, h_r_ex_ev, M_dot_r, p_ev, p_sf : h_sf_ex_ev, Q_dot_ev, A_l, A_tp, A_v, pinch)
+
+" Saturation properties : "
+h_r_sat_l = enthalpy(fluid$, p = p_ev, x = 0)
+h_r_sat_v = enthalpy(fluid$, p = p_ev, x = 1)
+T_r_sat = temperature(fluid$, p = p_ev, x = 0.5)
+
+" Supply-exhaust conditions for each zone :"
+if h_r_su_ev < h_r_sat_l then
+	h_r_su_l = h_r_su_ev
+	h_r_ex_l = h_r_sat_l
+	h_r_su_tp = h_r_sat_l
+	h_r_ex_tp = h_r_sat_v
+	h_r_su_v = h_r_sat_v
+else
+	h_r_su_l = h_r_sat_l
+	h_r_ex_l = h_r_sat_l
+
+	if h_r_su_ev < h_r_sat_v then
+	        h_r_su_tp = h_r_su_ev
+	        h_r_ex_tp = h_r_sat_v
+	        h_r_su_v = h_r_sat_v
+	else
+	        h_r_su_v = h_r_su_ev
+	        h_r_su_tp = h_r_sat_v
+	        h_r_ex_tp = h_r_sat_v
+	endif
+endif
+
+if h_r_ex_ev > h_r_sat_v then
+	h_r_ex_v = h_r_ex_ev
+else
+	h_r_su_v = h_r_sat_v
+	h_r_ex_v = h_r_sat_v
+
+	if h_r_ex_ev > h_r_sat_l then
+	       h_r_ex_tp = h_r_ex_ev
+	else
+	       h_r_ex_l = h_r_ex_ev
+	       h_r_su_tp = h_r_sat_l
+	       h_r_ex_tp = h_r_sat_l
+	endif
+endif
+
+" Heat flow rate for each zone :"
+Q_dot_tp = max(0, M_dot_r*(h_r_ex_tp - h_r_su_tp))
+Q_dot_v = max(0, M_dot_r*(h_r_ex_v - h_r_su_v))
+Q_dot_l = max(0, M_dot_r*(h_r_ex_l - h_r_su_l))
+
+Q_dot_ev = Q_dot_tp + Q_dot_v + Q_dot_l
+
+" Secondary fluid side :"
+h_sf_su_v = h_sf_su_ev
+h_sf_ex_v = h_sf_su_ev - Q_dot_v/M_dot_sf
+h_sf_su_tp = h_sf_ex_v
+h_sf_ex_tp = h_sf_su_tp - Q_dot_tp/M_dot_sf
+h_sf_su_l = h_sf_ex_tp
+h_sf_ex_l = h_sf_ex_tp - Q_dot_l/M_dot_sf
+
+h_sf_ex_ev = h_sf_su_ev - Q_dot_ev/M_dot_sf
+
+" Secondary fluid temperatures :"
+T_sf_su_l = temperature(fluidev$, h = h_sf_su_l, p = p_sf)
+T_sf_ex_l = temperature(fluidev$, h = h_sf_ex_l, p = p_sf)
+T_sf_su_tp = temperature(fluidev$, h = h_sf_su_tp, p = p_sf)
+T_sf_ex_tp = temperature(fluidev$, h = h_sf_ex_tp, p = p_sf)
+T_sf_su_v = temperature(fluidev$, h = h_sf_su_v, p = p_sf)
+T_sf_ex_v = temperature(fluidev$, h = h_sf_ex_v, p = p_sf)
+
+" Primary fluid temperatures :"
+T_r_su_l = temperature(fluid$, h = h_r_su_l, p = p_ev)
+T_r_ex_l = temperature(fluid$, h = h_r_ex_l, p = p_ev)
+T_r_su_tp = temperature(fluid$, h = h_r_su_tp, p = p_ev)
+T_r_ex_tp = temperature(fluid$, h = h_r_ex_tp, p = p_ev)
+T_r_su_v = temperature(fluid$, h = h_r_su_v, p = p_ev)
+T_r_ex_v = temperature(fluid$, h = h_r_ex_v, p = p_ev)
+
+"! Vapor zone"
+if h_r_ex_v > h_r_su_v + 1 then
+	call lmtd_xi1000(T_sf_su_v, T_sf_ex_v, T_r_su_v, T_r_ex_v : DELTAT_log_v)
+	AU_v = Q_dot_v/DELTAT_log_v
+	pinch = min(T_sf_su_l - T_r_ex_l, T_sf_ex_l - T_r_su_l)
+else	"There is no vapor zone"
+	AU_v = 0
+	pinch = 9999
+endif
+
+"! Two-phase zone :"
+if h_r_ex_tp > h_r_su_tp then
+	call lmtd_xi1000(T_sf_su_tp, T_sf_ex_tp, T_r_su_tp, T_r_ex_tp : DELTAT_log_tp)
+	AU_tp = Q_dot_tp/DELTAT_log_tp
+	pinch = min(pinch, T_sf_ex_tp - T_r_sat)
+else
+	AU_tp = 0
+endif
+
+"! Liquid zone :"
+if h_r_ex_l > h_r_su_l then
+	call lmtd_xi1000(T_sf_su_l, T_sf_ex_l, T_r_su_l, T_r_ex_l : DELTAT_log_l)
+	AU_l = Q_dot_l/DELTAT_log_l
+	pinch = min(pinch, min(T_sf_su_l - T_r_ex_l, T_sf_ex_l - T_r_su_l))
+else
+	AU_l = 0
+endif
+
+" Nominal heat transfer coefficients :"
+h_r_l_n = 49.74
+h_r_tp_n = 649.4
+h_r_v_n = 22.47
+h_sf_n = 643.9
+
+" Nominal flow rates :"
+M_dot_sf_ref = 0.1
+M_dot_r_ref = 0.08
+
+" Actual heat transfer coefficient and heat transfer area :"
+h_sf = h_sf_n*(M_dot_sf/M_dot_sf_ref)^0.8
+
+h_r_l = h_r_l_n*(M_dot_r/M_dot_r_ref)^0.8
+U_l = (1/h_sf + 1/h_r_l)^(-1)
+A_l = AU_l/U_l
+
+h_r_tp = h_r_tp_n*(M_dot_r/M_dot_r_ref)^0.8
+U_tp = (1/h_sf + 1/h_r_tp)^(-1)
+A_tp = AU_tp/U_tp
+
+h_r_v = h_r_v_n*(M_dot_r/M_dot_r_ref)^0.8
+U_v = (1/h_sf + 1/h_r_v)^(-1)
+A_v = AU_v/U_v
+
+" Write data into lookup table : (as in the original; ignored by CoolSolve) "
+lookup('ev', 1, 1) = M_dot_r*h_r_su_l
+lookup('ev', 2, 1) = M_dot_r*h_r_ex_l
+lookup('ev', 3, 1) = M_dot_r*h_r_su_tp
+lookup('ev', 4, 1) = M_dot_r*h_r_ex_tp
+lookup('ev', 5, 1) = M_dot_r*h_r_su_v
+lookup('ev', 6, 1) = M_dot_r*h_r_ex_v
+
+lookup('ev', 1, 2) = T_r_su_l
+lookup('ev', 2, 2) = T_r_ex_l
+lookup('ev', 3, 2) = T_r_su_tp
+lookup('ev', 4, 2) = T_r_ex_tp
+lookup('ev', 5, 2) = T_r_su_v
+lookup('ev', 6, 2) = T_r_ex_v
+
+lookup('ev', 1, 3) = T_sf_ex_l
+lookup('ev', 2, 3) = T_sf_su_l
+lookup('ev', 3, 3) = T_sf_ex_tp
+lookup('ev', 4, 3) = T_sf_su_tp
+lookup('ev', 5, 3) = T_sf_ex_v
+lookup('ev', 6, 3) = T_sf_su_v
+
+end
+
+"!###############################################################"
+"!#### 4. Effectiveness-NTU zone procedures (TM-0566) ##########"
+"!###############################################################"
+
+" Single-phase heat exchanger: effectiveness-NTU method with the counterflow
+  relation, for the desuperheating and subcooling zones of a three-zone
+  condenser.
+  Source: ~/Nextcloud/thermo_models/procedures EES/epsilon NTU single phase -
+  EV - CD SQ081222.EES (EES X8.198, S. Quoilin).
+  hf = hot fluid, cf = cold fluid (as in the original comments).
+  The thermal resistances are R = C*m_dot^(-n) [K/W]; alpha is the surface
+  fraction of the zone (dimensionless), so AU = alpha/(R_cf + R_hf) [W/K].
+  KNOWN DEFECT OF THE ORIGINAL, KEPT AS IT IS: the cold-fluid heat capacity
+  is evaluated on the HOT fluid, cp_cf = specheat(hf$, ...).  The demonstration
+  program below reports the value this line returns and the value the cold
+  fluid would give, so the size of the error is visible.
+  Reference: Cuevas C. et Winandy E. 2002, Simplified 3 zones modelling of a
+  car air-conditioning condenser, IIR Zero Leakage - Minimum Charge
+  Conference, Stockholm; Cuevas C., Winandy E. et Lebrun J. 2003, Modelling of
+  an air condenser working in critical zone for engine cooling by
+  refrigeration loop, Vehicle Thermal Management Systems, Brighton.  The
+  same procedures are in CSL-0008 (condenser_three_zones, Cristian Cuevas),
+  where the cold-fluid line reads specheat(cf$, ...)."
+PROCEDURE single_phase_HX_eps_ntu(hf$, cf$, t_cf_su, t_cf_ex, P_cf_su, P_cf_ex, P_hf_su, P_hf_ex, t_hf_su, t_hf_ex, M_dot_hf, M_dot_cf, C_cf, C_hf, n_cf, n_hf, alpha : Q_dot, epsilon, NTU, AU)
+
+" Average pressure and temperature "
+P_bar_hf = (P_hf_su + P_hf_ex)/2
+P_bar_cf = (P_cf_su + P_cf_ex)/2
+t_bar_hf = (t_hf_ex + t_hf_su)/2
+t_bar_cf = (t_cf_su + t_cf_ex)/2
+
+"Air properties (as in the original: the hot fluid is passed here) "
+cp_cf = specheat(hf$, T = t_bar_cf, P = P_bar_cf)
+
+"Refrigerant properties"
+cp_hf = specheat(hf$, T = t_bar_hf, P = P_bar_hf)
+
+" Thermal resistances "
+R_cf = C_cf*(M_dot_cf)^(-n_cf)
+R_hf = C_hf*(M_dot_hf)^(-n_hf)
+
+" Global heat transfer coefficient "
+AU = alpha/(R_cf + R_hf)
+
+" Mass flow rate "
+C_dot_hf = M_dot_hf*cp_hf
+C_dot_cf = M_dot_cf*cp_cf
+
+C_dot_min = min(C_dot_hf, C_dot_cf)
+C_dot_max = max(C_dot_hf, C_dot_cf)
+
+omega = C_dot_min/C_dot_max
+
+" Number of transfer units "
+NTU = AU/C_dot_min
+
+" Effectiveness "
+epsilon = (1 - exp(-NTU*(1 - omega)))/(1 - omega*exp(-NTU*(1 - omega)))
+
+" Fluid to fluid heat transfer "
+Q_dot = epsilon*C_dot_min*(t_hf_su - t_cf_su)
+
+end
+
+" Two-phase heat exchanger: evaporating zone, latent-heat effectiveness-NTU
+  method (epsilon = 1 - exp(-NTU)).
+  Source: TM-0566, procedure EV (see single_phase_HX_eps_ntu).
+  hf = secondary (cold) fluid, R$ = refrigerant, t_ev [degC] evaporating
+  temperature.  P_ev_out [Pa] and P_crit_ev [Pa] are computed by the original (P_ev and
+  P_crit) and not used by any of its equations; they are declared as outputs
+  and renamed, because a procedure body shares the variable namespace of the
+  calling program in CoolSolve (P_ev would collide with the evaporating
+  pressure of the hx_ev_three_zones demonstration, P_crit with the one of
+  CD_eps_ntu).  No equation was changed.
+  The refrigerant stays at t_ev, so C_dot_min = M_dot_hf*cp_hf (as in the
+  original)."
+PROCEDURE EV_eps_ntu(hf$, R$, P_hf_su, P_hf_ex, t_hf_su, t_hf_ex, t_ev, M_dot_r, M_dot_hf, C_hf, C_r, n_hf, n_r : Q_dot, epsilon, NTU, AU, P_ev_out, P_crit_ev)
+
+t_bar_hf = (t_hf_su + t_hf_ex)/2
+P_bar_hf = (P_hf_su + P_hf_ex)/2
+
+"Cold fluid properties"
+cp_hf = specheat(hf$, T = t_bar_hf, P = P_bar_hf)
+
+"Refrigerant properties"
+P_ev_out = pressure(R$, x = 0, T = t_ev)
+P_crit_ev = p_crit(R$)
+
+" Thermal resistances "
+R_hf = C_hf*(M_dot_hf)^(-n_hf)
+R_r = C_r*(M_dot_r)^(-n_r)
+
+" Heat transfer coefficient "
+AU = 1/(R_hf + R_r)
+
+" Flow capacities "
+C_dot_min = M_dot_hf*cp_hf
+
+" Number of transfer units "
+NTU = AU/C_dot_min
+
+" Effectiveness "
+epsilon = 1 - exp(-NTU)
+
+" Fluid to fluid heat transfer "
+Q_dot = epsilon*C_dot_min*(t_hf_su - t_ev)
+
+end
+
+" Condenser: two-phase condensing zone, latent-heat effectiveness-NTU method
+  (epsilon = 1 - exp(-NTU)).
+  Source: TM-0566, procedure CD (see single_phase_HX_eps_ntu).
+  cf = secondary (cold) fluid, R$ = refrigerant, t_cd [degC] condensing
+  temperature.  P_cd_out [Pa] and P_crit_cdz [Pa] are computed by the original (P_cd and
+  P_crit) and not used by any of its equations; they are declared as outputs
+  and renamed for the same reason as in EV_eps_ntu.  No equation was changed."
+PROCEDURE CD_eps_ntu(cf$, R$, P_cf_su, P_cf_ex, t_cf_su, t_cf_ex, t_cd, M_dot_r, M_dot_cf, C_cf, C_r, n_cf, n_r, alpha : Q_dot, epsilon, NTU, AU, P_cd_out, P_crit_cdz)
+
+t_bar_cf = (t_cf_su + t_cf_ex)/2
+P_bar_cf = (P_cf_su + P_cf_ex)/2
+
+"Cold fluid properties"
+cp_cf = specheat(cf$, T = t_bar_cf, P = P_bar_cf)
+
+"Refrigerant properties"
+P_cd_out = pressure(R$, x = 0, T = t_cd)
+P_crit_cdz = p_crit(R$)
+
+" Thermal resistances "
+R_cf = C_cf*(M_dot_cf)^(-n_cf)
+R_r = C_r*(M_dot_r)^(-n_r)
+
+" Global heat transfer coefficient "
+AU = alpha/(R_cf + R_r)
+
+" Flow capacities "
+C_dot_min = M_dot_cf*cp_cf
+
+" Number of transfer units "
+NTU = AU/C_dot_min
+
+" Effectiveness "
+epsilon = 1 - exp(-NTU)
+
+" Fluid to fluid heat transfer "
+Q_dot = epsilon*C_dot_min*(t_cd - t_cf_su)
+
+end
+
+"!###############################################################"
+"!#### 5. Evaporator by zones, effectiveness-NTU (TM-0571) #####"
+"!###############################################################"
+
+" Evaporator2: an evaporator split in a two-phase (boiling) zone and a
+  vapour (superheating) zone, the second zone being rated by the
+  effectiveness-NTU method and the first one by the latent-heat relation of
+  the original.
+  Source: ~/Nextcloud/thermo_models/procedures EES/Evaporator epsilon-NTU
+  SQ080311.EES (EES X7.991, S. Quoilin).
+  Inputs : fluid$ = refrigerant, fluidev$ = secondary fluid (air in the
+  original), T_sf_su_ev [degC] secondary supply temperature, M_dot_sf [kg/s]
+  secondary mass flow rate, p_sf_su_ev [Pa] secondary pressure,
+  T_r_su_ev/T_r_ex_ev [degC] refrigerant supply/exhaust temperatures,
+  p_ev [Pa] evaporating pressure, M_dot_r [kg/s] refrigerant mass flow rate.
+  Outputs: T_sf_ex_ev [degC] secondary exhaust temperature,
+           Q_dot_ev [W] evaporator duty,
+           AU_ev_l/AU_ev_tp/AU_ev_v [W/K] UA of the liquid, two-phase and
+           vapour zones.
+  The heat capacities are not evaluated with a property function but taken
+  from the secant slope of the enthalpy-temperature curve between the zone
+  boundaries (as in the original, where the property-function alternative is
+  commented out), so the effectiveness of each zone is a diagnosed output
+  only and is not used to size anything."
+PROCEDURE evaporator2_eps_ntu(fluid$, fluidev$, T_sf_su_ev, M_dot_sf, p_sf_su_ev, T_r_su_ev, T_r_ex_ev, p_ev, M_dot_r : T_sf_ex_ev, Q_dot_ev, AU_ev_l, AU_ev_tp, AU_ev_v)
+
+"Refrigerant side :"
+p_r_ex_ev = p_ev
+p_r_su_ev = p_ev
+
+h_r_su_ev = enthalpy(fluid$, t = T_r_su_ev, p = p_ev)
+h_r_ex_ev = enthalpy(fluid$, t = T_r_ex_ev, p = p_ev)
+h_r_su_tp = enthalpy(fluid$, p = p_ev, x = 0)
+h_r_ex_tp = enthalpy(fluid$, p = p_ev, x = 1)
+
+T_r_sat = temperature(fluid$, p = p_ev, x = 0.5)
+T_r_su_tp = T_r_sat
+T_r_ex_tp = T_r_sat
+
+Q_dot_v = M_dot_r*(h_r_ex_ev - h_r_ex_tp)
+Q_dot_tp = M_dot_r*(h_r_ex_tp - h_r_su_tp)
+Q_dot_l = M_dot_r*(h_r_su_tp - h_r_su_ev)
+Q_dot_ev = Q_dot_v + Q_dot_tp + Q_dot_l
+
+"Secondary fluid side : "
+p_sf_ex_ev = p_sf_su_ev
+
+h_sf_su_ev = enthalpy(fluidev$, p = p_sf_su_ev, t = T_sf_su_ev)
+h_sf_ex_ev = h_sf_su_ev - Q_dot_ev/M_dot_sf
+h_sf_su_tp = h_sf_su_ev - Q_dot_v/M_dot_sf
+h_sf_ex_tp = h_sf_ex_ev + Q_dot_l/M_dot_sf
+
+T_sf_ex_ev = temperature(fluidev$, h = h_sf_ex_ev, p = p_sf_ex_ev)
+T_sf_su_tp = temperature(fluidev$, h = h_sf_su_tp, p = p_sf_su_ev)
+T_sf_ex_tp = temperature(fluidev$, h = h_sf_ex_tp, p = p_sf_ex_ev)
+
+"Vapor zone"
+"1.5.3. Effectiveness"
+c_p_sf_ev_v = (h_sf_su_ev - h_sf_su_tp)/(t_sf_su_ev - T_sf_su_tp)
+c_p_r_ev_v = (h_r_ex_ev - h_r_ex_tp)/(T_r_ex_ev - T_r_ex_tp)
+
+C_dot_r_ev_v = M_dot_r*c_p_r_ev_v
+C_dot_sf_ev_v = M_dot_sf*c_p_sf_ev_v
+C_dot_min_ev_v = min(C_dot_r_ev_v, C_dot_sf_ev_v)
+epsilon_ev_v = Q_dot_v/C_dot_min_ev_v/(t_sf_su_ev - T_r_ex_tp)
+
+DELTAT_log_v = ((T_sf_su_ev - T_r_ex_ev) - (T_sf_su_tp - T_r_ex_tp))/ln((T_sf_su_ev - T_r_ex_ev)/(T_sf_su_tp - T_r_ex_tp))
+AU_ev_v = Q_dot_v/DELTAT_log_v
+
+NTU_ev_v = AU_ev_v/C_dot_min_ev_v
+C_dot_max_ev_v = max(C_dot_r_ev_v, C_dot_sf_ev_v)
+omega_ev_v = C_dot_min_ev_v/C_dot_max_ev_v
+epsilon_ev_v_bis = (1 - exp(-NTU_ev_v*(1 - omega_ev_v)))/(1 - omega_ev_v*exp(-NTU_ev_v*(1 - omega_ev_v)))
+
+"Two-phase zone :"
+c_p_sf_ev_tp = (h_sf_su_tp - h_sf_ex_tp)/(T_sf_su_tp - T_sf_ex_tp)
+
+C_dot_sf_ev_tp = M_dot_sf*c_p_sf_ev_tp
+AU_ev_tp = -C_dot_sf_ev_tp*ln(1 - (T_sf_su_tp - T_sf_ex_tp)/(T_sf_su_tp - T_r_sat))
+
+"Liquid zone :"
+c_p_sf_ev_l = (h_sf_ex_ev - h_sf_ex_tp)/(T_sf_ex_ev - T_sf_ex_tp)
+c_p_r_ev_l = (h_r_su_ev - h_r_su_tp)/(T_r_su_ev - T_r_su_tp)
+
+C_dot_r_ev_l = M_dot_r*c_p_r_ev_l
+C_dot_sf_ev_l = M_dot_sf*c_p_sf_ev_l
+C_dot_min_ev_l = min(C_dot_r_ev_l, C_dot_sf_ev_l)
+
+epsilon_ev_l = Q_dot_l/(C_dot_min_ev_l*(T_sf_ex_tp - T_r_su_ev))
+
+DELTAT_log_l = ((T_sf_ex_tp - T_r_su_tp) - (T_sf_ex_ev - T_r_su_ev))/ln((T_sf_ex_tp - T_r_su_tp)/(T_sf_ex_ev - T_r_su_ev))
+AU_ev_l = Q_dot_l/DELTAT_log_l
+
+NTU_ev_l = AU_ev_l/C_dot_min_ev_l
+C_dot_max_ev_l = max(C_dot_r_ev_l, C_dot_sf_ev_l)
+omega_ev_l = C_dot_min_ev_l/C_dot_max_ev_l
+epsilon_ev_l_bis = (1 - exp(-NTU_ev_l*(1 - omega_ev_l)))/(1 - omega_ev_l*exp(-NTU_ev_l*(1 - omega_ev_l)))
+
+end
+
+"!########################################################################"
+"!##########################   MAIN PROGRAM   #############################"
+"!########################################################################"
+
+" ------------------------------------ 1. lmtd_xi1000 -----------------------------------"
+" The four branches of the procedure: parallel temperature profiles (equal
+  terminal differences, the singular form is avoided by the equality test),
+  the plain counterflow difference, a pinch at one end and a temperature
+  cross-over (the two regularised branches of the original). "
+T_hf_su_1 = 100
+T_hf_ex_1 = 60
+T_cf_su_1 = 20
+T_cf_ex_1 = 60
+call lmtd_xi1000(T_hf_su_1, T_hf_ex_1, T_cf_su_1, T_cf_ex_1 : DELTAT_1)
+
+T_hf_su_2 = 10
+T_hf_ex_2 = 5
+T_cf_su_2 = 3.5
+T_cf_ex_2 = 8.5
+call lmtd_xi1000(T_hf_su_2, T_hf_ex_2, T_cf_su_2, T_cf_ex_2 : DELTAT_2)
+
+T_hf_su_3 = 30
+T_hf_ex_3 = 25
+T_cf_su_3 = 24.5
+T_cf_ex_3 = 26
+call lmtd_xi1000(T_hf_su_3, T_hf_ex_3, T_cf_su_3, T_cf_ex_3 : DELTAT_3)
+
+T_hf_su_4 = 30
+T_hf_ex_4 = 26
+T_cf_su_4 = 20
+T_cf_ex_4 = 31
+call lmtd_xi1000(T_hf_su_4, T_hf_ex_4, T_cf_su_4, T_cf_ex_4 : DELTAT_4)
+
+T_hf_su_5 = 30
+T_hf_ex_5 = 26
+T_cf_su_5 = 28
+T_cf_ex_5 = 31
+call lmtd_xi1000(T_hf_su_5, T_hf_ex_5, T_cf_su_5, T_cf_ex_5 : DELTAT_5)
+
+" Reference values of case 2 (the demonstration case of the source file
+  procedures EES/LMTD.EES, stored solution): 1.5 K, i.e. 0.666667 W/K for
+  AU = 1/DELTAT. "
+AU_2 = 1/DELTAT_2
+
+" ------------------------------------ 2. hx_cd_three_zones ----------------------------"
+" Operating point stored in condenseur 3 zones.EES (R245fa / water). "
+fluid_cd$ = 'r245fa'
+fluidcd_cd$ = 'water'
+T_cf_su_cd = 39.62
+M_dot_cf = 2
+T_su_cd = 79.31
+p_cd = 343220
+p_cf = 100000
+beta_cd = 60
+b_cd = 0.0023
+L_w_tot_cd = 8.29
+M_dot_cd = 0.2594
+
+" The exhaust temperature of the source file is T_ex_cd = 49.99 degC, which
+  is the saturation temperature of R245fa at p_cd = 343220 Pa in EES.  The
+  saturation line of R245fa in CoolProp lies about 0.09 K lower there, so the
+  same (p, T) state falls on the vapour side, the subcooling zone of the
+  procedure becomes negative and the stored solution is not reproduced.  A 1 K
+  subcooling is therefore imposed below (a state on the saturation line cannot
+  be evaluated at all, see README, Conversion log). "
+DELTAT_sc_cd = 1
+T_ex_cd = T_sat(fluid_cd$, p = p_cd) - DELTAT_sc_cd
+
+call hx_cd_three_zones(fluid_cd$, fluidcd_cd$, T_cf_su_cd, M_dot_cf, T_su_cd, T_ex_cd, M_dot_cd, p_cd, p_cf, b_cd, L_w_tot_cd, beta_cd : A_cd, M_fluid_cd, pinch_cd, Q_dot_cd)
+
+" Energy balance of the procedure: the duty of the three zones must equal
+  the duty seen by the secondary fluid. "
+cp_sf_cd = cp(fluidcd_cd$, t = T_cf_su_cd, p = p_cf)
+T_sf_ex_cd = T_cf_su_cd + Q_dot_cd/(M_dot_cf*cp_sf_cd)
+Q_dot_cd_bal = M_dot_cf*cp_sf_cd*(T_sf_ex_cd - T_cf_su_cd)
+
+" ------------------------------------ 3. hx_ev_three_zones ----------------------------"
+" Operating point stored in evaporator 1 2 & 3 zones SQ110729.EES (R123 /
+  water): a total area of 1 m^2 is imposed and the exhaust enthalpy of the
+  refrigerant is the unknown. "
+fluid_ev$ = 'r123'
+fluidev_ev$ = 'water'
+p_ev = 2E5
+M_dot_sf_ev = 0.1
+M_dot_r_ev = 0.1
+T_sf_su_ev = 170
+p_sf_ev = 10E5
+h_r_su_ev = 2E5
+h_sf_su_ev = enthalpy(fluidev_ev$, p = p_sf_ev, t = T_sf_su_ev)
+
+A_ev_tot = 1
+
+call hx_ev_three_zones(fluid_ev$, fluidev_ev$, h_sf_su_ev, M_dot_sf_ev, h_r_su_ev, h_r_ex_ev, M_dot_r_ev, p_ev, p_sf_ev : h_sf_ex_ev, Q_dot_ev, A_l, A_tp, A_v, pinch)
+
+" Total area predicted by the three zones: the residual on the imposed total
+  area is the free variable of the sizing problem (the exhaust enthalpy of
+  the refrigerant h_r_ex_ev).  In the source file A_ev_tot_pred is an output
+  and the second line A_ev_tot_pred = A_ev_tot is one of the two alternative
+  equations the file asks the user to comment out. "
+h_r_ex_ev = 3.4E5
+A_ev_tot_pred = A_v + A_tp + A_l
+res_A_ev_tot = A_ev_tot_pred - A_ev_tot
+
+" Refrigerant supply and exhaust temperatures of the sized evaporator.  The
+  source file declares T_r_su_ev = 50 and T_r_ex_ev = 100 without using them
+  (its second alternative equation fixes h_r_ex_ev instead); they are read
+  back from the enthalpies here. "
+T_r_su_ev = temperature(fluid_ev$, p = p_ev, h = h_r_su_ev)
+T_r_ex_ev = temperature(fluid_ev$, p = p_ev, h = h_r_ex_ev)
+
+" Energy balance of the procedure: the duty of the three zones must equal
+  the duty seen by the secondary fluid. "
+Q_dot_ev_bal = M_dot_sf_ev*(h_sf_su_ev - h_sf_ex_ev)
+
+" ------------------------------------ 4. single_phase_HX_eps_ntu -----------------------"
+" Desuperheating / subcooling zone of a three-zone condenser.  The operating
+  point and the correlation constants are those of the desuperheating zone of
+  the three-zone condenser of CSL-0008 (Cuevas C. et Winandy E. 2002), which
+  is the same family of correlations. "
+hf$ = 'r134a'
+cf$ = 'air_ha'
+t_r_sat_oh = 45
+t_cf_su = 20
+t_cf_ex = 28
+P_cf_su = 101325
+P_cf_ex = 101325
+P_hf_su = 5E5
+P_hf_ex = 5E5
+t_hf_ex = t_r_sat_oh
+t_hf_su = t_r_sat_oh + 10
+M_dot_hf = 0.5
+M_dot_cf_sp = 1.5
+C_cf = 0.1993/1000
+C_hf = 0.03384/1000
+n_cf = 0.5
+n_hf = 0.8
+alpha = 0.2
+
+call single_phase_HX_eps_ntu(hf$, cf$, t_cf_su, t_cf_ex, P_cf_su, P_cf_ex, P_hf_su, P_hf_ex, t_hf_su, t_hf_ex, M_dot_hf, M_dot_cf_sp, C_cf, C_hf, n_cf, n_hf, alpha : Q_dot_sp, epsilon_sp, NTU_sp, AU_sp)
+
+" Size of the known defect of the original (cold-fluid heat capacity taken
+  on the hot fluid): the heat capacity of the hot fluid against the heat
+  capacity of the cold fluid, and the effectiveness the procedure would give
+  with the cold fluid. "
+cp_hf_sp = specheat(hf$, T = (t_hf_su + t_hf_ex)/2, P = (P_hf_su + P_hf_ex)/2)
+cp_cf_sp = specheat(cf$, T = (t_cf_su + t_cf_ex)/2, P = (P_cf_su + P_cf_ex)/2)
+C_dot_cf_sp = M_dot_cf_sp*cp_cf_sp
+omega_sp = min(M_dot_hf*cp_hf_sp, C_dot_cf_sp)/max(M_dot_hf*cp_hf_sp, C_dot_cf_sp)
+NTU_sp_cf = AU_sp/min(M_dot_hf*cp_hf_sp, C_dot_cf_sp)
+epsilon_sp_cf = (1 - exp(-NTU_sp_cf*(1 - omega_sp)))/(1 - omega_sp*exp(-NTU_sp_cf*(1 - omega_sp)))
+
+" ------------------------------------ 5. EV_eps_ntu -----------------------------------"
+" Boiling zone of a three-zone evaporator, with the correlation constants of
+  CSL-0008 (the two-phase zone C_r_tp there). "
+hf_ev$ = 'air_ha'
+R_ev$ = 'r123'
+P_hf_su_ev = 101325
+P_hf_ex_ev = 101325
+t_hf_su_ev = 40
+t_hf_ex_ev = 30
+t_ev = 5
+M_dot_r_ev2 = 0.1
+M_dot_hf_ev = 0.5
+C_hf_ev = 0.1993/1000
+C_r_ev = 0.00744/1000
+n_hf_ev = 0.5
+n_r_ev = 0.8
+
+call EV_eps_ntu(hf_ev$, R_ev$, P_hf_su_ev, P_hf_ex_ev, t_hf_su_ev, t_hf_ex_ev, t_ev, M_dot_r_ev2, M_dot_hf_ev, C_hf_ev, C_r_ev, n_hf_ev, n_r_ev : Q_dot_evz, epsilon_evz, NTU_evz, AU_evz, P_ev_out, P_crit_ev)
+
+" ------------------------------------ 6. CD_eps_ntu -----------------------------------"
+" Condensing zone of the three-zone condenser of CSL-0008 (the two-phase zone
+  C_r_tp there). "
+cf_cd$ = 'air_ha'
+R_cd$ = 'r134a'
+P_cf_su_cdz = 101325
+P_cf_ex_cdz = 101325
+t_cf_su_cdz = 20
+t_cf_ex_cdz = 28
+t_cdz = 45
+M_dot_r_cdz = 0.5
+M_dot_cf_cdz = 1.5
+C_cf_cdz = 0.1993/1000
+C_r_cdz = 0.00744/1000
+n_cf_cdz = 0.5
+n_r_cdz = 0.8
+alpha_cdz = 0.5
+
+call CD_eps_ntu(cf_cd$, R_cd$, P_cf_su_cdz, P_cf_ex_cdz, t_cf_su_cdz, t_cf_ex_cdz, t_cdz, M_dot_r_cdz, M_dot_cf_cdz, C_cf_cdz, C_r_cdz, n_cf_cdz, n_r_cdz, alpha_cdz : Q_dot_cdz, epsilon_cdz, NTU_cdz, AU_cdz, P_cd_out, P_crit_cdz)
+
+" ------------------------------------ 7. evaporator2_eps_ntu -------------------------"
+" Operating point stored in Evaporator epsilon-NTU SQ080311.EES (R123 /
+  humid air): the total UA of the zones is imposed (800 W/K in the source
+  file) and the evaporating pressure is the unknown. "
+fluid_e2$ = 'r123'
+fluidev_e2$ = 'air_ha'
+T_sf_su_e2 = 180
+M_dot_sf_e2 = 4
+p_sf_su_e2 = 4E5
+T_r_su_e2 = 40
+T_r_ex_e2 = 150
+M_dot_r_e2 = 0.2
+
+call evaporator2_eps_ntu(fluid_e2$, fluidev_e2$, T_sf_su_e2, M_dot_sf_e2, p_sf_su_e2, T_r_su_e2, T_r_ex_e2, p_ev2, M_dot_r_e2 : T_sf_ex_e2, Q_dot_ev2, AU_ev_l2, AU_ev_tp2, AU_ev_v2)
+
+AU_ev_l2 + AU_ev_tp2 + AU_ev_v2 = 800
+
+" ------------------------------------ results / checks --------------------------------"
+
+" The evaporating pressure of the evaporator2 demonstration is the only
+  unknown of the main program; the guess of three_zone_hx_procedures.initials
+  keeps the solver on the physical branch of the source file. "

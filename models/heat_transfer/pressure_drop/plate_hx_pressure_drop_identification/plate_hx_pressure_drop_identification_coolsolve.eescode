@@ -1,0 +1,240 @@
+{=============================================================================
+  Plate heat exchanger: two-phase pressure drops and heat-transfer
+  coefficients, with a fictitious-orifice condenser pressure drop
+  CoolSolve Library model CSL-0124 - runnable variant (plate_hx_pressure_drop_identification_coolsolve)
+ -----------------------------------------------------------------------------
+  Runnable CoolSolve variant of the blocked native file: the only changes
+  (all forced by the gaps, logged in the README) are
+    1. CALL EES_REFPROP (REFPROP mixture R245fa+R134a, unsupported:
+       CS-GAP-REFPROP) replaced by pure-fluid CoolSolve property calls on
+       the formal argument fluid$ = 'R245fa' - the pure-fluid fallback that
+       the original file itself keeps in comments; faithful for
+       MM_fraction = 1 (pure R245fa), the value of the stored EES run;
+    2. the $common lines dropped (their variables were only used by the
+       EES_REFPROP calls; CS-BUG-COMMON-PROC);
+    3. CALL EES_REFPROP(...,0,...:MM) replaced by MM = molarmass(WorkingFluid$).
+  No CoolSolve-only syntax is used: the variant is valid EES.
+
+  Inputs : L_h, L_w, tt, b (plate geometry); beta; p, T, T_sat, M_dot, q,
+           N_p, coef, A_thr; WorkingFluid$ = 'R245fa'
+  Outputs: h, DELTAp, DELTAp_tp, alpha_tp_cd, DELTAp_ev, h_tp_ev,
+           DELTAp_cd_approx
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, J. Lebrun laboratory (optim folder, ~2011) - see README.md
+=============================================================================}
+
+Procedure Thonon(fluid$,P,T,M_dot,b,L_w_tot,L_h,beta:h,DELTAp)
+
+{variant: the two CALL EES_REFPROP blocks (CS-GAP-REFPROP) are replaced by the
+ pure-fluid calls the original keeps in comments; $common dropped
+ (CS-BUG-COMMON-PROC)}
+rho = density(fluid$,t=t,p=p)
+cp = cp(fluid$,t=t,p=p)
+mu = viscosity(fluid$,p=p,t=t)
+k = conductivity(fluid$,t=t,p=p)
+
+Pr = cp * mu / k
+G = M_dot /(b*L_w_tot)
+D_h = 2*b   "or 2*b/phi  ??????"
+Re = G*D_h/mu
+if beta = 25 then
+	C_1 = 0.1
+	m = 0.687
+	if Re < 1000 then
+		C_2 = 28.21
+		pp= 0.9
+	endif
+	if Re >= 1000 then
+		C_2 = 0.872
+		pp = 0.392
+	endif
+endif
+
+if beta = 30 then
+	C_1 = 0.2267
+	m = 0.631
+	if Re < 550 then
+		C_2 = 26.34
+		pp= 0.830
+	endif
+	if Re >= 550 then
+		C_2 = 0.572
+		pp = 0.217
+	endif
+endif
+
+if beta = 45 then
+	C_1 = 0.2998
+	m = 0.645
+	if Re < 200 then
+		C_2 = 18.19
+		pp= 0.682
+	endif
+	if Re >= 200 then
+		C_2 = 0.6857
+		pp = 0.172
+	endif
+endif
+
+if beta = 60 then
+	C_1 = 0.2946
+	m = 0.7
+	if Re < 160 then
+		C_2 = 45.57
+		pp= 0.67
+	endif
+	if Re >= 160 then
+		C_2 = 0.370
+		pp = 0.172
+	endif
+endif
+
+Nu = C_1 * Re^m*Pr^(1/3)
+f = C_2 * Re^(-pp)
+
+h = Nu * k / D_h
+DELTAp = (f*2*G^2/rho * L_h)/D_h
+end
+
+$bookmark kuo
+Procedure kuo(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef:DELTAp,alpha_tp_cd)
+
+	{variant: the four CALL EES_REFPROP blocks replaced by the pure-fluid
+	 calls the original keeps in comments (completed with cp and enthalpy);
+	 $common dropped (CS-BUG-COMMON-PROC)}
+	rho_g=Density(fluid$,P=P,x=1)
+	rho_l=Density(fluid$,P=P,x=0)
+	mu_g=Viscosity(fluid$,P=P,x=1)
+	mu_l=Viscosity(fluid$,P=P,x=0)
+	k_l=Conductivity(fluid$,P=P,x=0)
+	cp_l=cp(fluid$,P=P,x=0)
+	h_l=enthalpy(fluid$,P=P,x=0)
+	h_v=enthalpy(fluid$,P=P,x=1)
+
+	Pr_l = cp_l * mu_l/k_l
+	G=M_dot/(b*L_W*N_p)
+	D_h = 2*b
+	Re_l=G*D_h/mu_l
+	h_r_l=0.2092*(k_l/D_h)*Re_l^0.5*Pr_l^(1/3){*(mu_ave/mu_wall)^0.14}            "Heat exchange coefficient on the saturated liquid, identified experimentally with water"
+	Fr_l=G^2/(rho_l^2*g#*D_h)
+	i_fg = h_v - h_l
+	Bo=q/(G*i_fg)
+
+	dx=0.05
+	x_0=0.01
+	x=x_0
+	Int=0
+	repeat
+	    Co=(rho_g/rho_l)*((1-x)/x)^0.8
+	    h_r=h_r_l*(0.25*Co^(-0.45)*Fr_l^0.25+75*Bo^0.75)
+	    Int=Int+h_r*dx
+	    x:=x+dx
+	until (x>0.95)
+	alpha_tp_cd=coef*Int/(x-x_0)
+
+
+	"Pressure drop:"
+	X_m = 0.5	"average value of the vapor quality between inlet and outlet"
+	v_m = (1-X_m)/rho_l + X_m/rho_g
+	G_eq = G * ( (1 - X_m) + X_m * (rho_l/rho_g)^0.5)
+	Re_eq = G_eq * D_h/mu_l
+
+	f_tp = 21500 * Re_eq^(-1.14)*Bo^(-0.085)
+	DELTAp = 2 * G^2 * v_m * L_h * f_tp /D_h
+
+End
+
+$bookmark Hsieh
+Procedure Hsieh_new(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h:DELTAp,h_tp_ev)
+
+
+"Hsieh YY, Lin TF. Saturated flow boiling heat transfer and pressure drop of
+refrigerant R410a in a vertical plate heat exchanger. Int J Heat Mass Trans
+2002;45:033-1044"
+
+	"average heat transfer coefficient:"
+	{variant: the four CALL EES_REFPROP blocks replaced by the pure-fluid
+	 calls the original keeps in comments (completed with cp and enthalpy);
+	 $common dropped (CS-BUG-COMMON-PROC)}
+	rho_g=density(fluid$,T=T_sat,x=1)
+	rho_l=density(fluid$,T=T_sat,x=0)
+	mu_g=viscosity(fluid$,T=T_sat,x=1)
+	mu_l=viscosity(fluid$,T=T_sat,x=0)
+	k_l=conductivity(fluid$,T=T_sat,x=0)
+	cp_l=cp(fluid$,T=T_sat,x=0)
+	h_l=enthalpy(fluid$,T=T_sat,x=0)
+	h_v=enthalpy(fluid$,T=T_sat,x=1)
+
+	Pr_l = cp_l * mu_l/k_l
+	G=M_dot/(b*L_W_tot)
+	D_h= 2*b
+	Re_l=G*D_h/mu_l
+	h_l=0.2092*(k_l/D_h)*Re_l^0.78*Pr_l^(1/3)
+	i_fg = h_v - h_l
+	{Bo=Max(q/(G*i_fg), 1)}
+	Bo=q/(G*i_fg)
+	h_tp_ev=88*Bo^0.5*h_l
+
+	"Pressure drop:"
+	X_m = 0.5	"average value of the vapor quality between inlet and outlet"
+	v_m = 0.5/rho_l + 0.5/rho_g
+	G_eq = G * ( (1 - X_m) + X_m * (rho_l/rho_g)^0.5)
+	Re_eq = G_eq * D_h/mu_l
+	f_tp = 61000 * Re_eq^(-1.25)
+	DELTAp = 2 * G^2 * v_m * L_h * f_tp /D_h
+
+end
+
+"!Heat exchanger"
+L_h = 0.25  [m] 	"plate length, measured between the center of the port holes"
+L_w = 0.112 [m]	"plate width between gaskets"
+b = 0.0024 - tt	"Space between two plates"
+tt=0.0005 [m] 	"plate thickness, evaluated with the weight of one plate"
+
+"!Hypotheses"
+DELTAT_pp_cd=15.46          "condenser pinch point [°C] (as in the original)"
+DELTAT_pp_ev=7.474 [°C]     "evaporator pinch point [°C]"
+P_r_ev=1.186E+06 [Pa]       "evaporation pressure [Pa]"
+MM_fraction=1               "molar fraction of the first component of the mixture [-] (kept: 1 = pure R245fa, the stored run)"
+DELTAT_sh=5 [°C]            "superheating at the evaporator outlet [°C]"
+DELTAT_sc=5                 "subcooling at the condenser outlet [K]"
+r_v_in_exp=3.4              "volume ratio of the expander [-]"
+epsilon_m_exp=0.7           "mechanical efficiency of the expander [-]"
+epsilon_s_pp=0.6            "isentropic efficiency of the pump [-]"
+
+WorkingFluid$='R245fa'
+fluidev$='glycol'
+
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+"- - - - - - - - I.2 Evaporator model - - - - - - - -"
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+
+L_w_tot = L_w * 37
+beta = 45
+
+p = 1.6E5
+T = 88
+M_dot = 0.1
+T_sat = 27
+
+{variant: CALL EES_REFPROP(WorkingFluidMix$,0,MM_fraction : MM) replaced
+ (CS-GAP-REFPROP); faithful at MM_fraction = 1 (pure R245fa)}
+MM = molarmass(WorkingFluid$)
+
+call Thonon(workingfluid$,P,T,M_dot,b,L_w_tot,L_h,beta:h,DELTAp)
+
+call kuo(workingfluid$,P,M_dot,q,N_p,b,L_w_tot,2*L_h,coef:DELTAp_tp,alpha_tp_cd)
+
+q = 10000
+N_p = 1
+coef = 1
+
+"Approximation by a fictitious orifice, identified on the measurement with 245fa and the two condensers in series:"
+A_thr = 0.00012
+v_r_su_cd = volume(workingfluid$,p=p,t=t)
+V_dot_su_cd = M_dot * v_r_su_cd
+
+V_thr = V_dot_su_cd/A_thr
+DELTAp_cd_approx = V_thr^2/(2*v_r_su_cd)
+
+call Hsieh_new(workingfluid$,T_sat,M_dot,q,b,L_w_tot,2*L_h:DELTAp_ev,h_tp_ev)

@@ -340,6 +340,9 @@ comment block.
 
 ## Related models
 
+- `CSL-0112` *three_zone_hx_procedures*: the three-zone evaporator
+  procedure that uses a coefficient of this family for its two-phase zone.
+
 - `CSL-0087` *internal_turbulent_nusselt*: the single-phase turbulent
   correlations (Dittus-Boelter, Gnielinski) that `h_Thome`, `h_Chen_Edelstein`,
   `h_Chen_Bennett` and `h_Liu_Winterton` write out in their bodies, and
@@ -365,3 +368,4 @@ comment block.
 - sources/thermocycle `THC-004`: the inventory row this model completes with
   Shah 1982 and Gungor-Winterton 1987 (`ht` has neither); its third correlation,
   Cooper 1984, is `CSL-0088` *nucleate_boiling_and_chf* (`h_Cooper`).
+- `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.

@@ -1,0 +1,70 @@
+{
+  "id": "CSL-0118",
+  "name": "air_nozzle_ejector",
+  "title": "Air nozzle ejector (primary nozzle and entrainment)",
+  "summary": "Air ejector: a pressurised primary flow expands through a converging nozzle and entrains a low-pressure secondary flow; mass flows from the total free air delivery and the secondary mass fraction, subsonic orifice-type nozzle equation, momentum/energy mixing at the exit plane, diffuser efficiency correlated with the nozzle diameter and entrainment; returns the suction pressure (suction effect) and the discharge pressure rise.",
+  "kind": "steady",
+  "level": 3,
+  "status": "blocked",
+  "main_file": "air_nozzle_ejector.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "ejector",
+    "air",
+    "primary nozzle",
+    "entrainment",
+    "mixing chamber",
+    "diffuser",
+    "free air delivery",
+    "suction effect"
+  ],
+  "language_features": [
+    "procedure",
+    "CALL WARNING (branch taken at the default point)",
+    "ideal-gas Air property calls"
+  ],
+  "stats": {
+    "n_equations": 65,
+    "largest_block": 6
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Steady-state models/air-nozzle ejector.EES",
+    "candidate_id": "TM-0593",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.793",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file, for the runnable variant air_nozzle_ejector_coolsolve.eescode. Provenance audit (README): the stored set is one consistent solved run at FF = 0.1, FAD_tot = 260, T = 30/30 °C, p_1_su_ej = 800000, D_in_ex_noz = 0.02; the stored FF = 0.4 cell and the file's commented FF = 0.4254 block both contradict the mass-flow and epsilon_diff equations (post-solve edits). The import uses the stored-solution input set",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 3.44e-03,
+    "notes": "compare_solution.py: 65 common variables, 24 differ (rtol=0.001) - 3 stale stored cells (FF 7.50e-01, DELTAp_ex_diff 7.31e-01, epsilon_diff 4.06e-01), 7 enthalpy-reference offsets (2.9e-01, differences agree), 14 property-backend deviations, max 3.44e-03 on p_dyn_mix_ex_diff (CoolProp vs EES air data); main outputs: p_0_su_ej 1.0e-04, p_mix_ex_diff 6.0e-05, C_1_ex_noz 7.4e-04."
+  },
+  "missing_features": [
+    "CS-GAP-CALL-WARNING",
+    "CS-GAP-AIR-ENTHALPY-REF"
+  ],
+  "related": [
+    "CSL-0122"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added (card C-129, T-IMPORT; native file blocked, runnable variant verified)",
+      "by": "worker for S. Quoilin"
+    }
+  ]
+}

@@ -190,3 +190,6 @@ exchanger titles): only the `CSX-017` row is decided on by this card.
   (Cmin, Cmax, Cr, NTU<->UA, eps and NTU for the counterflow, parallel,
   crossflow and boiler/condenser arrangements) as EES functions, to be copied
   in a model that rates a crossflow exchanger.
+- `CSL-0105` *lmtd_and_f_correction*: the LMTD relations (`LMTD`,
+  `F_LMTD_Fakheri`, `Ft_aircooler`) as EES functions, the alternative rating
+  method of a crossflow exchanger.

@@ -474,6 +474,10 @@ contains the state-point arrays (§3, step 5). This procedure was tested on
 
 - No `$UnitSystem` directive: CoolSolve has a single unit system (SI mass basis,
   °C, Pa, J, degrees for trigonometry); the file starts with the header block.
+- The header block (opening comment of the file) stays short: **about 10–20 lines** (title, one-paragraph
+  description, source and authors, licence, status/gaps in one line). Details — derivations, verification tables,
+  conversion log, long explanations — belong in the model's `README.md` (maintainer, 2026-10-07; existing models are
+  not reworked for this).
 - Section titles as displayed comments: `"!Compressor model"`.
 - One equation per line; explanation and units in a trailing comment:
   `W_dot = W_dot_loss_0 + (1 + alpha)*W_dot_in   "electrical power [W]"`.

@@ -1,0 +1,74 @@
+{
+  "id": "CSL-0113",
+  "name": "condenser_3_zones_plate_correlations",
+  "title": "Three-zone plate condenser with heat-transfer correlations (Thonon/Kuo)",
+  "summary": "Plate condenser for R123 with water (or glycol) cooling: three refrigerant zones (desuperheating, condensation, subcooling) sized with LMTD and plate-heat-exchanger correlations (Thonon single phase, Kuo two phase); computes area, pressure drops, hold-up mass and volume.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "condenser_3_zones_plate_correlations.eescode",
+  "fluids": [
+    "R123",
+    "Water"
+  ],
+  "tags": [
+    "plate heat exchanger",
+    "condenser",
+    "three zones",
+    "Thonon correlation",
+    "Kuo correlation",
+    "pressure drop",
+    "design"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "procedures",
+    "repeat loop"
+  ],
+  "stats": {
+    "n_equations": 35,
+    "largest_block": 4
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/procedures EES/condenser 3 zones with correlations.EES",
+    "candidate_id": "TM-0563",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.940",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solution stored in the source file (18 variables)",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.0556,
+    "notes": "compare_solution.py: 17 common variables, 5 differ (rtol=0.001), max 5.56e-02 on DELTAp_cd; every input agrees exactly. The 5 differing variables are the integrated outputs (A_cd, DELTAp_cd, DELTAp_sf_cd, M_fluid_cd, V_cd), all traced to the R123 property library of EES 8 (2008) vs CoolProp in the superheated region (desuperheating duty = small difference of large enthalpies); within the 'older EES fluid models: up to a few %' tolerance of ees_import.md §11, explained in the README."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0008",
+    "CSL-0096",
+    "CSL-0079",
+    "CSL-0115",
+    "CSL-0124",
+    "CSL-0114"
+  ,
+    "CSL-0121"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    }
+  ]
+}

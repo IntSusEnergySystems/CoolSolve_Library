@@ -1,0 +1,75 @@
+{
+  "id": "CSL-0115",
+  "name": "hx_fem_evaporator_discretised",
+  "title": "Discretised (finite-volume) evaporator with three U-value zones",
+  "summary": "Counterflow evaporator discretised in N cells by a PROCEDURE with a REPEAT-UNTIL loop; the overall heat-transfer coefficient passes smoothly from liquid to two-phase to vapour values over a 0.1 quality window (the smoothing that fixes the convergence problems of the earlier sharp-switching revision TM-0275). Water inlet temperature imposed, water outlet and refrigerant outlet solved by iteration over the procedure.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "hx_fem_evaporator_discretised.eescode",
+  "fluids": [
+    "R245fa",
+    "Water"
+  ],
+  "tags": [
+    "heat exchanger",
+    "evaporator",
+    "discretised",
+    "finite volumes",
+    "two-phase",
+    "heat-transfer coefficient zones",
+    "R245fa"
+  ],
+  "language_features": [
+    "string variables",
+    "PROCEDURE",
+    "REPEAT-UNTIL loop",
+    "lookup table write in procedure (blocked)"
+  ],
+  "stats": {
+    "n_equations": 32,
+    "largest_block": 4
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/procedures EES/hx - fem SQ011025.EES",
+    "candidate_id": "TM-0575",
+    "authors": [
+      "Sylvain Quoilin (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.423",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (23 variables); the runnable variant hx_fem_evaporator_discretised_coolsolve was verified, not the native file",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.0022,
+    "notes": "21 common variables, max rel. diff 2.20e-03 (rtol=0.001) on the R245fa absolute enthalpies h_su/h_ex and Q_dot (EES vs CoolProp backend, within the 0.5 % tolerance); all temperatures and T_hf_ex agree; outlet two-phase in both tools (DELTAT_ex = 0)."
+  },
+  "missing_features": [
+    "CS-GAP-REPEAT-UNTIL-BARE",
+    "CS-BUG-LOOKUP-WRITE"
+  ],
+  "related": [
+    "CSL-0008",
+    "CSL-0113",
+    "CSL-0031",
+    "CSL-0124",
+    "CSL-0114"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added (C-126, T-IMPORT TM-0575)",
+      "by": "worker of the CoolSolve Library for S. Quoilin"
+    }
+  ]
+}

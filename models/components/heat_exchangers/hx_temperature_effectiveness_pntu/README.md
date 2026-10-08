@@ -417,3 +417,6 @@ Cho, *Handbook of Heat Transfer*, 3E (1998).
 - `CSL-0087` *internal_turbulent_nusselt*: the first `ht` family of the library
   (same layout: one `FUNCTION` per correlation, per-function comment block,
   demonstration program, verification table).
+- `CSL-0105` *lmtd_and_f_correction*: the LMTD relations of the same `ht`
+  triage (`LMTD`, `F_LMTD_Fakheri`, `Ft_aircooler`, same layout), the other
+  way of rating a shell-and-tube or air-cooler exchanger.

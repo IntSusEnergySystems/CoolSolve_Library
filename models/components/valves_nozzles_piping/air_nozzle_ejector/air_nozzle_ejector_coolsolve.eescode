@@ -1,0 +1,133 @@
+{=============================================================================
+  Air ejector with a primary nozzle (entrainment model) - runnable
+  CoolSolve variant of CSL-0118 (native file: air_nozzle_ejector.eescode)
+ -----------------------------------------------------------------------------
+  Same equations as the native file except the two changes forced by CoolSolve
+  gaps, logged here and in the README:
+   1. CS-GAP-AIR-ENTHALPY-REF: the three equations that take a RATIO of
+      absolute enthalpies (nozzle and diffuser isentropic relations) are
+      written with EES-reference enthalpies (h - DELTAh_ref), because the
+      ideal-gas Air enthalpy of CoolSolve keeps CoolProp's arbitrary reference
+      (offset DELTAh_ref = 125873 J/kg at 30 °C, anchored on the EES stored
+      solution of the source file). The enthalpy DIFFERENCE equations are
+      unchanged (reference-invariant).
+   2. CS-GAP-CALL-WARNING: the six range-check IF statements of the
+      warning_error procedure are removed - their CALL WARNING branches
+      cannot execute in CoolSolve. The copies of the inputs remain.
+  Variables and equations otherwise as in the original. Verified against the
+  EES stored solution (see README): CoolSolve-only constructs: none (plain
+  EES arithmetic); CoolSolve-only syntax: none.
+=============================================================================}
+
+"!Inputs (fixed in EES via the Variable Information dialog; stored-solution run)"
+FF = 0.1                     "entrainment ratio (secondary/total mass flow) [-]; stored value 0.4 is a post-solve edit, see README"
+FAD_tot = 260                "total free air delivery [l/s]"
+T_1_su_ej = 30               "primary supply temperature [°C]"
+T_0_su_ej = 30               "secondary (suction) supply temperature [°C]"
+p_1_su_ej = 800000           "primary supply pressure [Pa]"
+D_in_ex_noz = 0.02           "nozzle outlet diameter [m]"
+{The commented block of the original file holds another operating point:
+ FF=0.4254, FAD_tot=140 l/s, T_1_su_ej=143.2 °C, T_0_su_ej=143.6 °C,
+ p_1_su_ej=800764 Pa, D_in_ex_noz=0.02 m}
+
+"! ############################################################## Parameters :   # #############################################################"
+K_noz = 0.99
+epsilon_diff=-3.60546509E-01+3.69564316E+01*D_in_ex_noz+1.11527327E+00*FF
+
+
+"! ############################################################## Pre-processing  # #############################################################"
+
+call warning_error(FF,FAD_tot,T_1_su_ej,T_0_su_ej,p_1_su_ej,D_in_ex_noz:var1_out,var2_out,var3_out,var4_out,var5_out,var6_out)
+
+rho_fad = density(air,t=20,p=101325)
+FAD_1 = M_dot_1/rho_fad
+M_dot_1 = M_dot_tot * (1 - FF)
+M_dot_0 = M_dot_tot * FF
+FAD_tot = M_dot_tot/rho_fad*1000
+gamma = cp(air,t=25)/cv(air,t=25)
+
+
+"!  ##############################################################  Ejector :   ##############################################################"
+
+
+"Fluid characteristics, supply of the low pressure side : "
+p_0_su_noz = p_0_su_ej
+t_0_su_noz = T_0_su_ej
+rho_0_su_noz = density(air,t=t_0_su_ej,p=p_0_su_noz)
+C_0_su_noz = M_dot_0/A_duct_2inch/rho_0_su_noz
+p_dyn_0_su_noz = rho_0_su_noz * C_0_su_noz^2/2
+h_tot_0_su_noz = enthalpy(air,t=t_0_su_ej)
+
+"Fluid characteristics, supply of the high pressure side :"
+p_1_su_ej = p_0_su_ej + DELTAp_su_ej
+t_1_su_noz = T_1_su_ej
+p_1_su_noz = p_1_su_ej
+h_tot_1_su_noz = enthalpy(air,t=t_1_su_noz)
+rho_1_su_noz = density(air,t=t_1_su_noz,p=p_1_su_noz)
+C_1_su_noz = M_dot_1/A_duct_2inch/rho_1_su_noz
+p_dyn_1_su_noz = rho_1_su_noz * C_1_su_noz^2/2
+p_tot_1_su_noz = p_1_su_noz + p_dyn_1_su_noz
+
+"Nozzle characteristics "
+D_thr_noz = D_in_ex_noz - 2e-3
+D_duct_2inch =0.0508
+D_duct_ex_diff = 69e-3
+
+"Passage areas :"
+A_thr_noz = D_thr_noz^2*pi/4
+A_1_ex_noz = D_in_ex_noz^2*pi/4
+A_duct_2inch = pi*D_duct_2inch^2/4
+A_duct_ex_diff = D_duct_ex_diff^2*pi/4
+
+
+"Enthalpy offset between the EES and CoolProp references of ideal-gas Air [J/kg]
+ (h_EES(30 C) = 303595.0691 J/kg is the stored solution of the source file)"
+DELTAh_ref = enthalpy(air,t=30) - 303595.0691
+
+"Isentropic evolution through the nozzle (the geometry is not taken into account)"
+(h_1_ex_noz-DELTAh_ref)/(h_tot_1_su_noz-DELTAh_ref) = (p_0_su_noz/p_tot_1_su_noz)^((gamma-1)/gamma)
+C_1_ex_noz^2/2 = h_tot_1_su_noz - h_1_ex_noz
+
+"Mixing between both flows :"
+M_dot_1 * C_1_ex_noz = M_dot_tot * C_mix_ex_noz
+M_dot_1 * h_tot_1_su_noz + M_dot_0 * h_tot_0_su_noz = M_dot_tot * h_tot_mix_ex_noz
+h_tot_mix_ex_noz = h_mix_ex_noz + C_mix_ex_noz^2/2
+p_mix_ex_noz = p_0_su_noz			"! hypothèse"
+
+"Exhaust conditions : "
+p_mix_ex_diff = p_0_su_noz + DELTAp_ex_diff
+h_tot_mix_ex_diff = h_tot_mix_ex_noz
+h_tot_mix_ex_diff = h_mix_ex_diff + C_mix_ex_diff^2/2
+C_mix_ex_diff = M_dot_tot/rho_mix_ex_diff/A_duct_ex_diff
+rho_mix_ex_diff = density(air,h=h_mix_ex_diff,p=p_mix_ex_diff)
+
+T_mix_ex_diff_pred = temperature(air,h=h_tot_mix_ex_diff)
+
+
+"Nozzle efficiency :"
+epsilon_diff = C_mix_ex_noz_s^2/C_mix_ex_noz^2
+(h_tot_mix_ex_diff_s-DELTAh_ref)/(h_mix_ex_noz-DELTAh_ref) = (p_tot_mix_ex_diff/p_mix_ex_noz)^((gamma-1)/gamma)
+h_tot_mix_ex_diff_s = h_mix_ex_noz + C_mix_ex_noz_s^2/2
+p_tot_mix_ex_diff_bis = p_mix_ex_diff + rho_mix_ex_diff*C_mix_ex_diff^2/2
+p_tot_mix_ex_diff/p_mix_ex_diff =(( h_tot_mix_ex_diff-DELTAh_ref)/(h_mix_ex_diff-DELTAh_ref))^(gamma/(gamma-1))
+p_dyn_mix_ex_diff = rho_mix_ex_diff*C_mix_ex_diff^2/2
+
+"Prediction of DELTAp_su_ej with contraction factor K_noz"
+DELTAp_1_noz = P_1_su_noz - P_0_su_noz
+M_dot_1 = epsilon_noz_iso * K_noz *A_1_ex_noz* sqrt(2*rho_1_su_noz * DELTAp_1_noz)
+epsilon_noz_iso=((gamma_noz*tau_noz^(2/gamma_noz))/(gamma_noz-1)*(1-beta_noz^4)/(1-beta_noz^4*tau_noz^(2/gamma_noz))*(1-tau_noz^((gamma_noz-1)/gamma_noz))/(1-tau_noz))^0.5
+beta_noz = d_thr_noz/D_duct_2inch
+tau_noz=p_0_su_ej/P_1_su_noz
+gamma_noz = cp(air,t=t_1_su_noz)/cv(air,t=t_1_su_noz)
+
+procedure warning_error(var1_in,var2_in,var3_in, var4_in,var5_in,var6_in:var1_out,var2_out,var3_out,var4_out,var5_out,var6_out)
+
+
+var1_out := var1_in
+var2_out := var2_in
+var3_out := var3_in
+var4_out := var4_in
+var5_out := var5_in
+var6_out := var6_in
+
+end

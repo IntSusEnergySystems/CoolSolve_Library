@@ -373,3 +373,23 @@ Transfer*, 3E, McGraw-Hill, 1998.
   Dittus-Boelter and Gnielinski coefficients are written out in their bodies.
   They apply to the same pipe flow once the wall temperature crosses the
   pseudo-critical point of the fluid (supercritical water, transcritical CO2).
+- `CSL-0105` *lmtd_and_f_correction*: the LMTD relations (`LMTD`,
+  `F_LMTD_Fakheri`, `Ft_aircooler`) of the same `ht` triage, same layout; a
+  rating model combines the heat-transfer coefficients of this file with the
+  mean temperature difference of that one.
+- `CSL-0107` *radiation_heat_flux*: the radiation relations of the same `ht`
+  triage (blackbody spectral radiance, grey-surface heat flux with
+  back-radiation, grey transmittance, 3 functions), same layout; its
+  temperatures are in °C with `T + 273.15` formed inside the functions.
+- `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.
+- `CSL-0108` *packed_bed_nusselt*: the packed-bed forced-convection family
+  of the same `ht` triage (Gnielinski, Wakao-Kagei, Achenbach, KTA, 4
+  functions), same layout and same comment blocks; its functions take the
+  bed operating point (dp, voidage, vs, fluid properties) or Re, Pr and the
+  void fraction instead of the pipe dimensionless numbers.
+- `CSL-0106` *conduction_resistances_and_shapes*: the conduction family of the same `ht` triage (plane-wall and cylindrical-wall resistances, 6 shape factors, R-value conversions, 14 relations), same layout; no convection input is needed there, only geometry and `k`.
+- `CSL-0109` *fin_efficiency_and_wall_factors*: the circular-fin efficiency and
+  the Kays-Crawford wall correction factors of the same `ht` triage (3
+  functions), same layout; its `(mu/mu_wall)^n` factors are the general form
+  of the fixed-exponent Sieder-Tate correction of this file, and its `fd`
+  factors apply to the same friction-factor inputs.

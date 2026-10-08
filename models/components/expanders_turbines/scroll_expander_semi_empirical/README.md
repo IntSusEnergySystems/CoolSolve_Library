@@ -155,5 +155,8 @@ Source files (MIT, collection of S. Quoilin):
   to this semi-empirical expander (ThermoCycle efficiency/filling-factor fits).
 - `CSL-0036` *orc_extraction_r134a*: ORC with two-stage scroll expanders —
   the application the module was written for.
+- `CSL-0117` *double_stage_scroll_expander*: correlation model of the
+  two-stage hermetic scroll expander (Lemort/Quoilin/Pire), the machine this
+  semi-empirical model was validated on.
 - See also the CoolSolve example `expander_module.eescode` (kept in CoolSolve
   as a test case).

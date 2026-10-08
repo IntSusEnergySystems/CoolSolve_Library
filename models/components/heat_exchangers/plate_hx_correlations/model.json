@@ -1,0 +1,73 @@
+{
+  "id": "CSL-0111",
+  "name": "plate_hx_correlations",
+  "title": "Plate heat exchangers: heat-transfer and pressure-drop correlations (function library)",
+  "summary": "Ten EES PROCEDUREs for the corrugated channel of a chevron plate heat exchanger: six single-phase correlations (Kumar, Thonon, Muley, Bogaerts, Martin, Wanniarachchi) and four two-phase condensation/flow-boiling correlations (Kuo-Lie-Hsieh-Lin, Hsieh-Lin, Yan-Lio-Lin, Han-Lee-Kim), each returning a heat-transfer coefficient and a pressure drop from the state, the mass flow rate and the plate geometry.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "plate_hx_correlations.eescode",
+  "fluids": [
+    "R410A"
+  ],
+  "tags": [
+    "plate heat exchanger",
+    "chevron plate",
+    "correlation",
+    "heat transfer coefficient",
+    "pressure drop",
+    "two-phase",
+    "condensation",
+    "flow boiling",
+    "function library"
+  ],
+  "language_features": [
+    "procedures",
+    "CALL",
+    "IF/THEN/ENDIF blocks",
+    "REPEAT-UNTIL",
+    ":= assignment",
+    "string variable (Regime$)"
+  ],
+  "stats": {
+    "n_equations": 39,
+    "largest_block": 4
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/procedures EES/PHEX correlations SQ150128.EES",
+    "candidate_id": "TM-0585",
+    "authors": [
+      "Sylvain Quoilin",
+      "Stéphane Bertagnolio (martin procedure of TM-0496)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.721",
+    "language": "en",
+    "course": "",
+    "notes": "Procedure library of the ULiège plate-HX models, representative of duplicate group DG-0129 (TM-0583/TM-0584/TM-0585, C-121 triage); the near-identical martin procedure and its variant come from TM-0496 (~/Nextcloud/thermo_models/procedures EES/single phase hx  martin - SQ080229.EES, TM-0561 duplicate). Unit system already SI-°C-Pa-J. The Han procedure is transcribed but its call stays commented out as in the original (absurd pressure drops, see README)."
+  },
+  "verification": {
+    "reference": "EES stored solution of TM-0585 (38 common variables, compare_solution.py) plus ht 1.2.0 Python values of the HT-010 family (Martin VDI 4.6e-13, Kumar 9.0e-4 at the complementary chevron angle, Muley explained by the original file's phi^3 typo)",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 5.83e-2,
+    "notes": "Maximum over all common variables is the R410A viscosity mu (5.83e-2, EES formulation vs CoolProp pseudo-pure model), which propagates through Re into the correlations (all outputs within 2.66e-2); geometry-only outputs (A_hex, T_sat) agree below 1e-6. Excluded as stale EES records of earlier runs: A_bar, L_p, mu_ratio, h, DELTAp, h_han, DELTAp_han."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0096"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added (T-FUNC card C-122, TM-0585 + TM-0496)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

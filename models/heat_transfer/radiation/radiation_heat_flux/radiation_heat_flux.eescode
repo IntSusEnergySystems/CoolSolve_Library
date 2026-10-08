@@ -1,0 +1,138 @@
+{=============================================================================
+  Radiation heat flux: blackbody spectral radiance, grey-surface radiant
+  heat flux with back-radiation, and grey transmittance
+  CoolSolve Library model CSL-0107 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Three thermal-radiation relations as EES FUNCTIONs: the Planck spectral
+  radiance of a blackbody, the net radiant heat flux of a grey surface
+  exchanging with isothermal surroundings, and the transmittance of a grey
+  (absorbing) medium along a path length.
+
+  Temperatures are in °C, as everywhere in the library; the functions add
+  273.15 internally (ht takes kelvin). The demonstration program at the end
+  calls each function twice: once (case A) with the inputs of the ht doctest
+  of the corresponding function, once (case B) with a second input set. The
+  ht values of both sets are tabulated in the README (verification table).
+
+  The fourth member of the ht module, solar_spectrum, is NOT translated: it
+  only reads a 1.4 MB measured solar-spectrum data file, it is not a
+  correlation (as in the ht triage, sources/ht/README.md).
+
+  Inputs : T [C], wavelength [m], emissivity [-], extinction_coefficient
+           [m2/mol], molar_density [mol/m3], length [m], base [-]
+  Outputs: spectral radiance [W/m2-sr-m], heat flux [W/m2], transmittance [-]
+  Units  : SI - temperatures in °C, lengths in m, energies in J
+  Source : ht (Caleb Bell), ht/radiation.py, version 1.2.0, commit 85e0ee6,
+           MIT - https://github.com/CalebBell/ht ; original references in
+           each function block - see README.md
+  Status : VERIFIED against the doctests and the values of ht 1.2.0
+           (README.md, "Verification")
+=============================================================================}
+
+FUNCTION blackbody_spectral_radiance(T, wavelength)
+{BLACKBODY_SPECTRAL_RADIANCE - Planck spectral radiance of a blackbody at the
+temperature T [C], evaluated at the wavelength wavelength [m]; result in
+[W/m2-sr-m] (per metre of wavelength, as ht returns it).
+
+  I = 2*h*c^2 / {wavelength^5 * [EXP(h*c/(wavelength*k*T_K)) - 1]}
+  T_K = T + 273.15
+
+h = 6.62607004E-34 J-s (Planck constant), c = 299792458 m/s (speed of light),
+k = 1.380649E-23 J/K (Boltzmann constant): the values used by fluids.constants
+with ht 1.2.0. For h*c/(wavelength*k*T_K) > 709.7 the exponential overflows
+double precision and the radiance is zero to machine precision, so 0 is
+returned (as in ht).
+Validity: exact law, no range; wavelength > 0, T_K > 0.
+Original: M. Planck, "Ueber das Gesetz der Energieverteilung im Normalspectrum",
+  Annalen der Physik 309(3): 553-563, 1901; as given in Bergman, T. L.,
+  A. S. Lavine, F. P. Incropera and D. P. DeWitt, Introduction to Heat
+  Transfer, 6E, Wiley, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/radiation.py,
+  blackbody_spectral_radiance, MIT License, C. Bell -
+  https://github.com/CalebBell/ht}
+  h_Planck = 6.62607004E-34   "Planck constant [J-s], value used by fluids.constants with ht 1.2.0"
+  c_light = 299792458   "speed of light [m/s]"
+  k_B = 1.380649E-23   "Boltzmann constant [J/K]"
+  T_K = T + 273.15   "absolute temperature [K]"
+  to_exp = h_Planck*c_light/(wavelength*T_K*k_B)   "dimensionless exponent [-]"
+  IF to_exp > 709.7 THEN
+    blackbody_spectral_radiance = 0   "radiance below machine precision [W/m2-sr-m]"
+  ELSE
+    blackbody_spectral_radiance = 2*h_Planck*c_light^2*wavelength^(-5)/(EXP(to_exp) - 1)   "spectral radiance [W/m2-sr-m]"
+  ENDIF
+END
+
+FUNCTION q_rad(emissivity, T, T2)
+{Q_RAD - net radiant heat flux [W/m2] leaving a grey surface of emissivity
+emissivity [-] at the temperature T [C], exchanging with isothermal
+surroundings at T2 [C].
+
+  q = emissivity*sigma*(T_K^4 - T2_K^4)
+  T_K = T + 273.15, T2_K = T2 + 273.15
+
+sigma = 5.670367E-8 W/m2-K4 (Stefan-Boltzmann constant): the value used by
+fluids.constants with ht 1.2.0. ht has T2 = 0 K as the default (no
+back-radiation); EES has no optional arguments, so pass T2 = -273.15 [C].
+Emissivity is at most 1; T2 may be larger than T (negative flux, as in ht).
+Validity: grey diffuse surface in large isothermal surroundings, no range.
+Original: J. Stefan (1879) and L. Boltzmann (1884) for the blackbody law;
+  as given in Bergman, T. L., A. S. Lavine, F. P. Incropera and D. P. DeWitt,
+  Introduction to Heat Transfer, 6E, Wiley, 2011.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/radiation.py, q_rad, MIT License,
+  C. Bell - https://github.com/CalebBell/ht}
+  sigma = 5.670367E-8   "Stefan-Boltzmann constant [W/m2-K4], value used by fluids.constants with ht 1.2.0"
+  T_K = T + 273.15   "surface absolute temperature [K]"
+  T2_K = T2 + 273.15   "surroundings absolute temperature [K]"
+  q_rad = sigma*emissivity*(T_K^4 - T2_K^4)   "net radiant heat flux [W/m2]"
+END
+
+FUNCTION grey_transmittance(extinction_coefficient, molar_density, length, base)
+{GREY_TRANSMITTANCE - fraction [-] of spectral radiance transmitted through a
+grey (absorbing) body along a path, from the Beer-Lambert attenuation.
+
+  tau = base^(-extinction_coefficient*molar_density*length)
+
+extinction_coefficient [m2/mol] at the modelled frequency (temperature and
+pressure dependent, e.g. from the HITRAN database), molar_density [mol/m3],
+length [m]. ht defaults base to e (more theoretically sound); chemists often
+use 10. EES has no optional arguments, so pass base = EXP(1) for e.
+Validity: homogeneous absorbing medium along the path, no range.
+Original: P. Bouguer (1729), J. H. Lambert (1760) and A. Beer (1852) for the
+  attenuation law; as given in Modest, M. F., Radiative Heat Transfer, 3E,
+  Academic Press, 2013.
+Taken from: ht 1.2.0 (commit 85e0ee6), ht/radiation.py, grey_transmittance,
+  MIT License, C. Bell - https://github.com/CalebBell/ht}
+  tau_exp = molar_density*extinction_coefficient*length   "dimensionless attenuation exponent [-]"
+  grey_transmittance = base^(-tau_exp)   "transmitted fraction [-]"
+END
+
+"!Demonstration program: every function is called twice"
+"It is ignored by the future $INCLUDE library:radiation_heat_flux (CS-FEAT-IMPORT)."
+"Case A: the input set of the ht doctest of each function (published values;"
+"kelvin inputs converted to °C: T[K] - 273.15)."
+"Case B: a second input set per function."
+"Both cases are tabulated against ht in the README (verification table)."
+
+"Case A - blackbody spectral radiance at 800 K and 4 micrometre (526.85 C)"
+I_blackbody_A = blackbody_spectral_radiance(526.85, 4E-6)   "spectral radiance [W/m2-sr-m]"
+
+"Case A - radiant heat flux of a black surface at 400 K (126.85 C), no back-radiation"
+q_black_A = q_rad(1, 126.85, -273.15)   "radiant heat flux [W/m2]"
+
+"Case A - radiant heat flux, emissivity 0.85, surface 400 K (126.85 C), surroundings 305 K (31.85 C)"
+q_grey_A = q_rad(0.85, 126.85, 31.85)   "radiant heat flux [W/m2]"
+
+"Case A - transmittance of 1 cm of water vapour at 1.3 micrometre (base e)"
+tau_water_A = grey_transmittance(3.8E-4, 55300, 1E-2, EXP(1))   "transmitted fraction [-]"
+
+"Case B - blackbody spectral radiance at 1500 K (1226.85 C) and 2 micrometre"
+I_blackbody_B = blackbody_spectral_radiance(1226.85, 2E-6)   "spectral radiance [W/m2-sr-m]"
+
+"Case B - blackbody spectral radiance at 300 K (26.85 C) and 10 micrometre"
+I_cold_B = blackbody_spectral_radiance(26.85, 10E-6)   "spectral radiance [W/m2-sr-m]"
+
+"Case B - radiant heat flux, emissivity 0.9, surface 1000 K (726.85 C), surroundings 300 K (26.85 C)"
+q_hot_B = q_rad(0.9, 726.85, 26.85)   "radiant heat flux [W/m2]"
+
+"Case B - transmittance with base 10"
+tau_base10_B = grey_transmittance(1.2E-3, 10000, 5E-3, 10)   "transmitted fraction [-]"

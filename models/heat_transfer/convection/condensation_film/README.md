@@ -324,3 +324,5 @@ from are Hewitt, Shires & Bott, *Process Heat Transfer*, 1994, and Kakaç (ed.),
   they start from the Dittus-Boelter coefficient of `CSL-0087`.
 - `CSL-0100` *free_conv_enclosed_and_jackets*: the Nusselt numbers of the coil
   around which the film of this file condenses.
+- `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.
+- `CSL-0106` *conduction_resistances_and_shapes*: the conduction family of the same `ht` triage (resistances, shape factors, R-value conversions, 14 relations), same layout; it uses the same local `pi_val` convention forced by `CS-BUG-PI-FUNCTION`.

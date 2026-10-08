@@ -367,6 +367,11 @@ in `model.json` (`origin.authors`).
 
 ## Related models
 
+- `CSL-0112` *three_zone_hx_procedures*: the counterflow eps-NTU and the
+  latent-heat `eps = 1 - exp(-NTU)` relations of this file, as they are used
+  inside the three-zone condenser/evaporator procedures of a heat exchanger
+  that splits its surface into zones.
+
 - `CSL-0096` *plate_hx_heat_transfer*: the plate-heat-exchanger heat-transfer
   coefficients (single-phase Nu and flow boiling) that a plate rating model
   combines with the effectiveness-NTU relations of this file.
@@ -403,3 +408,8 @@ in `model.json` (`origin.authors`).
 - `CSL-0098` *flow_boiling_in_tubes*: the in-tube flow-boiling
   coefficients (10 functions), same layout; together with the relations of this
   file they rate a boiler or an evaporator.
+- `CSL-0105` *lmtd_and_f_correction*: the LMTD relations of the same `ht`
+  triage (`LMTD`, `F_LMTD_Fakheri`, `Ft_aircooler`, same layout); a rating
+  model uses either the ε-NTU method of this file or the LMTD method of that
+  one.
+- `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.

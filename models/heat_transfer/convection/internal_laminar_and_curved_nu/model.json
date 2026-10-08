@@ -1,0 +1,94 @@
+{
+  "id": "CSL-0091",
+  "name": "internal_laminar_and_curved_nu",
+  "title": "Internal laminar convection and curved ducts: Nusselt-number correlations (function library)",
+  "summary": "Ten EES FUNCTIONs returning the Nusselt number of single-phase internal flow at low Reynolds number or in non-circular/curved ducts: fully developed laminar pipe flow at constant wall temperature (3.66) and constant heat flux (48/11), laminar thermal entry region (Hausen, Sieder-Tate, Baehr-Stephan), laminar rectangular duct (Shah-London), and turbulent spiral (Morimoto-Hotta) and helical coils (Mori-Nakayama, Schmidt, Xin-Ebadian). The heat-transfer coefficient follows from h = Nu*k/Dh and is left to the caller.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "internal_laminar_and_curved_nu.eescode",
+  "fluids": [],
+  "tags": [
+    "internal convection",
+    "laminar flow",
+    "nusselt number",
+    "correlation",
+    "thermal entry region",
+    "rectangular duct",
+    "helical coil",
+    "spiral heat exchanger",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "TANH",
+    "dimensionless arguments"
+  ],
+  "stats": {
+    "n_equations": 83,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ht",
+    "source_path": "",
+    "candidate_id": "HT-005",
+    "authors": [
+      "Caleb Bell (ht library)",
+      "R. K. Shah and A. L. London (Shah-London rectangular-duct correlation)",
+      "E. Morimoto and K. Hotta (Morimoto-Hotta spiral correlation)",
+      "Y. Mori and W. Nakayama (Mori-Nakayama helical correlation)",
+      "E. F. Schmidt (Schmidt helical correlation)",
+      "R. C. Xin and M. A. Ebadian (Xin-Ebadian helical correlation)",
+      "H. Hausen (Hausen entry-region correlation)",
+      "E. N. Sieder and G. E. Tate (Sieder-Tate entry-region correlation)",
+      "H. D. Baehr and K. Stephan (Baehr-Stephan entry-region correlation)"
+    ],
+    "url": "https://github.com/CalebBell/ht",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/conv_internal.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each correlation is the original paper or book cited in its function comment block (in most cases as given in Bergman, Lavine, Incropera & DeWitt, Introduction to Heat Transfer, 6E, Wiley, 2011). Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "reference": "doctest values of ht 1.2.0 ht/conv_internal.py (case A) and additional values computed with the same ht functions in a throw-away virtualenv (case B); 21 output values in total",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 3.2e-13,
+    "notes": "compare_solution.py: 21 common variables, 0 differ (rtol=0.001); largest relative deviation 3.2e-13 (Nu_helical_Schmidt_B), i.e. round-off only."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0005",
+    "CSL-0079",
+    "CSL-0087",
+    "CSL-0088",
+    "CSL-0089",
+    "CSL-0090",
+    "CSL-0092",
+    "CSL-0093",
+    "CSL-0094",
+    "CSL-0095",
+    "CSL-0097",
+    "CSL-0098",
+    "CSL-0099",
+    "CSL-0100",
+    "CSL-0101",
+    "CSL-0103",
+    "CSL-0104"
+  ],
+  "related_external": [
+    "sources/labothappy LTP-034 (in-tube HTC correlations; the ht family is more complete)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added (T-FUNC card C-100, family HT-005 of the ht triage)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

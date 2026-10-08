@@ -249,3 +249,6 @@ Source (local clone of the public repository):
   performance surfaces) — same approach, other fluid and maps.
 - `CSL-0019` *orc_simple_r245fa*: the same fluid and a similar screening
   purpose; there the component performance is imposed instead of mapped.
+- `CSL-0117` *double_stage_scroll_expander*: the original ULiège EES
+  correlations of the same hermetic scroll expander (Lemort/Quoilin/Pire)
+  from which the ThermoCycle hermetic-scroll maps of this library derive.

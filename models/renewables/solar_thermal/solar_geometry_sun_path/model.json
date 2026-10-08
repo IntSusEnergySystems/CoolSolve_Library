@@ -1,0 +1,64 @@
+{
+  "id": "CSL-0119",
+  "name": "solar_geometry_sun_path",
+  "title": "Solar geometry and sun path",
+  "summary": "Solar geometry for a fixed site (Port-au-Prince, Haiti): day of year, declination, hour angle, incidence and zenith angles, solar altitude and azimuth, sunrise/sunset times; native file blocked by nDay_ and $ifnot parametrictable, runnable variant verified.",
+  "kind": "steady",
+  "level": 1,
+  "status": "blocked",
+  "main_file": "solar_geometry_sun_path.eescode",
+  "fluids": [],
+  "tags": [
+    "solar geometry",
+    "sun path",
+    "declination",
+    "hour angle",
+    "sunrise",
+    "exercise"
+  ],
+  "language_features": [
+    "date function nDay_",
+    "$ifnot parametrictable directive",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 22,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/solar/angles.EES",
+    "candidate_id": "TM-0589",
+    "authors": [
+      "TBD (ULiège, J. Lebrun laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.198",
+    "language": "fr",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solution of solar/angles.EES (22 variables) compared with the runnable variant solar_geometry_sun_path_coolsolve.eescode",
+    "date": "2026-10-07",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 1.6e-06,
+    "notes": "Variant vs EES: 22 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Max 1.5e-6 on theta_z (trigonometric round-off); all others agree to at least 1e-7. No variable excluded."
+  },
+  "missing_features": [
+    "CS-GAP-NDAY",
+    "CS-GAP-IF-DIRECTIVE"
+  ],
+  "related": ["CSL-0082", "CSL-0083"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added (roadmap card C-130)",
+      "by": "opencode worker (muse-spark) for S. Quoilin"
+    }
+  ]
+}
