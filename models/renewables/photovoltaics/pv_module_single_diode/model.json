@@ -1,0 +1,72 @@
+{
+  "id": "CSL-0160",
+  "name": "pv_module_single_diode",
+  "title": "PV module single-diode I-V curve",
+  "summary": "Five-parameter single-diode model of a flat-plate PV module: module parameters read from an embedded PVModules catalogue table, I-V/P-V curve computed in 100 points at a given cell temperature and irradiance.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "pv_module_single_diode.eescode",
+  "fluids": [],
+  "tags": [
+    "photovoltaics",
+    "single-diode model",
+    "I-V curve",
+    "five-parameter model",
+    "catalogue data",
+    "maximum power point"
+  ],
+  "language_features": [
+    "string variables",
+    "PROCEDURE",
+    "DUPLICATE arrays",
+    "lookup tables",
+    "LOOKUP$ROW"
+  ],
+  "stats": {
+    "n_equations": 337,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/photovoltaique/PV_model.EES",
+    "candidate_id": "TM-0316",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory)",
+      "W. De Soto, S. A. Klein, W. A. Beckman (original formulation, Solar Energy Laboratory UW-Madison)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.991",
+    "language": "fr",
+    "course": "ULiège Thermodynamics Laboratory course file (photovoltaique), derived from the UW F-Chart PV module model"
+  },
+  "verification": {
+    "reference": "EES stored solution (333 common variables) and the 100x3 I-V parametric table stored in the source file (hand-decoded from the binary); both concern the runnable variant pv_module_single_diode_coolsolve",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 1.37e-06,
+    "notes": "Variant vs EES stored solution: 333 common variables, 1 differ (P[1]: EES -2.04506e-08 W vs 0, floating noise at V[1]=0); excluding it the largest relative deviation is 1.37e-06 (I[97]). I-V parametric table matches the stored solution exactly."
+  },
+  "missing_features": [
+    "CS-GAP-END-PROCEDURE",
+    "CS-GAP-CONVERT-UNQUOTED",
+    "CS-GAP-LOOKUPROW",
+    "CS-GAP-LOOKUP-PROC",
+    "CS-BUG-LOOKUP-STRING"
+  ],
+  "related": [],
+  "related_external": [
+    "De Soto, Klein, Beckman, Improvement and validation of a model for photovoltaic array performance, Solar Energy 80 (2006) 78-88 (UW F-Chart PV model)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (C-152, T-IMPORT TM-0316; blocked native file with verified runnable variant)",
+      "by": "glm-5.3-flash for S. Quoilin"
+    }
+  ]
+}

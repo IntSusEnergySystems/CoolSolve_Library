@@ -165,3 +165,10 @@ Source file (EES 7.458, comments in French), collection of S. Quoilin:
   (volumetric efficiency, constant losses, refrigerant heat transfers
   represented by a fictitious wall) in a full air-cooled water chiller of the
   ULiège model bank.
+- `CSL-0156` *refrigeration_screw_compressor_r22*: the same R22 cycle closed by the
+  ULiège reference screw compressor (internal leakage nozzle/diffuser, sliding-valve
+  part load) — the detailed component counterpart of this simple compressor model.
+- `CSL-0167` *reciprocating_polynomial_r22*: the same R22 cycle closed by the ULiège
+  reference reciprocating compressor (six-step semi-empirical model with clearance
+  re-expansion and motor slip) — the detailed component counterpart of this simple
+  compressor model.

@@ -1,0 +1,352 @@
+{===========================================================================
+  Gas pipe pressure drop and heat gain with insulation and fittings
+  CoolSolve Library model CSL-0158 - native file
+ ---------------------------------------------------------------------------
+  Insulated R717 gas line (Laborelec 2002 toolkit): heat gain from ambient
+  air, Colebrook-White friction drop, fitting K-factors from a table,
+  equivalent nozzle area A. Eight PROCEDUREs with array transfer, lookup
+  tables and the built-in Colebrook/StringPos calls, in the original EES
+  syntax (converted to SI-°C-Pa-J).
+  Status: blocked in CoolSolve (CS-GAP-LOOKUP-PROC, CS-GAP-ACCENTED-IDENT,
+  CS-GAP-COLEBROOK, CS-GAP-STRINGPOS, CS-GAP-ARRAY-ARG; verified runnable
+  variant: gas_pipe_insulated_pressure_drop_coolsolve.eescode).
+
+  Inputs : R$, pipe$, lambda$, T_bub, DELTAT_oh, U, L, z_iso_mm, T_A, R_pro,
+           fitting counts, additional pressure drops
+  Outputs: m_dot, V_dot, Dp, p_o, Q, T_int, f, A, Head_loss, notes
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ~/Nextcloud/thermo_models/modeles/LABORELEC_2002/4_Pressure Drop/
+           4_2_Gas Pipes/Gas Pipe/Gas_Pipe_Pressure_Drop.EES (EES X6.596) -
+           see README.md. Authors: F. Trebilcock (ULiege, 2002, Laborelec).
+===========================================================================}
+
+"!#######################################################"
+PROCEDURE R717_CHECK(R$,Pipe$:NOTE$)
+
+A = StringPos('ø',Pipe$)
+if (R$='R717') and (A>1) then
+  NOTE$='Note: Copper pipes can not be used with R717 (ammonia)!!!'
+else
+  NOTE$=''
+endif
+end
+
+"!#######################################################"
+PROCEDURE PIPEDATA(pipe$,dy_mm_input,z_wall_mm_input:di_mm,z_wall_mm,e_mm)
+
+if pipe$='User defined' then
+  z_wall_mm = z_wall_mm_input
+  di_mm = dy_mm_input-2*z_wall_mm_input
+  e_mm=0.0015
+else
+  dy_mm=lookup('pipedata',1,pipe$)     "outer diameter [mm]"
+  z_wall_mm=lookup('pipedata',2,pipe$) "wall thickness [mm]"
+  di_mm=dy_mm-2*z_wall_mm
+  e_mm=lookup('pipedata',3,pipe$)      "roughness [mm]"
+endif
+end
+
+"!#######################################################"
+
+PROCEDURE INSULATIONDATA(lambda$,lambda_input:Lambda_iso)
+
+if lambda$='User defined' then
+  Lambda_iso = lambda_input
+else
+  Lambda_iso = lookup('pipedata',1,lambda$) "insulation conductivity [W/(m-K)]"
+endif
+end
+
+"!######################################################"
+
+PROCEDURE Nearest(di_mm: Row,message$,fitting)
+"Equivalent diameter procedure"
+i:=0
+D=di_mm/1000
+message$=''
+
+if (di_mm<=100) then
+  fitting=1
+  REPEAT
+    i:=i+1
+    D_equiv=lookup('Fittings',i,2)     "equivalent diameter [m]"
+    IF (D_equiv<D) OR (D_equiv=D) THEN Row=lookup('Fittings',i,1)
+    IF (D_equiv>D) THEN
+      i:=11
+    ENDIF
+  UNTIL (i>10)
+
+  Diam_min=lookup('Fittings',Row,2)
+  Row2=Row+1
+  Diam_max=lookup('Fittings',Row2,2)
+
+  Dif_1=D-Diam_min
+  Dif_2=Diam_max-D
+
+  IF (Dif_1<Dif_2) OR  (Dif_1=Dif_2) THEN
+    D_fitting=Diam_min
+    Row=Row
+  ENDIF
+  IF (Dif_1>Dif_2) THEN
+    D_fitting=Diam_max
+    Row=Row2
+  ENDIF
+else
+  Row=10
+  message$='No Fitting Data Available !!!!!  DP_fittings=0'
+  fitting=0
+endif
+end
+
+"!#################################################"
+
+PROCEDURE Fittings(fitting,U,rho_i,Row,n°_90°elbow_reg,n°_90°elbow_long,n°_45°elbow,n°_return_bend,n°_Tee_line,n°_Tee_branch,n°_glove_valve,n°_gate_valve,n°_angle_valve,n°_swing_check_valve,n°_bell_mouth_inlet,n°_square_inlet,n°_projected_inlet:DpF)
+
+if (fitting=1) then
+K_90°elbow_reg=lookup('Fittings', Row, 4)
+K_90°elbow_long=lookup('Fittings', Row, 5)
+K_45°elbow=lookup('Fittings', Row, 6)
+K_return_bend=lookup('Fittings', Row, 7)
+K_Tee_line=lookup('Fittings', Row, 8)
+K_Tee_branch=lookup('Fittings', Row, 9)
+K_glove_valve=lookup('Fittings', Row, 10)
+K_gate_valve=lookup('Fittings', Row, 11)
+K_angle_valve=lookup('Fittings', Row, 12)
+K_swing_check_valve=lookup('Fittings', Row, 13)
+K_bell_mouth_inlet=lookup('Fittings', Row, 14)
+K_square_inlet=lookup('Fittings', Row, 15)
+K_projected_inlet=lookup('Fittings', Row, 16)
+
+DELTAp_90°elbow_reg=n°_90°elbow_reg*K_90°elbow_reg*rho_i*(U^2/2)
+DELTAp_90°elbow_long=n°_90°elbow_long*K_90°elbow_long*rho_i*(U^2/2)
+DELTAp_45°elbow=n°_45°elbow*K_45°elbow*rho_i*(U^2/2)
+DELTAp_return_bend=n°_return_bend*K_return_bend*rho_i*(U^2/2)
+DELTAp_Tee_line=n°_Tee_line*K_Tee_line*rho_i*(U^2/2)
+DELTAp_Tee_branch=n°_Tee_branch*K_Tee_branch*rho_i*(U^2/2)
+DELTAp_glove_valve=n°_glove_valve*K_glove_valve *rho_i*(U^2/2)
+DELTAp_gate_valve=n°_gate_valve*K_gate_valve *rho_i*(U^2/2)
+DELTAp_angle_valve=n°_angle_valve*K_angle_valve *rho_i*(U^2/2)
+DELTAp_swing_check_valve=n°_swing_check_valve*K_swing_check_valve*rho_i*(U^2/2)
+DELTAp_bell_mouth_inlet=n°_bell_mouth_inlet*K_bell_mouth_inlet*rho_i*(U^2/2)
+DELTAp_square_inlet=n°_square_inlet*K_square_inlet*rho_i*(U^2/2)
+DELTAp_projected_inlet=n°_projected_inlet*K_projected_inlet*rho_i*(U^2/2)
+
+DELTAp_inlet=DELTAp_bell_mouth_inlet+DELTAp_square_inlet+DELTAp_projected_inlet
+DELTAp_elbows=DELTAp_90°elbow_reg+DELTAp_90°elbow_long+DELTAp_45°elbow
+DELTAp_Tees=DELTAp_return_bend+DELTAp_Tee_line+DELTAp_Tee_branch
+DELTAp_valves=DELTAp_glove_valve+DELTAp_gate_valve+DELTAp_angle_valve+DELTAp_swing_check_valve
+
+DpFittings=DELTAp_elbows+DELTAp_Tees+DELTAp_valves+DELTAp_inlet
+
+
+DpF=DpFittings
+else
+DpF=0
+endif
+end
+
+"!##################################################"
+
+PROCEDURE FITTINGSNUMBER(n°_90°elbow_reg,n°_90°elbow_long,n°_45°elbow,n°_return_bend,n°_Tee_line,n°_Tee_branch,n°_glove_valve,n°_gate_valve,n°_angle_valve,n°_swing_check_valve,n°_bell_mouth_inlet,n°_square_inlet,n°_projected_inlet:n°_Fittings)
+
+n°_Fittings=n°_90°elbow_reg+n°_90°elbow_long+n°_45°elbow+n°_return_bend+n°_Tee_line+n°_Tee_branch+n°_glove_valve+n°_gate_valve+n°_angle_valve+n°_swing_check_valve+n°_bell_mouth_inlet+n°_square_inlet+n°_projected_inlet
+
+end
+
+"!###################################################"
+
+PROCEDURE PIPE_GAS(R$,SP[1..5],U,di_mm,z_wall_mm,e_mm,z_iso_mm,L,lambda_iso,T_A,R_pro,Row,DpF:m_dot,V_dot,T_DEW,T_int,Error$,f,Dp,p_o,Q,Pr)
+
+{SECTION 1.4 : Calculation of pressure drop and heat transfer (as in the original)}
+
+Error$ =''
+
+{SECTION 1.4.1: Transfer of array variables to local variables}
+T_i = SP[1]
+h_i = SP[2]
+p_i = SP[3]
+Ts_i = SP[4]
+rho_i = SP[5]
+
+{SECTION 1.4.2: Recalculation of non SI-Unit variables}
+di = di_mm/1000
+e = e_mm/1000
+z_wall = z_wall_mm/1000
+z_iso = z_iso_mm/1000
+
+{SECTION 1.4.3: Preliminary calculations (average velocity)}
+A_c_i = pi/4*di*abs(di)
+V_dot = U*A_c_i
+m_dot = V_dot*rho_i
+
+{SECTION 1.4.4: Calculation of heat transfer}
+cp = SpecHeat(R$,T=T_i,p=p_i)
+mu = Viscosity(R$,T=T_i,p=p_i)
+nu = mu/rho_i
+If (R$='Ammonia_ha') then
+  If (T_i<=-29) then
+    lambda = Conductivity(R$,T=-29,p=p_i)
+  Else
+    lambda = Conductivity(R$,T=T_i,p=p_i)
+  Endif
+Else
+  lambda = Conductivity(R$,T=T_i,p=p_i)
+Endif
+
+Pr = cp*mu/lambda
+Re_D = U*di/nu
+If (Re_D<=2000) then Re_D = 2000
+
+If (Re_D>0) then Nus_D = 0.0235*(Re_D^0.8-230)*(1.8*Pr^0.3-0.8) Else Nus_D = 1
+alpha_i = Nus_d*lambda/di
+alpha_o = 10
+
+dy = di+2*z_wall
+diso = dy+2*z_iso
+A_i = pi*di*L
+R_i = 1/(A_i*alpha_i)
+
+if (lambda_iso<=1e-10) or (diso=0) then
+  R_iso = 0
+  A_o = pi*dy*L
+  R_o = 1/(A_o*alpha_o)
+else
+  R_iso = ln(diso/dy)/(2*pi*L*lambda_iso)
+  A_o = pi*diso*L
+  R_o = 1/(A_o*alpha_o)
+endif
+
+R_TOT = R_i+R_iso+R_o
+
+Q = (T_A-T_i)/R_TOT
+h_int = h_i+Q/m_dot
+T_int = Q/(m_dot*cp)+T_i
+T_SURF = (T_int+T_i)/2+Q*(R_i+R_iso)
+T_int_MIN = Temperature(R$,p=p_i,X=1)
+If (T_int<=T_int_MIN) then
+  T_int = T_int_MIN+0.01
+  Error$ = 'Condensation!!!'
+Endif
+
+
+
+{Humid Air:}
+p_ATM=101325
+R=R_pro/100
+T_DEW = Dewpoint(AirH2O,p=p_ATM,T=T_A,R=R)
+
+{SECTION 1.4.5: Calculation of pressure drop}
+
+"considering the relative roughness as:"
+epsilon=0.000046	"roughness of the pipe [m]"
+RR=epsilon/di
+
+if (Re_D<=2000) then
+  f = 64/Re_D
+else
+  Call  Colebrook(Re_D, RR , f) "turbulent flow"
+endif
+
+DpDx = 0.5*f*rho_i*U^2/di
+DpP= DpDx*L
+
+
+
+Dp = DpP+DpF
+
+p_o = p_i-Dp
+
+end
+
+"!#####################################################"
+PROCEDURE MESSAGES(DELTAP_aditional:NOTE2$,NOTE3$)
+
+If (DELTAP_aditional>0) then
+NOTE2$='Remember to check that the mass flow rate is'
+NOTE3$=' the same used in the aditional components definition.'
+else
+NOTE2$=''
+NOTE3$=''
+endif
+end
+
+"===================================================="
+"					MODEL"
+"===================================================="
+
+"Inputs of the Diagram window of the original, written as equations for the
+default run of the stored solution (unit conversion: see README)."
+R$='R717'
+pipe$='ø88.9 Steel, Seamless'    "column of the Pipedata lookup table"
+lambda$='Armaflex'               "insulation column of the Pipedata lookup table"
+T_bub=35                         "saturation temperature at pipe inlet [C]"
+DELTAT_oh=70                     "inlet superheat [K] (T_pipe_inlet in the original)"
+L=5                              "pipe length [m]"
+z_iso_mm=3                       "insulation thickness [mm]"
+T_A=10                           "ambient temperature [C]"
+R_pro=40                         "ambient relative humidity [%]"
+U=24.05591817                    "mean gas velocity [m/s] (m_dot = 1 kg/s in the stored run)"
+dy_mm_input=30                   "outer diameter if pipe$='User defined' [mm]"
+z_wall_mm_input=2                "wall thickness if pipe$='User defined' [mm]"
+lambda_input=0.04                "conductivity if lambda$='User defined' [W/(m-K)]"
+DELTAp_ad_1=0                    "additional pressure drop of component 1 [Pa]"
+DELTAp_ad_2=0                    "additional pressure drop of component 2 [Pa]"
+DELTAp_ad_3=0                    "additional pressure drop of component 3 [Pa]"
+DELTAp_ad_4=0                    "additional pressure drop of component 4 [Pa]"
+DELTAp_ad_5=0                    "additional pressure drop of component 5 [Pa]"
+DELTAp_ad_6=0                    "additional pressure drop of component 6 [Pa]"
+"Fitting counts: Diagram-window inputs, not stored in the file; reconstructed
+from the stored DpF (see README)."
+n°_90°elbow_reg=0
+n°_90°elbow_long=0
+n°_45°elbow=0
+n°_return_bend=0
+n°_Tee_line=0
+n°_Tee_branch=0
+n°_glove_valve=2
+n°_gate_valve=3
+n°_angle_valve=0
+n°_swing_check_valve=2
+n°_bell_mouth_inlet=0
+n°_square_inlet=0
+n°_projected_inlet=1
+
+"State at the pipe inlet (Diagram-window snippets of the original)"
+p_i=pressure(R$,T=T_bub,x=0)     "saturation pressure at the inlet [Pa]"
+T_i=T_bub+DELTAT_oh              "gas temperature at pipe inlet [C]"
+Ts_i=T_bub                       "saturation temperature at pipe inlet [C]"
+h_i=enthalpy(R$,T=T_i,P=p_i)     "specific enthalpy at pipe inlet [J/kg]"
+rho_i=density(R$,T=T_i,P=p_i)    "density at pipe inlet [kg/m3]"
+SP[1]=T_i
+SP[2]=h_i
+SP[3]=p_i
+SP[4]=Ts_i
+SP[5]=rho_i
+
+call INSULATIONDATA(lambda$,lambda_input:Lambda_iso)
+call PIPEDATA(pipe$,dy_mm_input,z_wall_mm_input:di_mm,z_wall_mm,e_mm)
+call R717_CHECK(R$,Pipe$:NOTE$)
+call Nearest(di_mm: Row,message$,fitting)
+call FITTINGSNUMBER(n°_90°elbow_reg,n°_90°elbow_long,n°_45°elbow,n°_return_bend,n°_Tee_line,n°_Tee_branch,n°_glove_valve,n°_gate_valve,n°_angle_valve,n°_swing_check_valve,n°_bell_mouth_inlet,n°_square_inlet,n°_projected_inlet:n°_Fittings)
+call Fittings(fitting,U,rho_i,Row,n°_90°elbow_reg,n°_90°elbow_long,n°_45°elbow,n°_return_bend,n°_Tee_line,n°_Tee_branch,n°_glove_valve,n°_gate_valve,n°_angle_valve,n°_swing_check_valve,n°_bell_mouth_inlet,n°_square_inlet,n°_projected_inlet:DpF)
+call PIPE_GAS(R$,SP[1..5],U,di_mm,z_wall_mm,e_mm,z_iso_mm,L,lambda_iso,T_A,R_pro,Row,DpF:m_dot,V_dot,T_DEW,T_int,Error$,f,Dp,p_o,Q,Pr)
+call MESSAGES(DELTAP_aditional:NOTE2$,NOTE3$)
+
+"---------------------------------------------------------------------"
+
+"For the pressure drop, the classical nozzle theory will be used in order to calculate the throttling mass flow rate in relationship with the pressure drop."
+DELTAp=1/2*(m_dot/A)^2*v_spec
+v_spec=1/rho_i
+"The model requires the identification of the nozzle throat area A for then characterizes the pressure drops of the installation in relationship with the mass flow rate. In this way we should consider the pressure drops in the pipelines, and the local pressure drops, caused in the several fittings, as well as specified pressure drop in the refrigeration system components, defined herafter:"
+DELTAP_aditional=DELTAp_ad_1+DELTAp_ad_2+DELTAp_ad_3+DELTAp_ad_4+DELTAp_ad_5+DELTAp_ad_6
+
+DELTAp_total=Dp+DELTAP_aditional
+"And the change of pressure and temperature through the system is:"
+DELTAp_total=p_i-p_out
+DELTAT_total=T_int-T_i
+
+"Then, the pressure drop is represented as:"
+DELTAp=DELTAp_total	"[Pa] (the original, in kPa, multiplied by 1000)"
+
+"and the Head loss is:"
+Head_loss=DELTAp/rho_i

@@ -187,3 +187,7 @@ revision. The header names the EES licence of the J. Lebrun laboratory
   pressure-drop correlations (Thonon, Kuo, Hsieh) of the same lab model
   set, on the R245fa+R134a REFPROP mixture (blocked; R245fa variant).
 - `CSL-0114` *evaporator_3_zones_plate_correlations*: the same evaporator duty with three lumped correlation-based zones (Thonon/Hsieh) instead of the finite-volume discretisation.
+- `CSL-0127` *hx_constant_effectiveness_discretised* (level 4): the other
+  discretised heat exchanger of the library — single-phase counterflow
+  segments with an imposed effectiveness closed by pinch complementarities
+  (LaboThapPy `HexCstEffDisc`), instead of UA-based finite-volume cells.

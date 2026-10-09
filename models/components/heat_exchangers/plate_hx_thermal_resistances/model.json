@@ -1,0 +1,73 @@
+{
+  "id": "CSL-0161",
+  "name": "plate_hx_thermal_resistances",
+  "title": "Single-phase plate heat exchanger: thermal-resistance model (Martin)",
+  "summary": "Heat-transfer coefficient, thermal resistance and pressure drop of a chevron-type plate heat exchanger on the single-phase side, from the plate geometry with Martin's 1996 correlation; water properties from the built-in calls, ethylene-glycol brine from BRINEPROP2 (ULiège BrineProp) on the alternate $IF branch.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "plate_hx_thermal_resistances.eescode",
+  "fluids": [
+    "Water",
+    "EG brine (BrineProp2, not a CoolProp fluid)"
+  ],
+  "tags": [
+    "plate heat exchanger",
+    "chevron plate",
+    "Martin correlation",
+    "thermal resistance",
+    "heat transfer coefficient",
+    "pressure drop",
+    "brine",
+    "glycol"
+  ],
+  "language_features": [
+    "string variables",
+    "$IF compile-time directive",
+    "PROCEDURE with string output",
+    "implicit friction factor",
+    "expression as CALL output argument (EG branch)"
+  ],
+  "stats": {
+    "n_equations": 37,
+    "largest_block": 4
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/plate_heat_exchanger_SB080104.EES",
+    "candidate_id": "TM-0319",
+    "authors": [
+      "Stéphane Bertagnolio",
+      "Sylvain Quoilin"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (38 variables, last run = water); concerns the runnable variant plate_hx_thermal_resistances_coolsolve.eescode (the native file is blocked)",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.0203,
+    "notes": "34 common variables, 4 differ (rtol=0.001); max relative deviation 2.03e-02 (Pr_f), inherited from the water thermal conductivity: EES 7.888 returns 0.59477 W/m-K at 25 °C, CoolProp/IAPWS 0.60652 W/m-K (the IAPWS value, 2 % above the old EES library). Geometric/algebraic outputs match to 4.2e-05 (DELTAP)."
+  },
+  "missing_features": [
+    "CS-GAP-IF-DIRECTIVE",
+    "CS-BUG-HASH-IDENT",
+    "CS-GAP-CALL-EXPR-OUT"
+  ],
+  "related": ["CSL-0079", "CSL-0111", "CSL-0162"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (T-IMPORT, roadmap card C-153, batch B-11)",
+      "by": "GLM (Z.ai) for S. Quoilin"
+    }
+  ]
+}

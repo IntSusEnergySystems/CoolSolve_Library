@@ -267,4 +267,6 @@ parameter-identification model (ParamID, `TM-0470`).
   group.
 - `CSL-0074` *cooling_coil_refsim*: the reference-simulation model of the same
   coil of the same model bank, the other level of detail (dry and wet regimes
-  computed simultaneously, secondary refrigerant side).
+  computed simultaneously, secondary refrigerant side).- `CSL-0163` *cooling_coil_paramid*: the parameter-identification sibling of
+  the same model bank and authors (card C-155); one measured wet-regime point
+  identifies the resistances that this simplified model drops.

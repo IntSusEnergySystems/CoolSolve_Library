@@ -1,10 +1,10 @@
 {
  "snapshot": {
-  "content_hash": "sha256:194725296554d077",
-  "files": 633,
-  "bytes": 5731405,
-  "models": 123,
-  "functions": 347,
+  "content_hash": "sha256:63b0f5977d183105",
+  "files": 790,
+  "bytes": 7055256,
+  "models": 148,
+  "functions": 432,
   "taxonomy_version": "0.2"
  },
  "models": [
@@ -82,7 +82,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0005;CSL-0034;CSL-0080",
+   "related": "CSL-0005;CSL-0034;CSL-0080;CSL-0166",
    "coolsolve_version": "0.3.0+fix/library-gaps@fbdb6a7",
    "verified_on": "2026-10-05",
    "path": "models/components/boilers_burners/boiler_mean_specific_heat",
@@ -109,11 +109,38 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-GAP-NAME-SYMBOL;CS-GAP-FLUIDS-C8H18;CS-GAP-IF5;CS-BUG-COMMON-PROC",
-   "related": "CSL-0006;CSL-0005;CSL-0081",
+   "related": "CSL-0006;CSL-0005;CSL-0081;CSL-0166",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
    "path": "models/components/boilers_burners/condensing_boiler_refsim",
    "main_file": "condensing_boiler_refsim.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0166",
+   "name": "boiler_modulating_burner_refsim",
+   "title": "Boiler with modulating burner: steady-state reference model",
+   "category": "components/boilers_burners",
+   "kind": "steady",
+   "level": 3,
+   "status": "blocked",
+   "summary": "Steady-state fuel-oil/gas boiler with a limited-modulating burner: combustion reference model (cpbar), gas-water and water-environment epsilon-NTU exchangers, four regimes (OFF, ON/OFF, modulating, full load) selected from the water set point. Native file blocked by CoolSolve gaps; a verified runnable variant resolves the regime branches for the stored operating point.",
+   "fluids": "Air;CO2;CO;H2O;N2;O2",
+   "tags": "boiler;combustion;fuel oil;modulating burner;on/off control;part load;flue gas;eps-NTU;adiabatic flame temperature;reference model;model bank",
+   "n_equations": 128,
+   "largest_block": 13,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/Model data bank/Heat_and_Cool_Production_Systems/Heat_Production_by_Combustion/BoilerWithModulatingBurner_RefSim_Model_SB080212.zip!/BoilerWithModulatingBurner_RefSim_EES_Model_SB080212.EES",
+   "authors": "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-GAP-IF-DIRECTIVE;CS-GAP-IF5;CS-BUG-STRING-CALL-OUT",
+   "related": "CSL-0005;CSL-0006;CSL-0080",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-09",
+   "path": "models/components/boilers_burners/boiler_modulating_burner_refsim",
+   "main_file": "boiler_modulating_burner_refsim.eescode",
    "figures": 0
   },
   {
@@ -136,7 +163,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0001;CSL-0020;CSL-0037;CSL-0036;CSL-0078;CSL-0116",
+   "related": "CSL-0001;CSL-0020;CSL-0037;CSL-0036;CSL-0078;CSL-0116;CSL-0156;CSL-0167",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/compressors/scroll_compressor_semi_empirical",
@@ -190,7 +217,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0007;CSL-0021;CSL-0023;CSL-0067",
+   "related": "CSL-0007;CSL-0021;CSL-0023;CSL-0067;CSL-0156",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/compressors/dry_air_screw_compressor_leakage",
@@ -244,7 +271,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0021;CSL-0001;CSL-0033",
+   "related": "CSL-0021;CSL-0001;CSL-0033;CSL-0167",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/compressors/refrigeration_compressor_identification",
@@ -298,7 +325,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-GAP-INTERP-EES;CS-GAP-INTERP-EXTRAP",
-   "related": "CSL-0011;CSL-0023;CSL-0069",
+   "related": "CSL-0011;CSL-0023;CSL-0069;CSL-0157",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/compressors/centrifugal_compressor_lookup_map",
@@ -379,11 +406,119 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-BUG-LOOKUP-COL-ARG",
-   "related": "CSL-0116;CSL-0007",
+   "related": "CSL-0116;CSL-0007;CSL-0157",
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
    "path": "models/components/compressors/copeland_catalogue_correlation",
    "main_file": "copeland_catalogue_correlation.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0152",
+   "name": "turbocharger_combustion_products",
+   "title": "Turbocharger matching with combustion-product composition (simplified formulation)",
+   "category": "components/compressors",
+   "kind": "steady",
+   "level": 3,
+   "status": "blocked",
+   "summary": "Steady-state matching of a turbocharger on a supercharged engine: filter and compressor (given pressure ratio and isentropic efficiency), glycol-water intercooler (epsilon-NTU), combustion at the given AFR with the exhaust properties computed from the molar composition of the complete-combustion products (excess air, simplified dry air, ideal-gas CO2/H2O/O2/N2), turbine matched on the compressor power balance, equivalent exhaust-orifice diameter and heat-recovery percentages.",
+   "fluids": "Air;EG;CO2;H2O;O2;N2",
+   "tags": "turbocharger;supercharging;compressor-turbine matching;combustion products;excess air;intercooler;exhaust gas;equivalent orifice;heat recovery;exercise",
+   "n_equations": 219,
+   "largest_block": 10,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP4_Ex_1/SURALIMENTATION_FORMULATION SIMPLE_V2017-1.EES",
+   "authors": "P. Ngendakumana; R. Dickes",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-GAP-NAME-SYMBOL;CS-GAP-SUM-INDEXED;CS-GAP-MOLARMASS-ELEMENT;CS-GAP-INCOMPRESSIBLE",
+   "related": "CSL-0005;CSL-0150",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/components/compressors/turbocharger_combustion_products",
+   "main_file": "turbocharger_combustion_products.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0156",
+   "name": "refrigeration_screw_compressor_r22",
+   "title": "Screw compressor in an R22 refrigeration cycle (full load / part load)",
+   "category": "components/compressors",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Reference model of a volumetric screw compressor with internal leakage through an opening (isentropic nozzle + diffuser), closing a simple R22 cycle; part load by the sliding valve, with pumping and constant losses.",
+   "fluids": "R22",
+   "tags": "refrigeration;screw compressor;internal leakage;sliding valve;part load;reference model",
+   "n_equations": 122,
+   "largest_block": 27,
+   "origin_type": "research",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/modeles/JL/new/screw JL080205/3_4_2_Part_load_control.EES",
+   "authors": "J. Lebrun (ULiège Thermodynamics Laboratory)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "",
+   "related": "CSL-0001;CSL-0007;CSL-0020;CSL-0167",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/components/compressors/refrigeration_screw_compressor_r22",
+   "main_file": "refrigeration_screw_compressor_r22.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0157",
+   "name": "reciprocating_catalogue_r717",
+   "title": "Reciprocating compressor from catalogue data (R717)",
+   "category": "components/compressors",
+   "kind": "steady",
+   "level": 3,
+   "status": "blocked",
+   "summary": "Isentropic and volumetric effectiveness of an R717 reciprocating compressor computed from 17 catalogue rows (condensing/evaporating temperature, capacity, electrical power, mass flow) read from a lookup table, with a power-law extrapolation of the isentropic effectiveness to 1000 and 750 rpm.",
+   "fluids": "R717",
+   "tags": "reciprocating compressor;catalogue data;isentropic effectiveness;volumetric effectiveness;speed maps;ammonia;part load",
+   "n_equations": 399,
+   "largest_block": 1,
+   "origin_type": "industry",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/1_Compressors/1_1_Reciprocating Compressors/Catalogue_data_model-RPM_simulation-Part_speed-Full_load.EES",
+   "authors": "Felipe Trebilcock (ULiège Thermodynamics Laboratory)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-BUG-DUPLICATE-VAR-BOUND;CS-GAP-LOOKUP-NONAME",
+   "related": "CSL-0123;CSL-0035",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/components/compressors/reciprocating_catalogue_r717",
+   "main_file": "reciprocating_catalogue_r717.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0167",
+   "name": "reciprocating_polynomial_r22",
+   "title": "Reciprocating compressor reference model with polynomial laws in an R22 cycle",
+   "category": "components/compressors",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Semi-empirical reference model of a hermetic reciprocating refrigeration compressor (supply pressure drop, heating-up against a fictitious wall, isentropic compression, cooling-down, exhaust pressure drop, clearance-volume re-expansion and motor slip), with its parameters identified from test data and imposed through scaled comparison variables (AUD, FMEP_0); closed on a simple R22 cycle, it predicts mass flow, electrical power, discharge temperature and COP, and lists the polynomial laws identified from the results.",
+   "fluids": "R22",
+   "tags": "reciprocating compressor;piston compressor;refrigeration;semi-empirical model;polynomial regression;parameter identification;clearance volume;fictitious wall heat transfer",
+   "n_equations": 133,
+   "largest_block": 34,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/modeles/JL/new/reciprocating JL080205.zip!/reciprocating JL080205/3_2_3_Polynomial_modelling.EES",
+   "authors": "TBD (J. Lebrun, ULiège Thermodynamics Laboratory, per the file series JL080205)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "",
+   "related": "CSL-0001;CSL-0007;CSL-0022;CSL-0156",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-09",
+   "path": "models/components/compressors/reciprocating_polynomial_r22",
+   "main_file": "reciprocating_polynomial_r22.eescode",
    "figures": 0
   },
   {
@@ -406,7 +541,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0007;CSL-0036;CSL-0040;CSL-0084;CSL-0116;CSL-0117",
+   "related": "CSL-0007;CSL-0036;CSL-0040;CSL-0084;CSL-0116;CSL-0117;CSL-0159",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/expanders_turbines/scroll_expander_semi_empirical",
@@ -433,7 +568,7 @@
    "license": "MIT",
    "url": "https://github.com/thermocycle/Thermocycle-library",
    "missing_features": "",
-   "related": "CSL-0019;CSL-0037;CSL-0038;CSL-0086;CSL-0117",
+   "related": "CSL-0019;CSL-0037;CSL-0038;CSL-0086;CSL-0117;CSL-0125;CSL-0159",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
    "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps",
@@ -514,7 +649,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0002;CSL-0014;CSL-0032;CSL-0026;CSL-0027;CSL-0031;CSL-0099;CSL-0113;CSL-0112;CSL-0115",
+   "related": "CSL-0002;CSL-0014;CSL-0032;CSL-0026;CSL-0027;CSL-0031;CSL-0099;CSL-0113;CSL-0112;CSL-0115;CSL-0138",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/heat_exchangers/condenser_three_zones",
@@ -541,7 +676,7 @@
    "license": "MIT",
    "url": "https://github.com/PyLaboThap/LaboThapPy",
    "missing_features": "",
-   "related": "CSL-0008;CSL-0002",
+   "related": "CSL-0008;CSL-0002;CSL-0126;CSL-0128;CSL-0127;CSL-0138",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/heat_exchangers/hx_constant_pinch",
@@ -703,7 +838,7 @@
    "license": "MIT",
    "url": "https://github.com/CalebBell/ht",
    "missing_features": "",
-   "related": "CSL-0002;CSL-0026;CSL-0027;CSL-0087;CSL-0089;CSL-0094;CSL-0096;CSL-0097;CSL-0098;CSL-0099;CSL-0102;CSL-0105;CSL-0112;CSL-0091;CSL-0110",
+   "related": "CSL-0002;CSL-0026;CSL-0027;CSL-0087;CSL-0089;CSL-0094;CSL-0096;CSL-0097;CSL-0098;CSL-0099;CSL-0102;CSL-0105;CSL-0112;CSL-0091;CSL-0110;CSL-0126;CSL-0128;CSL-0127",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
    "path": "models/components/heat_exchangers/hx_effectiveness_ntu",
@@ -838,7 +973,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0096",
+   "related": "CSL-0096;CSL-0161",
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
    "path": "models/components/heat_exchangers/plate_hx_correlations",
@@ -865,7 +1000,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0008;CSL-0090;CSL-0096;CSL-0097;CSL-0098;CSL-0114",
+   "related": "CSL-0008;CSL-0090;CSL-0096;CSL-0097;CSL-0098;CSL-0114;CSL-0138",
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
    "path": "models/components/heat_exchangers/three_zone_hx_procedures",
@@ -892,7 +1027,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0008;CSL-0096;CSL-0079;CSL-0115;CSL-0124;CSL-0114;CSL-0121",
+   "related": "CSL-0008;CSL-0096;CSL-0079;CSL-0115;CSL-0124;CSL-0114;CSL-0121;CSL-0153",
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
    "path": "models/components/heat_exchangers/condenser_3_zones_plate_correlations",
@@ -919,7 +1054,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0079;CSL-0112;CSL-0113;CSL-0115;CSL-0121",
+   "related": "CSL-0079;CSL-0112;CSL-0113;CSL-0115;CSL-0121;CSL-0153",
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
    "path": "models/components/heat_exchangers/evaporator_3_zones_plate_correlations",
@@ -946,11 +1081,146 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-GAP-REPEAT-UNTIL-BARE;CS-BUG-LOOKUP-WRITE",
-   "related": "CSL-0008;CSL-0113;CSL-0031;CSL-0124;CSL-0114",
+   "related": "CSL-0008;CSL-0113;CSL-0031;CSL-0124;CSL-0114;CSL-0127",
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
    "path": "models/components/heat_exchangers/hx_fem_evaporator_discretised",
    "main_file": "hx_fem_evaporator_discretised.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0126",
+   "name": "hx_constant_effectiveness",
+   "title": "Heat exchanger with a constant effectiveness (enthalpy-based)",
+   "category": "components/heat_exchangers",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Counterflow heat exchanger with an imposed constant effectiveness: the duty is eta times the largest heat rate an ideal (infinite area) exchanger could transfer between the two inlet states, the limit being the enthalpy the hot stream can give up when cooled to the cold inlet temperature or the enthalpy the cold stream can absorb when heated to the hot inlet temperature, whichever is smaller. Both outlet states follow from the two energy balances. Translation of the LaboThapPy component HexCstEff.",
+   "fluids": "Water",
+   "tags": "heat exchanger;counterflow;constant effectiveness;enthalpy-based;recuperator;gas cooler;internal heat exchanger",
+   "n_equations": 44,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/component/heat_exchanger/hex_csteff.py",
+   "authors": "Basile Chaudoir; Elise Neven",
+   "license": "MIT",
+   "url": "https://github.com/PyLaboThap/LaboThapPy",
+   "missing_features": "",
+   "related": "CSL-0014;CSL-0090;CSL-0128;CSL-0127",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/components/heat_exchangers/hx_constant_effectiveness",
+   "main_file": "hx_constant_effectiveness.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0127",
+   "name": "hx_constant_effectiveness_discretised",
+   "title": "Discretised constant-effectiveness heat exchanger with a minimum pinch (sCO2 recuperator)",
+   "category": "components/heat_exchangers",
+   "kind": "steady",
+   "level": 4,
+   "status": "verified",
+   "summary": "Counterflow HX split into n_disc equal-enthalpy segments; the duty is limited by a user maximum effectiveness, by an external ideal-outlet maximum heat, by an internal zero-pinch limit and by a minimum segment temperature difference. The Python effectiveness/bisection loops become min-based complementarity conditions. Translation of the LaboThapPy HexCstEffDisc.",
+   "fluids": "R744;Water",
+   "tags": "heat exchanger;counterflow;discretised;pinch point;effectiveness;sCO2;recuperator;gas cooler;complementarity",
+   "n_equations": 329,
+   "largest_block": 128,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/component/heat_exchanger/hex_csteff_disc.py",
+   "authors": "Basile Chaudoir; Elise Neven",
+   "license": "Apache-2.0",
+   "url": "https://github.com/PyLaboThap/LaboThapPy",
+   "missing_features": "CS-BUG-DUPLICATE-INDEX-EXPR",
+   "related": "CSL-0126;CSL-0014;CSL-0090;CSL-0115;CSL-0138",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-09",
+   "path": "models/components/heat_exchangers/hx_constant_effectiveness_discretised",
+   "main_file": "hx_constant_effectiveness_discretised.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0128",
+   "name": "hx_eps_ntu_plate_pipe",
+   "title": "Heat exchanger with UA from the plate geometry (eps-NTU, Gnielinski)",
+   "category": "components/heat_exchangers",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Plate/pipe heat exchanger whose conductance-area product is computed from its geometry: Gnielinski film coefficients of the two streams, plate wall conduction and fouling resistance in series, then the eps-NTU relation of the selected flow arrangement gives the duty and the outlet states. Translation of the LaboThapPy HexeNTU (plate/pipe branch) component.",
+   "fluids": "Water",
+   "tags": "heat exchanger;effectiveness-NTU;plate heat exchanger;conductance-area product;Gnielinski;wall conduction;fouling;flow arrangements;sizing",
+   "n_equations": 99,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/component/heat_exchanger/hex_eNTU.py",
+   "authors": "Basile Chaudoir; Marie Peeters; Elise Neven",
+   "license": "MIT",
+   "url": "https://github.com/PyLaboThap/LaboThapPy",
+   "missing_features": "",
+   "related": "CSL-0090;CSL-0087;CSL-0091;CSL-0126;CSL-0014",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/components/heat_exchangers/hx_eps_ntu_plate_pipe",
+   "main_file": "hx_eps_ntu_plate_pipe.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0138",
+   "name": "hx_moving_boundary_bell",
+   "title": "Moving-boundary heat exchanger (Bell 2015), evaporator regime",
+   "category": "components/heat_exchangers",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Counter-flow heat exchanger with zones delimited by the phase changes (moving-boundary method of Bell 2015): clamped zone boundaries, per-zone UA and the Bell area constraint A = sum(Q_j/(U_j*LMTD_j)). Five oracle cases of increasing area solved simultaneously; the active zone set (1-3 zones) follows the operating point. Translation of the TESPy MovingBoundaryHeatExchanger.",
+   "fluids": "Water;Propane",
+   "tags": "heat exchanger;evaporator;moving boundary;phase change;zone UA;area constraint;bell2015;oracle-validated",
+   "n_equations": 124,
+   "largest_block": 18,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/src/tespy/components/heat_exchangers/sectioned.py",
+   "authors": "Francesco Witte; Ilja Tuschy; Ian Bell; Sylvain Quoilin; Vincent Lemort",
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy",
+   "missing_features": "",
+   "related": "CSL-0008;CSL-0014;CSL-0112;CSL-0127",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-09",
+   "path": "models/components/heat_exchangers/hx_moving_boundary_bell",
+   "main_file": "hx_moving_boundary_bell.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0161",
+   "name": "plate_hx_thermal_resistances",
+   "title": "Single-phase plate heat exchanger: thermal-resistance model (Martin)",
+   "category": "components/heat_exchangers",
+   "kind": "steady",
+   "level": 2,
+   "status": "blocked",
+   "summary": "Heat-transfer coefficient, thermal resistance and pressure drop of a chevron-type plate heat exchanger on the single-phase side, from the plate geometry with Martin's 1996 correlation; water properties from the built-in calls, ethylene-glycol brine from BRINEPROP2 (ULiège BrineProp) on the alternate $IF branch.",
+   "fluids": "Water;EG brine (BrineProp2, not a CoolProp fluid)",
+   "tags": "plate heat exchanger;chevron plate;Martin correlation;thermal resistance;heat transfer coefficient;pressure drop;brine;glycol",
+   "n_equations": 37,
+   "largest_block": 4,
+   "origin_type": "research",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/modeles/plate_heat_exchanger_SB080104.EES",
+   "authors": "Stéphane Bertagnolio; Sylvain Quoilin",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-GAP-IF-DIRECTIVE;CS-BUG-HASH-IDENT;CS-GAP-CALL-EXPR-OUT",
+   "related": "CSL-0079;CSL-0111;CSL-0162",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/components/heat_exchangers/plate_hx_thermal_resistances",
+   "main_file": "plate_hx_thermal_resistances.eescode",
    "figures": 0
   },
   {
@@ -1027,7 +1297,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "",
+   "related": "CSL-0125",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/pumps_fans/centrifugal_fan_reference_model",
@@ -1054,11 +1324,38 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-GAP-ELSEIF-CHAIN;CS-GAP-UPPERCASE;CS-GAP-CALL-EXPR-OUT;CS-GAP-STRING-ARRAY;CS-GAP-LOOKUP-PROC",
-   "related": "CSL-0079;CSL-0078",
+   "related": "CSL-0079;CSL-0078;CSL-0125",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/components/pumps_fans/centrifugal_brine_pump_refsim",
    "main_file": "centrifugal_brine_pump_refsim.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0125",
+   "name": "pump_curve_similarity",
+   "title": "Centrifugal pump from manufacturer curves and similarity laws",
+   "category": "components/pumps_fans",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Pump sized from catalogue characteristic curves (flow rate, head, isentropic efficiency, required NPSH at a rated speed) and scaled to any speed with the affinity laws; the three operating modes of the original component (P_N: flow rate from pressures and speed, P_M: speed from pressures and flow rate, M_N: discharge pressure from flow rate and speed) are shipped as three files. Translation of the LaboThapPy component PumpCurveSimilarity.",
+   "fluids": "R744",
+   "tags": "pump;characteristic curves;affinity laws;NPSH;off-design;lookup table;three modes",
+   "n_equations": 33,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/component/pump/pump_curve_similarity.py",
+   "authors": "Basile Chaudoir; Elise Neven",
+   "license": "MIT",
+   "url": "https://github.com/PyLaboThap/LaboThapPy",
+   "missing_features": "",
+   "related": "CSL-0084;CSL-0072;CSL-0071",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/components/pumps_fans/pump_curve_similarity",
+   "main_file": "pump_curve_similarity.eescode",
    "figures": 0
   },
   {
@@ -1243,7 +1540,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0005;CSL-0006;CSL-0024;CSL-0049",
+   "related": "CSL-0005;CSL-0006;CSL-0024;CSL-0049;CSL-0149",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/cycles/engines/gas_engine_full_power_cpbar",
@@ -1302,6 +1599,60 @@
    "verified_on": "2026-10-05",
    "path": "models/cycles/engines/stirling_cycle_ideal_regenerator",
    "main_file": "stirling_cycle_ideal_regenerator.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0149",
+   "name": "gas_engine_complete_model",
+   "title": "Complete gas engine: throttle, carburettor, combustion, cooling and recovery circuits",
+   "category": "cycles/engines",
+   "kind": "steady",
+   "level": 2,
+   "status": "blocked",
+   "summary": "Steady-state model of the 5 L four-stroke natural-gas engine of the ULiege MSTh course at its maximum-power point (2400 rpm, shaft power solved from the indicated efficiency): butterfly valve and carburettor, intake pressure drop through the valve area, adiabatic combustion chamber with the cpbar mean specific heat, expansion, jacket and water-to-environment exchangers, and two recovery exchangers (exercise 5). The stand-by throttling pressure drop is read in an engine map (external lookup table recovered from the sibling file TM-0137).",
+   "fluids": "Air;CH4;Water",
+   "tags": "gas engine;four-stroke;throttle;carburettor;combustion chamber;cooling circuit;recovery exchanger;lookup table;mean specific heat;exercise",
+   "n_equations": 105,
+   "largest_block": 10,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 08/SB/MSTH-SB-R8-EX1-2-3-4-5.EES",
+   "authors": "ULiège MSTh course (J. Lebrun, V. Lemort, S. Bertagnolio)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-GAP-INTERP-EES;CS-GAP-INCLUDE",
+   "related": "CSL-0034;CSL-0005",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/cycles/engines/gas_engine_complete_model",
+   "main_file": "gas_engine_complete_model.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0151",
+   "name": "engine_derating_iso3046",
+   "title": "Engine derating according to ISO 3046/1 (ambient pressure and temperature)",
+   "category": "cycles/engines",
+   "kind": "steady",
+   "level": 2,
+   "status": "blocked",
+   "summary": "Power correction of an engine between the ISO 3046/1 reference conditions and the site conditions: correction factor K from the dry atmospheric pressure, absolute intake-air temperature and coolant temperature ratios (factor a, exponents m, n, s of the ISO table), derating factor alpha = K - 0.7*(1-K)*(1/eta_m - 1), site shaft power. Two exercises: naturally aspirated Diesel (372 kW on site) and supercharged aftercooled engine (1000 kW catalogue).",
+   "fluids": "Water",
+   "tags": "engine;derating;ISO 3046;part load;ambient conditions;exercise",
+   "n_equations": 43,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP2_Ex_1-3/Détarage moteurs_Exercices_1-2.EES",
+   "authors": "Philippe Ngendakumana (ULiège); Rémi Dickes (ULiège)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-GAP-IF-DIRECTIVE;CS-GAP-ACCENTED-IDENT",
+   "related": "",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/cycles/engines/engine_derating_iso3046",
+   "main_file": "engine_derating_iso3046.eescode",
    "figures": 0
   },
   {
@@ -1459,7 +1810,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0004;CSL-0015;CSL-0038;CSL-0040;CSL-0036;CSL-0084",
+   "related": "CSL-0004;CSL-0015;CSL-0038;CSL-0040;CSL-0036;CSL-0084;CSL-0153",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/cycles/organic_rankine/orc_simple_r245fa",
@@ -1486,7 +1837,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0004;CSL-0007;CSL-0019;CSL-0037;CSL-0040;CSL-0038",
+   "related": "CSL-0004;CSL-0007;CSL-0019;CSL-0037;CSL-0040;CSL-0038;CSL-0159",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/cycles/organic_rankine/orc_extraction_r134a",
@@ -1548,6 +1899,60 @@
    "figures": 0
   },
   {
+   "id": "CSL-0153",
+   "name": "orc_whr_refprop_cost",
+   "title": "Waste-heat-recovery ORC with a scroll expander, REFPROP mixtures and an equipment cost model",
+   "category": "cycles/organic_rankine",
+   "kind": "steady",
+   "level": 3,
+   "status": "blocked",
+   "summary": "Complete ORC recovering heat from an exhaust-gas/thermal-oil stream: three-zone plate evaporator and condenser with Thonon/Kuo/Hsieh correlations, scroll expander with fixed volume ratio, pump, pipe sizing and total equipment/investment cost; refrigerant properties from the EES REFPROP interface on the mixture file R245fa+R134a (stored run: pure R245fa).",
+   "fluids": "R245fa+R134a (REFPROP);R245fa;TherminolVP-1;Water;Air",
+   "tags": "ORC;organic Rankine;waste heat recovery;scroll expander;plate heat exchanger;cost model;specific investment cost;Thonon;Kuo;Hsieh and Lin;REFPROP;optimisation",
+   "n_equations": 361,
+   "largest_block": 24,
+   "origin_type": "research",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/modeles/cycle ORC with refprop.EES",
+   "authors": "TBD (ULiège Thermodynamics Laboratory)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-GAP-REFPROP;CS-GAP-IF5;CS-GAP-END-PROCEDURE",
+   "related": "CSL-0019;CSL-0113;CSL-0114;CSL-0121;CSL-0124;CSL-0159",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/cycles/organic_rankine/orc_whr_refprop_cost",
+   "main_file": "orc_whr_refprop_cost.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0159",
+   "name": "orc_void_fraction_charge",
+   "title": "Low-temperature ORC (R134a) with void-fraction charge of the heat exchangers",
+   "category": "cycles/organic_rankine",
+   "kind": "steady",
+   "level": 4,
+   "status": "blocked",
+   "summary": "Low-temperature R134a Rankine cycle (ULiège lab model, 2007): pump, three-zone evaporator and condenser weighted by the refrigerant mass per zone, detailed expander (throat pressure drop, leakage, isochoric expansion, cooling); the refrigerant charge M_charge is solved from a global void-fraction balance so that the condenser subcooling is met.",
+   "fluids": "R134a;AirH2O",
+   "tags": "ORC;Rankine;refrigerant charge;void fraction;three-zone heat exchanger;epsilon-NTU;expander;plate heat exchanger;low-grade heat;reference model",
+   "n_equations": 312,
+   "largest_block": 112,
+   "origin_type": "research",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/modeles/ORC simple model with void fraction.EES",
+   "authors": "TBD (ULiège Thermodynamics Laboratory; comments signed ARA)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-BUG-HUMIDAIR-PROPS",
+   "related": "CSL-0153;CSL-0036;CSL-0037;CSL-0084",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/cycles/organic_rankine/orc_void_fraction_charge",
+   "main_file": "orc_void_fraction_charge.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0001",
    "name": "refrigeration_cycle_simple_compressor",
    "title": "Refrigeration cycle with a simple compressor model",
@@ -1567,7 +1972,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0007;CSL-0013;CSL-0015;CSL-0022;CSL-0033;CSL-0025;CSL-0054;CSL-0061;CSL-0068;CSL-0077",
+   "related": "CSL-0007;CSL-0013;CSL-0015;CSL-0022;CSL-0033;CSL-0025;CSL-0054;CSL-0061;CSL-0068;CSL-0077;CSL-0156;CSL-0167",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-04",
    "path": "models/cycles/refrigeration_heat_pumps/refrigeration_cycle_simple_compressor",
@@ -1837,7 +2242,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-GAP-ELSEIF-CHAIN;CS-GAP-UPPERCASE;CS-GAP-STRING-ARRAY;CS-GAP-LOOKUP-PROC;CS-GAP-CALL-EXPR-OUT",
-   "related": "CSL-0077;CSL-0079;CSL-0072;CSL-0007;CSL-0068;CSL-0081;CSL-0116",
+   "related": "CSL-0077;CSL-0079;CSL-0072;CSL-0007;CSL-0068;CSL-0081;CSL-0116;CSL-0155",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/cycles/refrigeration_heat_pumps/brine_to_water_heat_pump_refsim",
@@ -1864,11 +2269,38 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-GAP-NAME-PIPE;CS-GAP-IF-DIRECTIVE;CS-GAP-PROP-SV;CS-GAP-LOOKUP-PROC;CS-GAP-CONVERT-UNQUOTED;CS-GAP-LKT;CS-GAP-INCLUDE;CS-GAP-INCOMPRESSIBLE;CS-GAP-GE-ARROW;CS-GAP-REPEAT-UNTIL-BARE",
-   "related": "CSL-0007;CSL-0037;CSL-0078;CSL-0079;CSL-0123",
+   "related": "CSL-0007;CSL-0037;CSL-0078;CSL-0079;CSL-0123;CSL-0155",
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_vitocal_300g",
    "main_file": "heat_pump_vitocal_300g.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0155",
+   "name": "inverter_air_water_heat_pump",
+   "title": "Inverter air-to-water heat pump (Daikin Altherma type), heating mode",
+   "category": "cycles/refrigeration_heat_pumps",
+   "kind": "steady",
+   "level": 4,
+   "status": "blocked",
+   "summary": "Detailed steady-state model of an inverter-driven reversible air-to-water heat pump (Daikin Altherma type, 2007): inverter compressor with isentropic and isochoric compression stages, effectiveness heat exchangers, fan and pump characteristics, frost/ice correction. Heating-mode branch of the original two-mode (SUBPROGRAM) file, flattened per decision D10.",
+   "fluids": "R410A;Water;AirH2O",
+   "tags": "heat pump;inverter compressor;reversible;air-to-water;frost;fan characteristics;catalogue model;part load",
+   "n_equations": 343,
+   "largest_block": 151,
+   "origin_type": "research",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/modeles/HP_INVERTER_REV_VLD05092007_DAIKIN-ALTHERMA3.EES",
+   "authors": "TBD (ULiège Thermodynamics Laboratory, file initials VLD)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-GAP-IF5",
+   "related": "CSL-0078;CSL-0116",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump",
+   "main_file": "inverter_air_water_heat_pump.eescode",
    "figures": 0
   },
   {
@@ -1972,7 +2404,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0006;CSL-0011;CSL-0034;CSL-0046;CSL-0050;CSL-0058;CSL-0080;CSL-0087;CSL-0091",
+   "related": "CSL-0006;CSL-0011;CSL-0034;CSL-0046;CSL-0050;CSL-0058;CSL-0080;CSL-0087;CSL-0091;CSL-0149;CSL-0150;CSL-0152;CSL-0166",
    "coolsolve_version": "0.3.0+fix/library-gaps@fbdb6a7",
    "verified_on": "2026-10-05",
    "path": "models/fundamentals/combustion/cpbar_combustion_products",
@@ -1999,7 +2431,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-GAP-FLUIDS-C8H18",
-   "related": "CSL-0005;CSL-0058",
+   "related": "CSL-0005;CSL-0058;CSL-0150",
    "coolsolve_version": "0.3.0",
    "verified_on": "2026-10-05",
    "path": "models/fundamentals/combustion/octane_combustion_400pct_air",
@@ -2031,6 +2463,33 @@
    "verified_on": "2026-10-05",
    "path": "models/fundamentals/combustion/diesel_engine_excess_air_exhaust_analysis",
    "main_file": "diesel_engine_excess_air_exhaust_analysis.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0150",
+   "name": "adiabatic_flame_dissociation",
+   "title": "Adiabatic flame temperature of CH4 or fuel oil with or without dissociation",
+   "category": "fundamentals/combustion",
+   "kind": "steady",
+   "level": 2,
+   "status": "blocked",
+   "summary": "Adiabatic, constant-pressure combustion of CH4 or fuel oil with excess air: adiabatic flame temperature from H_reactants = H_products, with either complete-combustion products (CO2, H2O, O2, N2) or the 14-species chemical-equilibrium mixture from the EES built-in Chem_Equil procedure; species enthalpies from the EES built-in NASA procedure.",
+   "fluids": "CH4;O2;N2;CO2;H2O;CO;H2;NO",
+   "tags": "combustion;adiabatic flame temperature;chemical equilibrium;dissociation;excess air;fuel oil;exercise",
+   "n_equations": 85,
+   "largest_block": 2,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP1_Ex_1-5/Ex_3-4_CH4-Fuel Oil_Tadiab with or without dissociation_2016.EES",
+   "authors": "P. Ngendakumana; R. Dickes",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-GAP-IF-DIRECTIVE;CS-GAP-CHEM-EQUIL;CS-GAP-NASA;CS-GAP-NAME-SYMBOL;CS-GAP-SUM-INDEXED",
+   "related": "CSL-0005;CSL-0046;CSL-0152",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/fundamentals/combustion/adiabatic_flame_dissociation",
+   "main_file": "adiabatic_flame_dissociation.eescode",
    "figures": 0
   },
   {
@@ -2242,7 +2701,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-GAP-ELSEIF-CHAIN;CS-GAP-UPPERCASE;CS-GAP-STRING-ARRAY;CS-GAP-LOOKUP-PROC",
-   "related": "CSL-0072;CSL-0074;CSL-0078;CSL-0087;CSL-0113;CSL-0091;CSL-0116;CSL-0114;CSL-0121",
+   "related": "CSL-0072;CSL-0074;CSL-0078;CSL-0087;CSL-0113;CSL-0091;CSL-0116;CSL-0114;CSL-0121;CSL-0161;CSL-0162;CSL-0163",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/fundamentals/properties/brineprop_secondary_refrigerants",
@@ -2269,11 +2728,38 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0079;CSL-0113;CSL-0114",
+   "related": "CSL-0079;CSL-0113;CSL-0114;CSL-0153;CSL-0131;CSL-0132",
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
    "path": "models/fundamentals/properties/heat_transfer_fluid_properties",
    "main_file": "heat_transfer_fluid_properties.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0132",
+   "name": "r1233zd_thermal_conductivity",
+   "title": "Thermal conductivity of R1233zd(E) - Perkins & Huber correlation",
+   "category": "fundamentals/properties",
+   "kind": "function",
+   "level": 1,
+   "status": "verified",
+   "summary": "Two EES FUNCTIONs giving the thermal conductivity of R1233zd(E) from a temperature and a pressure as the sum of a dilute-gas term and a residual term: the coefficient set written in the original LaboThapPy function and the coefficient set of Table 1 of Perkins & Huber (2017), which differ by 8-17 %. The density comes from the built-in R1233zd(E) property functions. Demonstrated at the two state points published in Table 2 of the paper and at four heat-pump states of this fluid.",
+   "fluids": "R1233zd(E)",
+   "tags": "thermal conductivity;transport property;R1233zd(E);refrigerant;correlation;function library;translation;ORC;heat pump",
+   "n_equations": 26,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/correlations/properties/thermal_conductivity.py",
+   "authors": "R. A. Perkins (thermal conductivity correlation, J. Chem. Eng. Data 62:2659-2665, 2017); M. L. Huber (thermal conductivity correlation, J. Chem. Eng. Data 62:2659-2665, 2017); Elise Neven (LaboThapPy thermal_conductivity.py); Basile Chaudoir (LaboThapPy contributor)",
+   "license": "MIT",
+   "url": "https://github.com/PyLaboThap/LaboThapPy",
+   "missing_features": "",
+   "related": "CSL-0131;CSL-0130;CSL-0121",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-09",
+   "path": "models/fundamentals/properties/r1233zd_thermal_conductivity",
+   "main_file": "r1233zd_thermal_conductivity.eescode",
    "figures": 0
   },
   {
@@ -2350,7 +2836,7 @@
    "license": "MIT",
    "url": "https://github.com/CalebBell/ht",
    "missing_features": "",
-   "related": "CSL-0005;CSL-0018;CSL-0079;CSL-0088;CSL-0086;CSL-0089;CSL-0090;CSL-0092;CSL-0093;CSL-0094;CSL-0095;CSL-0096;CSL-0097;CSL-0098;CSL-0099;CSL-0100;CSL-0101;CSL-0102;CSL-0103;CSL-0104;CSL-0105;CSL-0107;CSL-0091;CSL-0108;CSL-0106;CSL-0109;CSL-0110",
+   "related": "CSL-0005;CSL-0018;CSL-0079;CSL-0088;CSL-0086;CSL-0089;CSL-0090;CSL-0092;CSL-0093;CSL-0094;CSL-0095;CSL-0096;CSL-0097;CSL-0098;CSL-0099;CSL-0100;CSL-0101;CSL-0102;CSL-0103;CSL-0104;CSL-0105;CSL-0107;CSL-0091;CSL-0108;CSL-0106;CSL-0109;CSL-0110;CSL-0128;CSL-0130",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
    "path": "models/heat_transfer/convection/internal_turbulent_nusselt",
@@ -2431,7 +2917,7 @@
    "license": "MIT",
    "url": "https://github.com/CalebBell/ht",
    "missing_features": "",
-   "related": "CSL-0005;CSL-0079;CSL-0087;CSL-0088;CSL-0089;CSL-0090;CSL-0092;CSL-0093;CSL-0094;CSL-0095;CSL-0097;CSL-0098;CSL-0099;CSL-0100;CSL-0101;CSL-0103;CSL-0104",
+   "related": "CSL-0005;CSL-0079;CSL-0087;CSL-0088;CSL-0089;CSL-0090;CSL-0092;CSL-0093;CSL-0094;CSL-0095;CSL-0097;CSL-0098;CSL-0099;CSL-0100;CSL-0101;CSL-0103;CSL-0104;CSL-0128",
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
    "path": "models/heat_transfer/convection/internal_laminar_and_curved_nu",
@@ -2763,6 +3249,33 @@
    "figures": 0
   },
   {
+   "id": "CSL-0131",
+   "name": "void_fraction_correlations",
+   "title": "Void-fraction correlations for two-phase flow (13 models, function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "blocked",
+   "summary": "EES FUNCTION library of the thirteen void-fraction correlations of the LaboThapPy void_fraction module: homogeneous (no slip), Zivi, Fauske, Premoli and Hughmark (slip-ratio family), Lockhart-Martinelli, Graham and Cioncolini-Thome (empirical, the last two respectively condensation-only and annular flow), Armand-Treschev and Bankoff (K times the homogeneous void fraction), and the drift-flux models Rouhani-Axelsson, Dix and Woldesemayat-Ghajar; the Reynolds and Weber numbers Premoli needs are helper functions. Demonstrated on the case of the original example (R410A at 1.2 MPa, 8 mm pipe, 300 kg/m^2.s, ten qualities).",
+   "fluids": "R410A",
+   "tags": "void fraction;two-phase flow;hold-up;slip ratio;drift flux;correlation;function library;translation;refrigeration;ORC;boiling;condensation",
+   "n_equations": 161,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/correlations/void_fraction/void_fraction.py",
+   "authors": "Elise Neven (LaboThapPy, void_fraction.py); S. M. Zivi (Zivi void fraction, 1964); H. K. Fauske (Fauske void fraction, 1962); A. Premoli, D. D. Francesco and A. Prina (Premoli void fraction, 1971); R. W. Lockhart and R. C. Martinelli (Lockhart-Martinelli void fraction, 1949); D. Chisholm (closed-form approximation of the Lockhart-Martinelli curves, 1967); G. A. Hughmark (Hughmark void fraction, 1962); G. B. Wallis (Graham void fraction, 1969); V. I. Armand and G. G. Treschev (Armand-Treschev void fraction); S. G. Bankoff (Bankoff void fraction, 1960); S. Z. Rouhani and E. Axelsson (Rouhani-Axelsson void fraction, 1970); G. E. Dix (Dix void fraction, 1971); B. Chexal, J. Horowitz and G. Lellouche (assessment of eight void fraction models, 1986); M. A. Woldesemayat and A. J. Ghajar (Woldesemayat-Ghajar void fraction, 2007); A. Cioncolini and J. R. Thome (Cioncolini-Thome void fraction, 2012)",
+   "license": "MIT (declared in pyproject.toml; LICENSE.txt of the library is Apache-2.0) / model published under the library MIT licence (decision D3)",
+   "url": "https://github.com/PyLaboThap/LaboThapPy",
+   "missing_features": "CS-BUG-IMPLICIT-PROC",
+   "related": "CSL-0130;CSL-0103;CSL-0121;CSL-0132",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-09",
+   "path": "models/heat_transfer/convection/void_fraction_correlations",
+   "main_file": "void_fraction_correlations.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0018",
    "name": "pipe_pressure_drop_colebrook",
    "title": "Pipe pressure drop with the Colebrook-White friction factor",
@@ -2782,7 +3295,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0087;CSL-0094;CSL-0100;CSL-0103",
+   "related": "CSL-0087;CSL-0094;CSL-0100;CSL-0103;CSL-0158;CSL-0130",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_colebrook",
@@ -2809,7 +3322,7 @@
    "license": "MIT",
    "url": "https://github.com/CalebBell/ht",
    "missing_features": "",
-   "related": "CSL-0018;CSL-0087;CSL-0091;CSL-0110",
+   "related": "CSL-0018;CSL-0087;CSL-0091;CSL-0110;CSL-0130;CSL-0131",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
    "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware",
@@ -2836,11 +3349,65 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-GAP-REFPROP;CS-BUG-COMMON-PROC",
-   "related": "CSL-0113;CSL-0115",
+   "related": "CSL-0113;CSL-0115;CSL-0153",
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
    "path": "models/heat_transfer/pressure_drop/plate_hx_pressure_drop_identification",
    "main_file": "plate_hx_pressure_drop_identification.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0130",
+   "name": "pipe_pressure_drop_correlations",
+   "title": "Pressure drop in straight pipes: friction factors and two-phase correlations (function library)",
+   "category": "heat_transfer/pressure_drop",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "EES FUNCTION library of the pipe pressure-drop correlations: six single-phase Darcy friction factors (Churchill 1977, Swamee-Jain 1976, Konakov, Petukhov 1970, Haaland 1983 and Cheng for supercritical CO2), the single-phase pressure drop of a straight pipe (Darcy-Weisbach plus hydrostatic term), the two-phase frictional pressure drops of Friedel 1979, Muller-Steinhagen & Heck 1986 and Choi-Kedzierski-Domanski 2001, the two-phase acceleration term (homogeneous or Zivi void fraction) and the two-phase gravity term; the Reynolds, Froude and Weber numbers, the homogeneous and Zivi void fractions and the homogeneous two-phase density are given as helper functions.",
+   "fluids": "R134a;Water;R744",
+   "tags": "pressure drop;friction factor;Darcy-Weisbach;pipe flow;two-phase flow;frictional multiplier;acceleration pressure drop;gravity;void fraction;supercritical CO2;function library;translation",
+   "n_equations": 104,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/correlations/pressure_drop/pipe_DP.py",
+   "authors": "E. Neven (LaboThapPy, pipe_DP.py); S. W. Churchill (Churchill friction factor, 1977); P. K. Swamee and A. K. Jain (Swamee-Jain friction factor, 1976); B. S. Petukhov (Petukhov friction factor, 1970); S. E. Haaland (Haaland friction factor, 1983); L. Cheng (Cheng supercritical CO2 friction factor, 2024); Z. Yang and J. Yang (pseudo-critical temperature of CO2, 2012); D. Banuti (pseudo-boiling bounds, 2019); L. Friedel (Friedel two-phase pressure drop, 1979); H. Muller-Steinhagen and K. Heck (two-phase pressure drop, 1986); J. Y. Choi, M. A. Kedzierski and P. A. Domanski (Choi two-phase pressure drop, 2001); G. B. Wallis (two-phase acceleration pressure drop, 1969)",
+   "license": "MIT (declared in pyproject.toml; LICENSE.txt of the library is Apache-2.0) / model published under the library MIT licence",
+   "url": "https://github.com/PyLaboThap/LaboThapPy",
+   "missing_features": "",
+   "related": "CSL-0018;CSL-0087;CSL-0103;CSL-0158;CSL-0131;CSL-0132",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-09",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations",
+   "main_file": "pipe_pressure_drop_correlations.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0158",
+   "name": "gas_pipe_insulated_pressure_drop",
+   "title": "Gas pipe pressure drop and heat gain with insulation and fittings (R717)",
+   "category": "heat_transfer/pressure_drop",
+   "kind": "steady",
+   "level": 3,
+   "status": "blocked",
+   "summary": "Insulated R717 gas line of the Laborelec 2002 toolkit: heat gain from ambient air (internal Nusselt correlation, insulation cylinder, external convection, dew point), Colebrook-White friction drop, fitting K-factor drops from a nearest-diameter table and an equivalent nozzle area identified from the total pressure drop.",
+   "fluids": "R717;AirH2O",
+   "tags": "pressure drop;pipe flow;insulation;heat gain;Colebrook-White;fittings;R717;refrigeration line",
+   "n_equations": 107,
+   "largest_block": 10,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/4_Pressure Drop/4_2_Gas Pipes/Gas Pipe/Gas_Pipe_Pressure_Drop.EES",
+   "authors": "Felipe Trebilcock (ULiege Thermodynamics Lab, Dec 2002, for Laborelec); J. Lebrun (reviewer); E. Winandy (reviewer)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-GAP-LOOKUP-PROC;CS-GAP-ACCENTED-IDENT;CS-GAP-COLEBROOK;CS-GAP-STRINGPOS;CS-GAP-ARRAY-ARG;CS-BUG-PI-FUNCTION;CS-BUG-IMPLICIT-PROC;CS-BUG-LOOKUP-COLNAME",
+   "related": "CSL-0018;CSL-0130",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/heat_transfer/pressure_drop/gas_pipe_insulated_pressure_drop",
+   "main_file": "gas_pipe_insulated_pressure_drop.eescode",
    "figures": 0
   },
   {
@@ -2890,7 +3457,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "",
-   "related": "CSL-0016;CSL-0028;CSL-0030;CSL-0031;CSL-0062;CSL-0073;CSL-0074",
+   "related": "CSL-0016;CSL-0028;CSL-0030;CSL-0031;CSL-0062;CSL-0073;CSL-0074;CSL-0163",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/hvac/air_handling/chilled_water_cooling_coil",
@@ -2998,7 +3565,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-GAP-IF5",
-   "related": "CSL-0017;CSL-0016;CSL-0070;CSL-0074",
+   "related": "CSL-0017;CSL-0016;CSL-0070;CSL-0074;CSL-0163",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/hvac/air_handling/cooling_coil_with_control_simplified",
@@ -3025,11 +3592,65 @@
    "license": "MIT",
    "url": "",
    "missing_features": "CS-GAP-NAME-PIPE;CS-GAP-INCLUDE;CS-GAP-IF5;CS-GAP-IFSTR",
-   "related": "CSL-0017;CSL-0073;CSL-0062;CSL-0070;CSL-0076;CSL-0077;CSL-0079",
+   "related": "CSL-0017;CSL-0073;CSL-0062;CSL-0070;CSL-0076;CSL-0077;CSL-0079;CSL-0162;CSL-0163",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/hvac/air_handling/cooling_coil_refsim",
    "main_file": "cooling_coil_refsim.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0162",
+   "name": "glycol_runaround_recovery_loop",
+   "title": "Air-to-air glycol run-around heat-recovery loop",
+   "category": "hvac/air_handling",
+   "kind": "steady",
+   "level": 3,
+   "status": "blocked",
+   "summary": "Run-around heat recovery between the extracted and the fresh air of an air handling unit: two epsilon-NTU coils under Braun's hypothesis (dry and wet regimes computed simultaneously, the regime of largest capacity kept), linked by a glycol loop with Colebrook piping pressure drop and a pump; glycol properties from the ULiège BrineProp library.",
+   "fluids": "AirH2O;EG",
+   "tags": "heat recovery;run-around loop;air handling;coil;dehumidification;wet regime;Braun hypothesis;fictitious wet-bulb gas;ethylene glycol;brine;pump;Colebrook;reference model",
+   "n_equations": 271,
+   "largest_block": 65,
+   "origin_type": "research",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/modeles/Recovery_Loop/GLYCOL_RECOVERY_LOOP_SB080110.EES",
+   "authors": "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-GAP-IF-DIRECTIVE;CS-GAP-IF5;CS-GAP-CALL-EXPR-OUT;CS-GAP-INCLUDE;CS-BUG-NEWTON-CYCLE",
+   "related": "CSL-0074;CSL-0079;CSL-0161;CSL-0163",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/hvac/air_handling/glycol_runaround_recovery_loop",
+   "main_file": "glycol_runaround_recovery_loop.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0163",
+   "name": "cooling_coil_paramid",
+   "title": "Cooling coil parameter identification model (PARAMID reference, wet regime)",
+   "category": "hvac/air_handling",
+   "kind": "steady",
+   "level": 2,
+   "status": "blocked",
+   "summary": "Parameter identification of a cooling and dehumidifying coil from one measured wet-regime point (ULiège model bank PARAMID reference): a one-zone counter-flow exchanger whose conductance AU is the series of the air-side, metal and brine-side resistances; the fictitious wet-bulb gas and the semi-isothermal contact surface reproduce the measured capacity and exhaust air state, and the imposed resistance ratios fix the identified nominal resistances.",
+   "fluids": "AirH2O",
+   "tags": "cooling coil;air handling;dehumidification;parameter identification;wet regime;wet bulb;contact temperature;fictitious perfect gas;secondary refrigerant;brine;ethylene glycol;reference model",
+   "n_equations": 82,
+   "largest_block": 24,
+   "origin_type": "research",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/Model data bank/AHU_Components/Cooling_Coil/COOLINGCOIL_PARAMID_REFERENCE_MODEL_VL080321.zip!/COOLINGCOIL_PARAMID_REFERENCE_EES_MODEL_VL080321.EES",
+   "authors": "Vincent Lemort (ULiège Thermodynamics Laboratory); Jean Lebrun (ULiège Thermodynamics Laboratory)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-GAP-NAME-PIPE;CS-GAP-INCLUDE;CS-GAP-CALL-EXPR-OUT",
+   "related": "CSL-0073;CSL-0074;CSL-0079;CSL-0017;CSL-0162",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-09",
+   "path": "models/hvac/air_handling/cooling_coil_paramid",
+   "main_file": "cooling_coil_paramid.eescode",
    "figures": 0
   },
   {
@@ -3249,6 +3870,33 @@
    "figures": 0
   },
   {
+   "id": "CSL-0160",
+   "name": "pv_module_single_diode",
+   "title": "PV module single-diode I-V curve",
+   "category": "renewables/photovoltaics",
+   "kind": "steady",
+   "level": 2,
+   "status": "blocked",
+   "summary": "Five-parameter single-diode model of a flat-plate PV module: module parameters read from an embedded PVModules catalogue table, I-V/P-V curve computed in 100 points at a given cell temperature and irradiance.",
+   "fluids": "",
+   "tags": "photovoltaics;single-diode model;I-V curve;five-parameter model;catalogue data;maximum power point",
+   "n_equations": 337,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/modeles/photovoltaique/PV_model.EES",
+   "authors": "TBD (ULiège Thermodynamics Laboratory); W. De Soto, S. A. Klein, W. A. Beckman (original formulation, Solar Energy Laboratory UW-Madison)",
+   "license": "MIT",
+   "url": "",
+   "missing_features": "CS-GAP-END-PROCEDURE;CS-GAP-CONVERT-UNQUOTED;CS-GAP-LOOKUPROW;CS-GAP-LOOKUP-PROC;CS-BUG-LOOKUP-STRING",
+   "related": "",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/renewables/photovoltaics/pv_module_single_diode",
+   "main_file": "pv_module_single_diode.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0082",
    "name": "parabolic_trough_receiver_forristal",
    "title": "Parabolic-trough receiver (HCE): steady 1D radial energy balance, Forristal/NREL model",
@@ -3268,7 +3916,7 @@
    "license": "MIT",
    "url": "https://github.com/thermocycle/Thermocycle-library",
    "missing_features": "",
-   "related": "CSL-0083;CSL-0119",
+   "related": "CSL-0083;CSL-0119;CSL-0129",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
    "path": "models/renewables/solar_thermal/parabolic_trough_receiver_forristal",
@@ -3295,7 +3943,7 @@
    "license": "MIT",
    "url": "https://github.com/thermocycle/Thermocycle-library",
    "missing_features": "",
-   "related": "CSL-0082;CSL-0119",
+   "related": "CSL-0082;CSL-0119;CSL-0129",
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
    "path": "models/renewables/solar_thermal/parabolic_trough_loss_correlations",
@@ -3328,6 +3976,33 @@
    "path": "models/renewables/solar_thermal/solar_geometry_sun_path",
    "main_file": "solar_geometry_sun_path.eescode",
    "figures": 0
+  },
+  {
+   "id": "CSL-0129",
+   "name": "parabolic_trough_collector_discretised",
+   "title": "Parabolic-trough collector with a discretised absorber (Soponova MicroCSP efficiency map)",
+   "category": "renewables/solar_thermal",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Translation of the LaboThapPy component PTCollector: the absorber of a Sopogy SopoNova MicroCSP parabolic-trough collector is divided into 20 elements along its length; each element absorbs the solar power it receives times the collector efficiency of the 6 x 17 datasheet map (irradiance, fluid temperature rise over the ambient), and the water flowing at constant pressure marches along the absorber with its enthalpy increasing by the absorbed power divided by the mass flow rate. It delivers the absorbed power, the exhaust enthalpy and temperature and the mean efficiency of the collector field.",
+   "fluids": "Water",
+   "tags": "parabolic trough;solar thermal;collector;discretisation;semi-empirical;collector efficiency map;lookup table;enthalpy marching;translation",
+   "n_equations": 140,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/component/solar/parabolic_trough_collector.py; ~/git/LaboThapPy/labothappy/toolbox/geometries/solar/parabolictrough_geometry.py; ~/git/LaboThapPy/labothappy/component/examples/solar/parabolic_trough_collector_example.py, commit f03f7f47",
+   "authors": "Basile Chaudoir (ULiege Thermodynamics Laboratory); Elise Neven (ULiege Thermodynamics Laboratory)",
+   "license": "MIT (declared in pyproject.toml; LICENSE.txt is Apache-2.0) / model published under the library MIT licence",
+   "url": "https://github.com/PyLaboThap/LaboThapPy",
+   "missing_features": "CS-BUG-DUPLICATE-INDEX-EXPR;CS-GAP-SUM-INDEXED",
+   "related": "CSL-0083;CSL-0082",
+   "coolsolve_version": "0.3.0@7addbbc",
+   "verified_on": "2026-10-08",
+   "path": "models/renewables/solar_thermal/parabolic_trough_collector_discretised",
+   "main_file": "parabolic_trough_collector_discretised.eescode",
+   "figures": 0
   }
  ],
  "functions": [
@@ -3358,6 +4033,20 @@
    "signature": "(tip_speed, power, fan_diameter, induced)",
    "model_id": "CSL-0099",
    "path": "models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode"
+  },
+  {
+   "function": "alpha_homogeneous",
+   "type": "FUNCTION",
+   "signature": "(rho_l, rho_v, x)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "alpha_Zivi",
+   "type": "FUNCTION",
+   "signature": "(rho_l, rho_v, x)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
   },
   {
    "function": "baffle_thickness",
@@ -3402,6 +4091,13 @@
    "path": "models/components/heat_exchangers/plate_hx_correlations/plate_hx_correlations.eescode"
   },
   {
+   "function": "BOILER_REGIME",
+   "type": "PROCEDURE",
+   "signature": "(t_w_ex_set,t_w_ex_FL,t_w_ex_MIN,t_w_ex_OFF:regime$)",
+   "model_id": "CSL-0166",
+   "path": "models/components/boilers_burners/boiler_modulating_burner_refsim/boiler_modulating_burner_refsim.eescode"
+  },
+  {
    "function": "BRINEPROP",
    "type": "PROCEDURE",
    "signature": "(Pr$,Fl$,Conc,Temp:output)",
@@ -3430,11 +4126,25 @@
    "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
   },
   {
+   "function": "calc_Cmax_HX",
+   "type": "FUNCTION",
+   "signature": "(m_dot_h, m_dot_c, Cp_h, Cp_c)",
+   "model_id": "CSL-0128",
+   "path": "models/components/heat_exchangers/hx_eps_ntu_plate_pipe/hx_eps_ntu_plate_pipe.eescode"
+  },
+  {
    "function": "calc_Cmin",
    "type": "FUNCTION",
    "signature": "(m_dot_h, m_dot_c, Cp_h, Cp_c)",
    "model_id": "CSL-0090",
    "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "calc_Cmin_HX",
+   "type": "FUNCTION",
+   "signature": "(m_dot_h, m_dot_c, Cp_h, Cp_c)",
+   "model_id": "CSL-0128",
+   "path": "models/components/heat_exchangers/hx_eps_ntu_plate_pipe/hx_eps_ntu_plate_pipe.eescode"
   },
   {
    "function": "calc_Cr",
@@ -3444,11 +4154,53 @@
    "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
   },
   {
+   "function": "calc_Q_max_HX",
+   "type": "FUNCTION",
+   "signature": "(m_dot_c, h_c_Th, h_su_c, m_dot_h, h_su_H, h_h_Tc)",
+   "model_id": "CSL-0128",
+   "path": "models/components/heat_exchangers/hx_eps_ntu_plate_pipe/hx_eps_ntu_plate_pipe.eescode"
+  },
+  {
    "function": "CD_eps_ntu",
    "type": "PROCEDURE",
    "signature": "(cf$, R$, P_cf_su, P_cf_ex, t_cf_su, t_cf_ex, t_cd, M_dot_r, M_dot_cf, C_cf, C_r, n_cf, n_r, alpha : Q_dot, epsilon, NTU, AU, P_cd_out, P_crit_cdz)",
    "model_id": "CSL-0112",
    "path": "models/components/heat_exchangers/three_zone_hx_procedures/three_zone_hx_procedures.eescode"
+  },
+  {
+   "function": "change$",
+   "type": "FUNCTION",
+   "signature": "(t_out,Operating_mode$)",
+   "model_id": "CSL-0155",
+   "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
+  },
+  {
+   "function": "changeair$",
+   "type": "FUNCTION",
+   "signature": "(Operating_mode$)",
+   "model_id": "CSL-0155",
+   "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
+  },
+  {
+   "function": "changeIndoorUnit$",
+   "type": "FUNCTION",
+   "signature": "(Operating_mode$)",
+   "model_id": "CSL-0155",
+   "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
+  },
+  {
+   "function": "changeOutdoorUnit$",
+   "type": "FUNCTION",
+   "signature": "(Operating_mode$)",
+   "model_id": "CSL-0155",
+   "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
+  },
+  {
+   "function": "changewater$",
+   "type": "FUNCTION",
+   "signature": "(Operating_mode$)",
+   "model_id": "CSL-0155",
+   "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
   },
   {
    "function": "check_tubing_TEMA",
@@ -3479,6 +4231,20 @@
    "path": "models/cycles/organic_rankine/orc_biomass_chp/orc_biomass_chp.eescode"
   },
   {
+   "function": "conductivity_R1233zd",
+   "type": "FUNCTION",
+   "signature": "(T, P)",
+   "model_id": "CSL-0132",
+   "path": "models/fundamentals/properties/r1233zd_thermal_conductivity/r1233zd_thermal_conductivity.eescode"
+  },
+  {
+   "function": "conductivity_R1233zd_published",
+   "type": "FUNCTION",
+   "signature": "(T, P)",
+   "model_id": "CSL-0132",
+   "path": "models/fundamentals/properties/r1233zd_thermal_conductivity/r1233zd_thermal_conductivity.eescode"
+  },
+  {
    "function": "copeland",
    "type": "FUNCTION",
    "signature": "(table$,coef$,T_ev,T_cd)",
@@ -3491,6 +4257,13 @@
    "signature": "(table$, coef$, T_ev, T_cd)",
    "model_id": "CSL-0123",
    "path": "models/components/compressors/copeland_catalogue_correlation/copeland_catalogue_correlation.eescode"
+  },
+  {
+   "function": "CorrectionFanSpeed",
+   "type": "FUNCTION",
+   "signature": "(t_out,Operating_mode$)",
+   "model_id": "CSL-0155",
+   "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
   },
   {
    "function": "correlation_eta_is_pump",
@@ -3528,6 +4301,13 @@
    "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode"
   },
   {
+   "function": "cp_compressor",
+   "type": "FUNCTION",
+   "signature": "(DELTA_T_sh_0,t_r_su_cp,p_r_su_cp,fluid$)",
+   "model_id": "CSL-0155",
+   "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
+  },
+  {
    "function": "cp_g",
    "type": "FUNCTION",
    "signature": "(T_p1,T_p2,m,n,p,e)",
@@ -3543,10 +4323,24 @@
   },
   {
    "function": "cpbar",
+   "type": "PROCEDURE",
+   "signature": "(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)",
+   "model_id": "CSL-0166",
+   "path": "models/components/boilers_burners/boiler_modulating_burner_refsim/boiler_modulating_burner_refsim.eescode"
+  },
+  {
+   "function": "cpbar",
    "type": "FUNCTION",
    "signature": "(m,n,f,T_p1,T_p2)",
    "model_id": "CSL-0080",
    "path": "models/components/boilers_burners/condensing_boiler_refsim/condensing_boiler_refsim.eescode"
+  },
+  {
+   "function": "cpbar",
+   "type": "PROCEDURE",
+   "signature": "(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)",
+   "model_id": "CSL-0149",
+   "path": "models/cycles/engines/gas_engine_complete_model/gas_engine_complete_model.eescode"
   },
   {
    "function": "cpbar",
@@ -3640,6 +4434,20 @@
    "path": "models/components/expanders_turbines/double_stage_scroll_expander/double_stage_scroll_expander.eescode"
   },
   {
+   "function": "dP_acceleration_two_phase",
+   "type": "FUNCTION",
+   "signature": "(G, rho_l, rho_v, x_inlet, x_outlet, void_model)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "dP_Choi",
+   "type": "FUNCTION",
+   "signature": "(G, rho_su, rho_ex, x_su, x_ex, mu_l_sat, h_lv_sat, L, d_hyd)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
    "function": "dP_ESDU_high_fin",
    "type": "FUNCTION",
    "signature": "(m, A_min, A_increase, flow_area_contraction_ratio, tube_diameter, pitch_parallel, pitch_normal, tube_rows, rho, mu)",
@@ -3654,11 +4462,74 @@
    "path": "models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode"
   },
   {
+   "function": "dP_Friedel",
+   "type": "FUNCTION",
+   "signature": "(G, x, rho_l, rho_v, mu_l, mu_v, sigma, d_hyd, L, K)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "dP_gravity_two_phase",
+   "type": "FUNCTION",
+   "signature": "(L, rho_l, rho_v, x_inlet, x_outlet, theta)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
    "function": "dP_Kern",
    "type": "FUNCTION",
    "signature": "(m, rho, mu, mu_w, DShell, LSpacing, pitch, Do, NBaffles)",
    "model_id": "CSL-0103",
    "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode"
+  },
+  {
+   "function": "dP_Muller_Steinhagen_Heck",
+   "type": "FUNCTION",
+   "signature": "(G, x, rho_l, rho_v, mu_l, mu_v, d_hyd, L, K)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "dP_pipe_friction",
+   "type": "FUNCTION",
+   "signature": "(f, L, d_hyd, G, rho)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "dP_pipe_gravity",
+   "type": "FUNCTION",
+   "signature": "(L, rho, theta)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "dP_pipe_single_phase",
+   "type": "FUNCTION",
+   "signature": "(f, L, d_hyd, G, rho, theta)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "dP_pipe_two_phase",
+   "type": "FUNCTION",
+   "signature": "(dP_friction, dP_acceleration, dP_gravity)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "e_NTU",
+   "type": "FUNCTION",
+   "signature": "(NTU, C_r, Flow_Type$, n_shell_pass)",
+   "model_id": "CSL-0128",
+   "path": "models/components/heat_exchangers/hx_eps_ntu_plate_pipe/hx_eps_ntu_plate_pipe.eescode"
+  },
+  {
+   "function": "Enthalpy_Fusion",
+   "type": "FUNCTION",
+   "signature": "(fluid$)",
+   "model_id": "CSL-0155",
+   "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
   },
   {
    "function": "eps_boiler_condenser",
@@ -3773,11 +4644,53 @@
    "path": "models/components/heat_exchangers/three_zone_hx_procedures/three_zone_hx_procedures.eescode"
   },
   {
+   "function": "f_Cheng_CO2",
+   "type": "FUNCTION",
+   "signature": "(G, d_hyd, P, h, mu)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "f_Churchill",
+   "type": "FUNCTION",
+   "signature": "(K, d_hyd, Re)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "f_Haaland",
+   "type": "FUNCTION",
+   "signature": "(K, d_hyd, Re)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "f_Konakov",
+   "type": "FUNCTION",
+   "signature": "(Re)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
    "function": "F_LMTD_Fakheri",
    "type": "FUNCTION",
    "signature": "(Thi, Tho, Tci, Tco, shells)",
    "model_id": "CSL-0105",
    "path": "models/components/heat_exchangers/lmtd_and_f_correction/lmtd_and_f_correction.eescode"
+  },
+  {
+   "function": "f_Petukhov",
+   "type": "FUNCTION",
+   "signature": "(Re)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "f_Swamee_Jain",
+   "type": "FUNCTION",
+   "signature": "(K, d_hyd, Re)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
   },
   {
    "function": "fd_Martin_1999",
@@ -3801,11 +4714,46 @@
    "path": "models/heat_transfer/convection/fin_efficiency_and_wall_factors/fin_efficiency_and_wall_factors.eescode"
   },
   {
+   "function": "Fittings",
+   "type": "PROCEDURE",
+   "signature": "(fitting,U,rho_i,Row,n°_90°elbow_reg,n°_90°elbow_long,n°_45°elbow,n°_return_bend,n°_Tee_line,n°_Tee_branch,n°_glove_valve,n°_gate_valve,n°_angle_valve,n°_swing_check_valve,n°_bell_mouth_inlet,n°_square_inlet,n°_projected_inlet:DpF)",
+   "model_id": "CSL-0158",
+   "path": "models/heat_transfer/pressure_drop/gas_pipe_insulated_pressure_drop/gas_pipe_insulated_pressure_drop.eescode"
+  },
+  {
+   "function": "FITTINGSNUMBER",
+   "type": "PROCEDURE",
+   "signature": "(n°_90°elbow_reg,n°_90°elbow_long,n°_45°elbow,n°_return_bend,n°_Tee_line,n°_Tee_branch,n°_glove_valve,n°_gate_valve,n°_angle_valve,n°_swing_check_valve,n°_bell_mouth_inlet,n°_square_inlet,n°_projected_inlet:n°_Fittings)",
+   "model_id": "CSL-0158",
+   "path": "models/heat_transfer/pressure_drop/gas_pipe_insulated_pressure_drop/gas_pipe_insulated_pressure_drop.eescode"
+  },
+  {
+   "function": "flow_outside_curve",
+   "type": "FUNCTION",
+   "signature": "(q, q_min, q_max)",
+   "model_id": "CSL-0125",
+   "path": "models/components/pumps_fans/pump_curve_similarity/pump_curve_similarity.eescode"
+  },
+  {
+   "function": "FluidPrice",
+   "type": "FUNCTION",
+   "signature": "(WorkingFluid$)",
+   "model_id": "CSL-0153",
+   "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
+  },
+  {
    "function": "fluidprop",
    "type": "PROCEDURE",
    "signature": "(Fluid$,Temp, Pres,Rh:Rho,Mu,Gamma)",
    "model_id": "CSL-0075",
    "path": "models/components/instrumentation/iso5167_orifice_plate_flow_rate/iso5167_orifice_plate_flow_rate.eescode"
+  },
+  {
+   "function": "Fr_pipe",
+   "type": "FUNCTION",
+   "signature": "(G, d_hyd, rho)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
   },
   {
    "function": "Ft_aircooler",
@@ -3925,6 +4873,13 @@
    "signature": "(m, x, D, rhol, rhog, mul, mug, kl, Cpl, Hvap, sigma, dPsat, Te)",
    "model_id": "CSL-0098",
    "path": "models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode"
+  },
+  {
+   "function": "h_conv_pipe_htc",
+   "type": "FUNCTION",
+   "signature": "(mu, Pr, mu_w, k_f, G, Dh, L)",
+   "model_id": "CSL-0128",
+   "path": "models/components/heat_exchangers/hx_eps_ntu_plate_pipe/hx_eps_ntu_plate_pipe.eescode"
   },
   {
    "function": "h_Cooper",
@@ -4224,6 +5179,13 @@
    "function": "Hsieh_new",
    "type": "PROCEDURE",
    "signature": "(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h:DELTAp,h_tp_ev)",
+   "model_id": "CSL-0153",
+   "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
+  },
+  {
+   "function": "Hsieh_new",
+   "type": "PROCEDURE",
+   "signature": "(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h:DELTAp,h_tp_ev)",
    "model_id": "CSL-0124",
    "path": "models/heat_transfer/pressure_drop/plate_hx_pressure_drop_identification/plate_hx_pressure_drop_identification.eescode"
   },
@@ -4233,6 +5195,13 @@
    "signature": "(fluid$,fluidcd$,T_sf_su,M_dot_sf,T_r_su,T_r_ex,M_dot_r,p_cd,p_sf,b,L_w_tot,beta:A_cd,DELTAp,DELTAp_sf,M_fluid)",
    "model_id": "CSL-0113",
    "path": "models/components/heat_exchangers/condenser_3_zones_plate_correlations/condenser_3_zones_plate_correlations.eescode"
+  },
+  {
+   "function": "hx_cd",
+   "type": "PROCEDURE",
+   "signature": "(fluid$,fluidcd$,T_sf_su,M_dot_sf,T_r_su,T_r_ex,M_dot_r,p_cd,p_sf,b,L_w_tot,L_h,beta:A_cd,DELTAp,DELTAp_sf,M_fluid)",
+   "model_id": "CSL-0153",
+   "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
   },
   {
    "function": "hx_cd",
@@ -4254,6 +5223,13 @@
    "signature": "(fluid$,fluidev$,T_sf_su_ev,M_dot_sf,T_r_su_ev,T_r_ex_ev,M_dot_r,p_ev,p_sf,b,L_w_tot,beta:A_ev,DELTAp,DELTAp_sf)",
    "model_id": "CSL-0114",
    "path": "models/components/heat_exchangers/evaporator_3_zones_plate_correlations/evaporator_3_zones_plate_correlations.eescode"
+  },
+  {
+   "function": "hx_ev",
+   "type": "PROCEDURE",
+   "signature": "(fluid$,fluidev$,T_sf_su_ev,M_dot_sf,T_r_su_ev,T_r_ex_ev,M_dot_r,p_ev,p_sf,b,L_w_tot,L_h,beta:A_ev,DELTAp,DELTAp_sf,M_fluid)",
+   "model_id": "CSL-0153",
+   "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
   },
   {
    "function": "hx_ev_three_zones",
@@ -4289,6 +5265,20 @@
    "signature": "(Theta, A_0, A_1, A_2, A_3)",
    "model_id": "CSL-0083",
    "path": "models/renewables/solar_thermal/parabolic_trough_loss_correlations/parabolic_trough_loss_correlations.eescode"
+  },
+  {
+   "function": "IceFactor",
+   "type": "FUNCTION",
+   "signature": "(t_c_ev_wet)",
+   "model_id": "CSL-0155",
+   "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
+  },
+  {
+   "function": "INSULATIONDATA",
+   "type": "PROCEDURE",
+   "signature": "(lambda$,lambda_input:Lambda_iso)",
+   "model_id": "CSL-0158",
+   "path": "models/heat_transfer/pressure_drop/gas_pipe_insulated_pressure_drop/gas_pipe_insulated_pressure_drop.eescode"
   },
   {
    "function": "is",
@@ -4385,6 +5375,13 @@
    "function": "kuo",
    "type": "PROCEDURE",
    "signature": "(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef:DELTAp,alpha_tp_cd)",
+   "model_id": "CSL-0153",
+   "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
+  },
+  {
+   "function": "kuo",
+   "type": "PROCEDURE",
+   "signature": "(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef:DELTAp,alpha_tp_cd)",
    "model_id": "CSL-0116",
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_vitocal_300g/heat_pump_vitocal_300g.eescode"
   },
@@ -4431,6 +5428,13 @@
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_vitocal_300g/heat_pump_vitocal_300g.eescode"
   },
   {
+   "function": "LMTD_sm",
+   "type": "FUNCTION",
+   "signature": "(DT_a, DT_b)",
+   "model_id": "CSL-0138",
+   "path": "models/components/heat_exchangers/hx_moving_boundary_bell/hx_moving_boundary_bell.eescode"
+  },
+  {
    "function": "lmtd_xi1000",
    "type": "PROCEDURE",
    "signature": "(T_hf_su, T_hf_ex, T_cf_su, T_cf_ex : DELTAT_log)",
@@ -4452,6 +5456,20 @@
    "path": "models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode"
   },
   {
+   "function": "MESSAGES",
+   "type": "PROCEDURE",
+   "signature": "(DELTAP_aditional:NOTE2$,NOTE3$)",
+   "model_id": "CSL-0158",
+   "path": "models/heat_transfer/pressure_drop/gas_pipe_insulated_pressure_drop/gas_pipe_insulated_pressure_drop.eescode"
+  },
+  {
+   "function": "mm_p",
+   "type": "FUNCTION",
+   "signature": "(m,n,f)",
+   "model_id": "CSL-0152",
+   "path": "models/components/compressors/turbocharger_combustion_products/turbocharger_combustion_products.eescode"
+  },
+  {
    "function": "mmprod",
    "type": "FUNCTION",
    "signature": "(m,n,f)",
@@ -4464,6 +5482,13 @@
    "signature": "(fluid$,P,T,M_dot,N_p,b,W,L,beta,mu_ratio,phi:h,DELTAp)",
    "model_id": "CSL-0111",
    "path": "models/components/heat_exchangers/plate_hx_correlations/plate_hx_correlations.eescode"
+  },
+  {
+   "function": "Nearest",
+   "type": "PROCEDURE",
+   "signature": "(di_mm: Row,message$,fitting)",
+   "model_id": "CSL-0158",
+   "path": "models/heat_transfer/pressure_drop/gas_pipe_insulated_pressure_drop/gas_pipe_insulated_pressure_drop.eescode"
   },
   {
    "function": "NTU_boiler_condenser",
@@ -4772,6 +5797,13 @@
    "signature": "(Re, Pr)",
    "model_id": "CSL-0087",
    "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
+  },
+  {
+   "function": "Nu_Gnielinski_transition_HX",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, Dh, L)",
+   "model_id": "CSL-0128",
+   "path": "models/components/heat_exchangers/hx_eps_ntu_plate_pipe/hx_eps_ntu_plate_pipe.eescode"
   },
   {
    "function": "Nu_Gorban",
@@ -5159,11 +6191,25 @@
    "path": "models/heat_transfer/convection/internal_turbulent_nusselt/internal_turbulent_nusselt.eescode"
   },
   {
+   "function": "Nu_Sieder_Tate_HX",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, mu, mu_w)",
+   "model_id": "CSL-0128",
+   "path": "models/components/heat_exchangers/hx_eps_ntu_plate_pipe/hx_eps_ntu_plate_pipe.eescode"
+  },
+  {
    "function": "Nu_sphere_Churchill",
    "type": "FUNCTION",
    "signature": "(Pr, Gr)",
    "model_id": "CSL-0093",
    "path": "models/heat_transfer/convection/free_conv_plates_and_sphere/free_conv_plates_and_sphere.eescode"
+  },
+  {
+   "function": "Nu_Stephan_Preusser_HX",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, Dh, L)",
+   "model_id": "CSL-0128",
+   "path": "models/components/heat_exchangers/hx_eps_ntu_plate_pipe/hx_eps_ntu_plate_pipe.eescode"
   },
   {
    "function": "Nu_Swenson",
@@ -5341,11 +6387,32 @@
    "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu/hx_temperature_effectiveness_pntu.eescode"
   },
   {
+   "function": "patm",
+   "type": "FUNCTION",
+   "signature": "(Altitude)",
+   "model_id": "CSL-0151",
+   "path": "models/cycles/engines/engine_derating_iso3046/engine_derating_iso3046.eescode"
+  },
+  {
    "function": "Penalty",
    "type": "PROCEDURE",
    "signature": "(t,t_s,B,H,NB,A:F_correlation_p)",
    "model_id": "CSL-0081",
    "path": "models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode"
+  },
+  {
+   "function": "PIPE_GAS",
+   "type": "PROCEDURE",
+   "signature": "(R$,SP[1..5],U,di_mm,z_wall_mm,e_mm,z_iso_mm,L,lambda_iso,T_A,R_pro,Row,DpF:m_dot,V_dot,T_DEW,T_int,Error$,f,Dp,p_o,Q,Pr)",
+   "model_id": "CSL-0158",
+   "path": "models/heat_transfer/pressure_drop/gas_pipe_insulated_pressure_drop/gas_pipe_insulated_pressure_drop.eescode"
+  },
+  {
+   "function": "PIPEDATA",
+   "type": "PROCEDURE",
+   "signature": "(pipe$,dy_mm_input,z_wall_mm_input:di_mm,z_wall_mm,e_mm)",
+   "model_id": "CSL-0158",
+   "path": "models/heat_transfer/pressure_drop/gas_pipe_insulated_pressure_drop/gas_pipe_insulated_pressure_drop.eescode"
   },
   {
    "function": "PistonSpeed",
@@ -5388,6 +6455,13 @@
    "signature": "(fluid$,T:mu,rho,cp,k)",
    "model_id": "CSL-0114",
    "path": "models/components/heat_exchangers/evaporator_3_zones_plate_correlations/evaporator_3_zones_plate_correlations.eescode"
+  },
+  {
+   "function": "prop_htf",
+   "type": "PROCEDURE",
+   "signature": "(fluid$,T,p:mu,rho,cp,k)",
+   "model_id": "CSL-0153",
+   "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
   },
   {
    "function": "pump",
@@ -5439,6 +6513,13 @@
    "path": "models/heat_transfer/radiation/radiation_heat_flux/radiation_heat_flux.eescode"
   },
   {
+   "function": "R717_CHECK",
+   "type": "PROCEDURE",
+   "signature": "(R$,Pipe$:NOTE$)",
+   "model_id": "CSL-0158",
+   "path": "models/heat_transfer/pressure_drop/gas_pipe_insulated_pressure_drop/gas_pipe_insulated_pressure_drop.eescode"
+  },
+  {
    "function": "R_cylinder",
    "type": "FUNCTION",
    "signature": "(Di, Do, k, L)",
@@ -5465,6 +6546,41 @@
    "signature": "(H, D, insulated)",
    "model_id": "CSL-0100",
    "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode"
+  },
+  {
+   "function": "Re_pipe",
+   "type": "FUNCTION",
+   "signature": "(G, d_hyd, mu)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "Re_void",
+   "type": "FUNCTION",
+   "signature": "(G, d_hyd, mu)",
+   "model_id": "CSL-0131",
+   "path": "models/heat_transfer/convection/void_fraction_correlations/void_fraction_correlations.eescode"
+  },
+  {
+   "function": "ReadPV",
+   "type": "PROCEDURE",
+   "signature": "(PVName$ : T_NOCT, A_c, N_s, I_sc_ref, V_oc_ref, I_mp_ref, V_mp_ref, alpha_sc, beta_oc, a_ref, I_L_ref, I_o_ref, R_s_ref, R_sh_ref, delta, gamma_r)",
+   "model_id": "CSL-0160",
+   "path": "models/renewables/photovoltaics/pv_module_single_diode/pv_module_single_diode.eescode"
+  },
+  {
+   "function": "REYNOLDS",
+   "type": "PROCEDURE",
+   "signature": "(rho_f,mu_f,A_bar,PHI,V_dot_f_m3h,A_cs,d_h,u_f:Re_f,f_0,f_1,Regime$)",
+   "model_id": "CSL-0161",
+   "path": "models/components/heat_exchangers/plate_hx_thermal_resistances/plate_hx_thermal_resistances.eescode"
+  },
+  {
+   "function": "rho_two_phase_homogeneous",
+   "type": "FUNCTION",
+   "signature": "(x, rho_l, rho_v)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
   },
   {
    "function": "S_isothermal_pipe_eccentric_to_isothermal_pipe",
@@ -5509,6 +6625,13 @@
    "path": "models/heat_transfer/conduction/conduction_resistances_and_shapes/conduction_resistances_and_shapes.eescode"
   },
   {
+   "function": "SH",
+   "type": "FUNCTION",
+   "signature": "(DELTA_T_sh)",
+   "model_id": "CSL-0155",
+   "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
+  },
+  {
    "function": "shell_clearance",
    "type": "FUNCTION",
    "signature": "(mode, D)",
@@ -5537,11 +6660,39 @@
    "path": "models/components/heat_exchangers/shell_and_tube_sizing/shell_and_tube_sizing.eescode"
   },
   {
+   "function": "SpeedFactor",
+   "type": "FUNCTION",
+   "signature": "(Operating_mode$,t_out,r_p)",
+   "model_id": "CSL-0155",
+   "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
+  },
+  {
+   "function": "SpeedPump",
+   "type": "FUNCTION",
+   "signature": "(Pump_speed$)",
+   "model_id": "CSL-0155",
+   "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
+  },
+  {
+   "function": "Summary",
+   "type": "PROCEDURE",
+   "signature": "(table$,row,W_dot_net, Q_dot_ev, eta_cycle,A_cd,A_ev,p_r_ev,T_ev,DELTAT_pp_cd,DELTAT_pp_ev,fluid$,SIC,N_p_cd, N_p_ev, L_w_tot_ev,L_w_tot_cd,eta_overall,T_cd,epsilon_exp,r_p:X)",
+   "model_id": "CSL-0153",
+   "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
+  },
+  {
    "function": "summation",
    "type": "PROCEDURE",
    "signature": "(q,h,d,w,m,t,DELTAtau,Fo_p,time:sum)",
    "model_id": "CSL-0081",
    "path": "models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode"
+  },
+  {
+   "function": "T_pseudo_critical_CO2",
+   "type": "FUNCTION",
+   "signature": "(P)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
   },
   {
    "function": "temperature_effectiveness_air_cooler",
@@ -5631,6 +6782,13 @@
    "function": "Thonon",
    "type": "PROCEDURE",
    "signature": "(fluid$,P,T,M_dot,b,L_w_tot,L_h,beta:h,DELTAp)",
+   "model_id": "CSL-0153",
+   "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
+  },
+  {
+   "function": "Thonon",
+   "type": "PROCEDURE",
+   "signature": "(fluid$,P,T,M_dot,b,L_w_tot,L_h,beta:h,DELTAp)",
    "model_id": "CSL-0116",
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_vitocal_300g/heat_pump_vitocal_300g.eescode"
   },
@@ -5675,6 +6833,97 @@
    "signature": "(d, M_dot_a, rho, A : V)",
    "model_id": "CSL-0122",
    "path": "models/components/instrumentation/nozzle_discharge_coefficients/nozzle_discharge_coefficients.eescode"
+  },
+  {
+   "function": "void_fraction_Armand_Treschev",
+   "type": "FUNCTION",
+   "signature": "(rho_l, rho_v, x)",
+   "model_id": "CSL-0131",
+   "path": "models/heat_transfer/convection/void_fraction_correlations/void_fraction_correlations.eescode"
+  },
+  {
+   "function": "void_fraction_Bankoff",
+   "type": "FUNCTION",
+   "signature": "(rho_l, rho_v, x, P)",
+   "model_id": "CSL-0131",
+   "path": "models/heat_transfer/convection/void_fraction_correlations/void_fraction_correlations.eescode"
+  },
+  {
+   "function": "void_fraction_Cioncolini_Thome",
+   "type": "FUNCTION",
+   "signature": "(rho_l, rho_v, x)",
+   "model_id": "CSL-0131",
+   "path": "models/heat_transfer/convection/void_fraction_correlations/void_fraction_correlations.eescode"
+  },
+  {
+   "function": "void_fraction_Dix",
+   "type": "FUNCTION",
+   "signature": "(rho_l, rho_v, x, G, sigma)",
+   "model_id": "CSL-0131",
+   "path": "models/heat_transfer/convection/void_fraction_correlations/void_fraction_correlations.eescode"
+  },
+  {
+   "function": "void_fraction_Fauske",
+   "type": "FUNCTION",
+   "signature": "(rho_l, rho_v, x)",
+   "model_id": "CSL-0131",
+   "path": "models/heat_transfer/convection/void_fraction_correlations/void_fraction_correlations.eescode"
+  },
+  {
+   "function": "void_fraction_Graham",
+   "type": "FUNCTION",
+   "signature": "(rho_v, x, d_hyd, G)",
+   "model_id": "CSL-0131",
+   "path": "models/heat_transfer/convection/void_fraction_correlations/void_fraction_correlations.eescode"
+  },
+  {
+   "function": "void_fraction_homogeneous",
+   "type": "FUNCTION",
+   "signature": "(rho_l, rho_v, x)",
+   "model_id": "CSL-0131",
+   "path": "models/heat_transfer/convection/void_fraction_correlations/void_fraction_correlations.eescode"
+  },
+  {
+   "function": "void_fraction_Hughmark",
+   "type": "FUNCTION",
+   "signature": "(rho_l, rho_v, x, mu_l, mu_v, d_hyd, G)",
+   "model_id": "CSL-0131",
+   "path": "models/heat_transfer/convection/void_fraction_correlations/void_fraction_correlations.eescode"
+  },
+  {
+   "function": "void_fraction_Lockhart_Martinelli",
+   "type": "FUNCTION",
+   "signature": "(rho_l, rho_v, x, mu_l, mu_v)",
+   "model_id": "CSL-0131",
+   "path": "models/heat_transfer/convection/void_fraction_correlations/void_fraction_correlations.eescode"
+  },
+  {
+   "function": "void_fraction_Premoli",
+   "type": "FUNCTION",
+   "signature": "(rho_l, rho_v, x, mu_l, sigma, d_hyd, G)",
+   "model_id": "CSL-0131",
+   "path": "models/heat_transfer/convection/void_fraction_correlations/void_fraction_correlations.eescode"
+  },
+  {
+   "function": "void_fraction_Rouhani_Axelsson",
+   "type": "FUNCTION",
+   "signature": "(rho_l, rho_v, x, G, sigma)",
+   "model_id": "CSL-0131",
+   "path": "models/heat_transfer/convection/void_fraction_correlations/void_fraction_correlations.eescode"
+  },
+  {
+   "function": "void_fraction_Woldesemayat_Ghajar",
+   "type": "FUNCTION",
+   "signature": "(rho_l, rho_v, x, G, sigma, D, P, theta)",
+   "model_id": "CSL-0131",
+   "path": "models/heat_transfer/convection/void_fraction_correlations/void_fraction_correlations.eescode"
+  },
+  {
+   "function": "void_fraction_Zivi",
+   "type": "FUNCTION",
+   "signature": "(rho_l, rho_v, x)",
+   "model_id": "CSL-0131",
+   "path": "models/heat_transfer/convection/void_fraction_correlations/void_fraction_correlations.eescode"
   },
   {
    "function": "wall_factor_fd",
@@ -5733,6 +6982,20 @@
    "path": "models/components/instrumentation/nozzle_discharge_coefficients/nozzle_discharge_coefficients.eescode"
   },
   {
+   "function": "We_pipe",
+   "type": "FUNCTION",
+   "signature": "(G, d_hyd, sigma, rho)",
+   "model_id": "CSL-0130",
+   "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "We_void",
+   "type": "FUNCTION",
+   "signature": "(G, d_hyd, sigma, rho)",
+   "model_id": "CSL-0131",
+   "path": "models/heat_transfer/convection/void_fraction_correlations/void_fraction_correlations.eescode"
+  },
+  {
    "function": "weibe",
    "type": "PROCEDURE",
    "signature": "(theta, theta_s, theta_d : x_b, x_dot_b)",
@@ -5745,6 +7008,13 @@
    "signature": "(eta_I,W_dot_el_net,eta_global,i)",
    "model_id": "CSL-0040",
    "path": "models/cycles/organic_rankine/orc_biomass_chp/orc_biomass_chp.eescode"
+  },
+  {
+   "function": "WRITERESULTS",
+   "type": "PROCEDURE",
+   "signature": "(i,t_w_su,t_w_ex,t_w_ex_set,V_dot_w_l\\h,Q_dot_u,Q_dot_c,eta,theta,M_dot_f,regime$,W_dot_aux_lf,W_dot_aux_gf,X_burner:Write_Results$)",
+   "model_id": "CSL-0166",
+   "path": "models/components/boilers_burners/boiler_modulating_burner_refsim/boiler_modulating_burner_refsim.eescode"
   },
   {
    "function": "Yan",

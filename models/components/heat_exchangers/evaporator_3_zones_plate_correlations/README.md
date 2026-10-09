@@ -230,3 +230,5 @@ Source files (EES 8.940 / 8.652), collection of S. Quoilin:
 - `CSL-0121` *heat_transfer_fluid_properties*: library version of the source
   `prop_htf` procedure (renamed `prop_heat_transfer_fluid`, with the
   `therminol66`/`TherminolVP-1` branches and a built-in fluid fallback).
+
+- `CSL-0153` *orc_whr_refprop_cost*: three-zone plate evaporator (Thonon/Hsieh).

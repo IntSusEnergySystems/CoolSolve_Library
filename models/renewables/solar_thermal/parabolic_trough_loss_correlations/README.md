@@ -232,6 +232,9 @@ library).
 
 ## Related models
 
+- `CSL-0129` *parabolic_trough_collector_discretised*: collector model with a discretised
+  absorber (enthalpy march over `DUPLICATE` elements, Soponova MicroCSP
+  efficiency map); the absorber counterpart of this receiver model.
 - `CSL-0082` *parabolic_trough_receiver_forristal*: the first-principles
   1D radial receiver balance of the same collector family (Forristal/NREL);
   the cross-check between the two models is discussed in *Verification*.

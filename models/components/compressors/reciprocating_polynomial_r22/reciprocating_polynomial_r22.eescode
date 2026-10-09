@@ -1,0 +1,243 @@
+{=============================================================================
+  Reciprocating (piston) compressor reference model with polynomial laws, R22
+  CoolSolve Library model CSL-0167
+ -----------------------------------------------------------------------------
+  Semi-empirical reference model of a hermetic reciprocating refrigeration
+  compressor (ULiège Thermodynamics Laboratory), closed on a simple R22 cycle
+  (5 K superheat, 5 K subcooling). The refrigerant path is decomposed into six
+  steps: supply pressure drop (fixed-area obstacle), heating-up against a
+  fictitious wall of uniform temperature, isentropic compression, cooling-down
+  to the wall, exhaust pressure drop; the mass flow rate follows from the swept
+  volume, the clearance-volume re-expansion and the motor slip. The identified
+  parameters are imposed through scaled comparison variables (AUD = AU per
+  V_s^(2/3), FMEP_0); the polynomial laws identified from the results are
+  listed in a comment below.
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J (converted
+           by hand from the original bar/kJ, see README.md)
+  Source : ULiège Thermodynamics Laboratory, file 3_2_3_Polynomial_modelling
+           of the reciprocating compressor series (JL080205) - see README.md
+  Status : verified against the EES stored solution of the source file
+=============================================================================}
+
+"!Polynomial laws identified from the simulation results of file 3_2_2 (same series), in the original units (Q_dot_ev, W_dot in kW; M_dot in kg/s; as in the original)"
+{Convenient parabolic laws are identified for Q_dot_ev and for W_dot_cp, as
+functions of t_ev and of t_cd. It would also be possible to use simple
+correlations for epsilon_v_cp and epsilon_s_cp as functions of r_p_cp, and for
+COP_c as function of COP_c_Carnot. Detailed results are presented in plot
+windows in the original file. The following regressions are identified:
+
+t_cd = 30 °C:
+Q_dot_ev = 140.347307 + 5.43633235*t_ev + 0.0678505938*t_ev^2
+W_dot    = 27.148225 + 0.163191489*t_ev - 0.00340853546*t_ev^2
+M_dot    = 0.786001989 + 0.028657388*t_ev + 0.000327347436*t_ev^2
+epsilon_v_cp = 1.02408571 - 0.0537629037*R_p_cp
+
+t_cd = 40 °C:
+Q_dot_ev = 125.651247 + 5.00563036*t_ev + 0.0631008501*t_ev^2
+W_dot    = 32.4608296 + 0.302916421*t_ev - 0.0038108656*t_ev^2
+M_dot    = 0.758129787 + 0.0283406219*t_ev + 0.000324466119*t_ev^2
+epsilon_v_cp = 1.01865438 - 0.0489584439*R_p_cp
+
+t_cd = 50 °C:
+Q_dot_ev = 110.992087 + 4.56488145*t_ev + 0.0581906221*t_ev^2
+W_dot    = 37.2841892 + 0.449913252*t_ev - 0.00390291668*t_ev^2
+M_dot    = 0.728199646 + 0.0280017347*t_ev + 0.000321135515*t_ev^2
+epsilon_v_cp = 1.01185408 - 0.0447140919*R_p_cp
+
+t_cd = 60 °C:
+Q_dot_ev = 96.3665544 + 4.11189878*t_ev + 0.0531382031*t_ev^2
+W_dot    = 41.5440564 + 0.601543764*t_ev - 0.00376964387*t_ev^2
+M_dot    = 0.69602023 + 0.027645006*t_ev + 0.000317653691*t_ev^2
+epsilon_v_cp = 1.00358245 - 0.0409887895*R_p_cp
+
+In file 3_2_4 (Use_of_polynomial_model, same series), each coefficient of
+these regressions is expanded into a linear regression of t_cd.}
+
+"!Refrigeration cycle (modelling equations as in file 3_2_2 of the same series)"
+Q_dot_ev = M_dot*(h_ex_ev - h_su_ev)      "cooling capacity [W]"
+Q_dot_cd = M_dot*(h_su_cd - h_ex_cd)      "condensation heat rate [W]"
+COP_c = Q_dot_ev/W_dot                    "cooling COP [-]"
+COP_h = Q_dot_cd/W_dot                    "heating COP [-]"
+h_ex_ev = enthalpy(fluid$, p=p_ev, t=t_ex_ev)       "evaporator outlet: superheated vapour [J/kg]"
+h_su_cd = enthalpy(fluid$, t=t_su_cd, p=p_cd)       "compressor exhaust = condenser inlet [J/kg]"
+h_ex_cd = enthalpy(fluid$, p=p_cd, t=t_ex_cd)       "condenser outlet: subcooled liquid [J/kg]"
+p_ev = pressure(fluid$, x=0, t=t_ev)      "evaporation pressure [Pa]"
+p_cd = pressure(fluid$, x=0, t=t_cd)      "condensation pressure [Pa]"
+t_ex_ev = t_ev + DELTAt_sh_ev             "evaporator outlet temperature [°C]"
+t_ex_cd = t_cd - DELTAt_sc_cd             "condenser outlet temperature [°C]"
+
+"Connection evaporator - compressor:"
+t_su_cp = t_ex_ev
+p_su_cp = p_ev
+
+"Connection condenser - compressor:"
+t_ex_cp = t_su_cd
+p_ex_cp = p_cd
+
+"Connection condenser - evaporator:"
+h_su_ev = h_ex_cd                         "expansion valve is isenthalpic [J/kg]"
+
+"!Compressor reference model"
+"As in the original, the evolution of the refrigerant is decomposed into five
+steps: (i) pressure drop (su - su1); (ii) heating-up (su1 - su2); (iii)
+isentropic compression (su2 - ex2); (iv) cooling down (ex2 - ex1); (v)
+pressure drop (ex1 - ex)."
+
+"1. First step: pressure drop from su to su1 (fixed-area obstacle model, as in the original)"
+v_su1_cp = volume(fluid$, t=t_su1_cp, p=p_su1_cp)
+t_su1_cp = temperature(fluid$, h=h_su1_cp, p=p_su1_cp)
+h_su1_cp = h_su_cp
+p_su1_cp = p_su_cp - C_su_cp^2/(2*v_su_cp)     "supply throttling (in Pa; the original divides by 1e+5 for bar)"
+C_su_cp = V_dot_su_cp/A_su_cp                  "supply velocity [m/s]"
+A_su_cp = pi*d_su_cp^2/4                       "supply flow area [m^2]"
+delta_su_cp = d_su_cp/(V_s_cp)^0.3333          "diameter scaled by the cubic root of the swept volume [-]"
+DELTAp_su1_cp = p_su_cp - p_su1_cp             "supply pressure drop [Pa]"
+
+"Fluid definition (compressor supply state):"
+v_su_cp = volume(fluid$, t=t_su_cp, p=p_su_cp)
+h_su_cp = enthalpy(fluid$, t=t_su_cp, p=p_su_cp)
+s_su_cp = entropy(fluid$, t=t_su_cp, p=p_su_cp)
+h_exs_cp = enthalpy(fluid$, p=p_ex_cp, s=s_su_cp)    "isentropic exhaust state [J/kg]"
+
+"2. Second step: heating-up from su1 to su2 (fictitious wall of uniform temperature t_w_cp, as in the original)"
+h_su2_cp - h_su1_cp = Q_dot_su1_cp/M_dot       "supply heating [J/kg]"
+Q_dot_su1_cp = epsilon_su1_cp*C_dot_su1_cp*(t_w_cp - t_su1_cp)   "supply heat rate [W]"
+epsilon_su1_cp = 1 - exp(-NTU_su1_cp)
+NTU_su1_cp = AU_su1_cp/C_dot_su1_cp
+C_dot_su1_cp = M_dot*c_p_su1_cp                "supply heat-capacity rate [W/K]"
+c_p_su1_cp = specheat(fluid$, T=t_su1_cp, P=p_su1_cp)   "[J/kg-K]"
+DELTAt_su12_cp = t_su2_cp - t_su1_cp           "supply heating-up [K]"
+
+v_su2_cp = volume(fluid$, t=t_su2_cp, p=p_su2_cp)
+t_su21_cp = temperature(fluid$, h=h_su2_cp, p=p_su2_cp)
+p_su2_cp = p_su1_cp
+t_su2_cp = t_su21_cp
+s_su2_cp = entropy(fluid$, t=t_su2_cp, p=p_su2_cp)
+
+"The wall balance equation is given by:"
+W_dot - W_dot_in - Q_dot_su1_cp - Q_dot_ex2_cp + Q_dot_amb_cp = 0   "wall energy balance [W]"
+"where the ambient losses are:"
+Q_dot_amb_cp = AU_amb_cp*(t_amb_cp - t_w_cp)   "ambient heat rate (negative: losses) [W]"
+
+"3. Third step: suction (clearance-volume re-expansion, as in the original)"
+M_dot = V_tr_cp*N_cp/v_su2_cp                  "mass flow rate [kg/s]"
+V_tr_cp = V_s_cp + V_c_cp - V_c_cp*(v_su2_cp/v_ex2_cp)   "true swept volume (clearance gas re-expands) [m^3]"
+C_f_cp = V_c_cp/V_s_cp                         "clearance factor [-]"
+R_p_cp = p_ex_cp/p_su_cp                       "pressure ratio [-]"
+
+"As the power developed by the motor increases, its sliding increases (linear dependency, as in the original):"
+N_cp = N_nom_cp*(1 - C_sd_cp*W_dot)            "rotation speed [1/s]; C_sd_cp in 1/W (fitted per kW in the original)"
+
+"Definition of a global volumetric effectiveness:"
+V_dot_su_cp = M_dot*v_su_cp                    "supply volume flow rate [m^3/s]"
+V_dot_su_cp = epsilon_v_cp*V_dot_sw_cp
+V_dot_sw_cp = V_s_cp*N_cp                      "displaced volume flow rate [m^3/s]"
+N_cp = rpm_cp/60                               "rotation speed in revolutions per second [1/s]"
+
+"4. Fourth step: isentropic compression (adiabatic and reversible, as in the original)"
+h_ex2_cp = enthalpy(fluid$, p=p_ex2_cp, s=s_su2_cp)
+v_ex2_cp = volume(fluid$, p=p_ex2_cp, t=t_ex2_cp)
+t_ex2_cp = temperature(fluid$, h=h_ex2_cp, p=p_ex2_cp)
+
+"The simplest way to represent electromechanical losses is to express them as a linear function of the isentropic power:"
+W_dot = W_dot_in + W_dot_loss                  "electrical power [W]"
+W_dot_in = M_dot*(h_ex2_cp - h_su2_cp)         "isentropic compression power [W]"
+W_dot_loss = alpha_cp*W_dot_in + W_dot_loss0   "electromechanical losses [W]"
+
+"Definition of a compressor isentropic effectiveness:"
+W_dot = M_dot*w                                "specific electrical work [J/kg]"
+w = w_s/epsilon_s_cp
+w_s = h_exs_cp - h_su_cp                       "isentropic specific work [J/kg]"
+
+"5. Fifth step: cooling down from ex2 to ex1 (same set of equations as for the supply heating, as in the original)"
+t_ex1_cp = temperature(fluid$, h=h_ex1_cp, p=p_ex1_cp)
+p_ex1_cp = p_ex2_cp
+h_ex1_cp - h_ex2_cp = Q_dot_ex2_cp/M_dot       "exhaust cooling [J/kg]"
+Q_dot_ex2_cp = epsilon_ex2_cp*C_dot_ex2_cp*(t_w_cp - t_ex2_cp)   "exhaust heat rate (negative) [W]"
+epsilon_ex2_cp = 1 - exp(-NTU_ex2_cp)
+NTU_ex2_cp = AU_ex2_cp/C_dot_ex2_cp
+C_dot_ex2_cp = M_dot*c_p_ex2_cp                "exhaust heat-capacity rate [W/K]"
+c_p_ex2_cp = specheat(fluid$, T=t_ex2_cp, P=p_ex2_cp)   "[J/kg-K]"
+DELTAt_ex21_cp = t_ex2_cp - t_ex1_cp           "exhaust cooling-down [K]"
+
+"6. Sixth step: throttling from ex1 to ex (constant exhaust pressure drop, as in the original)"
+v_ex_cp = volume(fluid$, t=t_ex_cp, p=p_ex_cp)
+p_ex_cp = p_ex1_cp - DELTAp_ex1_cp             "discharge pressure [Pa]"
+h_ex_cp = h_ex1_cp
+t_ex_cp = temperature(fluid$, h=h_ex_cp, p=p_ex_cp)
+
+"!Parameters (results of the manual identification on test data, as in the original)"
+V_s_cp = 2.08E-3                               "swept volume [m^3]"
+C_f_cp = 0.0325                                "clearance factor [-]"
+C_sd_cp = 8E-7                                 "0.8e-3 per kW in the original: slip per W of electrical power [1/W]"
+C_sd_cp = C_rsd_cp/50000                       "C_rsd_cp = 50*8e-4 in the original (relative slip) [-]"
+delta_su_cp = 1                                "scaled supply diameter [-]"
+DELTAp_ex1_cp = 2E5*M_dot^2                    "exhaust pressure-drop correlation (see above) [Pa]"
+alpha_cp = 0.18                                "loss factor proportional to the isentropic power [-]"
+M_dot_ref = 1.3                                "reference mass flow rate of the series [kg/s]"
+N_0_cp = N_nom_cp                              "nominal rotation speed [1/s]"
+
+"General variables used for comparison between compressors:"
+FMEP_0_cp = W_dot_loss0/(N_0_cp*V_s_cp)        "friction mean effective pressure at zero load [Pa]"
+Sp_cp = 2*L_cp*N_cp                            "mean piston speed [m/s]"
+L_cp = 0.0592                                  "stroke [m]"
+AUDsu_cp = AU_su1_cp/(V_s_cp)^(2/3)            "supply AU scaled by the swept volume [W/(K*m^(4/3))]"
+AUDex_cp = AU_ex2_cp/(V_s_cp)^(2/3)            "exhaust AU scaled by the swept volume [W/(K*m^(4/3))]"
+AUDamb_cp = AU_amb_cp/(V_s_cp)^(2/3)           "ambient AU scaled by the swept volume [W/(K*m^(4/3))]"
+
+"The identification gives the following scaled values (10.32, 6.137, 0.7978 kW/K-based and 63.46 kPa in the original):"
+AUDsu_cp = 10.32E3
+AUDex_cp = 6.137E3
+AUDamb_cp = 0.7978E3
+FMEP_0_cp = 63.46E3
+
+"!Inputs"
+fluid$ = 'R22'                                 "refrigerant"
+N_nom_cp = 1250/60                             "nominal rotation speed [1/s]"
+t_amb_cp = 20                                  "ambient temperature [°C]"
+
+t_ev = 0                                       "evaporation temperature [°C]"
+t_cd = 40                                      "condensation temperature [°C]"
+DELTAt_sh_ev = 5                               "superheating at the evaporator outlet [K]"
+DELTAt_sc_cd = 5                               "subcooling at the condenser outlet [K]"
+COP_c_Carnot = (t_ev + 273)/(t_cd - t_ev)      "Carnot cooling COP (273 as in the original) [-]"
+epsilon_c_Carnot = COP_c/COP_c_Carnot          "second-law efficiency of the cycle [-]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1 su: compressor supply (evaporator outlet), 2 su1: after the supply pressure
+ drop, 3 su2: after the heating-up, 4 ex2: isentropic compression exhaust,
+ 5 ex1: after the cooling-down, 6 ex: compressor exhaust (discharge),
+ 7 condenser outlet, 8 evaporator inlet. Use the arrays h[i]/P[i] or s[i]/T[i]
+ with the "Overlay array path" option of the CoolSolve Diagram tab.}
+P[1] = p_su_cp
+h[1] = h_su_cp
+T[1] = t_su_cp
+s[1] = s_su_cp
+P[2] = p_su1_cp
+h[2] = h_su1_cp
+T[2] = t_su1_cp
+s[2] = ENTROPY(fluid$, h=h_su1_cp, P=p_su1_cp)
+P[3] = p_su2_cp
+h[3] = h_su2_cp
+T[3] = t_su2_cp
+s[3] = s_su2_cp
+P[4] = p_ex2_cp
+h[4] = h_ex2_cp
+T[4] = t_ex2_cp
+s[4] = s_su2_cp
+P[5] = p_ex1_cp
+h[5] = h_ex1_cp
+T[5] = t_ex1_cp
+s[5] = ENTROPY(fluid$, h=h_ex1_cp, P=p_ex1_cp)
+P[6] = p_ex_cp
+h[6] = h_ex_cp
+T[6] = t_ex_cp
+s[6] = ENTROPY(fluid$, h=h_ex_cp, P=p_ex_cp)
+P[7] = p_cd
+h[7] = h_ex_cd
+T[7] = t_ex_cd
+s[7] = ENTROPY(fluid$, T=t_ex_cd, P=p_cd)
+P[8] = p_ev
+h[8] = h_su_ev
+T[8] = TEMPERATURE(fluid$, h=h_su_ev, P=p_ev)
+s[8] = ENTROPY(fluid$, h=h_su_ev, P=p_ev)

@@ -165,3 +165,6 @@ case.
   leakage): same course (repetition 2), same equivalent-nozzle leakage
   physics on dry air; there the file's own leakage-consistency loop gives a
   backward leak and the admission-area closure is added at import.
+- `CSL-0156` *refrigeration_screw_compressor_r22*: the same leakage (nozzle +
+  diffuser) screw-machine concept as a reference model on a real-fluid (R22)
+  refrigeration cycle, with sliding-valve part load.

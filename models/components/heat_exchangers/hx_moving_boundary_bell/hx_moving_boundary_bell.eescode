@@ -1,0 +1,94 @@
+{=============================================================================
+  Moving-boundary heat exchanger (Bell 2015) - evaporator regime
+  CoolSolve Library model CSL-0138
+ -----------------------------------------------------------------------------
+  Counter-flow heat exchanger whose sections are delimited by the phase
+  changes of the fluids (moving-boundary method of Bell et al. 2015): the
+  zone boundaries sit at the cumulative heats of the saturation lines, each
+  zone UA is built from zone heat-transfer coefficients, and the Bell area
+  constraint A = sum(Q_j/(U_j*LMTD_j)) sizes the hot-side area. Regime of the
+  main program: hot side single-phase liquid, cold side liquid -> two-phase ->
+  vapour (evaporator); zone boundaries clamped with min/max keep shrunken
+  zones in the system, so the active zone set follows the operating point.
+  Source: TESPy MovingBoundaryHeatExchanger, src/tespy/components/heat_exchangers/sectioned.py,
+  commit 19425523 (MIT) - see README.md. Status: verified (Bell 2015 oracle,
+  tests/test_components/bell2015_five_cases.json, section A).
+=============================================================================}
+
+"!Smoothed logarithmic mean temperature difference (Quoilin 2011; as in the
+ TESPy function smoothed_lmtd, eps = 0.001 K, xi = 5 1/K)"
+FUNCTION LMTD_sm(DT_a, DT_b)
+  eps = 0.001                                    "smoothing threshold [K]"
+  xi = 5                                         "extrapolation slope [1/K]"
+  IF (ABS(DT_a - DT_b) < 0.000001) AND (DT_a > eps) THEN
+    LMTD_sm = (DT_a + DT_b)/2                    "equal differences: arithmetic mean (as in the original)"
+  ELSE
+    IF (DT_a > eps) AND (DT_b > eps) THEN
+      LMTD_sm = (DT_a - DT_b)/ln(DT_a/DT_b)
+    ELSE
+      IF (DT_a > eps) THEN
+        LMTD_sm = (DT_a - eps)/(ln(DT_a/eps)*(1 - xi*(DT_b - eps)))
+      ELSE
+        IF (DT_b > eps) THEN
+          LMTD_sm = (DT_b - eps)/(ln(DT_b/eps)*(1 - xi*(DT_a - eps)))
+        ELSE
+          LMTD_sm = eps/((1 - xi*(DT_a - eps))*(1 - xi*(DT_b - eps)))
+        ENDIF
+      ENDIF
+    ENDIF
+  ENDIF
+END
+
+"!Section A of the Bell 2015 oracle: water (hot, liquid) / n-propane (cold).
+ Five areas A_h[i] are solved simultaneously; the active zone set changes
+ with the area (1, 2 or 3 zones)"
+T_h_in = 56.85                 "hot inlet temperature (330 K in the oracle) [C]"
+P_h = 101325                   "hot-side pressure (no pressure drop) [Pa]"
+M_dot_h = 0.1                  "hot mass flow rate [kg/s]"
+T_c_in = 1.85                  "cold inlet temperature (275 K in the oracle) [C]"
+P_c = 997682.6201918732        "cold-side pressure (no pressure drop) [Pa]"
+M_dot_c = 0.01                 "cold mass flow rate [kg/s]"
+alpha_sp = 100                 "single-phase heat transfer coefficient, both sides and zones [W/m2-K]"
+alpha_tp = 1000                "two-phase heat transfer coefficient, both sides [W/m2-K]"
+R_cond = 0                     "wall conduction thermal resistance [K/W]"
+area_ratio = 1                 "cold to hot side area ratio [-]"
+A_h[1] = 0.2                   "hot-side area, oracle case 1 [m2]"
+A_h[2] = 1                     "hot-side area, oracle case 2 [m2]"
+A_h[3] = 2                     "hot-side area, oracle case 3 [m2]"
+A_h[4] = 4                     "hot-side area, oracle case 4 [m2]"
+A_h[5] = 7                     "hot-side area, oracle case 5 [m2]"
+
+"!Inlet states and cold-side saturation states (constant cold-side pressure)"
+h_h_in = ENTHALPY(Water, T=T_h_in, P=P_h)        "hot inlet enthalpy [J/kg]"
+h_c_in = ENTHALPY(Propane, T=T_c_in, P=P_c)      "cold inlet enthalpy [J/kg]"
+h_c_l_sat = ENTHALPY(Propane, P=P_c, x=0)        "saturated-liquid enthalpy at P_c [J/kg]"
+h_c_v_sat = ENTHALPY(Propane, P=P_c, x=1)        "saturated-vapour enthalpy at P_c [J/kg]"
+
+"!Moving boundaries and three zones, per area case (as in the original
+ area_zones_func: cumulative heats at the saturation lines, clamped to the
+ exchanger ends with min/max; zones 1/2/3 use the liquid/two-phase/vapour
+ alphas). The zone areas are written as the three terms of the Bell area
+ constraint so that a shrunken zone contributes identically zero"
+DUPLICATE i=1,5
+  Q[i] = M_dot_h*(h_h_in - h_h_out[i])                     "hot-side energy balance [W]"
+  Q[i] = M_dot_c*(h_c_out[i] - h_c_in)                     "cold-side energy balance [W]"
+  T_h_out[i] = TEMPERATURE(Water, P=P_h, h=h_h_out[i])     "hot outlet temperature [C]"
+  T_c_out[i] = TEMPERATURE(Propane, P=P_c, h=h_c_out[i])   "cold outlet temperature [C]"
+  Q_b1[i] = Q[i]*MIN(MAX((h_c_l_sat - h_c_in)/(h_c_out[i] - h_c_in), 0), 1)   "cumulative heat at the liquid/2P boundary [W]"
+  Q_b2[i] = Q[i]*MIN(MAX((h_c_v_sat - h_c_in)/(h_c_out[i] - h_c_in), 0), 1)   "cumulative heat at the 2P/vapour boundary [W]"
+  h_h_b2[i] = h_h_in - (Q[i] - Q_b1[i])/M_dot_h                     "hot enthalpy at boundary 2 [J/kg]"
+  h_h_b3[i] = h_h_in - (Q[i] - Q_b2[i])/M_dot_h                     "hot enthalpy at boundary 3 [J/kg]"
+  h_c_b2[i] = h_c_in + Q_b1[i]/M_dot_c                     "cold enthalpy at boundary 2 [J/kg]"
+  h_c_b3[i] = h_c_in + Q_b2[i]/M_dot_c                     "cold enthalpy at boundary 3 [J/kg]"
+  T_h_b2[i] = TEMPERATURE(Water, P=P_h, h=h_h_b2[i])       "hot temperature at boundary 2 [C]"
+  T_h_b3[i] = TEMPERATURE(Water, P=P_h, h=h_h_b3[i])       "hot temperature at boundary 3 [C]"
+  T_c_b2[i] = TEMPERATURE(Propane, P=P_c, h=h_c_b2[i])     "cold temperature at boundary 2 [C]"
+  T_c_b3[i] = TEMPERATURE(Propane, P=P_c, h=h_c_b3[i])     "cold temperature at boundary 3 [C]"
+  U_1[i] = 1/(1/alpha_sp + A_h[i]*R_cond + A_h[i]/(alpha_sp*A_h[i]*area_ratio))   "zone 1 overall coefficient [W/m2-K]"
+  U_2[i] = 1/(1/alpha_sp + A_h[i]*R_cond + A_h[i]/(alpha_tp*A_h[i]*area_ratio))   "zone 2 overall coefficient [W/m2-K]"
+  U_3[i] = 1/(1/alpha_sp + A_h[i]*R_cond + A_h[i]/(alpha_sp*A_h[i]*area_ratio))   "zone 3 overall coefficient [W/m2-K]"
+  LMTD_1[i] = LMTD_sm(T_h_out[i] - T_c_in, T_h_b2[i] - T_c_b2[i])    "zone 1 mean temperature difference [K]"
+  LMTD_2[i] = LMTD_sm(T_h_b2[i] - T_c_b2[i], T_h_b3[i] - T_c_b3[i])  "zone 2 mean temperature difference [K]"
+  LMTD_3[i] = LMTD_sm(T_h_b3[i] - T_c_b3[i], T_h_in - T_c_out[i])    "zone 3 mean temperature difference [K]"
+  A_h[i] = Q_b1[i]/(U_1[i]*LMTD_1[i]) + (Q_b2[i] - Q_b1[i])/(U_2[i]*LMTD_2[i]) + (Q[i] - Q_b2[i])/(U_3[i]*LMTD_3[i])   "Bell area constraint, as in the original area_zones_func [m2]"
+END

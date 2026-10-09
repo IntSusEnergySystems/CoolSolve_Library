@@ -207,7 +207,9 @@ suffice (0) → score 2 → **level 2**, same rating as the comparable `CSL-0096
   its `martin_hx` demonstration). The scientific basis of each correlation is
   the paper cited in its comment block (table above).
 - Related models: `CSL-0096` (`ht` HT-010 transcription of the Kumar, Martin
-  and Muley-Manglik single-phase correlations, independent source), and the
+  and Muley-Manglik single-phase correlations, independent source), the
   ULiège plate-HX component models that embed copies of these procedures
   (e.g. `condenser_3_zones_plate_correlations`,
-  `evaporator_3_zones_plate_correlations`).
+  `evaporator_3_zones_plate_correlations`), and `CSL-0161`
+  (`plate_hx_thermal_resistances`, the 2008 single-phase plate-HX resistance
+  model whose inline Martin equations this library supersedes as procedures).

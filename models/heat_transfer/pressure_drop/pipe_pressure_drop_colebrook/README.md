@@ -173,3 +173,8 @@ stored solution is the verification reference).
   shell-and-tube heat exchanger (Kern) and the Bell-Delaware correction factors;
   a shell-and-tube model combines its bundle drop with the pipe friction factor
   of this file.
+- CSL-0158 `gas_pipe_insulated_pressure_drop` (uses the explicit Colebrook-White form of this model in its `_coolsolve` variant).
+- `CSL-0130` *pipe_pressure_drop_correlations*: six explicit Darcy
+  friction factors (Churchill, Swamee-Jain, Konakov, Petukhov, Haaland, Cheng)
+  and the two-phase pressure drops of a straight pipe, next to the implicit
+  Colebrook-White factor of this file.

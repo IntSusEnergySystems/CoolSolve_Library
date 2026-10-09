@@ -1,0 +1,231 @@
+{=============================================================================
+  Screw compressor in an R22 refrigeration cycle: full-load / part-load control
+  CoolSolve Library model CSL-0156
+ -----------------------------------------------------------------------------
+  Volumetric screw compressor with internal leakage through an opening
+  (isentropic nozzle followed by an internal diffuser), closing a simple R22
+  vapour-compression cycle. Part load is controlled by a sliding valve that
+  reduces the effective displacement V_s (X_sv = V_s/V_s_fl); the leakage
+  flow through the nozzle is solved from the throat conditions. Electromechanical
+  losses are injected in the fluid before compression; the machine is adiabatic.
+  The unit system of the original (kPa, kJ) was converted by hand to
+  SI-°C-Pa-J; see README.md for the conversion log and verification.
+
+  Inputs : fluid$, rpm, t_ev, t_cd, DELTAt_oh, DELTAt_sc, V_s_fl, A_thr,
+           T_loss, alpha, DELTAp_pumping, X_sv (default run = stored EES point)
+  Outputs: M_dot, Q_dot_ev, Q_dot_cd, W_dot, COP_c, COP_h, CLF, PLF, X_FLA
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège Thermodynamics Laboratory, J. Lebrun (JL080205),
+           modeles/JL/new/screw JL080205/3_4_2_Part_load_control.EES - see README.md
+=============================================================================}
+
+"PART LOAD CONTROL.
+-----------------------------------
+This control is supposed to be achieved by the sliding valve.
+The model is derived from § 3_4_1 (full load).
+Subscripts used to describe the refrigeration cycle :
+1  evaporator exhaust = compressor supply
+2 = compressor exhaust = condenser supply
+3 = condenser exhaust = thermostatic expansion valve supply
+4 = expansion valve exhaust = evaporator supply
+cd = condenser
+cp = compressor
+ev = evaporator
+thv = thermostatic expansion valve
+State variables:"
+
+t[1] = t_ev + DELTAt_oh          "( the overheating is supposed to be imposed by the thermostatic expansion valve )"
+p[1] = p_ev
+
+"All fluid thermophysical properties are calculated through functions contained in EES library :"
+p_ev = pressure(fluid$, t=t_ev, x=1)
+h[1] = enthalpy(fluid$, t=t[1], p=p[1])
+s[1] = entropy(fluid$, t=t[1], p=p[1])
+v[1] = volume(fluid$, t=t[1], p=p[1])
+
+h[2] = enthalpy(fluid$, t=t[2], p=p[2])
+s[2] = entropy(fluid$, t=t[2], p=p[2])
+p[2] = p_cd
+p_cd = pressure(fluid$, t=t_cd, x=1)
+
+t[3] = t_cd - DELTAt_sc          "( the subcooling is supposed to be imposed by refrigerant charge and condenser characteristics )"
+p[3] = p_cd
+h[3] = enthalpy(fluid$, t=t[3], p=p[3])
+s[3] = entropy(fluid$, t=t[3], p=p[3])
+
+t[4] = t_ev
+p[4] = p_ev
+h[4] = h[3]
+h[4] = enthalpy(fluid$, t=t[4], x=x[4])
+s[4] = entropy(fluid$, t=t[4], x=x[4])
+h[5] = h[1]
+p[5] = p[1]
+
+"Evaporator and condenser energy balances :"
+Q_dot_ev = M_dot*(h[1] - h[4])   "cooling capacity [W]"
+Q_dot_cd = M_dot*(h[2] - h[3])   "condenser heat rate [W]"
+"Coefficients of performances :"
+COP_c = Q_dot_ev/W_dot
+COP_h = Q_dot_cd/W_dot
+"Cooling load and part load factors:"
+CLF = Q_dot_ev/Q_dot_ev_fl
+PLF = W_dot/W_dot_fl
+
+"2)COMPRESSOR MODELING :
+ Volumetric compressor + internal leakage through an opening, represented as isentropic nozzle + internal isobaric diffuser.
+Subscripts used in the compressor model :
+su : machine supply
+su1 : compressor supply ( after heating-up )
+su2 : compression chamber supply ( after mixing with internal leakage )
+ex: compressor exhaust and supply of leakage nozzle
+thr : throat of leakage nozzle
+sun : nozzle supply
+exn : exhaust of leakage nozzle and supply of leakage diffuser
+exd : exhaust of leakage diffuser
+in : internal
+l : leakage"
+
+"Compressor flow rate :"
+V_dot_su = M_dot*v_su            "[m^3/s]"
+V_dot_su2 = M_dot_in*v_su2       "[m^3/s]"
+M_dot_in = M_dot + M_dot_l       "[kg/s]"
+V_dot_su = epsilon_v*V_dot_s
+V_dot_su2 = V_dot_s
+V_dot_s = V_s*N                  "volume flow rate displaced by the compressor [m^3/s]"
+"V_s = swept volume [m^3]"
+N = rpm/60                       "rotation speed in rounds per second [1/s]"
+"Slide vane control:"
+X_sv = V_s/V_s_fl
+
+"Compressor power :"
+W_dot = M_dot*w                  "electrical power [W]"
+w = w_s/epsilon_s                "specific work [J/kg]"
+w_s = h_exs - h_su               "isentropic specific work from the machine supply [J/kg]"
+w_s2 = h_exs2 - h_su2            "isentropic specific work of the compression chamber [J/kg]"
+W_dot = W_dot_loss + (1 + alpha)*W_dot_in
+W_dot_in = W_dot_s2 + W_dot_pumping
+W_dot_pumping = V_dot_pumping*DELTAp_pumping
+V_dot_pumping = N*V_pumping      "[m^3/s]"
+"Pumping volume:"
+V_pumping = V_s_fl - V_s         "[m^3]"
+DELTAp_pumping = 50E3            "pressure lift of the pumping loss [Pa] (50 kPa in the original)"
+
+W_dot_loss = omega*T_loss        "constant losses [W]"
+omega = 2*pi*N                   "[rad/s]"
+W_dot_s2 = M_dot_in*w_s2         "[W]"
+"Electric motor loading:"
+X_FLA = W_dot/W_dot_max
+
+"Hypotheses (as in full load):
+1)all electromechanical losses injected in the fluid before compression;
+2)adiabatic machine."
+"Supply heating-up:"
+W_dot - W_dot_in + Q_dot = M_dot*(h_su1 - h_su)
+" with Q_dot = heat transfered from the surroundings to the compressor."
+Q_dot = 0                        "( second hypothesis ) [W]"
+p_su1 = p_su
+
+"Supply mixing:"
+M_dot*h_su1 + M_dot_l*h_exd = M_dot_in*h_su2
+p_su2 = p_su1
+
+"Isentropic compression:"
+h_ex = h_exs2
+
+"Isentropic nozzle:"
+"Real gas:"
+h_sun - h_thr = C_thr^2/2        "nozzle energy balance, C_thr in m/s (C_thr^2/2000 with h in kJ/kg in the original)"
+C_thr = M_dot_l*v_thr/A_thr      "throat velocity [m/s]"
+"Equivalent perfect gas:"
+t_thr + 273.15 = (t_sun + 273.15)*(p_thr/p_sun)^((gamma - 1)/gamma)
+v_thr = zeta*r*(t_thr + 273.15)/p_thr
+r = 8314/M_mol                   "gas constant [J/kg-K] (8.314/M_mol in kJ/kg-K in the original)"
+M_mol = molarmass(fluid$)        "[kg/kmol]"
+h_sun - h_thr = c_p*(t_sun - t_thr)
+"Possible chocking:"
+p_thrmin = (2/(gamma + 1))^(gamma/(gamma - 1))*p_sun
+p_thr = max(p_thrmin, p_exn)
+a = sqrt(gamma*r*(t_thr + 273.15))   "sound velocity [m/s] (gamma*r*1000*(t_thr+273) with r in kJ/kg-K in the original)"
+Mach = C_thr/a
+
+"Fluid definition in the compressor model :
+Machine supply:"
+v_su = volume(fluid$, t=t_su, p=p_su)
+h_su = enthalpy(fluid$, t=t_su, p=p_su)
+s_su = entropy(fluid$, t=t_su, p=p_su)
+"After heating-up:"
+h_su1 = enthalpy(fluid$, t=t_su1, p=p_su1)
+s_su1 = entropy(fluid$, t=t_su1, p=p_su1)
+p[6] = p_su1
+h[6] = h_su1
+
+"After mixing:"
+v_su2 = volume(fluid$, t=t_su2, p=p_su2)
+h_su2 = enthalpy(fluid$, t=t_su2, p=p_su2)
+s_su2 = entropy(fluid$, t=t_su2, p=p_su2)
+p[7] = p_su2
+h[7] = h_su2
+
+"After isentropic compression:"
+h_ex = enthalpy(fluid$, p=p_ex, s=s_ex)
+s_ex = s_su2
+h_ex = enthalpy(fluid$, t=t_ex, p=p_ex)
+"Nozzle supply:"
+t_sun = t_ex
+p_sun = p_ex
+h_sun = enthalpy(fluid$, t=t_sun, p=p_sun)
+s_sun = entropy(fluid$, t=t_sun, p=p_sun)
+p[8] = p[2]
+h[8] = h_exs2
+
+"Nozzle throat:"
+h_thr = enthalpy(fluid$, p=p_thr, s=s_sun)
+h_thr = enthalpy(fluid$, t=t_thr, p=p_thr)
+v_thr = volume(fluid$, t=t_thr, p=p_thr)
+p[9] = p_thr
+h[9] = h_thr
+
+"Nozzle exhaust = diffuser supply :"
+h_exn = enthalpy(fluid$, p=p_exn, s=s_sun)
+h_exn = enthalpy(fluid$, t=texn, p=p_exn)
+p_exn = p_exd
+h[10] = h_exn
+p[10] = p_exn
+"Diffuser exhaust :"
+p_exd = p_su
+h_exd = h_sun
+h_exd = enthalpy(fluid$, t=t_exd, p=p_exd)
+s_exd = entropy(fluid$, t=t_exd, p=p_exd)
+h[11] = h_exd
+p[11] = p_exd
+"Machine exhaust , if it was isentropic :"
+h_exs = enthalpy(fluid$, p=p_ex, s=s_su)
+
+"Connections of the compressor model with the other components of the refrigeration cycle :"
+t_su = t[1]
+p_su = p[1]
+t_ex = t[2]
+p_ex = p[2]
+
+"------------------------------------------------------------------------
+Parameters:"
+V_s_fl = 103E-4                  "swept volume at full load [m^3]"
+A_thr = 0.0002                   "leakage nozzle throat area [m^2]"
+T_loss = 5                       "loss torque [N-m] (0.005 kN-m in the original)"
+alpha = 0.2                      "loss factor proportional to W_dot_in [-]"
+
+"Input data:"
+fluid$ = 'R22'
+rpm = 1500
+t_cd = 32.25                     "[°C]"
+t_ev = -0.334                    "[°C]"
+DELTAt_oh = 5                    "superheating [K]"
+DELTAt_sc = 5                    "subcooling [K]"
+X_sv = 0.4105263158              "slide-valve position [-]: operating point of the EES stored solution
+                                  (set by the parametric table of the original, see README)"
+
+"Full load results:"
+Q_dot_ev_fl = 683.7E3            "cooling capacity at full load [W] (683.7 kW in the original)"
+W_dot_fl = 152.1E3               "electrical power at full load [W] (152.1 kW in the original)"
+W_dot_max = W_dot_fl
+"(assuming that the full load regime considered is also the nominal regime at which the motor was sized)"

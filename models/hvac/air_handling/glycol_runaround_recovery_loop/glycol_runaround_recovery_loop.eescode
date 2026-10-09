@@ -1,0 +1,264 @@
+{=============================================================================
+  Air-to-air glycol run-around heat-recovery loop
+  CoolSolve Library model CSL-0162 - native file, BLOCKED
+ -----------------------------------------------------------------------------
+  Two air coils (extraction side and fresh-air side) linked by a glycol loop
+  and a pump: classical epsilon-NTU equations with Braun's hypothesis for the
+  coils (dry and wet regimes simulated simultaneously, the regime of largest
+  capacity is kept), glycol properties from the ULiège BrineProp library,
+  Colebrook pressure drop in the piping and a pump model. Winter regime: heat
+  is recovered from the extracted air to heat the fresh air; summer regime:
+  the fresh air is cooled and the heat rejected in the extracted air.
+  Inputs : t_ge_a_su, RH_ge_a_su, t_gp_a_su, RH_gp_a_su, V_dot_*_m3h,
+           DELTAP_gw_coil_n, L_pipe, D_pipe, X_gw, R_a_n, R_gw_n (diagram)
+  Outputs: outlet states, recovered power (total/sensible/latent), condensate,
+           epsilon_recovery, W_dot_gw_pump
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège model bank, S. Bertagnolio, 10 January 2008 - see README.md
+  Status : blocked (CS-GAP-IF-DIRECTIVE, CS-GAP-IF5, CS-GAP-CALL-EXPR-OUT,
+           CS-GAP-INCLUDE; the runnable variant is blocked by
+           CS-BUG-NEWTON-CYCLE) - see README.md
+=============================================================================}
+
+"!Inputs (diagram-window inputs of the original; values of the stored run)"
+recovery_regime$='winter'  "diagram-window input; the original offers 'winter' and 'summer'"
+t_ge_a_su=23  "extracted-air supply temperature [C] (stored run; diagram text 22 [C])"
+RH_ge_a_su=0.5  "extracted-air supply relative humidity [-]"
+t_gp_a_su=-12  "fresh-air supply temperature [C]"
+RH_gp_a_su=0.9  "fresh-air supply relative humidity [-]"
+P_atm=101325  "atmospheric pressure [Pa]"
+V_dot_ge_a_m3h=11500  "extracted-air volume flow rate [m^3/h]"
+V_dot_ge_a_n_m3h=11500  "nominal extracted-air volume flow rate [m^3/h]"
+V_dot_gp_a_m3h=11500  "fresh-air volume flow rate [m^3/h]"
+V_dot_gp_a_n_m3h=11500  "nominal fresh-air volume flow rate [m^3/h]"
+V_dot_gw_m3h=3.2  "glycol volume flow rate [m^3/h]"
+V_dot_gw_n_m3h=3.2  "nominal glycol volume flow rate [m^3/h]"
+DELTAP_gw_coil_n=37000  "glycol pressure drop of one coil at the nominal flow [Pa]"
+L_pipe=6  "total length of the glycol piping [m] (stored run; diagram text 2 [m])"
+D_pipe=0.032  "pipe inner diameter [m]"
+epsilon_pipe=0.1E-3  "pipe roughness [m]"
+eta_pump_gw=0.4  "glycol pump efficiency [-]"
+R_a_n=0.0001511  "nominal air-side thermal resistance of one coil [K/W]"
+R_gw_n=0.0000146  "nominal glycol-side thermal resistance of one coil [K/W]"
+R_m=0  "metal thermal resistance, hypothesis [K/W]"
+
+"!1. Flow rates"
+"air extraction side (ge): supply conditions and flow rate"
+w_ge_a_su=HUMRAT(AIRH2O,T=t_ge_a_su,P=P_atm,R=RH_ge_a_su)
+M_dot_ge_a_n=V_dot_ge_a_n_m3h/3600*rho_a
+M_dot_ge_a=V_dot_ge_a_m3h/3600*rho_a
+C_dot_ge_a = M_dot_ge_a * c_p_a
+"air fresh-air (pulsion) side (gp)"
+w_gp_a_su=HUMRAT(AIRH2O,T=t_gp_a_su,P=P_atm,R=RH_gp_a_su)
+M_dot_gp_a=V_dot_gp_a_m3h/3600*rho_a
+M_dot_gp_a_n=V_dot_gp_a_n_m3h/3600*rho_a
+C_dot_gp_a = M_dot_gp_a * c_p_a
+"glycol water flow rate"
+V_dot_gw_n=V_dot_gw_n_m3h/3600
+M_dot_gw_n=V_dot_gw_n*rho_gw
+V_dot_gw=V_dot_gw_m3h/3600
+M_dot_gw=V_dot_gw*rho_gw
+
+"!2. Properties"
+"air properties (constants, as in the original)"
+rho_a=1.2  "[kg/m^3]"
+c_p_a=1025  "[J/kg-K]"
+"glycol properties from the BrineProp library (implicit USERLIB of EES)"
+CALL BRINEPROP('SPECHEAT','EG',X_gw,t_gw_m:c_p_gw/1000)
+CALL BRINEPROP('DENSITY','EG',X_gw,t_gw_m:rho_gw)
+CALL BRINEPROP('DYNVISC','EG',X_gw,t_gw_m:mu_gw*1000)
+t_gw_m=(t_ge_gw_su+t_ge_gw_ex)/2
+c_p_g=1840  "specific heat of water vapour [J/kg-K]"
+h_fg0=2.5E6  "latent heat of vaporisation at 0 C [J/kg]"
+"nominal glycol temperatures of the coils (data of the thermal resistances)"
+t_gp_gw_su_n=14.7  "[C]"
+t_gp_gw_ex_n=-2.7  "[C]"
+t_ge_gw_su_n=t_gp_gw_ex_n
+t_ge_gw_ex_n=t_gp_gw_su_n
+X_gw=25  "glycol mass concentration [%]"
+
+"!3. Simulation model"
+$IF recovery_regime$='winter'
+"!3.1. Winter regime: heat recovered from the extracted air (ge) to heat the
+ fresh air (gp); the cooling coil is on the extraction side, the heating coil
+ on the fresh-air side"
+"heating side"
+C_dot_heating_a=C_dot_gp_a
+M_dot_heating_a=M_dot_gp_a
+M_dot_heating_a_n=M_dot_gp_a_n
+t_heating_a_su=t_gp_a_su
+w_heating_a_su=w_gp_a_su
+RH_heating_a_su=RH_gp_a_su
+"cooling side"
+M_dot_cooling_a=M_dot_ge_a
+C_dot_cooling_a=C_dot_ge_a
+t_cooling_a_su=t_ge_a_su
+w_cooling_a_su=w_ge_a_su
+M_dot_cooling_a_n=M_dot_ge_a_n
+"glycol water loop"
+t_ge_gw_su=t_cooling_gw_su
+t_gp_gw_ex=t_heating_gw_ex
+t_ge_gw_ex=t_cooling_gw_ex
+t_gp_gw_su=t_heating_gw_su
+"air outlet states"
+t_ge_a_ex=t_cooling_a_ex
+t_gp_a_ex=t_heating_a_ex
+w_ge_a_ex=w_cooling_a_ex
+w_gp_a_ex=w_heating_a_ex
+RH_ge_a_ex=RH_cooling_a_ex
+RH_gp_a_ex=RH_heating_a_ex
+"recovered power"
+Q_dot_recovery_total=Q_dot_cooling
+Q_dot_recovery_sensible=Q_dot_cooling_sensible
+Q_dot_recovery_latent=Q_dot_cooling_latent
+M_dot_cond_kgh=M_dot_cooling_cond_kgh
+"recovery effectiveness"
+epsilon_recovery=Q_dot_recovery_total/(C_dot_min_recovery*(t_cooling_a_su-t_heating_a_su))
+C_dot_min_recovery=MIN(C_dot_cooling_a,C_dot_heating_a)
+$ENDIF
+
+$IF recovery_regime$='summer'
+"!3.1 bis. Summer regime: the fresh air is cooled and the heat rejected in
+ the extracted air"
+"heating side"
+C_dot_heating_a=C_dot_ge_a
+t_heating_a_su=t_ge_a_su
+w_heating_a_su=w_ge_a_su
+RH_heating_a_su=RH_ge_a_su
+"cooling side"
+M_dot_cooling_a=M_dot_gp_a
+C_dot_cooling_a=C_dot_gp_a
+t_cooling_a_su=t_gp_a_su
+w_cooling_a_su=w_gp_a_su
+M_dot_cooling_a_n=M_dot_gp_a_n
+"outputs"
+"glycol water loop"
+t_gp_gw_su=t_cooling_gw_su
+t_ge_gw_ex=t_heating_gw_ex
+t_gp_gw_ex=t_cooling_gw_ex
+t_ge_gw_su=t_heating_gw_su
+"air outlet states"
+t_gp_a_ex=t_cooling_a_ex
+t_ge_a_ex=t_heating_a_ex
+w_gp_a_ex=w_cooling_a_ex
+w_ge_a_ex=w_heating_a_ex
+RH_gp_a_ex=RH_cooling_a_ex
+RH_ge_a_ex=RH_heating_a_ex
+"recovered power"
+Q_dot_recovery_total=Q_dot_cooling
+Q_dot_recovery_sensible=Q_dot_cooling_sensible
+Q_dot_recovery_latent=Q_dot_cooling_latent
+M_dot_cond_kgh=M_dot_cooling_cond_kgh
+"recovery effectiveness"
+epsilon_recovery=Q_dot_recovery_total/(C_dot_min_recovery*(t_cooling_a_su-t_heating_a_su))
+C_dot_min_recovery=MIN(C_dot_cooling_a,C_dot_heating_a)
+$ENDIF
+
+"!3.2. Glycol loop"
+t_ge_gw_su=t_gp_gw_ex
+t_gp_gw_su=t_ge_gw_ex+W_dot_gw_pump/(M_dot_gw*c_p_gw)
+"glycol water pressure drop in the piping (Colebrook; the original also
+ offers the constant closure lambda_gw=0.02, commented out)"
+DELTAp_gw_pipe=lambda_gw*(L_pipe/D_pipe)*rho_gw*C_gw^2/2
+1/sqrt(lambda_gw)=-2*log10((epsilon_pipe/D_pipe)/3.71+2.51/(Re_gw*sqrt(lambda_gw)))
+Re_gw=C_gw*D_pipe/nu_gw
+nu_gw=mu_gw/rho_gw
+C_gw=V_dot_gw/(PI*D_pipe^2/4)
+"total glycol water pressure drop (piping + two coils)"
+DELTAp_gw_tot=DELTAp_gw_pipe+2*DELTAp_gw_coil_n
+"glycol water pump"
+W_dot_gw_pump=V_dot_gw*DELTAp_gw_tot/eta_pump_gw
+
+"!3.3. Heating side"
+"air side"
+Q_dot_heating=C_dot_heating_a*(t_heating_a_ex-t_heating_a_su)
+"glycol water side"
+Q_dot_heating=C_dot_heating_gw*(t_heating_gw_su-t_heating_gw_ex)
+C_dot_heating_gw=M_dot_gw*c_p_gw
+"effectiveness"
+Q_dot_heating=epsilon_heating*C_dot_min_heating*(t_heating_gw_su-t_heating_a_su)
+C_dot_min_heating=MIN(C_dot_heating_a,C_dot_heating_gw)
+"counterflow hypothesis"
+epsilon_heating = (1-exp(-NTU_heating*(1-omega_heating)))/(1-omega_heating*exp(-NTU_heating*(1-omega_heating)))
+NTU_heating = AU_heating / C_dot_min_heating
+"Definition of thermal resistances (air, metal and glycol in series):"
+1 / AU_heating =R_tot_heating
+R_a_heating= R_a_n *  (M_dot_heating_a_n / M_dot_heating_a)^0.6
+R_gw_heating = R_gw_n * (M_dot_gw_n / M_dot_gw)^0.8
+R_tot_heating=R_a_heating+R_m+R_gw_heating
+omega_heating = C_dot_min_heating / C_dot_max_heating
+C_dot_max_heating= max ( C_dot_heating_a , C_dot_heating_gw )
+"humidity: no condensation on the heating coil"
+w_heating_a_ex=w_heating_a_su
+RH_heating_a_ex=RELHUM(AIRH2O,t=t_heating_a_ex,w=w_heating_a_ex,P=P_atm)
+
+"!3.4. Cooling side"
+"!Dry regime"
+"air side"
+Q_dot_cooling_dry=C_dot_cooling_a*(t_cooling_a_su-t_cooling_a_ex_dry)
+"glycol water side"
+Q_dot_cooling_dry=C_dot_cooling_gw*(t_cooling_gw_ex_dry-t_cooling_gw_su)
+C_dot_cooling_gw=M_dot_gw*c_p_gw
+"effectiveness"
+Q_dot_cooling_dry=epsilon_cooling_dry*C_dot_min_cooling_dry*(t_cooling_a_su-t_cooling_gw_su)
+C_dot_min_cooling_dry=MIN(C_dot_cooling_a,C_dot_cooling_gw)
+"counterflow hypothesis"
+epsilon_cooling_dry = (1-exp(-NTU_cooling_dry*(1-omega_cooling_dry)))/(1-omega_cooling_dry*exp(-NTU_cooling_dry*(1-omega_cooling_dry)))
+NTU_cooling_dry = AU_cooling_dry/C_dot_min_cooling_dry
+"Definition of thermal resistances (air, metal and glycol in series):"
+1 / AU_cooling_dry = R_a_cooling+R_m+R_gw_cooling
+R_a_cooling= R_a_n *  (M_dot_cooling_a_n / M_dot_cooling_a)^0.6
+R_gw_cooling = R_gw_n * (M_dot_gw_n / M_dot_gw)^0.8
+R_tot_cooling=R_a_cooling+R_m+R_gw_cooling
+omega_cooling_dry = C_dot_min_cooling_dry / C_dot_max_cooling_dry
+C_dot_max_cooling_dry = max ( C_dot_cooling_a , C_dot_cooling_gw )
+"contact temperature"
+(t_cooling_c_dry-t_cooling_gw_su)/(R_m+R_gw_cooling)=(t_cooling_a_ex_dry-t_cooling_gw_su)/(R_a_cooling+R_m+R_gw_cooling)
+
+"!Wet regime (fictitious gas at the wet-bulb temperature, Braun hypothesis)"
+"air side"
+Q_dot_cooling_wet=M_dot_cooling_a*(h_cooling_a_su-h_cooling_a_ex_wet-(w_cooling_a_su-w_cooling_a_ex_wet)*c_p_gw*t_cooling_w_cond)
+Q_dot_cooling_wet=C_dot_cooling_af*(t_wb_cooling_a_su-t_wb_cooling_a_ex_wet)
+C_dot_cooling_af=M_dot_cooling_a*c_p_cooling_af
+"glycol water side"
+Q_dot_cooling_wet=C_dot_cooling_gw*(t_cooling_gw_ex_wet-t_cooling_gw_su)
+"effectiveness"
+Q_dot_cooling_wet=epsilon_cooling_wet*C_dot_min_cooling_wet*(t_wb_cooling_a_su-t_cooling_gw_su)
+"counterflow hypothesis"
+epsilon_cooling_wet =(1-exp(-NTU_cooling_wet*(1-omega_cooling_wet)))/(1-omega_cooling_wet*exp(-NTU_cooling_wet*(1-omega_cooling_wet)))
+"NTU & omega"
+NTU_cooling_wet = AU_cooling_wet / C_dot_min_cooling_wet
+omega_cooling_wet = C_dot_min_cooling_wet / C_dot_max_cooling_wet
+C_dot_max_cooling_wet = MAX ( C_dot_cooling_af , C_dot_cooling_gw )
+C_dot_min_cooling_wet=MIN(C_dot_cooling_af,C_dot_cooling_gw)
+"Heat transfer coefficient"
+1 / AU_cooling_wet = R_cooling_af+R_m+R_gw_cooling
+R_cooling_af  = R_a_cooling*c_p_a / c_p_cooling_af
+"(according to Merkel theory and assuming that Lewis = 1)"
+"Fictitious isothermal contact surface:"
+h_cooling_a_su - h_cooling_a_ex_wet = epsilon_cooling_c_wet * ( h_cooling_a_su - h_cooling_c_wet )
+W_cooling_a_su - W_cooling_a_ex_wet = epsilon_cooling_c_wet * ( W_cooling_a_su - W_cooling_c_wet )
+epsilon_cooling_c_wet = 1-exp(-NTU_cooling_c_wet )
+NTU_cooling_c_wet = 1/(R_a_cooling*C_dot_cooling_a)
+"Humid air properties"
+h_cooling_a_su=c_p_a*t_cooling_a_su+W_cooling_a_su*(c_p_g*t_cooling_a_su+h_fg0)
+h_cooling_a_ex_wet=c_p_a*t_cooling_a_ex_wet+W_cooling_a_ex_wet*(c_p_g*t_cooling_a_ex_wet+h_fg0)
+w_cooling_a_ex_dry=w_cooling_a_su
+t_wb_cooling_a_su= wetbulb(AIRH2O,T=t_cooling_a_su,P=P_atm,w=w_cooling_a_su)
+t_wb_cooling_a_ex_wet= wetbulb(AIRH2O,T=t_cooling_a_ex_wet,P=P_atm,w=w_cooling_a_ex_wet)
+w_cooling_c_wet=HUMRAT(AIRH2O,T=t_cooling_c_wet,R=1,P=P_atm)
+h_cooling_c_wet=ENTHALPY(AIRH2O,t=t_cooling_c_wet,R=1,P=P_atm)
+"condensated water temperature and flow rate"
+t_cooling_w_cond=t_cooling_c_wet
+M_dot_cooling_cond_wet=M_dot_cooling_a*(w_cooling_a_su-w_cooling_a_ex_wet)
+M_dot_cooling_cond=IF(Q_dot_cooling_dry,Q_dot_cooling_wet,M_dot_cooling_cond_wet,0,0)
+M_dot_cooling_cond_kgh=M_dot_cooling_cond*3600
+
+"!Dry or wet regime? (Braun's hypothesis: the regime of largest capacity is kept)"
+Q_dot_cooling=MAX(Q_dot_cooling_wet,Q_dot_cooling_dry)
+Q_dot_cooling_sensible=C_dot_cooling_a*(t_cooling_a_su-t_cooling_a_ex)
+Q_dot_cooling_latent=Q_dot_cooling-Q_dot_cooling_sensible
+t_cooling_gw_ex=IF(Q_dot_cooling_dry,Q_dot_cooling_wet,t_cooling_gw_ex_wet,t_cooling_gw_ex_wet,t_cooling_gw_ex_dry)
+t_cooling_a_ex=IF(Q_dot_cooling_dry,Q_dot_cooling_wet,t_cooling_a_ex_wet,t_cooling_a_ex_wet,t_cooling_a_ex_dry)
+w_cooling_a_ex=IF(Q_dot_cooling_dry,Q_dot_cooling_wet,w_cooling_a_ex_wet,w_cooling_a_ex_wet,w_cooling_a_ex_dry)
+RH_cooling_a_ex=RELHUM(AIRH2O,T=t_cooling_a_ex,P=P_atm,w=w_cooling_a_ex)

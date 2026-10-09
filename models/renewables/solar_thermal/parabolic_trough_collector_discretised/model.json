@@ -1,0 +1,67 @@
+{
+  "id": "CSL-0129",
+  "name": "parabolic_trough_collector_discretised",
+  "title": "Parabolic-trough collector with a discretised absorber (Soponova MicroCSP efficiency map)",
+  "summary": "Translation of the LaboThapPy component PTCollector: the absorber of a Sopogy SopoNova MicroCSP parabolic-trough collector is divided into 20 elements along its length; each element absorbs the solar power it receives times the collector efficiency of the 6 x 17 datasheet map (irradiance, fluid temperature rise over the ambient), and the water flowing at constant pressure marches along the absorber with its enthalpy increasing by the absorbed power divided by the mass flow rate. It delivers the absorbed power, the exhaust enthalpy and temperature and the mean efficiency of the collector field.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "parabolic_trough_collector_discretised.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "parabolic trough",
+    "solar thermal",
+    "collector",
+    "discretisation",
+    "semi-empirical",
+    "collector efficiency map",
+    "lookup table",
+    "enthalpy marching",
+    "translation"
+  ],
+  "language_features": [
+    "DUPLICATE arrays",
+    "two-variable lookup table (interpolate2)",
+    "property functions",
+    "string variables"
+  ],
+  "stats": {"n_equations": 140, "largest_block": 1},
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/component/solar/parabolic_trough_collector.py; ~/git/LaboThapPy/labothappy/toolbox/geometries/solar/parabolictrough_geometry.py; ~/git/LaboThapPy/labothappy/component/examples/solar/parabolic_trough_collector_example.py, commit f03f7f47",
+    "candidate_id": "LTP-020",
+    "authors": [
+      "Basile Chaudoir (ULiege Thermodynamics Laboratory)",
+      "Elise Neven (ULiege Thermodynamics Laboratory)"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy",
+    "license": "MIT (declared in pyproject.toml; LICENSE.txt is Apache-2.0) / model published under the library MIT licence",
+    "ees_version": "",
+    "language": "en",
+    "course": "SopoNova MicroCSP collector data of Sopogy; semi-empirical heat-loss correlation of R. Dickes, V. Lemort and S. Quoilin, https://hdl.handle.net/2268/182680 (defined but unused by the original solve())"
+  },
+  "verification": {
+    "reference": "the example of the source, labothappy/component/examples/solar/parabolic_trough_collector_example.py (case study study_disc, convergence study over 1 to 50 discretisation elements, 10 collectors in series), re-run in a throw-away virtual environment (Python 3.12, LaboThapPy from the local clone, CoolProp 8.0.0) and compared with tools/compare_solution.py; the same comparison repeated for 1, 2, 5, 10 and 50 cells",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 3.4e-05,
+    "notes": "64 common variables, 0 differ at the default rtol = 1e-3 of compare_solution.py; maximum relative difference 3.4e-05 on eta_coll[20] and Q_dot_abs_disc[20] (6.1e-06 on Q_dot, 7.8e-07 on T_ex), from the interpolation scheme of the map: the source uses a bicubic RectBivariateSpline, the model the bilinear interpolate2 of CoolSolve on the same 6 x 17 table. Over the convergence study the absorbed power differs by 1.9e-05 (1 cell) to 5.2e-06 (50 cells). Excluded from the comparison: h_su (reference name of h[1]) and the intermediate arrays DT, T_su_el, Q_dot_disc, p[i]."
+  },
+  "missing_features": [
+    "CS-BUG-DUPLICATE-INDEX-EXPR",
+    "CS-GAP-SUM-INDEXED"
+  ],
+  "related": [
+    "CSL-0083",
+    "CSL-0082"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-08", "action": "added (translation of the LaboThapPy PTCollector component, card C-174)", "by": "opencode worker (space-bunny-free) for S. Quoilin"}
+  ]
+}

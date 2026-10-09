@@ -183,3 +183,18 @@ No student names or personal data involved.
   design-point counterpart (pinch imposed, pressure solved).
 - `CSL-0002` (*counterflow_hx_oil_water*, level 1): single-phase
   counterflow exchanger (ε-NTU); no phase change, no pinch closure.
+- `CSL-0126` (*hx_constant_effectiveness*, level 1): the *rating*
+  counterpart of this model — the effectiveness is imposed, the duty and the
+  outlet states are computed (LaboThapPy `HexCstEff`), whereas here the pinch
+  is imposed and the condensing pressure solved.
+
+- `CSL-0128` *hx_eps_ntu_plate_pipe* (level 2): the sibling LaboThapPy
+  translation `HexeNTU` for a single-phase plate exchanger whose
+  conductance-area product comes from the plate geometry; single-phase here,
+  three refrigerant zones in this model.
+- `CSL-0127` *hx_constant_effectiveness_discretised* (level 4): the
+  discretised constant-effectiveness sibling (`HexCstEffDisc`) — the pinch
+  `Pinch_min` is held at every one of the `n_disc` segments of a single-phase
+  counterflow exchanger (sCO2 recuperators), instead of at the zone
+  interfaces of a phase-changing exchanger.
+- CSL-0138 (hx_moving_boundary_bell): moving-boundary (Bell 2015) translation of the same zone-delimited heat-exchanger family (TESPy TSP-014).

@@ -1,0 +1,84 @@
+{=============================================================================
+  Reciprocating compressor from catalogue data (R717) - runnable variant
+  CoolSolve Library model CSL-0157
+ -----------------------------------------------------------------------------
+  Runnable transcription of the blocked native file
+  reciprocating_catalogue_r717.eescode. Only the two blocking constructs are
+  changed (logged in README.md), the equations are unchanged:
+  DUPLICATE i = 1, n -> DUPLICATE i = 1, 17 (n = 17 kept; variable-bound
+  loops are silently dropped, CS-BUG-DUPLICATE-VAR-BOUND); nameless
+  lookup(i, col) -> lookup('lookup_1', i, col) (companion table
+  reciprocating_catalogue_r717_coolsolve-lookup_1.csv, CS-GAP-LOOKUP-NONAME).
+  Both forms are valid EES; verified against the EES stored solution.
+  Inputs : lookup table (17 rows), fluid$, V_s_cp, rpm_cp, rpm2, rpm3,
+           DELTAT_oh, m; Outputs: epsilon_s_cp_mes[i], epsilon_v_cp_mes[i],
+           R_p_cp[i], epsilon_s_1000_rpm[i], epsilon_s_750_rpm[i]
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Laborelec compressor toolkit 2002, F. Trebilcock (ULiège) - README.md
+=============================================================================}
+
+"!MODEL"
+"The model obtains the curves of the isentropic and volumetric effectiveness
+ directly from the manufacturer information. The catalogue data (compressor
+ selection software) go into the lookup table of the model; given the swept
+ volume of the compressor, its rotational speed and the superheating at which
+ the data were taken, the effectiveness can be plotted versus the pressure
+ ratio (plots 1 and 2 of the original file). As in the original."
+
+n = 17                          "number of rows in the lookup table [-]"
+DUPLICATE i = 1, 17
+
+"Measured effectiveness"
+w_mes[i] = W_dot_cp_mes[i]/M_dot_cp_mes[i]               "measured specific work [J/kg]"
+epsilon_s_cp_mes[i] = w_s[i]/w_mes[i]                    "global isentropic effectiveness [-]"
+V_dot_su_cp_mes[i] = M_dot_cp_mes[i]*v_su_cp[i]          "suction volume flow rate [m^3/s]"
+epsilon_v_cp_mes[i] = V_dot_su_cp_mes[i]/V_dot_sw_cp[i]  "global volumetric effectiveness [-]"
+
+w_s[i] = h_exs_cp[i] - h_su_cp[i]                        "isentropic specific work [J/kg]"
+V_dot_sw_cp[i] = V_s_cp*N_cp[i]                          "displaced volume flow rate [m^3/s]"
+N_cp[i] = rpm_cp/60                                      "rotational speed [1/s]"
+
+R_p_cp[i] = p_ex_cp[i]/p_su_cp[i]                        "pressure ratio [-]"
+
+"Fluid definition"
+h_exs_cp[i] = enthalpy(fluid$, p=p_ex_cp[i], s=s_su_cp[i])  "isentropic exhaust enthalpy [J/kg]"
+h_su_cp[i] = enthalpy(fluid$, t=t_su_cp[i], p=p_su_cp[i])   "supply enthalpy [J/kg]"
+s_su_cp[i] = entropy(fluid$, t=t_su_cp[i], p=p_su_cp[i])    "supply entropy [J/kg-K]"
+v_su_cp[i] = volume(fluid$, t=t_su_cp[i], p=p_su_cp[i])     "supply specific volume [m^3/kg]"
+
+"Measured outputs (manufacturer data)"
+W_dot_cp_mes[i] = lookup('lookup_1', i, 4)               "electrical power [W]"
+M_dot_cp_mes[i] = lookup('lookup_1', i, 5)               "mass flow rate [kg/s]"
+
+"Saturation pressures and supply state"
+P_cd[i] = PRESSURE(fluid$, T=T_cd[i], X=1)               "condensation pressure [Pa]"
+P_ev[i] = PRESSURE(fluid$, T=T_ev[i], X=1)               "evaporation pressure [Pa]"
+t_su_cp[i] = T_ev[i] + DELTAT_oh                         "supply temperature [°C]"
+p_su_cp[i] = P_ev[i]
+p_ex_cp[i] = P_cd[i]
+
+"Catalogue inputs (one row per operating point)"
+T_cd[i] = lookup('lookup_1', i, 1)                       "condensing temperature [°C]"
+T_ev[i] = lookup('lookup_1', i, 2)                       "evaporating temperature [°C]"
+
+"Effectiveness extrapolated to other speeds (as in the original)"
+epsilon_s_1000_rpm[i] = epsilon_s_cp_mes[i]*(rpm_cp/rpm2)^m
+epsilon_s_750_rpm[i] = epsilon_s_cp_mes[i]*(rpm_cp/rpm3)^m
+END
+
+"Constant inputs"
+fluid$ = 'R717'                 "refrigerant"
+V_s_cp = 0.0009712              "swept volume [m^3] (recommended: use the manufacturer swept volume)"
+rpm_cp = 1450                   "rotational speed of the catalogue data [rpm]"
+rpm2 = 1000                     "speed of the 1000 rpm curve [rpm]"
+rpm3 = 750                      "speed of the 750 rpm curve [rpm]"
+DELTAT_oh = 5.001               "superheating at which the data were taken [K]"
+m = 0.18                        "exponent of the speed correction [-]"
+
+"Inactive in the active model (nested-brace comment of the original): an
+ alternative evaporator balance computing Q_dot_ev[i] from the cycle
+ (condenser outlet subcooled by DELTAT_sc, then Q_dot_ev = M_dot*(h_su_cp -
+ h_ex_cd)) instead of reading it from the catalogue; it also contains the
+ commented input DELTAT_sc = 0.001 [K]. Curve-fitting expression noted in the
+ original: epsilon_s_cp_mes[i] = a0 + a1*(R_p_cp[i]-7)^2 + a2/(R_p_cp[i]-a3)
+ (coefficients a0..a3 are not defined in this file)."

@@ -394,3 +394,9 @@ drops the refrigerant side entirely. They have no `duplicate_group`.
 - `CSL-0079` *brineprop_secondary_refrigerants*: the BrineProp library this
   model copies its `BRINEPROP` procedure from (brine properties of the
   ethylene-glycol solution of the coil).
+- `CSL-0162` *glycol_runaround_recovery_loop*: the same Braun wet-coil
+  formulation applied to the two coils of a run-around heat-recovery loop
+  (import of the same model bank, card C-154).
+- `CSL-0163` *cooling_coil_paramid*: the parameter-identification sibling of
+  the same model bank and authors (card C-155): one measured wet-regime point
+  identifies the resistances of the same one-zone wet-coil model.

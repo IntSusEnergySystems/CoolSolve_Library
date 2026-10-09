@@ -1,0 +1,90 @@
+{
+  "id": "CSL-0130",
+  "name": "pipe_pressure_drop_correlations",
+  "title": "Pressure drop in straight pipes: friction factors and two-phase correlations (function library)",
+  "summary": "EES FUNCTION library of the pipe pressure-drop correlations: six single-phase Darcy friction factors (Churchill 1977, Swamee-Jain 1976, Konakov, Petukhov 1970, Haaland 1983 and Cheng for supercritical CO2), the single-phase pressure drop of a straight pipe (Darcy-Weisbach plus hydrostatic term), the two-phase frictional pressure drops of Friedel 1979, Muller-Steinhagen & Heck 1986 and Choi-Kedzierski-Domanski 2001, the two-phase acceleration term (homogeneous or Zivi void fraction) and the two-phase gravity term; the Reynolds, Froude and Weber numbers, the homogeneous and Zivi void fractions and the homogeneous two-phase density are given as helper functions.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "pipe_pressure_drop_correlations.eescode",
+  "fluids": ["R134a", "Water", "R744"],
+  "tags": [
+    "pressure drop",
+    "friction factor",
+    "Darcy-Weisbach",
+    "pipe flow",
+    "two-phase flow",
+    "frictional multiplier",
+    "acceleration pressure drop",
+    "gravity",
+    "void fraction",
+    "supercritical CO2",
+    "function library",
+    "translation"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "LN / LOG10 / SQRT / ABS",
+    "property functions",
+    "string variables"
+  ],
+  "stats": {
+    "n_equations": 104,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/correlations/pressure_drop/pipe_DP.py",
+    "candidate_id": "LTP-028",
+    "authors": [
+      "E. Neven (LaboThapPy, pipe_DP.py)",
+      "S. W. Churchill (Churchill friction factor, 1977)",
+      "P. K. Swamee and A. K. Jain (Swamee-Jain friction factor, 1976)",
+      "B. S. Petukhov (Petukhov friction factor, 1970)",
+      "S. E. Haaland (Haaland friction factor, 1983)",
+      "L. Cheng (Cheng supercritical CO2 friction factor, 2024)",
+      "Z. Yang and J. Yang (pseudo-critical temperature of CO2, 2012)",
+      "D. Banuti (pseudo-boiling bounds, 2019)",
+      "L. Friedel (Friedel two-phase pressure drop, 1979)",
+      "H. Muller-Steinhagen and K. Heck (two-phase pressure drop, 1986)",
+      "J. Y. Choi, M. A. Kedzierski and P. A. Domanski (Choi two-phase pressure drop, 2001)",
+      "G. B. Wallis (two-phase acceleration pressure drop, 1969)"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy",
+    "license": "MIT (declared in pyproject.toml; LICENSE.txt of the library is Apache-2.0) / model published under the library MIT licence",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "LaboThapPy commit f03f7f47, file labothappy/correlations/pressure_drop/pipe_DP.py, with the helpers of labothappy/correlations/properties/dimensionless.py (compute_reynolds, compute_froude, compute_weber), labothappy/correlations/void_fraction/void_fraction.py (void_fraction_homogeneous, void_fraction_zivi), labothappy/correlations/properties/two_phase.py (compute_two_phase_density) and labothappy/correlations/properties/supercritical.py (pseudo_boiling_bounds, pseudo_critical_temperature_CO2). The demonstration cases come from the library example labothappy/component/examples/heat_exchanger/hex_pipe_DP_correlations_comparison_example.py. Translation published under the CoolSolve_Library MIT license (decision D3); the scientific basis of each correlation is the original paper named in its function comment block."
+  },
+  "verification": {
+    "reference": "the LaboThapPy correlations of commit f03f7f47, recomputed in a throw-away virtual environment under work/ (work/pipe_dp/ref_pipe_dp.py, installed with pip install -e ~/git/LaboThapPy); the five friction factors also reproduce the values printed by the library example itself at the Reynolds number of its logspace grid; 34 output values in total",
+    "date": "2026-10-09",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 1.02e-12,
+    "notes": "compare_solution.py: 34 common variables, 0 differ (rtol=0.001); the largest relative deviation is 1.0e-12 (dP_F3, supercritical CO2), i.e. round-off in the double-precision evaluation."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0018",
+    "CSL-0087",
+    "CSL-0103",
+    "CSL-0158",
+    "CSL-0131",
+    "CSL-0132"
+  ],
+  "related_external": [
+    "sources/labothappy LTP-034 (in-tube heat-transfer correlations; needs a friction factor such as those of this file)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-09",
+      "action": "added (T-FUNC card C-175, inventory row LTP-028)",
+      "by": "opencode worker (space-bunny-free) for S. Quoilin"
+    }
+  ]
+}

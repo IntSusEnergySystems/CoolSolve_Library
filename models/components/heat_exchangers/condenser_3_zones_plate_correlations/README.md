@@ -177,3 +177,5 @@ Source file (EES 8.940), collection of S. Quoilin:
   `prop_htf` procedure (renamed `prop_heat_transfer_fluid`, with the
   `therminol66`/`TherminolVP-1` branches and a built-in fluid fallback).
 - `CSL-0114` *evaporator_3_zones_plate_correlations*: the evaporator counterpart of the same lab file family (same zone structure, Thonon single phase and Hsieh & Lin boiling instead of Kuo; R245fa/oil default point and an auto-size variant file).
+
+- `CSL-0153` *orc_whr_refprop_cost*: three-zone plate condenser (Thonon/Kuo).

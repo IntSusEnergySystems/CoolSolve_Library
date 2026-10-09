@@ -1,0 +1,64 @@
+{
+  "id": "CSL-0167",
+  "name": "reciprocating_polynomial_r22",
+  "title": "Reciprocating compressor reference model with polynomial laws in an R22 cycle",
+  "summary": "Semi-empirical reference model of a hermetic reciprocating refrigeration compressor (supply pressure drop, heating-up against a fictitious wall, isentropic compression, cooling-down, exhaust pressure drop, clearance-volume re-expansion and motor slip), with its parameters identified from test data and imposed through scaled comparison variables (AUD, FMEP_0); closed on a simple R22 cycle, it predicts mass flow, electrical power, discharge temperature and COP, and lists the polynomial laws identified from the results.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "reciprocating_polynomial_r22.eescode",
+  "fluids": [
+    "R22"
+  ],
+  "tags": [
+    "reciprocating compressor",
+    "piston compressor",
+    "refrigeration",
+    "semi-empirical model",
+    "polynomial regression",
+    "parameter identification",
+    "clearance volume",
+    "fictitious wall heat transfer"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 133,
+    "largest_block": 34
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/JL/new/reciprocating JL080205.zip!/reciprocating JL080205/3_2_3_Polynomial_modelling.EES",
+    "candidate_id": "TM-0499",
+    "authors": [
+      "TBD (J. Lebrun, ULiège Thermodynamics Laboratory, per the file series JL080205)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X6.395",
+    "language": "en",
+    "course": "Reference model series of the ULiège Thermodynamics Laboratory (reciprocating JL080205)"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (ees_variables.csv, reference values converted bar/kJ -> Pa/J by hand); M_dot, W_dot and W_dot_loss hand-checked against the solution listing stored in the file header",
+    "date": "2026-10-09",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.0181,
+    "notes": "97 common variables; 13 excluded as absolute enthalpy/entropy (R22 reference-state offset EES 6.395 vs CoolProp: +155.2 kJ/kg / +824 J/kg, nearly constant; isentropic relation unaffected, w_s within 1.7e-3) and C_sd_cp excluded as unit-converted (8e-4 1/kW -> 8e-7 1/W). Remaining 83 variables within 1.81e-02 (worst C_dot_su1_cp via c_p_su1_cp +1.65 %), median 7.9e-04 - older-EES R22 property formulation vs CoolProp, same family as the 1.4 % documented on CSL-0001."
+  },
+  "missing_features": [],
+  "related": ["CSL-0001", "CSL-0007", "CSL-0022", "CSL-0156"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-09",
+      "action": "added (task C-159, card TM-0499, hand conversion bar/kJ -> Pa/J)",
+      "by": "glm-5.3-flash (Z.ai) for S. Quoilin"
+    }
+  ]
+}

@@ -390,3 +390,4 @@ model bank, so nothing was merged into or split from this model.
   model but without a runnable variant.
 - `CSL-0068` *heat_pump_scroll_compressor_data_check*: a data-consistency check
   of a scroll compressor heat pump on the same refrigerant family.
+- `CSL-0155` *inverter_air_water_heat_pump*: air-to-water counterpart of this complete heat-pump system model (Daikin Altherma type, heating branch imported).

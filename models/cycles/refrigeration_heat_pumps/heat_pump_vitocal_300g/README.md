@@ -257,6 +257,8 @@ procedures then compute the resulting pinch points.
   polynomial of the `'ari'` compressor mode, with the five catalogue tables
   recovered from `TM-0560` (see *How to run* for the vintage caveat).
 
+- `CSL-0155` *inverter_air_water_heat_pump*: air-to-water counterpart of this complete heat-pump system model (Daikin Altherma type, heating branch imported).
+
 [1] Winandy, E., C. Saavedra O., J. Lebrun (2002), *Experimental analysis and
 simplified modelling of a hermetic scroll refrigeration compressor*, Applied
 Thermal Engineering 22, 107–120 (cited in the file header).

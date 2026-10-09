@@ -136,6 +136,9 @@ Original authors of the model: S. Quoilin and A. Desideri (see the git history o
 
 ## Related models
 
+- `CSL-0129` *parabolic_trough_collector_discretised*: collector model with a discretised
+  absorber (enthalpy march over `DUPLICATE` elements, Soponova MicroCSP
+  efficiency map); the absorber counterpart of this receiver model.
 - `CSL-0119` *solar_geometry_sun_path*: solar geometry (declination, hour
   angle, sun position) of the same sub-category; provides the sun-position
   inputs such collector models need.

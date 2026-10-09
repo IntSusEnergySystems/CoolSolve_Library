@@ -393,3 +393,12 @@ Transfer*, 3E, McGraw-Hill, 1998.
   functions), same layout; its `(mu/mu_wall)^n` factors are the general form
   of the fixed-exponent Sieder-Tate correction of this file, and its `fd`
   factors apply to the same friction-factor inputs.
+
+- `CSL-0128` *hx_eps_ntu_plate_pipe*: translation of the LaboThapPy
+  `HexeNTU` component; `h_conv_pipe_htc` of that model calls `Nu_Gnielinski`
+  (with `fd = 8*f` of the original transition branch) and `Nu_Sieder_Tate`
+  for the turbulent branches of its pipe/canal convection coefficient, next to
+  a laminar branch.
+- `CSL-0130` *pipe_pressure_drop_correlations*: the six explicit Darcy
+  friction factors that can be computed for the `fd` argument of most functions
+  of this file (smooth or rough pipe, single phase or supercritical CO2).

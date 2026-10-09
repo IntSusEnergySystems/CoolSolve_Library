@@ -184,3 +184,7 @@ Source file (EES 10.836, comments in French), collection of S. Quoilin:
 - `CSL-0058` *diesel_engine_excess_air_exhaust_analysis*: exercise 3 of the
   same repetition series, same five-box combustion balance with a diesel fuel
   whose `CH_n` is fitted from its mass fractions.
+- `CSL-0150` *adiabatic_flame_dissociation*: the same adiabatic flame
+  temperature with **chemical-equilibrium dissociation** of the products
+  (EES built-in `Chem_Equil`/`NASA`, native file blocked), for CH4 or fuel
+  oil instead of octane.

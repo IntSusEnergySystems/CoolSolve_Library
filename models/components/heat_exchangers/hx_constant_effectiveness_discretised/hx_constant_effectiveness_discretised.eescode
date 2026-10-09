@@ -1,0 +1,135 @@
+{=============================================================================
+  Discretised constant-effectiveness heat exchanger with a minimum pinch
+  CoolSolve Library model CSL-0127
+ -----------------------------------------------------------------------------
+  Translation of the LaboThapPy component HexCstEffDisc (counterflow HX split
+  into n_disc equal-enthalpy segments) into EES-language equations. The duty
+  Q_dot = epsilon*Q_dot_max is limited by the user maximum effectiveness
+  eta_max, by an external ideal-outlet maximum heat, by an internal zero-pinch
+  limit and by a minimum segment temperature difference Pinch_min; the Python
+  effectiveness loops (1 % steps, bisection) become simultaneous equations
+  closed by two min-based complementarities, with DUPLICATE-array profiles.
+  File for case RecupHT of the original example: n_disc = 20, Pinch_min = 0 K.
+  Inputs : fluid_H$, T_su_H, P_su_H, M_dot_H; fluid_C$, T_su_C, P_su_C, M_dot_C; eta_max, n_disc, Pinch_min, DP_h, DP_c
+  Outputs: Q_dot, epsilon, DT_pinch, outlet states, segment profiles
+  Units  : SI - temperatures in degC, pressures in Pa, energies in J
+  Source : LaboThapPy HexCstEffDisc, B. Chaudoir and E. Neven et al. (ULiege), commit f03f7f47 - see README.md
+  Status : verified vs the original Python example (the original reduces
+           epsilon in 1 % steps; the pinch here is continuous) - README.md
+=============================================================================}
+
+"!Inputs (case RecupHT of hex_csteff_disc_example.py)"
+fluid_H$ = 'R744'             "hot side: CO2 (CoolProp 'CO2' maps to the EES real fluid R744; bare CO2 is the ideal-gas species)"
+T_su_H = 52.25394337030201      "hot supply temperature [C] (325.403943370302 K in the original)"
+P_su_H = 15000000.0         "hot supply pressure [Pa]"
+M_dot_H = 30                "hot mass flow rate [kg/s]"
+fluid_C$ = 'R744'            "cold side: CO2 of the original"
+T_su_C = 34.60446766758423     "cold supply temperature [C] (307.7544676675842 K in the original)"
+P_su_C = 3991606            "cold supply pressure [Pa]"
+M_dot_C = 30                "cold mass flow rate [kg/s]"
+eta_max = 0.95                "user maximum effectiveness [-]"
+n_disc = 20               "number of enthalpy segments [-] (the DUPLICATE bounds below use the literals 21 and 20)"
+Pinch_min = 0                "minimum temperature difference, held at every segment [K]"
+DP_h = 0              "hot-side pressure drop, equally distributed over the segments [Pa]"
+DP_c = 0                "cold-side pressure drop, equally distributed over the segments [Pa]"
+
+"!Inlet states and external maximum heat (as in find_Q_dot_max of the original)"
+h_su_H = ENTHALPY(fluid_H$, T=T_su_H, P=P_su_H)   "hot inlet enthalpy [J/kg]"
+h_su_C = ENTHALPY(fluid_C$, T=T_su_C, P=P_su_C)   "cold inlet enthalpy [J/kg]"
+h_H_id = ENTHALPY(fluid_H$, T=T_su_C, P=P_su_H)   "hot fluid cooled to the cold inlet temperature [J/kg]"
+h_C_id = ENTHALPY(fluid_C$, T=T_su_H, P=P_su_C)   "cold fluid heated to the hot inlet temperature [J/kg]"
+Q_max_h = M_dot_H*(h_su_H - h_H_id)               "hot-side ideal duty [W]"
+Q_max_c = M_dot_C*(h_C_id - h_su_C)               "cold-side ideal duty [W]"
+Q_max_ext = MIN(Q_max_h, Q_max_c)                 "external maximum heat [W]"
+
+"!Segment pressures, index i = 1..21 counted from the hot-inlet (cold-outlet) end;"
+"the hot side flows towards increasing i, the cold side (counterflow) the other way"
+DUPLICATE i=1,21
+  p_hot[i] = P_su_H - (i-1)*DP_h/n_disc            "hot-side pressure [Pa]"
+  p_cold[i] = P_su_C - (21-i)*DP_c/n_disc      "cold-side pressure at the same exchanger position [Pa]"
+END
+
+"!Temperature profiles at the unknown duty Q_dot, as in counterflow_discretized;"
+"equal enthalpy steps, so the profiles are linear in the segment index"
+DUPLICATE i=1,21
+  h_hot[i] = h_su_H - (i-1)*Q_dot/(n_disc*M_dot_H)   "hot-side enthalpy profile [J/kg]"
+  T_hot[i] = TEMPERATURE(fluid_H$, h=h_hot[i], P=p_hot[i])   "hot-side temperature [C]"
+  h_cold[i] = h_su_C + Q_dot/M_dot_C - (i-1)*Q_dot/(n_disc*M_dot_C)   "cold-side enthalpy profile [J/kg] (i=1 is the cold outlet, as in the original)"
+  T_cold[i] = TEMPERATURE(fluid_C$, h=h_cold[i], P=p_cold[i])   "cold-side temperature [C]"
+  DT[i] = T_hot[i] - T_cold[i]                       "local temperature difference [K]"
+END
+DT_min[1] = DT[1]                                    "running minimum of DT [K]"
+DT_min[2] = MIN(DT_min[1], DT[2])
+DT_min[3] = MIN(DT_min[2], DT[3])
+DT_min[4] = MIN(DT_min[3], DT[4])
+DT_min[5] = MIN(DT_min[4], DT[5])
+DT_min[6] = MIN(DT_min[5], DT[6])
+DT_min[7] = MIN(DT_min[6], DT[7])
+DT_min[8] = MIN(DT_min[7], DT[8])
+DT_min[9] = MIN(DT_min[8], DT[9])
+DT_min[10] = MIN(DT_min[9], DT[10])
+DT_min[11] = MIN(DT_min[10], DT[11])
+DT_min[12] = MIN(DT_min[11], DT[12])
+DT_min[13] = MIN(DT_min[12], DT[13])
+DT_min[14] = MIN(DT_min[13], DT[14])
+DT_min[15] = MIN(DT_min[14], DT[15])
+DT_min[16] = MIN(DT_min[15], DT[16])
+DT_min[17] = MIN(DT_min[16], DT[17])
+DT_min[18] = MIN(DT_min[17], DT[18])
+DT_min[19] = MIN(DT_min[18], DT[19])
+DT_min[20] = MIN(DT_min[19], DT[20])
+DT_min[21] = MIN(DT_min[20], DT[21])
+DT_pinch = DT_min[21]                              "minimum temperature difference over the segments [K]"
+
+"!Internal profiles at the unknown internal maximum heat Q_dot_max (the"
+"fictive-effectiveness search of the original), same equations as above"
+DUPLICATE i=1,21
+  h2_hot[i] = h_su_H - (i-1)*Q_dot_max/(n_disc*M_dot_H)
+  T2_hot[i] = TEMPERATURE(fluid_H$, h=h2_hot[i], P=p_hot[i])
+  h2_cold[i] = h_su_C + Q_dot_max/M_dot_C - (i-1)*Q_dot_max/(n_disc*M_dot_C)
+  T2_cold[i] = TEMPERATURE(fluid_C$, h=h2_cold[i], P=p_cold[i])
+  DT2[i] = T2_hot[i] - T2_cold[i]                    "[K]"
+END
+DT2_min[1] = DT2[1]
+DT2_min[2] = MIN(DT2_min[1], DT2[2])
+DT2_min[3] = MIN(DT2_min[2], DT2[3])
+DT2_min[4] = MIN(DT2_min[3], DT2[4])
+DT2_min[5] = MIN(DT2_min[4], DT2[5])
+DT2_min[6] = MIN(DT2_min[5], DT2[6])
+DT2_min[7] = MIN(DT2_min[6], DT2[7])
+DT2_min[8] = MIN(DT2_min[7], DT2[8])
+DT2_min[9] = MIN(DT2_min[8], DT2[9])
+DT2_min[10] = MIN(DT2_min[9], DT2[10])
+DT2_min[11] = MIN(DT2_min[10], DT2[11])
+DT2_min[12] = MIN(DT2_min[11], DT2[12])
+DT2_min[13] = MIN(DT2_min[12], DT2[13])
+DT2_min[14] = MIN(DT2_min[13], DT2[14])
+DT2_min[15] = MIN(DT2_min[14], DT2[15])
+DT2_min[16] = MIN(DT2_min[15], DT2[16])
+DT2_min[17] = MIN(DT2_min[16], DT2[17])
+DT2_min[18] = MIN(DT2_min[17], DT2[18])
+DT2_min[19] = MIN(DT2_min[18], DT2[19])
+DT2_min[20] = MIN(DT2_min[19], DT2[20])
+DT2_min[21] = MIN(DT2_min[20], DT2[21])
+DT2_pinch = DT2_min[21]                            "minimum difference of the zero-pinch profiles [K]"
+cap = MIN(Q_max_ext - Q_dot_max, DT2_pinch)          "complementarity: Q_dot_max = smaller of external and zero-pinch heat [W]"
+cap = 0
+
+"!Final selection: the 1 % effectiveness loop of the original, recast as a"
+"simultaneous constraint: Q_dot is the smaller of the heat whose minimum"
+"segment difference equals Pinch_min and of the eta_max share of Q_dot_max"
+comp = MIN(DT_pinch - Pinch_min, eta_max*Q_dot_max - Q_dot)   "complementarity closing Q_dot [W]"
+comp = 0
+epsilon = Q_dot/Q_dot_max                            "effectiveness finally used [-]"
+
+"!Outlet states (as in update_connectors of the original)"
+h_ex_C = h_su_C + Q_dot/M_dot_C                      "cold outlet enthalpy [J/kg]"
+p_ex_C = P_su_C - DP_c                               "cold outlet pressure [Pa]"
+T_ex_C = TEMPERATURE(fluid_C$, h=h_ex_C, P=p_ex_C)   "cold outlet temperature [C]"
+h_ex_H = h_su_H - Q_dot/M_dot_H                      "hot outlet enthalpy [J/kg]"
+p_ex_H = P_su_H - DP_h                               "hot outlet pressure [Pa]"
+T_ex_H = TEMPERATURE(fluid_H$, h=h_ex_H, P=p_ex_H)   "hot outlet temperature [C]"
+
+"!Diagnostics (no effect on the solution)"
+DT_hot_end = T_su_H - T_ex_C                         "temperature difference at the hot-inlet end [K]"
+DT_cold_end = T_ex_H - T_su_C                        "temperature difference at the cold-inlet end [K]"

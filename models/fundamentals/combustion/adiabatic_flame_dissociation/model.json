@@ -1,0 +1,85 @@
+{
+  "id": "CSL-0150",
+  "name": "adiabatic_flame_dissociation",
+  "title": "Adiabatic flame temperature of CH4 or fuel oil with or without dissociation",
+  "summary": "Adiabatic, constant-pressure combustion of CH4 or fuel oil with excess air: adiabatic flame temperature from H_reactants = H_products, with either complete-combustion products (CO2, H2O, O2, N2) or the 14-species chemical-equilibrium mixture from the EES built-in Chem_Equil procedure; species enthalpies from the EES built-in NASA procedure.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "adiabatic_flame_dissociation.eescode",
+  "fluids": [
+    "CH4",
+    "O2",
+    "N2",
+    "CO2",
+    "H2O",
+    "CO",
+    "H2",
+    "NO"
+  ],
+  "tags": [
+    "combustion",
+    "adiabatic flame temperature",
+    "chemical equilibrium",
+    "dissociation",
+    "excess air",
+    "fuel oil",
+    "exercise"
+  ],
+  "language_features": [
+    "string variables",
+    "arrays",
+    "DUPLICATE",
+    "$IF directives",
+    "CALL CHEM_EQUIL (EES built-in)",
+    "CALL NASA (EES built-in)",
+    "sum"
+  ],
+  "stats": {
+    "n_equations": 85,
+    "largest_block": 2
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP1_Ex_1-5/Ex_3-4_CH4-Fuel Oil_Tadiab with or without dissociation_2016.EES",
+    "candidate_id": "TM-0231",
+    "authors": [
+      "P. Ngendakumana",
+      "R. Dickes"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.589",
+    "language": "en",
+    "course": "MCI (ULiège), TP1 exercises 3-4 (2016)"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (last run: CH4, DISSOCIATION$ = 'YES', e = 0.2, 30 bar, reactants at 288 K): T_adiab = 2417.129 K, H_react = H_prod = -78333.02 kJ/kmol fuel. The native file is blocked in CoolSolve (missing_features); no CoolSolve comparison yet - to be re-verified when the gaps close (T-RECHECK).",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "notes": "26 of the 28 stored variables carry values (CO and NO cleared); the Oil-case records (MM_f, LHV_f, c_f, H_rf, H_ra, HHV, LHV_f_bis) belong to the alternative fuel case of this multi-case file. The stored ntot = 0.54286 kmol is inconsistent with the stored H-atom balance for the same run (flagged in the README, not resolvable without EES)."
+  },
+  "missing_features": [
+    "CS-GAP-IF-DIRECTIVE",
+    "CS-GAP-CHEM-EQUIL",
+    "CS-GAP-NASA",
+    "CS-GAP-NAME-SYMBOL",
+    "CS-GAP-SUM-INDEXED"
+  ],
+  "related": [
+    "CSL-0005",
+    "CSL-0046",
+    "CSL-0152"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (card C-142, batch B-11); native file blocked (CS-GAP-IF-DIRECTIVE, CS-GAP-CHEM-EQUIL, CS-GAP-NASA, CS-GAP-NAME-SYMBOL, CS-GAP-SUM-INDEXED), no runnable variant (equilibrium physics has no faithful substitute)",
+      "by": "GLM (Z.ai) for S. Quoilin"
+    }
+  ]
+}

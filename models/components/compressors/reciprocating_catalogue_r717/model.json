@@ -1,0 +1,70 @@
+{
+  "id": "CSL-0157",
+  "name": "reciprocating_catalogue_r717",
+  "title": "Reciprocating compressor from catalogue data (R717)",
+  "summary": "Isentropic and volumetric effectiveness of an R717 reciprocating compressor computed from 17 catalogue rows (condensing/evaporating temperature, capacity, electrical power, mass flow) read from a lookup table, with a power-law extrapolation of the isentropic effectiveness to 1000 and 750 rpm.",
+  "kind": "steady",
+  "level": 3,
+  "status": "blocked",
+  "main_file": "reciprocating_catalogue_r717.eescode",
+  "fluids": [
+    "R717"
+  ],
+  "tags": [
+    "reciprocating compressor",
+    "catalogue data",
+    "isentropic effectiveness",
+    "volumetric effectiveness",
+    "speed maps",
+    "ammonia",
+    "part load"
+  ],
+  "language_features": [
+    "DUPLICATE arrays",
+    "lookup tables",
+    "string variables"
+  ],
+  "stats": {
+    "n_equations": 399,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "industry",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/1_Compressors/1_1_Reciprocating Compressors/Catalogue_data_model-RPM_simulation-Part_speed-Full_load.EES",
+    "candidate_id": "TM-0282",
+    "authors": [
+      "Felipe Trebilcock (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X6.596",
+    "language": "en",
+    "course": "Laborelec compressor toolkit 2002 (reviewers J. Lebrun, E. Winandy)"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (645 variables stored, 381 of the active model); the runnable variant reciprocating_catalogue_r717_coolsolve.eescode is verified, the native file cannot run",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.0907,
+    "notes": "381 common variables, 51 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 18. The 51 are the absolute h/s (reference-state offset EES vs CoolProp R717: h +145.1..145.5 kJ/kg, s +482.2..482.9 J/kg-K); all 330 derived results pass rtol (worst 9.96e-4)."
+  },
+  "missing_features": [
+    "CS-BUG-DUPLICATE-VAR-BOUND",
+    "CS-GAP-LOOKUP-NONAME"
+  ],
+  "related": [
+    "CSL-0123",
+    "CSL-0035"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (blocked native file, verified runnable variant)",
+      "by": "GLM (opencode) for S. Quoilin"
+    }
+  ]
+}

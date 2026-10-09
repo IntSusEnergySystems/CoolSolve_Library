@@ -1,0 +1,92 @@
+{
+  "id": "CSL-0153",
+  "name": "orc_whr_refprop_cost",
+  "title": "Waste-heat-recovery ORC with a scroll expander, REFPROP mixtures and an equipment cost model",
+  "summary": "Complete ORC recovering heat from an exhaust-gas/thermal-oil stream: three-zone plate evaporator and condenser with Thonon/Kuo/Hsieh correlations, scroll expander with fixed volume ratio, pump, pipe sizing and total equipment/investment cost; refrigerant properties from the EES REFPROP interface on the mixture file R245fa+R134a (stored run: pure R245fa).",
+  "kind": "steady",
+  "level": 3,
+  "status": "blocked",
+  "main_file": "orc_whr_refprop_cost.eescode",
+  "fluids": [
+    "R245fa+R134a (REFPROP)",
+    "R245fa",
+    "TherminolVP-1",
+    "Water",
+    "Air"
+  ],
+  "tags": [
+    "ORC",
+    "organic Rankine",
+    "waste heat recovery",
+    "scroll expander",
+    "plate heat exchanger",
+    "cost model",
+    "specific investment cost",
+    "Thonon",
+    "Kuo",
+    "Hsieh and Lin",
+    "REFPROP",
+    "optimisation"
+  ],
+  "language_features": [
+    "procedures",
+    "$common",
+    "EES_REFPROP external call",
+    "IF(A,B,X,Y,Z) 5-argument",
+    "lookup write",
+    "REPEAT-UNTIL",
+    ":= assignment",
+    "string variables",
+    "$bookmark"
+  ],
+  "stats": {
+    "n_equations": 361,
+    "largest_block": 24
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/cycle ORC with refprop.EES",
+    "candidate_id": "TM-0268",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.652",
+    "language": "fr",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (386 variables), compared with the runnable _coolsolve variant: 356 common variables; eta_cycle agrees to 7.1e-4, W_dot_net to 5.0e-3, SIC to 1.3e-2; the pressure-drop correlations deviate up to 0.114 (transport-property differences REFPROP vs CoolProp, see README)",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.252,
+    "notes": "Maximum over all common variables 0.252 = absolute Air enthalpies h_a_ex_liq/h_a_ex_vap (reference-state offset EES ideal gas vs CoolProp Air; their temperatures agree). Excluding that pair, the maximum is 0.114 on the evaporator pressure-drop correlation DELTAp_ev. The 9 REFPROP pseudo-quality outputs (Q_r_* outside 0..1) are not reproduced; 21 EES-only variables are stale values of an older EES session; the 6 CoolSolve-only names are the string variables and pi. Native file not runnable (CS-GAP-REFPROP, CS-GAP-IF5, CS-GAP-END-PROCEDURE)."
+  },
+  "missing_features": [
+    "CS-GAP-REFPROP",
+    "CS-GAP-IF5",
+    "CS-GAP-END-PROCEDURE"
+  ],
+  "related": ["CSL-0019",
+    "CSL-0113",
+    "CSL-0114",
+    "CSL-0121",
+    "CSL-0124", "CSL-0159"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (blocked import, card C-145)",
+      "by": "worker, CoolSolve Library batch B-11"
+    },
+    {
+      "date": "2026-10-08",
+      "action": "runnable _coolsolve variant added and verified against the EES stored solution (orchestrator review of C-145)",
+      "by": "worker, CoolSolve Library batch B-11"
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{=============================================================================
+  Parabolic-trough collector, absorber discretised (Soponova MicroCSP)
+  CoolSolve Library model CSL-0129
+ -----------------------------------------------------------------------------
+  Translation of the LaboThapPy component PTCollector (commit f03f7f47): the
+  absorber is split into n_disc elements along its length; each element absorbs
+  the solar power it receives times the collector efficiency of the 6 x 17
+  Soponova MicroCSP datasheet map (irradiance, fluid temperature rise over the
+  ambient, companion table sopo_map), and the fluid marches along the absorber
+  at constant pressure. The Python loop over the elements is a DUPLICATE array
+  of cells; the enthalpy states are written out one by one (see README).
+
+  Inputs : fluid, m_dot, P_su, T_su, T_amb, DNI, Theta, v_wind, n_disc,
+           L_coll, W
+  Outputs: Q_dot (absorbed power), h_ex, T_ex, p_ex, eta_coll_avg
+  Units  : SI - degC, Pa, J; angles in deg (the original takes them in rad)
+  Source : LaboThapPy (ULiege Thermodynamics Laboratory), commit f03f7f47 -
+           authors B. Chaudoir, E. Neven; Sopogy SopoNova MicroCSP collector
+           data. Licence MIT. Status: verified (README)
+=============================================================================}
+
+"Collector and operating conditions (Soponova MicroCSP geometry record)"
+fluid$ = 'Water'      "heat transfer fluid, as in the original example"
+m_dot = 0.6           "mass flow rate at the suction side [kg/s]"
+P_su = 500E3         "suction pressure [Pa]"
+T_su = 100           "suction temperature [degC]"
+T_amb = 25           "ambient temperature [degC]"
+DNI = 900            "direct normal irradiance [W/m^2]"
+Theta = 10           "incidence angle [deg] (10 deg in the original example)"
+v_wind = 5           "wind speed on the absorber [m/s]"
+n_disc = 20          "number of discretisation elements [-]; the loop below is unrolled over 20 elements, as EES and CoolSolve expand it at parse time"
+L_coll = 36.57       "absorber length of the collector field [m] (10 collectors of 3.657 m in series)"
+W = 1.524            "collector aperture width [m]"
+
+"Geometry of the discretisation"
+L_disc = L_coll/n_disc                    "length of one discretisation element [m]"
+Q_dot_sun_tot = DNI*cos(Theta)*L_coll*W   "solar power incident on the collector field [W]"
+
+"Elements of the absorber: the collector efficiency of an element is read on the
+ datasheet map at the irradiance and at the temperature of the fluid at the
+ inlet of the element"
+DUPLICATE i=1,20
+  T_su_el[i] = temperature(fluid$,h=h[i],p=P_su)  "fluid temperature at the inlet of element i [degC]"
+  DT[i] = T_su_el[i] - T_amb                      "temperature rise over the ambient at the inlet of element i [degC]"
+  eta_coll[i] = interpolate2('sopo_map','Irrad','DT_C','eta_coll',DNI,DT[i])  "collector efficiency of element i [-]"
+  Q_dot_disc[i] = DNI*cos(Theta)*L_disc*W         "solar power incident on element i [W]"
+  Q_dot_abs_disc[i] = Q_dot_disc[i]*eta_coll[i]   "power absorbed by element i [W]"
+END
+
+"Suction state and enthalpy march along the absorber: the fluid enthalpy
+ increases by the absorbed power of the element divided by the mass flow rate"
+h[1] = enthalpy(fluid$,T=T_su,P=P_su)        "specific enthalpy at the suction side [J/kg]"
+h[2] = h[1] + Q_dot_abs_disc[1]/m_dot        "outlet of element 1 [J/kg]"
+h[3] = h[2] + Q_dot_abs_disc[2]/m_dot        "outlet of element 2 [J/kg]"
+h[4] = h[3] + Q_dot_abs_disc[3]/m_dot        "outlet of element 3 [J/kg]"
+h[5] = h[4] + Q_dot_abs_disc[4]/m_dot        "outlet of element 4 [J/kg]"
+h[6] = h[5] + Q_dot_abs_disc[5]/m_dot        "outlet of element 5 [J/kg]"
+h[7] = h[6] + Q_dot_abs_disc[6]/m_dot        "outlet of element 6 [J/kg]"
+h[8] = h[7] + Q_dot_abs_disc[7]/m_dot        "outlet of element 7 [J/kg]"
+h[9] = h[8] + Q_dot_abs_disc[8]/m_dot        "outlet of element 8 [J/kg]"
+h[10] = h[9] + Q_dot_abs_disc[9]/m_dot       "outlet of element 9 [J/kg]"
+h[11] = h[10] + Q_dot_abs_disc[10]/m_dot     "outlet of element 10 [J/kg]"
+h[12] = h[11] + Q_dot_abs_disc[11]/m_dot     "outlet of element 11 [J/kg]"
+h[13] = h[12] + Q_dot_abs_disc[12]/m_dot     "outlet of element 12 [J/kg]"
+h[14] = h[13] + Q_dot_abs_disc[13]/m_dot     "outlet of element 13 [J/kg]"
+h[15] = h[14] + Q_dot_abs_disc[14]/m_dot     "outlet of element 14 [J/kg]"
+h[16] = h[15] + Q_dot_abs_disc[15]/m_dot     "outlet of element 15 [J/kg]"
+h[17] = h[16] + Q_dot_abs_disc[16]/m_dot     "outlet of element 16 [J/kg]"
+h[18] = h[17] + Q_dot_abs_disc[17]/m_dot     "outlet of element 17 [J/kg]"
+h[19] = h[18] + Q_dot_abs_disc[18]/m_dot     "outlet of element 18 [J/kg]"
+h[20] = h[19] + Q_dot_abs_disc[19]/m_dot     "outlet of element 19 [J/kg]"
+h[21] = h[20] + Q_dot_abs_disc[20]/m_dot     "outlet of element 20 [J/kg]"
+
+"Outputs"
+Q_dot = sum(Q_dot_abs_disc[1],Q_dot_abs_disc[2],Q_dot_abs_disc[3],Q_dot_abs_disc[4],Q_dot_abs_disc[5],Q_dot_abs_disc[6],Q_dot_abs_disc[7],Q_dot_abs_disc[8],Q_dot_abs_disc[9],Q_dot_abs_disc[10],Q_dot_abs_disc[11],Q_dot_abs_disc[12],Q_dot_abs_disc[13],Q_dot_abs_disc[14],Q_dot_abs_disc[15],Q_dot_abs_disc[16],Q_dot_abs_disc[17],Q_dot_abs_disc[18],Q_dot_abs_disc[19],Q_dot_abs_disc[20])   "power absorbed by the collector field [W]"
+h_ex = h[21]                "specific enthalpy at the exhaust side [J/kg]"
+T_ex = temperature(fluid$,h=h_ex,p=P_su)   "exhaust temperature [degC]"
+p_ex = P_su                 "exhaust pressure, constant along the absorber [Pa]"
+eta_coll_avg = Q_dot/Q_dot_sun_tot   "mean collector efficiency of the field [-]"
+
+"Energy balance check of the march (identity, not a constraint)"
+Q_dot_bal = m_dot*(h_ex - h[1])   "absorbed power recomputed from the enthalpy rise [W]"

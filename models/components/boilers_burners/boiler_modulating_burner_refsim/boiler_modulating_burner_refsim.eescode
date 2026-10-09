@@ -1,0 +1,387 @@
+{=============================================================================
+  Boiler with modulating burner: steady-state reference model (RefSim)
+  CoolSolve Library model CSL-0166
+ -----------------------------------------------------------------------------
+  Fuel-oil/gas boiler with a limited-modulating burner. Four regimes selected
+  from the water set point t_w_ex_set: OFF, ON/OFF, MODULATING (the fuel flow
+  is modulated so that t_w_ex reaches the set point) and FL (full load). Each
+  regime evaluates the same steady-state boiler: adiabatic combustion with
+  excess air (cpbar from CSL-0005), gas-water epsilon-NTU exchanger
+  (AU_gw = AU_gw_FL*(M_dot_f/M_dot_f_FL)^0.65), water-environment exchanger,
+  efficiency eta = Q_dot_u/Q_dot_c. The two MODULEs of the original
+  (BOILERSS, BOILERMOD) are flattened per call (decision D10, README.md).
+  The regime branches are selected by compile-time $if directives on the
+  runtime string regime$: BLOCKED in CoolSolve (CS-GAP-IF-DIRECTIVE,
+  CS-GAP-IF5, CS-BUG-STRING-CALL-OUT); lookup writes silently dropped
+  (CS-BUG-LOOKUP-WRITE, not blocking). Runnable variant: *_coolsolve.eescode.
+  Source : ULiege model bank 2008-02-12, "Classical Boiler with Modulating
+           Burner" - EES file BoilerWithModulatingBurner_RefSim_EES_Model_SB080212.EES
+  Authors: Stephane Bertagnolio (ULiege Thermodynamics Laboratory)
+  License: MIT (lab disclaimer: freely distributed, may not be sold, cite origin)
+ =============================================================================}
+
+{--- Library functions copied from CSL-0005 (cpbar_combustion_products) ---}
+
+PROCEDURE cpbar(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)
+{Mean specific heat c_bar_p [J/kg-K] of the products of combustion of a CmHn
+ hydrocarbon between T_p1 and T_p2 [°C], with simplified air (79 % N2 / 21 % O2
+ molar). Incomplete combustion (air deficiency) also returns the unburned-CO
+ losses Q_4 [J/kg fuel], the fraction x of C atoms oxidized to CO2 and the
+ minimum excess air e_min; f = 0 gives pure air. Verbatim from CSL-0005
+ (ULiege combustion library, P. Ngendakumana 2003); verified there.}
+IF (unitsystem('K')=1)  THEN CALL error('Please, set °C for temperature units!')
+If (unitsystem('Molar')=1)  then CALL error('Please, set Mass basis!')
+Q_4 = 0
+x = 1
+e_min = 0
+e = 0
+x_air_N2 = 0.79 ; x_air_O2= 0.21
+R_u = 8314 "J/kmol.K"
+MM_CO = molarmass(CO) ; MM_N2 = molarmass(N2) ; MM_O2 = molarmass(O2)
+MM_CO2 = molarmass(CO2) ; MM_H2O = molarmass(H2O)
+IF (f>0) Then "combustion products (not pure air)"
+parfuel = m+n/4
+MM_f = 12*m+1*n
+f_st = MM_f/(parfuel*(MM_O2+(x_air_N2/x_air_O2)*MM_N2))
+e = (f_st/f)-1
+IF (f>f_st) Then "air deficiency"
+e_min = -m/(2*parfuel) "to ensure x>0"
+f_max = f_st/(1+e_min)
+g = parfuel*(1+e)*(79/21)
+c = n/2
+x=2*(e*parfuel+m/2)/m
+a = m*x "x is the fraction of the C atoms oxidized into CO2"
+b = m*(1-x)
+nkmoltot = a+ b + c +g
+x_CO2 = a/nkmoltot
+x_CO = b/nkmoltot
+x_H2O = c/nkmoltot
+x_N2 = g/nkmoltot
+mmprod = x_CO2*MM_CO2+x_CO*MM_CO+x_H2O*MM_H2O+x_N2*MM_N2
+h_CO2 = (enthalpy(CO2,T=T_p1)-enthalpy(CO2,T=T_p2))*MM_CO2
+h_CO = (enthalpy(CO,T=T_p1)-enthalpy(CO,T=T_p2))*MM_CO
+h_H2O =(enthalpy(H2O,T=T_p1)-enthalpy(H2O,T=T_p2))*MM_H2O
+h_N2 = (enthalpy(N2,T=T_p1)-enthalpy(N2,T=T_p2))*MM_N2
+c_bar_p = ((x_CO2*h_CO2+x_CO*h_CO+x_H2O*h_H2O+x_N2*h_N2)/mmprod)/(T_p1-T_p2)
+T_ref = 25
+LHV_CO_mol = enthalpy(CO,T=T_ref)*MM_CO+0.5*enthalpy(O2,T=T_ref)*MM_O2-ENTHALPY(CO2,T=T_ref)*MM_CO2
+LHV_CO_mas = LHV_CO_mol/MM_CO
+Q_4 = LHV_CO_mol*b
+ELSE
+nkmoltot = m+ n/2 + parfuel*(e+(1+e)*(x_air_N2/x_air_O2))
+x_CO2 = m/nkmoltot
+x_H2O = (n/2)/nkmoltot
+x_O2 = parfuel*e/nkmoltot
+x_N2 = parfuel*(1+e)*(x_air_N2/x_air_O2)/nkmoltot
+MM_prod = x_CO2*MM_CO2+x_H2O*MM_H2O+x_O2*MM_O2+x_N2*MM_N2
+hp_1 = (enthalpy(CO2,T=T_p1)-enthalpy(CO2, T=T_p2))*MM_CO2
+hp_2 = (enthalpy(H2O,T=T_p1)-enthalpy(H2O, T=T_p2))*MM_H2O
+hp_3 = (enthalpy(O2,T=T_p1)-enthalpy(O2, T=T_p2))*MM_O2
+hp_4 = (enthalpy(N2,T=T_p1)-enthalpy(N2, T=T_p2))*MM_N2
+hp = (x_CO2*hp_1+x_H2O*hp_2+x_O2*hp_3+x_N2*hp_4)/MM_prod
+c_bar_p  = hp/(T_p1-T_p2)
+ENDIF
+ELSE
+MM_a = x_air_O2*MM_O2+x_air_N2*MM_N2
+ha_1 = (enthalpy(O2,T=T_p1)-enthalpy(O2, T=T_p2))*MM_O2
+ha_2 = (enthalpy(N2,T=T_p1)-enthalpy(N2, T=T_p2))*MM_N2
+ha = (x_air_O2*ha_1+x_air_N2*ha_2)/MM_a
+c_bar_p  = ha/(T_p1-T_p2)
+ENDIF
+END
+
+"!Procedures of the original model"
+
+PROCEDURE WRITERESULTS (i,t_w_su,t_w_ex,t_w_ex_set,V_dot_w_l\h,Q_dot_u,Q_dot_c,eta,theta,M_dot_f,regime$,W_dot_aux_lf,W_dot_aux_gf,X_burner:Write_Results$)
+lookup('Lookup_Results',i,1)=i
+lookup('Lookup_Results',i,2)=t_w_su
+lookup('Lookup_Results',i,3)=t_w_ex
+lookup('Lookup_Results',i,4)=t_w_ex_set
+lookup('Lookup_Results',i,5)=V_dot_w_l\h
+lookup('Lookup_Results',i,6)=Q_dot_u
+lookup('Lookup_Results',i,7)=Q_dot_c
+lookup('Lookup_Results',i,8)=eta
+lookup('Lookup_Results',i,9)=theta
+lookup('Lookup_Results',i,10)=M_dot_f
+lookup$('Lookup_Results',i,11)=regime$
+lookup('Lookup_Results',i,12)=W_dot_aux_lf
+lookup('Lookup_Results',i,13)=W_dot_aux_gf
+lookup('Lookup_Results',i,14)=X_burner
+Write_Results$='OK'
+END
+
+PROCEDURE BOILER_REGIME(t_w_ex_set,t_w_ex_FL,t_w_ex_MIN,t_w_ex_OFF:regime$)
+"!Definition of the functioning regime"
+IF (t_w_ex_FL<=t_w_ex_set) THEN
+regime$:='FL'
+ENDIF
+IF (t_w_ex_MIN<=t_w_ex_set) AND (t_w_ex_set<t_w_ex_FL) THEN
+regime$:='MODULATING'
+ENDIF
+IF (t_w_ex_OFF<= t_w_ex_set) AND (t_w_ex_set < t_w_ex_MIN) THEN
+regime$:='ON\OFF'
+ENDIF
+IF (t_w_ex_set <= t_w_ex_OFF) THEN
+regime$:='OFF'
+ENDIF
+END
+
+"!1. INPUTS (values of the stored operating point, last run of the original;"
+"the four first ones and AU_gw_FL, M_dot_f_FL, AU_wenv were supplied by the"
+"parametric table of the original, no longer recoverable - see README.md)"
+"water flow rate"
+V_dot_w_l\h=2150 [l/h]            "water volume flow rate through the boiler [l/h]"
+V_dot_w_l\h_OFF=2150 [l/h]        "water volume flow rate in the OFF regime [l/h] (as in the original)"
+t_w_su=70                         "water supply temperature [°C]"
+t_w_ex_set=71                     "water exhaust temperature set point [°C]"
+"3. PARAMETERS"
+i=1                               "run index of the results table [-]"
+"nominal useful power (for calculation of auxiliary consumption)"
+Q_dot_u_n=55000 [W]
+"modulating burner lower limit"
+X_MOD_MIN = 0.2 [-]
+"fuel flow rate"
+M_dot_f_FL=0.0013 [kg/s]          "full-load fuel flow rate (0.001292 commented in the original text)"
+M_dot_f_MIN=M_dot_f_FL*X_MOD_MIN  "minimum fuel flow rate of the modulating burner [kg/s]"
+"fuel/combustion"
+y_C=86.9E-2 [-]                   "carbon mass fraction of the fuel"
+y_H=13.1E-2 [-]                   "hydrogen mass fraction of the fuel (dead input of the boiler module)"
+f=6E-2 [-]                        "fuel-air ratio (commented in the original text, value of the stored run)"
+"heat transfer coefficients"
+AU_gw_FL=84 [W/K]                 "gas-water exchanger conductance at full load (83.4 commented in the original)"
+AU_wenv=12 [W/K]                  "water-environment exchanger conductance (11.65 commented in the original)"
+"Fluids Properties"
+c_w=4187 [J/kg-K]
+rho_w=1000 [kg/m^3]
+c_f=1800 [J/kg-K]
+LHV=43E6 [J/kg]
+c_p_a=1005 [J/kg-K]
+"Ambient conditions"
+t_a= 25 [C]
+t_f=25 [C]
+t_env=25 [C]
+"inputs of the MODULATING call (parametric table of the original, stale in the"
+"stored solution; recomputed values of the last MODULATING run - README.md)"
+t_w_su_MOD=70                     "water supply temperature in the modulating call [°C]"
+f_MOD=0.06 [-]                    "fuel-air ratio in the modulating call"
+AU_wenv_MOD=11.65 [W/K]           "water-environment conductance in the modulating call [W/K]"
+
+"!4.1. POTENTIAL REGIMES"
+"4.1.1. OFF regime:"
+Q_dot_wenv_OFF=epsilon_wenv_OFF*C_dot_w_OFF*(t_w_su-t_env)
+Q_dot_wenv_OFF=C_dot_w_OFF*(t_w_su-t_w_ex_OFF)
+"water flow rate"
+M_dot_w_OFF=V_dot_w_l\h_OFF/3600*rho_w/1000
+C_dot_w_OFF=M_dot_w_OFF*c_w
+"effectiveness"
+epsilon_wenv_OFF=1-exp(-NTU_wenv_OFF)
+NTU_wenv_OFF=AU_wenv/C_dot_w_OFF
+
+"!4.1.2/4.1.3. MODULE BOILERSS flattened (decision D10): the module body is"
+"copied once per call. Call 1, tag min (MIN regime, lower limit of the"
+"modulating burner). Formal -> actual: V_dot_w_l\h_ss -> V_dot_w_l\h,"
+"t_w_su_ss -> t_w_su, M_dot_f_ss -> M_dot_f_MIN, y_C -> y_C, y_H -> y_H"
+"(unused in the body), f_ss -> f, AU_gw_ss -> AU_gw_MIN, AU_wenv_ss -> AU_wenv;"
+"outputs: t_w_ex_ss -> t_w_ex_MIN, Q_dot_u_ss -> Q_dot_u_MIN,"
+"Q_dot_c_ss -> Q_dot_c_MIN, eta_ss -> eta_MIN. Internal variables renamed"
+"with the tag _min."
+"lower limit of modulating burner"
+AU_gw_MIN=AU_gw_FL*(M_dot_f_MIN/M_dot_f_FL)^0.65
+M_dot_w_min=V_dot_w_l\h/3600*rho_w/1000
+C_dot_w_min=M_dot_w_min*c_w
+"combustion reference model"
+y_C_min=y_C
+y_C_min=12/(12+n_min)
+f_min=f
+1/f_min=(1/f_st_min)*(1+e_min)
+1/f_st_min=((1+n_min/4)/0.21)*(MMa_min/(12+n_min))
+MMa_min=MolarMass(Air)
+Q_dot_1_min+Q_dot_2_min+Q_dot_3_min+Q_dot_4_min+Q_dot_5_min=0
+Q_dot_1_min=M_dot_a_min*c_p_a*(25-t_a)
+M_dot_a_min=M_dot_f_MIN/f_min
+Q_dot_2_min=M_dot_f_MIN*c_f*(25-t_f)
+Q_dot_3_min=-M_dot_f_MIN*LHV
+Q_dot_4_min=0
+"(if complete combustion)"
+Q_dot_5_min=M_dot_p_min*c_p_p_min*(t_adiab_min-25)
+M_dot_p_min=M_dot_a_min+M_dot_f_MIN
+CALL cpbar(1,n_min,f_min,25,t_adiab_min:c_p_p_min,Q_41_min,x1_min,e_min1_min,e1_min)
+"gas - water heat exchanger"
+Q_dot_gw_min=C_dot_min_min*epsilon_gw_min*(t_g_su_min-t_w_su)
+C_dot_min_min=min(C_dot_g_min,C_dot_w_min)
+C_dot_g_min=M_dot_p_min*c_p_g_min
+epsilon_gw_min=(1-exp(-NTU_gw_min*(1-omega_min)))/(1-omega_min*exp(-NTU_gw_min*(1-omega_min)))
+NTU_gw_min=AU_gw_MIN/C_dot_min_min
+omega_min=C_dot_min_min/C_dot_max_min
+C_dot_max_min=max(C_dot_g_min,C_dot_w_min)
+Q_dot_gw_min=C_dot_w_min*(t_w_ex_1_min-t_w_su)
+Q_dot_gw_min=C_dot_g_min*(t_g_su_min-t_g_ex_min)
+t_g_su_min=t_adiab_min
+CALL cpbar(1,n_min,f_min,t_g_ex_min,t_adiab_min:c_p_g_min,Q_42_min,x2_min,e_min2_min,e2_min)
+"water - environment heat exchanger"
+Q_dot_wenv_min=C_dot_w_min*epsilon_wenv_min*(t_w_ex_1_min-t_env)
+epsilon_wenv_min=1-exp(-NTU_wenv_min)
+NTU_wenv_min=AU_wenv/C_dot_w_min
+Q_dot_wenv_min=C_dot_w_min*(t_w_ex_1_min-t_w_ex_MIN)
+Q_dot_u_MIN=C_dot_w_min*(t_w_ex_MIN-t_w_su)
+Q_dot_c_MIN=M_dot_f_MIN*LHV
+"boiler efficiency"
+eta_MIN=Q_dot_u_MIN/Q_dot_c_MIN
+
+"!Call 2 of MODULE BOILERSS, tag fl (FULL LOAD regime). Formal -> actual:"
+"M_dot_f_ss -> M_dot_f_FL, AU_gw_ss -> AU_gw_FL; outputs: t_w_ex_ss ->"
+"t_w_ex_FL, Q_dot_u_ss -> Q_dot_u_FL, Q_dot_c_ss -> Q_dot_c_FL, eta_ss ->"
+"eta_FL. Internal variables renamed with the tag _fl."
+M_dot_w_fl=V_dot_w_l\h/3600*rho_w/1000
+C_dot_w_fl=M_dot_w_fl*c_w
+"combustion reference model"
+y_C_fl=y_C
+y_C_fl=12/(12+n_fl)
+f_fl=f
+1/f_fl=(1/f_st_fl)*(1+e_fl)
+1/f_st_fl=((1+n_fl/4)/0.21)*(MMa_fl/(12+n_fl))
+MMa_fl=MolarMass(Air)
+Q_dot_1_fl+Q_dot_2_fl+Q_dot_3_fl+Q_dot_4_fl+Q_dot_5_fl=0
+Q_dot_1_fl=M_dot_a_fl*c_p_a*(25-t_a)
+M_dot_a_fl=M_dot_f_FL/f_fl
+Q_dot_2_fl=M_dot_f_FL*c_f*(25-t_f)
+Q_dot_3_fl=-M_dot_f_FL*LHV
+Q_dot_4_fl=0
+"(if complete combustion)"
+Q_dot_5_fl=M_dot_p_fl*c_p_p_fl*(t_adiab_fl-25)
+M_dot_p_fl=M_dot_a_fl+M_dot_f_FL
+CALL cpbar(1,n_fl,f_fl,25,t_adiab_fl:c_p_p_fl,Q_41_fl,x1_fl,e_min1_fl,e1_fl)
+"gas - water heat exchanger"
+Q_dot_gw_fl=C_dot_min_fl*epsilon_gw_fl*(t_g_su_fl-t_w_su)
+C_dot_min_fl=min(C_dot_g_fl,C_dot_w_fl)
+C_dot_g_fl=M_dot_p_fl*c_p_g_fl
+epsilon_gw_fl=(1-exp(-NTU_gw_fl*(1-omega_fl)))/(1-omega_fl*exp(-NTU_gw_fl*(1-omega_fl)))
+NTU_gw_fl=AU_gw_FL/C_dot_min_fl
+omega_fl=C_dot_min_fl/C_dot_max_fl
+C_dot_max_fl=max(C_dot_g_fl,C_dot_w_fl)
+Q_dot_gw_fl=C_dot_w_fl*(t_w_ex_1_fl-t_w_su)
+Q_dot_gw_fl=C_dot_g_fl*(t_g_su_fl-t_g_ex_fl)
+t_g_su_fl=t_adiab_fl
+CALL cpbar(1,n_fl,f_fl,t_g_ex_fl,t_adiab_fl:c_p_g_fl,Q_42_fl,x2_fl,e_min2_fl,e2_fl)
+"water - environment heat exchanger"
+Q_dot_wenv_fl=C_dot_w_fl*epsilon_wenv_fl*(t_w_ex_1_fl-t_env)
+epsilon_wenv_fl=1-exp(-NTU_wenv_fl)
+NTU_wenv_fl=AU_wenv/C_dot_w_fl
+Q_dot_wenv_fl=C_dot_w_fl*(t_w_ex_1_fl-t_w_ex_FL)
+Q_dot_u_FL=C_dot_w_fl*(t_w_ex_FL-t_w_su)
+Q_dot_c_FL=M_dot_f_FL*LHV
+"boiler efficiency"
+eta_FL=Q_dot_u_FL/Q_dot_c_FL
+
+"!4.2. ALGORITHM : definition of the regime"
+"checking of the regime"
+CALL BOILER_REGIME(t_w_ex_set,t_w_ex_FL,t_w_ex_MIN,t_w_ex_OFF:regime$)
+
+$DOLAST
+"!4.3. PERFORMANCES OF THE BOILER IN THE DEFINED REGIME"
+$if regime$='OFF'
+"OFF regime"
+t_w_ex=t_w_ex_OFF
+Q_dot_u=0
+Q_dot_c=0
+eta=0
+theta=0
+M_dot_f=0
+X_burner=0 [-]
+$endif
+$if regime$='FL'
+"Full load"
+t_w_ex=t_w_ex_FL
+Q_dot_u=Q_dot_u_FL
+Q_dot_c=Q_dot_c_FL
+eta=eta_FL
+theta=1 [-]
+M_dot_f=M_dot_f_FL
+X_burner=1 [-]
+$endif
+$if regime$='MODULATING'
+"Modulating regime - MODULE BOILERMOD flattened, tag mod (identical body to"
+"BOILERSS). Formal -> actual: V_dot_w_l\h_MOD -> V_dot_w_l\h, t_w_su_MOD ->"
+"t_w_su_MOD, M_dot_f_ss -> M_dot_f_MOD, y_C -> y_C, f_ss -> f_MOD, AU_gw_ss ->"
+"AU_gw_MOD, AU_wenv_ss -> AU_wenv_MOD; outputs: t_w_ex_ss -> t_w_ex_MOD,"
+"Q_dot_u_ss -> Q_dot_u_MOD, Q_dot_c_ss -> Q_dot_c_MOD, eta_ss -> eta_MOD."
+"Internal variables renamed with the tag _mod."
+M_dot_w_mod=V_dot_w_l\h/3600*rho_w/1000
+C_dot_w_mod=M_dot_w_mod*c_w
+"combustion reference model"
+y_C_mod=y_C
+y_C_mod=12/(12+n_mod)
+f_mod=f_MOD
+1/f_mod=(1/f_st_mod)*(1+e_mod)
+1/f_st_mod=((1+n_mod/4)/0.21)*(MMa_mod/(12+n_mod))
+MMa_mod=MolarMass(Air)
+Q_dot_1_mod+Q_dot_2_mod+Q_dot_3_mod+Q_dot_4_mod+Q_dot_5_mod=0
+Q_dot_1_mod=M_dot_a_mod*c_p_a*(25-t_a)
+M_dot_a_mod=M_dot_f_MOD/f_mod
+Q_dot_2_mod=M_dot_f_MOD*c_f*(25-t_f)
+Q_dot_3_mod=-M_dot_f_MOD*LHV
+Q_dot_4_mod=0
+"(if complete combustion)"
+Q_dot_5_mod=M_dot_p_mod*c_p_p_mod*(t_adiab_mod-25)
+M_dot_p_mod=M_dot_a_mod+M_dot_f_MOD
+CALL cpbar(1,n_mod,f_mod,25,t_adiab_mod:c_p_p_mod,Q_41_mod,x1_mod,e_min1_mod,e1_mod)
+"gas - water heat exchanger"
+Q_dot_gw_mod=C_dot_min_mod*epsilon_gw_mod*(t_g_su_mod-t_w_su_MOD)
+C_dot_min_mod=min(C_dot_g_mod,C_dot_w_mod)
+C_dot_g_mod=M_dot_p_mod*c_p_g_mod
+epsilon_gw_mod=(1-exp(-NTU_gw_mod*(1-omega_mod)))/(1-omega_mod*exp(-NTU_gw_mod*(1-omega_mod)))
+NTU_gw_mod=AU_gw_MOD/C_dot_min_mod
+omega_mod=C_dot_min_mod/C_dot_max_mod
+C_dot_max_mod=max(C_dot_g_mod,C_dot_w_mod)
+Q_dot_gw_mod=C_dot_w_mod*(t_w_ex_1_mod-t_w_su_MOD)
+Q_dot_gw_mod=C_dot_g_mod*(t_g_su_mod-t_g_ex_mod)
+t_g_su_mod=t_adiab_mod
+CALL cpbar(1,n_mod,f_mod,t_g_ex_mod,t_adiab_mod:c_p_g_mod,Q_42_mod,x2_mod,e_min2_mod,e2_mod)
+"water - environment heat exchanger"
+Q_dot_wenv_mod=C_dot_w_mod*epsilon_wenv_mod*(t_w_ex_1_mod-t_env)
+epsilon_wenv_mod=1-exp(-NTU_wenv_mod)
+NTU_wenv_mod=AU_wenv_MOD/C_dot_w_mod
+Q_dot_wenv_mod=C_dot_w_mod*(t_w_ex_1_mod-t_w_ex_MOD)
+Q_dot_u_MOD=C_dot_w_mod*(t_w_ex_MOD-t_w_su_MOD)
+Q_dot_c_MOD=M_dot_f_MOD*LHV
+"boiler efficiency"
+eta_MOD=Q_dot_u_MOD/Q_dot_c_MOD
+AU_gw_MOD=AU_gw_FL*(M_dot_f_MOD/M_dot_f_FL)^0.65
+t_w_ex_MOD=t_w_ex_set
+t_w_ex=t_w_ex_MOD
+Q_dot_u=Q_dot_u_MOD
+Q_dot_c=Q_dot_c_MOD
+eta=eta_MOD
+theta=1 [-]
+M_dot_f=M_dot_f_MOD
+X_burner=M_dot_f_MOD/M_dot_f_FL
+$endif
+$if regime$='ON\OFF'
+"ON/OFF regime"
+t_w_ex=t_w_ex_set
+t_w_ex=theta_ON\OFF*t_w_ex_MIN+(1-theta_ON\OFF)*t_w_ex_OFF
+"efficiency"
+Q_dot_u=C_dot_w_ON\OFF*(t_w_ex-t_w_su)
+M_dot_w_ON\OFF=V_dot_w_l\h/3600*rho_w/1000
+C_dot_w_ON\OFF=M_dot_w_ON\OFF*c_w
+Q_dot_c=theta_ON\OFF*Q_dot_c_MIN
+eta=Q_dot_u/Q_dot_c
+theta=theta_ON\OFF
+M_dot_f=theta_ON\OFF*M_dot_f_FL
+X_burner=1 [-]
+$endif
+"!4.4. RESULTS"
+CALL WRITERESULTS (i,t_w_su,t_w_ex,t_w_ex_set,V_dot_w_l\h,Q_dot_u,Q_dot_c,eta,theta,M_dot_f,regime$,W_dot_aux_lf,W_dot_aux_gf,X_burner:Write_Results$)
+$ENDDOLAST
+
+
+"!4.4. AUXILIARY CONSUMPTIONS"
+"burner electric motor (pump and fan) electricity consumption"
+"Light liquid fuel boiler"
+W_dot_aux_lf=41.9+1.49E-3*Q_dot_u_n + 3E-10*Q_dot_u_n^2 + IF(Q_dot_u_n,35000,100,0,0)
+"the 100W added are due to the presence of a fuel heater used on boilers of nominal useful power < 35000 W"
+"Gaseous fuel boiler"
+W_dot_aux_gf=17.2+1.28E-3*Q_dot_u_n+8E-10*Q_dot_u_n^2
+{X_burner=1 [-]}
+
+"!*************************************************** END ***************************************************"

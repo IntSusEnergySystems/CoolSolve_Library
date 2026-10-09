@@ -1,0 +1,1031 @@
+{=============================================================================
+  Inverter air-to-water heat pump (Daikin Altherma type), heating mode
+  CoolSolve Library model CSL-0155
+-----------------------------------------------------------------------------
+  Detailed steady-state model of an inverter-driven reversible air-to-water
+  heat pump (Daikin Altherma, 2007): inverter compressor (isentropic + isochoric
+  compression), refrigerant-side and air/water-side heat exchangers with
+  effectiveness models, fans (flow-pressure characteristic), water pump, frost/ice
+  correction. The original EES file computes heating OR cooling through two
+  SUBPROGRAMs called by 46 wrapper FUNCTIONs; per decision D10 the heating-mode
+  SUBPROGRAM is flattened here into the main program (default run = EES stored
+  run: heating, t_out=-15 degC, water 40 degC); the cooling branch stays in the
+  source only (see README.md). Units SI, degC, Pa, J (unchanged from original).
+  Source: ULiege Thermodynamics Laboratory (V. Lemort collab., file initials VLD),
+  ~/Nextcloud/thermo_models/modeles/HP_INVERTER_REV_VLD05092007_DAIKIN-ALTHERMA3.EES
+  Licence MIT. Status and gaps: see README.md.
+=============================================================================}
+
+"!Functioning and reversibility functions (FUNCTIONs of the original, kept as they are)"
+FUNCTION cp_compressor(DELTA_T_sh_0,t_r_su_cp,p_r_su_cp,fluid$)
+
+ IF DELTA_T_sh_0<=0 then
+
+ cp_compressor=specheat(fluid$,x=1,P=p_r_su_cp)
+ else
+ cp_compressor=specheat(fluid$,t=t_r_su_cp,P=p_r_su_cp)
+endif
+end
+
+"Superheating"
+
+FUNCTION SH(DELTA_T_sh)
+
+ IF DELTA_T_sh=0 then
+
+ SH=-0.001
+
+ else
+
+ SH=DELTA_T_sh
+endif
+end
+
+"Ice factor"
+
+FUNCTION IceFactor(t_c_ev_wet)
+
+ IF t_c_ev_wet<=0 then
+
+ IceFactor=1.16
+
+ else
+
+ IceFactor=1
+endif
+end
+
+"Speed Factor"
+
+FUNCTION SpeedFactor(Operating_mode$,t_out,r_p)
+
+ IF Operating_mode$='Cooling_mode' then
+
+ SpeedFactor=1
+endif
+ IF (Operating_mode$='Heating_mode') and ((t_out<=15) and (t_out>6)) then
+
+ SpeedFactor={0+3.83959944E+00-8.52778794E-01*r_p+6.78403315E-02*r_p^2}1
+
+endif
+ IF (Operating_mode$='Heating_mode') and ((t_out<=20) and (t_out>15)) then
+
+ SpeedFactor={1.04}1
+
+endif
+ IF (Operating_mode$='Heating_mode') and (t_out<=6) then
+
+ SpeedFactor={9.87599784E+03-7.69081625E+02*t_out+2.11224046E+01*t_out^2-1.84526567E-02*t_out^3+1.22961373E-03*t_out^4-8.30431376E+03*r_p+2.61948237E+03*r_p^2-3.67303798E+02*r_p^3+1.93170055E+01*r_p^4+4.85458192E+02*t_out*r_p-1.02124838E+02*t_out*r_p^2+7.15970408E+00*t_out*r_p^3-8.96363360E+00*t_out^2*r_p+9.68619633E-01*t_out^2*r_p^2-3.78758382E-03*t_out^2*r_p^3-1.02191519E-01*t_out^3*r_p+3.38876308E-02*t_out^3*r_p^2-2.43793875E-03*t_out^3*r_p^3}1
+
+endif
+end
+
+"Change Operating mode"
+
+FUNCTION change$(t_out,Operating_mode$)
+
+ IF ((t_out<=18) and (t_out>=15)) and ((Operating_mode$='Cooling_mode') OR (Operating_mode$='Heating_mode' )) then
+
+ change$='!! CHANGE THE OPERATING MODE AND CONDITIONS !!'
+
+ else
+
+ change$=''
+
+endif
+end
+
+"Change Indoor Unit "
+
+FUNCTION changeIndoorUnit$(Operating_mode$)
+
+ IF Operating_mode$='Cooling_mode' then
+
+ changeIndoorUnit$='Indoor Unit'
+
+ else
+
+ changeIndoorUnit$='Outdoor Unit'
+
+endif
+end
+
+"Change Outdoor Unit "
+
+FUNCTION changeOutdoorUnit$(Operating_mode$)
+
+ IF Operating_mode$='Cooling_mode' then
+
+ changeOutdoorUnit$='Outdoor Unit'
+
+ else
+
+ changeOutdoorUnit$='Indoor Unit'
+
+endif
+end
+
+" Pump speed"
+
+FUNCTION SpeedPump(Pump_speed$)
+
+ IF Pump_speed$='High' then
+
+ SpeedPump=1
+ endif
+ IF Pump_speed$='Medium' then
+
+ SpeedPump=0.8077
+ endif
+ IF Pump_speed$='Low' then
+
+ SpeedPump=0.43846
+ endif
+
+end
+
+FUNCTION changeair$(Operating_mode$)
+
+ IF Operating_mode$='Cooling_mode' then
+
+ changeair$='Not available'
+
+ else
+
+ changeair$='Available'
+
+endif
+end
+
+"Fan speed"
+
+FUNCTION CorrectionFanSpeed(t_out,Operating_mode$)
+
+ IF ((t_out<=25) and (t_out>=20)) and (Operating_mode$='Cooling_mode') then
+
+ CorrectionFanSpeed=0.94
+ endif
+
+ IF ((t_out<=35) and (t_out>20)) and (Operating_mode$='Cooling_mode') then
+
+ CorrectionFanSpeed=0.97
+ endif
+ IF ((t_out>35)) and (Operating_mode$='Cooling_mode') then
+
+ CorrectionFanSpeed=1
+ endif
+ IF ((t_out<=20) and (t_out>=4)) and (Operating_mode$='Heating_mode') then
+
+ CorrectionFanSpeed=0.94
+ endif
+ IF ((t_out<4)) and (Operating_mode$='Heating_mode') then
+
+ CorrectionFanSpeed=1
+ endif
+
+end
+
+"Change secondary fluid"
+
+FUNCTION changewater$(Operating_mode$)
+
+ IF Operating_mode$='Cooling_mode' then
+
+ changewater$='Available'
+
+ else
+
+ changewater$='Not available'
+
+endif
+end
+
+"**********************************************************************************************************************************************************"
+
+"!Inputs of the default run (the original child diagram took them from its mother diagram;"
+" values = EES stored run, or EES guess when not stored)"
+Operating_mode$='Heating_mode'
+Pump_speed$='High'
+DELTA_T_sh=5   "K"
+fluid$='R410A'
+P_atm=101300   "Pa"
+R_m_ev=2e-05   "K/W"
+D_equ_ev_n=0.005872   "m"
+alpha_0_fan_cd=0.2191
+alpha_1_fan_cd=-0.01741
+alpha_2_fan_cd=-6.107
+alpha_3_fan_cd=12.38
+beta_0_fan_cd=0.02449
+beta_1_fan_cd=0.2162
+beta_2_fan_cd=-0.9785
+beta_3_fan_cd=2.677
+alpha_cp=0.35
+V_s_cp_max=4.998e-05   "m^3"
+N_rot=3100   "rpm"
+r_v_in_cp=3
+X_cp=1
+M_dot_r_cd_n=0.07705   "kg/s"
+M_dot_a_cd_n=1.485   "kg/s"
+R_r_cd_n=0.000217   "K/W"
+R_a_cd_n=0.0002279   "K/W"
+R_m_cd=2e-05   "K/W"
+A_ex_fan_cd=0.2352   "m^2"
+D_equ_cd_n=0.00692   "m"
+DELTA_T_sc=5   "K"
+D_fan_cd=0.6   "m"
+f_factor=0
+gain=0.9
+N_fan_cd=1
+rpm_fan_cd=760   "rpm"
+S_equ_a_cd_nom=0.2195   "m^2"
+t_cd_set=25   "C"
+RH_in=0.47
+RH_out=0.8
+t_in=22   "C"
+t_out=-15   "C"
+t_w_su=40   "C"
+p_w_su=200000   "Pa"
+M_dot_w_ev_n=0.6371   "kg/s"
+M_dot_r_ev_water_n=0.07705   "kg/s"
+R_r_ev_water_n=0.0002113   "K/W"
+R_w_ev_n=0.0002219   "K/W"
+D_equ_w_ev_n=0.01209   "m"
+alpha_0_pump=1.18
+alpha_1_pump=-1.466
+alpha_2_pump=-614
+alpha_3_pump=-6002
+beta_0_pump=0.01585
+beta_1_pump=0.2436
+beta_2_pump=69.42
+beta_3_pump=-2098
+D_pump=0.133   "m"
+rpm_pump=1300   "rpm"
+
+"Enthalpy of fusion: stand-in for the EES built-in property function Enthalpy_Fusion,
+not available in CoolSolve; value = the one stored by EES for Water (H_ice of the
+stored solution, see README)."
+FUNCTION Enthalpy_Fusion(fluid$)
+  Enthalpy_Fusion=333605.9169
+end
+
+"!Heating-mode cycle model (SUBPROGRAM HeatingMode flattened into the main program, decision D10;"
+" equations unchanged, original comments kept)"
+
+ " PREPROCESING"
+"air side"
+
+t_a_ex_fan_cd=0 "air temperature at the condenser fan exhaust-not available in heating mode!!!!!" "C"
+V_dot_a_mh_cd=0 "condenser air flow rate-not available in heating mode!!!!!" "m^3/h"
+V_dot_a_mh_cd_20=0 "condenser air flow rate at 20°C-not available in heating mode!!!!!" "m^3/h"
+W_dot_fan_cd=0 "condenser fan power consumption-not available in heating mode!!!!!" "W"
+t_a_ex_cd=0 "air temperature at the condenser exhaust-not available in heating mode!!!!!" "C"
+M_dot_a_cd=0 "condenser air mass flow rate-not available in heating mode!!!!!" "kg/s"
+
+"water side"
+
+M_dot_w_ev=0 "evaporator water mass flow rate-not available in heating mode!!!!!" "kg/s"
+DELTA_p_w_ev=0 "evaporator water pressure drop-not available in heating mode!!!!!" "Pa"
+t_w_ex_ev=0 "water temperature at the evaporator exhaust-not available in heating mode!!!!!" "C"
+V_dot_w_mh_ev=0 "evaporator water flow rate-not available in heating mode!!!!!" "m^3/h"
+W_dot_pump_ev=0 "evaporator pump power consumption-not available in heating mode!!!!!" "W"
+
+" 1. EVAPORATOR- Air heated"
+
+"1.1 GENERAL DEFINITIONS"
+
+DELTA_T_sh_0=SH(DELTA_T_sh) "superheating at the evaporator exhaust-see fonction above fonction definition " "K"
+
+v_a_20=VOLUME(AirH2O,T=20,P=101300,R=0.50) "air volume at 20°C of air temperature and 55% of relative humidity" "m^3/kg"
+
+W_dot_electronic=6 "electronic device power consumption" "W"
+W_dot_heater=30 "compressor crancke-case electrical heater power consumption" "W"
+
+"**********************************************************************************************************************************************************" "1.2 DEFINITION OF SUPPLY AIR CONDITIONS:"
+"**********************************************************************************************************************************************************"
+
+t_a_su_ev=t_out "air temperature at the evaporator supply" "C"
+RH_a_su_ev=RH_out "air relative humidity at the evaporator supply" "[-]"
+
+w_a_su_ev=humrat(AIRH2O, t=t_a_su_ev,P=P_atm,R=RH_a_su_ev) " air absolute humidity at evaporator supply" "kg/kg"
+h_a_su_ev=enthalpy(AIRH2O, t=t_a_su_ev,P=P_atm,w=w_a_su_ev) "air enthalpy at evaporator supply" "J/kg"
+t_wb_su_ev=wetbulb(AIRH2O, t=t_a_su_ev,P=P_atm,w=w_a_su_ev) "air wet bulb temperature at evaporat supply" "C"
+v_a_su_ev=volume(AIRH2O, t=t_a_su_ev,P=P_atm,w=w_a_su_ev) "air volume at evaporator supply" "m³/kg"
+rho_a_su_ev=density(AIRH2O, t=t_a_su_ev,P=P_atm,w=w_a_su_ev) "air density at evaporator supply" "kg/m³"
+cp_a_su_ev =SPECHEAT(AirH2O,T=t_a_su_ev,P=P_atm,w=w_a_su_ev) "air specific heat at evaporator supply" "J/kg-K"
+
+"where:"
+
+"t_a_su_ev- input value" "dry bulb temperature at evaporator supply" "[C]"
+"P_atm- input value" "atmospheric pressure" "[Pa]"
+"RH_su_ev- input value" "air relative humidity at the evaporator supply" "[-]"
+
+"**********************************************************************************************************************************************************"
+ "1.2.WET REGIME:"
+"**********************************************************************************************************************************************************"
+ "1.2.1 Air side:"
+ "*********************"
+
+"Cooling power:"
+
+Q_dot_ev_wet=M_dot_a_ev*((h_a_su_ev-h_a_ex_ev_wet)-(w_a_su_ev - w_a_ex_ev_wet) * c_w_ev * t_c_ev_wet)-M_dot_ice*H_ice
+ "air side cooling power" "W"
+M_dot_ice=IF(T_c_ev_wet<0.001, M_dot_w_condens_wet, IF(T_c_ev_wet=0.001, 0, 0)) "ice flow rate" "kg/s"
+
+H_ice=ENTHALPY_FUSION(Water) "water fusion enthalpy" "J/kg"
+Q_dot_ice=M_dot_ice*H_ice "ice power" "W"
+
+"Definition of exhaust conditions:"
+
+w_a_ex_ev_wet=humrat(AIRH2O, h=h_a_ex_ev_wet,P=P_atm,R=RH_a_ex_ev_wet)
+ "air absolute humidity at evaporator exhaust" "kg/kg"
+t_a_ex_ev_wet=temperature(AIRH2O, h=h_a_ex_ev_wet,P=P_atm,w=w_a_ex_ev_wet)
+ "air enthalpy at evaporator exhaust" "J/kg"
+t_wb_ex_ev_wet=wetbulb(AIRH2O, t=t_a_ex_ev_wet,P=P_atm,w=w_a_ex_ev_wet)
+ "wet bulb temperature at evaporator exhaust" "C"
+rho_a_ex_ev_wet=density(AIRH2O, t=t_a_ex_ev_wet,P=P_atm,w=w_a_ex_ev_wet)
+ "air density at evaporator exhaust" "kg/m³"
+
+"Condensed water:"
+
+M_dot_w_condens_wet=M_dot_a_ev*(w_a_su_ev - w_a_ex_ev_wet) "condensed water flow rate" "kg/s"
+
+ c_w_ev =4187 "water specific heat" "J/kg-K"
+
+" Epsilon - NTU effectiveness model:"
+
+Q_dot_ev_wet=epsilon_ev_wet*C_dot_a_ev_wet*(t_wb_su_ev-t_ev_mean_wet) "cooling power" "W"
+C_dot_a_ev_wet=M_dot_a_ev*cp_f_a_ev "fictitious thermal capacity flow rate" "W/K"
+cp_f_a_ev=((h_a_su_ev-h_a_ex_ev_wet)-(w_a_su_ev - w_a_ex_ev_wet) * c_w_ev * t_c_ev_wet)/(t_wb_su_ev-t_wb_ex_ev_wet)
+ "fictitious specific heat" "J/kg-K"
+epsilon_ev_wet=1-exp(-NTU_ev_wet) "evaporator effectiveness" "[-]"
+NTU_ev_wet=AU_ev_wet/(C_dot_a_ev_wet) "number of transfer units" "[-]"
+AU_ev_wet = 1/(R_af_ev+ R_r_ev_wet+R_m_ev*F_ice) "overall heat transfer coefficient" "W/K"
+F_ice=IceFactor(t_c_ev_wet) "ice correction factor" "[-]"
+R_a_ev = R_a_cd_n *(M_dot_a_cd_n / M_dot_a_ev)^0.6 "air thermal resistance" "K/W"
+R_r_ev_wet = R_r_cd_n*(M_dot_r_cd_n/M_dot_r_ev_wet)^0.8 "refrigerant thermal resistance" "K/W"
+R_af_ev = R_a_ev * cp_a_su_ev / cp_f_a_ev "fictitious air thermal resistance" "K/W"
+
+"with:"
+
+"M_dot_r_ev_n - parameter" "evaporator nominal refrigerant mass flow rate" "kg/s"
+"M_dot_a_ev_n- parameter" "evaporator nominal air mass flow rate" "kg/s"
+"R_r_ev_n- parameter" "evaporator nominal refrigerant thermal resistance" "K/W"
+"R_a_ev_n- parameter" "evaporator nominal air thermal resistance" "K/W"
+"R_m_ev - parameter" "evaporator metal thermal resistance" "K/W"
+
+"Fictitious isothermal contact model:"
+
+ epsilon_c_ev_wet=(h_a_ev-h_b_ev)/(h_a_ev-h_c_ev_wet) "contact effectiveness" "[-]"
+ h_a_ev=h_a_su_ev "air enthalpy at the evaporator supply" "J/kg"
+ h_b_ev=h_a_ex_ev_wet "air enthalpy at the evaporator exhaust" "J/kg"
+
+ h_c_ev_wet=enthalpy(AIRH2O,t=t_c_ev_wet,p=P_atm,R=1) "contact enthalpy" "J/kg"
+ epsilon_c_ev_wet= 1 - exp ( -NTU_c_ev_wet) "contact effectiveness" "[-]"
+ NTU_c_ev_wet= 1 / ( R_a_ev * C_dot_a_ev) "contact number of transfer units" "[-]"
+ C_dot_a_ev = M_dot_a_ev * cp_a_su_ev "air thermal capacity" "W/K"
+ epsilon_c_ev_wet=(w_a_ev-w_b_ev)/(w_a_ev-w_c_ev_wet) "contact effectiveness" "[-]"
+ w_a_ev=w_a_su_ev "absolute humidity at the evaporator supply" "kg/kg"
+ w_b_ev=w_a_ex_ev_wet "absolute humidity at the evaporator exhaust" "kg/kg"
+ w_c_ev_wet=humrat(AIRH2O,t=t_c_ev_wet,p=P_atm,R=1) "contact absolute humidity" "kg/kg"
+
+ "1.2.2 Refrigerant side"
+ "*******************************"
+
+Q_dot_ev_wet= M_dot_r_ev_wet*DELTA_h_ev_wet "refrigerant side cooling power" "W"
+DELTA_h_ev_wet=(h_r_ex_ev_wet-h_r_su_ev_wet)
+ "refrigerant enthalpy increase accross the evaporator" "J/kg"
+
+"Definitions of supply conditions:"
+
+h_r_su_ev_wet=h_r_ex_cd "refrigerant enthalpy at evaporator supply" "J/kg"
+p_r_su_ev_wet=p_r_ex_ev_wet+DELTA_p_r_ev_wet "refrigerant pressure at evaporator supply" "Pa"
+t_r_sat_su_ev_wet=temperature(fluid$,x=0,p=p_ev_wet) "refrigerant saturation temperature at evaporator supply" "C"
+h_r_sat_su_ev_wet=enthalpy(fluid$,x=0,p=p_ev_wet) "refrigerant saturation enthalpy at evaporator supply" "J/kg"
+t_r_su_ev_wet=temperature(fluid$,h=h_r_su_ev_wet,p=p_r_su_ev_wet) "refrigerant temperature at evaporator supply" "C"
+rho_r_su_ev_wet=density(fluid$,h=h_r_su_ev_wet,p=p_r_su_ev_wet) "refrigerant density at evaporator supply" "m³/kg"
+
+"Definitions of exhaust conditions:"
+
+t_r_sat_ex_ev_wet=temperature(fluid$,x=1,p=p_ev_wet) "refrigerant saturation temperature at evaporator exhaust" "C"
+h_r_sat_ex_ev_wet=enthalpy(fluid$,x=1,p=p_ev_wet) "refrigerant saturation enthalpy at evaporator exhaust" "J/kg"
+t_r_ex_ev_wet=t_r_sat_ex_ev_wet+DELTA_T_sh_0 "refrigerant temperature at evaporator exhaust" "C"
+p_ev_wet=p_r_ex_ev_wet "refrigerant evaporating pressure - by definition" "Pa"
+h_r_ex_ev_wet=enthalpy(fluid$,t=t_r_ex_ev_wet,p=p_r_ex_ev_wet) "refrigerant enthalpy at evaporator exhaust" "J/kg"
+
+"with:"
+
+"DELTA_T_sh - input value" "evaporator superheating" "K"
+
+"Fictitious evaporating temperature:"
+
+t_ev_wet=(t_r_su_ev_wet+t_r_sat_ex_ev_wet)/2 "refrigerant evaporation temperature - by definition (middle point)" "C"
+t_ev_mean_wet=(t_ev_wet*(h_r_sat_ex_ev_wet-h_r_sat_su_ev_wet)+t_r_ex_ev_wet*(h_r_ex_ev_wet-h_r_sat_ex_ev_wet))/((h_r_sat_ex_ev_wet-h_r_sat_su_ev_wet)+(h_r_ex_ev_wet-h_r_sat_ex_ev_wet)) "refrigerant mean temperature -by definition" "C"
+
+"Pressure drop on refrigerant side: "
+
+M_dot_r_ev_wet=(pi*D_equ_cd_n^(2)/4)*sqrt(2*rho_r_su_ev_wet*DELTA_p_r_ev_wet)
+ "refrigerant mass flow rate" "kg/s"
+
+"with:"
+
+"D_equ_ev_n - parameter" "evaporator equivalent diameter" "m"
+
+"**********************************************************************************************************************************************************"
+ "1.3 DRY REGIME:"
+"**********************************************************************************************************************************************************" "1.3.1Air side:"
+ "*****************"
+
+"Cooling power:"
+
+Q_dot_ev_dry=M_dot_a_ev*cp_a_su_ev*(t_a_su_ev-t_a_ex_ev_dry) "air side cooling power" "W"
+
+"Definition of exhaust conditions:"
+
+RH_a_ex_ev_dry=relhum(AIRH2O, w=w_a_ex_ev_dry,P=P_atm,t=t_a_ex_ev_dry)"air relative humidity at evaporator exhaust" "[ ]"
+w_a_ex_ev_dry=w_a_su_ev "air absolute humidity at evaporator exhaust" "kg/kg"
+t_wb_ex_ev_dry=wetbulb(AIRH2O, t=t_a_ex_ev_dry,P=P_atm,w=w_a_ex_ev_dry)"wet bulb temperature at evaporator exhaust" "C"
+rho_a_ex_ev_dry=density(AIRH2O, t=t_a_ex_ev_dry,P=P_atm,w=w_a_ex_ev_dry)"air density at evaporator exhaust" "kg/m³"
+h_a_ex_ev_dry=enthalpy(AIRH2O, t=t_a_ex_ev_dry,P=P_atm,w=w_a_ex_ev_dry) "air density at evaporator exhaust" "kg/m³"
+
+" Epsilon - NTU effectiveness model:"
+
+Q_dot_ev_dry=epsilon_ev_dry*C_dot_a_ev_dry*(t_a_su_ev-t_ev_mean_dry) "cooling power" "W"
+C_dot_a_ev_dry=M_dot_a_ev*cp_a_su_ev " thermal capacity flow rate" "W/K"
+
+epsilon_ev_dry=1-exp(-NTU_ev_dry) "evaporator effectiveness" "[-]"
+NTU_ev_dry=AU_ev_dry/(C_dot_a_ev_dry) "number of transfer units" "[-]"
+AU_ev_dry = 1/(R_a_ev+ R_r_ev_dry+R_m_ev) "overall heat transfer coefficient" "W/K"
+R_r_ev_dry = R_r_cd_n * (M_dot_r_cd_n/M_dot_r_ev_dry)^0.8 "refrigerant thermal resistance" "K/W"
+"with:"
+
+"M_dot_r_ev_n - parameter" "evaporator nominal refrigerant mass flow rate" "kg/s"
+"M_dot_a_ev_n- parameter" "evaporator nominal air mass flow rate" "kg/s"
+"R_r_ev_n- parameter" "evaporator nominal refrigerant thermal resistance" "K/W"
+"R_a_ev_n- parameter" "evaporator nominal air thermal resistance" "K/W"
+"R_m_ev - parameter" "evaporator metal thermal resistance" "K/W"
+
+ "1.3.2 Refrigerant side"
+ "*************************"
+
+Q_dot_ev_dry= M_dot_r_ev_dry*DELTA_h_ev_dry "refrigerant side cooling power" "W"
+DELTA_h_ev_dry=(h_r_ex_ev_dry-h_r_su_ev_dry) "refrigerant enthalpy increase accross the evaporator" "J/kg"
+
+"Definitions of supply conditions:"
+
+h_r_su_ev_dry=h_r_ex_cd "refrigerant enthalpy at evaporator supply" "J/kg"
+p_r_su_ev_dry=p_r_ex_ev_dry+DELTA_p_r_ev_dry "refrigerant pressure at evaporator supply" "Pa"
+t_r_sat_su_ev_dry=temperature(fluid$,x=0,p=p_ev_dry) "refrigerant saturation temperature at evaporator supply" "C"
+h_r_sat_su_ev_dry=enthalpy(fluid$,x=0,p=p_ev_dry)
+h_r_sat_su_ev_dry=h_r_sat_su_ev_wet "refrigerant saturation enthalpy at evaporator supply" "J/kg"
+t_r_su_ev_dry=temperature(fluid$,h=h_r_su_ev_dry,p=p_r_su_ev_dry) "refrigerant temperature at evaporator supply" "C"
+rho_r_su_ev_dry=density(fluid$,h=h_r_su_ev_dry,p=p_r_su_ev_dry) "refrigerant density at evaporator supply" "m³/kg"
+
+"Definitions of exhaust conditions:"
+
+t_r_sat_ex_ev_dry=temperature(fluid$,x=1,p=p_ev_dry) "refrigerant saturation temperature at evaporator exhaust" "C"
+h_r_sat_ex_ev_dry=enthalpy(fluid$,x=1,p=p_ev_dry) "refrigerant saturation enthalpy at evaporator exhaust" "J/kg"
+t_r_ex_ev_dry=t_r_sat_ex_ev_dry+DELTA_T_sh_0 "refrigerant temperature at evaporator exhaust" "C"
+p_ev_dry=p_r_ex_ev_dry "refrigerant evaporating pressure - by definition" "Pa"
+h_r_ex_ev_dry=enthalpy(fluid$,t=t_r_ex_ev_dry,p=p_r_ex_ev_dry) "refrigerant enthalpy at evaporator exhaust" "J/kg"
+
+"with:"
+
+"DELTA_T_sh - input value" "evaporator superheating" "K"
+
+"Fictitious evaporating temperature:"
+
+t_ev_dry=(t_r_su_ev_dry+t_r_sat_ex_ev_dry)/2 "refrigerant evaporation temperature - by definition (middle point)" "C"
+t_ev_mean_dry=(t_ev_dry*(h_r_sat_ex_ev_dry-h_r_sat_su_ev_dry)+t_r_ex_ev_dry*(h_r_ex_ev_dry-h_r_sat_ex_ev_dry)) / ((h_r_sat_ex_ev_dry-h_r_sat_su_ev_dry)+(h_r_ex_ev_dry-h_r_sat_ex_ev_dry)) "refrigerant mean temperature -by definition" "C"
+
+"Pressure drop on refrigerant side: "
+
+M_dot_r_ev_dry=(pi*D_equ_cd_n^(2)/4)*sqrt(2*rho_r_su_ev_dry*DELTA_p_r_ev_dry)
+ "refrigerant mass flow rate" "kg/s"
+
+"with:"
+
+"D_equ_ev_n - parameter" "evaporator equivalent diameter" "m"
+
+ "1.4 COOLING POWER"
+
+Q_dot_ev=IF(Q_dot_ev_dry<Q_dot_ev_wet, Q_dot_ev_wet, IF(Q_dot_ev_dry=Q_dot_ev_wet, Q_dot_ev_dry, Q_dot_ev_dry))
+ "evaporator cooling power" "kW"
+
+ "1.5 CONDENSATE FLOW RATE"
+
+M_dot_w_condens=IF(Q_dot_ev_dry<Q_dot_ev_wet, M_dot_w_condens_wet, IF(Q_dot_ev_dry=Q_dot_ev_wet, 0, 0)) "kg/s"
+
+ "1.6 EXHAUST AIR STATE"
+
+t_a_ex_ev=IF(Q_dot_ev_dry<Q_dot_ev_wet, t_a_ex_ev_wet, IF(Q_dot_ev_dry=Q_dot_ev_wet, t_a_ex_ev_dry, t_a_ex_ev_dry))
+ "air temperature at the evaporator exhaust" "C"
+w_a_ex_ev=IF(Q_dot_ev_dry<Q_dot_ev_wet, w_a_ex_ev_wet, IF(Q_dot_ev_dry=Q_dot_ev_wet, w_a_ex_ev_dry, w_a_ex_ev_dry))
+ "air absolute humidity at the evaporator exhaust" "kg/kg"
+RH_a_ex_ev=IF(Q_dot_ev_dry<Q_dot_ev_wet, RH_a_ex_ev_wet, IF(Q_dot_ev_dry=Q_dot_ev_wet, RH_a_ex_ev_dry, RH_a_ex_ev_dry))
+ "air relative humidity at the evaporator exhaust" "[ ]"
+h_a_ex_ev=Enthalpy(AirH2O,T=t_a_ex_ev,P=P_atm,w=w_a_ex_ev) "air enthalpy at the evaporator exhaust" "J/kg"
+rho_a_ex_ev=Density(AirH2O,T=t_a_ex_ev,P=P_atm,w=w_a_ex_ev) "air density at the evaporator exhaust" "kg/m³"
+v_a_ex_ev=Volume(AirH2O,T=t_a_ex_ev,P=P_atm,w=w_a_ex_ev) "air volume at the evaporator exhaust" "m³/kg"
+
+ "1.7 EXHAUST REFRIGERANT STATE"
+
+t_r_sat_ex_ev=IF(Q_dot_ev_dry<Q_dot_ev_wet, t_r_sat_ex_ev_wet, IF(Q_dot_ev_dry=Q_dot_ev_wet, t_r_sat_ex_ev_dry, t_r_sat_ex_ev_dry))
+ "saturated refrigerant temperature at the evaporator exhaust" "C"
+t_r_ex_ev=IF(Q_dot_ev_dry<Q_dot_ev_wet, t_r_ex_ev_wet, IF(Q_dot_ev_dry=Q_dot_ev_wet, t_r_ex_ev_dry, t_r_ex_ev_dry))
+ "refrigerant temperature at the evaporator exhaust" "C"
+p_r_ex_ev=IF(Q_dot_ev_dry<Q_dot_ev_wet, p_r_ex_ev_wet, IF(Q_dot_ev_dry=Q_dot_ev_wet, p_r_ex_ev_dry, p_r_ex_ev_dry))
+ "refrigerant pressure at the evaporator exhaust" "C"
+h_r_ex_ev=IF(Q_dot_ev_dry<Q_dot_ev_wet, h_r_ex_ev_wet, IF(Q_dot_ev_dry=Q_dot_ev_wet, h_r_ex_ev_dry, h_r_ex_ev_dry))
+ "refrigerant enthalpy at the evaporator exhaust" "J/kg"
+p_ev=IF(Q_dot_ev_dry<Q_dot_ev_wet, p_ev_wet, IF(Q_dot_ev_dry=Q_dot_ev_wet, p_ev_dry, p_ev_dry)) "evaporating pressure" "Pa"
+t_ev=IF(Q_dot_ev_dry<Q_dot_ev_wet, t_ev_wet, IF(Q_dot_ev_dry=Q_dot_ev_wet, t_ev_dry, t_ev_dry)) "evaporating temperature" "C"
+M_dot_r_ev=IF(Q_dot_ev_dry<Q_dot_ev_wet, M_dot_r_ev_wet, IF(Q_dot_ev_dry=Q_dot_ev_wet, M_dot_r_ev_dry, M_dot_r_ev_dry))
+ "refrigerant mass flow rate" "kg/s"
+DELTA_p_r_ev=IF(Q_dot_ev_dry<Q_dot_ev_wet, DELTA_p_r_ev_wet, IF(Q_dot_ev_dry=Q_dot_ev_wet, DELTA_p_r_ev_dry, DELTA_p_r_ev_dry))
+ "evaporator pressure drop" "Pa"
+
+ "1.8 SENSIBLE COOLING POWER"
+
+Q_dot_ev_sens=M_dot_a_ev*cp_a_su_ev*(t_a_su_ev-t_a_ex_ev) "sensible cooling power" "W"
+Q_dot_ev_lat=Q_dot_ev-Q_dot_ev_sens "latent cooling power" "W"
+SHR_ev=(Q_dot_ev_sens/Q_dot_ev)*100 " evaporator sensible heat ratio" "[%]"
+
+ "1.9 AIR FLOW RATE"
+
+V_dot_a_ev=M_dot_a_ev*v_a_su_ev "air volume flow rate" "m³s"
+V_dot_a_mh_ev=V_dot_a_ev*3600 "air volume flow rate" "m³/h"
+V_dot_a_mh_ev=V_dot_mh_fan_ev*N_fan_cd "air flow rate" "m³/h"
+V_dot_a_mh_ev_20=(M_dot_a_ev*v_a_20)*3600 "air volume flow rate at 20°C" "m³/h"
+
+"with:"
+
+"V_dot_a_mh_fan_ev_ref -reference- input value" "reference air flow rate" "m³/h"
+"N_fan_ev- input value" "number of fans" "[-]"
+
+ "1.10 PRESSURE DROP ON AIR SIDE "
+
+M_dot_a_ev=(1-f_factor)*S_equ_a_cd_nom*sqrt((2*DELTA_P_a_ev)/v_a_su_ev) "evaporator air pressure drop" "Pa"
+
+"with"
+
+"DELTA_p_a_ev_nom - parameter" "nominal evaporator air pressure drop" "Pa"
+
+ "2. COMPRESSOR"
+
+"Volume compressor"
+"The compressor model includes supply, exhaust and ambient heat transfers. Suction and discharge pressure drops are neglected, as well as any lubricant circulation. The compression is considered as adiabatic, reversible and (therefore also) isentropic, up to the adapted pressure. From that point, the compression is simulated by an irreversible constant volume process, until the exhaust pressure. The evolution of the refrigerant is decomposed into four steps:
+(i) Heating-up (su - su1).
+(ii) Isentropic compression (su1 - in)
+(iii) Compression at constant volume (in -ex1).
+(iv) Cooling down (ex1 -ex)"
+
+"First step: supply heating-up (from su to su):
+In general, the different heat transfers in a compressor include the one to the suction gas, the heating-up due to the electromechanical losses, the heat given by the high temperature discharge gas and the heat transfer to the ambient.
+We assume that a fictitious wall of uniform temperature tw is able to represent all the heat transfer modes."
+
+M_dot_r_ref=0.25 "reference refrigerant mass flow rate - parameter" "kg/s"
+W_dot_loss0_cp_reference=1000 "reference constant electro-mechanical compressor losses-parameter" "W"
+V_s_cp_max_reference=0.000213 "reference maximal compressor volume-parameter" "m³"
+N_rot_cp_0=1400 "reference rotation speed" "tr/min"
+
+ "2.1 DEFINITION OF SUPPLY CONDITIONS:"
+
+t_r_su_cp=t_r_sat_su_cp+DELTA_T_sh_su_cp "refrigerant temperature at compressor supply" "C"
+DELTA_T_sh_su_cp=DELTA_T_sh_0 "refrigerant superheating at compressor supply" "K"
+p_r_su_cp=PRESSURE(fluid$,T=T_r_sat_su_cp,x=1) "refrigerant pressure at compressor supply" "Pa"
+t_r_sat_su_cp=t_r_sat_ex_ev "refrigerant saturation temperature at compressor supply" "C"
+h_r_su_cp=ENTHALPY(fluid$,T=T_r_su_cp,P=P_r_su_cp) "refrigerant enthalpy at compressor supply" "J/kg"
+s_r_su_cp=ENTROPY(fluid$,T=T_r_su_cp,P=P_r_su_cp) "refrigerant entropy at compressor supply" "J/kg-K"
+v_r_su_cp=VOLUME(fluid$,T=T_r_su_cp,P=P_r_su_cp) "refrigerant volume at compressor supply" "m³/kg"
+
+h_r_su1_cp =h_r_su_cp +Q_dot_r_su_cp / M_dot_r_cp "heating-up energy at compressor supply" "J/kg"
+M_dot_r_cp=M_dot_r_ev "compressor refrigerant mass flow rate" "kg/s"
+
+Q_dot_r_su_cp = epsilon_r_su_cp*C_dot_r_su_cp*( t_w_cp - t_r_su_cp ) "heating-up power at compressor supply" "W"
+epsilon_r_su_cp = 1 - exp(-NTU_r_su_cp) "heating-up effectiveness at compressor supply" "[-]"
+NTU_r_su_cp = AU_r_su_cp / C_dot_r_su_cp "heating-up number of transfer units at compressor supply" "[-]"
+AU_r_su_cp=70*(M_dot_r_cp/M_dot_r_ref)^(0.8) "overall heat transfer coefficient" "W/K"
+C_dot_r_su_cp = M_dot_r_cp * c_p_r_su_cp "termal capacity flow rate at compressor supply" "W/K"
+c_p_r_su_cp= cp_compressor(DELTA_T_sh,t_r_su_cp,p_r_su_cp,fluid$) "refrigerant specific heat at compressor supply" "J/kg-K"
+
+p_r_su1_cp=p_r_su_cp "refrigerant overheated pressure at compressor supply" "Pa"
+t_r_su1_cp = temperature( fluid$, h=h_r_su1_cp, p=p_r_su1_cp ) "refrigerant overheated temperature at the compressor supply" "C"
+DELTA_T_r_su_cp=t_r_su1_cp-t_r_su_cp "refrigerant overheating at the compressor supply" "K"
+v_r_su1_cp = volume( fluid$, t = t_r_su1_cp , p = p_r_su1_cp ) "refrigerant volume at compressor supply" "m³/kg"
+s_r_su1_cp= entropy( fluid$, t = t_r_su1_cp , p = p_r_su1_cp ) "refrigerant entropy at compressor supply" "J/kg-K"
+
+ "2.2 WALL BALANCE:"
+
+Q_dot_out_cp = Q_dot_r_su_cp +Q_dot_r_ex_cp - W_dot_loss_cp "wall balance" "W"
+
+"With the ambient heat gain given by:"
+
+Q_dot_out_cp = AU_amb_cp * ( t_out_cp-t_w_cp) "W"
+
+"and with:"
+
+AU_amb_cp=10*(M_dot_r_cp/M_dot_r_ref)^(0.8) "overal heat transfer coefficient" "W/K"
+t_out_cp=t_out "ambient temperature" "C"
+
+ "2.3 SUCTION:"
+
+M_dot_r_cp=V_dot_s_cp/v_r_su1_cp "compressor refrigerant mass flow rate" "kg/s"
+
+ "2.4 VOLUMETRIC EFFECTIVENESS:"
+
+epsilon_v_cp=v_r_su_cp/v_r_su1_cp "[-]"
+
+ "2.5 SECOND AND THIRD STEPS: isentropic and isochoric compressions:
+
+Both compression steps are considered as adiabatic, from su1 to ex1, so the discharge enthalpy can easily be computed by"
+
+h_r_ex1_cp=h_r_su1_cp+w_r_in_cp "refrigerant enthalpy after isochoric compression" "J/kg"
+
+"The first compression is adiabatic-reversible and, therefore, isentropic, up to the adapted pressure;
+the second one is also adiabatic, but irreversible and at constant absolute volume (this second part corresponds to the opening of the compression chamber to the discharge plenum): "
+
+w_r_in_cp=w_r_in1_cp+w_r_in2_cp "internal work of compression" "J/kg"
+w_r_in1_cp= h_r_in_cp - h_r_su1_cp "internal work of the isentropic compression" "J/kg"
+h_r_in_cp = enthalpy(fluid$,s=s_r_in_cp,v=v_r_in_cp) "refrigerant enthalpy after isentropic compression" "J/kg"
+s_r_in_cp=s_r_su1_cp "refrigerant entropy" "J/(kg*K)"
+v_r_in_cp=v_r_su1_cp/r_v_in_cp "refrigerant volume" "m³/kg"
+
+relative_internal_loss=w_r_in2_cp/w_r_in_cp "relative internal loss" "[-]"
+
+w_r_in2_cp= v_r_in_cp * (p_r_ex1_cp-p_r_in_cp) " internal work of the isochoric compression" "J/kg"
+p_r_ex1_cp=p_r_ex_cp "refrigerant pressure after isochoric compression" "Pa"
+r_p=p_r_ex_cp/p_r_su_cp "pressure ratio" "[-]"
+
+p_r_in_cp=PRESSURE(fluid$,s=s_r_in_cp,v=v_r_in_cp) "internal pressure" "Pa"
+W_dot_in_cp=M_dot_r_cp * w_r_in_cp "internal power of compression" "W"
+
+ "2.6 ELECTRICAL POWER CONSUMED BY THE COMPRESSOR: split into 3 terms:"
+
+W_dot_cp=W_dot_in_cp+W_dot_loss_cp+W_dot_heater "W"
+
+"with:"
+
+W_dot_loss_cp=W_dot_loss0_cp+alpha_cp*W_dot_in_cp+W_dot_loss0_cp*(N_rot/N_rot_cp_0)^2
+ "electro-mechanical loss" "W"
+W_dot_loss0_cp=W_dot_loss0_cp_reference*(V_s_cp_max/V_s_cp_max_reference)^(0.98)
+ "stand-by electro-mechanical loss" "W"
+
+ "2.7 GLOBAL ISENTROPIC EFFECTIVENNES:"
+
+w_r_cp=W_dot_cp / M_dot_r_cp "specific work" "J/kg"
+epsilon_s_cp= w_r_s_cp / w_r_cp "compressor isentropic effectiveness" "[-]"
+w_r_s_cp=h_r_exs_cp-h_r_su_cp "specific work of adiabatic and reversible compression" "J/kg"
+h_r_exs_cp = enthalpy( fluid$ , p = p_r_ex_cp , s = s_r_su_cp ) "enthalpy after isentropic compression" "J/kg"
+
+ "2.8 FOURTH STEP:exhaust cooling-down (from ex1 to ex):
+
+The same set of equations is used for the exhaust heat transfer"
+
+t_r_ex1_cp=temperature(fluid$,h=h_r_ex1_cp,p=p_r_ex1_cp) "temperature after isochoric compression" "C"
+
+ h_r_ex_cp = h_r_ex1_cp +Q_dot_r_ex_cp / M_dot_r_cp "cooling-down energy at compressor exhaust" "J/kg"
+Q_dot_r_ex_cp = epsilon_r_ex_cp*C_dot_r_ex_cp*( t_w_cp - t_r_ex1_cp ) "cooling-down power at compressor exhaust" "W"
+
+epsilon_r_ex_cp = 1 - exp(-NTU_r_ex_cp) "cooling-down effectiveness" "[-]"
+NTU_r_ex_cp = AU_r_ex_cp / C_dot_r_ex_cp "cooling-down number of transfer units" "[-]"
+AU_r_ex_cp=70*(M_dot_r_cp/M_dot_r_ref)^(0.8) "overall heat transfer coefficient" "W/K"
+C_dot_r_ex_cp = M_dot_r_cp * c_p_r_ex1_cp "thermal capacity flow rate" "W/K"
+c_p_r_ex1_cp = specheat(fluid$,T=t_r_ex1_cp,P =p_r_ex1_cp) "specific heat after isochoric compression" "J/kg-K"
+DELTA_T_r_ex_cp=-t_r_ex1_cp+t_r_ex_cp "cooling-down at compressor exhaust" "K"
+t_r_ex_cp=temperature(fluid$,h=h_r_ex_cp,p=p_r_ex_cp) "temperature at compressor exhaust" "C"
+
+ "2.9 PART LOAD CONTROL:by varying continuously the compressor swept volume and/or rotation speed:"
+
+SF=SpeedFactor(Operating_mode$,t_out,r_p) "nominal rotation speed corection factor" "[-]"
+V_dot_s_cp=V_dot_s_cp_max*X_cp "refrigerant compressor flow rate" "m³/s"
+V_dot_s_cp_max=V_s_cp_max*(N_rot*SF/60) "maximal refrigerant compressor flow rate" "m³/s"
+Hz_cp=N_rot*SF/60 "compressor rotation speed" "tr/s"
+
+" with:"
+
+"V_s_cp_max - reference - parameter" "maximal compressor swept volume" "m³"
+"r_v_in_cp - parameter" "internal volume ratio of the compressor" "[-]"
+"W_dot_loss0_cp - parameter" "constant electro-mechanical losses" "W"
+"alpha_cp - parameter" "loss factor" "[-]"
+"AU_r_ex_cp - parameter" "fictitious cooling-down overall heat transfer coefficient" "W/K"
+"AU_amb_cp - parameter" "fictitious ambient heat transfer coefficient" "W/K"
+"AU_r_su_cp - parameter" "fictitious heating-up overall heat transfer coefficient" "W/K"
+"N_rot - parameter" "rotation speed of the compressor" "rpm"
+"X_cp - input value" "compressor load factor" "[-]"
+
+ "3. CONDENSER-Water cooled"
+
+ "3.1 REFRIGERANT SIDE"
+
+"Condenser power"
+
+Q_dot_cd_water=M_dot_r_cd_water*(h_r_su_cd_water-h_r_ex_cd_water) "refrigerant side condenser thermal power" "W"
+M_dot_r_cd_water=M_dot_r_cp "condenser refrigerant mass flow rate" "kg/s"
+
+"Definition of supply conditions:"
+
+p_r_su_cd_water=p_r_ex_cp "refrigerant pressure at condenser supply" "Pa"
+t_r_su_cd_water=t_r_ex_cp "refrigerant temperature at condenser supply" "C"
+DELTA_T_sh_cd_water=t_r_su_cd_water-t_r_sat_su_cd_water "superheating at condenser supply" "K"
+
+p_cd_water=p_r_su_cd_water "condensing pressure - by definition" "Pa"
+t_r_sat_su_cd_water=temperature(fluid$,x=1,P=p_r_su_cd_water) "saturation temperature at condenser supply" "C"
+h_r_sat_su_cd_water=enthalpy(fluid$,x=1,P=p_r_su_cd_water) "saturation enthalpy at condenser supply" "J/kg"
+h_r_su_cd_water=enthalpy(fluid$,T=T_r_su_cd_water,P=p_r_su_cd_water) "enthalpy at condenser supply" "J/kg"
+cp_r_su_cd_water=specheat(fluid$,T=T_r_su_cd_water,P=p_r_su_cd_water) "specific heat at condenser supply" "J/kg-K"
+rho_r_su_cd_water=density(fluid$,T=T_r_su_cd_water,P=p_r_su_cd_water) "density at condenser supply" "kg/m³"
+
+"Definition of exhaust conditions:"
+
+p_r_ex_cd_water=p_r_su_cd_water-DELTA_P_r_cd_water "refrigerant pressure at condenser exhaust" "Pa"
+t_r_sat_ex_cd_water=temperature(fluid$,x=0,P=p_r_ex_cd_water) "saturation temperature at condenser exhaust" "C"
+h_r_sat_ex_cd_water=enthalpy(fluid$,x=0,P=p_r_ex_cd_water) "saturation enthalpy at condenser exhaust" "J/kg"
+t_r_ex_cd_water=t_r_sat_ex_cd_water-DELTA_T_sc "temperature at condenser exhaust" "C"
+h_r_ex_cd_water=enthalpy(fluid$,t=t_r_ex_cd_water,P=p_r_ex_cd_water) "enthalpy at condenser exhaust" "J/kg"
+
+"Fictitious condensing temperature and mean temperature:"
+
+t_cd_water=(t_r_sat_su_cd_water+t_r_sat_ex_cd_water)/2 "condensing temperature - by definition" "C"
+
+t_cd_mean_water=(t_r_su_cd_water*(h_r_su_cd_water-h_r_sat_su_cd_water)+t_cd_water*(h_r_sat_su_cd_water-h_r_sat_ex_cd_water)+t_r_ex_cd_water*(h_r_sat_ex_cd_water-h_r_ex_cd_water))/((h_r_su_cd_water-h_r_sat_su_cd_water)+(h_r_sat_su_cd_water-h_r_sat_ex_cd_water)+(h_r_sat_ex_cd_water-h_r_ex_cd_water))
+ "mean temperature -by definition" "C"
+
+ "3.2 PRESSURE DROP ON REFRIGERANT SIDE"
+
+M_dot_r_cd_water=(pi*D_equ_ev_n^(2)/4)*sqrt(2*rho_r_su_cd_water*DELTA_p_r_cd_water)
+ "condenser refrigerant mass flow rate" "kg/s"
+
+ "3.3 WATER SIDE"
+ "3.3.1 DEFINITION OF SUPPLY WATER CONDITIONS"
+
+"t_w_su-input value" "water temperature at the condenser pump supply" "C"
+"p_w_su-input value" "water pressure at the condenser pump supply" "C"
+
+cp_w_su_cd=SpecHeat(Water,T=t_w_su_cd,P=p_w_su) "water specific heat at the condenser supply" "J/kg-K"
+h_w_su_cd=Enthalpy(Water,T=t_w_su_cd,P=p_w_su) "water enthalpy heat at the condenser supply" "J/kg"
+rho_w_su_cd=Density(Water,T=t_w_su_cd,P=p_w_su) "water density heat at the condenser supply" "m^3/kg"
+
+V_dot_w_mh_cd=M_dot_w_cd*3.6 "water volume flow rate" "m^3/h"
+ "3.3.2 THERMAL BALANCE "
+
+"Cooling power"
+
+Q_dot_cd_water=M_dot_w_cd*((cp_w_su_cd+cp_w_ex_cd)/2)*(t_w_ex_cd-t_w_su_cd) "W"
+
+"Definition of exhaust conditions:"
+
+p_w_ex=p_w_su-DELTA_p_w_cd "water pressure at the condenser exhaust" "C"
+cp_w_ex_cd=SpecHeat(Water,T=t_w_ex_cd,P=p_w_ex) "water specific heat at the condenser exhaust" "J/kg-K"
+h_w_ex_cd=Enthalpy(Water,T=t_w_ex_cd,P=p_w_ex) "water enthalpy heat at the condenser supply" "J/kg"
+
+" Epsilon - NTU effectiveness model:"
+
+Q_dot_cd_water=epsilon_cd_water*C_dot_w_cd_water*(t_cd_mean_water-t_w_su_cd) "thermal power" "W"
+C_dot_w_cd_water=M_dot_w_cd*((cp_w_su_cd+cp_w_ex_cd)/2) "fictitious thermal capacity flow rate" "W/K"
+
+epsilon_cd_water=1-exp(-NTU_cd_water) "evaporator effectiveness" "[-]"
+NTU_cd_water=AU_cd_water/(C_dot_w_cd_water) "number of transfer units" "[-]"
+AU_cd_water = 1/(R_w_cd+ R_r_cd_water+R_m_ev) "overall heat transfer coefficient" "W/K"
+R_w_cd = R_w_ev_n *(M_dot_w_ev_n / M_dot_w_cd)^0.8 "air thermal resistance" "K/W"
+R_r_cd_water= R_r_ev_water_n*(M_dot_r_ev_water_n/M_dot_r_cd_water)^0.8 "refrigerant thermal resistance" "K/W"
+
+"with:"
+
+"M_dot_w_ev_n-parameter" "evaporator nominal water mass flow rate" "kg/s"
+"M_dot_r_ev_water_n-parameter" "evaporator nominal refrigerant mass flow rate" "kg/s"
+"R_r_ev_water_n-parameter" "evaporator nominal refrigerant thermal resistance" "K/W"
+"R_w_ev_n-parameter" "evaporator nominal water resistance" "K/W"
+"R_m_ev - parameter" "evaporator metal thermal resistance" "K/W"
+
+ "1.4 PRESSURE DROP ON WATER SIDE "
+
+M_dot_w_cd=(pi*D_equ_w_ev_n^(2)/4)*sqrt(2*rho_w_su_cd*DELTA_p_w_cd)
+ "condenser water pressure drop" "Pa"
+
+ "1.5 CONNECTIONS"
+
+Q_dot_cd=Q_dot_cd_water "condenser heating power" "W"
+t_cd=t_cd_water "condensing temperature" "C"
+p_cd=p_cd_water "condensing pressure" "Pa"
+h_r_ex_cd=h_r_ex_cd_water "refrigerant enthalpy at the condenser exhaust" "J/kg"
+
+ "4. GLOBAL POWER CONSUMPTION OF THE AIR CONDITIONING GROUP"
+
+ "4.1 EVAPORATOR FAN POWER CONSUMPTION - FAN MODEL"
+
+DELTA_p_a_tot_fan_ev=DELTA_p_a_ev "total pressure drop along the air loop" "Pa"
+T_su_fan_ev=t_a_ex_ev "air temperature at fan supply" "C"
+P_su_fan_ev=P_atm "air pressure at fan supply" "Pa"
+RH_su_fan_ev=RH_a_ex_ev "relative humidity at fan supply" "[-]"
+DELTA_P_total_fan_ev=DELTA_p_a_tot_fan_ev "evaporator fan total pressure" "Pa"
+
+"Flow factor:"
+
+phi_fan_ev=V_dot_fan_ev/(A_fan_ev*U_fan_ev) "flow factor" "[-]"
+
+"Reference fan supply area:"
+
+A_fan_ev=pi*D_fan_cd^2/4 "m²"
+
+"Peripheral speed:"
+
+U_fan_ev=pi*D_fan_cd*N_rot_fan_ev "m/s"
+
+"Rotation speed:"
+
+N_rot_fan_ev=rpm_fan_cd*CorrectionFanSpeed(t_out,Operating_mode$)/60 "Hz"
+
+"Pressure factor:"
+
+psi_fan_ev=(DELTA_P_total_fan_ev)/P_dynam_periph_fan_ev "[-]"
+"with"
+DELTA_P_total_fan_ev=DELTA_P_stat_fan_ev + P_dynam_ex_fan_ev "Pa"
+
+"Exhaust dynamic pressure:"
+
+P_dynam_ex_fan_ev=C_ex_fan_ev^2/(2*v_fan_ev) "Pa"
+"with"
+
+C_ex_fan_ev=V_dot_fan_ev/A_ex_fan_cd "fan exhaust velocity" "m/s"
+
+"and"
+
+"A_ex_fan_ev" "fan exhaust equivalent area" "m²"
+
+"Peripheral dynamic pressure:"
+
+P_dynam_periph_fan_ev=U_fan_ev^2/(2*v_fan_ev) "Pa"
+"with"
+v_fan_ev=VOLUME(AirH2O,T=T_su_fan_ev,P=P_su_fan_ev,R=RH_su_fan_ev)
+ "supply air volume" "m³/kg"
+
+"Specific and volume air flow rates:"
+
+M_dot_fan_ev=V_dot_fan_ev/v_fan_ev "kg/s"
+V_dot_mh_fan_ev=V_dot_fan_ev*3600 "m³/h"
+
+"Fan isentropic power:"
+
+W_dot_s_fan_ev=V_dot_fan_ev*DELTA_P_total_fan_ev "W"
+
+"Isentropic effectiveness:"
+
+epsilon_s_fan_ev=W_dot_s_fan_ev/W_dot_shaft_fan_ev "[-]"
+
+"Power factor:"
+
+lambda_fan_ev =(phi_fan_ev*psi_fan_ev)/epsilon_s_fan_ev "[-]"
+
+"Air isentropic heating-up:"
+
+DELTA_T_total_s_fan_ev=W_dot_s_fan_ev/C_dot_fan_ev "K"
+"with"
+C_dot_fan_ev=M_dot_fan_ev*c_p_fan_ev "air capacity flow rate" "W/K"
+"and"
+c_p_fan_ev=SPECHEAT(AirH2O,T=T_su_fan_ev,P=P_su_fan_ev,R=RH_su_fan_ev) "air specific heat" "J/kg-K"
+
+"Flow-pressure characterisitc:"
+
+Phi_fan_ev=alpha_0_fan_cd + alpha_1_fan_cd*psi_fan_ev +alpha_2_fan_cd*psi_fan_ev^2+alpha_3_fan_cd*psi_fan_ev^3 "[-]"
+lambda_fan_ev=beta_0_fan_cd + beta_1_fan_cd*psi_fan_ev +beta_2_fan_cd*psi_fan_ev^2+beta_3_fan_cd*psi_fan_ev^3 "[-]"
+
+"Evaporator fan parameters:"
+
+"alpha_0_fan_ev" "[-]"
+"alpha_1_fan_ev" "[-]"
+"alpha_2_fan_ev" "[-]"
+"alpha_3_fan_ev" "[-]"
+
+"beta_0_fan_ev" "[-]"
+"beta_1_fan_ev" "[-]"
+"beta_2_fan_ev" "[-]"
+"beta_3_fan_ev" "[-]"
+
+"rpm_fan_ev -parameter" "evaporator fan rotation speed" "tr/min"
+"D_fan_ev - parameter" "evaporator fan diameter" "m"
+"A_ex_fan_ev-parameter" "evaporator fan exhaust section" "m²"
+
+"Evaporator fans power consumption"
+
+W_dot_fan_ev=W_dot_shaft_fan_ev*N_fan_cd "W"
+
+"Heating up at evaporator fans exhaust:"
+
+W_dot_shaft_fan_ev=M_dot_fan_ev*(h_a_ex_fan_ev-h_a_su_fan_ev) "W"
+
+"with"
+
+h_a_su_fan_ev=h_a_ex_ev "air enthalpy at evaporator fans supply" "J/kg"
+w_a_ex_fan_ev=w_a_su_fan_ev "absolute humidity at evaporator fans exhaust" "kg/kg"
+w_a_su_fan_ev=w_a_ex_ev "absolute humidity at evaporator fans supply" "kg/kg"
+
+t_a_ex_fan_ev=temperature(AIRH2O,P=P_atm,h=h_a_ex_fan_ev,w=w_a_ex_fan_ev) "air temperature at evaporator fans exhaust" "C"
+RH_a_ex_fan_ev=relhum(AIRH2O,P=P_atm,h=h_a_ex_fan_ev,w=w_a_ex_fan_ev) "relative humidity at evaporator fans exhaust" "[-]"
+
+"Air-conditioning group cooling power:"
+
+Q_dot_cooling=M_dot_a_ev*(h_a_su_ev-h_a_ex_fan_ev) "W"
+
+ "4.2 CONDENSER PUMP POWER CONSUMPTION - FAN MODEL"
+
+"Flow factor:"
+
+phi_pump=V_dot_pump/(A_pump*U_pump)
+
+"Reference area:"
+
+A_pump=pi*D_pump^2/4
+
+"Peripheral speed:"
+
+U_pump=pi*D_pump*N_pump
+"rotation speed:"
+
+N_pump=rpm_pump*SpeedPump(Pump_speed$)/60
+
+"Pressure factor:"
+
+psi_pump=(DELTAP_pump)/P_dynam_periph_pump
+
+"Peripheral dynamic pressure:"
+
+P_dynam_periph_pump=U_pump^2/(2*v_brine)
+
+"Brine specific volume:"
+
+v_brine=1/rho_brine
+
+rho_brine=DENSITY(water,t=t_w_su,p=p_w_su)
+
+"Mass flow rate:"
+
+M_dot_pump=V_dot_pump/v_brine
+
+V_dot_pump_mh=V_dot_pump*3600
+
+"Isentropic power:"
+
+W_dot_s_pump=V_dot_pump*DELTAP_pump
+
+"Isentropic effectiveness:"
+
+epsilon_s_pump=W_dot_s_pump/W_dot_shaft_pump
+
+"Power factor:"
+
+lambda_pump =(phi_pump*psi_pump)/epsilon_s_pump
+
+"Pump characteristics:"
+
+psi_pump=alpha_0_pump + alpha_1_pump*phi_pump +alpha_2_pump*phi_pump^2 + alpha_3_pump*phi_pump^3
+Lambda_pump=beta_0_pump + beta_1_pump*phi_pump + beta_2_pump*phi_pump^2 + beta_3_pump*phi_pump^3
+
+M_dot_pump=M_dot_w_cd
+DELTAP_pump=DELTA_p_w_cd
+W_dot_pump_cd=W_dot_shaft_pump
+
+"Heating up at condenser pump exhaust:"
+
+W_dot_shaft_pump*0.6=M_dot_w_cd*cp_w_su*(t_w_su_cd-t_w_su)
+
+cp_w_su=SpecHeat(Water,T=t_w_su,P=p_w_su)
+
+"Evaporator pump parameters:"
+
+"alpha_0_pump" "[-]"
+"alpha_1_pump" "[-]"
+"alpha_2_pump" "[-]"
+"alpha_3_pump" "[-]"
+
+"beta_0_pump" "[-]"
+"beta_1_pump" "[-]"
+"beta_2_pump" "[-]"
+"beta_3_pump" "[-]"
+
+"rpm_pump-parameter" "evaporator pump rotation speed" "tr/min"
+"D_pump - parameter" "impeler diameter" "m"
+
+"Air-conditioning group cooling power:"
+
+Q_dot_heat=M_dot_w_cd*cp_w_su*(t_w_ex_cd-t_w_su) "total heating power" "W"
+
+ "4.3 TOTAL POWER CONSUMPTION AND COP"
+
+W_dot=W_dot_cp+W_dot_fan_ev+W_dot_pump_cd+W_dot_electronic "total power consumption of the air-conditioning group" "W"
+
+COP_cp=Q_dot_heat/W_dot_cp
+ "compressor performance coefficient" "[-]"
+
+"with:"
+
+"W_dot_cp_ref -parameter" "reference compressor power consumption" "W"
+
+COP=Q_dot_heat/W_dot "air-conditioning group performance coefficient" "[-]"
+
+
+"!Outputs to the mother diagram of the original (string messages)"
+warning$=change$(t_out,Operating_mode$)
+Ev_Unit$=changeIndoorUnit$(Operating_mode$)
+Cd_Unit$=changeOutdoorUnit$(Operating_mode$)
+changeair$=changeair$(Operating_mode$)
+changewater$=changewater$(Operating_mode$)

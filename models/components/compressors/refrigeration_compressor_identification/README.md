@@ -186,3 +186,6 @@ repository as a test case.
 - CoolSolve example `refrigeration_compressor.eescode` (CSX-041): same
   model, kept in CoolSolve as a test case (transcribed from the TM-0017
   variant with the `M_dot_1` typo — see *Conversion log*).
+- `CSL-0167` *reciprocating_polynomial_r22*: the JL reference piston
+  compressor of the same laboratory series (semi-empirical six-step model
+  with clearance re-expansion and motor slip).

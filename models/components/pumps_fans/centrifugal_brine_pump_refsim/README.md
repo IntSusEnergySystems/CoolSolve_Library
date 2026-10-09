@@ -218,6 +218,9 @@ log; the model has no figure yet (maintainer, workflow §7).
 - `CSL-0078` *brine_to_water_heat_pump_refsim* — another model of the bank
   that calls the same BrineProp library (density and specific heat of a 25 %
   propylene glycol solution), with the same blocked-native-file treatment.
+- `CSL-0125` *pump_curve_similarity*: pump described by manufacturer curves
+  and the affinity laws (catalogue data, three operating modes); no catalogue
+  curves in this reference model.
 - `TM-0486` (inventory): sibling **ParamID** model of the same pump in the
   source collection (parameter identification from measurements, level 2) —
   a separate model if imported; not in the library yet.

@@ -1,0 +1,63 @@
+{
+  "id": "CSL-0156",
+  "name": "refrigeration_screw_compressor_r22",
+  "title": "Screw compressor in an R22 refrigeration cycle (full load / part load)",
+  "summary": "Reference model of a volumetric screw compressor with internal leakage through an opening (isentropic nozzle + diffuser), closing a simple R22 cycle; part load by the sliding valve, with pumping and constant losses.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "refrigeration_screw_compressor_r22.eescode",
+  "fluids": [
+    "R22"
+  ],
+  "tags": [
+    "refrigeration",
+    "screw compressor",
+    "internal leakage",
+    "sliding valve",
+    "part load",
+    "reference model"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 122,
+    "largest_block": 27
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/JL/new/screw JL080205/3_4_2_Part_load_control.EES",
+    "candidate_id": "TM-0277",
+    "authors": [
+      "J. Lebrun (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X6.395",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (121 numeric variables compared; reference converted from kPa/kJ to SI), part-load point X_sv = 0.4105; full-load cross-check against the solution pasted in a comment of the original file",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.0134,
+    "notes": "compare_solution.py: 121 common variables, 71 differ (rtol=0.001). 31 absolute h/s variables carry the EES 6.395 vs CoolProp R22 reference-state offset (not comparable; differences agree to 0.24 %); max rel diff of the 90 others 1.34e-2 (t_su1), propagated from the 0.15 % R22 saturation-pressure difference. Full-load cross-check: COP_c 4.496/4.506, Q_dot_ev 683.7/684.7 kW."
+  },
+  "missing_features": [],
+  "related": ["CSL-0001", "CSL-0007", "CSL-0020", "CSL-0167"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (C-148 T-IMPORT TM-0277, DG-0064; TM-0276 merged)",
+      "by": "worker lane glm (agent) for S. Quoilin"
+    }
+  ]
+}

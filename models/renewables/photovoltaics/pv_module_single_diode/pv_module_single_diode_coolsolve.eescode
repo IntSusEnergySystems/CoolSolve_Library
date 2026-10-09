@@ -1,0 +1,74 @@
+{=============================================================================
+  PV module single-diode I-V curve - runnable variant
+  CoolSolve Library model CSL-0160:coolsolve (native file BLOCKED)
+ -----------------------------------------------------------------------------
+  Same five-parameter single-diode PV model as the native file; the only
+  changes are the lookup workarounds forced by the CoolSolve gaps (each logged
+  in the README): the PROCEDURE ReadPV is flattened into the main program, the
+  module row is selected by its number (Row) instead of LOOKUP$ROW, and the
+  parameters are read with positional numeric lookups from the companion
+  numeric-key table pv_module_single_diode_coolsolve-pvmodules.csv.
+  Valid EES throughout (no CoolSolve-only syntax).
+  Inputs : Row (module row, 1..8), T_c [°C], G [W/m^2]; table pvmodules
+  Outputs: module parameters, I[i], V[i], P[i] (100 points)
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège Thermodynamics Laboratory course file, derived from the
+           University of Wisconsin Solar Energy Laboratory PV module model -
+           see README.md
+=============================================================================}
+
+"!Main program"
+epsilon = 1.12                                         "semiconductor band gap [eV]"
+
+"Default run: the module, the cell temperature and the irradiance were set in
+ the diagram window of the original file"
+PVModule$ = 'II-10'                                    "module selected in the diagram window"
+Row = 2                                                "row of II-10 in the table: 1 Solarex_Multi-crystal_Si, 2 II-10, 3 II-13, 4 II-11, 5 I-14, 6 II-15, 7 II-01, 8 I-05 (LOOKUP$ROW('PVModules','PV Name',PVModule$) in the original)"
+T_c = 32                                               "cell temperature of the default run [°C]"
+G = 1000                                               "irradiance of the default run [W/m^2]"
+
+"!Module parameters read from the pvmodules table (flattened PROCEDURE ReadPV of the original)"
+T_NOCT = Lookup('pvmodules', Row, 2)                   "NOCT [°C]"
+A_c = Lookup('pvmodules', Row, 3)                      "module area [m^2]"
+N_s = Lookup('pvmodules', Row, 4)                      "number of cells in series [-]"
+I_sc_ref = Lookup('pvmodules', Row, 5)                 "short-circuit current at STC [A]"
+V_oc_ref = Lookup('pvmodules', Row, 6)                 "open-circuit voltage at STC [V]"
+I_mp_ref = Lookup('pvmodules', Row, 7)                 "current at the maximum power point at STC [A]"
+V_mp_ref = Lookup('pvmodules', Row, 8)                 "voltage at the maximum power point at STC [V]"
+alpha_sc = Lookup('pvmodules', Row, 9)                 "temperature coefficient of I_sc [A/K]"
+beta_oc = Lookup('pvmodules', Row, 10)                 "temperature coefficient of V_oc [V/K]"
+a_ref = Lookup('pvmodules', Row, 11)                   "modified ideality factor at STC [V]"
+I_L_ref = Lookup('pvmodules', Row, 12)                 "photocurrent at STC [A]"
+I_o_ref = Lookup('pvmodules', Row, 13)                 "saturation (diode) current at STC [A]"
+R_s_ref = Lookup('pvmodules', Row, 14)                 "series resistance at STC [ohm]"
+R_sh_ref = Lookup('pvmodules', Row, 15)                "shunt resistance at STC [ohm]"
+delta = Lookup('pvmodules', Row, 16)                   "temperature coefficient of R_s [1/K]"
+gamma_r = Lookup('pvmodules', Row, 17)                 "power temperature coefficient [%/K]"
+
+"!Reference conditions"
+G_ref = 1000                                           "reference irradiance [W/m^2]"
+T_c_ref = 25                                           "reference cell temperature [°C]"
+TK_c_ref = ConvertTemp('C','K',T_c_ref)                  "reference cell temperature [K]"
+T_NOCT_ref = 20                                        "reference ambient temperature for the NOCT [°C]"
+I_NOCT = 800                                           "reference irradiance for the NOCT [W/m^2]"
+taualpha_bar = 0.9                                     "effective absorptance, as in the original [-]"
+T_amb_ref = 25                                         "reference ambient temperature [°C]"
+
+"!Model equations (as in the original)"
+TK_c = ConvertTemp('C','K',T_c)                          "cell temperature [K]"
+R_sh = R_sh_ref*G_ref/G                                "shunt resistance [ohm]"
+a = a_ref*TK_c/TK_c_ref                                "modified ideality factor [V]"
+R_s = R_s_ref*(1 + delta*(TK_c - TK_c_ref))            "series resistance [ohm]"
+I_L = G/G_ref*(I_L_ref + alpha_sc*(TK_c - TK_c_ref))   "photocurrent [A]"
+e_g = epsilon*(1 - 0.0002677*(TK_c - TK_c_ref))        "band gap at the cell temperature [eV]"
+I_o = I_o_ref*(TK_c/TK_c_ref)^3*exp(1/k*(epsilon/TK_c_ref - e_g/TK_c))  "saturation current [A]"
+k = 0.0000867343                                       "Boltzmann constant [eV/K]"
+
+"!Compute 100 points of the I-V curve for the cell conditions T_c and G of the diagram window (as in the original)"
+DELTAV1 = V_oc_ref/99                                  "voltage step of the curve [V]"
+
+Duplicate J = 1, 100
+	V[j] = (j - 1)*DELTAV1                             "terminal voltage of point j [V]"
+	I[j] = I_L - I_o*(exp((V[j] + I[j]*R_s)/a) - 1) - (V[j] + I[j]*R_s)/R_sh  "current of point j [A]"
+	P[j] = v[j]*i[j]                                   "power of point j [W]"
+End

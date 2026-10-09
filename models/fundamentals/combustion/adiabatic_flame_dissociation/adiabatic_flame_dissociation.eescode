@@ -1,0 +1,132 @@
+{=============================================================================
+  Adiabatic flame temperature of CH4 or fuel oil with or without dissociation
+  CoolSolve Library model CSL-0150
+ -----------------------------------------------------------------------------
+  Adiabatic, constant-pressure combustion of CH4 or fuel oil with excess air
+  e >= 0: the adiabatic flame temperature follows from H_reactants =
+  H_products. With DISSOCIATION$ = 'YES' the products are the 14-species
+  chemical-equilibrium mixture returned by the EES built-in Chem_Equil
+  procedure; with 'NO' they are complete combustion (CO2, H2O, O2, N2).
+  Molar species enthalpies come from the EES built-in NASA procedure.
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J; the
+           enthalpy balance is written per kmol of fuel
+  Source : ULiège, course MCI, TP1 exercises 3-4 (2016), P. Ngendakumana,
+           R. Dickes - see README.md
+  Status : blocked in CoolSolve (CS-GAP-IF-DIRECTIVE, CS-GAP-CHEM-EQUIL,
+           CS-GAP-NASA, CS-GAP-NAME-SYMBOL, CS-GAP-SUM-INDEXED); native
+           valid EES kept
+=============================================================================}
+
+"Case selection: comment/uncomment the alternatives, as in the original"
+{FUEL$ = 'Oil'          "Oil or CH4"}
+FUEL$ = 'CH4'           "Oil or CH4"
+DISSOCIATION$ = 'YES'   "YES or NO"
+{DISSOCIATION$ = 'NO'   "YES or NO"}
+
+"General data"
+T_ref = 25                    "reference temperature [°C] (298.15 K in the original; T_réf renamed T_ref)"
+P_comb = 30E5                 "combustion pressure [Pa] (30 bar in the original)"
+
+$IF FUEL$ = 'Oil'
+"Ultimate analysis of the fuel oil (mass %) and thus m and n (kmol of C and H per kg of fuel)"
+C% = 86.9
+H% = 100 - C%
+m = C%/(100*12)
+n = H%/(100*1)
+MM_f = 12*m+1*n               "apparent molar mass on the per-kg-of-fuel basis [kg/kmol]"
+"LHV and specific heat of the fuel and thus enthalpy H_rf"
+LHV_f = 42855E3               "lower heating value [J/kg] (42855 kJ/kg in the original)"
+c_f = 1885                    "specific heat of the fuel [J/kg-K] (1.885 kJ/kg-K in the original)"
+T_fuel = 14.85                "fuel inlet temperature [°C] (288 K in the original)"
+T_air = 14.85                 "air inlet temperature [°C] (288 K in the original)"
+H_rf = LHV_f+c_f*(T_fuel-T_ref)                     "fuel enthalpy relative to the reference [J/kg]"
+"Check of the value of LHV_f (empirical correlations of the original, coefficients per mass %)"
+O% = 0
+S% = 0
+HHV_kJ = 4.186*(81*C%+300*(H%-O%/8)+25*S%)          "higher heating value [kJ/kg], correlation in its original units"
+HHV = HHV_kJ*1000                                   "[J/kg]"
+LHV_f_bis = 4.186*(HHV_kJ/4.186-51.31*H%)*1000      "estimated LHV [J/kg], correlation in its original units"
+"Enthalpy of the reactants [J/kg fuel] (mass-basis property calls; the original called molar enthalpies)"
+H_ra = (m+n/4)*(1+e)*((molarmass(O2)*(enthalpy(O2,T=T_air)-enthalpy(O2,T=T_ref)))+(79/21)*(molarmass(N2)*(enthalpy(N2,T=T_air)-enthalpy(N2,T=T_ref))))
+H_react = H_rf+H_ra
+$ENDIF
+
+$IF FUEL$='CH4'
+Gas$ = 'CH4'
+m = 1 ; n = 4               "m and n of the fuel"
+T_fuel = 14.85              "fuel inlet temperature [°C] (288 K in the original)"
+T_air = 14.85               "air inlet temperature [°C] (288 K in the original)"
+"Enthalpy of the reactants [J/kmol fuel]; the ideal-gas enthalpies include the formation enthalpy"
+H_react = molarmass(CH4)*enthalpy(CH4,T=T_fuel)+(m+n/4)*(1+e)*(molarmass(O2)*enthalpy(O2,T=T_air)+(79/21)*molarmass(N2)*enthalpy(N2,T=T_air))
+$ENDIF
+
+$IFNOT PARAMETRICTABLE
+e = 0.2                     "excess air [-]"
+$ENDIF
+
+"!Combustion products"
+T_ref_K = T_ref+273.15      "absolute reference temperature [K] (NASA data are defined in K)"
+T_adiab_K = T_adiab+273.15  "absolute adiabatic flame temperature [K] (NASA and Chem_Equil data are defined in K)"
+
+$IF DISSOCIATION$ = 'YES'
+"!CHEM_EQUIL external routine"
+"Reactants : CmHn + (m+n/4)*(O2+79/21*N2)*(1+e)"
+A\O = 1e-10
+C\O = m/(2*(m+n/4)*(1+e))   "don't set a value to zero"
+H\O = n/(2*(m+n/4)*(1+e))   "don't set a value to zero"
+N\O = 79/21                 "don't set a value to zero"
+P = P_comb
+T = T_adiab_K
+CALL CHEM_EQUIL(P,T,A\O,C\O,H\O,N\O:x_H2,x_O2,x_H2O,x_CO,x_CO2,x_OH,x_H,x_O,x_N2,x_N,x_NO,x_NO2,x_CH4,x_Ar)
+
+"Array variables"
+x[1] = x_H2 ; x[2] = x_O2 ; x[3] = x_H2O ; x[4] = x_CO ; x[5] = x_CO2 ; x[6] = x_OH ; x[7] = x_H ; x[8] = x_O
+x[9] = x_N2 ; x[10] = x_N ; x[11] = x_NO ; x[12] = x_NO2 ; x[13] = x_CH4 ; x[14] = x_Ar
+Prod$[1] = 'H2' ; Prod$[2] = 'O2' ; Prod$[3] = 'H2O' ; Prod$[4] = 'CO' ; Prod$[5] = 'CO2' ; Prod$[6] = 'OH' ; Prod$[7] = 'H'
+Prod$[8] = 'O' ; Prod$[9] = 'N2' ; Prod$[10] = 'N' ; Prod$[11] = 'NO' ; Prod$[12] = 'NO2' ; Prod$[13] = 'CH4' ; Prod$[14] = 'Ar'
+
+"!NASA external routine"
+Nprod = 14                  "number of molar species in the combustion products"
+Duplicate i=1,Nprod
+  CALL NASA(Prod$[i],T_ref_K:{CP_ref[i]},H_ref[i],{S_ref[i]})
+  CALL NASA(Prod$[i],T_adiab_K:{CP[i]},H[i],{S[i]})
+End
+"Conservation of H atoms and thus ntot"
+n = ntot*(2*X_H2+2*x_H2O+x_OH+x_H+4*x_CH4)
+$ENDIF
+
+$IF DISSOCIATION$ = 'NO'
+"Array variables for the combustion products : CO2, H2O, O2 and N2"
+nkmol[1] = m ; nkmol[2] = n/2 ; nkmol[3] = (m+n/4)*e ; nkmol[4] = (m+n/4)*(79/21)*(1+e)
+Prod$[1] = 'CO2' ; Prod$[2] = 'H2O' ; Prod$[3] = 'O2' ; Prod$[4] = 'N2'
+"!NASA external routine"
+Nprod = 4                   "number of molar species in the combustion products"
+Duplicate i=1,Nprod
+  CALL NASA(Prod$[i],T_ref_K:{CP_ref[i]},H_ref[i],{S_ref[i]})
+  CALL NASA(Prod$[i],T_adiab_K:{CP[i]},H[i],{S[i]})
+End
+$ENDIF
+
+"!Enthalpy of the combustion products [J/kmol fuel]; NASA returns molar enthalpies (kJ/kmol), converted with x1000"
+
+$IF DISSOCIATION$ = 'YES'
+$IF FUEL$ ='Oil'
+H_prod = sum(ntot*x[i]*1000*(H[i]-H_ref[i]), i =1,Nprod)
+$ELSE " FUEL$ = 'CH4' "
+H_prod = sum(ntot*x[i]*1000*H[i], i =1,Nprod)
+$ENDIF
+$ELSE " DISSOCIATION$ = 'NO' "
+$IF FUEL$ ='Oil'
+H_prod = sum(nkmol[i]*1000*(H[i]-H_ref[i]), i =1,Nprod)
+$ELSE " FUEL$ = 'CH4' "
+H_prod = sum(nkmol[i]*1000*H[i], i =1,Nprod)
+$ENDIF
+$ENDIF
+
+"!ADIABATIC TEMPERATURE AT CONSTANT PRESSURE"
+{T_adiab = 2000}            " T used to update guesses (commented, as in the original)"
+H_react = H_prod            "adiabatic, constant-pressure reaction: H_reactants = H_products"
+
+"Conclusion (translated from the original): near stoichiometric conditions the adiabatic temperature
+ should be lower with dissociation than without; this is the case with CH4, but not with fuel oil.
+ Why? The author did not find the error in his equations!"

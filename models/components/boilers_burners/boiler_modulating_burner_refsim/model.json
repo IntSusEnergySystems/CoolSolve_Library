@@ -1,0 +1,78 @@
+{
+  "id": "CSL-0166",
+  "name": "boiler_modulating_burner_refsim",
+  "title": "Boiler with modulating burner: steady-state reference model",
+  "summary": "Steady-state fuel-oil/gas boiler with a limited-modulating burner: combustion reference model (cpbar), gas-water and water-environment epsilon-NTU exchangers, four regimes (OFF, ON/OFF, modulating, full load) selected from the water set point. Native file blocked by CoolSolve gaps; a verified runnable variant resolves the regime branches for the stored operating point.",
+  "kind": "steady",
+  "level": 3,
+  "status": "blocked",
+  "main_file": "boiler_modulating_burner_refsim.eescode",
+  "fluids": ["Air", "CO2", "CO", "H2O", "N2", "O2"],
+  "tags": [
+    "boiler",
+    "combustion",
+    "fuel oil",
+    "modulating burner",
+    "on/off control",
+    "part load",
+    "flue gas",
+    "eps-NTU",
+    "adiabatic flame temperature",
+    "reference model",
+    "model bank"
+  ],
+  "language_features": [
+    "procedures",
+    "CALL",
+    "string variables",
+    "IF/THEN/ENDIF with AND",
+    "MODULE flattened",
+    "compile-time $if directives",
+    "5-argument IF function",
+    "lookup-table writes in a procedure",
+    "copied library functions"
+  ],
+  "stats": {
+    "n_equations": 128,
+    "largest_block": 13
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/Heat_and_Cool_Production_Systems/Heat_Production_by_Combustion/BoilerWithModulatingBurner_RefSim_Model_SB080212.zip!/BoilerWithModulatingBurner_RefSim_EES_Model_SB080212.EES",
+    "candidate_id": "TM-0491",
+    "authors": [
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en",
+    "course": "ULiège model bank 2008-02-12, Heat and Cool Production Systems (reference simulation model)"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (last run: ON/OFF regime at t_w_ex_set = 71 °C); it is the runnable variant boiler_modulating_burner_refsim_coolsolve that is verified",
+    "date": "2026-10-09",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.000225,
+    "notes": "43 common variables, 0 differ (rtol=0.001); maximum relative difference 2.25e-4 on Q_dot_u_FL (CoolProp vs EES mean specific heats of the combustion products at 1930 °C). Stale stored values of the module variables (a mix of an earlier MODULATING run, CS-BUG-EXTRACT-STALE) are skipped by name; the D10-renamed module internals were checked by hand against them (n exact, e/f_st ~5e-5, t_adiab 0.07 %)."
+  },
+  "missing_features": [
+    "CS-GAP-IF-DIRECTIVE",
+    "CS-GAP-IF5",
+    "CS-BUG-STRING-CALL-OUT"
+  ],
+  "related": ["CSL-0005", "CSL-0006", "CSL-0080"],
+  "related_external": [
+    "ASHRAE TC4.7 HVAC1 Toolkit (J.P. Bourdouxhe, M. Grodent, J. Lebrun, C. Saavedra), cited by the original model"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-09",
+      "action": "added (card C-158, MODULE flatten D10, cpbar from CSL-0005)",
+      "by": "glm-5.3-flash for S. Quoilin"
+    }
+  ]
+}

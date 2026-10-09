@@ -1,0 +1,67 @@
+{
+  "id": "CSL-0159",
+  "name": "orc_void_fraction_charge",
+  "title": "Low-temperature ORC (R134a) with void-fraction charge of the heat exchangers",
+  "summary": "Low-temperature R134a Rankine cycle (ULiège lab model, 2007): pump, three-zone evaporator and condenser weighted by the refrigerant mass per zone, detailed expander (throat pressure drop, leakage, isochoric expansion, cooling); the refrigerant charge M_charge is solved from a global void-fraction balance so that the condenser subcooling is met.",
+  "kind": "steady",
+  "level": 4,
+  "status": "blocked",
+  "main_file": "orc_void_fraction_charge.eescode",
+  "fluids": [
+    "R134a",
+    "AirH2O"
+  ],
+  "tags": [
+    "ORC",
+    "Rankine",
+    "refrigerant charge",
+    "void fraction",
+    "three-zone heat exchanger",
+    "epsilon-NTU",
+    "expander",
+    "plate heat exchanger",
+    "low-grade heat",
+    "reference model"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "arrays"
+  ],
+  "stats": {"n_equations": 312, "largest_block": 112},
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/ORC simple model with void fraction.EES",
+    "candidate_id": "TM-0314",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory; comments signed ARA)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.139",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solution shipped in the source file (298/299 valid values), tools/compare_solution.py on the _coolsolve variant",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.0121,
+    "notes": "Variant vs EES: cycle results within 2.4e-03, maximum 1.21e-02 (Q_dot_ex_exp, -13 W; next 1.12e-02 w_exp_2, 7.3e-03 C_dot_sf_cd from the humid-air density backend). Absolute h/s carry the constant EES-CoolProp reference offset (differences within 6e-04); X_ex_* 0 vs EES +/-100 (CS-GAP-QUALITY-DOME, diagnostic only). Native file blocked by CS-BUG-HUMIDAIR-PROPS (silent 1E4 kg/m3 Density(AirH2O))."
+  },
+  "missing_features": [
+    "CS-BUG-HUMIDAIR-PROPS"
+  ],
+  "related": ["CSL-0153", "CSL-0036", "CSL-0037", "CSL-0084"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (T-IMPORT card C-151; native blocked, runnable _coolsolve variant verified)",
+      "by": "glm-5.3-flash (Z.ai) for S. Quoilin"
+    }
+  ]
+}

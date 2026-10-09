@@ -1,0 +1,558 @@
+{=============================================================================
+  Low-temperature ORC (R134a) with void-fraction charge of the heat exchangers
+  CoolSolve Library model CSL-0159
+ -----------------------------------------------------------------------------
+  Low-temperature Rankine cycle on R134a (ULiege lab model, 2007): volumetric
+  pump, plate evaporator and finned-tube condenser, each split into liquid /
+  two-phase / vapour zones weighted by the refrigerant mass they contain via a
+  global void-fraction charge balance (M_charge solved so that the condenser
+  outlet is subcooled by DELTAt_sc_ex_cd). Detailed expander: supply throat
+  pressure drop, leakage, isochoric expansion to the built-in volume ratio,
+  supply/exhaust cooling and ambient losses. Imposed inputs: Q_dot_ev and the
+  evaporator superheating; rpm_pump and the charge M_charge are outputs.
+  (Decision D11: the (T,H) quality call at the expander exhaust is rewritten
+  with the equivalent (P,H) pair, same state - logged in the README.)
+  Variant: _coolsolve - runnable variant of the blocked native file; single
+           change: rho_sf_cd=(1+w_air_cd)/Volume(...) instead of the silently
+           wrong Density(AirH2O,...) call (CS-BUG-HUMIDAIR-PROPS workaround,
+           valid EES syntax). Every change logged in README.md.
+
+  Inputs : Q_dot_ev, DELTAt_oh_ex_ev, DELTAt_sc_ex_cd, geometry, U values
+  Outputs: M_charge, rpm_pump, W_dot_Rankine, eta_Rankine, zone shares
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiege Thermodynamics Laboratory (comments signed ARA), 09/09/2007
+           - see README.md
+=============================================================================}
+"Program run to adjust the data so that the results are reasonable: find the charge that gives 3 K of subcooling after the condenser and the secondary-fluid (glycol water) flow that gives a 63 °C evaporator outlet (as in the original)"
+
+"------------------------------------------------------------"
+"!Low Temperature Rankine Model"
+"!-----------------------------------------------"
+"!Generic outputs"
+"W_dot_Rankine, eta_Rankine"
+
+"!Generic inputs"
+"Fluid:"
+fluid$='R134a'
+
+
+"============================================================================================"
+"1. PUMP"
+"============================================================================================"
+"Selected outputs:"
+"M_dot, W_dot_pump, h_ex_pump, t_ex_pump, DELTAt_pump"
+
+"Inputs:"
+h_su_pump=h_ex_cd "(see §4)"
+p_su_pump=p_ex_cd "(see §4)"
+p_ex_pump= p_su_ev "(see §2)"
+
+"Control variable:"
+{rpm_pump=1500 [min^-1]}     "imposed in an earlier version; rpm_pump is now an output adjusting to DELTAt_oh_ex_ev"
+{Ideal control hypothesis: the pump speed is tuned so that the required superheating is obtained at the evaporator exhaust (see § 2)}
+
+"Parameters:"
+V_s_pump=2.1E-6 [m^3]
+"(Swept volume of a volumetric pump; other geometrical characteristics might be considered, impeller diameter, impeller thikness, blades angle, etc. for a centrifugal pump)"
+epsilon_vol_pump=1 [-]
+"(if volumetric pump; if not, might be function of pressure difference and rotation speed)"
+epsilon_s_pump=0.6 [-]
+"(might be function of pressure difference and rotation speed)"
+
+"Simulation model:"
+"Mass flowrate:"
+M_dot_pump*v_su_pump=epsilon_vol_pump*N_pump*V_s_pump
+N_pump=rpm_pump/60
+v_su_pump=Volume(fluid$,h=h_su_pump,P=P_su_pump)
+"Power:"
+W_dot_pump=M_dot_pump*w_pump
+w_pump=w_s_pump/epsilon_s_pump
+{w_s_pump=h_exs_pump-h_su_pump
+h_exs_pump=Enthalpy(fluid$,s=s_su_pump,P=P_ex_pump)
+s_su_pump=Entropy(fluid$,h=h_su_pump,P=P_su_pump)}
+"Or, in excellent approximation:"
+w_s_pump=v_su_pump*(p_ex_pump-p_su_pump)
+"Fluid heating-up:"
+w_pump=h_ex_pump-h_su_pump
+"(if the pump can be considered as adiabatic)"
+t_ex_pump=Temperature(fluid$,h=h_ex_pump,P=P_ex_pump)
+t_su_pump=Temperature(fluid$,h=h_su_pump,P=P_su_pump)
+DELTAt_pump=t_ex_pump-t_su_pump
+Cp_pump=Cp(fluid$,T=t_su_pump,P=P_su_pump)
+"-------------------------------------------------------------------------------------"
+
+"============================================================================================"
+"2. EVAPORATOR"
+"============================================================================================"
+
+"(NB: no subscript means working fluid, sf subscript means secondary fluid;
+the secondary fluid is dealed with as if it was a perfect gas)"
+
+"Selected outputs:"
+"Q_dot_ev, h_ex_ev, t_ex_ev, p_su_ev, X_ex_ev, t_sf_ex_ev"
+
+"2.0. PARAMETERS"
+U_liquid_ev=1000	
+U_twophase_ev=3600
+U_vapor_ev=1000
+"!!! (should be defined as function of both flowrates)"
+DELTAp_ev=1E4 [Pa]
+
+"2.1. INPUTS"
+c_p_sf_ev=3800 [J/(kg*C)]  "(if the secondary fluid is  glycol water 40%)"
+t_sf_su_ev=88.47 [C] 
+Q_dot_ev=12990
+DELTAt_oh_ex_ev=10 [C]        {(pump control: see §1)}
+
+"2.2. CONNECTIONS"
+M_dot_ev=M_dot_pump "(see §1)"
+h_su_ev=h_ex_pump "(see §1)"
+p_ex_ev=p_su_exp "(see §3)"
+
+"2.3. EVAPORATOR GEOMETRY"
+
+n_plates=22
+L_ev=0.24   	 "Channel length"
+W_ev=0.081 	  "Heat transfer surface width"
+n_ch_r=n_plates/2-1	"Number of channels in which goes the working fluid"
+n_ch_sf=n_plates/2	"Number of channels in which goes the secondary fluid"
+A_free_1ch=150/1000/1000            "free flow area of 1 channel (as in the original)"
+Volume_ev=A_free_1ch*n_ch_r*L_ev
+
+" 2.4. HEAT TRANSFER SURFACES"
+A_1plate=L_ev*W_ev*1.25          "Heat transfer area of 1 plate (including an enhancement factor of 25% of the Alfa Laval AC30EQ-14H)"
+A_i_ev=A_1plate*(n_plates-2)    "Heat transfer area of the working fluid"      
+A_e_ev=A_1plate*(n_plates-2)   "Heat transfer area of the secondary fluid"  
+
+
+"2.5. MEAN VOID FRACTION"
+M_ev=M_liquid_ev+M_twophase_ev+M_vapor_ev
+Volume_ev=Volume_liquid_ev+Volume_twophase_ev+Volume_vapor_ev
+Volume_liquid_ev=M_liquid_ev*v_liquid_ev
+v_liquid_ev=Volume(fluid$,h=h_su_ev,P=P_su_ev)
+Volume_twophase_ev=M_twophase_ev*v_twophase_ev
+v_twophase_ev=Volume(fluid$,t=t_ev,x=0.5)
+Volume_vapor_ev=M_vapor_ev*v_vapor_ev
+v_vapor_ev=Volume(fluid$,t=t_ev,x=1)
+
+t_ev=T_sat(fluid$,P=P_su_ev)
+"!(doing as if all the pressure drop was occuring in superheating zone)"
+
+
+"2.6. UNDER-COOLED LIQUID ZONE"
+AU_liquid_ev=(Volume_liquid_ev/Volume_ev)*A_i_ev*U_liquid_ev
+NTU_liquid_ev=AU_liquid_ev/C_dot_liquid_ev_min
+alpha_liquid_ev=Volume_liquid_ev/Volume_ev     "percentage of the evaporator that is occupied by the liquid phase"
+C_dot_liquid_ev_min=MIN(C_dot_sf_ev,C_dot_liquid_ev)
+C_dot_liquid_ev_max=max(C_dot_sf_ev,C_dot_liquid_ev)
+C_dot_liquid_ev=M_dot_ev*c_p_liquid_ev
+c_p_liquid_ev=CP(fluid$,P=P_su_ev,T=(t_su_ev+T_ev)/2)
+omega_liquid=C_dot_liquid_ev_min/C_dot_liquid_ev_max
+epsilon_liquid_ev*(1-omega_liquid*exp(-NTU_liquid_ev*(1-omega_liquid)))=(1-exp(-NTU_liquid_ev*(1-omega_liquid)))
+Q_dot_liquid_ev=epsilon_liquid_ev*C_dot_liquid_ev_min*(t_sf_ex_ev_tp-t_su_ev)
+t_sf_ev=(t_sf_su_ev+t_sf_ex_ev)/2
+t_su_ev=Temperature(fluid$,P=P_su_ev,h=h_su_ev)
+Q_dot_liquid_ev=M_dot_ev*(h_ex_liquid_ev-h_su_ev)
+h_ex_liquid_ev=Enthalpy(fluid$,T=T_ev,x=0)
+Q_dot_liquid_ev=C_dot_sf_ev*(t_sf_ex_ev_tp-t_sf_ex_ev)   "secondary-fluid temperature at the two-phase zone inlet (pinch point)"
+
+"2.7. TWO-PHASE ZONE"
+AU_twophase_ev=(Volume_twophase_ev/Volume_ev)*A_i_ev*U_twophase_ev
+alpha_twophase_ev=Volume_twophase_ev/Volume_ev     "percentage of the evaporator that is occupied by the two phase"
+epsilon_twophase_ev=1-exp(-NTU_ev_twophase)
+NTU_ev_twophase=AU_twophase_ev/C_dot_sf_ev
+Q_dot_twophase_ev=epsilon_twophase_ev*C_dot_sf_ev*(t_sf_su_ev_tp-t_ev)
+Q_dot_twophase_ev=C_dot_sf_ev*(t_sf_su_ev_tp-t_sf_ex_ev_tp)
+Q_dot_twophase_ev=M_dot_ev*(h_ex_twophase_ev-h_su_twophase_ev)     
+h_ex_twophase_ev=Enthalpy(fluid$,T=T_ev,x=1)
+h_su_twophase_ev=h_ex_liquid_ev
+
+"2.8. SUPER-HEATED ZONE (if any):"
+AU_vapor_ev=(Volume_vapor_ev/Volume_ev)*A_i_ev*U_vapor_ev
+alpha_vapor_ev=Volume_vapor_ev/Volume_ev     "percentage of the evaporator that is occupied by the vapor phase"
+NTU_vapor_ev=AU_vapor_ev/C_dot_vapor_ev_min
+omega_vapor_ev=C_dot_vapor_ev_min/C_dot_vapor_ev_max
+epsilon_vapor_ev*(1-omega_vapor_ev*exp(-NTU_vapor_ev*(1-omega_vapor_ev)))=(1-exp(-NTU_vapor_ev*(1-omega_vapor_ev)))
+Q_dot_vapor_ev=epsilon_vapor_ev*C_dot_vapor_ev_min*(t_sf_su_ev-t_ev)
+C_dot_vapor_ev_min=MIN(C_dot_sf_ev,C_dot_vapor_ev)
+C_dot_vapor_ev_max=max(C_dot_sf_ev,C_dot_vapor_ev)
+C_dot_vapor_ev=M_dot_ev*c_p_vapor_ev
+c_p_vapor_ev=CP(fluid$,P=P_su_ev,T=(t_ex_ev+T_ev)/2)
+Q_dot_vapor_ev=M_dot_ev*(h_ex_ev-h_su_vapor_ev)
+h_su_vapor_ev=h_ex_twophase_ev
+t_ex_ev=Temperature(fluid$,P=P_ex_ev,h=h_ex_ev)
+
+"2.9. TOTAL HEAT TRANSFER"
+Q_dot_ev=Q_dot_liquid_ev+Q_dot_twophase_ev+Q_dot_vapor_ev
+
+"2.10. PRESSURE DROP"
+p_su_ev=p_ex_ev+DELTAp_ev
+
+"2.11. T-H_dot DIAGRAM"
+
+T[1]=T_su_ev
+T[2]=T_ev
+T[3]=T_ev
+T[4]=T_ex_ev
+T[5]=T_sf_su_ev
+T[6]=T_sf_su_ev_tp
+T[7]=T_sf_ex_ev_tp
+T[8]=T_sf_ex_ev
+H_dot[1]=M_dot_ev*h_su_ev
+H_dot[2]=M_dot_ev*h_su_twophase_ev
+H_dot[3]=M_dot_ev*h_su_vapor_ev
+H_dot[4]=M_dot_ev*h_ex_ev
+H_dot[5]=H_dot[4]
+H_dot[6]=H_dot[5]-C_dot_sf_ev*(t_sf_su_ev-t_sf_su_ev_tp)
+H_dot[7]=H_dot[6]-C_dot_sf_ev*(t_sf_su_ev_tp-t_sf_ex_ev_tp)
+H_dot[8]=H_dot[7]-C_dot_sf_ev*(t_sf_ex_ev_tp-t_sf_ex_ev)
+
+"Overheating at evaporator exhaust:"
+DELTAt_oh_ex_ev=t_ex_ev-t_sat_ex_ev
+t_sat_ex_ev=T_sat(fluid$,P=P_ex_ev)
+"Vapor quality at evaporator exhaust:"
+X_ex_ev=Quality(fluid$,p=p_ex_ev,h=h_ex_ev)
+"Exhaust temperature of the secondary fluid:"
+Q_dot_ev=C_dot_sf_ev*(t_sf_su_ev-t_sf_ex_ev)
+"(again, neglecting ambient heat losses)"
+C_dot_sf_ev=M_dot_sf_ev*c_p_sf_ev
+"Pinch point"
+DELTAt_pinch_ev=t_sf_ex_ev_tp-t_ev
+"Overall heat transfer coefficient"
+AU_ev=AU_liquid_ev+AU_twophase_ev+AU_vapor_ev
+U_ev=AU_ev/A_i_ev
+
+
+
+"============================================================================================"
+"3. EXPANDER"
+"============================================================================================"
+
+"Selected outputs:"
+" p_su_exp, W_dot_exp, h_ex_exp, t_ex_exp, X_ex_exp"
+
+"Inputs:"
+M_dot_exp=M_dot_ev "(see §2)"
+h_su_exp=h_ex_ev "(see §2)"
+p_ex_exp=p_su_cd "(see §4)"
+
+
+"Control variable:"
+RPM_exp=700 [min^-1]
+t_amb_exp=20
+
+" Parameters "
+V_s_cp=110e-6  "After sizing to optimize the efficiency of the cycle at 120 km/h"
+"(Swept volume of a volumetric expander; other geometrical characteristics might be considered, impeller diameter, impeller thickness, blades angle, etc. for a centrifugal pump)"
+r_v_in=3   "Volumetric ratio"
+A_leak=0.000002  
+AU_su_exp_n=7
+AU_ex_exp_n=9
+M_dot_nom=0.07
+T_loss_exp=1
+AU_amb_exp=11
+d_thr_su = 0.0055
+
+"Simulation model:"
+
+N_exp=RPM_exp/60
+" Expander caracteristics"
+V_s_exp=V_s_cp/r_v_in
+
+" Supply expander"
+t_sat_su_exp=T_sat(fluid$,P=P_su_exp)
+DELTAT_oh_su_exp=T_su_exp-T_sat_su_exp
+r_p_exp=P_su_exp/P_ex_exp
+h_su_exp=enthalpy(fluid$,P=P_su_exp,T=t_su_exp)
+s_su_exp=entropy(fluid$,P=P_su_exp,T=t_su_exp)
+v_su_exp=volume(fluid$,P=P_su_exp,T=t_su_exp)
+
+"Supply pressure drop"
+A_thr_su=PI*d_thr_su^2/4
+h_su_exp=h_thr_su+C_thr_su^2/2
+
+V_dot_thr_su=A_thr_su*C_thr_su
+M_dot_exp=V_dot_thr_su/v_su_exp
+
+DELTAP_su_exp=C_thr_su^2/(v_su_exp*2)
+P_su1_exp=P_su_exp- DELTAP_su_exp
+"assuming Incompressible fluid as hypothesis"
+
+" supply cooling down"
+C_dot_su_exp=M_dot_exp*cp_su_exp
+cp_su_exp=CP(fluid$,P=P_su1_exp,T=t_su_exp)
+NTU_su_exp=AU_su_exp/C_dot_su_exp
+AU_su_exp=AU_su_exp_n*(M_dot_exp/M_dot_nom)^0.6
+epsilon_su_exp=1-exp(-NTU_su_exp)
+Q_dot_su_exp=epsilon_su_exp*C_dot_su_exp*(t_su_exp-t_wall_exp)
+Q_dot_su_exp=C_dot_su_exp*(t_su_exp-t_su1_exp)
+h_su1_exp=enthalpy(fluid$,P=P_su1_exp,T=t_su1_exp)
+s_su1_exp=entropy(fluid$,P=P_su1_exp,T=t_su1_exp)
+v_su1_exp=volume(fluid$,P=P_su1_exp,T=t_su1_exp)
+
+
+
+
+
+" isentropic expansion up to the adapted pressure"
+r_v_in=v_in_exp/v_su1_exp
+P_in_exp=pressure(fluid$,v=v_in_exp,s=s_su1_exp)
+h_in_exp=enthalpy(fluid$,v=v_in_exp,P=P_in_exp)
+w_exp_1=h_su1_exp-h_in_exp
+r_p_in=P_su_exp/P_in_exp
+
+" isochoric expansion from adapted pressure to exaust pressure"
+w_exp_2=v_in_exp*(P_in_exp-P_ex_exp)
+
+"Total work"
+w_in_exp=w_exp_1+w_exp_2
+w_in_exp=h_su1_exp-h_ex2_exp
+
+" Power"
+W_dot_in_exp=M_dot_in*w_in_exp
+
+" leakage flow rate"
+h_su1_exp=h_thr+0.5*C_thr^2
+P_su_exp*v_su1_exp^gamma=P_thr*v_thr^gamma
+r=8314/MM
+MM=molarmass(fluid$)
+P_crit=P_su_exp*(2/(gamma+1))^(gamma/(gamma-1))  "Critical pressure at the sound speed"
+P_thr=P_crit
+h_thr=enthalpy(fluid$,P=P_thr,s=s_su1_exp)
+t_thr=temperature(fluid$,h=h_thr,P=P_thr)
+C_thr_bis=sqrt(gamma*r*(t_thr+273))
+t_thr_bis=t_su1_exp*2/(gamma+1)
+M_dot_leak=A_leak*C_thr/v_thr
+v_thr=volume(fluid$,P=P_thr,h=h_thr) "(h, not T, as in the original)"
+
+" Mass flow rate"
+V_dot_s_exp=N_exp*V_s_exp
+M_dot_in=V_dot_s_exp/v_su1_exp
+M_dot_exp=M_dot_in+M_dot_leak
+
+"2.10 Mixing with leakage at exhaust"
+M_dot_in*h_ex2_exp+M_dot_leak*h_su1_exp=M_dot_exp*h_ex1_exp
+h_ex1_exp=enthalpy(fluid$,T=t_ex1_exp,P=P_ex_exp)
+
+" Exhaust cooling down"
+cp_ex_exp=CP(fluid$,P=P_ex_exp,T=t_ex1_exp)
+C_dot_ex_exp=M_dot_exp*cp_ex_exp
+NTU_ex_exp=AU_ex_exp/C_dot_ex_exp
+AU_ex_exp=AU_ex_exp_n*(M_dot_exp/M_dot_nom)^0.6
+epsilon_ex_exp=1-exp(-NTU_ex_exp)
+Q_dot_ex_exp=epsilon_ex_exp*C_dot_ex_exp*(t_ex1_exp-t_wall_exp)
+Q_dot_ex_exp=C_dot_ex_exp*(t_ex1_exp-t_ex_exp)
+
+" Calculated exhaust expander"
+h_ex_exp=enthalpy(fluid$,P=P_ex_exp,T=t_ex_exp)
+
+" Power"
+W_dot_sh_exp=W_dot_in_exp-W_dot_loss_exp
+omega_exp=2*PI*N_exp		"rotation speed"
+W_dot_loss_exp=T_loss_exp*omega_exp
+
+" Heat balance over the expander"
+Q_dot_amb_exp=AU_amb_exp*(t_wall_exp-t_amb_exp)
+Q_dot_su_exp+Q_dot_ex_exp+W_dot_loss_exp-Q_dot_amb_exp=0
+
+" Global isentropic effectiveness"
+W_dot_exp_s=M_dot_exp*w_in_exp_s
+w_in_exp_s=h_su_exp-h_ex_exp_s
+h_ex_exp_s=enthalpy(fluid$,P=P_ex_exp,s=s_su_exp)
+epsilon_s_exp=W_dot_sh_exp/W_dot_exp_s
+
+X_ex_exp=Quality(fluid$,P=P_ex_exp,h=h_ex_exp)
+
+
+
+"============================================================================================"
+"4. CONDENSER"
+"============================================================================================"
+
+"(NB: no subscript means working fluid, sf subscript means secondary fluid;
+the secondary fluid is dealed with as if it was a perfect gas)"
+
+"Selected outputs:"
+"Q_dot_cd, h_ex_cd, t_ex_cd, p_su_cd, p_ex_cd, DELTAt_sc_ex_cd,X_ex_cd, t_sf_ex_cd"
+
+"4.0. PARAMETERS"
+fluid3$='AirH2O'
+w_air_cd=humrat(fluid3$,T=t_sf_su_cd,r=0.5,P=101325)   "(CS-BUG-HUMIDAIR-PROPS workaround, see README)"
+rho_sf_cd=(1+w_air_cd)/Volume(fluid3$,T=t_sf_su_cd,r=0.5,P=101325)
+c_p_sf_cd=Cp(fluid3$,T=t_sf_su_cd,r=0.5,P=101325)
+t_sf_su_cd=20 [C]
+DELTAt_sc_ex_cd=3  [C]  "imposed: the charge is solved so as to obtain this subcooling (as in the original)"
+U_vapor_cd=600
+U_twophase_cd=1200
+U_liquid_cd=500
+DELTAp_cd=1E3 [Pa]
+
+"4.1. INPUTS"
+
+"4.2. CONNECTIONS"
+
+M_dot_cd=M_dot_exp
+h_su_cd=h_ex_exp
+
+
+{M_cd=0.95 [kg]}  "imposed in an earlier version; now determined by the global void-fraction model"
+
+"4.3. GEOMETRY"
+
+n_t=40	"Number of tubes"
+A_i_1tube=0.02718                                    "Internal area of 1 tube (obtained by the detailed model Condenser three zones model (frontal)- CCAR070911-3  (R134a).EES)"
+A_i_t_cd=A_i_1tube*n_t	"Total heat transfer area of the refrigerant side"
+Volume_cd=A_i_t_cd/2000	"Assuming an area density of 2000 m2/m3 typical of this kind of heat exchanger"
+" Frontal dimensions "
+H_cd=n_t*T_h+(n_t+1)*F_h	" Heat exchanger height "
+W_r_cd=T_el	" Real heat exchanger width "
+T_h=2/1000	" Tube height "
+F_h=10/1000	" Fin height "
+T_el=T_tl-2*L_t_coll	" Tube external length "
+T_tl=650/1000	"! Tube total length "
+L_t_coll=10/1000	" Tube length inside the collector (in each side) "
+A_su_cd=H_cd*W_r_cd	"Frontal area "
+{A_su_cd=0.2936}                                         "frontal area of the detailed condenser model the geometry comes from (as in the original)"
+C_rad_air=3.3475                                        "radiator air speed [m/s]"
+
+
+"Secondary fluid mass flowrate"
+M_dot_sf_cd=rho_sf_cd*A_su_cd*C_rad_air
+
+"4.4. MEAN VOID FRACTION"
+
+M_cd=M_vapor_cd+M_twophase_cd+M_liquid_cd
+Volume_cd=Volume_vapor_cd+Volume_twophase_cd+Volume_liquid_cd
+Volume_vapor_cd=M_vapor_cd*v_vapor_cd
+v_vapor_cd=Volume(fluid$,t=t_cd,x=1)
+Volume_twophase_cd=M_twophase_cd*v_twophase_cd
+v_twophase_cd=Volume(fluid$,t=t_cd,x=0.5)
+Volume_liquid_cd=M_liquid_cd*v_liquid_cd
+v_liquid_cd=Volume(fluid$,P=P_cd,x=0)
+t_cd=T_sat(fluid$,P=P_cd) 
+p_cd=p_ex_cd
+"!(doing as if all the pressure drop was occuring in superheating zone)"
+
+
+"SUPER-HEATED ZONE "
+AU_vapor_cd=(Volume_vapor_cd/Volume_cd)*A_i_t_cd*U_vapor_cd
+alpha_vapor_cd=Volume_vapor_cd/Volume_cd     "percentage of the condenser that is occupied by the vapor phase"
+C_dot_vapor_cd_min=MIN(C_dot_sf_cd,C_dot_vapor_cd)
+C_dot_vapor_cd_max=max(C_dot_sf_cd,C_dot_vapor_cd)
+C_dot_vapor_cd=M_dot_cd*c_p_vapor_cd
+c_p_vapor_cd=CP(fluid$,P=P_su_cd,T=(t_su_cd+T_cd)/2)
+NTU_vapor_cd=AU_vapor_cd/C_dot_vapor_cd_min
+omega_vapor_cd=C_dot_vapor_cd_min/C_dot_vapor_cd_max
+epsilon_vapor_cd*(1-omega_vapor_cd*exp(-NTU_vapor_cd*(1-omega_vapor_cd)))=(1-exp(-NTU_vapor_cd*(1-omega_vapor_cd)))
+Q_dot_vapor_cd=epsilon_vapor_cd*C_dot_vapor_cd_min*(t_su_cd-t_sf_ex_cd_tp)
+t_sf_cd=(t_sf_su_cd+t_sf_ex_cd)/2
+t_su_cd=Temperature(fluid$,P=P_su_cd,h=h_su_cd)
+Q_dot_vapor_cd=M_dot_cd*(h_su_cd-h_ex_vapor_cd)   
+h_ex_vapor_cd=Enthalpy(fluid$,T=T_cd,x=1)
+Q_dot_vapor_cd=C_dot_sf_cd*(t_sf_ex_cd-t_sf_ex_cd_tp)
+
+
+"TWO-PHASE ZONE"
+AU_twophase_cd=(Volume_twophase_cd/Volume_cd)*A_i_t_cd*U_twophase_cd
+alpha_twophase_cd=Volume_twophase_cd/Volume_cd     "percentage of the condenser that is occupied by the  two-phase"
+epsilon_twophase_cd=1-exp(-NTU_twophase_cd)
+NTU_twophase_cd=AU_twophase_cd/C_dot_sf_cd
+Q_dot_twophase_cd=epsilon_twophase_cd*C_dot_sf_cd*(t_cd-t_sf_su_cd_tp)
+Q_dot_twophase_cd=M_dot_cd*(h_su_twophase_cd-h_ex_twophase_cd)
+Q_dot_twophase_cd=C_dot_sf_cd*(t_sf_ex_cd_tp-t_sf_su_cd_tp)
+h_ex_twophase_cd=Enthalpy(fluid$,T=T_cd,x=0)
+h_su_twophase_cd=h_ex_vapor_cd
+
+"UNDER-COOLED LIQUID ZONE"
+AU_liquid_cd=(Volume_liquid_cd/Volume_cd)*A_i_t_cd*U_liquid_cd
+alpha_liquid_cd=Volume_liquid_cd/Volume_cd     "percentage of the condenser that is occupied by the liquid phase"
+NTU_liquid_cd=AU_liquid_cd/C_dot_liquid_cd_min
+C_dot_liquid_cd_min=MIN(C_dot_sf_cd,C_dot_liquid_cd)
+C_dot_liquid_cd_max=max(C_dot_sf_cd,C_dot_liquid_cd)
+C_dot_liquid_cd=M_dot_cd*c_p_liquid_cd
+c_p_liquid_cd=CP(fluid$,P=P_su_cd,T=(t_ex_cd+T_cd)/2)
+omega_liquid_cd=C_dot_liquid_cd_min/C_dot_liquid_cd_max
+epsilon_liquid_cd*(1-omega_liquid_cd*exp(-NTU_liquid_cd*(1-omega_liquid_cd)))=(1-exp(-NTU_liquid_cd*(1-omega_liquid_cd)))
+Q_dot_liquid_cd=epsilon_liquid_cd*C_dot_liquid_cd_min*(t_cd-t_sf_su_cd)
+Q_dot_liquid_cd=M_dot_cd*(h_su_liquid_cd-h_ex_cd)    
+h_su_liquid_cd=h_ex_twophase_cd
+t_ex_cd=Temperature(fluid$,P=P_ex_cd,h=h_ex_cd)
+
+
+"TOTAL HEAT TRANSFER"
+Q_dot_cd=Q_dot_vapor_cd+Q_dot_twophase_cd+Q_dot_liquid_cd
+
+"T-H_dot DIAGRAM"
+T[9]=T_su_cd
+T[10]=T_cd
+T[11]=T_cd
+T[12]=T_ex_cd
+T[13]=T_sf_ex_cd
+T[14]=T_sf_ex_cd_tp
+T[15]=T_sf_su_cd_tp
+T[16]=T_sf_su_cd
+
+H_dot[9]=M_dot_cd*h_su_cd
+H_dot[10]=M_dot_cd*h_su_twophase_cd
+H_dot[11]=M_dot_cd*h_su_liquid_cd
+H_dot[12]=M_dot_cd*h_ex_cd
+H_dot[13]=H_dot[9]
+H_dot[14]=H_dot[13]-C_dot_sf_cd*(t_sf_ex_cd-t_sf_ex_cd_tp)
+H_dot[15]=H_dot[14]-C_dot_sf_cd*(t_sf_ex_cd_tp-t_sf_su_cd_tp)
+H_dot[16]=H_dot[15]-C_dot_sf_cd*(t_sf_su_cd_tp-t_sf_su_cd)
+
+
+"PRESSURE DROP"
+p_ex_cd=p_su_cd-DELTAp_cd
+
+"Subcooling at condenser exhaust:"
+DELTAt_sc_ex_cd=t_sat_ex_cd-t_ex_cd    
+t_sat_ex_cd=T_sat(fluid$,P=P_ex_cd)
+"Fluid quality at condenser exhaust"
+X_ex_cd=Quality(fluid$,P=P_ex_cd,h=h_ex_cd)
+"Exhaust temperature of the secondary fluid:"
+Q_dot_cd=C_dot_sf_cd*(t_sf_ex_cd-t_sf_su_cd)
+"(again, neglecting ambient heat losses)"
+C_dot_sf_cd=M_dot_sf_cd*c_p_sf_cd
+
+"Overall heat transfer coefficient"
+AU_cd=AU_liquid_cd+AU_twophase_cd+AU_vapor_cd
+U_cd=AU_cd/A_i_t_cd
+
+
+
+
+"------------------------------------------------------------------------------"
+"!Global mean void fraction model:"
+M_ev+M_line+M_cd=M_charge
+M_line=Volume_line/v_line
+Volume_line=0.0001 [m^3]
+v_line=v_liquid_ev
+{M_charge=0.41 [kg]}  "charge imposed in an earlier version"
+"------------------------------------------------------------------------------"
+"Global performances:"
+W_dot_Rankine=W_dot_sh_exp-W_dot_pump
+eta_Rankine=W_dot_Rankine/Q_dot_ev
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{Indices 21-24 (1: expander supply = evaporator outlet, 2: expander exhaust =
+ condenser inlet, 3: condenser outlet = pump supply, 4: pump outlet = evaporator
+ inlet); indices 1-16 are taken by the T-H_dot arrays of the heat exchangers.
+ Use the arrays h[i]/P[i] or s[i]/T[i] with the "Overlay array path" option of
+ the CoolSolve Diagram tab.}
+P[21]=P_su_exp
+h[21]=h_su_exp
+T[21]=T_su_exp
+s[21]=s_su_exp
+P[22]=P_ex_exp
+h[22]=h_ex_exp
+T[22]=t_ex_exp
+s[22]=ENTROPY(fluid$,P=P[22],h=h[22])
+P[23]=P_ex_cd
+h[23]=h_ex_cd
+T[23]=t_ex_cd
+s[23]=ENTROPY(fluid$,P=P[23],h=h[23])
+P[24]=P_ex_pump
+h[24]=h_ex_pump
+T[24]=t_ex_pump
+s[24]=ENTROPY(fluid$,P=P[24],h=h[24])

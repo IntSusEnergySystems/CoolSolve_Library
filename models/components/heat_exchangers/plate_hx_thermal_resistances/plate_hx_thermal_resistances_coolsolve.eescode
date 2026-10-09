@@ -1,0 +1,95 @@
+{=============================================================================
+  Single-phase plate heat exchanger: thermal-resistance model (Martin)
+  CoolSolve Library model CSL-0161 - runnable variant (native file blocked)
+ -----------------------------------------------------------------------------
+  Same model as plate_hx_thermal_resistances.eescode (Martin 1996 correlation,
+  PROCEDURE REYNOLDS, thermal resistance R_f and pressure drop of a chevron
+  plate heat exchanger), with the two changes forced by the CoolSolve gaps,
+  each logged in the README:
+    1. the $IF fluid$ branches are resolved for the stored run (water): the
+       water property block is kept unconditional and the ethylene-glycol
+       branch (BRINEPROP2, CS-GAP-IF-DIRECTIVE) is removed - valid EES;
+    2. the Nusselt number variable Nu#_f is renamed Nu_f (identifier with '#',
+       CS-BUG-HASH-IDENT; same workaround as CSL-0111) - valid EES.
+  No CoolSolve-only syntax. Source, authors, licence: see the native file.
+=============================================================================}
+
+"!Single Phase Flow Plate Heat Exchanger
+Author : S.Bertagnolio, S.Quoilin
+Thermodynamics Laboratory, University of Liège
+Reference:
+[1] Martin, H. (1996) A theoritical approach to predict the performance of chevron-type plate heat exchangers. Chemical Engineering and Processing 35, 301-310
+[2] Garcia-Cascales, J.R., Vera-Garcia, F., Corberan-Salvador, J.M., Gonzalvez-Macia, J. (2007) Assessment of boiling and condensation heat transfer correlations in the modelling of plate heat exchangers. International Journal of Refrigeration."
+
+PROCEDURE REYNOLDS(rho_f,mu_f,A_bar,PHI,V_dot_f_m3h,A_cs,d_h,u_f:Re_f,f_0,f_1,Regime$)
+  "Reynolds number"
+  Re_f=rho_f*u_f*d_h/mu_f
+  "Coefficients f_0 and f_1"
+  IF Re_f<2000 THEN
+    f_0=64/Re_f
+    f_1=597/Re_f+3.85
+    Regime$='LAMINAR'
+  ELSE
+    f_0=(1.8*log10(Re_f)-1.5)^(-2)
+    f_1=39/Re_f^0.289
+    Regime$='TURBULENT'
+  ENDIF
+END
+
+"!Data"
+"heat exchanger"
+A_bar = 0.004            "amplitude of corrugation [m]"
+LAMBDA = 0.025           "corrugation wavelength [m]"
+L_p = 1.55               "plate length, measured between the centres of the upper and lower port holes [m]"
+L_w = 0.63               "plate width between gaskets [m]"
+beta=45                  "chevron angle [deg]"
+t=0.0006                 "plate thickness [m]"
+N_p=105                  "total number of plates [-]"
+D_p=0.2                  "port hole diameter [m]"
+k_w=17                   "plate thermal conductivity [W/K-m]"
+"fluid properties"
+T_m=25                   "mean fluid temperature [C]"
+T_w=25                   "wall temperature (stored value; line absent from the commented data block of the original) [C]"
+P_m=1E5                  "mean fluid pressure [Pa]"
+V_dot_f_m3h=150          "volume flow rate [m^3/h]"
+X_EG=25                  "ethylene-glycol mass concentration [%] (stored run; 50 [%] in the original comment)"
+fluid$='Water'           "stored run; the EG branch of the native file calls Brineprop2 (see README)"
+
+"Water properties (native file: $IF fluid$='Water' branch, resolved for the stored run)"
+rho_f= DENSITY(fluid$,T=T_m,P=P_m)
+mu_f=VISCOSITY(fluid$,T=T_m,P=P_m)
+mu_w=VISCOSITY(fluid$,T=T_w,P=P_m)
+k_f=CONDUCTIVITY(fluid$,T=T_m,P=P_m)
+Pr_f=PRANDTL(fluid$,T=T_m,P=P_m)
+c_p_f=SPECHEAT(fluid$,T=T_m,P=P_m)
+{Ethylene-glycol branch of the native file removed in this variant:
+ $IF fluid$='EG'
+ CALL BRINEPROP2(fluid$, X_EG,T_m:T_freezing, rho_f, c_p_f/1000, k_f,mu_f, Pr_f)
+ CALL BRINEPROP2(fluid$, X_EG,T_w:T_freezing_w, rho_w, c_p_w/1000, k_w,mu_w, Pr_w)
+ $ENDIF}
+"!Equations"
+"hydraulic diameter"
+d_h=4*A_bar/PHI
+"velocity : superficial velocity = volumetric flow rate / average flow cross-section [m/s]"
+u_f=V_dot_f/A_cs
+V_dot_f=V_dot_f_m3h/3600
+"Reynolds Number and regime"
+CALL REYNOLDS(rho_f,mu_f,A_bar,PHI,V_dot_f_m3h,A_cs,d_h,u_f:Re_f,f_0,f_1,Regime$)
+"corrugation parameter"
+X=2*PI*A_bar/LAMBDA
+"area enlargement factor"
+PHI=1/6*(1+sqrt(1+X^2)+4*sqrt(1+X^2/2))
+"Average flow cross-section = number of gaps of one side * plate width between gaskets * 2 * A_bar [m^2]"
+A_cs=ROUND(L_w/LAMBDA)*L_w*2*A_bar
+"friction factor"
+1/sqrt(f)= (cos(beta)/(0.18 *tan(beta) + 0.36*sin(beta) + f_0/cos(beta))^0.5 + (1-cos(beta))/sqrt(3.8*f_1))
+"Nusselt number (Nu#_f in the native file, renamed for CS-BUG-HASH-IDENT)"
+Nu_f=Pr_f^(1/3)*(mu_f/mu_w)^(1/6)*0.122*(f*Re_f^2*sin(2*beta))^(0.374)
+"!Heat Transfer Coefficient"
+Nu_f=h_f*d_h/k_f
+"Thermal Resistance"
+R_f=1/(h_f*A_hex)
+"Heat transfer area"
+A_hex=L_w*(L_p-D_p)*PHI*N_p
+"!Pressure drop"
+DELTAP=(f*rho_f*u_f^2*L_p)/(2*d_h)

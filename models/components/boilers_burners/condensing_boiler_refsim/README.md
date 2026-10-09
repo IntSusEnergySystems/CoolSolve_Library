@@ -389,3 +389,4 @@ the load).
   the one of the source.
 - `CSL-0081` *vertical_ghes_refsim* — another reference model of the same ULiège
   model bank (ground heat exchangers, 13 February 2008).
+- `CSL-0166` *boiler_modulating_burner_refsim*: the condensing boiler of the same model bank (modulating-burner RefSim model, 2008 model bank).

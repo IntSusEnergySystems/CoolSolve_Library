@@ -1,0 +1,342 @@
+{=============================================================================
+  Heat exchanger: eps-NTU with UA from the plate geometry (UA from plate/pipe
+  geometry, plate wall conduction, fouling, Gnielinski convection)
+  CoolSolve Library model CSL-0128
+ -----------------------------------------------------------------------------
+  Translation of the LaboThapPy component HexeNTU (plate/pipe geometry) into
+  EES-language equations: the conductance-area product UA is built from series
+  thermal resistances (hot-side film, cold-side film, plate conduction,
+  fouling) whose film coefficients come from the Gnielinski correlation family
+  of the original, and the duty follows from the eps-NTU relation of the
+  selected flow arrangement. Steady state, single phase, no pressure drop,
+  properties evaluated at the inlet states, as in the original.
+  Default run: water/water counterflow plate heat exchanger, the case of the
+  TESPy test test_labothappy_reference (see README.md).
+  Source : LaboThapPy, HexeNTU by B. Chaudoir, M. Peeters, E. Neven
+           (ULiège Thermodynamics Laboratory), Apache-2.0/MIT - see README.md
+  Status : verified against the LaboThapPy component and the TESPy test
+=============================================================================}
+
+"!Plate geometry (as in the LaboThapPy plate-heat-exchanger geometry)"
+L_HTX = 0.393               "heat exchanger length [m]"
+W_HTX = 0.243               "heat exchanger width [m]"
+H_HTX = 0.0446              "heat exchanger height, plate pack and casing [m]"
+t_casing = 0.005            "casing thickness [m]"
+n_plates = 10               "number of plates [-]"
+t_plate = 0.0008            "plate thickness [m]"
+k_plate = 45                "plate thermal conductivity [W/(m K)]"
+H_n_canals = 4              "number of hot-side canals [-]"
+C_n_canals = 5              "number of cold-side canals [-]"
+A_htx = 0.752               "total heat exchange area [m^2]"
+R_foul = 1E-4                "fouling resistance [m^2 K/W] (reference case, see README)"
+Flow_Type$ = 'CounterFlow'  "flow arrangement: CounterFlow, ParallelFlow, CrossFlow_Unmixed, CrossFlow_Mixed, ShellAndTube_1_2, ShellAndTube_n_passes"
+n_shell_pass = 2            "number of shell passes, ShellAndTube_n_passes only [-]"
+
+"!Canal cross-sections and hydraulic diameter (canal thickness and Dh as in the original)"
+t_canal_H = ((H_HTX - 2*t_casing) - n_plates*t_plate)/(2*H_n_canals)  "hot-side canal thickness [m]"
+t_canal_C = ((H_HTX - 2*t_casing) - n_plates*t_plate)/(2*C_n_canals)  "cold-side canal thickness [m]"
+A_canal_H = t_canal_H*(W_HTX - 2*t_casing)*H_n_canals               "hot-side canal flow area [m^2]"
+A_canal_C = t_canal_C*(W_HTX - 2*t_casing)*C_n_canals               "cold-side canal flow area [m^2]"
+D_h = 4*t_canal_H*W_HTX/(2*t_canal_H + 2*W_HTX)                      "hydraulic diameter, hot side, used for both streams as in the original [m]"
+
+"!Streams (water to water counterflow plate heat exchanger)"
+fluid_H$ = 'Water'          "hot fluid [as in the original: fluid_H]"
+fluid_C$ = 'Water'          "cold fluid [as in the original: fluid_C]"
+T_su_H = 90                 "hot supply temperature [C]"
+P_su_H = 4E5                "hot supply pressure [Pa]"
+M_dot_H = 0.014             "hot mass flow rate [kg/s]"
+T_su_C = 12                 "cold supply temperature [C]"
+P_su_C = 4E5                "cold supply pressure [Pa]"
+M_dot_C = 0.08              "cold mass flow rate [kg/s]"
+
+"!Fluid properties, evaluated at the inlet states (as in the original)"
+cp_H = cp(fluid_H$, T=T_su_H, P=P_su_H)          "hot supply specific heat [J/(kg K)]"
+mu_H = viscosity(fluid_H$, T=T_su_H, P=P_su_H)   "hot supply dynamic viscosity [Pa-s]"
+Pr_H = prandtl(fluid_H$, T=T_su_H, P=P_su_H)      "hot supply Prandtl number [-]"
+k_f_H = conductivity(fluid_H$, T=T_su_H, P=P_su_H)  "hot supply thermal conductivity [W/(m K)]"
+cp_C = cp(fluid_C$, T=T_su_C, P=P_su_C)          "cold supply specific heat [J/(kg K)]"
+mu_C = viscosity(fluid_C$, T=T_su_C, P=P_su_C)   "cold supply dynamic viscosity [Pa-s]"
+Pr_C = prandtl(fluid_C$, T=T_su_C, P=P_su_C)      "cold supply Prandtl number [-]"
+k_f_C = conductivity(fluid_C$, T=T_su_C, P=P_su_C)  "cold supply thermal conductivity [W/(m K)]"
+
+"!Heat capacity rates (as in the original)"
+C_H = cp_H*M_dot_H         "hot-side heat capacity rate [W/K]"
+C_C = cp_C*M_dot_C         "cold-side heat capacity rate [W/K]"
+C_min = calc_Cmin_HX(M_dot_H, M_dot_C, cp_H, cp_C)   "minimum heat capacity rate [W/K]"
+C_max = calc_Cmax_HX(M_dot_H, M_dot_C, cp_H, cp_C)   "maximum heat capacity rate [W/K]"
+C_r = C_min/C_max          "heat capacity ratio [-]"
+
+"!Convection: Gnielinski correlation family of the original (each branch called)"
+G_H = M_dot_H/A_canal_H    "hot-side mass flux per canal area [kg/(m^2 s)]"
+G_C = M_dot_C/A_canal_C    "cold-side mass flux per canal area [kg/(m^2 s)]"
+Re_H = G_H*D_h/mu_H        "hot-side Reynolds number [-]"
+Re_C = G_C*D_h/mu_C        "cold-side Reynolds number [-]"
+Nu_turb_H = Nu_Sieder_Tate_HX(Re_H, Pr_H, mu_H, mu_H)          "hot-side Nusselt number, turbulent branch [-]"
+Nu_trans_H = Nu_Gnielinski_transition_HX(Re_H, Pr_H, D_h, L_HTX)  "hot-side Nusselt number, transition branch [-]"
+Nu_lam_H = Nu_Stephan_Preusser_HX(Re_H, Pr_H, D_h, L_HTX)     "hot-side Nusselt number, laminar branch [-]"
+Nu_turb_C = Nu_Sieder_Tate_HX(Re_C, Pr_C, mu_C, mu_C)          "cold-side Nusselt number, turbulent branch [-]"
+Nu_trans_C = Nu_Gnielinski_transition_HX(Re_C, Pr_C, D_h, L_HTX)  "cold-side Nusselt number, transition branch [-]"
+Nu_lam_C = Nu_Stephan_Preusser_HX(Re_C, Pr_C, D_h, L_HTX)     "cold-side Nusselt number, laminar branch [-]"
+h_H = h_conv_pipe_htc(mu_H, Pr_H, mu_H, k_f_H, G_H, D_h, L_HTX)  "hot-side convection coefficient [W/(m^2 K)]"
+h_C = h_conv_pipe_htc(mu_C, Pr_C, mu_C, k_f_C, G_C, D_h, L_HTX)  "cold-side convection coefficient [W/(m^2 K)]"
+
+"!Conductance-area product: series thermal resistances (as in the original)"
+R_conv_H = 1/(A_htx*h_H)   "hot-side convection resistance [K/W]"
+R_conv_C = 1/(A_htx*h_C)   "cold-side convection resistance [K/W]"
+R_wall = t_plate/(k_plate*A_htx)  "plate conduction resistance [K/W]"
+R_foul_tot = R_foul/A_htx "fouling resistance [K/W]"
+AU = 1/(R_conv_H + R_conv_C + R_wall + R_foul_tot)   "conductance-area product [W/K]"
+NTU = AU/C_min             "number of transfer units [-]"
+
+"!Effectiveness and duty (as in the original; Q_max = C_min*(T_su_H - T_su_C))"
+eps = e_NTU(NTU, C_r, Flow_Type$, n_shell_pass)      "effectiveness of the selected arrangement [-]"
+h_C_Th = enthalpy(fluid_C$, T=T_su_H, P=P_su_C)      "enthalpy of the cold fluid at the hot supply temperature [J/kg]"
+h_H_Tc = enthalpy(fluid_H$, T=T_su_C, P=P_su_H)      "enthalpy of the hot fluid at the cold supply temperature [J/kg]"
+Q_max = calc_Q_max_HX(M_dot_C, h_C_Th, h_su_C, M_dot_H, h_su_H, h_H_Tc)  "maximum heat duty [W]"
+Q_max_capacity = C_min*(T_su_H - T_su_C)             "capacity-rate form of Q_max of the documentation [W]"
+Q_dot = eps*Q_max                                    "heat duty [W]"
+
+"!Effectiveness of the six flow arrangements of the original (demonstration)"
+FT_counter$ = 'CounterFlow'  "flow arrangement name of the counterflow relation"
+FT_parallel$ = 'ParallelFlow'  "flow arrangement name of the parallel flow relation"
+FT_xflow_unmixed$ = 'CrossFlow_Unmixed'  "flow arrangement name of the crossflow relation, both fluids unmixed"
+FT_xflow_mixed$ = 'CrossFlow_Mixed'  "flow arrangement name of the crossflow relation, C_min mixed"
+FT_st_1_2$ = 'ShellAndTube_1_2'  "flow arrangement name of the 1-2 shell-and-tube relation"
+FT_st_n$ = 'ShellAndTube_n_passes'  "flow arrangement name of the n-pass shell-and-tube relation"
+eps_counter = e_NTU(NTU, C_r, FT_counter$, n_shell_pass)      "counterflow effectiveness [-]"
+eps_parallel = e_NTU(NTU, C_r, FT_parallel$, n_shell_pass)   "parallel flow effectiveness [-]"
+eps_xflow_unmixed = e_NTU(NTU, C_r, FT_xflow_unmixed$, n_shell_pass)  "crossflow, both fluids unmixed, effectiveness [-]"
+eps_xflow_mixed = e_NTU(NTU, C_r, FT_xflow_mixed$, n_shell_pass)      "crossflow, C_min mixed, effectiveness [-]"
+eps_st_1_2 = e_NTU(NTU, C_r, FT_st_1_2$, n_shell_pass)      "1-2 shell-and-tube effectiveness [-]"
+eps_st_n = e_NTU(NTU, C_r, FT_st_n$, n_shell_pass)           "n-pass shell-and-tube effectiveness [-]"
+
+"!Outlet states (energy balance on each stream, no pressure drop)"
+h_su_H = enthalpy(fluid_H$, T=T_su_H, P=P_su_H)   "hot supply enthalpy [J/kg]"
+h_su_C = enthalpy(fluid_C$, T=T_su_C, P=P_su_C)   "cold supply enthalpy [J/kg]"
+h_ex_H = h_su_H - Q_dot/M_dot_H                   "hot outlet enthalpy [J/kg]"
+T_ex_H = temperature(fluid_H$, h=h_ex_H, P=P_su_H)  "hot outlet temperature [C]"
+h_ex_C = h_su_C + Q_dot/M_dot_C                   "cold outlet enthalpy [J/kg]"
+T_ex_C = temperature(fluid_C$, h=h_ex_C, P=P_su_C)  "cold outlet temperature [C]"
+P_ex_H = P_su_H                                   "hot outlet pressure, no pressure drop [Pa]"
+P_ex_C = P_su_C                                   "cold outlet pressure, no pressure drop [Pa]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: hot supply, 2: hot outlet, 3: cold supply, 4: cold outlet. Use the arrays
+ h[i]/P[i] or s[i]/T[i] with the "Overlay array path" option of the CoolSolve
+ Diagram tab.}
+P[1] = P_su_H
+h[1] = h_su_H
+T[1] = T_su_H
+s[1] = entropy(fluid_H$, T=T_su_H, P=P_su_H)
+P[2] = P_ex_H
+h[2] = h_ex_H
+T[2] = T_ex_H
+s[2] = entropy(fluid_H$, T=T_ex_H, P=P_ex_H)
+P[3] = P_su_C
+h[3] = h_su_C
+T[3] = T_su_C
+s[3] = entropy(fluid_C$, T=T_su_C, P=P_su_C)
+P[4] = P_ex_C
+h[4] = h_ex_C
+T[4] = T_ex_C
+s[4] = entropy(fluid_C$, T=T_ex_C, P=P_ex_C)
+
+FUNCTION Nu_Sieder_Tate_HX(Re, Pr, mu, mu_w)
+{NU_SIEDER_TATE_HX - Nusselt number, fully turbulent flow in a pipe or canal
+(the fully turbulent branch of the original Gnielinski correlation).
+
+  Nu = 0.027*Re^0.8*Pr^(1/3)*(mu/mu_w)^0.14
+
+Re [-] Reynolds number, Pr [-] Prandtl number, mu [Pa-s] and mu_w [Pa-s] the
+bulk and the wall viscosity. As in the original, the wall viscosity is taken
+equal to the bulk viscosity (its Nu_Gnielinski is the correction 0.14 power).
+Validity: Re > 10000, 0.1 <= Pr <= 1000 (ranges checked by the original).
+Original: as in the original (LaboThapPy, correlations/convection/pipe_htc.py,
+gnielinski_pipe_htc, branch sieder_tate); the Sieder-Tate equation as given in
+Rohsenow, W., J. Hartnett and Y. Cho, Handbook of Heat Transfer, 3E,
+McGraw-Hill, 1998, and in CSL-0087 (Nu_Sieder_Tate).}
+  Nu_Sieder_Tate_HX = 0.027*Re^0.8*Pr^(1/3)*(mu/mu_w)^0.14
+END
+
+FUNCTION Nu_Gnielinski_transition_HX(Re, Pr, Dh, L)
+{NU_GNIELINSKI_TRANSITION_HX - Nusselt number, transition regime (2300 <= Re),
+the middle branch of the original Gnielinski correlation, with the Darcy
+friction factor of the original relation.
+
+  f = (1.82*LOG10(Re) - 1.64)^(-2)
+  Nu = (f/8)*(Re - 1000)*Pr / {1 + 12.7*(f/8)^0.5*(Pr^(2/3) - 1)}*(1 + (Dh/L)^(2/3))
+
+Re [-] Reynolds number on Dh [m], Pr [-] Prandtl number, L [m] flow length.
+Validity: 2300 <= Re <= 1E6, 0.1 <= Pr <= 1000 (ranges checked by the
+original); the (Dh/L)^(2/3) entrance correction tends to 1 for long canals.
+Original: as in the original (LaboThapPy, correlations/convection/pipe_htc.py,
+gnielinski_pipe_htc, branch gnielinski_transition); the Gnielinski equation as
+given in Rohsenow, W., J. Hartnett and Y. Cho, Handbook of Heat Transfer,
+3E, McGraw-Hill, 1998, and in CSL-0087 (Nu_Gnielinski, with fd = 8*f).}
+  f_Gn = (1.82*LOG10(Re) - 1.64)^(-2)
+  Nu_Gnielinski_transition_HX = (f_Gn/8)*(Re - 1000)*Pr/(1 + 12.7*(f_Gn/8)^0.5*(Pr^(2/3) - 1))*(1 + (Dh/L)^(2/3))
+END
+
+FUNCTION Nu_Stephan_Preusser_HX(Re, Pr, Dh, L)
+{NU_STEPHAN_PREUSSER_HX - Nusselt number, fully laminar flow in a pipe or canal
+(Re < 2300), the laminar branch of the original Gnielinski correlation.
+
+  Nu = 3.657 + 0.0677*Re*Pr*(Dh/L)^1.33 / {1 + 0.1*Pr*(Re*Dh/L)^0.3}
+
+Re [-] Reynolds number on Dh [m], Pr [-] Prandtl number, L [m] flow length;
+the length ratio Dh/L corrects for the laminar entrance region.
+Validity: Re < 2300, 0.6 <= Pr (ranges checked by the original).
+Original: as in the original (LaboThapPy, correlations/convection/pipe_htc.py,
+gnielinski_pipe_htc, branch Stephan_Preusser); the entrance-region laminar
+Nusselt number as given in Baehr, H. D. and K. Stephan, Heat and Mass
+Transfer, Springer, 2013 (see CSL-0091, Nu_laminar_entry_Baehr_Stephan, for
+the fully developed 3.657 limit).}
+  Nu_Stephan_Preusser_HX = 3.657 + 0.0677*Re*Pr*(Dh/L)^1.33/(1 + 0.1*Pr*(Re*Dh/L)^0.3)
+END
+
+FUNCTION h_conv_pipe_htc(mu, Pr, mu_w, k_f, G, Dh, L)
+{H_CONV_PIPE_HTC - convection heat transfer coefficient of a single stream in
+its canals, from the Gnielinski correlation family of the original: the branch
+is selected on the Reynolds number and the coefficient follows from
+h = Nu*k_f/Dh.
+
+  Re = G*Dh/mu
+  Nu = Nu_Stephan_Preusser_HX(Re, Pr, Dh, L)    if Re < 2300
+  Nu = Nu_Gnielinski_transition_HX(Re, Pr, Dh, L) if 2300 <= Re <= 10000
+  Nu = Nu_Sieder_Tate_HX(Re, Pr, mu, mu_w)       if Re > 10000
+  h = Nu*k_f/Dh
+
+mu [Pa-s], Pr [-], mu_w [Pa-s], k_f [W/(m K)], G [kg/(m^2 s)], Dh [m],
+L [m]; h is returned in W/(m^2 K). As in the original, Re is outside
+[0, 1E6] or Pr outside [0.1, 1000] triggers a warning in the Python source.
+Original: as in the original (LaboThapPy, correlations/convection/pipe_htc.py,
+gnielinski_pipe_htc); see the three Nusselt functions above for the
+references.}
+  Re_p = G*Dh/mu
+  IF Re_p < 2300 THEN
+    Nu_p = Nu_Stephan_Preusser_HX(Re_p, Pr, Dh, L)
+  ELSE
+    IF Re_p > 10000 THEN
+      Nu_p = Nu_Sieder_Tate_HX(Re_p, Pr, mu, mu_w)
+    ELSE
+      Nu_p = Nu_Gnielinski_transition_HX(Re_p, Pr, Dh, L)
+    ENDIF
+  ENDIF
+  h_conv_pipe_htc = Nu_p*k_f/Dh
+END
+
+FUNCTION calc_Cmin_HX(m_dot_h, m_dot_c, Cp_h, Cp_c)
+{CALC_CMIN_HX - minimum of the two heat capacity rates, as the min(C_H, C_C) of
+the original.
+
+  C_H = Cp_h*m_dot_h
+  C_C = Cp_c*m_dot_c
+  C_min = min(C_H, C_C)
+
+m_dot_h, m_dot_c [kg/s] the mass flow rates, Cp_h, Cp_c [J/(kg K)] the
+specific heats; C_min is returned in W/K.
+Original: as in the original (LaboThapPy, HexeNTU: C_min = min(C_h, C_c)); the
+same relation is in CSL-0090 (ht, calc_Cmin_HX).}
+  C_H_l = Cp_h*m_dot_h
+  C_C_l = Cp_c*m_dot_c
+  calc_Cmin_HX = C_H_l
+  IF C_C_l < C_H_l THEN
+    calc_Cmin_HX = C_C_l
+  ENDIF
+END
+
+FUNCTION calc_Cmax_HX(m_dot_h, m_dot_c, Cp_h, Cp_c)
+{CALC_CMAX_HX - maximum of the two heat capacity rates, as the max(C_H, C_C) of
+the original.
+
+  C_H = Cp_h*m_dot_h
+  C_C = Cp_c*m_dot_c
+  C_max = max(C_H, C_C)
+
+m_dot_h, m_dot_c [kg/s] the mass flow rates, Cp_h, Cp_c [J/(kg K)] the
+specific heats; C_max is returned in W/K.
+Original: as in the original (LaboThapPy, HexeNTU: C_max = max(C_h, C_c)); the
+same relation is in CSL-0090 (ht, calc_Cmax_HX).}
+  C_H_l = Cp_h*m_dot_h
+  C_C_l = Cp_c*m_dot_c
+  calc_Cmax_HX = C_H_l
+  IF C_C_l > C_H_l THEN
+    calc_Cmax_HX = C_C_l
+  ENDIF
+END
+
+FUNCTION calc_Q_max_HX(m_dot_c, h_c_Th, h_su_c, m_dot_h, h_su_H, h_h_Tc)
+{CALC_Q_MAX_HX - maximum heat duty of the exchanger, as the minimum of the two
+capacity rates times the inlet temperature difference of the original.
+
+  Q_max_c = m_dot_c*(h_c_Th - h_su_c)
+  Q_max_h = m_dot_h*(h_su_H - h_h_Tc)
+  Q_max = min(Q_max_c, Q_max_h)
+
+m_dot_c, m_dot_h [kg/s], h_c_Th [J/kg] the cold fluid enthalpy at the hot
+supply temperature, h_su_c [J/kg] its supply enthalpy, h_su_H [J/kg] the hot
+supply enthalpy and h_h_Tc [J/kg] the hot fluid enthalpy at the cold supply
+temperature; Q_max is returned in W. The documentation of the original gives
+the approximation Q_max = C_min*(T_su_H - T_su_C), compared in the model.
+Original: as in the original (LaboThapPy, HexeNTU: Qmax_c, Qmax_h, Qmax).}
+  Q_max_c = m_dot_c*(h_c_Th - h_su_c)
+  Q_max_h = m_dot_h*(h_su_H - h_h_Tc)
+  calc_Q_max_HX = Q_max_c
+  IF Q_max_h < Q_max_c THEN
+    calc_Q_max_HX = Q_max_h
+  ENDIF
+END
+
+FUNCTION e_NTU(NTU, C_r, Flow_Type$, n_shell_pass)
+{E_NTU - effectiveness of a heat exchanger from its number of transfer units,
+for the six flow arrangements of the original.
+
+  counterflow:  eps = (1 - EXP(-NTU*(1 - C_r)))/(1 - C_r*EXP(-NTU*(1 - C_r)))
+  parallel:     eps = (1 - EXP(-NTU*(1 + C_r)))/(1 + C_r)
+  crossflow, both fluids unmixed:
+                eps = 1 - EXP((1/C_r)*NTU^0.22*(EXP(-C_r*NTU^0.78) - 1))
+  crossflow, C_min mixed:
+                eps = (1/C_r)*(1 - EXP(-C_r*(1 - EXP(-NTU))))
+  1-2 shell-and-tube:
+                eps = 2/(1 + C_r + SQRT(1 + C_r^2)*(1 + EXP(-NTU*SQRT(1 + C_r^2)))/(1 - EXP(-NTU*SQRT(1 + C_r^2))))
+  shell-and-tube, n shell passes (eps_1 = effectiveness of one 1-2 pass):
+                eps = (((1 - eps_1*C_r)/(1 - eps_1))^n - 1)/(((1 - eps_1*C_r)/(1 - eps_1))^n - C_r)
+
+NTU [-], C_r [-] the heat capacity ratio, Flow_Type$ the arrangement name,
+n_shell_pass [-] the number of shell passes. Flow_Type$ is one of
+'CounterFlow', 'ParallelFlow', 'CrossFlow_Unmixed', 'CrossFlow_Mixed',
+'ShellAndTube_1_2', 'ShellAndTube_n_passes'; any other name is an error.
+Validity: 0 < C_r < 1, NTU > 0; as in the original, the counterflow form is
+singular at C_r = 1 (take its limit).
+Original: as in the original (LaboThapPy, correlations/heat_exchanger/e_NTU.py);
+the same closed forms are in CSL-0090 (ht, effectiveness-ntu) and in TESPy
+(calculation of the same relations).}
+  e_NTU = -1
+  IF Flow_Type$ = 'CounterFlow' THEN
+    e_NTU = (1 - EXP(-NTU*(1 - C_r)))/(1 - C_r*EXP(-NTU*(1 - C_r)))
+  ELSE
+    IF Flow_Type$ = 'ParallelFlow' THEN
+      e_NTU = (1 - EXP(-NTU*(1 + C_r)))/(1 + C_r)
+    ELSE
+      IF Flow_Type$ = 'CrossFlow_Unmixed' THEN
+        e_NTU = 1 - EXP((1/C_r)*(NTU^0.22)*(EXP(-C_r*(NTU^0.78)) - 1))
+      ELSE
+        IF Flow_Type$ = 'CrossFlow_Mixed' THEN
+          e_NTU = (1/C_r)*(1 - EXP(-C_r*(1 - EXP(-NTU))))
+        ELSE
+          IF Flow_Type$ = 'ShellAndTube_1_2' THEN
+            e_NTU = 2/(1 + C_r + SQRT(1 + C_r^2)*(1 + EXP(-NTU*SQRT(1 + C_r^2)))/(1 - EXP(-NTU*SQRT(1 + C_r^2))))
+          ELSE
+            IF Flow_Type$ = 'ShellAndTube_n_passes' THEN
+              eps_1 = 2/(1 + C_r + SQRT(1 + C_r^2))*(1 - EXP(-NTU*SQRT(1 + C_r^2)))
+              K_pass = ((1 - eps_1*C_r)/(1 - eps_1))^n_shell_pass
+              e_NTU = (K_pass - 1)/(K_pass - C_r)
+            ELSE
+              CALL ERROR('Flow arrangement not recognised by e_NTU, see the comment block of the function', '')
+            ENDIF
+          ENDIF
+        ENDIF
+      ENDIF
+    ENDIF
+  ENDIF
+END

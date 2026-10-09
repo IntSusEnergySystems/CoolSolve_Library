@@ -1,0 +1,395 @@
+{=============================================================================
+  Void-fraction correlations for two-phase flow - runnable CoolSolve variant
+  CoolSolve Library model CSL-0131:void_fraction_correlations_coolsolve
+  -----------------------------------------------------------------------------
+  Runnable transcription of the native file void_fraction_correlations.eescode:
+  same 12 correlations with the same equations and the same demonstration case
+  (the LaboThapPy void_fraction_example.py of commit f03f7f47). Only the Hughmark
+  correlation is restructured, because of the registered CoolSolve bug
+  CS-BUG-IMPLICIT-PROC (an implicit equation in a FUNCTION body that has other
+  statements is silently not solved): void_fraction_Hughmark is replaced by the
+  explicit FUNCTION K_Hughmark(alpha, ...), and the implicit equation
+  alpha_Hughmark[i] = K_Hughmark(alpha_Hughmark[i], ...)*alpha_h[i] is written in
+  the main program. No CoolSolve-only syntax is used.
+
+  Inputs : rho_l, rho_v [kg/m^3], x [-], mu_l, mu_v [Pa.s], sigma [N/m],
+           d_hyd [m], G [kg/(m^2.s)], P [Pa], theta [deg from horizontal]
+  Outputs: alpha [-] (one FUNCTION per correlation)
+  Units  : SI - temperatures in C, pressures in Pa, densities in kg/m^3
+  Source : LaboThapPy (ULiège Thermodynamics Laboratory), commit f03f7f47,
+           labothappy/correlations/void_fraction/void_fraction.py, Apache-2.0
+           (licence of the model: MIT); correlations as in R. Dickes, PhD thesis
+           ULiège, and J. R. Thome & A. Cioncolini, "Void Fraction", 2015
+  Status : VERIFIED variant (130 values, max deviation 2.2e-5 vs the original
+           example re-run in a venv); cases, deviations and changes: README.md
+=============================================================================}
+
+"!--- Dimensionless numbers of the original (helpers)"
+
+FUNCTION Re_void(G, d_hyd, mu)
+{RE_VOID - Reynolds number from the mass flux, as compute_reynolds of the
+ original.
+  Re = MAX(1, G*d_hyd/mu)      G [kg/(m^2.s)], d_hyd [m], mu [Pa.s] -> Re [-]}
+
+  Re_void = MAX(1, G*d_hyd/mu)
+END
+
+FUNCTION We_void(G, d_hyd, sigma, rho)
+{WE_VOID - Weber number of the liquid film, as compute_weber of the original.
+  We = G^2*d_hyd/(sigma*rho)    sigma [N/m], rho [kg/m^3] -> We [-]}
+
+  We_void = G^2*d_hyd/(sigma*rho)
+END
+
+"!--- Slip-ratio family: alpha = 1/(1 + S*(rho_v/rho_l)*(1-x)/x)"
+
+FUNCTION void_fraction_homogeneous(rho_l, rho_v, x)
+{VOID_FRACTION_HOMOGENEOUS - Homogeneous void fraction (no-slip, slip ratio
+ S = 1), as void_fraction_homogeneous of the original.
+  alpha = 1/(1 + (rho_v/rho_l)*(1-x)/x)     rho [kg/m^3], x [-] -> alpha [-]
+Validity, as in the original: theoretically applicable to all two-phase
+ conditions; overpredicts the void fraction at low quality (x < 0.3) and is
+ most accurate at high quality (x > 0.7).}
+
+  void_fraction_homogeneous = 1/(1 + (rho_v/rho_l)*(1 - x)/x)
+END
+
+FUNCTION void_fraction_Zivi(rho_l, rho_v, x)
+{VOID_FRACTION_ZIVI - Zivi void fraction, slip-ratio method with
+ S = (rho_l/rho_v)^(1/3), as void_fraction_zivi of the original.
+  alpha = 1/(1 + (rho_l/rho_v)^(1/3)*(rho_v/rho_l)*(1-x)/x)   -> alpha [-]
+Validity, as in the original: annular, high-quality/high-void-fraction, low
+ friction; not validated for bubbly/slug flow.
+Original: S. M. Zivi, "Estimation of steady-state steam void-fraction by means
+ of the principle of minimum entropy production", Journal of Heat Transfer 86(2):
+ 247-251, 1964.
+Taken from: LaboThapPy (ULiège Thermodynamics Laboratory), commit f03f7f47,
+ labothappy/correlations/void_fraction/void_fraction.py, void_fraction_zivi,
+ Apache-2.0 - https://github.com/PyLaboThap/LaboThapPy}
+
+  void_fraction_Zivi = 1/(1 + (rho_l/rho_v)^(1/3)*(rho_v/rho_l)*(1 - x)/x)
+END
+
+FUNCTION void_fraction_Fauske(rho_l, rho_v, x)
+{VOID_FRACTION_FAUSKE - Fauske void fraction, slip-ratio method with
+ S = (rho_l/rho_v)^(1/2), as void_fraction_fauske of the original.
+  alpha = 1/(1 + (rho_l/rho_v)^(1/2)*(rho_v/rho_l)*(1-x)/x)   -> alpha [-]
+Validity, as in the original: water-steam two-phase flow at high mass flux.
+Original: H. K. Fauske, "Contribution to the theory of two-phase, one component
+ critical flow", Argonne National Laboratory Report ANL-6633, 1962.
+Taken from: LaboThapPy, commit f03f7f47, void_fraction.py, void_fraction_fauske,
+ Apache-2.0 - https://github.com/PyLaboThap/LaboThapPy}
+
+  void_fraction_Fauske = 1/(1 + (rho_l/rho_v)^(1/2)*(rho_v/rho_l)*(1 - x)/x)
+END
+
+FUNCTION void_fraction_Premoli(rho_l, rho_v, x, mu_l, sigma, d_hyd, G)
+{VOID_FRACTION_PREMOLI - Premoli (CISE) void fraction, slip-ratio method, as
+ void_fraction_premoli of the original; the slip ratio is built on the
+ homogeneous void fraction alpha_h.
+  Re_l  = Re_void(G, d_hyd, mu_l)                  liquid Reynolds number [-]
+  We_l  = We_void(G, d_hyd, sigma, rho_l)          liquid Weber number [-]
+  alpha_h = 1/(1 + (rho_v/rho_l)*(1-x)/x)          homogeneous void fraction [-]
+  y   = alpha_h/(1 - alpha_h)
+  F1  = 1.578*Re_l^(-0.19)*(rho_l/rho_v)^0.22
+  F2  = 0.0273*We_l*Re_l^(-0.51)*(rho_l/rho_v)^(-0.08)
+  S   = 1 + F1*SQRT(MAX(0, y/(1 + y*F2) - y*F2))
+  alpha = 1/(1 + S*(rho_v/rho_l)*(1-x)/x)
+ mu_l [Pa.s], sigma [N/m], d_hyd [m], G [kg/(m^2.s)] -> alpha [-]
+Validity, as in the original: empirical, fitted on a large experimental dataset
+ of two-phase mixtures flowing upward in vertical adiabatic channels; the mass
+ flux is accounted for.
+Original: A. Premoli, D. D. Francesco and A. Prina, "A dimensional correlation
+ for evaluating two-phase mixture density", La Termotecnica 25: 17-26, 1971.
+Taken from: LaboThapPy, commit f03f7f47, void_fraction.py, void_fraction_premoli,
+ Apache-2.0 - https://github.com/PyLaboThap/LaboThapPy}
+
+  Re_l = Re_void(G, d_hyd, mu_l)
+  We_l = We_void(G, d_hyd, sigma, rho_l)
+  alpha_h = 1/(1 + (rho_v/rho_l)*(1 - x)/x)
+  y = alpha_h/(1 - alpha_h)
+  F1 = 1.578*Re_l^(-0.19)*(rho_l/rho_v)^0.22
+  F2 = 0.0273*We_l*Re_l^(-0.51)*(rho_l/rho_v)^(-0.08)
+  S_Premoli = 1 + F1*SQRT(MAX(0, y/(1 + y*F2) - y*F2))
+  void_fraction_Premoli = 1/(1 + S_Premoli*(rho_v/rho_l)*(1 - x)/x)
+END
+
+FUNCTION K_Hughmark(alpha, rho_l, rho_v, x, mu_l, mu_v, d_hyd, G)
+{K_HUGHMARK - Hughmark correction factor K_h of the void fraction, as a function
+ of the void fraction it corrects (the implicit equation alpha = K_h*alpha_h is
+ written by the caller). As in the original: a degree-4 polynomial fit of
+ Hughmark's chart in LN(Z), where Z carries the mixture viscosity
+ mu_mix = mu_l + alpha*(mu_v - mu_l).
+  x = MIN(0.99, MAX(0.001, x))    quality clipped as in the original
+  alpha_h = 1/(1 + (rho_v/rho_l)*(1-x)/x)          homogeneous void fraction [-]
+  mu_mix = mu_l + alpha*(mu_v - mu_l)              mixture viscosity [Pa.s]
+  Z = (d_hyd*G/mu_mix)^(1/6)*((1/(9.81*d_hyd))*(G*x/(rho_v*alpha_h*(1-alpha_h)))^2)^(1/8)
+  K_Hughmark = EXP(degree-4 polynomial of LN(Z))
+ alpha [-], mu_l, mu_v [Pa.s], d_hyd [m], G [kg/(m^2.s)] -> K_h [-]
+Validity, as in the original: gas-liquid hold-up data of vertical and horizontal
+ pipes (air-water and other two-component systems); the quality clipping is a
+ numerical safeguard, not a stated limit of the paper. K_h is a polynomial fit
+ to Hughmark's chart, not a closed form of the 1962 paper.
+Original: G. A. Hughmark, "Holdup in gas-liquid flow", Chemical Engineering
+ Progress 58(4): 62-65, 1962.
+Taken from: LaboThapPy (ULiège Thermodynamics Laboratory), commit f03f7f47,
+ labothappy/correlations/void_fraction/void_fraction.py, void_fraction_hughmark,
+ Apache-2.0 - https://github.com/PyLaboThap/LaboThapPy}
+
+  x_Hughmark = MIN(0.99, MAX(0.001, x))
+  alpha_h_H = 1/(1 + (rho_v/rho_l)*(1 - x_Hughmark)/x_Hughmark)
+  mu_mix_H = mu_l + alpha*(mu_v - mu_l)
+  Z_H = (d_hyd*G/mu_mix_H)^(1/6)*((1/(9.81*d_hyd))*(G*x_Hughmark/(rho_v*alpha_h_H*(1 - alpha_h_H)))^2)^(1/8)
+  LN_Z_H = LN(Z_H)
+  LN_K_h = -0.010060658854755*LN_Z_H^4 + 0.155594796014726*LN_Z_H^3 - 0.870912508715887*LN_Z_H^2 + 2.167004115373165*LN_Z_H - 2.224608445535130
+  K_Hughmark = EXP(LN_K_h)
+END
+
+"!--- Empirical correlations"
+
+FUNCTION void_fraction_Lockhart_Martinelli(rho_l, rho_v, x, mu_l, mu_v)
+{VOID_FRACTION_LOCKHART_MARTINELLI - Lockhart-Martinelli void fraction in its
+ turbulent-turbulent form, as void_fraction_lockhart_martinelli of the
+ original; the branch is taken on the Martinelli parameter X_tt at 10.
+  X_tt = ((1-x)/x)^0.9*(mu_l/mu_v)^0.1*(rho_v/rho_l)^0.5
+  alpha = MIN(1, MAX(0, (1 + X_tt^0.8)^(-0.378)))          for X_tt <= 10
+  alpha = MIN(1, MAX(0, 0.823 - 0.157*LN(X_tt)))           for X_tt > 10
+ mu_l, mu_v [Pa.s], rho [kg/m^3], x [-] -> alpha [-]
+Validity, as in the original: both phases turbulent (the other three regimes of
+ the original LM framework are not covered); the 1949 data are isothermal,
+ adiabatic, two-component flow at near-atmospheric pressure, horizontal, small
+ diameters. The piecewise closed form and its constants are the later
+ curve-fit approximation (Chisholm, 1967), not equations of the 1949 paper.
+Original: R. W. Lockhart and R. C. Martinelli, "Proposed correlation of data for
+ isothermal two-phase two-component flow in pipes", Chemical Engineering Progress
+ 45(1): 39-48, 1949.
+Taken from: LaboThapPy, commit f03f7f47, void_fraction.py,
+ void_fraction_lockhart_martinelli, Apache-2.0 - https://github.com/PyLaboThap/LaboThapPy}
+
+  X_tt = ((1 - x)/x)^0.9*(mu_l/mu_v)^0.1*(rho_v/rho_l)^0.5
+  IF (X_tt <= 10) THEN
+    void_fraction_Lockhart_Martinelli = MIN(1, MAX(0, (1 + X_tt^0.8)^(-0.378)))
+  ELSE
+    void_fraction_Lockhart_Martinelli = MIN(1, MAX(0, 0.823 - 0.157*LN(X_tt)))
+  ENDIF
+END
+
+FUNCTION void_fraction_Graham(rho_v, x, d_hyd, G)
+{VOID_FRACTION_GRAHAM - Graham void fraction for condensing flow, as
+ void_fraction_graham of the original; the cutoff on the parameter F_t acts as a
+ regime switch, not as a smooth physical limit.
+  F_t = SQRT(x^3*G^2/(9.81*rho_v^2*d_hyd*(1 - x)))
+  alpha = MIN(1, MAX(0, 1 - EXP(-1 - 0.3*LN(F_t) - 0.0328*LN(F_t)^2)))  F_t > 0.01032
+  alpha = 0                                                            otherwise
+ rho_v [kg/m^3], d_hyd [m], G [kg/(m^2.s)] -> alpha [-]
+Validity, as in the original: condensation only.
+Original: G. B. Wallis, One-dimensional two-phase flow, 1969.
+Taken from: LaboThapPy, commit f03f7f47, void_fraction.py, void_fraction_graham,
+ Apache-2.0 - https://github.com/PyLaboThap/LaboThapPy}
+
+  F_t = SQRT(x^3*G^2/(9.81*rho_v^2*d_hyd*(1 - x)))
+  IF (F_t > 0.01032) THEN
+    void_fraction_Graham = MIN(1, MAX(0, 1 - EXP(-1 - 0.3*LN(F_t) - 0.0328*LN(F_t)^2)))
+  ELSE
+    void_fraction_Graham = 0
+  ENDIF
+END
+
+FUNCTION void_fraction_Cioncolini_Thome(rho_l, rho_v, x)
+{VOID_FRACTION_CIONCOLINI_THOME - Cioncolini-Thome annular-flow void fraction,
+ as void_fraction_cioncolini_thome of the original.
+  rho_ratio = rho_v/rho_l
+  h = -2.129 + 3.129*rho_ratio^(-0.2186)
+  n = 0.3487 + 0.6513*rho_ratio^0.515
+  alpha = h*x^n/(1 + (h - 1)*x^n)          rho [kg/m^3], x [-] -> alpha [-]
+Validity, as in the original: annular flow, 0 < x < 1, 1E-3 < rho_v/rho_l < 1,
+ 0.7 < eps < 1; eight gas-liquid and vapour-liquid combinations, tube diameters
+ 1.05 to 45.5 mm, circular and non-circular channels, macro and microscale.
+Original: A. Cioncolini and J. R. Thome, "Void fraction prediction in annular
+ two-phase flow", International Journal of Multiphase Flow 43: 72-84, 2012.
+Taken from: LaboThapPy, commit f03f7f47, void_fraction.py,
+ void_fraction_cioncolini_thome, Apache-2.0 - https://github.com/PyLaboThap/LaboThapPy}
+
+  rho_ratio = rho_v/rho_l
+  h = -2.129 + 3.129*rho_ratio^(-0.2186)
+  n_CT = 0.3487 + 0.6513*rho_ratio^0.515
+  void_fraction_Cioncolini_Thome = h*x^n_CT/(1 + (h - 1)*x^n_CT)
+END
+
+"!--- K x alpha_h family"
+
+FUNCTION void_fraction_Armand_Treschev(rho_l, rho_v, x)
+{VOID_FRACTION_ARMAND_TRESCHEV - Armand-Treschev void fraction: the homogeneous
+ void fraction corrected by a linear factor of the quality, as
+ void_fraction_armand_treschev of the original.
+  K = 0.833 + 0.167*x
+  alpha = K/(1 + (rho_v/rho_l)*(1-x)/x)     -> alpha [-]
+Validity, as in the original: steam-water mixture flow in heated boiler pipes at
+ high pressure (vertical, high pressure, boiling); less used and accurate.}
+
+  K_AT = 0.833 + 0.167*x
+  void_fraction_Armand_Treschev = K_AT/(1 + (rho_v/rho_l)*(1 - x)/x)
+END
+
+FUNCTION void_fraction_Bankoff(rho_l, rho_v, x, P)
+{VOID_FRACTION_BANKOFF - Bankoff void fraction: the homogeneous void fraction
+ corrected by a pressure-dependent factor K, as void_fraction_bankoff of the
+ original (its variable-density single-fluid model).
+  K = 0.71 + 0.0145*(P/1E6), P in MPa as in the original   P [Pa]
+  alpha = K/(1 + (rho_v/rho_l)*(1-x)/x)                     -> alpha [-]
+Validity, as in the original: steam-water flow, the parameter tuned against
+ three independent sets of void-fraction data; simple, not the most accurate.
+Original: S. G. Bankoff, "A variable density single fluid model for two-phase
+ flow with particular reference to steam-water flow", ASME Journal of Heat
+ Transfer 82: 265-272, 1960.
+Taken from: LaboThapPy, commit f03f7f47, void_fraction.py, void_fraction_bankoff,
+ Apache-2.0 - https://github.com/PyLaboThap/LaboThapPy}
+
+  K_Bankoff = 0.71 + 0.0145*(P/1E6)
+  void_fraction_Bankoff = K_Bankoff/(1 + (rho_v/rho_l)*(1 - x)/x)
+END
+
+"!--- Drift-flux family: alpha = J_v/(C0*(J_l + J_v) + V_drift)"
+
+FUNCTION void_fraction_Rouhani_Axelsson(rho_l, rho_v, x, G, sigma)
+{VOID_FRACTION_ROUHANI_AXELSSON - Rouhani-Axelsson drift-flux void fraction
+ (vertical flow), as void_fraction_rouhani_axelsson of the original.
+  J_l = (1-x)*G/rho_l          liquid superficial velocity [m/s]
+  J_v = x*G/rho_v              vapour superficial velocity [m/s]
+  C0 = 1 + 0.2*(1-x)          distribution parameter [-]
+  V_drift = 1.18*(9.81*sigma*(rho_l - rho_v)/rho_l^2)^0.25   drift velocity [m/s]
+  alpha = J_v/(C0*(J_l + J_v) + V_drift)
+ sigma [N/m], G [kg/(m^2.s)], rho [kg/m^3] -> alpha [-]
+Validity, as in the original: subcooled and quality boiling of steam-water in
+ vertical channels; reported for void fractions above 0.1, with a tendency to
+ slightly under-predict above 0.6.
+Original: S. Z. Rouhani and E. Axelsson, "Calculation of void volume fraction in
+ the subcooled and quality boiling regions", International Journal of Heat and
+ Mass Transfer 13: 383-393, 1970.
+Taken from: LaboThapPy, commit f03f7f47, void_fraction.py,
+ void_fraction_rouhani_axelsson, Apache-2.0 - https://github.com/PyLaboThap/LaboThapPy}
+
+  J_l = (1 - x)*G/rho_l
+  J_v = x*G/rho_v
+  C0_RA = 1 + 0.2*(1 - x)
+  V_drift_RA = 1.18*(9.81*sigma*(rho_l - rho_v)/rho_l^2)^0.25
+  void_fraction_Rouhani_Axelsson = J_v/(C0_RA*(J_l + J_v) + V_drift_RA)
+END
+
+FUNCTION void_fraction_Dix(rho_l, rho_v, x, G, sigma)
+{VOID_FRACTION_DIX - Dix drift-flux void fraction (vertical flow), as
+ void_fraction_dix of the original; C0 and V_drift are the ones of that
+ correlation.
+  J_l = (1-x)*G/rho_l          liquid superficial velocity [m/s]
+  J_v = x*G/rho_v              vapour superficial velocity [m/s]
+  n = (rho_v/rho_l)^0.1
+  C0 = J_v/(J_l + J_v)*(1 + (J_l/J_v)^n)       distribution parameter [-]
+  V_drift = 2.9*(9.81*sigma*(rho_l - rho_v)/rho_l^2)^0.25   drift velocity [m/s]
+  alpha = J_v/(C0*(J_l + J_v) + V_drift)
+ sigma [N/m], G [kg/(m^2.s)], rho [kg/m^3] -> alpha [-]
+Validity, as in the original: vertical flow; one of the best-performing
+ correlations over a large consolidated void-fraction database; applying it to
+ horizontal pipe segments is an extrapolation.
+Original: G. E. Dix, "Vapor void fractions for forced convection with subcooled
+ boiling at low flow rates", PhD thesis, University of California, Berkeley,
+ 1971; B. Chexal, J. Horowitz and G. Lellouche, "An assessment of eight void
+ fraction models for vertical flows", EPRI Report NSAC-107, 1986.
+Taken from: LaboThapPy, commit f03f7f47, void_fraction.py, void_fraction_dix,
+ Apache-2.0 - https://github.com/PyLaboThap/LaboThapPy}
+
+  J_l = (1 - x)*G/rho_l
+  J_v = x*G/rho_v
+  n_Dix = (rho_v/rho_l)^0.1
+  C0_Dix = J_v/(J_l + J_v)*(1 + (J_l/J_v)^n_Dix)
+  V_drift_Dix = 2.9*(9.81*sigma*(rho_l - rho_v)/rho_l^2)^0.25
+  void_fraction_Dix = J_v/(C0_Dix*(J_l + J_v) + V_drift_Dix)
+END
+
+FUNCTION void_fraction_Woldesemayat_Ghajar(rho_l, rho_v, x, G, sigma, D, P, theta)
+{VOID_FRACTION_WOLDESEMAYAT_GHAJAR - Woldesemayat-Ghajar drift-flux void
+ fraction, as void_fraction_woldesemayat_ghajar of the original: the Dix
+ distribution parameter with a drift velocity that also carries the diameter,
+ the inclination and the pressure.
+  J_l = (1-x)*G/rho_l          liquid superficial velocity [m/s]
+  J_v = x*G/rho_v              vapour superficial velocity [m/s]
+  n = (rho_v/rho_l)^0.1
+  C0 = J_v/(J_l + J_v)*(1 + (J_l/J_v)^n)       distribution parameter [-]
+  V_drift = 2.9*(9.81*sigma*D*(1 + COS(theta))*(rho_l - rho_v)/rho_l^2)^0.25
+            *(1.22 + 1.22*SIN(theta))^(101325/P)     drift velocity [m/s]
+  alpha = J_v/(C0*(J_l + J_v) + V_drift)
+ D [m], P [Pa], theta [deg from horizontal, 90 = vertical] -> alpha [-]
+Validity, as in the original: horizontal and upward-inclined pipes only (not
+ vertical downward), tube diameters 12.7 to 102.26 mm of the underlying
+ database, calibrated against a large unbiased database.
+Original: M. A. Woldesemayat and A. J. Ghajar, "Comparison of void fraction
+ correlations for different flow patterns in horizontal and upward inclined
+ pipes", International Journal of Multiphase Flow 33: 347-370, 2007.
+Taken from: LaboThapPy, commit f03f7f47, void_fraction.py,
+ void_fraction_woldesemayat_ghajar, Apache-2.0 - https://github.com/PyLaboThap/LaboThapPy}
+
+  J_l = (1 - x)*G/rho_l
+  J_v = x*G/rho_v
+  n_WG = (rho_v/rho_l)^0.1
+  C0_WG = J_v/(J_l + J_v)*(1 + (J_l/J_v)^n_WG)
+  V_drift_WG = 2.9*(9.81*sigma*D*(1 + COS(theta))*(rho_l - rho_v)/rho_l^2)^0.25*(1.22 + 1.22*SIN(theta))^(101325/P)
+  void_fraction_Woldesemayat_Ghajar = J_v/(C0_WG*(J_l + J_v) + V_drift_WG)
+END
+
+"!=============================================================================
+ Demonstration program: the case of the original example
+ void_fraction_example.py of LaboThapPy (commit f03f7f47) - R410A at
+ P = 1.2 MPa in a pipe of 8 mm hydraulic diameter, mass flux 300 kg/(m^2.s)
+ (mass flow rate 300*A_cross), ten qualities from 0.05 to 0.95; every one of the
+ 13 correlations is evaluated at each quality.
+============================================================================="
+
+fluid$ = 'R410A'         "the fluid of the original example (CoolProp 'R410A' is the EES fluid 'R410A')"
+P_demo = 1.2E6           "pressure of the original example [Pa]"
+d_hyd_demo = 0.008       "hydraulic diameter of the original example [m]"
+G_demo = 300             "mass flux of the original example (m_dot = 300*A_cross) [kg/(m^2.s)]"
+M_dot_demo = 300*PI*d_hyd_demo^2/4   "mass flow rate of the original example [kg/s]"
+theta_demo = 90          "inclination from the horizontal of the original example [deg]"
+
+T_sat_demo = TEMPERATURE(fluid$, P=P_demo, x=0)   "saturation temperature [C]"
+rho_l_demo = DENSITY(fluid$, P=P_demo, x=0)        "saturated liquid density [kg/m^3]"
+rho_v_demo = DENSITY(fluid$, P=P_demo, x=1)        "saturated vapour density [kg/m^3]"
+mu_l_demo = VISCOSITY(fluid$, P=P_demo, x=0)       "saturated liquid dynamic viscosity [Pa.s]"
+mu_v_demo = VISCOSITY(fluid$, P=P_demo, x=1)       "saturated vapour dynamic viscosity [Pa.s]"
+sigma_demo = SURFACETENSION(fluid$, T=T_sat_demo, x=0)   "surface tension at the saturation temperature [N/m] (the original calls it at the state quality; the CoolProp value varies by 0.02 % over the grid, see README.md)"
+
+Re_l_demo = Re_void(G_demo, d_hyd_demo, mu_l_demo)
+We_l_demo = We_void(G_demo, d_hyd_demo, sigma_demo, rho_l_demo)
+
+DUPLICATE i = 1, 10
+  x_demo[i] = 0.05 + 0.1*(i - 1)    "quality grid of the original example (numpy linspace(0.05, 0.95, 10)) [-]"
+
+  alpha_homogeneous[i] = void_fraction_homogeneous(rho_l_demo, rho_v_demo, x_demo[i])
+  alpha_Zivi[i] = void_fraction_Zivi(rho_l_demo, rho_v_demo, x_demo[i])
+  alpha_Fauske[i] = void_fraction_Fauske(rho_l_demo, rho_v_demo, x_demo[i])
+  alpha_Premoli[i] = void_fraction_Premoli(rho_l_demo, rho_v_demo, x_demo[i], mu_l_demo, sigma_demo, d_hyd_demo, G_demo)
+  alpha_Lockhart_Martinelli[i] = void_fraction_Lockhart_Martinelli(rho_l_demo, rho_v_demo, x_demo[i], mu_l_demo, mu_v_demo)
+  alpha_hughmark_h[i] = void_fraction_homogeneous(rho_l_demo, rho_v_demo, x_demo[i])
+  alpha_Hughmark[i] = K_Hughmark(alpha_Hughmark[i], rho_l_demo, rho_v_demo, x_demo[i], mu_l_demo, mu_v_demo, d_hyd_demo, G_demo)*alpha_hughmark_h[i]
+  alpha_Graham[i] = void_fraction_Graham(rho_v_demo, x_demo[i], d_hyd_demo, G_demo)
+  alpha_Armand_Treschev[i] = void_fraction_Armand_Treschev(rho_l_demo, rho_v_demo, x_demo[i])
+  alpha_Bankoff[i] = void_fraction_Bankoff(rho_l_demo, rho_v_demo, x_demo[i], P_demo)
+  alpha_Rouhani_Axelsson[i] = void_fraction_Rouhani_Axelsson(rho_l_demo, rho_v_demo, x_demo[i], G_demo, sigma_demo)
+  alpha_Dix[i] = void_fraction_Dix(rho_l_demo, rho_v_demo, x_demo[i], G_demo, sigma_demo)
+  alpha_Woldesemayat_Ghajar[i] = void_fraction_Woldesemayat_Ghajar(rho_l_demo, rho_v_demo, x_demo[i], G_demo, sigma_demo, d_hyd_demo, P_demo, theta_demo)
+  alpha_Cioncolini_Thome[i] = void_fraction_Cioncolini_Thome(rho_l_demo, rho_v_demo, x_demo[i])
+END
+
+"Same pipe inclined by 45 degrees: the inclination argument of the
+ Woldesemayat-Ghajar correlation (90 degrees = vertical above)"
+alpha_Woldesemayat_Ghajar_45 = void_fraction_Woldesemayat_Ghajar(rho_l_demo, rho_v_demo, 0.45, G_demo, sigma_demo, d_hyd_demo, P_demo, 45)
+
+"Below the cutoff of the Graham correlation (condensation branch switches off)"
+F_t_demo_low = SQRT(0.05^3*G_demo^2/(9.81*rho_v_demo^2*d_hyd_demo*(1 - 0.05)))
+alpha_Graham_lowG = void_fraction_Graham(rho_v_demo, 0.05, d_hyd_demo, 1)
+
+"Martinelli parameter of the Lockhart-Martinelli function, above its branch cut
+ (X_tt = 130 at x = 1e-3) and below it (X_tt = 0.26 at x = 0.5)"
+X_tt_low = ((1 - 0.5)/0.5)^0.9*(mu_l_demo/mu_v_demo)^0.1*(rho_v_demo/rho_l_demo)^0.5
+X_tt_high = ((1 - 0.001)/0.001)^0.9*(mu_l_demo/mu_v_demo)^0.1*(rho_v_demo/rho_l_demo)^0.5
+alpha_LM_low = void_fraction_Lockhart_Martinelli(rho_l_demo, rho_v_demo, 0.5, mu_l_demo, mu_v_demo)
+alpha_LM_high = void_fraction_Lockhart_Martinelli(rho_l_demo, rho_v_demo, 0.001, mu_l_demo, mu_v_demo)

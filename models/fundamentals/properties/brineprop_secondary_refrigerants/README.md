@@ -333,3 +333,13 @@ of the same function library, by a follow-up card.
 - `CSL-0121` *heat_transfer_fluid_properties*: companion function library for the pure
   heat-transfer fluids (monoethylene glycol, Therminol VP-1/66, thermal oil); the two
   libraries cover the secondary fluids of the library between them.
+- `CSL-0161` *plate_hx_thermal_resistances*: single-phase plate heat exchanger
+  (Martin) whose native file calls `BRINEPROP2` on its ethylene-glycol branch
+  (candidate `TM-0480`, merged here); the runnable variant resolves the stored
+  water run.
+- `CSL-0162` *glycol_runaround_recovery_loop*: model of the same model bank
+  calling `BRINEPROP` the same way ('SPECHEAT'/'DENSITY'/'DYNVISC' on EG 25 %);
+  its runnable variant flattens the calls like this variant does.
+- `CSL-0163` *cooling_coil_paramid*: calls this library's `BRINEPROP`
+  procedure for the ethylene-glycol properties of the identified coil
+  (card C-155; its runnable variant uses the stored brine values).

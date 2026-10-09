@@ -501,3 +501,4 @@ condenser, this file is the reusable procedure set of the laboratory.
   (`CSL-0008:counterflow`, `CSL-0008:crossflow`) are the models that would
   consume these procedures.
 - `CSL-0114` *evaporator_3_zones_plate_correlations*: the correlation-based three-zone plate evaporator of the same lab file family (Thonon/Hsieh), which rate a real plate geometry instead of the parametric UA/effectiveness relations of this library.
+- CSL-0138 (hx_moving_boundary_bell): moving-boundary (Bell 2015) translation of the same zone-delimited heat-exchanger family (TESPy TSP-014).

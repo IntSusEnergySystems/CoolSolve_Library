@@ -227,3 +227,10 @@ Source file (plain-text EES library, comments in French):
 - `CSL-0058` *diesel_engine_excess_air_exhaust_analysis*: exhaust-gas analysis
   of a diesel engine (real-fluid product enthalpies, no `cpbar`).
 - `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.
+- `CSL-0149` *gas_engine_complete_model*: complete gas engine (maximum-power
+  point with recovery circuits), `cpbar` for the products between 25 °C and the
+  flame temperature and between `t_6` and `t_7`.
+- `CSL-0150` *adiabatic_flame_dissociation*: adiabatic flame temperature of
+  CH4 or fuel oil with chemical-equilibrium dissociation (EES built-in
+  `Chem_Equil`/`NASA`, native file blocked), same combustion-course material.
+- `CSL-0166` *boiler_modulating_burner_refsim*: its cpbar procedure is copied into this model (modulating-burner RefSim model, 2008 model bank).

@@ -231,3 +231,7 @@ model follows the EES original.
   component and same course and repetition (MSTh TP 04), sized from the flow
   and enthalpy factors of its best-performance point rather than from a
   measured map.
+- `CSL-0157` *reciprocating_catalogue_r717*: catalogue rows in a companion
+  lookup table turned into effectiveness maps for an R717 reciprocating
+  compressor (blocked native file too: variable-bound `DUPLICATE` and the
+  nameless `lookup` form, with a verified `_coolsolve` variant).

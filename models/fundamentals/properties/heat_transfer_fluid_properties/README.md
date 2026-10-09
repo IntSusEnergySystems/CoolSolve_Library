@@ -143,3 +143,12 @@ procedure itself.
   *evaporator_3_zones_plate_correlations*: carry an earlier transcription of the same
   source procedure as a copied `prop_htf` block (glycol/oil branches, without the `p`
   argument and the built-in fallback).
+
+- `CSL-0153` *orc_whr_refprop_cost*: prop_htf heat-transfer-fluid properties (Therminol VP-1, glycol).
+- `CSL-0131` *void_fraction_correlations*: the void fraction of a two-phase heat-transfer
+  fluid, from the thirteen correlations of the same LaboThapPy triage; the saturated
+  properties this file returns (densities, viscosities, surface tension) are exactly the
+  arguments its correlation functions take.
+- `CSL-0132` *r1233zd_thermal_conductivity*: the thermal conductivity of the refrigerant
+  R1233zd(E), also from the LaboThapPy triage — a correlation for a refrigerant where this
+  file covers the secondary and heat-transfer fluids from their data sheets.

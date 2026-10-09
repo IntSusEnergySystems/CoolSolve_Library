@@ -1,0 +1,77 @@
+{
+  "id": "CSL-0127",
+  "name": "hx_constant_effectiveness_discretised",
+  "title": "Discretised constant-effectiveness heat exchanger with a minimum pinch (sCO2 recuperator)",
+  "summary": "Counterflow HX split into n_disc equal-enthalpy segments; the duty is limited by a user maximum effectiveness, by an external ideal-outlet maximum heat, by an internal zero-pinch limit and by a minimum segment temperature difference. The Python effectiveness/bisection loops become min-based complementarity conditions. Translation of the LaboThapPy HexCstEffDisc.",
+  "kind": "steady",
+  "level": 4,
+  "status": "verified",
+  "main_file": "hx_constant_effectiveness_discretised.eescode",
+  "fluids": [
+    "R744",
+    "Water"
+  ],
+  "tags": [
+    "heat exchanger",
+    "counterflow",
+    "discretised",
+    "pinch point",
+    "effectiveness",
+    "sCO2",
+    "recuperator",
+    "gas cooler",
+    "complementarity"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "arrays",
+    "DUPLICATE loops",
+    "MIN complementarity"
+  ],
+  "stats": {
+    "n_equations": 329,
+    "largest_block": 128
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/component/heat_exchanger/hex_csteff_disc.py",
+    "candidate_id": "LTP-012",
+    "authors": [
+      "Basile Chaudoir",
+      "Elise Neven"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy",
+    "license": "Apache-2.0",
+    "ees_version": "",
+    "language": "en"
+  },
+  "verification": {
+    "reference": "Both case studies (RecupHT, GasCooler) of labothappy/component/examples/heat_exchanger/hex_csteff_disc_example.py re-run in a throw-away venv (CoolProp 8.0.0, LaboThapPy commit f03f7f47), plus a tightened brentq zero-pinch reference",
+    "date": "2026-10-09",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.0133,
+    "notes": "Vs the source example: Q_dot +0.11 % (RecupHT, the original's bisection tolerance on Q_dot_max plus the BICUBIC-vs-HEOS backend) and +1.02 % (GasCooler, the original stops at the last 1 % effectiveness step: DT_pinch 11.50 K vs the enforced 10 K); max 1.33 % on h_ex_H (GasCooler) is that Q_dot difference propagated. epsilon exact (0.95), DT_pinch = Pinch_min exactly in the GasCooler case. Vs a tightened exact-root reference: Q_dot +0.012/+0.015 % (property backend only), DT_pinch within 7.6e-5 K. See README Verification."
+  },
+  "missing_features": [
+    "CS-BUG-DUPLICATE-INDEX-EXPR"
+  ],
+  "related": [
+    "CSL-0126",
+    "CSL-0014",
+    "CSL-0090",
+    "CSL-0115",
+  
+    "CSL-0138"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-09",
+      "action": "added (T-TRANSLATE of LaboThapPy HexCstEffDisc, verified vs the two case studies of hex_csteff_disc_example.py)",
+      "by": "opencode/GLM worker for S. Quoilin"
+    }
+  ]
+}

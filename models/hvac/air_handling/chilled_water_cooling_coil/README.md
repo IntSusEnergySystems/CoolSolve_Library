@@ -226,3 +226,6 @@ are different systems and stay `todo` for their own cards.
   bank at the reference-simulation level of detail (one zone, dry and wet
   regimes described simultaneously, secondary refrigerant side with the
   BrineProp correlations).
+- `CSL-0163` *cooling_coil_paramid*: parameter identification of a wet cooling
+  coil of the same ULiège model bank (one-zone wet model, resistances
+  identified from one measured point, card C-155).

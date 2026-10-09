@@ -1,0 +1,86 @@
+{
+  "id": "CSL-0162",
+  "name": "glycol_runaround_recovery_loop",
+  "title": "Air-to-air glycol run-around heat-recovery loop",
+  "summary": "Run-around heat recovery between the extracted and the fresh air of an air handling unit: two epsilon-NTU coils under Braun's hypothesis (dry and wet regimes computed simultaneously, the regime of largest capacity kept), linked by a glycol loop with Colebrook piping pressure drop and a pump; glycol properties from the ULiège BrineProp library.",
+  "kind": "steady",
+  "level": 3,
+  "status": "blocked",
+  "main_file": "glycol_runaround_recovery_loop.eescode",
+  "fluids": [
+    "AirH2O",
+    "EG"
+  ],
+  "tags": [
+    "heat recovery",
+    "run-around loop",
+    "air handling",
+    "coil",
+    "dehumidification",
+    "wet regime",
+    "Braun hypothesis",
+    "fictitious wet-bulb gas",
+    "ethylene glycol",
+    "brine",
+    "pump",
+    "Colebrook",
+    "reference model"
+  ],
+  "language_features": [
+    "$IF directive (winter/summer)",
+    "IF with 5 arguments",
+    "library procedure call (Brineprop)",
+    "humid-air properties",
+    "min/max"
+  ],
+  "stats": {
+    "n_equations": 271,
+    "largest_block": 65
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/Recovery_Loop/GLYCOL_RECOVERY_LOOP_SB080110.EES",
+    "candidate_id": "TM-0321",
+    "authors": [
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en",
+    "course": "ULiège model bank, air-to-air glycol recovery loop, 2008-01-10 (references Braun et al. 1989 and Ding et al. 1990)"
+  },
+  "verification": {
+    "reference": "EES stored solution in the source file (144 decoded variables) against the runnable variant glycol_runaround_recovery_loop_coolsolve.eescode - pointwise only: at the stored point all equations of the model are satisfied (largest residual 57 J/kg on the humid-air enthalpy h_cooling_c_wet, 0.22 %, EES vs CoolProp humid-air formulation; all others <= 0.04), but the variant does not converge in CoolSolve (CS-BUG-NEWTON-CYCLE), so no .sol and no compare_solution.py run yet",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": null,
+    "notes": "Native file blocked by CS-GAP-IF-DIRECTIVE (both $IF regime branches kept: 169 equations / 144 unknowns), CS-GAP-IF5, CS-GAP-CALL-EXPR-OUT and CS-GAP-INCLUDE (BrineProp USERLIB). The winter-resolved variant is square (271 equations, largest block 65) and stops on the solver bug CS-BUG-NEWTON-CYCLE; a T-RECHECK after that bug should solve it, verify against the stored solution and commit the .sol."
+  },
+  "missing_features": [
+    "CS-GAP-IF-DIRECTIVE",
+    "CS-GAP-IF5",
+    "CS-GAP-CALL-EXPR-OUT",
+    "CS-GAP-INCLUDE",
+    "CS-BUG-NEWTON-CYCLE"
+  ],
+  "related": [
+    "CSL-0074",
+    "CSL-0079",
+    "CSL-0161",
+    "CSL-0163"
+  ],
+  "related_external": [
+    "ULiège BrineProp library (~/Nextcloud/thermo_models/Model data bank/AHU_Components/Recovery_Systems/GLYCOLRECOVERYLOOP_REFSIM_EES_MODEL_SB080116.zip!/UserLib/BrineProp/Brineprop.lib, inventory TM-0479)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (card C-154, TM-0321, duplicate group DG-0076)",
+      "by": "glm-5.3-flash (worker) for S. Quoilin"
+    }
+  ]
+}

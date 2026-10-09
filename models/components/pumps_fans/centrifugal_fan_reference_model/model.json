@@ -55,7 +55,7 @@
     "notes": "34 common variables, 6 differ at rtol=1e-3; maximum relative deviation 1.19e-02 on c_p and C_dot, which are the moist-air specific heat and the diagnostic heat-capacity flow rate derived from it (no other equation uses them). They follow from the different moist-air models of EES and CoolProp: at 80 °C / 101325 Pa / RH 0.5 the humidity ratio is w = 0.19139 kg/kg dry air and the implied vapour specific heat is 1857.6 J/(kg K) (EES) against 1943.2 J/(kg K) (CoolProp HAASHRAE). The specific volume differs by 7.6e-04, which propagates to psi (1.36e-03), W_dot_s (1.36e-03), DELTAP_total (2.12e-03) and DELTAP_stat (2.58e-03); all the model factors and the shaft power agree within 1.4e-04 (phi 6.9e-07, V_dot 7.6e-04, C_ex 4.7e-04, lambda 8.7e-04, epsilon_s 1.0e-03, W_dot_shaft 5.2e-04). Excluded from the figure: pi, listed in the .sol as a constant, which compare_solution.py counts as 'only in CoolSolve'. coolsolve -d reports 'System square: Yes', 34 equations / 34 variables, largest block 1."
   },
   "missing_features": [],
-  "related": [],
+  "related": ["CSL-0125"],
   "related_external": [
     "thermo_models TM-0485 (Centrifugal_Fan_ParamID_Reference_EES_Model_ARJL080121.EES, inside CENTRIFUGAL_FAN_PARAMID_REFERENCE_MODEL_ARJL080121.zip): the parameter-identification companion of this reference model, identifying the alpha_i and beta_i factors from catalogue points; a different level of detail, left todo in the inventory",
     "ASHRAE (2004) HVAC Systems and Equipment Handbook, the reference cited in the original file header"

@@ -1,0 +1,1162 @@
+{=============================================================================
+  Waste-heat-recovery ORC with a scroll expander, REFPROP mixtures and an
+  equipment cost model - CoolSolve Library model CSL-0153
+  Runnable variant (orc_whr_refprop_cost_coolsolve) of the blocked native file
+ -----------------------------------------------------------------------------
+  Same model as the native file; the only changes (all forced by the gaps,
+  every one logged in the README conversion log) are
+    1. the CALL EES_REFPROP blocks (REFPROP mixture R245fa+R134a, unsupported:
+       CS-GAP-REFPROP) replaced by pure-fluid CoolSolve property calls on
+       R245fa - faithful at MM_fraction = 1 (pure R245fa), the value of the
+       stored EES run; molar REFPROP outputs (cp, cv) keep their convention;
+    2. the $common lines dropped (silently zero in CoolSolve:
+       CS-BUG-COMMON-PROC); the mixture is accessed as the literal 'R245fa',
+       MM computed locally with molarmass();
+    3. the two 5-argument IF(DELTAC_dot,0,X,Y,Z) intrinsics (CS-GAP-IF5)
+       rewritten with CoolSolve's 3-argument if() - CoolSolve-only syntax,
+       not valid EES.
+  Inputs : as the native file (exhaust/thermal-oil stream, cooling water,
+           plate geometry, pinch points, plate numbers, expander ratios)
+  Outputs: net power, efficiencies, heat-exchanger areas, pipe diameters,
+           TEC/TIC/SIC
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège Thermodynamics Laboratory (EES 8.652) - see README.md
+=============================================================================}
+
+
+
+$bookmark hx_cd
+procedure hx_cd(fluid$,fluidcd$,T_sf_su,M_dot_sf,T_r_su,T_r_ex,M_dot_r,p_cd,p_sf,b,L_w_tot,L_h,beta:A_cd,DELTAp,DELTAp_sf,M_fluid)
+{variant: $common dropped (CS-BUG-COMMON-PROC); the REFPROP blocks below replaced by
+ pure-fluid calls on R245fa (CS-GAP-REFPROP), faithful at MM_fraction = 1}
+
+
+{variant: the dead "if fluidev$='glycol'" block removed - fluidev$ is not an argument
+ of hx_cd (EES evaluated the comparison as false; CoolSolve errors on the undefined
+ procedure-local string); cp_sf is set just below as in the original}
+cp_sf = cp(fluidcd$,t=t_sf_su,p=p_sf)
+T_r_sat = temperature(fluid$,P=P_cd,x=1)
+h_r_sat_v = enthalpy(fluid$,P=P_cd,x=1)
+h_r_sat_l = enthalpy(fluid$,P=P_cd,x=0)
+rho_l = density(fluid$,P=P_cd,x=0)
+h_r_su= enthalpy(fluid$,T=T_r_su,P=P_cd)
+h_r_ex = enthalpy(fluid$,T=T_r_ex,P=P_cd)
+
+
+	h_r_ex_l = h_r_ex
+	h_r_su_l = h_r_sat_l
+	h_r_ex_tp = h_r_sat_l
+	h_r_su_tp = h_r_sat_v
+	h_r_ex_v = h_r_sat_v
+	h_r_su_v = h_r_su
+
+"Heat flow rate for each zone :"
+Q_dot_tp = M_dot_r * (h_r_su_tp - h_r_ex_tp)
+Q_dot_v = M_dot_r * (h_r_su_v - h_r_ex_v)
+Q_dot_l = M_dot_r*(h_r_su_l - h_r_ex_l)
+
+Q_dot_cd = Q_dot_tp + Q_dot_v + Q_dot_l
+
+"Secondary fluid side :"
+//h_sf_su_ev = enthalpy(fluid$;t=t_sf_su_ev;p=p_sf)
+C_dot_sf = cp_sf * M_dot_sf
+
+T_sf_su_l = T_sf_su
+T_sf_ex_l=   T_sf_su_l+Q_dot_l/C_dot_sf
+T_sf_su_tp= T_sf_ex_l 
+T_sf_ex_tp = T_sf_su_tp + Q_dot_tp/C_dot_sf
+T_sf_su_v=T_sf_ex_tp 
+T_sf_ex_v = T_sf_su_v + Q_dot_v/C_dot_sf
+T_sf_ex = T_sf_ex_v
+
+"Primary fluid temperatures :"
+T_r_su_l = T_r_sat
+T_r_ex_l =T_r_ex
+T_r_su_tp = T_r_sat
+T_r_ex_tp = T_r_sat
+T_r_su_v = T_r_su
+T_r_ex_v =T_r_sat
+
+"! Vapor zone"
+c_p_sf_v =cp_sf
+c_p_r_v = (h_r_ex_v - h_r_su_v)/(t_r_ex_v - t_r_su_v)
+
+C_dot_r_v=M_dot_r*c_p_r_v
+C_dot_sf_v=M_dot_sf*c_p_sf_v
+C_dot_min_v=min(C_dot_r_v,C_dot_sf_v)
+epsilon_ev_v=Q_dot_v/C_dot_min_v/(-t_sf_su_v+t_r_su_v)
+
+"Mean logarithmic temperature difference :"
+if T_sf_ex_v < T_r_sat then
+	DELTAT_log_v = ((T_sf_su_v - T_r_ex_v) - (T_sf_ex_v - T_r_su_v))/ln((T_sf_su_v-T_r_ex_v)/(T_sf_ex_v-T_r_su_v))
+else
+	T_sf_ex_v_bis = T_r_sat - 0.1
+	DELTAT_log_v = ((T_sf_su_v - T_r_ex_v) - (T_sf_ex_v_bis - T_r_su_v))/ln((T_sf_su_v-T_r_ex_v)/(T_sf_ex_v_bis-T_r_su_v))
+endif
+AU_v = -Q_dot_v/DELTAT_log_v
+
+pinch = min(T_sf_su_l - T_r_ex_l,T_sf_ex_l-T_r_su_l)
+
+
+"! Two-phase zone :"
+c_p_sf_tp =cp_sf
+
+C_dot_sf_tp=M_dot_sf*c_p_sf_tp
+
+if T_sf_ex_tp < T_r_sat then
+	AU_tp = -C_dot_sf_tp * ln(1 - (T_sf_su_tp - T_sf_ex_tp)/(T_sf_su_tp - T_r_sat))
+	DELTAT_log_tp = (T_sf_su_tp - T_sf_ex_tp)/ln((T_sf_su_tp - T_r_sat)/(T_sf_ex_tp - T_r_sat))
+	{AU_tp_bis = Q_dot_tp/DELTAT_log_tp}
+else
+	T_sf_ex_tp_bis = T_r_sat - 0.1
+	AU_tp = -C_dot_sf_tp * ln(1 - (T_sf_su_tp - T_sf_ex_tp_bis)/(T_sf_su_tp - T_r_sat))
+	DELTAT_log_tp = (T_sf_su_tp - T_sf_ex_tp)/ln((T_sf_su_tp - T_r_sat)/(T_sf_ex_tp_bis - T_r_sat))
+endif
+
+epsilon_tp = (T_sf_su_tp - T_sf_ex_tp)/(T_sf_su_tp - T_r_sat)
+pinch = min(pinch,T_sf_ex_tp - T_r_sat)
+
+
+
+"! Liquid zone :"
+
+c_p_sf_l = cp_sf
+c_p_r_l = (h_r_su_l - h_r_ex_l)/(t_r_su_l - t_r_ex_l)
+
+C_dot_r_l=M_dot_r*c_p_r_l
+C_dot_sf_l=M_dot_sf*c_p_sf_l
+C_dot_min_l=min(C_dot_r_l,C_dot_sf_l)
+
+epsilon_l=Q_dot_l/(C_dot_min_l*(t_sf_su_l-t_r_su_l))
+
+if T_sf_su_l < T_r_sat then
+	DELTAT_log_l = ((T_sf_su_l - T_r_ex_l) - (T_sf_ex_l - T_r_su_l))/ln((T_sf_su_l-T_r_ex_l)/(T_sf_ex_l-T_r_su_l))
+else
+	T_sf_su_l_bis = T_r_sat - 0.1
+	DELTAT_log_l = ((T_sf_su_l_bis - T_r_ex_l) - (T_sf_ex_l - T_r_su_l))/ln((T_sf_su_l_bis-T_r_ex_l)/(T_sf_ex_l-T_r_su_l))
+endif
+
+AU_l = -Q_dot_l/DELTAT_log_l
+
+pinch=min(pinch,min(T_sf_su_l - T_r_ex_l,T_sf_ex_l - T_r_su_l))
+
+
+
+"Actual heat transfer coefficient and heat transfer area :"
+
+call Thonon(fluid$,P_cd,(T_r_ex+T_r_sat)/2,M_dot_r,b,L_w_tot,L_h,beta:h_l,DELTAp_l)
+call Thonon(fluid$,P_cd,(T_r_su+T_r_sat)/2,M_dot_r,b,L_w_tot,L_h,beta:h_v,DELTAp_v)
+call Thonon(fluidcd$,P_sf,(T_sf_su+T_sf_ex)/2,M_dot_sf,b,L_w_tot,L_h,beta:h_sf,DELTAp_sf)
+call kuo(fluid$,P_cd,M_dot_r,10000,1,b,L_w_tot,L_h,1:DELTAp_tp,h_tp)
+{h_tp = 1E5
+DELTAp_tp = 0}
+
+
+U_ev_l = (1/h_sf + 1/h_l)^(-1)
+A_l = AU_l / U_ev_l
+
+U_ev_tp = (1/h_sf + 1/h_tp)^(-1)
+A_tp = AU_tp / U_ev_tp
+
+U_ev_v = (1/h_sf + 1/h_v)^(-1)
+A_v = AU_v / U_ev_v
+
+L_l = A_l/L_w_tot
+L_v = A_v/L_w_tot
+L_tp = A_tp/L_w_tot
+
+"Total area :"
+A_cd = A_v + A_l + A_tp
+DELTAp = DELTAp_l*L_l/L_h + DELTAp_v*L_v/L_h + DELTAp_tp*L_tp/L_h
+//DELTAp = DELTAp_v * (L_l + L_v + L_tp)/L_h
+
+M_fluid = (A_l + A_tp/2)*b*rho_l
+
+end
+
+
+
+
+
+
+
+"Curve fits for the transport procedure of the heat transfer fluids"
+
+procedure prop_htf(fluid$,T,p:mu,rho,cp,k)
+$bookmark prop_htf
+
+if (fluid$='glycol') or (fluid$='TherminolVP-1') then
+
+if fluid$='glycol' then	"Correlation for Monoethylene glycol"
+mu=-0.00197505085+0.450245894/T-1.01338701/T^2	"! T is in °C !"
+rho=1148.28275 - 0.675538335*T - 0.000198964867*T^2
+Cp=2329.09926 + 4.81933829*T
+k=0.304902525 - 0.000771015939*T
+endif
+
+if fluid$='TherminolVP-1' then	"http://twt.mpei.ac.ru/TTHB/HEDH/HTF-VP1.PDF"
+nu = exp(544.149/(T + 114.43) - 2.59578) * 1e-6
+rho=-0.90797 * T + 0.00078116*T^2 - 2.367e-6 * T^3 + 1083.25
+Cp=1000 * (0.002414 * T + 5.9591e-6 * T^2 - 2.9879e-8 * T^3 + 4.4172e-11*T^4 + 1.498)
+k=-8.19477e-5 * T - 1.92257e-7*T^2+2.5034e-11*T^3-7.2974e-15*T^4+0.137742
+mu = nu * rho
+endif
+
+else
+mu=viscosity(fluid$,t=t,p=p)	"! T is in °C !"
+rho=density(fluid$,t=t,p=p)
+Cp=cp(fluid$,t=t,p=p)
+k=conductivity(fluid$,t=t,p=p)
+endif
+end
+
+
+
+$bookmark hx_ev
+procedure hx_ev(fluid$,fluidev$,T_sf_su_ev,M_dot_sf,T_r_su_ev,T_r_ex_ev,M_dot_r,p_ev,p_sf,b,L_w_tot,L_h,beta:A_ev,DELTAp,DELTAp_sf,M_fluid)
+{variant: $common dropped (CS-BUG-COMMON-PROC); the REFPROP blocks below replaced by
+ pure-fluid calls on R245fa (CS-GAP-REFPROP), faithful at MM_fraction = 1}
+
+
+call prop_htf(fluidev$,T_sf_su_ev,p_sf:mu_sf,rho_sf,cp_sf,k_sf)
+
+T_r_sat = temperature(fluid$,P=P_ev,x=1)
+h_r_sat_v = enthalpy(fluid$,P=P_ev,x=1)
+h_r_sat_l = enthalpy(fluid$,P=P_ev,x=0)
+rho_l = density(fluid$,P=P_ev,x=0)
+h_r_su_ev= enthalpy(fluid$,T=T_r_su_ev,P=P_ev)
+h_r_ex_ev = enthalpy(fluid$,T=T_r_ex_ev,P=P_ev)
+
+
+	h_r_su_l = h_r_su_ev
+	h_r_ex_l = h_r_sat_l
+	h_r_su_tp = h_r_sat_l
+	h_r_ex_tp = h_r_sat_v
+	h_r_su_v = h_r_sat_v
+	h_r_ex_v = h_r_ex_ev
+
+"Heat flow rate for each zone :"
+Q_dot_tp = M_dot_r * (h_r_ex_tp - h_r_su_tp)
+Q_dot_v = M_dot_r * (h_r_ex_v - h_r_su_v)
+Q_dot_l = M_dot_r*(h_r_ex_l - h_r_su_l)
+
+Q_dot_ev = Q_dot_tp + Q_dot_v + Q_dot_l
+
+"Secondary fluid side :"
+//h_sf_su_ev = enthalpy(fluid$;t=t_sf_su_ev;p=p_sf)
+C_dot_sf = cp_sf * M_dot_sf
+T_sf_su_v = T_sf_su_ev
+T_sf_ex_v = T_sf_su_ev - Q_dot_v/C_dot_sf
+T_sf_su_tp = T_sf_ex_v
+T_sf_ex_tp = T_sf_su_tp - Q_dot_tp/C_dot_sf
+T_sf_su_l = T_sf_ex_tp
+T_sf_ex_l = T_sf_ex_tp - Q_dot_l/C_dot_sf
+
+T_sf_ex_ev = T_sf_su_ev - Q_dot_ev/C_dot_sf
+
+"Primary fluid temperatures :"
+T_r_su_l = T_r_su_ev
+T_r_ex_l =T_r_sat
+T_r_su_tp =T_r_sat
+T_r_ex_tp = T_r_sat
+T_r_su_v = T_r_sat
+T_r_ex_v = T_r_ex_ev
+
+"! Vapor zone"
+c_p_sf_v =cp_sf
+c_p_r_v = (h_r_ex_v - h_r_su_v)/(t_r_ex_v - t_r_su_v)
+
+C_dot_r_v=M_dot_r*c_p_r_v
+C_dot_sf_v=M_dot_sf*c_p_sf_v
+C_dot_min_v=min(C_dot_r_v,C_dot_sf_v)
+epsilon_ev_v=Q_dot_v/C_dot_min_v/(t_sf_su_v-t_r_su_v)
+
+"Mean logarithmic temperature difference :"
+if T_sf_ex_v > T_r_sat then
+	DELTAT_log_v = ((T_sf_su_v - T_r_ex_v) - (T_sf_ex_v - T_r_su_v))/ln((T_sf_su_v-T_r_ex_v)/(T_sf_ex_v-T_r_su_v))
+else
+	T_sf_ex_v_bis = T_r_sat + 0.1
+	DELTAT_log_v = ((T_sf_su_v - T_r_ex_v) - (T_sf_ex_v_bis - T_r_su_v))/ln((T_sf_su_v-T_r_ex_v)/(T_sf_ex_v_bis-T_r_su_v))
+endif
+AU_v = Q_dot_v/DELTAT_log_v
+
+pinch = min(T_sf_su_l - T_r_ex_l,T_sf_ex_l-T_r_su_l)
+
+
+"! Two-phase zone :"
+c_p_sf_tp =cp_sf
+
+C_dot_sf_tp=M_dot_sf*c_p_sf_tp
+
+if T_sf_ex_tp > T_r_sat then
+	AU_tp = -C_dot_sf_tp * ln(1 - (T_sf_su_tp - T_sf_ex_tp)/(T_sf_su_tp - T_r_sat))
+	DELTAT_log_tp = (T_sf_su_tp - T_sf_ex_tp)/ln((T_sf_su_tp - T_r_sat)/(T_sf_ex_tp - T_r_sat))
+	{AU_tp_bis = Q_dot_tp/DELTAT_log_tp}
+else
+	T_sf_ex_tp_bis = T_r_sat + 0.1
+	AU_tp = -C_dot_sf_tp * ln(1 - (T_sf_su_tp - T_sf_ex_tp_bis)/(T_sf_su_tp - T_r_sat))
+	DELTAT_log_tp = (T_sf_su_tp - T_sf_ex_tp)/ln((T_sf_su_tp - T_r_sat)/(T_sf_ex_tp_bis - T_r_sat))
+endif
+
+epsilon_tp = (T_sf_su_tp - T_sf_ex_tp)/(T_sf_su_tp - T_r_sat)
+pinch = min(pinch,T_sf_ex_tp - T_r_sat)
+
+
+
+"! Liquid zone :"
+
+c_p_sf_l = cp_sf
+c_p_r_l = (h_r_su_l - h_r_ex_l)/(t_r_su_l - t_r_ex_l)
+
+C_dot_r_l=M_dot_r*c_p_r_l
+C_dot_sf_l=M_dot_sf*c_p_sf_l
+C_dot_min_l=min(C_dot_r_l,C_dot_sf_l)
+
+epsilon_l=Q_dot_l/(C_dot_min_l*(t_sf_su_l-t_r_su_l))
+
+if T_sf_su_l > T_r_sat then
+	DELTAT_log_l = ((T_sf_su_l - T_r_ex_l) - (T_sf_ex_l - T_r_su_l))/ln((T_sf_su_l-T_r_ex_l)/(T_sf_ex_l-T_r_su_l))
+else
+	T_sf_su_l_bis = T_r_sat + 0.1
+	DELTAT_log_l = ((T_sf_su_l_bis - T_r_ex_l) - (T_sf_ex_l - T_r_su_l))/ln((T_sf_su_l_bis-T_r_ex_l)/(T_sf_ex_l-T_r_su_l))
+endif
+
+AU_l = Q_dot_l/DELTAT_log_l
+
+pinch=min(pinch,min(T_sf_su_l - T_r_ex_l,T_sf_ex_l - T_r_su_l))
+
+
+
+"Actual heat transfer coefficient and heat transfer area :"
+
+call Thonon(fluid$,P_ev,(T_r_su_ev+T_r_sat)/2,M_dot_r,b,L_w_tot,L_h,beta:h_l,DELTAp_l)
+call Thonon(fluid$,P_ev,(T_r_ex_ev+T_r_sat)/2,M_dot_r,b,L_w_tot,L_h,beta:h_v,DELTAp_v)
+call Thonon(fluidev$,P_sf,(T_sf_su_ev+T_sf_ex_l)/2,M_dot_sf,b,L_w_tot,L_h,beta:h_sf,DELTAp_sf)
+call Hsieh_new(fluid$,T_r_sat,M_dot_r,10000,b,L_w_tot,L_h:DELTAp_tp,h_tp)
+
+
+
+U_ev_l = (1/h_sf + 1/h_l)^(-1)
+A_l = AU_l / U_ev_l
+
+U_ev_tp = (1/h_sf + 1/h_tp)^(-1)
+A_tp = AU_tp / U_ev_tp
+
+U_ev_v = (1/h_sf + 1/h_v)^(-1)
+A_v = AU_v / U_ev_v
+
+L_l = A_l/L_w_tot
+L_v = A_v/L_w_tot
+L_tp = A_tp/L_w_tot
+
+"Total area :"
+A_ev = A_v + A_l + A_tp
+DELTAp = DELTAp_l*L_l/L_h + DELTAp_v*L_v/L_h + DELTAp_tp*L_tp/L_h
+
+M_fluid = (A_l + A_tp/2)*b*rho_l
+
+//DELTAp = DELTAp_v * (L_l + L_v + L_tp)/L_h
+
+end
+
+
+
+
+
+
+
+$Bookmark Thonon
+"Thonon correlation : Single phase correlation, tested for various chevron angles"
+Procedure Thonon(fluid$,P,T,M_dot,b,L_w_tot,L_h,beta:h,DELTAp)
+
+if fluid$='glycol' then
+call prop_htf(fluid$,T,p:mu,rho,cp,k)
+else
+{variant: the two CALL EES_REFPROP blocks (CS-GAP-REFPROP) used the $common
+ mixture (R245fa) whatever the fluid$ argument; pure R245fa called at the same
+ (T, P), faithful at MM_fraction = 1. $common dropped (CS-BUG-COMMON-PROC)}
+rho = density('R245fa',t=T,p=P)
+cp = cp('R245fa',t=T,p=P)
+mu = viscosity('R245fa',t=T,p=P)
+k = conductivity('R245fa',t=T,p=P)
+endif
+
+
+Pr = cp * mu / k
+G = M_dot /(b*L_w_tot)
+D_h = 2*b   "or 2*b/phi  ??????"
+Re = G*D_h/mu
+if beta = 25 then
+	C_1 = 0.1
+	m = 0.687
+	if Re < 1000 then
+		C_2 = 28.21
+		pp= 0.9
+	endif
+	if Re >= 1000 then
+		C_2 = 0.872
+		pp = 0.392
+	endif
+endif
+
+if beta = 30 then
+	C_1 = 0.2267
+	m = 0.631
+	if Re < 550 then
+		C_2 = 26.34
+		pp= 0.830
+	endif
+	if Re >= 550 then
+		C_2 = 0.572
+		pp = 0.217
+	endif
+endif
+
+if beta = 45 then
+	C_1 = 0.2998
+	m = 0.645
+	if Re < 200 then
+		C_2 = 18.19
+		pp= 0.682
+	endif
+	if Re >= 200 then
+		C_2 = 0.6857
+		pp = 0.172
+	endif
+endif
+
+if beta = 60 then
+	C_1 = 0.2946
+	m = 0.7
+	if Re < 160 then
+		C_2 = 45.57
+		pp= 0.67
+	endif
+	if Re >= 160 then
+		C_2 = 0.370
+		pp = 0.172
+	endif
+endif
+
+Nu = C_1 * Re^m*Pr^(1/3)
+f = C_2 * Re^(-pp)
+
+h = Nu * k / D_h
+DELTAp = (f*2*G^2/rho * L_h)/D_h
+end
+
+
+
+
+$bookmark Hsieh
+Procedure Hsieh_new(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h:DELTAp,h_tp_ev)
+
+
+"Hsieh YY, Lin TF. Saturated flow boiling heat transfer and pressure drop of
+refrigerant R410a in a vertical plate heat exchanger. Int J Heat Mass Trans
+2002;45:033-1044"
+
+	"average heat transfer coefficient:"
+	{variant: the four CALL EES_REFPROP blocks (CS-GAP-REFPROP) replaced by pure-fluid
+	 calls on R245fa, faithful at MM_fraction = 1; h_l and h_v keep the REFPROP
+	 molar convention of the original (h_ref, kJ/kmol) so that i_fg is unchanged;
+	 $common dropped (CS-BUG-COMMON-PROC), MM computed locally}
+	MM = molarmass(fluid$)
+rho_l = density(fluid$,T=T_sat,x=0)
+cp_l = cp(fluid$,T=T_sat,x=0)
+h_l = enthalpy(fluid$,T=T_sat,x=0)*MM/1000
+mu_l = viscosity(fluid$,T=T_sat,x=0)
+k_l = conductivity(fluid$,T=T_sat,x=0)
+rho_g = density(fluid$,T=T_sat,x=1)
+h_v = enthalpy(fluid$,T=T_sat,x=1)*MM/1000
+mu_g = viscosity(fluid$,T=T_sat,x=1)
+k_g = conductivity(fluid$,T=T_sat,x=1)
+
+Pr_l = cp_l * mu_l/k_l
+
+{	rho_g=density(fluid$,T=T_sat,x=1)
+	rho_l=density(fluid$,T=T_sat,x=0)
+	mu_g=viscosity(fluid$,T=T_sat,x=1)
+	mu_l=viscosity(fluid$,T=T_sat,x=0)	
+	k_l=conductivity(fluid$,T=T_sat,x=0)
+	Pr_l=Prandtl(fluid$,T=T_sat,x=0)}
+	G=M_dot/(b*L_W_tot)
+	D_h= 2*b
+	Re_l=G*D_h/mu_l	
+	h_l=0.2092*(k_l/D_h)*Re_l^0.78*Pr_l^(1/3)	
+	{i_fg=enthalpy(fluid$,T=T_sat,x=1)-enthalpy(fluid$,T=T_sat,x=0)}
+	i_fg = h_v - h_l
+	{Bo=Max(q/(G*i_fg), 1)}
+	Bo=q/(G*i_fg)
+	h_tp_ev=88*Bo^0.5*h_l
+
+	"Pressure drop:"
+	X_m = 0.5	"average value of the vapor quality between inlet and outlet"
+	v_m = 0.5/rho_l + 0.5/rho_g
+	G_eq = G * ( (1 - X_m) + X_m * (rho_l/rho_g)^0.5)
+	Re_eq = G_eq * D_h/mu_l
+	f_tp = 61000 * Re_eq^(-1.25)
+	DELTAp = 2 * G^2 * v_m * L_h * f_tp /D_h
+	
+end
+
+
+
+
+
+
+Procedure Summary(table$,row,W_dot_net, Q_dot_ev, eta_cycle,A_cd,A_ev,p_r_ev,T_ev,DELTAT_pp_cd,DELTAT_pp_ev,fluid$,SIC,N_p_cd, N_p_ev, L_w_tot_ev,L_w_tot_cd,eta_overall,T_cd,epsilon_exp,r_p:X)
+$bookmark summary
+lookup(table$,row,1) = W_dot_net
+lookup(table$,row,2) = Q_dot_ev
+lookup(table$,row,3) = eta_cycle
+lookup(table$,row,4) = A_cd
+lookup(table$,row,5) = A_ev
+lookup(table$,row,6) = p_r_ev
+lookup(table$,row,7) = DELTAT_pp_cd
+lookup(table$,row,8) = DELTAT_pp_ev
+lookup$(table$,row,9)=fluid$
+lookup(table$,row,10)=SIC
+lookup(table$,row,11) =N_p_cd
+lookup(table$,row,12) = N_p_ev
+lookup(table$,row,13)=L_w_tot_cd
+lookup(table$,row,14)=L_w_tot_ev
+lookup(table$,row,15)=eta_overall
+lookup(table$,row,16) = T_ev
+lookup(table$,row,17)=T_cd
+lookup(table$,row,18)=epsilon_exp
+lookup(table$,row,19) = r_p
+
+	X=1
+
+{variant: 'End procedure' of the original (CS-GAP-END-PROCEDURE, registered) written End}
+End
+
+Function FluidPrice(WorkingFluid$)
+
+{	N:=8
+	j:=1
+	repeat
+	    
+	    Fluid$:=Lookup$('Prix Fluides', j, 'Fluide')
+	    if (WorkingFluid$=Fluid$) then
+
+	        a=j
+
+	    endif
+	    j:=j+1	   
+
+	until (j>N)
+
+FluidPrice=Lookup('Prix Fluides', a, 'Prix')}
+
+fluidprice = 15
+
+End
+
+
+$bookmark kuo
+Procedure kuo(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef:DELTAp,alpha_tp_cd)
+
+	{variant: the four CALL EES_REFPROP blocks (CS-GAP-REFPROP) replaced by pure-fluid
+	 calls on R245fa, faithful at MM_fraction = 1; h_l and h_v keep the REFPROP
+	 molar convention of the original (h_ref, kJ/kmol) so that i_fg is unchanged;
+	 $common dropped (CS-BUG-COMMON-PROC), MM computed locally}
+	MM = molarmass(fluid$)
+rho_l = density(fluid$,P=p,x=0)
+cp_l = cp(fluid$,P=p,x=0)
+h_l = enthalpy(fluid$,P=p,x=0)*MM/1000
+mu_l = viscosity(fluid$,P=p,x=0)
+k_l = conductivity(fluid$,P=p,x=0)
+rho_g = density(fluid$,P=p,x=1)
+h_v = enthalpy(fluid$,P=p,x=1)*MM/1000
+mu_g = viscosity(fluid$,P=p,x=1)
+k_g = conductivity(fluid$,P=p,x=1)
+
+Pr_l = cp_l * mu_l/k_l
+
+
+{	rho_g=Density(fluid$,P=P,x=1)
+	rho_l=Density(fluid$,P=P,x=0)
+	mu_g=Viscosity(fluid$,P=P,x=1)
+	mu_l=Viscosity(fluid$,P=P,x=0)	
+	k_l=Conductivity(fluid$,P=P,x=0)
+	Pr_l=Prandtl(fluid$,P=P,x=0)}
+	G=M_dot/(b*L_W*N_p)
+	D_h = 2*b
+	Re_l=G*D_h/mu_l
+	h_r_l=0.2092*(k_l/D_h)*Re_l^0.5*Pr_l^(1/3){*(mu_ave/mu_wall)^0.14}            "Heat exchange coefficient on the saturated liquid, identified experimentally with water"
+	Fr_l=G^2/(rho_l^2*g#*D_h)
+	{i_fg=enthalpy(fluid$,P=P,x=1)-enthalpy(fluid$,P=P,x=0)}	
+	i_fg = h_v - h_l
+	Bo=q/(G*i_fg)
+
+	dx=0.05
+	x_0=0.01
+	x=x_0
+	Int=0
+	repeat
+	    Co=(rho_g/rho_l)*((1-x)/x)^0.8	
+	    h_r=h_r_l*(0.25*Co^(-0.45)*Fr_l^0.25+75*Bo^0.75)
+	    Int=Int+h_r*dx	
+	    x:=x+dx
+	until (x>0.95)
+	alpha_tp_cd=coef*Int/(x-x_0)
+
+
+	"Pressure drop:"
+	X_m = 0.5	"average value of the vapor quality between inlet and outlet"
+	v_m = (1-X_m)/rho_l + X_m/rho_g
+	G_eq = G * ( (1 - X_m) + X_m * (rho_l/rho_g)^0.5)
+	Re_eq = G_eq * D_h/mu_l
+
+	f_tp = 21500 * Re_eq^(-1.14)*Bo^(-0.085)
+	DELTAp = 2 * G^2 * v_m * L_h * f_tp /D_h
+
+End
+
+
+"============================"
+"PART I :  THERMODYNAMICS MODEL"
+"========================"
+
+"- - - - - - - - - - - - - - - - - - - - - - -"
+"- - - - - - - - I.1 Inputs - - - - - - -"
+"- - - - - - - - - - - - - - - - - - - - - - -"
+$bookmark inputs
+row = 8
+ 
+"!Air"
+T_a_su=180 [°C]                                                                   "Air temperature at the system inlet"
+M_dot_a=0.3 [kg/s]                                                             "D?bit d'air"
+p_a = 1E5
+
+"!Water"
+T_w_su=15 [°C]                                                                   "Water temperature at the condenser"
+M_dot_w=0.5 [kg/s]                                                              "Water flow rate at the condenser"
+//DELTAT_w_cd = 30
+
+"!Heat exchanger"
+L_h = 0.25  [m] 	"plate length, measured between the center of the port holes"
+L_w = 0.112 [m]	"plate width between gaskets"
+b = 0.0024 - t 	"Space between two plates"
+t=0.0005 [m] 	"plate thickness, evaluated with the weight of one plate"
+
+"!Hypotheses"
+
+
+"optimisation 2xb:"
+DELTAT_pp_cd=28.33
+DELTAT_pp_ev=7.834
+N_p_cd=29.82
+N_p_ev=14.39
+p_r_ev=2.618E+06
+
+
+
+
+MM_fraction=1
+DELTAT_sh=5 [°C]                                                               "Superheating at the evaporator outlet"                                                             "Pinch point at the condenser"
+DELTAT_sc=5                                                                  "subcooling at the condenser"
+r_v_in_exp=3.4                                                                     "volume ratio of the expander"
+epsilon_m_exp=0.7                                                             "mechanical efficiency of the expander"
+epsilon_s_pp=0.6                                                               "isentropic efficiency of the pump"
+
+WorkingFluidMix$='C:\REFPROP8\R245fa+R134a'                  "Fluid"
+WorkingFluid$='R245fa'
+fluidev$='TherminolVP-1'
+
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+"- - - - - - - - I.2 Evaporator model - - - - - - - -"
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+$bookmark evaporator
+
+
+L_w_tot_ev = L_w * (N_p_ev - 1)/2
+
+beta = 45
+call hx_ev(Workingfluid$,fluidev$,T_a_su_vap,M_dot_a,T_r_su_liq,T_r_ex_ev,M_dot_r,p_r_ev,1E5,b,L_w_tot_ev,L_h,beta:A_ev,DELTAp_ev,DELTAp_ev_sf,M_fluid_ev)
+
+V_ev=A_ev*b      "Evaporator volume, m3"
+
+call prop_htf(fluidev$,T_a_su_vap,p_a:mu_a,rho_a,cp_a,k_a)
+
+
+"Surchauffe"
+
+MM = molarmass(WorkingFluid$)   "variant: CALL EES_REFPROP(...,0,...) replaced (CS-GAP-REFPROP)"
+{variant: each CALL EES_REFPROP block of the main program (CS-GAP-REFPROP) is replaced
+ below by pure-fluid equations on R245fa (WorkingFluid$), faithful at MM_fraction = 1;
+ the REFPROP pseudo-quality outputs outside 0..1 (Q_r_su_liq, Q_r_ex_vap, Q_r_in_exp,
+ Q_r_ex_exp_s, Q_r_ex_exp, Q_r_ex_sc_cd, Q_r_ex_pp_s, Q_r_ex_pp, Q_r_su_exp) are
+ diagnostic outputs of the wrapper, unused in the file, and are not reproduced;
+ the 273.1 offsets of the original (0.05 K below the exact conversion) are dropped}
+T_r_su_vap = temperature(WorkingFluid$,P=P_r_ev,x=1)
+P_r_su_vap = P_r_ev
+rho_r_su_vap = density(WorkingFluid$,P=P_r_ev,x=1)
+v_r_su_vap = volume(WorkingFluid$,P=P_r_ev,x=1)
+h_r_su_vap = enthalpy(WorkingFluid$,P=P_r_ev,x=1)
+s_r_su_vap = entropy(WorkingFluid$,P=P_r_ev,x=1)
+Q_r_su_vap = 1
+Cv_r_su_vap = cv(WorkingFluid$,P=P_r_ev,x=1)*MM/1000
+Cp_r_su_vap = cp(WorkingFluid$,P=P_r_ev,x=1)*MM/1000
+w_r_su_vap = soundspeed(WorkingFluid$,P=P_r_ev,x=1)
+T_r_ex_vap = temperature(WorkingFluid$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)
+P_r_ex_vap = P_r_ev
+rho_r_ex_vap = density(WorkingFluid$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)
+v_r_ex_vap = volume(WorkingFluid$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)
+h_r_ex_vap = enthalpy(WorkingFluid$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)
+s_r_ex_vap = entropy(WorkingFluid$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)
+Cv_r_ex_vap = cv(WorkingFluid$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)*MM/1000
+Cp_r_ex_vap = cp(WorkingFluid$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)*MM/1000
+w_r_ex_vap = soundspeed(WorkingFluid$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)
+T_a_su_vap=T_a_su
+//h_a_su_vap=Enthalpy(Air; T=T_a_su_vap)
+Q_dot_vap=M_dot_a*cp_a * (T_a_su_vap-T_a_ex_vap)
+T_a_ex_vap=Temperature(Air, h=h_a_ex_vap)
+
+"Evaporation"
+T_r_su_tp = temperature(WorkingFluid$,P=P_r_ev,x=0)
+P_r_su_tp = P_r_ev
+rho_r_su_tp = density(WorkingFluid$,P=P_r_ev,x=0)
+v_r_su_tp = volume(WorkingFluid$,P=P_r_ev,x=0)
+h_r_su_tp = enthalpy(WorkingFluid$,P=P_r_ev,x=0)
+s_r_su_tp = entropy(WorkingFluid$,P=P_r_ev,x=0)
+Q_r_su_tp = 0
+Cv_r_su_tp = cv(WorkingFluid$,P=P_r_ev,x=0)*MM/1000
+Cp_r_su_tp = cp(WorkingFluid$,P=P_r_ev,x=0)*MM/1000
+w_r_su_tp = soundspeed(WorkingFluid$,P=P_r_ev,x=0)
+T_r_ex_tp=T_r_su_vap
+P_r_ex_tp=P_r_ev
+h_r_ex_tp=h_r_su_vap
+T_a_su_tp=T_a_ex_vap
+//h_a_su_tp=Enthalpy(Air; T=T_a_su_tp)
+Q_dot_tp=M_dot_a*cp_a * (T_a_su_tp-T_a_ex_tp)
+T_a_ex_tp=T_r_su_tp+DELTAT_pp_ev
+//h_a_ex_tp=Enthalpy(Air; T=T_a_ex_tp)
+
+"Preheating"
+T_r_su_liq = temperature(WorkingFluid$,T=T_r_ex_pp,P=P_r_ev)
+P_r_su_liq = P_r_ev
+rho_r_su_liq = density(WorkingFluid$,T=T_r_ex_pp,P=P_r_ev)
+v_r_su_liq = volume(WorkingFluid$,T=T_r_ex_pp,P=P_r_ev)
+h_r_su_liq = enthalpy(WorkingFluid$,T=T_r_ex_pp,P=P_r_ev)
+s_r_su_liq = entropy(WorkingFluid$,T=T_r_ex_pp,P=P_r_ev)
+Cv_r_su_liq = cv(WorkingFluid$,T=T_r_ex_pp,P=P_r_ev)*MM/1000
+Cp_r_su_liq = cp(WorkingFluid$,T=T_r_ex_pp,P=P_r_ev)*MM/1000
+w_r_su_liq = soundspeed(WorkingFluid$,T=T_r_ex_pp,P=P_r_ev)
+//Call EES_REFPROP(WorkingFluidMix$;12;47+273,1;17E5/1000;MM_fraction : T_r_su_liq+273,1;P_r_su_liq/1000;rho_r_su_liq/MM;v_r_su_liq*MM;h_r_su_liq*MM/1000;s_r_su_liq*MM/1000;Q_r_su_liq;Cv_r_su_liq;Cp_r_su_liq;w_r_su_liq)
+T_r_ex_liq=T_r_su_tp
+P_r_ex_liq=P_r_ev
+h_r_ex_liq=h_r_su_tp
+T_a_su_liq=T_a_ex_tp
+//h_a_su_liq=Enthalpy(Air; T=T_a_su_liq)
+Q_dot_liq=M_dot_a*cp_a*(T_a_su_liq-T_a_ex_liq)
+T_a_ex_liq=Temperature(Air, h=h_a_ex_liq)
+
+"Power"
+Q_dot_vap=M_dot_r*(h_r_ex_vap-h_r_su_vap)
+Q_dot_tp=M_dot_r*(h_r_ex_tp-h_r_su_tp)
+Q_dot_liq=M_dot_r*(h_r_ex_liq-h_r_su_liq)
+
+"Global"
+T_r_ex_ev=T_r_ex_vap
+P_r_ex_ev=P_r_ex_vap
+v_r_ex_ev=v_r_ex_vap
+h_r_ex_ev=h_r_ex_vap
+s_r_ex_ev=s_r_ex_vap
+
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+"- - - - - - - - I.3 Expander model - - - - - - - - -"
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+$bookmark expander
+
+P_r_su_exp=P_r_ev - DELTAp_ev
+h_r_su_exp=h_r_ex_ev
+{variant: the original REFPROP call takes P/1000.1 kPa (kept: P*1000/1000.1 Pa)}
+T_r_su_exp = temperature(WorkingFluid$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)
+P_r_su_exp_bis = P_r_su_exp*1000/1000.1
+rho_r_su_exp = density(WorkingFluid$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)
+v_r_su_exp = volume(WorkingFluid$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)
+h_r_su_exp_bis = enthalpy(WorkingFluid$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)
+s_r_su_exp = entropy(WorkingFluid$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)
+Cv_r_su_exp = cv(WorkingFluid$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)*MM/1000
+Cp_r_su_exp = cp(WorkingFluid$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)*MM/1000
+w_r_su_exp = soundspeed(WorkingFluid$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)
+{T_r_su_exp=T_r_ex_ev
+v_r_su_exp=v_r_ex_ev
+s_r_su_exp=s_r_ex_ev}
+
+v_r_in_exp=r_v_in_exp*v_r_su_exp
+s_r_in_exp=s_r_su_exp
+{variant: (T, P) inputs, unknowns determined through the known v_r_in_exp (built-in
+ volume ratio) and s_r_in_exp (= s_r_su_exp)}
+T_r_in_exp_bis = T_r_in_exp
+P_r_in_exp_bis = P_r_in_exp
+v_r_in_exp = volume(WorkingFluid$,T=T_r_in_exp,P=P_r_in_exp)
+s_r_in_exp = entropy(WorkingFluid$,T=T_r_in_exp,P=P_r_in_exp)
+rho_r_in_exp = density(WorkingFluid$,T=T_r_in_exp,P=P_r_in_exp)
+h_r_in_exp = enthalpy(WorkingFluid$,T=T_r_in_exp,P=P_r_in_exp)
+Cv_r_in_exp = cv(WorkingFluid$,T=T_r_in_exp,P=P_r_in_exp)*MM/1000
+Cp_r_in_exp = cp(WorkingFluid$,T=T_r_in_exp,P=P_r_in_exp)*MM/1000
+w_r_in_exp = soundspeed(WorkingFluid$,T=T_r_in_exp,P=P_r_in_exp)
+W_dot_1=M_dot_r*(h_r_su_exp-h_r_in_exp)
+W_dot_2=M_dot_r*v_r_in_exp*(P_r_in_exp-P_r_ex_exp)
+W_dot_in=W_dot_1+W_dot_2
+P_r_ex_exp=P_r_su_vap_cd + DELTAp_cd
+T_r_ex_exp_s = temperature(WorkingFluid$,P=P_r_ex_exp*1000/1000.1,s=s_r_su_exp)
+P_r_ex_exp_s = P_r_ex_exp*1000/1000.1
+rho_r_ex_exp_s = density(WorkingFluid$,P=P_r_ex_exp*1000/1000.1,s=s_r_su_exp)
+v_r_ex_exp_s = volume(WorkingFluid$,P=P_r_ex_exp*1000/1000.1,s=s_r_su_exp)
+h_r_ex_exp_s = enthalpy(WorkingFluid$,P=P_r_ex_exp*1000/1000.1,s=s_r_su_exp)
+s_r_ex_exp_s = s_r_su_exp
+Cv_r_ex_exp_s = cv(WorkingFluid$,P=P_r_ex_exp*1000/1000.1,s=s_r_su_exp)*MM/1000
+Cp_r_ex_exp_s = cp(WorkingFluid$,P=P_r_ex_exp*1000/1000.1,s=s_r_su_exp)*MM/1000
+w_r_ex_exp_s = soundspeed(WorkingFluid$,P=P_r_ex_exp*1000/1000.1,s=s_r_su_exp)
+h_r_ex_exp=h_r_su_exp-W_dot_shaft/M_dot_r
+Q_dot_loss=W_dot_in-W_dot_shaft
+T_r_ex_exp = temperature(WorkingFluid$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)
+P_r_ex_exp_bis = P_r_ex_exp*1000/1000.1
+rho_r_ex_exp = density(WorkingFluid$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)
+v_r_ex_exp = volume(WorkingFluid$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)
+h_r_ex_exp_bis = enthalpy(WorkingFluid$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)
+s_r_ex_exp = entropy(WorkingFluid$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)
+Cv_r_ex_exp = cv(WorkingFluid$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)*MM/1000
+Cp_r_ex_exp = cp(WorkingFluid$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)*MM/1000
+w_r_ex_exp = soundspeed(WorkingFluid$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)
+W_dot_shaft=W_dot_in*epsilon_m_exp
+epsilon_s_exp=(W_dot_shaft/M_dot_r)/(h_r_su_exp-h_r_ex_exp_s)
+
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+"- - - - - - - - I.4 Condenser model - - - - - - - - -"
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+$bookmark condenser
+
+
+L_w_tot_cd = L_w * (N_p_cd - 1)/2
+fluidcd$='water'
+p_w = 1E5
+
+call hx_cd(workingfluid$,fluidcd$,T_w_su,M_dot_w,T_r_su_vap_cd,T_r_ex_sc_cd,M_dot_r,p_r_su_tp_cd,p_w,2*b,L_w_tot_cd,L_h,beta:A_cd,DELTAp_cd,DELTAp_sf_cd,M_fluid_cd)
+
+V_cd=A_cd*b      "Condenser volume, m3"
+
+cp_w=4187
+DELTAT_w_cd = T_w_ex_vap_cd - T_w_su
+
+"Desuperheating"
+T_r_su_vap_cd=T_r_ex_exp
+h_r_su_vap_cd=h_r_ex_exp
+T_r_ex_vap_cd = temperature(WorkingFluid$,P=P_r_ex_vap_cd,x=1)
+P_r_ex_vap_cd_bis = P_r_ex_vap_cd
+rho_r_ex_vap_cd = density(WorkingFluid$,P=P_r_ex_vap_cd,x=1)
+v_r_ex_vap_cd = volume(WorkingFluid$,P=P_r_ex_vap_cd,x=1)
+h_r_ex_vap_cd = enthalpy(WorkingFluid$,P=P_r_ex_vap_cd,x=1)
+s_r_ex_vap_cd = entropy(WorkingFluid$,P=P_r_ex_vap_cd,x=1)
+Q_r_ex_vap_cd = 1
+Cv_r_ex_vap_cd = cv(WorkingFluid$,P=P_r_ex_vap_cd,x=1)*MM/1000
+Cp_r_ex_vap_cd = cp(WorkingFluid$,P=P_r_ex_vap_cd,x=1)*MM/1000
+w_r_ex_vap_cd = soundspeed(WorkingFluid$,P=P_r_ex_vap_cd,x=1)
+P_r_ex_vap_cd=P_r_su_vap_cd
+T_w_su_vap_cd=if(DELTAC_dot, T_bis, T_r_ex_vap_cd-DELTAT_pp_cd) "1) variant: 5-arg IF (CS-GAP-IF5) as CoolSolve 3-arg if()"
+Q_dot_vap_cd=cp_w*M_dot_w*(T_w_ex_vap_cd-T_w_su_vap_cd)
+
+"Condensation"
+P_r_su_tp_cd=P_r_ex_vap_cd
+h_r_su_tp_cd=h_r_ex_vap_cd
+T_r_su_tp_cd=T_r_ex_vap_cd
+T_r_ex_tp_cd = temperature(WorkingFluid$,P=P_r_ex_tp_cd,x=0)
+P_r_ex_tp_cd_bis = P_r_ex_tp_cd
+rho_r_ex_tp_cd = density(WorkingFluid$,P=P_r_ex_tp_cd,x=0)
+v_r_ex_tp_cd = volume(WorkingFluid$,P=P_r_ex_tp_cd,x=0)
+h_r_ex_tp_cd = enthalpy(WorkingFluid$,P=P_r_ex_tp_cd,x=0)
+s_r_ex_tp_cd = entropy(WorkingFluid$,P=P_r_ex_tp_cd,x=0)
+Q_r_ex_tp_cd = 0
+Cv_r_ex_tp_cd = cv(WorkingFluid$,P=P_r_ex_tp_cd,x=0)*MM/1000
+Cp_r_ex_tp_cd = cp(WorkingFluid$,P=P_r_ex_tp_cd,x=0)*MM/1000
+w_r_ex_tp_cd = soundspeed(WorkingFluid$,P=P_r_ex_tp_cd,x=0)
+P_r_ex_tp_cd=P_r_su_tp_cd
+Q_dot_tp_cd=cp_w*M_dot_w*(T_w_ex_tp_cd-T_w_su_tp_cd)
+T_w_ex_tp_cd=T_w_su_vap_cd
+C_dot_fictif_r_cd=M_dot_r*(h_r_su_tp_cd-h_r_ex_sc_cd)/(T_r_su_tp_cd-T_r_ex_sc_cd)
+C_dot_w=cp_w*M_dot_w
+DELTAC_dot=(C_dot_w-C_dot_fictif_r_cd)
+
+"Subcooling"
+P_r_su_sc_cd=P_r_ex_tp_cd
+h_r_su_sc_cd=h_r_ex_tp_cd
+T_r_su_sc_cd=T_r_ex_tp_cd
+P_r_ex_sc_cd=P_r_su_sc_cd
+t_r_ex_sc_cd=T_r_su_sc_cd-DELTAT_sc
+T_r_ex_sc_cd_bis = T_r_ex_sc_cd
+P_r_ex_sc_cd_bis = P_r_ex_sc_cd
+rho_r_ex_sc_cd = density(WorkingFluid$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)
+v_r_ex_sc_cd = volume(WorkingFluid$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)
+h_r_ex_sc_cd = enthalpy(WorkingFluid$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)
+s_r_ex_sc_cd = entropy(WorkingFluid$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)
+Cv_r_ex_sc_cd = cv(WorkingFluid$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)*MM/1000
+Cp_r_ex_sc_cd = cp(WorkingFluid$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)*MM/1000
+w_r_ex_sc_cd = soundspeed(WorkingFluid$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)
+Q_dot_sc_cd=cp_w*M_dot_w*(T_w_ex_sc_cd-T_w_su_sc_cd)
+T_w_ex_sc_cd=T_w_su_tp_cd
+T_w_su_sc_cd=if(DELTAC_dot, T_r_ex_sc_cd-DELTAT_pp_cd, T_bis) "2) variant: 5-arg IF (CS-GAP-IF5) as CoolSolve 3-arg if()"
+T_w_su_sc_cd=T_w_su
+
+"Power"
+Q_dot_vap_cd=M_dot_r*(h_r_su_vap_cd-h_r_ex_vap_cd)
+Q_dot_tp_cd=M_dot_r*(h_r_su_tp_cd-h_r_ex_tp_cd)
+Q_dot_sc_cd=M_dot_r*(h_r_su_sc_cd-h_r_ex_sc_cd)
+
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+"- - - - - - - - I.5 Pump model - - - - - - - - -"
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+$bookmark pump
+"!Pump"
+
+T_r_ex_pp_s = temperature(WorkingFluid$,P=P_r_ex_pp*1000/1000.1,s=s_r_su_pp)
+P_r_ex_pp_s = P_r_ex_pp*1000/1000.1
+rho_r_ex_pp_s = density(WorkingFluid$,P=P_r_ex_pp*1000/1000.1,s=s_r_su_pp)
+v_r_ex_pp_s = volume(WorkingFluid$,P=P_r_ex_pp*1000/1000.1,s=s_r_su_pp)
+h_r_ex_pp_s = enthalpy(WorkingFluid$,P=P_r_ex_pp*1000/1000.1,s=s_r_su_pp)
+s_r_ex_pp_s = s_r_su_pp
+Cv_r_ex_pp_s = cv(WorkingFluid$,P=P_r_ex_pp*1000/1000.1,s=s_r_su_pp)*MM/1000
+Cp_r_ex_pp_s = cp(WorkingFluid$,P=P_r_ex_pp*1000/1000.1,s=s_r_su_pp)*MM/1000
+w_r_ex_pp_s = soundspeed(WorkingFluid$,P=P_r_ex_pp*1000/1000.1,s=s_r_su_pp)
+P_r_ex_pp=P_r_su_liq
+epsilon_s_pp=(h_r_ex_pp_s-h_r_su_pp)/(h_r_ex_pp-h_r_su_pp)
+T_r_ex_pp = temperature(WorkingFluid$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)
+P_r_ex_pp_bis = P_r_ex_pp/1000.1   "kPa, as in the original (output without the /1000 scaling)"
+rho_r_ex_pp = density(WorkingFluid$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)
+v_r_ex_pp = volume(WorkingFluid$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)
+h_r_ex_pp_bis = enthalpy(WorkingFluid$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)
+s_r_ex_pp = entropy(WorkingFluid$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)
+Cv_r_ex_pp = cv(WorkingFluid$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)*MM/1000
+Cp_r_ex_pp = cp(WorkingFluid$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)*MM/1000
+w_r_ex_pp = soundspeed(WorkingFluid$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)
+W_dot_pp=M_dot_r*(h_r_ex_pp-h_r_su_pp)
+h_r_su_pp=h_r_ex_sc_cd
+s_r_su_pp=s_r_ex_sc_cd
+
+V_s_pp=V_dot_ex_cd/50	"to be checked"
+
+
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+"- - - - - - - - I.5.1 SF Pump model - - -  - -"
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+$bookmark pump_sf
+W_dot_pp_sf = M_dot_a * DELTAp_ev_sf/rho_a / epsilon_s_pp
+
+
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+"- - - - - - - - - I.6 Cycle efficiency - - - - - - - - - -"
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+$bookmark cycle
+"!Cycle efficiency"
+
+
+W_dot_net=W_dot_shaft-W_dot_pp - W_dot_pp_sf
+eta_cycle=100*(W_dot_net)/Q_dot_ev
+Q_dot_ev=Q_dot_tp+Q_dot_liq+Q_dot_vap
+epsilon_ev=(T_a_su-T_a_ex_liq)/(T_a_su-25)*100
+eta_overall=epsilon_ev*eta_cycle/100
+
+
+"- - - - - - - - - - - - - - - - - - - - - - - -"
+"- - - - - - - - I.7 Plots - - - - - - - - -"
+"- - - - - - - - - - - - - - - - - - - - - - - -"
+
+"!Plots"
+
+P[1]=P_r_ex_pp
+h[1]=h_r_ex_pp
+s[1]=s_r_ex_pp
+T[1]=t_r_ex_pp
+
+P[2]=P_r_ex_liq
+h[2]=h_r_ex_liq
+s[2]=s_r_ex_liq
+s_r_ex_liq=s_r_su_tp
+T[2]=t_r_ex_liq
+
+P[3]=P_r_ex_tp
+h[3]=h_r_ex_tp
+s[3]=s_r_ex_tp
+s_r_ex_tp=s_r_su_vap
+T[3]=t_r_ex_tp
+
+P[4]=P_r_ex_vap
+h[4]=h_r_ex_vap
+s[4]=s_r_ex_vap
+T[4]=t_r_ex_vap
+
+P[5]=P_r_ex_exp
+h[5]=h_r_ex_exp
+s[5]=s_r_ex_exp
+T[5]=t_r_ex_exp
+
+P[6]=P_r_su_vap_cd
+h[6]=h_r_su_vap_cd
+s[6]=s_r_su_vap_cd
+s_r_su_vap_cd=s_r_ex_exp
+T[6]=t_r_su_vap_cd
+
+P[7]=P_r_su_tp_cd
+h[7]=h_r_su_tp_cd
+s[7]=s_r_su_tp_cd
+s_r_su_tp_cd=s_r_ex_vap_cd
+T[7]=t_r_su_tp_cd
+
+P[8]=P_r_su_sc_cd
+h[8]=h_r_su_sc_cd
+s[8]=s_r_su_sc_cd
+s_r_su_sc_cd=s_r_ex_tp_cd
+T[8]=t_r_su_sc_cd
+
+P[9]=P_r_ex_sc_cd
+h[9]=h_r_ex_sc_cd
+s[9]=s_r_ex_sc_cd
+T[9]=t_r_ex_sc_cd
+
+T_a[1]=T_a_su
+s_a[1]=s[4]
+t_a[2]=T_a_ex_vap
+s_a[2]=s[3]
+T_a[3]=T_a_ex_tp
+s_a[3]=s[2]
+t_a[4]=T_a_ex_liq
+s_a[4]=s[1]
+
+t_w[1]=T_w_su
+s_w[1]=s[9]
+t_w[2]=T_w_su_tp_cd
+s_w[2]=s[8]
+t_w[3]=T_w_su_vap_cd
+s_w[3]=s[7]
+t_w[4]=T_w_ex_vap_cd
+s_w[4]=s[6]
+
+"---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
+
+"!Additional calculations"
+eta_HX=(t_a[1]-t_a[4])/(t_a[1]-t_amin)
+t_amin=t_w_su
+eta_TR=(t_a[1]-t_w_su)/(t_a[1]+t_w_su)
+eta_relatif=eta_cycle/eta_TR
+
+P_evap=P_r_ev/100000
+
+R_rho=rho_r_ex_vap/rho_r_ex_exp
+v[4]=v_r_su_exp
+v[6]=v_r_ex_exp
+VFR=v[6]/v[4]
+PR=p[3]/p[6]
+
+
+
+"============================"
+"PART III :  Pipes diameter calculation"
+"========================"
+$bookmark pipes
+"Velocity in pipes, m/s"
+vit_ex_exp=12
+vit_ex_pp=0.6
+vit_ex_ev=10
+vit_ex_cd=0.6
+
+"According to Seb: suction 8-14 m/s, discharge 6-14 m/s, liquid 0.4-0.8 m/s"
+
+
+"Volume flow rates, m3/s"
+V_dot_ex_exp=M_dot_r*v_r_ex_exp
+V_dot_ex_pp=M_dot_r*v_r_ex_pp
+V_dot_ex_ev=M_dot_r*v_r_ex_ev
+V_dot_ex_cd=M_dot_r*v_r_ex_sc_cd
+
+"Pipes sectional area, m2"
+vit_ex_exp=V_dot_ex_exp/A_pipe_exp_to_cd
+vit_ex_pp=V_dot_ex_pp/A_pipe_pp_to_ev
+vit_ex_ev=V_dot_ex_ev/A_pipe_ev_to_exp
+vit_ex_cd=V_dot_ex_cd/A_pipe_cd_to_pp
+
+"Pipes diameter, mm"
+A_pipe_exp_to_cd=pi*(d_pipe_exp_to_cd/1000)^2/4
+A_pipe_pp_to_ev=pi*(d_pipe_pp_to_ev/1000)^2/4
+A_pipe_ev_to_exp=pi*(d_pipe_ev_to_exp/1000)^2/4
+A_pipe_cd_to_pp=pi*(d_pipe_cd_to_pp/1000)^2/4
+
+
+"============================"
+"PART IV :  Economic model"
+"========================"
+$bookmark economics
+
+"Cost law for hermetic compressors"
+Cout_compresseur=170*(V_dot_su_exp)+225
+Cout_expanseur = Cout_compresseur * 1.5
+V_dot_su_exp=V_dot_ex_ev*3600	"! ???"
+
+"cost law of the evaporator"
+//Cout_evaporateur=480*A_ev+388
+Cout_evaporateur=190 + 310 * A_ev
+"cost law of the condenser"
+//Cout_condenseur=480*A_cd+388
+Cout_condenseur=190 + 310 * A_cd
+
+"HX cost"
+Cout_total_HX=Cout_condenseur+Cout_evaporateur
+
+"cost law of the pumps"
+Cout_pump=900*(W_dot_pp/300)^0.25
+
+"cost law of the pipes"
+"liquid pipe"
+L_liqpipe=3                                                                      "length of the liquid pipe"
+Cout_unit_liqpipe=3                                                          "D<1 cm, Cout=3eur/m"
+Cout_liqpipe=L_liqpipe*Cout_unit_liqpipe                            "Cost of liquid pipes"
+
+"cost law of the vapour pipes"
+L_vappipe=1                                                                                                      "length of the vapor pipe"
+Cout_vappipe_su_exp=L_vappipe*(-6.90+6.75*d_pipe_ev_to_exp/10)                      "Cost of the vapor pipe, evaporator-expander"
+Cout_vappipe_ex_exp=L_vappipe*(-6.90+6.75*d_pipe_exp_to_cd/10)                       "Cost of the vapor pipe, expander-condenser"
+Cout_vappipe=Cout_vappipe_ex_exp+Cout_vappipe_su_exp
+
+"Total cost of pipes"
+Cout_total_pipe=Cout_liqpipe+Cout_vappipe        
+
+"Refrigerant Volume"
+//V_tot=V_pipe+V_s_pp+V_liqR+(1/8)*V_cd+(3/8)*V_ev   " Total liquid volume"
+V_pipe=A_pipe_pp_to_ev*L_liqpipe                                "Volume of the refrigerant in the liquid pipes"
+eta_vol_pump=1                                                     "volumetric efficiency of the pump"
+s_f=50                                                                        "stroke frequency, Hz"
+
+V_liqR=5/1000                                                             "volume of the liquid reservoir, m3"
+V_pump=V_dot_ex_cd/(s_f*eta_vol_pump)             "Swept volume of the pump"
+
+M_fluid_lines = (V_pipe + V_s_pp) * rho_liq
+M_fluid_hx = M_fluid_ev + M_fluid_cd 
+M_fluid_liqR = V_liqR/3 * rho_liq
+
+"Cost of the working fluid"
+Cout_kg_fluide=FluidPrice(WorkingFluid$)
+Cout_fluid=(M_fluid_lines + M_fluid_hx + M_fluid_liqR)*Cout_kg_fluide
+rho_liq=Density(WorkingFluid$,T=15,x=0)
+
+"Cost of other components"
+Cout_liquidreservoir=200       "Cost of the liquid reservoir"
+Cout_mischardware=300       "Cost of the misceleneous hardware"
+Cout_controlsystem=500     "Cost of the Control system"
+//Cout_water_pump=300       "Cost of the water pump"
+Cout_water_pump=0       "Cost of the water pump"
+Cout_sf_pump = 500*(W_dot_pp_sf/300)^0.25
+
+Cout_inv=Cout_liquidreservoir+Cout_mischardware+Cout_controlsystem+Cout_water_pump + Cout_sf_pump
+
+TEC=Cout_expanseur+Cout_evaporateur+Cout_condenseur+Cout_pump+Cout_liqpipe+Cout_total_pipe+Cout_fluid+Cout_inv                  "Total equipment cost"
+Cout_labor=(30/100)*TEC                                                                 "20 % considered more appropriate"                                                                                                "Labor cost"
+
+TIC=TEC+Cout_labor                           "Total investment cost"
+SIC=TIC/(W_dot_net/1000)                  "Specific investment cost"
+
+"Summary of the key quantities"
+table$='optim'
+Call Summary(table$,row,W_dot_net, Q_dot_ev, eta_cycle,A_cd,A_ev,p_r_ev,T_r_ex_tp,DELTAT_pp_cd,DELTAT_pp_ev,workingfluid$,SIC,N_p_cd, N_p_ev, L_w_tot_ev,L_w_tot_cd,eta_overall,T_r_su_tp_cd,epsilon_s_exp,PR:X)

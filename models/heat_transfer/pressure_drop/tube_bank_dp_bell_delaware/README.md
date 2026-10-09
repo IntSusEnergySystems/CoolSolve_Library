@@ -285,3 +285,10 @@ K. J. Bell (1963, 1988), E. U. Schlünder (1987), R. W. Serth (2014).
   same `ht` module; a shell-side model pairs its bundle coefficient with the
   factors of this file.
 - `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.
+- `CSL-0130` *pipe_pressure_drop_correlations*: the pipe-side friction factors
+  and pressure drops (single-phase and two-phase) that a shell-and-tube model
+  pairs with the shell-side drop of this file.
+- `CSL-0131` *void_fraction_correlations*: the thirteen void-fraction
+  correlations of the same batch; this file's two-phase shell-side hold-up and
+  volume estimates would use one of them (the drift-flux or slip-ratio models
+  for a vertical shell, the horizontal correlations otherwise).

@@ -212,3 +212,4 @@ model (its `.initials` were used to start the crossflow variant).
 - `CSL-0115` *hx_fem_evaporator_discretised*: the same two-phase heat
   exchanger treated fully discretised (N finite-volume cells, cell-by-cell U
   switching smoothed over a quality window) instead of three lumped zones.
+- CSL-0138 (hx_moving_boundary_bell): moving-boundary (Bell 2015) translation of the same zone-delimited heat-exchanger family (TESPy TSP-014).

@@ -1,0 +1,84 @@
+{
+  "id": "CSL-0152",
+  "name": "turbocharger_combustion_products",
+  "title": "Turbocharger matching with combustion-product composition (simplified formulation)",
+  "summary": "Steady-state matching of a turbocharger on a supercharged engine: filter and compressor (given pressure ratio and isentropic efficiency), glycol-water intercooler (epsilon-NTU), combustion at the given AFR with the exhaust properties computed from the molar composition of the complete-combustion products (excess air, simplified dry air, ideal-gas CO2/H2O/O2/N2), turbine matched on the compressor power balance, equivalent exhaust-orifice diameter and heat-recovery percentages.",
+  "kind": "steady",
+  "level": 3,
+  "status": "blocked",
+  "main_file": "turbocharger_combustion_products.eescode",
+  "fluids": [
+    "Air",
+    "EG",
+    "CO2",
+    "H2O",
+    "O2",
+    "N2"
+  ],
+  "tags": [
+    "turbocharger",
+    "supercharging",
+    "compressor-turbine matching",
+    "combustion products",
+    "excess air",
+    "intercooler",
+    "exhaust gas",
+    "equivalent orifice",
+    "heat recovery",
+    "exercise"
+  ],
+  "language_features": [
+    "SUBPROGRAM flattened (D10)",
+    "FUNCTION",
+    "DUPLICATE arrays",
+    "indexed SUM",
+    "property functions",
+    "EG incompressible solution"
+  ],
+  "stats": {
+    "n_equations": 219,
+    "largest_block": 10
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP4_Ex_1/SURALIMENTATION_FORMULATION SIMPLE_V2017-1.EES",
+    "candidate_id": "TM-0240",
+    "authors": [
+      "P. Ngendakumana",
+      "R. Dickes"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.589",
+    "language": "fr",
+    "course": "MCI (ULiège), TP4 exercise 1: supercharging (formulation simplifiée, PNG 24/03/2019)"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (last consistent run of 109 stored values), compared with the runnable _coolsolve variant: 50 variables agree within 4.5e-3 relative (max, Q_dot_2; most within 1e-3). 12 absolute-enthalpy/entropy variables carry backend reference offsets (differences agree); 8 stored values are stale (h_p_* constant offset -82.87 MJ/kg, s_p_ex_e_s/s_p_su_e off-scale, p_su_e/r_p_e inconsistent with the stored w_e_s) - documented in the README.",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.0045,
+    "notes": "The native file does not parse (C%); the comparison concerns the variant. The stored subprogram state (ref call) is reproduced under the flattened names (x_ref[i], h_ref[i], pp_ref[i]...)."
+  },
+  "missing_features": [
+    "CS-GAP-NAME-SYMBOL",
+    "CS-GAP-SUM-INDEXED",
+    "CS-GAP-MOLARMASS-ELEMENT",
+    "CS-GAP-INCOMPRESSIBLE"
+  ],
+  "related": [
+    "CSL-0005",
+    "CSL-0150"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (card C-144, batch B-11); native file blocked (CS-GAP-NAME-SYMBOL, CS-GAP-SUM-INDEXED, CS-GAP-MOLARMASS-ELEMENT, CS-GAP-INCOMPRESSIBLE), SUBPROGRAM flattened (D10), runnable _coolsolve variant verified against the EES stored solution",
+      "by": "GLM (Z.ai) for S. Quoilin"
+    }
+  ]
+}

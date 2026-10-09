@@ -244,3 +244,4 @@ Sources (never copied into the library):
   its README lists this model as first user).
 - The gas-turbine and engine models of the collection (e.g. card C-10,
   *two-shaft gas turbine*) call the same library (`cpbar`, `gamma`).
+- `CSL-0166` *boiler_modulating_burner_refsim*: the classical ON/OFF boiler of the same model bank (modulating-burner RefSim model, 2008 model bank).

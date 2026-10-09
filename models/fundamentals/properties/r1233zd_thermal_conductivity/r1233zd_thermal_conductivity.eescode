@@ -1,0 +1,187 @@
+{=============================================================================
+  Thermal conductivity of R1233zd(E) - Perkins & Huber correlation
+  CoolSolve Library model CSL-0132 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Two EES FUNCTIONs giving k [W/m-K] of R1233zd(E) from T [C] and P [Pa]: a
+  dilute-gas term quadratic in the reduced temperature plus a residual term
+  polynomial in the reduced density, the density coming from the built-in
+  R1233zd(E) property functions (as in the original, which uses CoolProp);
+   - conductivity_R1233zd: coefficient set as written in the original;
+   - conductivity_R1233zd_published: coefficient set of Table 1 of the paper.
+  Neither implements the critical enhancement, as in the original; both take °C
+  and add 273.15 internally (the original takes kelvin). Coefficient sets,
+  reducing constants and the difference between the two: README.md.
+  Inputs : T [C], P [Pa]        Outputs: k [W/m-K]
+  Source : LaboThapPy (ULiège), commit f03f7f47, thermal_conductivity.py,
+           conducticity_R1233zd, Apache-2.0 (model licence: MIT); correlation
+           of R. A. Perkins & M. L. Huber, J. Chem. Eng. Data 62: 2659-2665,
+           2017 (same source as the EES data of this fluid)
+  Status : VERIFIED vs the re-run of the original (8 values, 0 differ); README.md
+============================================================================}
+
+FUNCTION conductivity_R1233zd(T, P)
+{CONDUCTIVITY_R1233ZD - thermal conductivity of R1233zd(E) [W/m-K] at the
+ temperature T [C] and the pressure P [Pa], as conducticity_R1233zd of the
+ original.
+
+   k = k_0 + Delta_k_r
+   k_0 = A_0 + A_1*(T/T_c) + A_2*(T/T_c)^2                  dilute-gas term
+   Delta_k_r = SUM(i = 1..5) (B_i1 + B_i2*(T/T_c))*(rho/rho_c)^i   residual term
+   T in kelvin in the correlation, hence T_K = T + 273.15 (T in °C here)
+   rho = DENSITY('R1233zd(E)', T = T, P = P)   density of the fluid [kg/m^3]
+
+ T_c = 382.52 K and rho_c = 489.24 kg/m^3 are the reducing constants written in
+ the original (the paper uses T_c = 439.6 K and rho_c = 480.219 kg/m^3 of the
+ Mondejar et al. equation of state it was fitted to - see README.md).
+ rho comes from the built-in R1233zd(E) property functions, as in the original
+ (CoolProp density); the original falls back on the saturated-liquid density
+ when the (T, P) call fails, a safeguard the EES function does not need
+ (DENSITY accepts a state inside the two-phase region).
+ Validity, as in the original: liquid, vapour and supercritical states of
+ R1233zd(E) over the range of applicability of the underlying equation of
+ state; the critical enhancement near the critical point is not included (as
+ in the original), so the correlation underestimates k there.
+ Original: R. A. Perkins and M. L. Huber, "Measurement and Correlation of the
+   Thermal Conductivity of trans-1-Chloro-3,3,3-trifluoropropene
+   (R1233zd(E))", Journal of Chemical Engineering Data 62(9): 2659-2665,
+   2017, doi:10.1021/acs.jced.7b00487.
+ Taken from: LaboThapPy, commit f03f7f47,
+   labothappy/correlations/properties/thermal_conductivity.py,
+   conducticity_R1233zd, Apache-2.0 - https://github.com/PyLaboThap/LaboThapPy}
+
+  T_c = 382.52   "critical temperature used by the original [K]"
+  A_0 = -0.0103589   "dilute-gas coefficients of the original [W/m-K]"
+  A_1 = 0.0308929   "dilute-gas coefficients of the original [W/m-K]"
+  A_2 = 0.000230348   "dilute-gas coefficients of the original [W/m-K]"
+  B_11 = -0.0428296   "residual coefficients of the original [W/m-K]"
+  B_12 = 0.0434288   "residual coefficients of the original [W/m-K]"
+  B_21 = 0.0927099   "residual coefficients of the original [W/m-K]"
+  B_22 = -0.0605844   "residual coefficients of the original [W/m-K]"
+  B_31 = -0.0702107   "residual coefficients of the original [W/m-K]"
+  B_32 = 0.0440187   "residual coefficients of the original [W/m-K]"
+  B_41 = 0.0249708   "residual coefficients of the original [W/m-K]"
+  B_42 = -0.0155082   "residual coefficients of the original [W/m-K]"
+  B_51 = -0.00301838   "residual coefficients of the original [W/m-K]"
+  B_52 = 0.0021019   "residual coefficients of the original [W/m-K]"
+  rho_c = 489.24   "critical density used by the original [kg/m^3]"
+
+  T_K = T + 273.15   "absolute temperature of the correlation [K]"
+  Tr = T_K/T_c   "reduced temperature [-]"
+  rho = DENSITY('R1233zd(E)', T = T, P = P)   "density of R1233zd(E) [kg/m^3]"
+  rr = rho/rho_c   "reduced density [-]"
+
+  k_0 = A_0 + A_1*Tr + A_2*Tr^2   "dilute-gas contribution [W/m-K]"
+  dk_1 = (B_11 + B_12*Tr)*rr   "residual contribution, power 1 [W/m-K]"
+  dk_2 = (B_21 + B_22*Tr)*rr^2   "residual contribution, power 2 [W/m-K]"
+  dk_3 = (B_31 + B_32*Tr)*rr^3   "residual contribution, power 3 [W/m-K]"
+  dk_4 = (B_41 + B_42*Tr)*rr^4   "residual contribution, power 4 [W/m-K]"
+  dk_5 = (B_51 + B_52*Tr)*rr^5   "residual contribution, power 5 [W/m-K]"
+
+  conductivity_R1233zd = k_0 + dk_1 + dk_2 + dk_3 + dk_4 + dk_5   "thermal conductivity [W/m-K]"
+END
+
+FUNCTION conductivity_R1233zd_published(T, P)
+{CONDUCTIVITY_R1233ZD_PUBLISHED - thermal conductivity of R1233zd(E) [W/m-K] at
+ the temperature T [C] and the pressure P [Pa], with the coefficient set of
+ Table 1 of the paper (Perkins & Huber 2017), which differs from the one the
+ original writes down (see conductivity_R1233zd and README.md).
+
+   k = k_0 + Delta_k_r
+   k_0 = A_0 + A_1*(T/T_c) + A_2*(T/T_c)^2                      dilute-gas term
+   Delta_k_r = SUM(i = 1..6) (B_i1 + B_i2*(T/T_c))*(rho/rho_c)^i   residual term
+   T_c = 439.6 K, rho_c = 480.219 kg/m^3: the critical parameters of the
+   Mondejar et al. (2015) equation of state the correlation was fitted to, as
+   printed in the paper. The sixth power is listed in Table 1 of the paper and
+   is needed to reproduce Table 2 (the sum of Eq. 6 as printed stops at five).
+ Validity, as in the original: liquid, vapour and supercritical states of
+ R1233zd(E); the critical enhancement (Eqs. 7-10 of the paper) is not included,
+ so the correlation is a few per cent low near the critical point.
+ Original: R. A. Perkins and M. L. Huber, "Measurement and Correlation of the
+   Thermal Conductivity of trans-1-Chloro-3,3,3-trifluoropropene
+   (R1233zd(E))", Journal of Chemical Engineering Data 62(9): 2659-2665,
+   2017, doi:10.1021/acs.jced.7b00487; Eq. (5), Eq. (6) and Table 1.}
+
+  T_c = 439.6   "critical temperature of the paper [K]"
+  A_0 = -0.0140033   "dilute-gas coefficients of Table 1 [W/m-K]"
+  A_1 = 0.037816   "dilute-gas coefficients of Table 1 [W/m-K]"
+  A_2 = -0.00245832   "dilute-gas coefficients of Table 1 [W/m-K]"
+  B_11 = 0.00862816   "residual coefficients of Table 1 [W/m-K]"
+  B_12 = 0.000914709   "residual coefficients of Table 1 [W/m-K]"
+  B_21 = -0.0208988   "residual coefficients of Table 1 [W/m-K]"
+  B_22 = -0.00407914   "residual coefficients of Table 1 [W/m-K]"
+  B_31 = 0.0511968   "residual coefficients of Table 1 [W/m-K]"
+  B_32 = 0.00845668   "residual coefficients of Table 1 [W/m-K]"
+  B_41 = -0.0349076   "residual coefficients of Table 1 [W/m-K]"
+  B_42 = -0.0108985   "residual coefficients of Table 1 [W/m-K]"
+  B_51 = 0.00975727   "residual coefficients of Table 1 [W/m-K]"
+  B_52 = 0.00538262   "residual coefficients of Table 1 [W/m-K]"
+  B_61 = -0.000926484   "residual coefficients of Table 1 [W/m-K]"
+  B_62 = -0.000806009   "residual coefficients of Table 1 [W/m-K]"
+  rho_c = 480.219   "critical density of the paper [kg/m^3]"
+
+  T_K = T + 273.15   "absolute temperature of the correlation [K]"
+  Tr = T_K/T_c   "reduced temperature [-]"
+  rho = DENSITY('R1233zd(E)', T = T, P = P)   "density of R1233zd(E) [kg/m^3]"
+  rr = rho/rho_c   "reduced density [-]"
+
+  k_0 = A_0 + A_1*Tr + A_2*Tr^2   "dilute-gas contribution [W/m-K]"
+  dk_1 = (B_11 + B_12*Tr)*rr   "residual contribution, power 1 [W/m-K]"
+  dk_2 = (B_21 + B_22*Tr)*rr^2   "residual contribution, power 2 [W/m-K]"
+  dk_3 = (B_31 + B_32*Tr)*rr^3   "residual contribution, power 3 [W/m-K]"
+  dk_4 = (B_41 + B_42*Tr)*rr^4   "residual contribution, power 4 [W/m-K]"
+  dk_5 = (B_51 + B_52*Tr)*rr^5   "residual contribution, power 5 [W/m-K]"
+  dk_6 = (B_61 + B_62*Tr)*rr^6   "residual contribution, power 6 [W/m-K]"
+
+  conductivity_R1233zd_published = k_0 + dk_1 + dk_2 + dk_3 + dk_4 + dk_5 + dk_6   "thermal conductivity [W/m-K]"
+END
+
+"!=============================================================================
+ Demonstration program. It is ignored by the future
+ $INCLUDE library:r1233zd_thermal_conductivity (CS-FEAT-IMPORT).
+ Cases A and B are the two state points of Table 2 of the paper (given there as
+ a temperature and a density; the pressure is the one of R1233zd(E) at that
+ temperature and density, converted for the property functions). Cases C to F
+ are states of a heat-pump cycle working with R1233zd(E): evaporator outlet,
+ evaporator inlet, condenser outlet and condenser inlet.
+ The two functions are evaluated at each state; k_published is the published
+ correlation, k_ltp the coefficient set of the original (the difference is
+ tabulated in README.md).
+============================================================================="
+
+"Case A - Table 2 of the paper: T = 300 K, rho = 1308.8 kg/m^3 (liquid), k = 0.091399 W/m-K"
+T_A = 26.85   "temperature of case A [C] (300.00 K in the paper)"
+P_A = 1.99864E7   "pressure of case A [Pa] (R1233zd(E) at 300 K and 1308.8 kg/m^3)"
+k_A = conductivity_R1233zd(T_A, P_A)   "thermal conductivity [W/m-K]"
+k_published_A = conductivity_R1233zd_published(T_A, P_A)   "thermal conductivity, published coefficients [W/m-K]"
+rho_A = DENSITY('R1233zd(E)', T = T_A, P = P_A)   "density of case A [kg/m^3]"
+
+"Case B - Table 2 of the paper: T = 445 K, rho = 168.52 kg/m^3, k = 0.026141 W/m-K"
+T_B = 171.85   "temperature of case B [C] (445.00 K in the paper)"
+P_B = 3.00028E6   "pressure of case B [Pa] (R1233zd(E) at 445 K and 168.52 kg/m^3)"
+k_B = conductivity_R1233zd(T_B, P_B)   "thermal conductivity [W/m-K]"
+k_published_B = conductivity_R1233zd_published(T_B, P_B)   "thermal conductivity, published coefficients [W/m-K]"
+rho_B = DENSITY('R1233zd(E)', T = T_B, P = P_B)   "density of case B [kg/m^3]"
+
+"Case C - evaporator outlet: 5 C at 1 bar"
+T_C = 5
+P_C = 1E5
+k_C = conductivity_R1233zd(T_C, P_C)   "thermal conductivity [W/m-K]"
+k_published_C = conductivity_R1233zd_published(T_C, P_C)   "thermal conductivity, published coefficients [W/m-K]"
+
+"Case D - evaporator inlet: 0 C at 1 bar"
+T_D = 0
+P_D = 1E5
+k_D = conductivity_R1233zd(T_D, P_D)   "thermal conductivity [W/m-K]"
+k_published_D = conductivity_R1233zd_published(T_D, P_D)   "thermal conductivity, published coefficients [W/m-K]"
+
+"Case E - condenser outlet: 40 C at 10 bar"
+T_E = 40
+P_E = 1E6
+k_E = conductivity_R1233zd(T_E, P_E)   "thermal conductivity [W/m-K]"
+k_published_E = conductivity_R1233zd_published(T_E, P_E)   "thermal conductivity, published coefficients [W/m-K]"
+
+"Case F - condenser inlet: 25 C at 10 bar"
+T_F = 25
+P_F = 1E6
+k_F = conductivity_R1233zd(T_F, P_F)   "thermal conductivity [W/m-K]"
+k_published_F = conductivity_R1233zd_published(T_F, P_F)   "thermal conductivity, published coefficients [W/m-K]"

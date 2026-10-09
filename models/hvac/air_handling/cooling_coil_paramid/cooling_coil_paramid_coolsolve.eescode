@@ -1,0 +1,166 @@
+{=============================================================================
+  Cooling coil parameter identification model (PARAMID reference, wet regime)
+  CoolSolve Library model CSL-0163 - runnable variant cooling_coil_paramid_coolsolve
+ -----------------------------------------------------------------------------
+  One measured wet-regime point identifies the parameters of a cooling coil:
+  a one-zone counter-flow heat exchanger described in the wet regime only.
+  AU is the series of the air-side convective, metal and refrigerant
+  (brine)-side resistances; the air is a fictitious perfect gas fixed by the
+  wet-bulb temperature (Lebrun et al., 1990) and the exhaust air state
+  follows from a fictitious semi-isothermal exchanger at the contact
+  temperature (ASHRAE 2000). The nominal flows are the measured ones and the
+  imposed ratios ratio_R_a_r, ratio_R_m_a let the measured capacity fix the
+  resistances; the computed exhaust air state is compared with the
+  measurement.
+
+  Source: ULiège model bank (Laborelec toolkit lineage), cooling coil PARAMID
+  reference model, 21 March 2008, V. Lemort and J. Lebrun - see README.md.
+  License: MIT. Status of the variant: verified against the EES stored
+  solution (the native file is blocked, see the gaps above).
+=============================================================================}
+
+{Variant: runnable variant of the blocked native file (see README.md, conversion log). Changes, all forced by a CoolSolve gap and logged there: (1) the variables K|star_r_n and K|star_r of the original are renamed Kstar_r_n and Kstar_r (CS-GAP-NAME-PIPE); (2) the six CALL BRINEPROP(...) library calls (two in the measurement reduction, four in the thermal resistances) are replaced by the six brine properties stored by EES for the default operating point, because the Brineprop procedure is a USERLIB library procedure reading binary .lkt tables (CS-GAP-INCLUDE) and the original calls return expressions, c_p/1000 and mu*1000 (CS-GAP-CALL-EXPR-OUT); in this variant the brine properties therefore do not vary with conc_r or t_r_su_coil_meas. No other equation, name or value changes.}
+
+"!Nomenclature (as in the original)"
+"AU_coil       Global heat transfer coefficient [W/K]"
+"C_dot         Capacity flow rate [W/K]"
+"conc_r        Concentration of propylene or ethylene glycol [%]"
+"c_p           Specific heat [J/kg-K]"
+"Kstar        Thermal properties coefficient [(m.s)^(m-1).J/kg^m/K]"
+"M_dot         Mass flow rate [kg/s]"
+"NTU           Number of transfer units [-]"
+"Q_dot         Thermal power [W]"
+"R             Thermal resistance [K/W]"
+"refrigerant$  Nature of the refrigerant (string variable)"
+"RH            Relative humidity [-]"
+"SHR           Sensible heat ratio [-]"
+"t             Temperature [°C]"
+"v             Specific volume [m^3/kg]"
+"W             Specific humidity [kg water/kg dry air]"
+"epsilon       Effectiveness [-]"
+"mu            Dynamic viscosity [Pa.s]"
+"omega         Capacity flow rate ratio [-]"
+"rho           Density [kg/m^3]"
+
+"!References (as in the original)"
+"[1] ASHRAE. 2000. 2000 ASHRAE handbook-HVAC Systems and Equipment, Chapter 21. Atlanta: ASHRAE"
+"[2] Incropera, F.P., D.P. DeWitt (2002) Fundamentals of Heat and Mass Transfer, Fifth Edition, John Wiley & Sons"
+"[3] Lebrun, J., X. Ding, J.-P. Eppe, and M. Wasacz. 1990. Cooling Coil Models to be used in Transient and/or Wet Regimes. Theoretical Analysis and Experimental Validation. Proceedings of SSB 1990, Liège:405-441."
+
+"!Disclaimer of the original: the accuracy or reliability of information presented in this model is not guaranteed or warranted in any way. This model is freely distributed and may not be sold or distributed for commercial purpose. The user is asked to cite his sources and the origin of this model."
+
+"!1. MEASURED OPERATING POINT (inputs of the original, entered in its diagram window; stored run)"
+P_atm_meas = 101300           "measured atmospheric pressure [Pa]"
+t_a_su_coil_meas = 27.8       "measured supply air dry bulb temperature [°C]"
+t_wb_su_coil_meas = 19.2      "measured supply air wet bulb temperature [°C]"
+t_r_su_coil_meas = 6.7        "measured supply refrigerant temperature [°C]"
+t_r_ex_coil_meas = 12.1       "measured exhaust refrigerant temperature [°C]"
+M_dot_r_coil_meas = 1.86      "measured refrigerant mass flow rate [kg/s]"
+t_a_ex_coil_meas = 12.5       "measured exhaust air dry bulb temperature [°C]"
+t_wb_ex_coil_meas = 12.2      "measured exhaust air wet bulb temperature [°C]"
+
+"!2. IMPOSED PARAMETERS (diagram window of the original)"
+ratio_R_a_r = 1.1             "ratio between the nominal air-side and refrigerant-side resistances [-]"
+ratio_R_m_a = 0.05            "ratio between the metal resistance and the nominal air-side resistance [-]"
+refrigerant$ = 'EG'           "nature of the secondary refrigerant: 'EG' or 'PG'"
+conc_r = 35                   "concentration of the secondary refrigerant [%]"
+
+"!3. MEASUREMENT REDUCTION (as in the original 4.1; BRINEPROP calls replaced by the stored brine properties)"
+rho_r_coil_meas = 1051.096386  "BRINEPROP('Density','EG',35,6.7) in the original, value stored by EES [kg/m^3]"
+c_p_r_coil_meas = 3578.654952  "BRINEPROP('SpecHeat','EG',35,6.7)/1000 in the original, value stored by EES [J/kg-K]"
+M_dot_r_coil_meas=V_dot_r_coil_meas*rho_r_coil_meas "[kg/s]"
+C_dot_r_coil_meas = M_dot_r_coil_meas * c_p_r_coil_meas
+Q_dot_coil_meas=C_dot_r_coil_meas*(t_r_ex_coil_meas-t_r_su_coil_meas)
+h_a_ex_coil_meas=enthalpy(airH2O,P=P_atm,b=t_wb_ex_coil_meas,t=t_a_ex_coil_meas)
+Q_dot_coil_meas=M_dot_a_coil_meas*(h_a_su_coil-h_a_ex_coil_meas) "calculation of M_dot_a_coil_meas"
+v_a_ex_coil_meas=volume(AIRH2O,T=t_a_ex_coil,P=P_atm,b=t_wb_ex_coil_meas)
+Q_dot_sens_coil_meas=C_dot_a_coil_meas*(t_a_su_coil_meas-t_a_ex_coil_meas)
+C_dot_a_coil_meas = M_dot_a_coil_meas * c_p_a_coil_meas
+c_p_a_coil_meas = specheat(AIRH2O,T=t_a_su_coil_meas ,P=P_atm_meas ,B=t_wb_su_coil_meas)
+Q_dot_lat_coil_meas=Q_dot_coil_meas-Q_dot_sens_coil_meas
+SHR_meas=Q_dot_sens_coil_meas/Q_dot_coil_meas
+
+"!4. CONNECTIONS BETWEEN THE MEASUREMENTS AND THE COIL MODEL (as in the original 4.2)"
+t_a_su_coil=t_a_su_coil_meas
+t_wb_su_coil=t_wb_su_coil_meas
+P_atm=P_atm_meas
+t_r_su_coil=t_r_su_coil_meas
+t_r_ex_coil=t_r_ex_coil_meas
+M_dot_r_coil=M_dot_r_coil_meas
+M_dot_a_coil=M_dot_a_coil_meas
+
+"!5. THERMAL RESISTANCES (as in the original 4.3; BRINEPROP calls replaced by the stored brine properties)"
+rho_r_coil = 1051.096386     "BRINEPROP('Density','EG',35,6.7) in the original, value stored by EES [kg/m^3]"
+c_p_r_coil = 3578.654952     "BRINEPROP('SpecHeat','EG',35,6.7)/1000 in the original, value stored by EES [J/kg-K]"
+mu_r_coil = 0.003850610191   "BRINEPROP('Dynvisc','EG',35,6.7)*1000 in the original, value stored by EES [Pa.s]"
+k_r_coil = 0.4332900778      "BRINEPROP('thermalc','EG',35,6.7) in the original, value stored by EES [W/m-K]"
+R_a_coil = R_a_coil_n *  (M_dot_a_coil_n / M_dot_a_coil)^0.6  "laminar flow between flat plates"
+R_r_coil = R_r_coil_n *Kstar_r_n/Kstar_r*(M_dot_r_coil_n / M_dot_r_coil)^m  "turbulent flow in circular tube"
+m=0.8   "exponent in the Dittus Boelter relationship (Incropera and DeWitt, 2002)"
+n=0.3   "idem"
+Kstar_r=mu_r_coil^(n-m)*k_r_coil^(1-n)*c_p_r_coil^n  "variation of refrigerant side resistance with refrigerant properties"
+M_dot_a_coil_n=M_dot_a_coil  "the nominal flows are the measured ones"
+M_dot_r_coil_n=M_dot_r_coil
+Kstar_r_n=Kstar_r
+ratio_R_a_r=R_a_coil_n/R_r_coil_n
+ratio_R_m_a=R_m_coil/R_a_coil_n
+
+"!6. COIL EFFECTIVENESS (as in the original 4.4)"
+c_p_a_coil = specheat(AIRH2O,T=t_a_su_coil ,P=P_atm ,B=t_wb_su_coil)
+R_af_coil  = R_a_coil * c_p_a_coil / c_p_af_coil
+1 / AU_coil = R_af_coil + R_m_coil + R_r_coil
+C_dot_r_coil = M_dot_r_coil * c_p_r_coil
+C_dot_af_coil  = M_dot_a_coil * c_p_af_coil
+C_dot_min_coil_wet = min ( C_dot_af_coil , C_dot_r_coil )
+C_dot_max_coil_wet = max ( C_dot_af_coil , C_dot_r_coil )
+NTU_coil_wet = AU_coil / C_dot_min_coil_wet
+omega_coil_wet = C_dot_min_coil_wet / C_dot_max_coil_wet
+epsilon_coil_wet = ( 1 - exp ( -NTU_coil_wet * ( 1 - omega_coil_wet ) ) ) / ( 1 - omega_coil_wet * exp ( -NTU_coil_wet * ( 1 - omega_coil_wet ) ) )
+
+"!7. COIL CAPACITY (as in the original 4.5)"
+Q_dot_coil = epsilon_coil_wet * C_dot_min_coil_wet * ( t_wb_su_coil - t_r_su_coil )
+
+"!8. HEAT BALANCE ON THE AIR SIDE (as in the original 4.6)"
+
+"8.1. Supply air status"
+t_wb_su_coil = wetbulb(AIRH2O,T=t_a_su_coil,P=P_atm,R=RH_su_coil)
+h_a_su_coil = enthalpy(AIRH2O,T=t_a_su_coil,P=P_atm,B = t_wb_su_coil)
+t_dp_su_coil = dewpoint(AIRH2O,T=t_a_su_coil,P=P_atm,w=W_su_coil)
+v_a_su_coil=volume(AIRH2O,T=t_a_su_coil,P=P_atm,R=RH_su_coil)
+W_su_coil = humrat(AIRH2O,T=t_a_su_coil,P=P_atm,R=RH_su_coil)
+
+"8.2. Definition of fictitious air (Merkel theory, Lewis = 1 as in the original)"
+Q_dot_coil = M_dot_a_coil * ( ( h_a_su_coil - h_a_ex_coil  ) - ( W_su_coil - W_ex_coil  ) * c_w_coil * t_w_coil )
+Q_dot_coil = C_dot_af_coil * ( t_wb_su_coil - t_wb_ex_coil )
+
+"8.3. Exhaust air status (fictitious semi-isothermal contact surface)"
+C_dot_a_coil = M_dot_a_coil * c_p_a_coil
+epsilon_c_coil = 1 - exp ( -NTU_c_coil )
+NTU_c_coil= 1 / ( R_a_coil * C_dot_a_coil )
+h_c_coil = enthalpy(AIRH2O,T=t_c_coil,P=P_atm,R = 1 )
+W_c_coil= humrat ( AIRH2O , t = t_c_coil , P = P_atm,  R = 1 )
+h_a_su_coil - h_a_ex_coil = epsilon_c_coil * ( h_a_su_coil - h_c_coil )
+W_su_coil - W_ex_coil = epsilon_c_coil * ( W_su_coil - W_c_coil)
+RH_ex_coil = relhum(AIRH2O,T=t_a_ex_coil,P=P_atm,w=W_ex_coil)
+h_a_ex_coil = enthalpy(AIRH2O,T=t_a_ex_coil,P=P_atm,w=W_ex_coil)
+t_wb_ex_coil=wetbulb(airH2O,P=P_atm,T=T_a_ex_coil,w=w_ex_coil)
+v_a_ex_coil=volume(AIRH2O,T=t_a_ex_coil,P=P_atm,w=w_ex_coil)
+
+"8.4. Total, latent and sensible load"
+Q_dot_sens_coil=C_dot_a_coil*(t_a_su_coil-t_a_ex_coil)
+Q_dot_lat_coil=Q_dot_coil-Q_dot_sens_coil
+SHR=Q_dot_sens_coil/Q_dot_coil
+
+"8.5. Condensate"
+M_dot_w_coil = M_dot_a_coil * ( W_su_coil - W_ex_coil )
+c_w_coil = 4187  "specific heat of the condensate [J/kg-K]"
+t_w_coil = t_c_coil  "temperature of the condensate [°C]"
+
+"!9. HEAT BALANCE ON THE REFRIGERANT SIDE (as in the original 4.7)"
+Q_dot_coil=C_dot_r_coil*(t_r_ex_coil-t_r_su_coil)
+
+"!OUTPUTS (identified parameters, to be compared with the measurements)"
+"R_a_coil_n, R_r_coil_n, R_m_coil : identified nominal resistances [K/W]"
+"M_dot_a_coil_n, M_dot_r_coil_n, Kstar_r_n : nominal flows and properties coefficient"
+"t_a_ex_coil [°C], t_wb_ex_coil [°C] : exhaust air state computed by the model"
+"Q_dot_coil, Q_dot_sens_coil, Q_dot_lat_coil [W], SHR [-], M_dot_w_coil [kg/s]"

@@ -1,0 +1,107 @@
+{=============================================================================
+  Engine derating according to ISO 3046/1 (ambient pressure, temperature)
+  CoolSolve Library model CSL-0151 (native file)
+-----------------------------------------------------------------------------
+  Derating of an engine between the ISO 3046/1 reference conditions and the
+  site conditions: correction factor K from the dry atmospheric-pressure,
+  absolute intake-air-temperature and coolant-temperature ratios (factor a,
+  exponents m, n, s of the ISO table), derating factor
+  alpha = K - 0.7*(1-K)*(1/eta_m - 1), site shaft power
+  W_dot_sh_x = W_dot_sh_ref*alpha. FUNCTION patm gives the atmospheric
+  pressure from the altitude; the water-vapour saturation pressure comes from
+  the STEAM tables. Two exercises (naturally aspirated Diesel, 372 kW on
+  site; supercharged aftercooled engine, 1000 kW catalogue) are selected by
+  the $if directive on Exercice$ (README.md).
+
+  Native EES syntax ($if selection, accented variable names): does NOT run in
+  CoolSolve yet (CS-GAP-IF-DIRECTIVE, CS-GAP-ACCENTED-IDENT); the runnable
+  variant engine_derating_iso3046_coolsolve.eescode resolves the branches to
+  the stored run (exercise 1), verified against the EES stored solution.
+=============================================================================}
+
+FUNCTION patm(Altitude)
+h = Altitude
+patm = (101.248815 - 0.0118062234*h + 4.72680601E-07*h^2)*1000   "atmospheric pressure [Pa] (kPa in the original, x1000)"
+END
+
+"!Engine derating according to ISO 3046/1"
+W_dot_sh_x = W_dot_sh_réf*alpha   "alpha <= 1"
+
+Exercice$ = '1'   "1 or 2"
+
+$IF Exercice$ = '1'
+
+"Naturally aspirated Diesel engine that must deliver 372 kW on site in the following ambient conditions:
+altitude 400 m, ambient temperature 45 °C and a relative humidity of the air of 80 %. The manufacturer
+gives a mechanical efficiency of 0.85."
+
+"Reference (standard) conditions"
+p_atm_réf = 100E3   "atmospheric pressure [Pa] (100 kPa in the original)"
+T_a_réf = 24.85   "intake air temperature [°C] (298 K in the original)"
+phi_a_réf = 30   "intake air relative humidity [%]"
+T_c_réf = 24.85   "coolant temperature [°C] (298 K in the original)"
+p_w_s_réf = pressure(STEAM,T=T_a_réf,x=1)   "saturation pressure of water vapour at the reference temperature [Pa]"
+T_réf = 273.15   "K/°C offset used for the absolute temperatures of the correction factor [K]"
+
+"Engine derating (see the table of the standard for the factor a and the exponents m, n and s)"
+alpha = K-0.7*(1-K)*(1/eta_m-1)
+K = ((p_atm_x - a*(phi_a_x/100)*p_w_s_x)/(p_atm_réf - a*(phi_a_réf/100)*p_w_s_réf))^m*((T_a_réf+T_réf)/(T_a_x+T_réf))^n*((T_c_réf+T_réf)/(T_c_x+T_réf))^s   "absolute temperatures [K]"
+
+"Engine power in the reference conditions"
+W_dot_sh_x = 372E3   "site shaft power [W] (372 kW in the original)"
+altitude = 400   "[m]"
+p_atm_x = patm(altitude)   "atmospheric pressure on site [Pa]"
+phi_a_x = 80   "relative humidity of the intake air [%]"
+eta_m = 0.85   "mechanical efficiency [-]"
+T_a_x = 45   "intake air temperature [°C]"
+p_w_s_x = pressure(STEAM,T=T_a_x,x=1)   "saturation pressure of water vapour at T_a_x [Pa]"
+"Naturally aspirated Diesel - power limited by the excess air according to ISO 3046/1"
+T_c_x = T_a_x   "just to give this variable a value since the engine is not supercharged (as in the original)"
+a = 1   "factor of the ISO 3046/1 table [-]"
+m = 1   "exponent of the ISO 3046/1 table [-]"
+n = 0.75   "exponent of the ISO 3046/1 table [-]"
+s = 0   "exponent of the ISO 3046/1 table [-]"
+{"Influence of the humidity of the air"
+Test_réf = (phi_a_réf/100)*p_w_s_réf
+Test_x = (phi_a_x/100)*p_w_s_x}   "as in the original (commented out)"
+$ENDIF
+
+$IF Exercice$ = '2'
+
+"Supercharged Diesel engine with cooling of the compressed air. It is rated 1000 kW by the manufacturer.
+The power it can deliver on site is asked for, in the following conditions: altitude 3000 m, ambient
+temperature 15 °C and a relative humidity of the air of 40 %. The manufacturer gives the following
+reference conditions: altitude 200 m, ambient temperature 27 °C, relative humidity 80 %, coolant
+temperature 45 °C and a mechanical efficiency of 0.87."
+
+"Reference conditions"
+Altitude_réf = 200   "[m]"
+p_atm_réf = patm(Altitude_réf)   "atmospheric pressure at the reference altitude [Pa]"
+T_a_réf = 27   "intake air temperature [°C]"
+phi_a_réf = 80   "intake air relative humidity [%]"
+T_c_réf = 45   "coolant temperature [°C]"
+p_w_s_réf = pressure(STEAM,T=T_a_réf,x=1)   "saturation pressure of water vapour in the reference conditions [Pa]"
+T_réf = 273.15   "K/°C offset [K]"
+W_dot_sh_réf = 1E6   "catalogue shaft power [W] (1000 kW in the original)"
+
+"Engine derating (see the table of the standard for the factor a and the exponents m, n and q)"
+alpha = K-0.7*(1-K)*(1/eta_m-1)
+K = ((p_atm_x - a*(phi_a_x/100)*p_w_s_x)/(p_atm_réf - a*(phi_a_réf/100)*p_w_s_réf))^m*((T_a_réf+T_réf)/(T_a_x+T_réf))^n*((T_c_réf+T_réf)/(T_c_x+T_réf))^s   "absolute temperatures [K]"
+
+"Site power calculation"
+altitude_x = 3000   "[m]"
+p_atm_x = patm(altitude_x)   "atmospheric pressure on site [Pa]"
+phi_a_x = 40   "relative humidity of the intake air [%]"
+eta_m = 0.87   "mechanical efficiency [-]"
+T_a_x = 15   "intake air temperature [°C]"
+p_w_s_x = pressure(STEAM,T=T_a_x,x=1)   "saturation pressure of water vapour at T_a_x [Pa]"
+"Supercharged Diesel with charge-air cooling according to ISO 3046/1"
+T_c_x = 40   "see the manufacturer data [°C]"
+a = 0   "factor of the ISO 3046/1 table [-]"
+m = 0.7   "exponent of the ISO 3046/1 table [-]"
+n = 1.2   "exponent of the ISO 3046/1 table [-]"
+s = 1   "exponent of the ISO 3046/1 table [-]"
+{"Influence of the humidity of the air"
+Test_réf = (phi_a_réf/100)*p_w_s_réf
+Test_x = (phi_a_x/100)*p_w_s_x}   "as in the original (commented out)"
+$ENDIF

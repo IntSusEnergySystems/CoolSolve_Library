@@ -1,0 +1,76 @@
+{
+  "id": "CSL-0138",
+  "name": "hx_moving_boundary_bell",
+  "title": "Moving-boundary heat exchanger (Bell 2015), evaporator regime",
+  "summary": "Counter-flow heat exchanger with zones delimited by the phase changes (moving-boundary method of Bell 2015): clamped zone boundaries, per-zone UA and the Bell area constraint A = sum(Q_j/(U_j*LMTD_j)). Five oracle cases of increasing area solved simultaneously; the active zone set (1-3 zones) follows the operating point. Translation of the TESPy MovingBoundaryHeatExchanger.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "hx_moving_boundary_bell.eescode",
+  "fluids": [
+    "Water",
+    "Propane"
+  ],
+  "tags": [
+    "heat exchanger",
+    "evaporator",
+    "moving boundary",
+    "phase change",
+    "zone UA",
+    "area constraint",
+    "bell2015",
+    "oracle-validated"
+  ],
+  "language_features": [
+    "DUPLICATE",
+    "user FUNCTION",
+    "MIN/MAX",
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 124,
+    "largest_block": 18
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/src/tespy/components/heat_exchangers/sectioned.py",
+    "candidate_id": "TSP-014",
+    "authors": [
+      "Francesco Witte",
+      "Ilja Tuschy",
+      "Ian Bell",
+      "Sylvain Quoilin",
+      "Vincent Lemort"
+    ],
+    "url": "https://github.com/oemof/tespy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en"
+  },
+  "verification": {
+    "reference": "Bell 2015 oracle tests/test_components/bell2015_five_cases.json (section A, 5 cases), re-generated with the local TESPy clone (commit 19425523) in a throw-away venv: pytest tests/test_components/test_bell2015_oracle.py -> 7 passed",
+    "date": "2026-10-09",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.000144,
+    "notes": "Over Q, T_h_out, T_c_out of the five cases: max |dQ| = 0.0144 % (tolerance 0.1 %), max |dT| = 0.0327 K (tolerance 0.5 K). Case 5 (effectiveness 0.999999) has the largest deviation. CoolProp 'n-Propane' maps to EES 'Propane'; temperatures converted K -> degC by hand, enthalpies untouched."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0008",
+    "CSL-0014",
+    "CSL-0112",
+    "CSL-0127"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-09",
+      "action": "added (T-TRANSLATE of TESPy MovingBoundaryHeatExchanger, verified vs the Bell 2015 oracle section A)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

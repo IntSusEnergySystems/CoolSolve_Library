@@ -1,0 +1,83 @@
+{
+  "id": "CSL-0163",
+  "name": "cooling_coil_paramid",
+  "title": "Cooling coil parameter identification model (PARAMID reference, wet regime)",
+  "summary": "Parameter identification of a cooling and dehumidifying coil from one measured wet-regime point (ULiège model bank PARAMID reference): a one-zone counter-flow exchanger whose conductance AU is the series of the air-side, metal and brine-side resistances; the fictitious wet-bulb gas and the semi-isothermal contact surface reproduce the measured capacity and exhaust air state, and the imposed resistance ratios fix the identified nominal resistances.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "cooling_coil_paramid.eescode",
+  "fluids": [
+    "AirH2O"
+  ],
+  "tags": [
+    "cooling coil",
+    "air handling",
+    "dehumidification",
+    "parameter identification",
+    "wet regime",
+    "wet bulb",
+    "contact temperature",
+    "fictitious perfect gas",
+    "secondary refrigerant",
+    "brine",
+    "ethylene glycol",
+    "reference model"
+  ],
+  "language_features": [
+    "library procedure call (Brineprop)",
+    "expression as CALL output (c_p/1000, mu*1000)",
+    "pipe character in variable names (K|star)",
+    "humid-air properties with the (T,B) wet-bulb input pair",
+    "implicit inversion of a property call (RH_su_coil)",
+    "min/max"
+  ],
+  "stats": {
+    "n_equations": 82,
+    "largest_block": 24
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/AHU_Components/Cooling_Coil/COOLINGCOIL_PARAMID_REFERENCE_MODEL_VL080321.zip!/COOLINGCOIL_PARAMID_REFERENCE_EES_MODEL_VL080321.EES",
+    "candidate_id": "TM-0470",
+    "authors": [
+      "Vincent Lemort (ULiège Thermodynamics Laboratory)",
+      "Jean Lebrun (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en",
+    "course": "ULiège model bank (Laborelec toolkit lineage), cooling coil parameters identification model, 2008-01-16; theory published as Lemort, Cuevas, Lebrun, Teodorese, ASHRAE Transactions 114(1), 2008"
+  },
+  "verification": {
+    "reference": "EES stored solution in the source file (93 records, 80 with a value; 92 decoded by the tool, one hand-decoded from the binary) against the runnable variant cooling_coil_paramid_coolsolve.eescode; the native file cannot be solved (CS-GAP-NAME-PIPE, CS-GAP-INCLUDE, CS-GAP-CALL-EXPR-OUT)",
+    "date": "2026-10-09",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.0105,
+    "notes": "79 common variables, 23 differ above rtol=0.001, maximum relative difference 1.05e-02 (M_dot_w_coil, proportional to the difference W_su_coil - W_ex_coil of two humidity ratios, +1.30 % on the difference). All 23 deviations (1.45e-03 to 1.05e-02) come from the EES and CoolProp humid-air formulations (W_su_coil 5.52e-03, h_a_su_coil 2.22e-03, W_ex_coil 4.17e-03), as in the other humid-air models of the library (CSL-0074 4.8e-03, CSL-0070 4.4e-03). Q_dot_coil closes exactly on the brine side; the identified resistances agree to 6.0e-04 and AU_coil to 3.2e-05. The parametric Table 2 (3335x2) of the file is a leftover artifact (smooth R_a_coil sweep not containing the stored value; sparse junk k column) and is not used."
+  },
+  "missing_features": [
+    "CS-GAP-NAME-PIPE",
+    "CS-GAP-INCLUDE",
+    "CS-GAP-CALL-EXPR-OUT"
+  ],
+  "related": [
+    "CSL-0073",
+    "CSL-0074",
+    "CSL-0079",
+    "CSL-0017",
+    "CSL-0162"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-09",
+      "action": "added",
+      "by": "opencode worker (t161) for S. Quoilin"
+    }
+  ]
+}

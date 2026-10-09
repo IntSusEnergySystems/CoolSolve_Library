@@ -1,0 +1,83 @@
+{
+  "id": "CSL-0158",
+  "name": "gas_pipe_insulated_pressure_drop",
+  "title": "Gas pipe pressure drop and heat gain with insulation and fittings (R717)",
+  "summary": "Insulated R717 gas line of the Laborelec 2002 toolkit: heat gain from ambient air (internal Nusselt correlation, insulation cylinder, external convection, dew point), Colebrook-White friction drop, fitting K-factor drops from a nearest-diameter table and an equivalent nozzle area identified from the total pressure drop.",
+  "kind": "steady",
+  "level": 3,
+  "status": "blocked",
+  "main_file": "gas_pipe_insulated_pressure_drop.eescode",
+  "fluids": [
+    "R717",
+    "AirH2O"
+  ],
+  "tags": [
+    "pressure drop",
+    "pipe flow",
+    "insulation",
+    "heat gain",
+    "Colebrook-White",
+    "fittings",
+    "R717",
+    "refrigeration line"
+  ],
+  "language_features": [
+    "PROCEDURE/CALL with array transfer",
+    "string variables",
+    "lookup tables (external .LKT, decoded by hand)",
+    "REPEAT-UNTIL"
+  ],
+  "stats": {
+    "n_equations": 107,
+    "largest_block": 10
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/4_Pressure Drop/4_2_Gas Pipes/Gas Pipe/Gas_Pipe_Pressure_Drop.EES",
+    "candidate_id": "TM-0312",
+    "authors": [
+      "Felipe Trebilcock (ULiege Thermodynamics Lab, Dec 2002, for Laborelec)",
+      "J. Lebrun (reviewer)",
+      "E. Winandy (reviewer)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X6.596",
+    "language": "en",
+    "course": "Laborelec refrigeration-line sizing toolkit (ULiege Thermodynamics Laboratory)"
+  },
+  "verification": {
+    "reference": "Solution stored in the EES file (52 variables; the runnable variant was verified against it, reference values converted kPa/kJ to Pa/J by hand)",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.0797,
+    "notes": "48 common variables, 44 within 6.2e-4. h_i/SP[2] 7.97e-2: EES-vs-CoolProp R717 enthalpy reference offset (differences unaffected); Pr 4.43e-2 and cp: stale procedure-local records of an older EES run; DELTAT_total 1.82e-3 (cp backend). Excluded: DELTAp_elbows/DELTAp_Tees (stale, inconsistent with the stored DpF), SP[6] (dead)."
+  },
+  "missing_features": [
+    "CS-GAP-LOOKUP-PROC",
+    "CS-GAP-ACCENTED-IDENT",
+    "CS-GAP-COLEBROOK",
+    "CS-GAP-STRINGPOS",
+    "CS-GAP-ARRAY-ARG",
+    "CS-BUG-PI-FUNCTION",
+    "CS-BUG-IMPLICIT-PROC",
+    "CS-BUG-LOOKUP-COLNAME"
+  ],
+  "related": [
+    "CSL-0018",
+    "CSL-0130"
+  ],
+  "related_external": [
+    "thermo_models TM-0309 (modeles/LABORELEC_2002/4_Pressure Drop/4_1_Liquid Pipes/Liquid Pipe/Liquid_Pipe_Pressure_Drop.EES, liquid-line variant, same procedures, not imported)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (roadmap card C-150, batch B-11): native file blocked, runnable _coolsolve variant verified against the EES stored solution",
+      "by": "opencode worker (glm-5.3-flash) for S. Quoilin"
+    }
+  ]
+}

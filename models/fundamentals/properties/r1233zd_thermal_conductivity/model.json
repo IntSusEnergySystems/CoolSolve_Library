@@ -1,0 +1,74 @@
+{
+  "id": "CSL-0132",
+  "name": "r1233zd_thermal_conductivity",
+  "title": "Thermal conductivity of R1233zd(E) - Perkins & Huber correlation",
+  "summary": "Two EES FUNCTIONs giving the thermal conductivity of R1233zd(E) from a temperature and a pressure as the sum of a dilute-gas term and a residual term: the coefficient set written in the original LaboThapPy function and the coefficient set of Table 1 of Perkins & Huber (2017), which differ by 8-17 %. The density comes from the built-in R1233zd(E) property functions. Demonstrated at the two state points published in Table 2 of the paper and at four heat-pump states of this fluid.",
+  "kind": "function",
+  "level": 1,
+  "status": "verified",
+  "main_file": "r1233zd_thermal_conductivity.eescode",
+  "fluids": [
+    "R1233zd(E)"
+  ],
+  "tags": [
+    "thermal conductivity",
+    "transport property",
+    "R1233zd(E)",
+    "refrigerant",
+    "correlation",
+    "function library",
+    "translation",
+    "ORC",
+    "heat pump"
+  ],
+  "language_features": [
+    "functions",
+    "property functions",
+    "string literals"
+  ],
+  "stats": {
+    "n_equations": 26,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/correlations/properties/thermal_conductivity.py",
+    "candidate_id": "LTP-048",
+    "authors": [
+      "R. A. Perkins (thermal conductivity correlation, J. Chem. Eng. Data 62:2659-2665, 2017)",
+      "M. L. Huber (thermal conductivity correlation, J. Chem. Eng. Data 62:2659-2665, 2017)",
+      "Elise Neven (LaboThapPy thermal_conductivity.py)",
+      "Basile Chaudoir (LaboThapPy contributor)"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en"
+  },
+  "verification": {
+    "reference": "Re-run of the original LaboThapPy conducticity_R1233zd in a throw-away virtual environment (work/r1233zd_cond, pip install ~/git/LaboThapPy, CoolProp 8.0.0) at the six demonstration states, plus the two state points of Table 2 of Perkins & Huber, J. Chem. Eng. Data 62(9):2659-2665, 2017",
+    "date": "2026-10-09",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.0,
+    "notes": "compare_solution.py against the re-run of the original function: 8 common variables, 0 differ (rtol=0.001); only in EES: 4; only in CoolSolve: 18. The eight values are bit-identical at the printed precision (same arithmetic, same CoolProp density backend). The four variables only in the reference (rho_C, rho_D, rho_E, rho_F) are densities the reference script prints but the demonstration program does not store. Physics check against the paper: conductivity_R1233zd_published gives 0.091346 W/m-K at 300 K / 1308.8 kg/m3 (published 0.091399, -0.06 %); at 445 K / 168.52 kg/m3 it gives 0.023992 against the published 0.026141 (-8.22 %), the difference being the critical enhancement neither function implements. The coefficient set of the original does not reproduce the paper: +8.35 % at 300 K / 1308.8 kg/m3 and +16.66 % at 445 K / 168.52 kg/m3. The CoolProp revision bundled with this CoolSolve build (8.1.0-dev) now ships a conductivity model for R1233zd(E) from the same paper, so CONDUCTIVITY('R1233zd(E)',...) evaluates and agrees with conductivity_R1233zd_published to 0.1 % in the liquid; the inventory note that CoolProp has none was verified with 7.2.0/8.0.0 (PropsSI('L',...) raises) but no longer holds for the bundled backend."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0131",
+    "CSL-0130",
+    "CSL-0121"
+  ],
+  "related_external": [
+    "Perkins & Huber (2017), Table 1 coefficients and Table 2 data, reproduced in the CoolProp transport block of dev/fluids/R1233zd(E).json"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-09",
+      "action": "added (T-FUNC card C-177 of batch B-12; candidate LTP-048; verified vs the re-run of the original function)",
+      "by": "opencode worker (space-bunny) for S. Quoilin"
+    }
+  ]
+}

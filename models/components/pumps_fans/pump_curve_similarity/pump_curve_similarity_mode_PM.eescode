@@ -1,0 +1,70 @@
+{=============================================================================
+  Centrifugal pump from manufacturer curves + similarity laws (mode P_M)
+  CoolSolve Library model CSL-0125 - variant mode_PM
+-----------------------------------------------------------------------------
+  Variant of pump_curve_similarity.eescode for mode P_M of the LaboThapPy
+  component PumpCurveSimilarity: suction and discharge pressures and the mass
+  flow rate are given, the rotational speed that makes the affinity-scaled
+  head curve match the required head is computed. Only the choice of the
+  unknowns changes (P_N mode: flow rate; M_N mode: discharge pressure); the
+  curves, the similarity laws and the thermodynamics are identical.
+
+  Inputs : fluid$, P_su, T_su, P_ex, m_dot, N_rot_rated
+           (curves read from the table 'pump_curves', rated speed)
+  Outputs: N_rot, V_dot, Delta_H, eta_is, NPSH_r, h_ex, W_dot_hyd, W_dot_shaft
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J; curves in
+           m3/h and m, speed in rpm (as in the original)
+  Source : LaboThapPy, PumpCurveSimilarity by B. Chaudoir, E. Neven - see README.md
+=============================================================================}
+
+"Inputs (CO2 case of the original example, mode P_M)"
+fluid$ = 'R744'               "pump fluid: CoolProp 'CO2' maps to EES 'R744', the real fluid; bare 'CO2' is the ideal-gas species in EES"
+T_su = 9.19364983582685       "suction temperature: 283.34364983582685 K - 1 K - 273.15 K in the original [C]"
+P_su = 4559550.900413511      "suction pressure [Pa]"
+P_ex = 15254008.433412187     "discharge pressure [Pa]"
+m_dot = 297.8817290783        "mass flow rate, mass flow rate of the mode P_N run of the same curves [kg/s]"
+N_rot_rated = 2900            "rated speed of the manufacturer curves [rpm]"
+g = 9.81                      "gravitational acceleration, value of the original [m/s2]"
+
+"!Suction state (incompressible fluid approximation for the head, as in the original)"
+rho_su = DENSITY(fluid$, T=T_su, P=P_su)   "suction density [kg/m3]"
+h_su = ENTHALPY(fluid$, T=T_su, P=P_su)   "suction enthalpy [J/kg]"
+s_su = ENTROPY(fluid$, T=T_su, P=P_su)    "suction entropy [J/kg-K]"
+
+"!Volumetric flow rate and head required by the pressure rise"
+V_dot = m_dot/rho_su*3600                 "volumetric flow rate [m3/h]"
+DP = P_ex - P_su                           "pressure rise [Pa]"
+H_required = DP/(g*rho_su)                 "head required by the pressure rise [m]"
+
+"!Operating point: N_rot is the unknown. The residual head_error(N_rot) of the
+ original (head of the similarity-scaled curve minus the required head = 0) is
+ rearranged into one implicit equation: head of the scaled curve, read at the
+ equivalent flow rate V_dot*N_rot_rated/N_rot, equals H_required/(N_rot/N_rot_rated)^2."
+N_rot = N_rot_rated*SQRT(H_required/INTERPOLATE('pump_curves', 'V_dot_rated', 'Delta_H_rated', V_dot*N_rot_rated/N_rot))   "pump rotational speed [rpm]"
+
+"!Similarity laws: speed ratio to the rated speed of the curves"
+N_ratio = N_rot/N_rot_rated                 "speed ratio [-]"
+Delta_H = H_required                        "head rise at the operating point [m]"
+
+"!Isentropic efficiency and required NPSH: curves of the rated speed read at the equivalent flow rate (NPSH_r ~ N^2)"
+eta_is = INTERPOLATE('pump_curves', 'V_dot_rated', 'eta_is_rated', V_dot/N_ratio)    "isentropic efficiency [-]"
+NPSH_r = N_ratio^2*INTERPOLATE('pump_curves', 'V_dot_rated', 'NPSH_r_rated', V_dot/N_ratio)  "required net positive suction head [m]"
+
+"!Discharge state and powers"
+h_ex_s = ENTHALPY(fluid$, P=P_ex, s=s_su)  "isentropic discharge enthalpy [J/kg]"
+h_ex = h_su + (h_ex_s-h_su)/eta_is         "discharge enthalpy [J/kg]"
+T_ex = TEMPERATURE(fluid$, h=h_ex, P=P_ex)  "discharge temperature [C]"
+W_dot_hyd = g*H_required*m_dot             "ideal hydraulic power [W]"
+W_dot_shaft = m_dot*(h_ex-h_su)            "shaft power [W]"
+
+"!Pump path for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: suction, 2: discharge. Use the arrays h[i]/P[i] or s[i]/T[i] with the
+ "Overlay array path" option of the CoolSolve Diagram tab.}
+P[1] = P_su
+h[1] = h_su
+T[1] = T_su
+s[1] = s_su
+P[2] = P_ex
+h[2] = h_ex
+T[2] = T_ex
+s[2] = ENTROPY(fluid$, h=h_ex, P=P_ex)

@@ -319,3 +319,6 @@ of the library.
   `thermo_models` `TM-0485`, the parameter-identification model of the same fan
   (identification of the `alpha_i`/`beta_i` factors from catalogue points) —
   a different level of detail, to be imported as a separate model.
+- `CSL-0125` *pump_curve_similarity*: pump described by manufacturer curves
+  and scaled with the same affinity (similarity) laws, for a liquid and with
+  three operating modes (catalogue data instead of dimensionless factors).

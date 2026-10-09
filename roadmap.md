@@ -56,16 +56,20 @@ Refresh with `python3 tools/build_index.py` (models) and
   `backlog_stats.py` and the inventories.
 - **Last session (2026-10-07 18:30 → 2026-10-08 01:00):** glm-5.3-flash did the hard cards and, once the opencode
   free quota was exhausted (19:09, shared by all free models), all the rest; the supervisor is still up (`python3
-  ~/llm/scripts/oc-orch.py down` to stop it). Next free IDs: `CSL-0125`, card `C-137`.
+  ~/llm/scripts/oc-orch.py down` to stop it). Next free IDs: `CSL-0168`, card `C-194`.
+- **Queue (2026-10-09, glm-5.3-flash out until 2026-10-14):** space-bunny alone (one opencode worker at a time;
+  muse if bunny is unavailable) takes, in order: B-12 C-175 … C-182, C-184, C-185 (after C-180), C-186 … C-188,
+  C-189 [hard], C-190, C-191 (after C-184), C-192; then B-11 C-140, C-146, C-156, C-157; then the reviews C-139
+  (taxonomy, M2), C-160 (B-11), C-193 (B-12).
 - **Worker models, in order of priority** (details, benchmark and lessons:
   `~/Nextcloud/llm/opencode-model-comparison.md`):
   1. z.ai `glm-5.3-flash` — main worker, given the hardest cards (maintainer, 2026-10-07: **never the full
-     `glm-5.3`, only the flash model**); weekly z.ai limit (last reset 2026-10-07 09:25
-     CEST = 15:25 UTC+8);
+     `glm-5.3`, only the flash model**); weekly z.ai limit (exhausted again 2026-10-09, reset **2026-10-14 09:25
+     CEST** = 15:25 UTC+8; also a 5-hour window);
   2. opencode `space-bunny-free` — best free worker (`ht` cards in 6–30 min, honest
      verification); check its gap claims (C-85: two invalid gaps) and its inventory
      edits;
-  **Only one free model at a time (maintainer, 2026-10-07): space-bunny.** The free quota is an opencode account
+  **Only one opencode (free) worker at a time (maintainer, 2026-10-07/08): space-bunny or muse-spark.** The free quota is an opencode account
   limit shared by all free models (all five hit "Free usage exceeded" in the same minute on 2026-10-07), so the
   models below are replacements only, if bunny is unavailable:
   3. opencode `mimo-v2.6-flash-free`, `longcat-2.5-preview-free`,
@@ -663,6 +667,74 @@ skipped (duplicates and variants are frequent), and proposes the import cards C-
 [x] C-136 T-REVIEW     B-10                                                                                      — light scripted review (orchestrator)
 ```
 
+### B-11 — ULiège collection: remaining wave1/high candidates (Phase 3B) ☐
+
+22 representatives still `todo` at wave1/high (`modeles/` 12, model data bank 4, *machines et systèmes thermiques* 3,
+MCI 3). The planning card triages them against the library and proposes the import cards (from C-140), each tagged
+[hard] or [std] to route it: [hard] → glm-5.3-flash, [std] → the free worker (one opencode worker at a time,
+bunny or muse — maintainer, 2026-10-08). Worker notes: `~/llm/scripts/csl/b11_plan.txt` (plan),
+`~/llm/scripts/csl/b11_extra.txt` (imports from the ULiège collection).
+
+```
+[x] C-137 T-PLAN       thermo_models wave1/high (22)      → sources/thermo_models/                                 — triage vs the library and 22 rows: 20 todo / 2 merged → 20 cards C-140…C-159 (CSL-0148…0167; 15 [hard])
+[ ] C-140 T-IMPORT TM-0042 (DG-0006) → cycles/refrigeration_heat_pumps/scroll_volume_ratio_cycle_r134a — [std] scroll built-in volume ratio vs isentropic efficiency and cycle COP (R134a, saturated); verification: EES stored solution (5/30 vars, dup-group copies) — CSL-0148
+[x] C-141 T-IMPORT TM-0136 (DG-0029) → cycles/engines/gas_engine_complete_model — [hard] complete gas engine: throttle, carburettor, pressure drop, combustion, recuperator, water circuits (link CSL-0034); verification: EES stored solution (97/98) + external Lookup 1 — CSL-0149
+[x] C-142 T-IMPORT TM-0231 → fundamentals/combustion/adiabatic_flame_dissociation — [hard] CH4/fuel-oil adiabatic flame temperature with/without dissociation (built-in Chem_Equil/NASA → blocked expected); verification: EES stored solution (26/28) — CSL-0150
+[x] C-143 T-IMPORT TM-0235 → cycles/engines/engine_derating_iso3046 — [hard] engine derating per ISO 3046/1 (ambient P/T); verification: EES stored solution (17/17) — CSL-0151
+[x] C-144 T-IMPORT TM-0240 → components/compressors/turbocharger_combustion_products — [hard] turbocharger matching with combustion products (SUBPROGRAM flatten D10, cpbar lib → CSL-0005); verification: EES stored solution (109/111) — CSL-0152
+[x] C-145 T-IMPORT TM-0268 (DG-0122) → cycles/organic_rankine/orc_whr_refprop_cost — [hard] WHR ORC, scroll expander, REFPROP mixtures + cost model (CS-GAP-REFPROP → blocked; Thonon/Kuo/prop_htf → CSL-0113/0114/0121); verification: EES stored solution (386/386) — CSL-0153
+[ ] C-146 T-IMPORT TM-0270 (DG-0059) → energy_systems/economics/investment_npv_payback — [std] NPV and simple payback of energy-saving investments; verification: parametric table1 (23x2) + EES stored solution (297/297) — CSL-0154
+[x] C-147 T-IMPORT TM-0274 → cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump — [hard] reversible inverter air-to-water heat pump (Daikin Altherma type), 560 eq, SUBPROGRAM flatten; verification: EES stored solution (226/492) — CSL-0155
+[x] C-148 T-IMPORT TM-0277 (DG-0064) → components/compressors/refrigeration_screw_compressor_r22 — [hard] screw compressor reference model in an R22 cycle, full-load/part-load (kPa/kJ → convert); verification: EES stored solution (122/122) — CSL-0156
+[x] C-149 T-IMPORT TM-0282 (DG-0066) → components/compressors/reciprocating_catalogue_r717 — [hard] reciprocating compressor from catalogue data: RPM/part-load maps (R717, DUPLICATE ≈399 eq; Copeland kin → CSL-0123); verification: EES stored solution (645/645) — CSL-0157
+[x] C-150 T-IMPORT TM-0312 (DG-0073) → heat_transfer/pressure_drop/gas_pipe_insulated_pressure_drop — [hard] gas pipe pressure drop and heat gain: Colebrook, insulation, fittings (companion .LKT); verification: EES stored solution (52/52) — CSL-0158
+[x] C-151 T-IMPORT TM-0314 (DG-0124) → cycles/organic_rankine/orc_void_fraction_charge — [hard] low-temperature ORC (R134a) with void-fraction charge of the heat exchangers; verification: EES stored solution (298/299) — CSL-0159
+[x] C-152 T-IMPORT TM-0316 (DG-0075) → renewables/photovoltaics/pv_module_single_diode — [hard] PV module single-diode I-V curve (embedded 'PVModules' table; UW F-Chart provenance to clear first); verification: parametric table1 (20x2) + EES stored solution (3276/3284) — CSL-0160
+[x] C-153 T-IMPORT TM-0319 (DG-0125) → components/heat_exchangers/plate_hx_thermal_resistances — [hard] single-phase plate HX resistance model (Martin), brine side via Brineprop2 (→ CSL-0111/CSL-0079); verification: EES stored solution (38/38) — CSL-0161
+[x] C-154 T-IMPORT TM-0321 (DG-0076) → hvac/air_handling/glycol_runaround_recovery_loop — [hard] air-to-air glycol run-around heat-recovery loop (epsilon-NTU coils, Braun hypothesis, pump); verification: EES stored solution (144/144) — CSL-0162
+[x] C-155 T-IMPORT TM-0470 → hvac/air_handling/cooling_coil_paramid — [hard] cooling-coil parameter identification (PARAMID reference; measured-data table 3335x2; → CSL-0074); verification: EES stored solution (79/92) + parametric Table 2 — CSL-0163
+[ ] C-156 T-IMPORT TM-0474 (DG-0114) → hvac/air_handling/heating_coil_refsim — [std] heating-coil reference simulation model (RefSim; → CSL-0074); verification: EES stored solution (48/48) — CSL-0164
+[ ] C-157 T-IMPORT TM-0485 → components/pumps_fans/centrifugal_fan_paramid — [std] centrifugal-fan parameter identification (ParamID reference; → CSL-0071); verification: EES stored solution (113/114) — CSL-0165
+[x] C-158 T-IMPORT TM-0491 → components/boilers_burners/boiler_modulating_burner_refsim — [hard] boiler with modulating burner (MODULE flatten D10; cpbar → CSL-0005; 11840x2 table); verification: EES stored solution (116/116) + parametric table1 — CSL-0166
+[x] C-159 T-IMPORT TM-0499 (DG-0117) → components/compressors/reciprocating_polynomial_r22 — [hard] reciprocating compressor reference in R22 cycle: polynomial modelling (bar/kJ → convert; → CSL-0022); verification: EES stored solution (102/102) — CSL-0167
+[ ] C-160 T-REVIEW     B-11                                                                                      — light scripted review (orchestrator)
+[ ] C-139 T-REVIEW     taxonomy at M2 (P6.2)                                                                       — 123 models: propose splits of crowded categories and the taxonomy version bump (maintainer decides)
+```
+
+### B-12 — LaboThapPy and TESPy: wave1/high translations (Phases 3D/3E) ☐
+
+≈ 16 LaboThapPy and 15 TESPy candidates at wave1/high (pilots: C-12, C-13). The planning card triages them against
+the library (overlaps with ULiège models, `ht` and ThermoCycle are frequent) and proposes the translation cards (from
+C-170), tagged [hard]/[std]. Worker notes: `~/llm/scripts/csl/b12_plan.txt` (plan), `~/llm/scripts/csl/b12_extra.txt` (translation cards). Dependencies: C-185 after C-180 (Stodola cone law), C-191 after C-184 (combustion chamber), C-192 uses CSL-0121.
+
+```
+[x] C-138 T-PLAN       LaboThapPy + TESPy wave1/high      → sources/labothappy/, sources/tespy/                   — triage vs the library and 31 rows: 24 todo / 7 merged → 23 cards C-170…C-192 (CSL-0125…0147)
+[x] C-170 T-TRANSLATE LTP-009 → components/pumps_fans/pump_curve_similarity — [std] pump from manufacturer curves + affinity laws, NPSH, 3 modes; verification: examples/pump/pump_curve_similarity_example.py re-run in a throw-away venv (Q~N, H~N^2 exact) — CSL-0125
+[x] C-171 T-TRANSLATE LTP-011 → components/heat_exchangers/hx_constant_effectiveness — [std] enthalpy-based constant-effectiveness HX (recuperator/IHX/gas cooler); verification: hex_csteff_example.py + eta=1 cold-inlet self-check — CSL-0126
+[x] C-172 T-TRANSLATE LTP-012 → components/heat_exchangers/hx_constant_effectiveness_discretised — [hard] pinch-limited discretised HX (sCO2 recuperator); verification: hex_csteff_disc_example.py (n_disc 100/Pinch 10 K, 20/0), min_i dT = Pinch — CSL-0127
+[x] C-173 T-TRANSLATE LTP-014 → components/heat_exchangers/hx_eps_ntu_plate_pipe — [std] UA from plate/pipe geometry, wall+fouling, Gnielinski; verification: TESPy test_labothappy_reference Q=3961.9 W, 295.54/296.98 K — CSL-0128
+[x] C-174 T-TRANSLATE LTP-020 → renewables/solar_thermal/parabolic_trough_collector_discretised — [std] absorber marching over DUPLICATE cells with the Soponova map; verification: collector example (1-50 cells, 10 collectors) vs CSL-0083 — CSL-0129
+[x] C-175 T-FUNC LTP-028 → heat_transfer/pressure_drop/pipe_pressure_drop_correlations — [std] 6 friction factors + Friedel/MSH/Choi dP, acceleration, gravity; verification: original papers (Churchill 1977, Friedel 1979, MSH 1986) — CSL-0130
+[x] C-176 T-FUNC LTP-033 → heat_transfer/convection/void_fraction_correlations — [std] 13 void-fraction models; verification: void_fraction_example.py re-run in a venv + original papers/ACHP — CSL-0131
+[x] C-177 T-FUNC LTP-048 → fundamentals/properties/r1233zd_thermal_conductivity — [std] R1233zd(E) conductivity (CoolProp has none); verification: Perkins & Huber 2017 coefficients (same source as the EES data) — CSL-0132
+[ ] C-178 T-TRANSLATE LTP-055 → cycles/refrigeration_heat_pumps/heat_pump_propane_pinch — [std] propane pinch-based HP (IHX case = CSL-0039, cross-check only); verification: fpi_HeatPump_example.py (p_low/p_high, COP) + exact pinch — CSL-0133
+[ ] C-179 T-TRANSLATE LTP-056 → cycles/organic_rankine/orc_preheated_recuperated_cyclopentane — [std] preheated+recuperated ORC, Zorlu site (correct the preheater-source bug); verification: fpi_orc_example.py re-run + CSL-0039 states — CSL-0134
+[ ] C-180 T-TRANSLATE TSP-003 → components/expanders_turbines/turbine_stodola_offdesign — [std] Stodola cone law + efficiency characteristic; verification: doctest P=-10 452 574 W, x=0.914; test_Turbine 28.8 t/h → 88.6 bar, eta 0.898 — CSL-0135
+[ ] C-181 T-TRANSLATE TSP-006 → components/compressors/polynomial_compressor_en12900 — [std] EN12900 10-coeff. eta_is/eta_v polynomials + dissipation; verification: test_polynomial_compressor.py catalogue tables, Bitzer map; cross-check CSL-0123 — CSL-0136
+[ ] C-182 T-TRANSLATE TSP-008,TSP-009 → components/heat_exchangers/hx_lmtd_ua — [std] UA/smoothed-LMTD HX with ttd+pinch specs (Condenser as _condenser variant); verification: test_HeatExchanger/test_Condenser doctests — CSL-0137
+[x] C-183 T-TRANSLATE TSP-014 → components/heat_exchangers/hx_moving_boundary_bell — [hard] Bell 2015 moving boundary (zone UA, area constraint); verification: bell2015_five_cases.json Q 452-4582 W (0.1 %/0.5 K) — CSL-0138
+[ ] C-184 T-TRANSLATE TSP-022 → fundamentals/combustion/combustion_chamber — [std] fuel/air stoichiometry, lambda, flue-gas species; verification: test_combustion.py + cgam-ebsilon-results.csv — CSL-0139
+[ ] C-185 T-TRANSLATE TSP-034 → cycles/steam_power/rankine_cycle_part_load — [std] Rankine + cooling water + motor/generator + part load (needs C-180); verification: rankine.py re-run 13.21/0.224/33.69 MW, eta 38.6 %, x 0.866 — CSL-0140
+[ ] C-186 T-TRANSLATE TSP-036 → cycles/gas_turbines/gas_turbine_open_cycle — [std] open Brayton with combustion chamber + generator; verification: gas_turbine.py re-run in a venv, blocks vs the CGAM reference — CSL-0141
+[ ] C-187 T-TRANSLATE TSP-037 → energy_systems/district_heating/district_heating_loop — [std] DH loop: consumer, feed pump, pipes with dP and heat loss; verification: district_heating.py re-run + loop energy balance — CSL-0142
+[ ] C-188 T-TRANSLATE TSP-040 → cycles/steam_power/rankine_cycle_two_extractions — [std] HP/MP/LP plant, two closed FWHs, drains (sweep replaces pymoo); verification: optimization_example.py re-run + balances — CSL-0143
+[ ] C-189 T-TRANSLATE TSP-042 → cycles/gas_turbines/sco2_recompression_brayton — [hard] sCO2 recompression, 2 sectioned recuperators; verification: Penkuhn & Tsatsaronis 2018 table (st.1 35 C/75 bar, st.4 600 C/250 bar) — CSL-0144
+[ ] C-190 T-TRANSLATE TSP-044 → cycles/refrigeration_heat_pumps/refrigeration_co2_transcritical_booster — [std] CO2 booster supermarket cycle; verification: co2_cycle.ipynb re-run (13/26/32/57.3 bar, 25/75 kW) — CSL-0145
+[ ] C-191 T-TRANSLATE TSP-050 → energy_systems/cogeneration/cgam_cogeneration — [std] CGAM cogeneration benchmark (needs C-184); verification: cgam-ebsilon-results.csv, comp 29.66 / turb 59.66 MW < 0.5 % — CSL-0146
+[ ] C-192 T-TRANSLATE TSP-051 → cycles/steam_power/segs_solar_power_plant — [hard] SEGS 7-stage plant, 5 FWHs, cooling tower (needs CSL-0121); verification: Ebsilon 31.769 MW, T(c79) 296.254 C — CSL-0147
+[ ] C-193 T-REVIEW     B-12                                                                                      — light scripted review (orchestrator)
+```
+
 ## 7. Dispatching a batch to agents
 
 Prompt for a worker agent (one card per agent; several agents in parallel only
@@ -882,3 +954,30 @@ and adds the log line in §8.
 | 2026-10-08 | C-118 `CSL-0109` | Added *fin_efficiency_and_wall_factors* (ht HT-023: circular-fin efficiency, wall correction factors for Nu and frictional dP) — verified vs ht 1.2.0 (26 values, max 4.0e-12); worker glm-5.3-flash (18 min) |
 | 2026-10-08 | C-119 `CSL-0110` | Added *shell_and_tube_sizing* (ht HT-024: 13 tube-count, bundle-diameter, TEMA clearance, baffle and unsupported-length functions) — verified vs ht 1.2.0 (43 values, max 2.4e-13); worker glm-5.3-flash (24 min) |
 | 2026-10-08 | C-120 review B-09 | Light scripted review (orchestrator): all 24 ht families translated (CSL-0087…0110, 347 functions in the library); each file cites ht 1.2.0 and the original references and has a verification table vs ht; build_index 123 models / 347 functions / 0 errors; test_models 125 targets (95 main files + 30 variants), 0 failure; inventories consistent; B-09 closed |
+| 2026-10-08 | C-138 plan B-12 | Planning of B-12 (LaboThapPy + TESPy wave1/high, 31 rows): 7 merged into existing models (ht, ThermoCycle, CSL-0007, scroll expanders), 24 to translate in 23 cards C-170…C-192 (CSL-0125…0147, 3 [hard]); worker space-bunny (12 min) |
+| 2026-10-08 | C-137 plan B-11 | Planning of B-11 (thermo_models wave1/high, 22 rows): 2 merged, 20 import cards C-140…C-159 (CSL-0148…0167, 15 [hard]: engines, REFPROP ORC, MODULE/SUBPROGRAM flattening, catalogue maps, PV tables, parameter identification); worker glm-5.3-flash (15 min) |
+| 2026-10-08 | C-170 `CSL-0125` | Added *pump_curve_similarity* (LaboThapPy LTP-009: pump from manufacturer curves + affinity laws, NPSH, 3 modes as main file + 2 variants) — verified vs the LaboThapPy re-run (max 1.1e-9); headers 17–21 lines; worker space-bunny (14 min) |
+| 2026-10-08 | C-171 `CSL-0126` | Added *hx_constant_effectiveness* (LaboThapPy LTP-011: enthalpy-based constant-effectiveness HX — recuperator, IHX, gas cooler) — verified vs the LaboThapPy example (max 2.3e-7); worker space-bunny (10 min) |
+| 2026-10-08 | C-141 `CSL-0149` | Added *gas_engine_complete_model* (TM-0136, complete gas engine: throttle, carburettor, pressure drop, combustion, recuperator) — native file blocked (CS-GAP-INTERP-EES; cpbar kept in the source function form, see register §8 CS-GAP-PROC-MULTIOUT); verified `_coolsolve` variant (97 variables vs EES, 6 explained, max 9.4e-3); lookup table recovered from TM-0137; headers shortened to 20 lines on review; worker glm-5.3-flash (26 min) |
+| 2026-10-08 | C-173 `CSL-0128` | Added *hx_eps_ntu_plate_pipe* (LaboThapPy LTP-014 HexeNTU: eps-NTU with UA from plate/pipe geometry, wall + fouling, Gnielinski) — verified vs the LaboThapPy component (max 1.8e-6) and within the TESPy test tolerances; worker space-bunny (15 min) |
+| 2026-10-08 | C-174 `CSL-0129` | Added *parabolic_trough_collector_discretised* (LaboThapPy LTP-020: absorber enthalpy march over discretised cells with the Soponova map) — verified vs the LaboThapPy example; loop unrolled because of CS-BUG-DUPLICATE-INDEX-EXPR (new, P1: index arithmetic T[i+1] in DUPLICATE not evaluated; reproduced and registered by the orchestrator); header trimmed to 20 lines on review; worker space-bunny (23 min) |
+| 2026-10-08 | C-142 `CSL-0150` | Added *adiabatic_flame_dissociation* (TM-0231, MCI TP: CH4 / fuel-oil adiabatic flame temperature with and without dissociation) — blocked, no runnable variant (14-species Gibbs equilibrium); new gaps CS-GAP-CHEM-EQUIL (EES built-in chemical-equilibrium procedure) and CS-GAP-NASA (EES NASA species procedure), evidence: the EES 10.589 source; worker glm-5.3-flash (≈ 25 min active, z.ai 5-hour window in between) |
+| 2026-10-08 | C-143 `CSL-0151` | Added *engine_derating_iso3046* (TM-0235, MCI TP: engine derating per ISO 3046/1) — native file blocked (CS-GAP-IF-DIRECTIVE, new CS-GAP-ACCENTED-IDENT: accented letters in variable names, frequent in the French ULiège files); verified `_coolsolve` variant (14/14, max 3.9e-6); header trimmed on review; worker glm-5.3-flash (20 min) |
+| 2026-10-08 | C-144 `CSL-0152` | Added *turbocharger_combustion_products* (TM-0240, MCI TP4: turbocharger matching with combustion products, SUBPROGRAM flattened per D10, cpbar → CSL-0005) — native file blocked; verified `_coolsolve` variant; new CS-GAP-MOLARMASS-ELEMENT (molarmass of element symbols C, H) and CS-BUG-EXTRACT-DECIMAL-RANGE (ees_extract.py rewrites the range comma of SUM/DUPLICATE as a decimal point); worker glm-5.3-flash (39 min) |
+| 2026-10-08 | C-145 `CSL-0153` | Added *orc_whr_refprop_cost* (TM-0268, waste-heat-recovery ORC with scroll expander, REFPROP mixture + cost model) — native file blocked (CS-GAP-REFPROP, CS-GAP-IF5, new CS-GAP-END-PROCEDURE); runnable `_coolsolve` variant built on review (29 EES_REFPROP blocks → CoolProp R245fa, faithful at the stored run MM_fraction = 1), verified vs the EES stored solution (eta_cycle 7.1e-4; max 0.25 explained); worker glm-5.3-flash (44 min) |
+| 2026-10-08 | C-147 `CSL-0155` | Added *inverter_air_water_heat_pump* (TM-0274, reversible inverter air-to-water heat pump, L4, ≈ 490 variables; heating branch flattened per D10) — native file blocked (CS-GAP-IF5, new CS-GAP-ENTHALPY-FUSION); `_coolsolve` variant solves 180/181 blocks, the coupled wet/dry block fails (Unknown fluid '' — register §8), no .sol; the EES stored solution is partly self-inconsistent (documented); worker glm-5.3-flash |
+| 2026-10-08 | C-148 `CSL-0156` | Added *refrigeration_screw_compressor_r22* (TM-0277, screw compressor reference model in an R22 cycle, full/part load; TM-0276 merged) — native file runs (kPa/kJ → SI by hand, D5; +273 → +273.15 logged); verified vs the EES 6.395 stored solution: Δh agree within 0.24 %, other variables max 1.3e-2 (R22 property backend), absolute h/s carry the reference offset; worker glm-5.3-flash (27 min) |
+| 2026-10-08 | C-149 `CSL-0157` | Added *reciprocating_catalogue_r717* (TM-0282, LABORELEC 2002: reciprocating ammonia compressor from catalogue data, RPM and part-load maps) — native file blocked (new CS-GAP-LOOKUP-NONAME: nameless LOOKUP(row, col) on the default table; new CS-BUG-DUPLICATE-VAR-BOUND: DUPLICATE with a variable bound is dropped — reproduced by the orchestrator); verified `_coolsolve` variant; worker glm-5.3-flash (36 min) |
+| 2026-10-08 | C-150 `CSL-0158` | Added *gas_pipe_insulated_pressure_drop* (TM-0312: gas pipe pressure drop and heat gain — Colebrook, insulation) — native file blocked; verified `_coolsolve` variant; 5 new register rows with valid-EES evidence (CS-GAP-COLEBROOK, CS-GAP-STRINGPOS, CS-GAP-ARRAY-ARG, CS-BUG-IMPLICIT-PROC, CS-BUG-LOOKUP-COLNAME); a duplicate pi row folded into CS-BUG-PI-FUNCTION by the orchestrator; worker glm-5.3-flash (71 min) |
+| 2026-10-08 | C-151 `CSL-0159` | Added *orc_void_fraction_charge* (TM-0314, low-temperature R134a ORC with the void-fraction refrigerant charge of the heat exchangers, L4) — native file blocked (existing CS-BUG-HUMIDAIR-PROPS); verified `_coolsolve` variant (charge M_charge 8.6e-5 vs EES); worker glm-5.3-flash (22 min) |
+| 2026-10-08 | C-152 `CSL-0160` | Added *pv_module_single_diode* (TM-0316, PV module single-diode I-V curve, embedded PVModules table hand-decoded from the EES binary; UW F-Chart properties) — native file blocked (existing gaps, evidence added to CS-GAP-END-PROCEDURE); verified `_coolsolve` variant; worker glm-5.3-flash (24 min) |
+| 2026-10-08 | C-153 `CSL-0161` | Added *plate_hx_thermal_resistances* (TM-0319, single-phase plate HX resistance model, Martin; brine side through BrineProp) — native file blocked (CS-GAP-IF-DIRECTIVE, CS-BUG-HASH-IDENT, CS-GAP-CALL-EXPR-OUT, CS-GAP-INCLUDE: existing IDs); `_coolsolve` variant for the stored run (fluid$ = 'Water') verified vs the EES stored solution; worker glm-5.3-flash (13 min) |
+| 2026-10-08 | C-154 `CSL-0162` | Added *glycol_runaround_recovery_loop* (TM-0321, air-to-air glycol run-around heat-recovery loop, epsilon-NTU coils) — native file blocked (4 existing gap IDs); the variant does not converge: new CS-BUG-NEWTON-CYCLE (long equation cycle with solution values over many orders of magnitude stalls with every solver strategy, 30-link reproducer); verified pointwise (the EES stored point satisfies all 65 block equations), no .sol; worker glm-5.3-flash |
+| 2026-10-09 | C-155 `CSL-0163` | Added *cooling_coil_paramid* (TM-0470, cooling-coil parameter identification, model data bank ParamID with a 3335×2 measured-data table; → CSL-0016/CSL-0074 family) — native file blocked (3 existing gaps; evidence added to CS-BUG-EXTRACT-FMT-BYTE); verified `_coolsolve` variant (max 1.05e-2 vs EES); worker glm-5.3-flash (31 min) |
+| 2026-10-09 | C-158 `CSL-0166` | Added *boiler_modulating_burner_refsim* (TM-0491, model data bank: boiler with modulating burner, MODULE flattened per D10, cpbar → CSL-0005) — native file blocked; verified `_coolsolve` variant; new CS-BUG-STRING-CALL-OUT (string set only as a CALL output cannot be passed on) and CS-BUG-EXTRACT-TABLE-FP (ees_extract.py decodes a phantom parametric table); evidence appended to 4 rows; variant header trimmed on review; worker glm-5.3-flash (35 min) |
+| 2026-10-09 | C-159 `CSL-0167` | Added *reciprocating_polynomial_r22* (TM-0499, model data bank: reciprocating compressor reference in an R22 cycle, polynomial modelling) — native file runs, verified vs the EES stored solution (max 1.8 %, explained); worker glm-5.3-flash (18 min) |
+| 2026-10-09 | C-172 `CSL-0127` | Added *hx_constant_effectiveness_discretised* (LaboThapPy LTP-012: pinch-limited discretised constant-effectiveness HX, sCO2 recuperator; gas-cooler case as `_gascooler` variant, L4) — verified vs the LaboThapPy example re-run (deviations explained: the original's 1 % effectiveness steps, bisection tolerance, property backend ~0.02 %); worker glm-5.3-flash (46 min) |
+| 2026-10-09 | C-183 `CSL-0138` | Added *hx_moving_boundary_bell* (TESPy TSP-014: Bell 2015 moving-boundary heat exchanger, zone UA with area constraint) — verified vs the Bell 2015 oracle of TESPy (5 cases, re-run in a venv: 7 tests pass); the worker was stopped by the z.ai weekly limit before its final report — result re-run (exact .sol match), inventory row set and merged by the orchestrator; worker glm-5.3-flash |
+| 2026-10-09 | C-175 `CSL-0130` | Added *pipe_pressure_drop_correlations* (LaboThapPy LTP-028: 22 FUNCTIONs — 6 friction factors, Friedel / Müller-Steinhagen-Heck / Choi two-phase dP, acceleration and gravity terms) — verified vs the LaboThapPy re-run (0 differ, max 1.0e-12); header trimmed on review; worker space-bunny |
+| 2026-10-09 | C-176 `CSL-0131` | Added *void_fraction_correlations* (LaboThapPy LTP-033: 13 void-fraction models) — native file blocked by CS-BUG-IMPLICIT-PROC (evidence appended); verified `_coolsolve` variant vs the LaboThapPy example re-run (130 values, 0 differ, max 2.2e-5); worker space-bunny (29 min) |
+| 2026-10-09 | C-177 `CSL-0132` | Added *r1233zd_thermal_conductivity* (LaboThapPy LTP-048: Perkins & Huber R1233zd(E) thermal conductivity, 2 FUNCTIONs) — verified (8/8); note: the CoolSolve build's bundled fluid data now include this conductivity (released CoolProp does not), documented; header trimmed on review; worker space-bunny (25 min) |

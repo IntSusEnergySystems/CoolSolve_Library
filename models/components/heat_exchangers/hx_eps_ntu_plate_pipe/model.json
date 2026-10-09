@@ -1,0 +1,71 @@
+{
+  "id": "CSL-0128",
+  "name": "hx_eps_ntu_plate_pipe",
+  "title": "Heat exchanger with UA from the plate geometry (eps-NTU, Gnielinski)",
+  "summary": "Plate/pipe heat exchanger whose conductance-area product is computed from its geometry: Gnielinski film coefficients of the two streams, plate wall conduction and fouling resistance in series, then the eps-NTU relation of the selected flow arrangement gives the duty and the outlet states. Translation of the LaboThapPy HexeNTU (plate/pipe branch) component.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "hx_eps_ntu_plate_pipe.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "heat exchanger",
+    "effectiveness-NTU",
+    "plate heat exchanger",
+    "conductance-area product",
+    "Gnielinski",
+    "wall conduction",
+    "fouling",
+    "flow arrangements",
+    "sizing"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "functions",
+    "arrays"
+  ],
+  "stats": {"n_equations": 99, "largest_block": 1},
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/component/heat_exchanger/hex_eNTU.py",
+    "candidate_id": "LTP-014",
+    "authors": [
+      "Basile Chaudoir",
+      "Marie Peeters",
+      "Elise Neven"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en"
+  },
+  "verification": {
+    "reference": "LaboThapPy HexeNTU re-run in a throw-away venv (CoolProp 8.0.0, water/water counterflow, the plate geometry and fouling = 1e-4 m2K/W of the model file): 9 common variables, 0 differ at rtol=1e-3, max rel. diff 1.8e-06 (h_ex_C); and the TESPy test tests/test_components/test_ntu_heat_exchanger.py::test_labothappy_reference (re-run in the same venv, passes): Q 3961.469 W vs 3961.899 W (rel 1.1e-04, test tolerance 2e-3), T_H,out 295.5516 K vs 295.54 K (test tolerance 0.1 K), T_C,out 296.9820 K vs 296.98 K",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 1.8e-06,
+    "notes": "Reference temperatures in K are converted with --ees-units. The residual comes from the Newton tolerance of the enthalpy inversion (both codes use CoolProp 8.0.0 and evaluate the properties at the inlet states). TESPy takes UA = 132.069586 W/K as an input and uses effective heat capacities between its inlet and outlet states; the model computes AU from the geometry (132.0695860402 W/K) and cp at the inlet, as the original LaboThapPy component does. Q_max uses the enthalpy form of the code; the documented approximation C_min*(T_su_H-T_su_C) is also in the model (0.45 % apart for water)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0090",
+    "CSL-0087",
+    "CSL-0091",
+    "CSL-0126",
+    "CSL-0014"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (T-TRANSLATE of LaboThapPy HexeNTU, UA from plate/pipe geometry with Gnielinski, verified vs the LaboThapPy component and the TESPy test_labothappy_reference)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

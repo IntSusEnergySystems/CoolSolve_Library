@@ -1,0 +1,83 @@
+{=============================================================================
+  Heat exchanger with a constant effectiveness (enthalpy-based)
+  CoolSolve Library model CSL-0126
+ -----------------------------------------------------------------------------
+  Counterflow exchanger model of the LaboThapPy component HexCstEff: the duty is
+  the constant effectiveness eta times the largest heat rate an ideal exchanger
+  (infinite area, no temperature cross) could transfer between the two inlet
+  states. That limit is the enthalpy the hot stream can give up when cooled to
+  the cold inlet temperature, or the enthalpy the cold stream can absorb when
+  heated to the hot inlet temperature, whichever is smaller. The duty sets both
+  outlet enthalpies by the energy balances of the two streams.
+  Both streams keep their supply pressure except for the optional constant drops
+  DP_h and DP_c (0 in the defaults of the original). Because Q_max is built from
+  enthalpies, no phase-change logic is needed. Translation of the Python
+  solve() into simultaneous equations.
+
+  Inputs : fluid_H$, T_su_H, P_su_H, M_dot_H (hot supply);
+           fluid_C$, T_su_C, P_su_C, M_dot_C (cold supply);
+           eta (constant effectiveness [-]), DP_h, DP_c (pressure drops [Pa])
+  Outputs: Q_dot, Q_dot_max, h_ex_H/T_ex_H/P_ex_H, h_ex_C/T_ex_C/P_ex_C
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : LaboThapPy, HexCstEff by B. Chaudoir, E. Neven - see README.md
+=============================================================================}
+
+"Design inputs (default run: the HexCstEff example of the original, recuperator)"
+fluid_C$ = 'Water'           "cold fluid [EES name] (CoolProp 'Water' maps to EES 'Water', the real fluid)"
+T_su_C = 60                  "cold supply temperature [C] (333.15 K in the original)"
+P_su_C = 3E5                 "cold supply pressure [Pa]"
+M_dot_C = 1                  "cold mass flow rate [kg/s]"
+fluid_H$ = 'Water'           "hot fluid [EES name]"
+T_su_H = 110                 "hot supply temperature [C] (383.15 K in the original)"
+P_su_H = 10E5                "hot supply pressure [Pa]"
+M_dot_H = 0.3                "hot mass flow rate [kg/s]"
+eta = 0.95                   "constant effectiveness of the exchanger [-]"
+DP_h = 0                     "hot side pressure drop [Pa] (default of the original)"
+DP_c = 0                     "cold side pressure drop [Pa] (default of the original)"
+
+"!Inlet states of the two streams"
+h_su_C = ENTHALPY(fluid_C$, T=T_su_C, P=P_su_C)   "cold supply enthalpy [J/kg]"
+h_su_H = ENTHALPY(fluid_H$, T=T_su_H, P=P_su_H)   "hot supply enthalpy [J/kg]"
+
+"!Maximum heat rate of an ideal exchanger: ideal outlet enthalpies at the
+ !temperature of the opposite inlet (as in the original)"
+h_H_id = ENTHALPY(fluid_H$, T=T_su_C, P=P_su_H)  "hot stream enthalpy at the cold inlet temperature [J/kg]"
+h_C_id = ENTHALPY(fluid_C$, T=T_su_H, P=P_su_C)  "cold stream enthalpy at the hot inlet temperature [J/kg]"
+Q_dot_max_h = M_dot_H*ABS(h_su_H - h_H_id)       "heat rate the hot stream can give up [W]"
+Q_dot_max_c = M_dot_C*ABS(h_C_id - h_su_C)       "heat rate the cold stream can absorb [W]"
+Q_dot_max = MIN(Q_dot_max_h, Q_dot_max_c)        "maximum heat rate [W]"
+
+"!Heat transfer rate and outlet states"
+Q_dot = eta*Q_dot_max                           "heat transfer rate from hot to cold [W]"
+h_ex_H = h_su_H - Q_dot/M_dot_H                 "hot outlet enthalpy [J/kg]"
+h_ex_C = h_su_C + Q_dot/M_dot_C                 "cold outlet enthalpy [J/kg]"
+P_ex_H = P_su_H - DP_h                          "hot outlet pressure [Pa]"
+P_ex_C = P_su_C - DP_c                          "cold outlet pressure [Pa]"
+T_ex_H = TEMPERATURE(fluid_H$, h=h_ex_H, P=P_ex_H)  "hot outlet temperature [C]"
+T_ex_C = TEMPERATURE(fluid_C$, h=h_ex_C, P=P_ex_C)  "cold outlet temperature [C]"
+
+"!Diagnostics: energy balances and cold-end approach"
+Q_dot_bal_H = M_dot_H*(h_su_H - h_ex_H)        "energy balance on the hot stream, equal to Q_dot [W]"
+Q_dot_bal_C = M_dot_C*(h_ex_C - h_su_C)         "energy balance on the cold stream, equal to Q_dot [W]"
+Delta_T_cold_end = T_ex_H - T_su_C              "cold-end temperature difference, 0 for eta = 1 [K]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: cold supply, 2: cold outlet, 3: hot supply, 4: hot outlet. Use the arrays
+ h[i]/P[i] or s[i]/T[i] with the "Overlay array path" option of the CoolSolve
+ Diagram tab to plot the two paths of the exchanger.}
+P[1] = P_su_C
+h[1] = h_su_C
+T[1] = T_su_C
+s[1] = ENTROPY(fluid_C$, T=T_su_C, P=P_su_C)
+P[2] = P_ex_C
+h[2] = h_ex_C
+T[2] = T_ex_C
+s[2] = ENTROPY(fluid_C$, h=h_ex_C, P=P_ex_C)
+P[3] = P_su_H
+h[3] = h_su_H
+T[3] = T_su_H
+s[3] = ENTROPY(fluid_H$, T=T_su_H, P=P_su_H)
+P[4] = P_ex_H
+h[4] = h_ex_H
+T[4] = T_ex_H
+s[4] = ENTROPY(fluid_H$, h=h_ex_H, P=P_ex_H)

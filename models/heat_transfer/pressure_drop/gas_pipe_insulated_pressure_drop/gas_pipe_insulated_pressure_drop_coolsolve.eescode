@@ -1,0 +1,449 @@
+{===========================================================================
+  Gas pipe pressure drop and heat gain with insulation and fittings
+  CoolSolve Library model CSL-0158 - runnable variant
+ ---------------------------------------------------------------------------
+  Insulated R717 gas line (Laborelec 2002 toolkit): heat gain from ambient
+  air, Colebrook-White friction drop, fitting K-factors from a table,
+  equivalent nozzle area A. Runnable CoolSolve variant of the native file
+  (blocked): lookups moved to the main program (CS-GAP-LOOKUP-PROC),
+  Colebrook/StringPos built-ins replaced (CS-GAP-COLEBROOK,
+  CS-GAP-STRINGPOS), SP[1..5] array argument as scalars (CS-GAP-ARRAY-ARG),
+  non-ASCII identifiers renamed (CS-GAP-ACCENTED-IDENT), single-line IFs as
+  block IF (CS-BUG-IF-SINGLELINE), pi literal and friction factor in main
+  (CS-BUG-PI-FUNCTION, CS-BUG-IMPLICIT-PROC); all equations valid EES.
+  Verified against the EES stored solution (README).
+
+  Inputs : R$, pipe_nr, iso_nr, T_bub, DELTAT_oh, U, L, z_iso_mm, T_A,
+           R_pro, fitting counts, additional pressure drops
+  Outputs: m_dot, V_dot, Dp, p_o, Q, T_int, f, A, Head_loss, notes
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ~/Nextcloud/thermo_models/modeles/LABORELEC_2002/4_Pressure Drop/
+           4_2_Gas Pipes/Gas Pipe/Gas_Pipe_Pressure_Drop.EES (EES X6.596) -
+           see README.md. Authors: F. Trebilcock (ULiege, 2002, Laborelec).
+===========================================================================}
+
+"!#######################################################"
+PROCEDURE R717_CHECK(R$,Pipe$:NOTE$)
+
+"Position test of the original (A = StringPos('ø',Pipe$)) dropped:
+CS-GAP-STRINGPOS. For the default pipe$ of the stored run the original
+displays the same note."
+if (R$='R717') then
+  NOTE$='Note: Copper pipes can not be used with R717 (ammonia)!!!'
+else
+  NOTE$=''
+endif
+end
+
+"!#######################################################"
+PROCEDURE PIPEDATA(pipe$,dy_mm_input,z_wall_mm_input,dy_tab_mm,z_tab_mm,e_tab_mm:di_mm,z_wall_mm,e_mm)
+"The pipe data columns are read in the main program (CS-GAP-LOOKUP-PROC) and
+passed as dy_tab_mm, z_tab_mm, e_tab_mm."
+if pipe$='User defined' then
+  z_wall_mm = z_wall_mm_input
+  di_mm = dy_mm_input-2*z_wall_mm_input
+  e_mm=0.0015
+else
+  di_mm=dy_tab_mm-2*z_tab_mm
+  z_wall_mm=z_tab_mm
+  e_mm=e_tab_mm
+endif
+end
+
+"!#######################################################"
+
+PROCEDURE INSULATIONDATA(lambda$,lambda_input,lambda_tab:Lambda_iso)
+"Insulation column read in the main program (CS-GAP-LOOKUP-PROC), passed as
+lambda_tab."
+if lambda$='User defined' then
+  Lambda_iso = lambda_input
+else
+  Lambda_iso = lambda_tab
+endif
+end
+
+"!######################################################"
+
+PROCEDURE Nearest(di_mm,D_equiv_1,D_equiv_2,D_equiv_3,D_equiv_4,D_equiv_5,D_equiv_6,D_equiv_7,D_equiv_8,D_equiv_9,D_equiv_10: Row,message$,fitting)
+"Equivalent diameter procedure. The D_equiv column of the Fittings table is
+passed from the main program (CS-GAP-LOOKUP-PROC); the row search of the
+original REPEAT loop written as block IF cascade (same result: the last row
+whose equivalent diameter does not exceed the pipe inner diameter)."
+D=di_mm/1000
+message$=''
+Row=0
+
+if (di_mm<=100) then
+  fitting=1
+  if (D_equiv_1<=D) then
+    Row=1
+  endif
+  if (D_equiv_2<=D) then
+    Row=2
+  endif
+  if (D_equiv_3<=D) then
+    Row=3
+  endif
+  if (D_equiv_4<=D) then
+    Row=4
+  endif
+  if (D_equiv_5<=D) then
+    Row=5
+  endif
+  if (D_equiv_6<=D) then
+    Row=6
+  endif
+  if (D_equiv_7<=D) then
+    Row=7
+  endif
+  if (D_equiv_8<=D) then
+    Row=8
+  endif
+  if (D_equiv_9<=D) then
+    Row=9
+  endif
+  if (D_equiv_10<=D) then
+    Row=10
+  endif
+
+  if (Row=1) then
+    Diam_min=D_equiv_1
+    Diam_max=D_equiv_2
+  endif
+  if (Row=2) then
+    Diam_min=D_equiv_2
+    Diam_max=D_equiv_3
+  endif
+  if (Row=3) then
+    Diam_min=D_equiv_3
+    Diam_max=D_equiv_4
+  endif
+  if (Row=4) then
+    Diam_min=D_equiv_4
+    Diam_max=D_equiv_5
+  endif
+  if (Row=5) then
+    Diam_min=D_equiv_5
+    Diam_max=D_equiv_6
+  endif
+  if (Row=6) then
+    Diam_min=D_equiv_6
+    Diam_max=D_equiv_7
+  endif
+  if (Row=7) then
+    Diam_min=D_equiv_7
+    Diam_max=D_equiv_8
+  endif
+  if (Row=8) then
+    Diam_min=D_equiv_8
+    Diam_max=D_equiv_9
+  endif
+  if (Row=9) then
+    Diam_min=D_equiv_9
+    Diam_max=D_equiv_10
+  endif
+
+  Dif_1=D-Diam_min
+  Dif_2=Diam_max-D
+
+  IF (Dif_1<Dif_2) OR  (Dif_1=Dif_2) THEN
+    D_fitting=Diam_min
+  ENDIF
+  IF (Dif_1>Dif_2) THEN
+    D_fitting=Diam_max
+    Row=Row+1
+  ENDIF
+else
+  Row=10
+  message$='No Fitting Data Available !!!!!  DP_fittings=0'
+  fitting=0
+endif
+end
+
+"!#################################################"
+
+PROCEDURE Fittings(fitting,U,rho_i,K_90_elbow_reg,K_90_elbow_long,K_45_elbow,K_return_bend,K_Tee_line,K_Tee_branch,K_glove_valve,K_gate_valve,K_angle_valve,K_swing_check_valve,K_bell_mouth_inlet,K_square_inlet,K_projected_inlet,n_90_elbow_reg,n_90_elbow_long,n_45_elbow,n_return_bend,n_Tee_line,n_Tee_branch,n_glove_valve,n_gate_valve,n_angle_valve,n_swing_check_valve,n_bell_mouth_inlet,n_square_inlet,n_projected_inlet:DpF)
+"The K-factors of the selected fitting class are read in the main program
+(CS-GAP-LOOKUP-PROC) and passed as arguments."
+
+if (fitting=1) then
+DELTAp_90_elbow_reg=n_90_elbow_reg*K_90_elbow_reg*rho_i*(U^2/2)
+DELTAp_90_elbow_long=n_90_elbow_long*K_90_elbow_long*rho_i*(U^2/2)
+DELTAp_45_elbow=n_45_elbow*K_45_elbow*rho_i*(U^2/2)
+DELTAp_return_bend=n_return_bend*K_return_bend*rho_i*(U^2/2)
+DELTAp_Tee_line=n_Tee_line*K_Tee_line*rho_i*(U^2/2)
+DELTAp_Tee_branch=n_Tee_branch*K_Tee_branch*rho_i*(U^2/2)
+DELTAp_glove_valve=n_glove_valve*K_glove_valve *rho_i*(U^2/2)
+DELTAp_gate_valve=n_gate_valve*K_gate_valve *rho_i*(U^2/2)
+DELTAp_angle_valve=n_angle_valve*K_angle_valve *rho_i*(U^2/2)
+DELTAp_swing_check_valve=n_swing_check_valve*K_swing_check_valve*rho_i*(U^2/2)
+DELTAp_bell_mouth_inlet=n_bell_mouth_inlet*K_bell_mouth_inlet*rho_i*(U^2/2)
+DELTAp_square_inlet=n_square_inlet*K_square_inlet*rho_i*(U^2/2)
+DELTAp_projected_inlet=n_projected_inlet*K_projected_inlet*rho_i*(U^2/2)
+
+DELTAp_inlet=DELTAp_bell_mouth_inlet+DELTAp_square_inlet+DELTAp_projected_inlet
+DELTAp_elbows=DELTAp_90_elbow_reg+DELTAp_90_elbow_long+DELTAp_45_elbow
+DELTAp_Tees=DELTAp_return_bend+DELTAp_Tee_line+DELTAp_Tee_branch
+DELTAp_valves=DELTAp_glove_valve+DELTAp_gate_valve+DELTAp_angle_valve+DELTAp_swing_check_valve
+
+DpFittings=DELTAp_elbows+DELTAp_Tees+DELTAp_valves+DELTAp_inlet
+
+
+DpF=DpFittings
+else
+DpF=0
+endif
+end
+
+"!##################################################"
+
+PROCEDURE FITTINGSNUMBER(n_90_elbow_reg,n_90_elbow_long,n_45_elbow,n_return_bend,n_Tee_line,n_Tee_branch,n_glove_valve,n_gate_valve,n_angle_valve,n_swing_check_valve,n_bell_mouth_inlet,n_square_inlet,n_projected_inlet:n_fittings)
+
+n_fittings=n_90_elbow_reg+n_90_elbow_long+n_45_elbow+n_return_bend+n_Tee_line+n_Tee_branch+n_glove_valve+n_gate_valve+n_angle_valve+n_swing_check_valve+n_bell_mouth_inlet+n_square_inlet+n_projected_inlet
+
+end
+
+"!###################################################"
+
+PROCEDURE PIPE_GAS(R$,T_i,h_i,p_i,Ts_i,rho_i,U,di_mm,z_wall_mm,e_mm,z_iso_mm,L,lambda_iso,T_A,R_pro,f,DpF:m_dot,V_dot,T_DEW,T_int,Error$,Dp,p_o,Q,Pr)
+"The SP[1..5] array argument of the original is replaced by the five state
+scalars (CS-GAP-ARRAY-ARG); the unused Row argument is dropped and the
+friction factor f is passed in (computed in the main program: CoolSolve does
+not solve an implicit equation in a multi-statement procedure body,
+CS-BUG-IMPLICIT-PROC)."
+
+{SECTION 1.4 : Calculation of pressure drop and heat transfer (as in the original)}
+
+Error$ =''
+
+{SECTION 1.4.2: Recalculation of non SI-Unit variables (the array transfer of
+section 1.4.1 of the original is the argument list here)}
+di = di_mm/1000
+e = e_mm/1000
+z_wall = z_wall_mm/1000
+z_iso = z_iso_mm/1000
+
+{SECTION 1.4.3: Preliminary calculations (average velocity)}
+A_c_i = 3.14159265358979/4*di*abs(di)
+V_dot = U*A_c_i
+m_dot = V_dot*rho_i
+
+{SECTION 1.4.4: Calculation of heat transfer}
+cp = SpecHeat(R$,T=T_i,p=p_i)
+mu = Viscosity(R$,T=T_i,p=p_i)
+nu = mu/rho_i
+If (R$='Ammonia_ha') then
+  If (T_i<=-29) then
+    lambda = Conductivity(R$,T=-29,p=p_i)
+  Else
+    lambda = Conductivity(R$,T=T_i,p=p_i)
+  Endif
+Else
+  lambda = Conductivity(R$,T=T_i,p=p_i)
+Endif
+
+Pr = cp*mu/lambda
+Re_D = U*di/nu
+If (Re_D<=2000) then
+  Re_D = 2000
+endif
+
+If (Re_D>0) then
+  Nus_D = 0.0235*(Re_D^0.8-230)*(1.8*Pr^0.3-0.8)
+Else
+  Nus_D = 1
+endif
+alpha_i = Nus_d*lambda/di
+alpha_o = 10
+
+dy = di+2*z_wall
+diso = dy+2*z_iso
+A_i = 3.14159265358979*di*L
+R_i = 1/(A_i*alpha_i)
+
+if (lambda_iso<=1e-10) or (diso=0) then
+  R_iso = 0
+  A_o = 3.14159265358979*dy*L
+  R_o = 1/(A_o*alpha_o)
+else
+  R_iso = ln(diso/dy)/(2*3.14159265358979*L*lambda_iso)
+  A_o = 3.14159265358979*diso*L
+  R_o = 1/(A_o*alpha_o)
+endif
+
+R_TOT = R_i+R_iso+R_o
+
+Q = (T_A-T_i)/R_TOT
+h_int = h_i+Q/m_dot
+T_int = Q/(m_dot*cp)+T_i
+T_SURF = (T_int+T_i)/2+Q*(R_i+R_iso)
+T_int_MIN = Temperature(R$,p=p_i,X=1)
+If (T_int<=T_int_MIN) then
+  T_int = T_int_MIN+0.01
+  Error$ = 'Condensation!!!'
+Endif
+
+
+
+{Humid Air:}
+p_ATM=101325
+R=R_pro/100
+T_DEW = Dewpoint(AirH2O,p=p_ATM,T=T_A,R=R)
+
+{SECTION 1.4.5: Calculation of pressure drop (the friction factor f is an
+input, computed in the main program)}
+
+DpDx = 0.5*f*rho_i*U^2/di
+DpP= DpDx*L
+
+
+
+Dp = DpP+DpF
+
+p_o = p_i-Dp
+
+end
+
+"!#####################################################"
+PROCEDURE MESSAGES(DELTAP_aditional:NOTE2$,NOTE3$)
+
+If (DELTAP_aditional>0) then
+NOTE2$='Remember to check that the mass flow rate is'
+NOTE3$=' the same used in the aditional components definition.'
+else
+NOTE2$=''
+NOTE3$=''
+endif
+end
+
+"===================================================="
+"					MODEL"
+"===================================================="
+
+"Inputs of the Diagram window of the original, written as equations for the
+default run of the stored solution (unit conversion: see README)."
+R$='R717'
+pipe$='ø88.9 Steel Seamless'    "pipe data (see pipe_nr; the original column name of Pipedata.LKT, comma removed)"
+pipe_nr=25                      "row of pipe$ in the pipedata table ('ø88.9 Steel, Seamless')"
+lambda$='Armaflex'              "insulation material (see iso_nr)"
+iso_nr=44                       "row of lambda$ in the pipedata table ('Armaflex')"
+T_bub=35                         "saturation temperature at pipe inlet [C]"
+DELTAT_oh=70                     "inlet superheat [K] (T_pipe_inlet in the original)"
+L=5                              "pipe length [m]"
+z_iso_mm=3                       "insulation thickness [mm]"
+T_A=10                           "ambient temperature [C]"
+R_pro=40                         "ambient relative humidity [%]"
+U=24.05591817                    "mean gas velocity [m/s] (m_dot = 1 kg/s in the stored run)"
+dy_mm_input=30                   "outer diameter if pipe$='User defined' [mm]"
+z_wall_mm_input=2                "wall thickness if pipe$='User defined' [mm]"
+lambda_input=0.04                "conductivity if lambda$='User defined' [W/(m-K)]"
+DELTAp_ad_1=0                    "additional pressure drop of component 1 [Pa]"
+DELTAp_ad_2=0                    "additional pressure drop of component 2 [Pa]"
+DELTAp_ad_3=0                    "additional pressure drop of component 3 [Pa]"
+DELTAp_ad_4=0                    "additional pressure drop of component 4 [Pa]"
+DELTAp_ad_5=0                    "additional pressure drop of component 5 [Pa]"
+DELTAp_ad_6=0                    "additional pressure drop of component 6 [Pa]"
+"Fitting counts: Diagram-window inputs, not stored in the file; reconstructed
+from the stored DpF (see README)."
+n_90_elbow_reg=0
+n_90_elbow_long=0
+n_45_elbow=0
+n_return_bend=0
+n_Tee_line=0
+n_Tee_branch=0
+n_glove_valve=2
+n_gate_valve=3
+n_angle_valve=0
+n_swing_check_valve=2
+n_bell_mouth_inlet=0
+n_square_inlet=0
+n_projected_inlet=1
+
+"State at the pipe inlet (Diagram-window snippets of the original)"
+p_i=pressure(R$,T=T_bub,x=0)     "saturation pressure at the inlet [Pa]"
+T_i=T_bub+DELTAT_oh              "gas temperature at pipe inlet [C]"
+Ts_i=T_bub                       "saturation temperature at pipe inlet [C]"
+h_i=enthalpy(R$,T=T_i,P=p_i)     "specific enthalpy at pipe inlet [J/kg]"
+rho_i=density(R$,T=T_i,P=p_i)    "density at pipe inlet [kg/m3]"
+SP[1]=T_i
+SP[2]=h_i
+SP[3]=p_i
+SP[4]=Ts_i
+SP[5]=rho_i
+
+"Tubing, insulation and fitting data, read in the main program
+(CS-GAP-LOOKUP-PROC). The decoded Pipedata.LKT is shipped transposed
+(nr, p1, p2, p3; rows 1-41 tubing with p1=outer diameter [mm], p2=wall
+thickness [mm], p3=roughness [mm]; rows 42-45 insulation with p1=conductivity
+[W/(m-K)]), selected by row index: CoolSolve does not resolve string-keyed
+columns of companion tables reliably (CS-BUG-LOOKUP-COLNAME)."
+dy_tab_mm=lookup('pipedata',pipe_nr,2)   "outer diameter [mm]"
+z_tab_mm=lookup('pipedata',pipe_nr,3)    "wall thickness [mm]"
+e_tab_mm=lookup('pipedata',pipe_nr,4)    "roughness [mm]"
+lambda_tab=lookup('pipedata',iso_nr,2)   "insulation conductivity [W/(m-K)]"
+D_fit_1=lookup('fittings',1,2)
+D_fit_2=lookup('fittings',2,2)
+D_fit_3=lookup('fittings',3,2)
+D_fit_4=lookup('fittings',4,2)
+D_fit_5=lookup('fittings',5,2)
+D_fit_6=lookup('fittings',6,2)
+D_fit_7=lookup('fittings',7,2)
+D_fit_8=lookup('fittings',8,2)
+D_fit_9=lookup('fittings',9,2)
+D_fit_10=lookup('fittings',10,2)
+
+call INSULATIONDATA(lambda$,lambda_input,lambda_tab:Lambda_iso)
+call PIPEDATA(pipe$,dy_mm_input,z_wall_mm_input,dy_tab_mm,z_tab_mm,e_tab_mm:di_mm,z_wall_mm,e_mm)
+call R717_CHECK(R$,Pipe$:NOTE$)
+call Nearest(di_mm,D_fit_1,D_fit_2,D_fit_3,D_fit_4,D_fit_5,D_fit_6,D_fit_7,D_fit_8,D_fit_9,D_fit_10: Row,message$,fitting)
+K_90_elbow_reg=lookup('fittings',Row,4)
+K_90_elbow_long=lookup('fittings',Row,5)
+K_45_elbow=lookup('fittings',Row,6)
+K_return_bend=lookup('fittings',Row,7)
+K_Tee_line=lookup('fittings',Row,8)
+K_Tee_branch=lookup('fittings',Row,9)
+K_glove_valve=lookup('fittings',Row,10)
+K_gate_valve=lookup('fittings',Row,11)
+K_angle_valve=lookup('fittings',Row,12)
+K_swing_check_valve=lookup('fittings',Row,13)
+K_bell_mouth_inlet=lookup('fittings',Row,14)
+K_square_inlet=lookup('fittings',Row,15)
+K_projected_inlet=lookup('fittings',Row,16)
+"Friction factor: the Colebrook-White equation of the original PIPE_GAS body
+(the EES built-in Colebrook procedure, CS-GAP-COLEBROOK), written here in the
+main program (CoolSolve does not solve an implicit equation in a
+multi-statement procedure body, CS-BUG-IMPLICIT-PROC). The original selected
+between this equation and f=64/Re_D for Re_D<=2000, reachable only at the
+clamped Re_D=2000; here the Colebrook equation is written unconditionally."
+epsilon=0.000046	"roughness of the pipe [m]"
+RR=epsilon/(di_mm/1000)
+mu_w = viscosity(R$,T=T_i,P=p_i)
+nu_w = mu_w/rho_i
+Re_D = if(2000-U*(di_mm/1000)/nu_w, 2000, U*(di_mm/1000)/nu_w)	"Reynolds number, clamped to 2000 as in the original"
+1/sqrt(f) = -2*log10(RR/3.7+2.51/(Re_D*sqrt(f)))
+
+call FITTINGSNUMBER(n_90_elbow_reg,n_90_elbow_long,n_45_elbow,n_return_bend,n_Tee_line,n_Tee_branch,n_glove_valve,n_gate_valve,n_angle_valve,n_swing_check_valve,n_bell_mouth_inlet,n_square_inlet,n_projected_inlet:n_fittings)
+call Fittings(fitting,U,rho_i,K_90_elbow_reg,K_90_elbow_long,K_45_elbow,K_return_bend,K_Tee_line,K_Tee_branch,K_glove_valve,K_gate_valve,K_angle_valve,K_swing_check_valve,K_bell_mouth_inlet,K_square_inlet,K_projected_inlet,n_90_elbow_reg,n_90_elbow_long,n_45_elbow,n_return_bend,n_Tee_line,n_Tee_branch,n_glove_valve,n_gate_valve,n_angle_valve,n_swing_check_valve,n_bell_mouth_inlet,n_square_inlet,n_projected_inlet:DpF)
+call PIPE_GAS(R$,T_i,h_i,p_i,Ts_i,rho_i,U,di_mm,z_wall_mm,e_mm,z_iso_mm,L,lambda_iso,T_A,R_pro,f,DpF:m_dot,V_dot,T_DEW,T_int,Error$,Dp,p_o,Q,Pr)
+call MESSAGES(DELTAP_aditional:NOTE2$,NOTE3$)
+
+"---------------------------------------------------------------------"
+
+"For the pressure drop, the classical nozzle theory will be used in order to calculate the throttling mass flow rate in relationship with the pressure drop."
+DELTAp=DELTAp_total	"[Pa] (the original, in kPa, multiplied by 1000)"
+v_spec=1/rho_i
+"The model requires the identification of the nozzle throat area A for then characterizes the pressure drops of the installation in relationship with the mass flow rate. In this way we should consider the pressure drops in the pipelines, and the local pressure drops, caused in the several fittings, as well as specified pressure drop in the refrigeration system components, defined herafter:"
+DELTAP_aditional=DELTAp_ad_1+DELTAp_ad_2+DELTAp_ad_3+DELTAp_ad_4+DELTAp_ad_5+DELTAp_ad_6
+
+DELTAp_total=Dp+DELTAP_aditional
+"And the change of pressure and temperature through the system is:"
+DELTAp_total=p_i-p_out
+DELTAT_total=T_int-T_i
+
+"The nozzle equation of the original, DELTAp=1/2*(m_dot/A)^2*v_spec, inverted
+for A: CoolSolve's single-equation Newton fails on the A^-2 form in this model
+(SingularJacobian), the explicit form solves."
+A=m_dot*sqrt(v_spec/(2*DELTAp))
+
+"and the Head loss is:"
+Head_loss=DELTAp/rho_i

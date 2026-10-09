@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0151",
+  "name": "engine_derating_iso3046",
+  "title": "Engine derating according to ISO 3046/1 (ambient pressure and temperature)",
+  "summary": "Power correction of an engine between the ISO 3046/1 reference conditions and the site conditions: correction factor K from the dry atmospheric pressure, absolute intake-air temperature and coolant temperature ratios (factor a, exponents m, n, s of the ISO table), derating factor alpha = K - 0.7*(1-K)*(1/eta_m - 1), site shaft power. Two exercises: naturally aspirated Diesel (372 kW on site) and supercharged aftercooled engine (1000 kW catalogue).",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "engine_derating_iso3046.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "engine",
+    "derating",
+    "ISO 3046",
+    "part load",
+    "ambient conditions",
+    "exercise"
+  ],
+  "language_features": [
+    "string variables",
+    "$if directives",
+    "FUNCTION",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 43,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP2_Ex_1-3/Détarage moteurs_Exercices_1-2.EES",
+    "candidate_id": "TM-0235",
+    "authors": [
+      "Philippe Ngendakumana (ULiège)",
+      "Rémi Dickes (ULiège)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.589",
+    "language": "fr",
+    "course": "MCI TP2 exercises 1-2 (ULiège, P. Ngendakumana)"
+  },
+  "verification": {
+    "reference": "EES stored solution of the source file (exercise 1 is the stored run): the runnable variant engine_derating_iso3046_coolsolve.eescode agrees on all 14 common variables, max rel. diff 3.9e-6 (alpha); the 3 other stored values (altitude_x, q, Test_x) are stale leftovers of exercise 2 and of the commented Test block, absent from the stored run",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 3.9e-06,
+    "notes": "Unit system of the source: SI MASS DEG KPA K KJ, converted by hand to SI MASS DEG PA C J. Comparison with compare_solution.py --ees-units."
+  },
+  "missing_features": [
+    "CS-GAP-IF-DIRECTIVE",
+    "CS-GAP-ACCENTED-IDENT"
+  ],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added",
+      "by": "glm-5.3-flash (opencode) for S. Quoilin"
+    }
+  ]
+}

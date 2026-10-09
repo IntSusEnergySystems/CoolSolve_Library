@@ -231,3 +231,9 @@ Source files (collection of S. Quoilin):
   brine-to-water heat pump of the ULiège model bank, where it is described step
   by step (suction heating-up, isentropic compression to an adapted pressure,
   isochoric compression, exhaust cooling-down, leakage through the throat).
+- `CSL-0156` *refrigeration_screw_compressor_r22*: the screw-compressor reference
+  model of the same laboratory series (physical leakage model instead of the
+  semi-empirical parameters), closed on an R22 cycle with sliding-valve part load.
+- `CSL-0167` *reciprocating_polynomial_r22*: the reciprocating (piston)
+  counterpart in the same JL080205 reference series (clearance-volume
+  re-expansion and motor slip instead of leakage and adapted pressure).

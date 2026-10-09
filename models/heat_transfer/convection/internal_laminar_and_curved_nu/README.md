@@ -314,3 +314,8 @@ of them come from in `ht` is Bergman, Lavine, Incropera & DeWitt,
   the library (same layout: definitions + demonstration program).
 - `sources/labothappy` LTP-034 (in-tube HTC correlations): the `ht` family is
   more complete and is the reference for the equations.
+
+- `CSL-0128` *hx_eps_ntu_plate_pipe*: translation of the LaboThapPy
+  `HexeNTU` component; its laminar pipe branch is the entrance-region
+  Nusselt number that tends to the 3.657 constant of
+  `Nu_laminar_T_const` of this file.

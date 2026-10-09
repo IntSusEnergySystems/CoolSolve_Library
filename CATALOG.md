@@ -4,7 +4,7 @@
 
 | Models | Verified | Runs | Blocked / failing | Documented only |
 |---:|---:|---:|---:|---:|
-| 123 | 88 | 7 | 28 | 0 |
+| 148 | 98 | 7 | 43 | 0 |
 
 ## Fundamentals
 
@@ -13,6 +13,7 @@
 | `CSL-0005` | [cpbar: mean specific heat of CmHn combustion products (function library)](models/fundamentals/combustion/cpbar_combustion_products/README.md) | Combustion | 🔵 Level 2 · Intermediate | 🧩 Function library | ✅ Verified |
 | `CSL-0046` | [Combustion of octane with 400 % theoretical air](models/fundamentals/combustion/octane_combustion_400pct_air/README.md) | Combustion | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0058` | [Diesel engine: excess air and useful power from exhaust-gas analysis](models/fundamentals/combustion/diesel_engine_excess_air_exhaust_analysis/README.md) | Combustion | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0150` | [Adiabatic flame temperature of CH4 or fuel oil with or without dissociation](models/fundamentals/combustion/adiabatic_flame_dissociation/README.md) | Combustion | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0045` | [Steam turbine exergy balance](models/fundamentals/processes/steam_turbine_exergy_balance/README.md) | Processes | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0048` | [Two rigid tanks connected by a valve: change of quality of R12](models/fundamentals/processes/two_tanks_connected_valve_r12/README.md) | Processes | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0056` | [Iron block quenched in a water tank (exergy destruction)](models/fundamentals/processes/iron_block_quench_water_tank/README.md) | Processes | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
@@ -22,6 +23,7 @@
 | `CSL-0047` | [Isothermal expansion of a non-ideal gas: unit of k and boundary work](models/fundamentals/properties/nonideal_gas_isothermal_work/README.md) | Properties | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0079` | [BrineProp: thermophysical properties of aqueous secondary refrigerants (function library)](models/fundamentals/properties/brineprop_secondary_refrigerants/README.md) | Properties | 🔵 Level 2 · Intermediate | 🧩 Function library | ⛔ Blocked |
 | `CSL-0121` | [Heat-transfer fluids: MEG, Therminol VP-1/66 and oil properties (function library)](models/fundamentals/properties/heat_transfer_fluid_properties/README.md) | Properties | 🔵 Level 2 · Intermediate | 🧩 Function library | ✅ Verified |
+| `CSL-0132` | [Thermal conductivity of R1233zd(E) - Perkins & Huber correlation](models/fundamentals/properties/r1233zd_thermal_conductivity/README.md) | Properties | 🟢 Level 1 · Introductory | 🧩 Function library | ✅ Verified |
 
 ## Heat transfer
 
@@ -45,9 +47,12 @@
 | `CSL-0104` | [Near-supercritical internal convection: Nusselt-number correlations for vertical upward pipe flow (function library)](models/heat_transfer/convection/supercritical_internal_nu/README.md) | Convection | 🔵 Level 2 · Intermediate | 🧩 Function library | ✅ Verified |
 | `CSL-0108` | [Packed-bed forced convection: Nusselt-number correlations (function library)](models/heat_transfer/convection/packed_bed_nusselt/README.md) | Convection | 🔵 Level 2 · Intermediate | 🧩 Function library | ✅ Verified |
 | `CSL-0109` | [Circular-fin efficiency and wall correction factors for Nu and frictional dP (function library)](models/heat_transfer/convection/fin_efficiency_and_wall_factors/README.md) | Convection | 🔵 Level 2 · Intermediate | 🧩 Function library | ✅ Verified |
+| `CSL-0131` | [Void-fraction correlations for two-phase flow (13 models, function library)](models/heat_transfer/convection/void_fraction_correlations/README.md) | Convection | 🔵 Level 2 · Intermediate | 🧩 Function library | ⛔ Blocked |
 | `CSL-0018` | [Pipe pressure drop with the Colebrook-White friction factor](models/heat_transfer/pressure_drop/pipe_pressure_drop_colebrook/README.md) | Pressure drop | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0103` | [Shell-and-tube pressure drop: Kern and the Bell-Delaware correction factors (function library)](models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/README.md) | Pressure drop | 🔵 Level 2 · Intermediate | 🧩 Function library | ✅ Verified |
 | `CSL-0124` | [Plate heat exchanger: two-phase pressure drops and heat-transfer coefficients, with a fictitious-orifice condenser pressure drop](models/heat_transfer/pressure_drop/plate_hx_pressure_drop_identification/README.md) | Pressure drop | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0130` | [Pressure drop in straight pipes: friction factors and two-phase correlations (function library)](models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/README.md) | Pressure drop | 🔵 Level 2 · Intermediate | 🧩 Function library | ✅ Verified |
+| `CSL-0158` | [Gas pipe pressure drop and heat gain with insulation and fittings (R717)](models/heat_transfer/pressure_drop/gas_pipe_insulated_pressure_drop/README.md) | Pressure drop | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0107` | [Radiation heat flux: blackbody emission, grey-surface exchange, transmittance (function library)](models/heat_transfer/radiation/radiation_heat_flux/README.md) | Radiation | 🔵 Level 2 · Intermediate | 🧩 Function library | ✅ Verified |
 
 ## Components
@@ -56,6 +61,7 @@
 |---|---|---|---|---|---|
 | `CSL-0006` | [Fuel-oil boiler modelled with the mean specific heat of the flue gases (cpbar)](models/components/boilers_burners/boiler_mean_specific_heat/README.md) | Boilers and burners | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0080` | [Condensing boiler reference model (RefSim)](models/components/boilers_burners/condensing_boiler_refsim/README.md) | Boilers and burners | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0166` | [Boiler with modulating burner: steady-state reference model](models/components/boilers_burners/boiler_modulating_burner_refsim/README.md) | Boilers and burners | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0007` | [Semi-empirical hermetic scroll compressor in a refrigeration cycle](models/components/compressors/scroll_compressor_semi_empirical/README.md) | Compressors | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0010` | [Two-stage compression of superheated steam with intercooling at the optimal intermediate pressure](models/components/compressors/two_stage_steam_compressor_intercooling/README.md) | Compressors | 🟢 Level 1 · Introductory | 🎯 Optimisation | ⛔ Blocked |
 | `CSL-0020` | [Dry air screw compressor with internal leakage](models/components/compressors/dry_air_screw_compressor_leakage/README.md) | Compressors | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
@@ -66,6 +72,10 @@
 | `CSL-0067` | [Piston compressor with inlet pressure drop and internal leakage](models/components/compressors/piston_compressor_suction_drop_leakage/README.md) | Compressors | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ☑️ Runs |
 | `CSL-0069` | [Centrifugal compressor design and similarity (air)](models/components/compressors/centrifugal_compressor_design_similarity/README.md) | Compressors | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0123` | [ARI/Copeland catalogue polynomial for scroll compressors (function library)](models/components/compressors/copeland_catalogue_correlation/README.md) | Compressors | 🟢 Level 1 · Introductory | 🧩 Function library | ⛔ Blocked |
+| `CSL-0152` | [Turbocharger matching with combustion-product composition (simplified formulation)](models/components/compressors/turbocharger_combustion_products/README.md) | Compressors | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0156` | [Screw compressor in an R22 refrigeration cycle (full load / part load)](models/components/compressors/refrigeration_screw_compressor_r22/README.md) | Compressors | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0157` | [Reciprocating compressor from catalogue data (R717)](models/components/compressors/reciprocating_catalogue_r717/README.md) | Compressors | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0167` | [Reciprocating compressor reference model with polynomial laws in an R22 cycle](models/components/compressors/reciprocating_polynomial_r22/README.md) | Compressors | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0037` | [Scroll expander semi-empirical model](models/components/expanders_turbines/scroll_expander_semi_empirical/README.md) | Expanders and turbines | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0084` | [ORC expander and pump empirical maps (function library)](models/components/expanders_turbines/orc_expander_pump_empirical_maps/README.md) | Expanders and turbines | 🔵 Level 2 · Intermediate | 🧩 Function library | ✅ Verified |
 | `CSL-0117` | [Two-stage hermetic scroll expander (correlation model)](models/components/expanders_turbines/double_stage_scroll_expander/README.md) | Expanders and turbines | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ✅ Verified |
@@ -87,10 +97,16 @@
 | `CSL-0113` | [Three-zone plate condenser with heat-transfer correlations (Thonon/Kuo)](models/components/heat_exchangers/condenser_3_zones_plate_correlations/README.md) | Heat exchangers | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0114` | [Three-zone plate evaporator with heat-transfer correlations (Thonon/Hsieh)](models/components/heat_exchangers/evaporator_3_zones_plate_correlations/README.md) | Heat exchangers | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ☑️ Runs |
 | `CSL-0115` | [Discretised (finite-volume) evaporator with three U-value zones](models/components/heat_exchangers/hx_fem_evaporator_discretised/README.md) | Heat exchangers | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0126` | [Heat exchanger with a constant effectiveness (enthalpy-based)](models/components/heat_exchangers/hx_constant_effectiveness/README.md) | Heat exchangers | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0127` | [Discretised constant-effectiveness heat exchanger with a minimum pinch (sCO2 recuperator)](models/components/heat_exchangers/hx_constant_effectiveness_discretised/README.md) | Heat exchangers | 🔴 Level 4 · Research | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0128` | [Heat exchanger with UA from the plate geometry (eps-NTU, Gnielinski)](models/components/heat_exchangers/hx_eps_ntu_plate_pipe/README.md) | Heat exchangers | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0138` | [Moving-boundary heat exchanger (Bell 2015), evaporator regime](models/components/heat_exchangers/hx_moving_boundary_bell/README.md) | Heat exchangers | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ✅ Verified |
+| `CSL-0161` | [Single-phase plate heat exchanger: thermal-resistance model (Martin)](models/components/heat_exchangers/plate_hx_thermal_resistances/README.md) | Heat exchangers | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0075` | [ISO 5167 orifice plate (diaphragm) flow-rate calculation](models/components/instrumentation/iso5167_orifice_plate_flow_rate/README.md) | Instrumentation and flow metering | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0122` | [Nozzle discharge coefficients and airflow-rate procedures (ASHRAE 41.2 / ISO 5167)](models/components/instrumentation/nozzle_discharge_coefficients/README.md) | Instrumentation and flow metering | 🔵 Level 2 · Intermediate | 🧩 Function library | ✅ Verified |
 | `CSL-0071` | [Centrifugal fan reference model (dimensionless factors)](models/components/pumps_fans/centrifugal_fan_reference_model/README.md) | Pumps and fans | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0072` | [Centrifugal brine pump reference simulation model (RefSim)](models/components/pumps_fans/centrifugal_brine_pump_refsim/README.md) | Pumps and fans | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0125` | [Centrifugal pump from manufacturer curves and similarity laws](models/components/pumps_fans/pump_curve_similarity/README.md) | Pumps and fans | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0009` | [Domestic hot-water storage tank: dynamic temperature evolution](models/components/storage/dhw_tank_dynamic/README.md) | Storage | 🟢 Level 1 · Introductory | ⏱️ Dynamic | ⛔ Blocked |
 | `CSL-0041` | [Ice storage tank discharge with phase change](models/components/storage/ice_storage_tank_discharge_phase_change/README.md) | Storage | 🔵 Level 2 · Intermediate | ⏱️ Dynamic | ⛔ Blocked |
 | `CSL-0118` | [Air nozzle ejector (primary nozzle and entrainment)](models/components/valves_nozzles_piping/air_nozzle_ejector/README.md) | Valves, nozzles and piping | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ⛔ Blocked |
@@ -105,6 +121,8 @@
 | `CSL-0034` | [Full-power operating point of a 4-stroke gas engine (combustion products with cpbar)](models/cycles/engines/gas_engine_full_power_cpbar/README.md) | Engines | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0049` | [Air-standard Otto cycle (ideal gas, variable specific heats)](models/cycles/engines/otto_cycle_air_standard/README.md) | Engines | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0059` | [Ideal Stirling cycle with a perfect regenerator](models/cycles/engines/stirling_cycle_ideal_regenerator/README.md) | Engines | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0149` | [Complete gas engine: throttle, carburettor, combustion, cooling and recovery circuits](models/cycles/engines/gas_engine_complete_model/README.md) | Engines | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0151` | [Engine derating according to ISO 3046/1 (ambient pressure and temperature)](models/cycles/engines/engine_derating_iso3046/README.md) | Engines | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0011` | [Two-shaft gas turbine with a compressor map and two expanders](models/cycles/gas_turbines/two_shaft_gas_turbine_compressor_map/README.md) | Gas turbines and gas cycles | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0050` | [Land-based two-shaft gas turbine with intercooling, regeneration and reheat](models/cycles/gas_turbines/gas_turbine_two_shaft_intercooled_regenerative/README.md) | Gas turbines and gas cycles | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0051` | [Ideal turbojet flying at 260 m/s](models/cycles/gas_turbines/turbojet_ideal_260ms/README.md) | Gas turbines and gas cycles | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
@@ -114,6 +132,8 @@
 | `CSL-0036` | [ORC with two-stage expander and intermediate extraction (R134a)](models/cycles/organic_rankine/orc_extraction_r134a/README.md) | Organic Rankine cycles | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0038` | [Supercritical CO2 ORC with polynomial compressor and turbine performance maps](models/cycles/organic_rankine/orc_co2_polynomial_maps/README.md) | Organic Rankine cycles | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ☑️ Runs |
 | `CSL-0040` | [Biomass-boiler ORC (R123) with scroll expanders and a split condenser](models/cycles/organic_rankine/orc_biomass_chp/README.md) | Organic Rankine cycles | 🔴 Level 4 · Research | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0153` | [Waste-heat-recovery ORC with a scroll expander, REFPROP mixtures and an equipment cost model](models/cycles/organic_rankine/orc_whr_refprop_cost/README.md) | Organic Rankine cycles | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0159` | [Low-temperature ORC (R134a) with void-fraction charge of the heat exchangers](models/cycles/organic_rankine/orc_void_fraction_charge/README.md) | Organic Rankine cycles | 🔴 Level 4 · Research | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0001` | [Refrigeration cycle with a simple compressor model](models/cycles/refrigeration_heat_pumps/refrigeration_cycle_simple_compressor/README.md) | Refrigeration and heat pumps | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0013` | [Basic heat pump (TESPy tutorial)](models/cycles/refrigeration_heat_pumps/heat_pump_basic_tespy/README.md) | Refrigeration and heat pumps | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0015` | [Basic vapour-compression refrigeration cycle (R134a)](models/cycles/refrigeration_heat_pumps/refrigeration_cycle_basic_r134a/README.md) | Refrigeration and heat pumps | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
@@ -126,6 +146,7 @@
 | `CSL-0077` | [Air-cooled water chiller, reference simulation model](models/cycles/refrigeration_heat_pumps/aircooled_chiller_refsim/README.md) | Refrigeration and heat pumps | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0078` | [Brine-to-water heat pump reference model (RefSim)](models/cycles/refrigeration_heat_pumps/brine_to_water_heat_pump_refsim/README.md) | Refrigeration and heat pumps | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0116` | [Vitocal 300G brine-to-water heat pump (scroll compressor, two plate heat exchangers)](models/cycles/refrigeration_heat_pumps/heat_pump_vitocal_300g/README.md) | Refrigeration and heat pumps | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0155` | [Inverter air-to-water heat pump (Daikin Altherma type), heating mode](models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/README.md) | Refrigeration and heat pumps | 🔴 Level 4 · Research | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0004` | [Rankine cycle of a 60 MW steam power plant](models/cycles/steam_power/rankine_cycle_60mw/README.md) | Steam power cycles | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0029` | [Steam Rankine cycle with regenerative extraction](models/cycles/steam_power/rankine_cycle_regenerative_extraction/README.md) | Steam power cycles | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0053` | [Elementary steam power plant (component balances)](models/cycles/steam_power/steam_power_plant_elementary/README.md) | Steam power cycles | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
@@ -140,6 +161,8 @@
 | `CSL-0070` | [Adiabatic humidifier, simplified model (effectiveness-NTU)](models/hvac/air_handling/adiabatic_humidifier_simplified/README.md) | Air handling | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0073` | [Cooling coil with control, simplified model (contact temperature)](models/hvac/air_handling/cooling_coil_with_control_simplified/README.md) | Air handling | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0074` | [Cooling coil RefSim model, dry and wet regimes (one zone)](models/hvac/air_handling/cooling_coil_refsim/README.md) | Air handling | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0162` | [Air-to-air glycol run-around heat-recovery loop](models/hvac/air_handling/glycol_runaround_recovery_loop/README.md) | Air handling | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0163` | [Cooling coil parameter identification model (PARAMID reference, wet regime)](models/hvac/air_handling/cooling_coil_paramid/README.md) | Air handling | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0030` | [Two-speed cooling tower (regimes and mean fan power vs water set-point)](models/hvac/cooling_towers/two_speed_cooling_tower/README.md) | Cooling towers and evaporative equipment | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0065` | [Cooling tower for the condenser water of a steam power plant](models/hvac/cooling_towers/cooling_tower_condenser_water/README.md) | Cooling towers and evaporative equipment | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0076` | [Direct-contact cooling tower, reference simulation model](models/hvac/cooling_towers/cooling_tower_direct_contact_refsim/README.md) | Cooling towers and evaporative equipment | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
@@ -153,9 +176,11 @@
 
 | ID | Model | Category | Level | Kind | Status |
 |---|---|---|---|---|---|
+| `CSL-0160` | [PV module single-diode I-V curve](models/renewables/photovoltaics/pv_module_single_diode/README.md) | Photovoltaics | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ⛔ Blocked |
 | `CSL-0082` | [Parabolic-trough receiver (HCE): steady 1D radial energy balance, Forristal/NREL model](models/renewables/solar_thermal/parabolic_trough_receiver_forristal/README.md) | Solar thermal | 🔵 Level 2 · Intermediate | ⚙️ Steady-state | ✅ Verified |
 | `CSL-0083` | [Parabolic-trough receiver and collector heat-loss correlations (Schott PTR70, Sopogy, Soltigua)](models/renewables/solar_thermal/parabolic_trough_loss_correlations/README.md) | Solar thermal | 🔵 Level 2 · Intermediate | 🧩 Function library | ✅ Verified |
 | `CSL-0119` | [Solar geometry and sun path](models/renewables/solar_thermal/solar_geometry_sun_path/README.md) | Solar thermal | 🟢 Level 1 · Introductory | ⚙️ Steady-state | ⛔ Blocked |
+| `CSL-0129` | [Parabolic-trough collector with a discretised absorber (Soponova MicroCSP efficiency map)](models/renewables/solar_thermal/parabolic_trough_collector_discretised/README.md) | Solar thermal | 🟠 Level 3 · Advanced | ⚙️ Steady-state | ✅ Verified |
 
 ## Buildings
 

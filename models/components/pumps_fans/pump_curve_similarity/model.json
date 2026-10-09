@@ -1,0 +1,64 @@
+{
+  "id": "CSL-0125",
+  "name": "pump_curve_similarity",
+  "title": "Centrifugal pump from manufacturer curves and similarity laws",
+  "summary": "Pump sized from catalogue characteristic curves (flow rate, head, isentropic efficiency, required NPSH at a rated speed) and scaled to any speed with the affinity laws; the three operating modes of the original component (P_N: flow rate from pressures and speed, P_M: speed from pressures and flow rate, M_N: discharge pressure from flow rate and speed) are shipped as three files. Translation of the LaboThapPy component PumpCurveSimilarity.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "pump_curve_similarity.eescode",
+  "fluids": [
+    "R744"
+  ],
+  "tags": [
+    "pump",
+    "characteristic curves",
+    "affinity laws",
+    "NPSH",
+    "off-design",
+    "lookup table",
+    "three modes"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "lookup tables",
+    "functions",
+    "arrays"
+  ],
+  "stats": {"n_equations": 33, "largest_block": 1},
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/component/pump/pump_curve_similarity.py",
+    "candidate_id": "LTP-009",
+    "authors": [
+      "Basile Chaudoir",
+      "Elise Neven"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "reference": "LaboThapPy component PumpCurveSimilarity (commit f03f7f47) re-run in a throw-away venv (pip install of the local clone, Python 3.12, CoolProp 8.0.0, SciPy 1.18) on the CO2 case of pump_curve_similarity_example.py: mode P_N with the example inputs, modes P_M and M_N at the operating point found by P_N; plus an affinity-law self-check at N_rot_rated/2 and 2*N_rot_rated",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 1.13e-09,
+    "notes": "All common variables agree within 1.13e-09 against a reference run that uses the plain HEOS property backend (the CoolSolve one). Against the default LaboThapPy run, whose MassConnector evaluates properties with BICUBIC&HEOS (spline tables), the largest difference is 7.2e-03 (W_dot_shaft), 6.8e-03 (m_dot), 4.1e-03 (V_dot), 1.7e-02 (NPSH_r): rho_su 871.60 vs 869.22 kg/m3 (0.27 %) at the same (T,P) propagates through Delta_H = DeltaP/(g*rho). Same EOS, bicubic approximation. The three modes return the same operating point (P_M recovers N_rot = 2900 rpm to 5.8e-15, M_N recovers P_ex to 1.3e-12) and the affinity laws Q~N, H~N^2 are exact (flow rate at half/double speed to 4e-10). LaboThapPy fluid name CO2 maps to EES R744 (bare CO2 is the ideal-gas species in EES)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0084",
+    "CSL-0072",
+    "CSL-0071"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-08", "action": "added (T-TRANSLATE of the LaboThapPy PumpCurveSimilarity component, three modes; verified against the component re-run in a throw-away venv)", "by": "opencode worker for S. Quoilin"}
+  ]
+}

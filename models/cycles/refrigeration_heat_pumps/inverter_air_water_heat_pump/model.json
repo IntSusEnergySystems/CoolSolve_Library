@@ -1,0 +1,74 @@
+{
+  "id": "CSL-0155",
+  "name": "inverter_air_water_heat_pump",
+  "title": "Inverter air-to-water heat pump (Daikin Altherma type), heating mode",
+  "summary": "Detailed steady-state model of an inverter-driven reversible air-to-water heat pump (Daikin Altherma type, 2007): inverter compressor with isentropic and isochoric compression stages, effectiveness heat exchangers, fan and pump characteristics, frost/ice correction. Heating-mode branch of the original two-mode (SUBPROGRAM) file, flattened per decision D10.",
+  "kind": "steady",
+  "level": 4,
+  "status": "blocked",
+  "main_file": "inverter_air_water_heat_pump.eescode",
+  "fluids": [
+    "R410A",
+    "Water",
+    "AirH2O"
+  ],
+  "tags": [
+    "heat pump",
+    "inverter compressor",
+    "reversible",
+    "air-to-water",
+    "frost",
+    "fan characteristics",
+    "catalogue model",
+    "part load"
+  ],
+  "language_features": [
+    "SUBPROGRAM flattened",
+    "string variables",
+    "five-argument IF (EES built-in)",
+    "humid-air properties",
+    "(s,v) property input pair"
+  ],
+  "stats": {
+    "n_equations": 343,
+    "largest_block": 151
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/HP_INVERTER_REV_VLD05092007_DAIKIN-ALTHERMA3.EES",
+    "candidate_id": "TM-0274",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory, file initials VLD)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.793L",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "reference": "EES stored solution (226 of 492 variables); partly self-inconsistent (condenser dew point 18.5 °C vs water heated to 42 °C), see README",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": null,
+    "notes": "Native file blocked by CS-GAP-IF5 (five-argument IF built-in, 14 call sites; gap registered). The _coolsolve variant (rewrites only the IF calls) solves 180 of 181 blocks; the 151-variable wet/dry selection block fails (Unknown fluid '' on two-phase (x,P) calls / MaxIterations; no .sol committed)."
+  },
+  "missing_features": [
+    "CS-GAP-IF5"
+  ],
+  "related": [
+    "CSL-0078",
+    "CSL-0116"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (blocked: CS-GAP-IF-5ARG; heating branch of TM-0274 flattened per D10)",
+      "by": "glm-5.3-flash (opencode worker) for S. Quoilin"
+    }
+  ]
+}

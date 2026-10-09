@@ -50,14 +50,12 @@
     "notes": "compare_solution.py prints '132 common variables, 72 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 31'. The largest printed difference over all common variables is 1.00e+00 (res and the three quality sentinels x_f_su_pp, x_f_ex_pp, x_f_int_exp: EES stores -100/100 for quality() outside the dome and a res of 1.1e-4 W, CoolSolve 0 and -1.1e-11); max_rel_diff 0.00262 is the maximum printed after excluding those four variables and the 52 h/u/s variables, which differ by a constant reference-state offset (+148.19 kJ/kg on h and u, +795.80 J/(kg K) on s: EES default R134a reference vs CoolProp IIR) and agree within 7.5e-4 (h, u) and 6.7e-4 (s) after removing it. The 16 physical variables between 1.1e-3 and 2.6e-3 (largest M_dot_f_ext 2.62e-3; Q_dot_hex 2.0e-3, W_dot_pp 1.8e-3, x_ext 1.7e-3, V_s_exp 1.15e-3) are the R134a equation-of-state differences (specific volume +0.21 %) propagated through the sizing; the other 60 agree within 1e-3. All 133 equations of the original are unchanged (W_dot_exp = 5000, epsilon_s_pp = 0.5 and the three Q_dot_hex statements determine V_s_exp, x_ext and the recuperator outlet); a worker's earlier rearranged specification (V_s_exp, x_ext, w_pp imposed from the stored solution) was reverted after review C-38. The shipped .initials is required (from default guesses the block of 21 stops on a singular Jacobian); 21 iterations with it."
   },
   "missing_features": [],
-  "related": [
-    "CSL-0004",
+  "related": ["CSL-0004",
     "CSL-0007",
     "CSL-0019",
     "CSL-0037",
     "CSL-0040",
-    "CSL-0038"
-  ],
+    "CSL-0038", "CSL-0159"],
   "related_external": [
     "CoolSolve examples/orc_extraction.eescode (same model, kept in CoolSolve as a test case)",
     "CoolSolve misc/EES_ok.zip: EES_ok/orc_extraction.EES (original EES file with the stored solution, used as reference)",

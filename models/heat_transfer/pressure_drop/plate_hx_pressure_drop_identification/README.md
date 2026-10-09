@@ -199,3 +199,5 @@ Source file (EES 8.652, comments mostly English), collection of S. Quoilin:
   variant (TM-0562) is described, not imported.
 - `CSL-0115` *hx_fem_evaporator_discretised*: R245fa evaporator of the same
   lab ORC model set (discretised, three U-value zones).
+
+- `CSL-0153` *orc_whr_refprop_cost*: same REFPROP-based plate-HX correlations (Thonon, Kuo, Hsieh) and blocked/variant pattern.

@@ -1,0 +1,325 @@
+{=============================================================================
+  Turbocharger performance: simplified formulation with combustion products
+  CoolSolve Library model CSL-0152
+ -----------------------------------------------------------------------------
+  Steady-state matching of a turbocharger on a supercharged engine: ambient
+  air through the filter and a compressor (given pressure ratio and
+  isentropic efficiency), an intercooler (epsilon-NTU on a glycol-water
+  loop), the engine (air-fuel ratio, a fraction k of the fuel energy carried
+  by the exhaust gas) and the turbine matched on the compressor power; the
+  equivalent exhaust-orifice diameter and the heat recovery are computed.
+  The exhaust properties come from the molar composition of the
+  complete-combustion products (excess air, simplified dry air 79 % N2 /
+  21 % O2) with ideal-gas species properties (CO2, H2O, O2, N2).
+  The SUBPROGRAM HSCmHnPRODCOMB_PNG030110 of the original (enthalpy and
+  entropy of the products) is flattened into the main program at its five
+  call sites, internal variables tagged per call (decision D10, mapping in
+  README.md). FUNCTION mm_p kept as in the original.
+  Source : ULiege Thermodynamics Laboratory (P. Ngendakumana 2019, R. Dickes)
+  License: MIT - see README.md
+  Status : BLOCKED in CoolSolve (valid EES): CS-GAP-NAME-SYMBOL (C%,
+           Q_dot_2_%), CS-GAP-SUM-INDEXED, CS-GAP-MOLARMASS-ELEMENT,
+           CS-GAP-INCOMPRESSIBLE. Runnable variant: *_coolsolve.eescode.
+=============================================================================}
+
+FUNCTION mm_p(m,n,f)
+
+{MM_p returns the molar mass (kg/kmol) of the combustion products given m and n
+of the CmHn hydrocarbon and the fuel-air ratio f. Complete combustion and a
+simplified dry air composition are assumed, as in the original.}
+
+MM[1] = molarmass(CO2)
+MM[2] = molarmass(H2O)
+MM[3] = molarmass(O2)
+MM[4] = molarmass(N2)
+
+"Stoichiometric fuel-air ratio and excess air"
+f_st = (m*molarmass(C)+n*molarmass(H))/((m+n/4)*(MM[3]+(79/21)*MM[4]))
+e = f_st/f-1
+
+"Mole fractions of the constituents - wet basis"
+ntkmol = m+(n/2)+(m+n/4)*(e+(1+e)*(79/21))
+x[1] = m/ntkmol
+x[2] = (n/2)/ntkmol
+x[3] = (m+n/4)*e/ntkmol
+x[4] = (m+n/4)*(1+e)*(79/21)/ntkmol
+mm_p = sum(x[i]*MM[i],i=1,4)
+
+END
+
+"!Turbocharger performance: simplified formulation (P. Ngendakumana, 24/03/2019)"
+"Notations (as in the original): w specific work, c compressor, hex heat exchanger
+(intercooler), mot engine, e expander (turbine), a air, f fuel-air ratio,
+p combustion products, s isentropic evolution"
+
+"!Data"
+
+$Bookmark DONNEES
+
+p_atm = 1e5                          "atmospheric pressure [Pa]"
+T_amb = 20                           "ambient temperature [C]"
+Filtre = 50                          "pressure drop in the air filter: mm of water column"
+{Filtre = 150 "dirty filter case, alternative kept from the original"}
+r_p_c = 2.16                         "compressor pressure ratio"
+epsilon_s_c = 0.7                    "compressor isentropic efficiency"
+T_w_su_hex = 25                      "coolant inlet temperature [C]"
+epsilon_hex = 0.8                    "thermal effectiveness of the intercooler"
+M_dot_a = 0.045                      "air mass flow rate [kg/s]"
+M_dot_w = 0.025                      "glycol-water flow rate in the intercooler [kg/s]"
+Conc = 40                            "mass concentration of the glycol-water mixture [%]"
+DELTAp_hex = 100                     "pressure drop in the intercooler: mm of water column"
+LHV_f = 43e6                         "lower heating value of the fuel [J/kg]"
+AFR = 20                             "air-fuel ratio"
+k = 1/3                              "fraction of the fuel energy carried by the exhaust gas"
+C% = 86.9                            "mass fraction of C in the fuel [%]"
+epsilon_s_e = 0.7                    "expander isentropic efficiency"
+eta_m_e = 0.85                       "expander mechanical efficiency"
+DELTAp_p_sil_cat = 300               "pressure drop in the muffler and catalytic system [Pa]"
+T_ref = 25                           "reference temperature [C]"
+g = g#                               "gravitational acceleration [m/s^2]"
+R_u = 8314                           "universal gas constant [J/(kmol.K)]"
+
+"!Calculations"
+
+"!Compressor"
+
+$Bookmark compresseur
+
+DELTAp_filtre = Filtre*1e-3*1e3*g    "clean dry filter [Pa]"
+T_a_su_c = T_amb
+p_a_su_c = p_atm-DELTAp_filtre       "air pressure at the compressor inlet [Pa]"
+r_p_c = p_a_ex_c/p_a_su_c            "air pressure at the compressor outlet"
+"Calculation of T_a_ex_c"
+h_a_su_c = enthalpy(Air,T=T_a_su_c)
+s_a_su_c = entropy(Air,T=T_a_su_c,P=p_a_su_c)
+s_a_ex_c_s = s_a_su_c                "isentropic compression"
+T_a_ex_c_s = temperature(Air,s=s_a_ex_c_s,P=p_a_ex_c)
+h_a_ex_c_s = enthalpy(Air,T=T_a_ex_c_s)
+w_c_s = h_a_ex_c_s-h_a_su_c          "isentropic specific work [J/kg]"
+epsilon_s_c = w_c_s/w_c              "gives the specific work w_c"
+w_c = h_a_ex_c-h_a_su_c              "gives h_a_ex_c"
+s_a_ex_c = entropy(Air,h=h_a_ex_c,P=p_a_ex_c)
+T_a_ex_c = temperature(Air,s=s_a_ex_c,P=p_a_ex_c)
+"Order-of-magnitude check: cp and gamma of the air in the compressor"
+c_p_a_c = (h_a_ex_c-h_a_su_c)/(T_a_ex_c-T_a_su_c) "cp of the air in the compressor [J/(kg.K)]"
+r_a = R_u/MM_a
+MM_a = molarmass(Air)
+gamma_a_c = c_p_a_c/(c_p_a_c-r_a)    "gamma of the air in the compressor [-]"
+
+"!Heat exchanger - Intercooler"
+
+$Bookmark Intercooler
+
+T_a_su_hex = T_a_ex_c
+Q_dot_hex = epsilon_hex*C_dot_min*(T_a_su_hex-T_w_su_hex) "heat rate transferred [W]"
+Q_dot_hex = C_dot_h*(T_a_su_hex-T_a_ex_hex)               "air outlet temperature"
+Q_dot_hex = C_dot_c*(T_w_ex_hex-T_w_su_hex)               "glycol-water outlet temperature"
+C_dot_min = min(C_dot_h,C_dot_c)
+C_dot_h = c_p_a_hex*M_dot_a
+C_dot_c = c_w*M_dot_w
+T_bar_w_hex = (T_w_su_hex+T_w_ex_hex)/2
+c_p_a_hex = (h_a_ex_hex-h_a_su_hex)/(T_a_ex_hex-T_a_su_hex) "cp of the air in the intercooler [J/(kg.K)]"
+c_w = Cp(EG,T=T_bar_w_hex,C=Conc)      "cp of the glycol-water mixture [J/(kg.K)]"
+h_a_su_hex = enthalpy(Air,T=T_a_su_hex)
+h_a_ex_hex = enthalpy(Air,T=T_a_ex_hex)
+DELTAp_a_hex = DELTAp_hex*1e-3*1e3*g  "air-side pressure drop [Pa]"
+
+"!Engine"
+
+$Bookmark Moteur
+
+p_a_su_mot = p_a_ex_c-DELTAp_a_hex    "air pressure at the engine inlet [Pa]"
+T_a_su_mot = T_a_ex_hex               "air temperature at the engine inlet"
+f = 1/AFR                             "fuel-air ratio"
+f = M_dot_f/M_dot_a                   "fuel mass flow rate"
+Q_dot = M_dot_f*LHV_f+M_dot_a*(h_a_ex_hex-h_a_ref) "power injected: fuel and air contributions [W]"
+h_a_ref = enthalpy(Air,T=T_ref)
+Q_dot_1 = M_dot_f*LHV_f               "fuel contribution [W]"
+Q_dot_2 = M_dot_a*(h_a_ex_hex-h_a_ref) "air contribution [W]"
+Q_dot_2_% = 100*Q_dot_2/Q_dot         "air contribution in % of Q_dot: negligible, as in the original"
+Q_dot_p = k*Q_dot                     "fraction of the supplied energy found in the exhaust gas [W]"
+Q_dot_p = M_dot_p*(h_p_su_e-h_p_ref)  "h_p_su_e at the expander inlet"
+M_dot_p = M_dot_a*(1+f)               "exhaust gas mass flow rate [kg/s]"
+m = (C%/100)/molarmass(C)             "kmol of C per kg of fuel"
+n = ((100-C%)/100)/molarmass(H)       "kmol of H per kg of fuel"
+pres_su_e = 1e5 "only for the subprogram call - no influence on the enthalpy; the intake pressure is computed below (expander: p_su_e)"
+
+{--- Call 1 of SUBPROGRAM HSCmHnPRODCOMB_PNG030110, flattened (decision D10):
+    inputs m, n, f; temp = T_p_su_e, pres = pres_su_e;
+    outputs h_p = h_p_su_e, s_p = s_m_su_e; internals tagged _su_e ---}
+MM_su_e[1] = molarmass(CO2)
+MM_su_e[2] = molarmass(H2O)
+MM_su_e[3] = molarmass(O2)
+MM_su_e[4] = molarmass(N2)
+f_st_su_e = (m*molarmass(C)+n*molarmass(H))/((m+n/4)*(MM_su_e[3]+(79/21)*MM_su_e[4]))
+f*(1+e_su_e) = f_st_su_e              "excess air of the combustion"
+ntkmol_su_e = m+(n/2)+(m+n/4)*(e_su_e+(1+e_su_e)*(79/21))
+x_su_e[1] = m/ntkmol_su_e
+x_su_e[2] = (n/2)/ntkmol_su_e
+x_su_e[3] = (m+n/4)*e_su_e/ntkmol_su_e
+x_su_e[4] = (m+n/4)*(1+e_su_e)*(79/21)/ntkmol_su_e
+MM_p_su_e = sum(x_su_e[i]*MM_su_e[i],i=1,4) "molar mass of the products [kg/kmol]"
+h_su_e[1] = enthalpy(CO2,T=T_p_su_e)
+h_su_e[2] = enthalpy(H2O,T=T_p_su_e)
+h_su_e[3] = enthalpy(O2,T=T_p_su_e)
+h_su_e[4] = enthalpy(N2,T=T_p_su_e)
+h_p_su_e = sum(x_su_e[i]*MM_su_e[i]*h_su_e[i],i=1,4)/MM_p_su_e "mixture enthalpy [J/kg]"
+Duplicate i = 1,4
+pp_su_e[i] = x_su_e[i]*pres_su_e      "partial pressures [Pa]"
+End
+s_su_e[1] = entropy(CO2,T=T_p_su_e,P=pp_su_e[1])
+s_su_e[2] = entropy(H2O,T=T_p_su_e,P=pp_su_e[2])
+s_su_e[3] = entropy(O2,T=T_p_su_e,P=pp_su_e[3])
+s_su_e[4] = entropy(N2,T=T_p_su_e,P=pp_su_e[4])
+s_m_su_e = sum(x_su_e[i]*MM_su_e[i]*s_su_e[i],i=1,4)/MM_p_su_e "mixture entropy [J/(kg.K)]"
+
+"!Expander (turbine)"
+
+$Bookmark Expanseur
+
+w_c = -w_e*(1+f)*eta_m_e              "turbocharger energy balance: compressor - turbine matching"
+epsilon_s_e = w_e/w_e_s               "isentropic specific work w_e_s of the expander"
+w_e = (h_p_ex_e-h_p_su_e)
+w_e_s = (h_p_ex_e_s-h_p_su_e)
+p_ex_e = p_atm+DELTAp_p_sil_cat       "pressure at the expander outlet [Pa]"
+
+{--- Call 2 of SUBPROGRAM HSCmHnPRODCOMB_PNG030110, flattened (D10):
+    temp = T_p_ex_e, pres = p_ex_e; outputs h_p = h_p_ex_e, s_p = s_p_ex_e ---}
+MM_ex_e[1] = molarmass(CO2)
+MM_ex_e[2] = molarmass(H2O)
+MM_ex_e[3] = molarmass(O2)
+MM_ex_e[4] = molarmass(N2)
+f_st_ex_e = (m*molarmass(C)+n*molarmass(H))/((m+n/4)*(MM_ex_e[3]+(79/21)*MM_ex_e[4]))
+f*(1+e_ex_e) = f_st_ex_e
+ntkmol_ex_e = m+(n/2)+(m+n/4)*(e_ex_e+(1+e_ex_e)*(79/21))
+x_ex_e[1] = m/ntkmol_ex_e
+x_ex_e[2] = (n/2)/ntkmol_ex_e
+x_ex_e[3] = (m+n/4)*e_ex_e/ntkmol_ex_e
+x_ex_e[4] = (m+n/4)*(1+e_ex_e)*(79/21)/ntkmol_ex_e
+MM_p_ex_e = sum(x_ex_e[i]*MM_ex_e[i],i=1,4)
+h_ex_e[1] = enthalpy(CO2,T=T_p_ex_e)
+h_ex_e[2] = enthalpy(H2O,T=T_p_ex_e)
+h_ex_e[3] = enthalpy(O2,T=T_p_ex_e)
+h_ex_e[4] = enthalpy(N2,T=T_p_ex_e)
+h_p_ex_e = sum(x_ex_e[i]*MM_ex_e[i]*h_ex_e[i],i=1,4)/MM_p_ex_e
+Duplicate i = 1,4
+pp_ex_e[i] = x_ex_e[i]*p_ex_e
+End
+s_ex_e[1] = entropy(CO2,T=T_p_ex_e,P=pp_ex_e[1])
+s_ex_e[2] = entropy(H2O,T=T_p_ex_e,P=pp_ex_e[2])
+s_ex_e[3] = entropy(O2,T=T_p_ex_e,P=pp_ex_e[3])
+s_ex_e[4] = entropy(N2,T=T_p_ex_e,P=pp_ex_e[4])
+s_p_ex_e = sum(x_ex_e[i]*MM_ex_e[i]*s_ex_e[i],i=1,4)/MM_p_ex_e
+
+{--- Call 3 of SUBPROGRAM HSCmHnPRODCOMB_PNG030110, flattened (D10):
+    temp = T_p_ex_e_s (isentropic), pres = p_ex_e;
+    outputs h_p = h_p_ex_e_s, s_p = s_p_ex_e_s ---}
+MM_ex_e_s[1] = molarmass(CO2)
+MM_ex_e_s[2] = molarmass(H2O)
+MM_ex_e_s[3] = molarmass(O2)
+MM_ex_e_s[4] = molarmass(N2)
+f_st_ex_e_s = (m*molarmass(C)+n*molarmass(H))/((m+n/4)*(MM_ex_e_s[3]+(79/21)*MM_ex_e_s[4]))
+f*(1+e_ex_e_s) = f_st_ex_e_s
+ntkmol_ex_e_s = m+(n/2)+(m+n/4)*(e_ex_e_s+(1+e_ex_e_s)*(79/21))
+x_ex_e_s[1] = m/ntkmol_ex_e_s
+x_ex_e_s[2] = (n/2)/ntkmol_ex_e_s
+x_ex_e_s[3] = (m+n/4)*e_ex_e_s/ntkmol_ex_e_s
+x_ex_e_s[4] = (m+n/4)*(1+e_ex_e_s)*(79/21)/ntkmol_ex_e_s
+MM_p_ex_e_s = sum(x_ex_e_s[i]*MM_ex_e_s[i],i=1,4)
+h_ex_e_s[1] = enthalpy(CO2,T=T_p_ex_e_s)
+h_ex_e_s[2] = enthalpy(H2O,T=T_p_ex_e_s)
+h_ex_e_s[3] = enthalpy(O2,T=T_p_ex_e_s)
+h_ex_e_s[4] = enthalpy(N2,T=T_p_ex_e_s)
+h_p_ex_e_s = sum(x_ex_e_s[i]*MM_ex_e_s[i]*h_ex_e_s[i],i=1,4)/MM_p_ex_e_s
+Duplicate i = 1,4
+pp_ex_e_s[i] = x_ex_e_s[i]*p_ex_e
+End
+s_ex_e_s[1] = entropy(CO2,T=T_p_ex_e_s,P=pp_ex_e_s[1])
+s_ex_e_s[2] = entropy(H2O,T=T_p_ex_e_s,P=pp_ex_e_s[2])
+s_ex_e_s[3] = entropy(O2,T=T_p_ex_e_s,P=pp_ex_e_s[3])
+s_ex_e_s[4] = entropy(N2,T=T_p_ex_e_s,P=pp_ex_e_s[4])
+s_p_ex_e_s = sum(x_ex_e_s[i]*MM_ex_e_s[i]*s_ex_e_s[i],i=1,4)/MM_p_ex_e_s
+
+{--- Call 4 of SUBPROGRAM HSCmHnPRODCOMB_PNG030110, flattened (D10):
+    temp = T_pp_su_e, pres = p_su_e; outputs h_p = h_p_su_e, s_p = s_p_su_e;
+    s_p_su_e = s_p_ex_e_s (isentropic intake state of the expander) ---}
+MM_su_e2[1] = molarmass(CO2)
+MM_su_e2[2] = molarmass(H2O)
+MM_su_e2[3] = molarmass(O2)
+MM_su_e2[4] = molarmass(N2)
+f_st_su_e2 = (m*molarmass(C)+n*molarmass(H))/((m+n/4)*(MM_su_e2[3]+(79/21)*MM_su_e2[4]))
+f*(1+e_su_e2) = f_st_su_e2
+ntkmol_su_e2 = m+(n/2)+(m+n/4)*(e_su_e2+(1+e_su_e2)*(79/21))
+x_su_e2[1] = m/ntkmol_su_e2
+x_su_e2[2] = (n/2)/ntkmol_su_e2
+x_su_e2[3] = (m+n/4)*e_su_e2/ntkmol_su_e2
+x_su_e2[4] = (m+n/4)*(1+e_su_e2)*(79/21)/ntkmol_su_e2
+MM_p_su_e2 = sum(x_su_e2[i]*MM_su_e2[i],i=1,4)
+h_su_e2[1] = enthalpy(CO2,T=T_pp_su_e)
+h_su_e2[2] = enthalpy(H2O,T=T_pp_su_e)
+h_su_e2[3] = enthalpy(O2,T=T_pp_su_e)
+h_su_e2[4] = enthalpy(N2,T=T_pp_su_e)
+h_p_su_e = sum(x_su_e2[i]*MM_su_e2[i]*h_su_e2[i],i=1,4)/MM_p_su_e2
+Duplicate i = 1,4
+pp_su_e2[i] = x_su_e2[i]*p_su_e
+End
+s_su_e2[1] = entropy(CO2,T=T_pp_su_e,P=pp_su_e2[1])
+s_su_e2[2] = entropy(H2O,T=T_pp_su_e,P=pp_su_e2[2])
+s_su_e2[3] = entropy(O2,T=T_pp_su_e,P=pp_su_e2[3])
+s_su_e2[4] = entropy(N2,T=T_pp_su_e,P=pp_su_e2[4])
+s_p_su_e = sum(x_su_e2[i]*MM_su_e2[i]*s_su_e2[i],i=1,4)/MM_p_su_e2
+
+s_p_su_e = s_p_ex_e_s                 "isentropic expansion: intake entropy = exhaust entropy"
+r_p_e = p_su_e/p_ex_e                 "expander pressure ratio"
+"Equivalent section A_eq_e and equivalent-orifice diameter phi_e"
+M_dot_p = A_eq_e*rho_ex_e*C_ex_e
+C_ex_e^2/2 = -(h_p_ex_e-h_p_su_e)     "sensible energy (enthalpy) converted into kinetic energy"
+p_ex_e*(1/rho_ex_e) = (R_u/MM_p)*(T_p_ex_e+273.15) "rho_ex_e; T in K"
+MM_p = mm_p(m,n,f)                    "molar mass of the exhaust gas: call of FUNCTION mm_p"
+A_eq_e = pi*phi_e^2/4                 "equivalent-orifice diameter [m]"
+"Order-of-magnitude check: cp and gamma of the exhaust gas"
+c_p_p_e = (h_p_su_e-h_p_ex_e)/(T_p_su_e-T_p_ex_e) "cp of the gas in the expander [J/(kg.K)]"
+r_p = R_u/MM_p
+c_p_p_e-c_v_p_e = r_p
+gamma_p_e = c_p_p_e/c_v_p_e           "gamma of the gas in the expander [-]"
+"Speed of sound check: the flow is subsonic, as in the original"
+C_a = sqrt(gamma_p_e*r_p*(T_p_ex_e+273.15))
+
+"!Percentage of the exhaust energy recovered by the turbocharger"
+
+$Bookmark Heat_Recovery
+
+pres_ref = 1e5                        "only for the subprogram call - no influence on the enthalpy"
+
+{--- Call 5 of SUBPROGRAM HSCmHnPRODCOMB_PNG030110, flattened (D10):
+    temp = T_ref, pres = pres_ref; outputs h_p = h_p_ref, s_p = s_p_ref ---}
+MM_ref[1] = molarmass(CO2)
+MM_ref[2] = molarmass(H2O)
+MM_ref[3] = molarmass(O2)
+MM_ref[4] = molarmass(N2)
+f_st_ref = (m*molarmass(C)+n*molarmass(H))/((m+n/4)*(MM_ref[3]+(79/21)*MM_ref[4]))
+f*(1+e_ref) = f_st_ref
+ntkmol_ref = m+(n/2)+(m+n/4)*(e_ref+(1+e_ref)*(79/21))
+x_ref[1] = m/ntkmol_ref
+x_ref[2] = (n/2)/ntkmol_ref
+x_ref[3] = (m+n/4)*e_ref/ntkmol_ref
+x_ref[4] = (m+n/4)*(1+e_ref)*(79/21)/ntkmol_ref
+MM_p_ref = sum(x_ref[i]*MM_ref[i],i=1,4)
+h_ref[1] = enthalpy(CO2,T=T_ref)
+h_ref[2] = enthalpy(H2O,T=T_ref)
+h_ref[3] = enthalpy(O2,T=T_ref)
+h_ref[4] = enthalpy(N2,T=T_ref)
+h_p_ref = sum(x_ref[i]*MM_ref[i]*h_ref[i],i=1,4)/MM_p_ref
+Duplicate i = 1,4
+pp_ref[i] = x_ref[i]*pres_ref
+End
+s_ref[1] = entropy(CO2,T=T_ref,P=pp_ref[1])
+s_ref[2] = entropy(H2O,T=T_ref,P=pp_ref[2])
+s_ref[3] = entropy(O2,T=T_ref,P=pp_ref[3])
+s_ref[4] = entropy(N2,T=T_ref,P=pp_ref[4])
+s_p_ref = sum(x_ref[i]*MM_ref[i]*s_ref[i],i=1,4)/MM_p_ref
+
+Q_dot_p_fin = M_dot_p*(h_p_ex_e-h_p_ref) "power lost at the exhaust [W]"
+HR_0 = 100*(Q_dot_p-Q_dot_p_fin)/Q_dot_p "heat recovery on the exhaust gas with the turbocharger [%]"
+HR = 100*(Q_dot_p-Q_dot_p_fin)/Q_dot "increase of the thermal efficiency of the engine due to the turbocharger [%]"
+HR_bis = -100*M_dot_p*w_e/Q_dot       "same as HR, check in the original"

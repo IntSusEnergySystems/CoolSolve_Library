@@ -221,3 +221,5 @@ solution of 186 variables, no tables).
   (vapour-compression/vapour-power cycles with imposed performance).
 - `CSL-0084` *orc_expander_pump_empirical_maps*: same fluid (R245fa) and a
   small closed ORC demo, with the expander and pump performance from maps.
+
+- `CSL-0153` *orc_whr_refprop_cost*: simple R245fa ORC with imposed component performance.

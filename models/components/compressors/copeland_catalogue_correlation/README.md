@@ -205,3 +205,7 @@ no author (initials `SQ` by the folder convention of the collection).
 - `CSL-0007` *scroll_compressor_semi_empirical*: the Winandy et al. (2002)
   semi-empirical scroll compressor identified on catalogue data (the other
   compressor model of the same heat-pump studies).
+- `CSL-0157` *reciprocating_catalogue_r717*: the same catalogue-data approach
+  (effectiveness maps from manufacturer rows) for the R717 reciprocating
+  member of the same 2002 Laborelec 5-file family, as a `DUPLICATE` array
+  model instead of a correlation function.

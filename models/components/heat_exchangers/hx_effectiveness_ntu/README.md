@@ -413,3 +413,18 @@ in `model.json` (`origin.authors`).
   model uses either the ε-NTU method of this file or the LMTD method of that
   one.
 - `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.
+- `CSL-0126` *hx_constant_effectiveness*: a constant-effectiveness exchanger
+  with an *enthalpy-based* `Q_max` (no area, no ε-NTU inversion); the relations
+  of this file size or rate the duty that model computes.
+
+- `CSL-0128` *hx_eps_ntu_plate_pipe*: translation of the LaboThapPy
+  `HexeNTU` component, whose `e_NTU` relations (counter, parallel, crossflow
+  unmixed and mixed, 1-2 and n-pass shell-and-tube) are the same closed forms
+  as `eps_counterflow`, `eps_parallel`, `eps_crossflow_approx` and
+  `eps_crossflow_mixed_Cmin` of this file; the model computes the
+  conductance-area product from a plate geometry and calls its own copy of the
+  relations.
+- `CSL-0127` *hx_constant_effectiveness_discretised* (level 4): the imposed
+  effectiveness taken to its discretised, pinch-limited form (`HexCstEffDisc`,
+  LaboThapPy): the duty is additionally bounded by a minimum segment
+  temperature difference and by an internal zero-pinch limit.

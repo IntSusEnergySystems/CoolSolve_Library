@@ -1,0 +1,70 @@
+{
+  "id": "CSL-0126",
+  "name": "hx_constant_effectiveness",
+  "title": "Heat exchanger with a constant effectiveness (enthalpy-based)",
+  "summary": "Counterflow heat exchanger with an imposed constant effectiveness: the duty is eta times the largest heat rate an ideal (infinite area) exchanger could transfer between the two inlet states, the limit being the enthalpy the hot stream can give up when cooled to the cold inlet temperature or the enthalpy the cold stream can absorb when heated to the hot inlet temperature, whichever is smaller. Both outlet states follow from the two energy balances. Translation of the LaboThapPy component HexCstEff.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "hx_constant_effectiveness.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "heat exchanger",
+    "counterflow",
+    "constant effectiveness",
+    "enthalpy-based",
+    "recuperator",
+    "gas cooler",
+    "internal heat exchanger"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "MIN / ABS",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 44,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/component/heat_exchanger/hex_csteff.py",
+    "candidate_id": "LTP-011",
+    "authors": [
+      "Basile Chaudoir",
+      "Elise Neven"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en"
+  },
+  "verification": {
+    "reference": "LaboThapPy hex_csteff_example.py run in a throw-away venv (local clone commit f03f7f47, CoolProp 8.0.0): Q_dot = 59860.06830657225 W, T_ex_C = 347.442730364788 K, T_ex_H = 335.660263317977 K; plus the eta = 1 cold-inlet self-check and a cold-limited case (M_dot_C = 0.2 kg/s)",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 2.3e-07,
+    "notes": "Max relative deviation 2.253e-07 over 29 compared variables (inputs, inlet/ideal/outlet enthalpies, Q_dot_max_h/c, Q_dot_max, Q_dot, outlet pressures, temperatures and entropies) for the example case; the same tolerance is obtained for the eta = 1 and the cold-limited cases. The largest deviation is the cold-supply entropy (s[1] 831.144076 vs 831.144263 J/kg.K, 1.9e-4 J/kg.K absolute) and comes from the property backend, not from the equations. eta = 1 gives T_ex_H = T_su_C = 60 C exactly (Delta_T_cold_end = -1.0e-12 K, h_ex_H = h_H_id to 4e-14) and Q_dot_bal_H = Q_dot_bal_C = Q_dot in all cases. The capacity-rate fallback branch of the original (C_min*(T_su_H - T_su_C)) is not part of the shipped model; the same relations are available as functions in CSL-0090. CoolProp 'Water' maps to EES 'Water' (real fluid in both)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0014",
+    "CSL-0090",
+    "CSL-0128",
+    "CSL-0127"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (T-TRANSLATE of LaboThapPy HexCstEff, verified vs hex_csteff_example.py and the eta = 1 / cold-limited self-checks)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

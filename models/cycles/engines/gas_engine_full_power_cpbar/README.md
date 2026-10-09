@@ -283,3 +283,6 @@ which reports
 * **CSL-0049** `otto_cycle_air_standard`: the air-standard Otto cycle of
   the same engine family, solved as a steady ideal-gas model (no cooling
   circuit, no combustion products).
+* **CSL-0149** `gas_engine_complete_model`: the maximum-power counterpart of
+  this stand-by point, from the same TP 08 exercise series (SB versions),
+  with the throttle map lookup, the water circuit and two recovery exchangers.

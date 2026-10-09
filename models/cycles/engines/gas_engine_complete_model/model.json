@@ -1,0 +1,75 @@
+{
+  "id": "CSL-0149",
+  "name": "gas_engine_complete_model",
+  "title": "Complete gas engine: throttle, carburettor, combustion, cooling and recovery circuits",
+  "summary": "Steady-state model of the 5 L four-stroke natural-gas engine of the ULiege MSTh course at its maximum-power point (2400 rpm, shaft power solved from the indicated efficiency): butterfly valve and carburettor, intake pressure drop through the valve area, adiabatic combustion chamber with the cpbar mean specific heat, expansion, jacket and water-to-environment exchangers, and two recovery exchangers (exercise 5). The stand-by throttling pressure drop is read in an engine map (external lookup table recovered from the sibling file TM-0137).",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "gas_engine_complete_model.eescode",
+  "fluids": [
+    "Air",
+    "CH4",
+    "Water"
+  ],
+  "tags": [
+    "gas engine",
+    "four-stroke",
+    "throttle",
+    "carburettor",
+    "combustion chamber",
+    "cooling circuit",
+    "recovery exchanger",
+    "lookup table",
+    "mean specific heat",
+    "exercise"
+  ],
+  "language_features": [
+    "INTERPOLATE (native EES call form with a named argument)",
+    "user-library routine cpbar (implicit library, copied; function-position calls in the native file, CALL form in the variant)",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 105,
+    "largest_block": 10
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 08/SB/MSTH-SB-R8-EX1-2-3-4-5.EES",
+    "candidate_id": "TM-0136",
+    "authors": [
+      "ULiège MSTh course (J. Lebrun, V. Lemort, S. Bertagnolio)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "Machines et systèmes thermiques (ULiège), repetition TP 08, exercises 1-5"
+  },
+  "verification": {
+    "reference": "EES stored solution of the original (97 common variables; the 98th, m, is a phantom variable of the original with an empty stored value), compared for the runnable _coolsolve variant with tools/compare_solution.py",
+    "date": "2026-10-08",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 0.0094,
+    "notes": "97 common variables, 6 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 9 (the constant PI and the 8 unused cpbar outputs). Excluding s_2 (absolute air entropy, CoolProp reference-state offset; its differences agree to 6e-5), the maximum is 9.4e-3 on cp_f = CP(CH4) (EES ideal-gas vs CoolProp real-fluid heat capacity, same deviation as CSL-0034). All other deviations explained in the README (cp_p_67 1.6e-3, W_dot_pumping 2.6e-3 on a small difference of two large pressures, Q_dot_recup_1 1.3e-3 on a 2.2 K temperature difference)."
+  },
+  "missing_features": [
+    "CS-GAP-INTERP-EES",
+    "CS-GAP-INCLUDE"
+  ],
+  "related": [
+    "CSL-0034",
+    "CSL-0005"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (roadmap card C-141, duplicate group DG-0029: TM-0136 representative)",
+      "by": "glm-5.3-flash worker for S. Quoilin"
+    }
+  ]
+}

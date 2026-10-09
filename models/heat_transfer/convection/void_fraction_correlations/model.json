@@ -1,0 +1,94 @@
+{
+  "id": "CSL-0131",
+  "name": "void_fraction_correlations",
+  "title": "Void-fraction correlations for two-phase flow (13 models, function library)",
+  "summary": "EES FUNCTION library of the thirteen void-fraction correlations of the LaboThapPy void_fraction module: homogeneous (no slip), Zivi, Fauske, Premoli and Hughmark (slip-ratio family), Lockhart-Martinelli, Graham and Cioncolini-Thome (empirical, the last two respectively condensation-only and annular flow), Armand-Treschev and Bankoff (K times the homogeneous void fraction), and the drift-flux models Rouhani-Axelsson, Dix and Woldesemayat-Ghajar; the Reynolds and Weber numbers Premoli needs are helper functions. Demonstrated on the case of the original example (R410A at 1.2 MPa, 8 mm pipe, 300 kg/m^2.s, ten qualities).",
+  "kind": "function",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "void_fraction_correlations.eescode",
+  "fluids": ["R410A"],
+  "tags": [
+    "void fraction",
+    "two-phase flow",
+    "hold-up",
+    "slip ratio",
+    "drift flux",
+    "correlation",
+    "function library",
+    "translation",
+    "refrigeration",
+    "ORC",
+    "boiling",
+    "condensation"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "MIN / MAX",
+    "LN",
+    "SQRT / EXP",
+    "COS / SIN (degrees)",
+    "property functions",
+    "string variables",
+    "DUPLICATE arrays"
+  ],
+  "stats": {
+    "n_equations": 161,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/correlations/void_fraction/void_fraction.py",
+    "candidate_id": "LTP-033",
+    "authors": [
+      "Elise Neven (LaboThapPy, void_fraction.py)",
+      "S. M. Zivi (Zivi void fraction, 1964)",
+      "H. K. Fauske (Fauske void fraction, 1962)",
+      "A. Premoli, D. D. Francesco and A. Prina (Premoli void fraction, 1971)",
+      "R. W. Lockhart and R. C. Martinelli (Lockhart-Martinelli void fraction, 1949)",
+      "D. Chisholm (closed-form approximation of the Lockhart-Martinelli curves, 1967)",
+      "G. A. Hughmark (Hughmark void fraction, 1962)",
+      "G. B. Wallis (Graham void fraction, 1969)",
+      "V. I. Armand and G. G. Treschev (Armand-Treschev void fraction)",
+      "S. G. Bankoff (Bankoff void fraction, 1960)",
+      "S. Z. Rouhani and E. Axelsson (Rouhani-Axelsson void fraction, 1970)",
+      "G. E. Dix (Dix void fraction, 1971)",
+      "B. Chexal, J. Horowitz and G. Lellouche (assessment of eight void fraction models, 1986)",
+      "M. A. Woldesemayat and A. J. Ghajar (Woldesemayat-Ghajar void fraction, 2007)",
+      "A. Cioncolini and J. R. Thome (Cioncolini-Thome void fraction, 2012)"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy",
+    "license": "MIT (declared in pyproject.toml; LICENSE.txt of the library is Apache-2.0) / model published under the library MIT licence (decision D3)",
+    "ees_version": "",
+    "language": "en",
+    "notes": "LaboThapPy commit f03f7f47, file labothappy/correlations/void_fraction/void_fraction.py (926 lines, 13 correlation functions plus the compute_void_fraction dispatcher), with the helpers labothappy/correlations/properties/dimensionless.py (compute_reynolds, compute_weber) and labothappy/correlations/properties/two_phase.py (get_saturated_phase_properties). The demonstration cases come from the library example labothappy/correlations/void_fraction/void_fraction_example.py. The module names R. Dickes (PhD thesis, ULiege) and Thome & Cioncolini, 'Void Fraction' (2015, DOI 10.1142/9789814623216_0021) as its presentation sources for the first group of correlations."
+  },
+  "verification": {
+    "reference": "the LaboThapPy void_fraction_example.py of commit f03f7f47 re-run in a throw-away virtual environment under work/ (work/void_fraction/ref_void_fraction.py, pip install of the local clone, CoolProp 8.0.0); 130 void fractions on the 10-quality grid plus the saturated properties",
+    "date": "2026-10-09",
+    "coolsolve_version": "0.3.0@7addbbc",
+    "max_rel_diff": 2.203e-05,
+    "notes": "RunnABLE VARIANT void_fraction_correlations_coolsolve.eescode: 130 values, 0 differ (rtol=1e-3), largest relative deviation 2.203e-05 (void_fraction_Dix at x = 0.95), caused by the surface tension taken at saturation instead of at the state quality (0.24 % in sigma, 0.25 power in the drift velocity). NATIVE FILE void_fraction_correlations.eescode: 120 of the 130 values agree within 1e-3; the 10 exceptions are alpha_Hughmark, up to 4.748e-02, because of CS-BUG-IMPLICIT-PROC (the implicit equation of the FUNCTION body is silently not solved). Excluded from the comparison: the four branch-check variables and the properties (see README.md, Verification)."
+  },
+  "missing_features": ["CS-BUG-IMPLICIT-PROC"],
+  "related": [
+    "CSL-0130",
+    "CSL-0103",
+    "CSL-0121",
+    "CSL-0132"
+  ],
+  "related_external": [
+    "sources/labothappy LTP-028 (pipe pressure-drop correlations, CSL-0130, which uses the homogeneous and Zivi void fractions of this family)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-09",
+      "action": "added (T-FUNC card C-176, inventory row LTP-033; native file blocked by CS-BUG-IMPLICIT-PROC, runnable variant verified)",
+      "by": "opencode worker (space-bunny-free) for S. Quoilin"
+    }
+  ]
+}
