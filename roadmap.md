@@ -13,30 +13,36 @@ in [docs/taxonomy.md](docs/taxonomy.md).
 
 ## 1. Status at a glance
 
-| Library (2026-10-08, 01:00) | Count |
+| Library (2026-10-09, 20:00 — work paused) | Count |
 |---|---:|
-| Models (`library.csv`) | 123 |
-| … verified / runs / blocked | 88 / 7 / 28 |
-| … steady / function / dynamic / optimization | 83 / 34 / 5 / 1 |
-| Functions and procedures (`functions.csv`) | 347 |
-| Regression (`test_models.py`, `CSL-0009:coolsolve` excluded) | 125 targets (95 main files + 30 variants), 0 failure |
-| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md) §4–§5) | 80 (48 gaps, 30 bugs, 2 doc issues) |
+| Models (`library.csv`) | 148 |
+| … verified / runs / blocked | 98 / 7 / 43 |
+| … blocked with a verified runnable `_coolsolve` variant / not runnable at all | 36 / 7 |
+| … steady / function / dynamic / optimization | 105 / 37 / 5 / 1 |
+| Functions and procedures (`functions.csv`) | 432 |
+| Regression (`test_models.py`, `CSL-0009:coolsolve` excluded) | 150 targets (105 main files + 45 variants), 0 failure |
+| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md) §4–§5) | 98 (58 gaps, 38 bugs, 2 doc issues) |
 | … closed (§7) | 9 (3 gaps, 5 bugs, 1 doc issue) |
-| … unverified suggestions (§8 *Unverified by a reviewer*) | 10 |
+| … unverified suggestions (§8 *Unverified by a reviewer*) | 11 |
+
+Not runnable at all (no verified variant): `CSL-0081` (borefield, dynamic), `CSL-0043` (LiBr absorption chiller),
+`CSL-0040` (biomass ORC CHP), `CSL-0116` (Vitocal heat pump, catalogue vintage), `CSL-0155` (inverter heat pump, one
+coupled block fails — register §8), `CSL-0150` (flame with dissociation, CS-GAP-CHEM-EQUIL), `CSL-0162` (run-around
+loop, CS-BUG-NEWTON-CYCLE).
 
 | Backlog (source inventories) | Candidates | todo | added | merged | duplicate | discarded | parked |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| ULiège collection `thermo_models` | 602 | 342 | 83 | 35 | 91 | 50 | 1 |
+| ULiège collection `thermo_models` | 602 | 322 | 99 | 38 | 92 | 50 | 1 |
 | CoolSolve examples | 47 | 1 | 33 | 9 | 1 | 3 | 0 |
 | `ht` (Caleb Bell), one row per correlation family | 24 | 0 | 24 | 0 | 0 | 0 | 0 |
 | ThermoCycle | 21 | 2 | 4 | 1 | 0 | 14 | 0 |
-| LaboThapPy | 74 | 73 | 1 | 0 | 0 | 0 | 0 |
-| TESPy | 52 | 51 | 1 | 0 | 0 | 0 | 0 |
+| LaboThapPy | 74 | 59 | 9 | 6 | 0 | 0 | 0 |
+| TESPy | 52 | 49 | 2 | 1 | 0 | 0 | 0 |
 
 The tables count inventory **rows**, not models: a model imported from a
 CoolSolve example and from its EES original in `thermo_models` has two `added`
 rows (workflow §2). Every library model has its `added` row (cross-check of
-2026-10-06).
+2026-10-09).
 
 Priorities of the candidates (wave1 / high / medium / low / skip):
 `thermo_models` 38 / 37 / 154 / 268 / 105 · CoolSolve examples 12 / 24 / 7 / 0 / 3 ·
@@ -46,81 +52,67 @@ TESPy 8 / 8 / 23 / 13 / 0.
 Refresh with `python3 tools/build_index.py` (models) and
 `python3 tools/backlog_stats.py` (candidates).
 
-### Where to resume (handover, 2026-10-06, 09:30)
+### Where to resume (handover, 2026-10-09, 20:00)
 
-- **State (2026-10-08, 01:00):** every card of B-01 … B-10 is done and every batch is closed by its review
-  (`C-120` B-09, `C-136` B-10: light scripted reviews). All 24 `ht` correlation families are in the library
-  (`CSL-0087` … `CSL-0110`); B-10 imported the 14 cards of the 2026-10-06 additions. **No batch is open**: the next
-  batches are to be planned from the backlog (`thermo_models` 342 `todo` rows, of which wave1/high first;
-  LaboThapPy 73; TESPy 51; ThermoCycle 2) — e.g. a T-PLAN card given to a worker that proposes B-11 from
-  `backlog_stats.py` and the inventories.
-- **Last session (2026-10-07 18:30 → 2026-10-08 01:00):** glm-5.3-flash did the hard cards and, once the opencode
-  free quota was exhausted (19:09, shared by all free models), all the rest; the supervisor is still up (`python3
-  ~/llm/scripts/oc-orch.py down` to stop it). Next free IDs: `CSL-0168`, card `C-194`.
-- **Queue (2026-10-09, glm-5.3-flash out until 2026-10-14):** space-bunny alone (one opencode worker at a time;
-  muse if bunny is unavailable) takes, in order: B-12 C-175 … C-182, C-184, C-185 (after C-180), C-186 … C-188,
-  C-189 [hard], C-190, C-191 (after C-184), C-192; then B-11 C-140, C-146, C-156, C-157; then the reviews C-139
-  (taxonomy, M2), C-160 (B-11), C-193 (B-12).
+- **State:** B-01 … B-10 are closed. **Open batches:**
+  - **B-11** (ULiège wave1/high, cards C-140…C-159): all 16 [hard] cards done; open the 4 [std] cards
+    `C-140`, `C-146`, `C-156`, `C-157`, then the review `C-160`, and the taxonomy review `C-139` (M2, P6.2).
+  - **B-12** (LaboThapPy + TESPy wave1/high, C-170…C-192): done `C-170` … `C-177`, `C-183`; open `C-178` … `C-182`,
+    `C-184` … `C-192` (`C-189` [hard]; dependencies `C-185` after `C-180`, `C-191` after `C-184`), then the review
+    `C-193`. Worker notes: `b11_extra.txt` / `b12_extra.txt` in `~/llm/scripts/csl/`.
+  - After that: plan the next batches from the backlog (`thermo_models` medium, LaboThapPy/TESPy medium) with a
+    T-PLAN card as C-137/C-138 did (notes `b11_plan.txt`, `b12_plan.txt`).
+- **Work paused by the maintainer on 2026-10-09 at 20:00.** No task is running, the supervisor and the event watcher
+  are stopped (`python3 ~/llm/scripts/oc-orch.py up` restarts the supervisor; the opencode server may still run:
+  `down --server` stops it). Partial attempts are archived in `~/git/csl-lanes/_results/` (`C-178_bunny_t169`: no
+  model yet — restart the card from scratch). Next free IDs: `CSL-0168`, card `C-194`.
+- **Worker availability when paused:** z.ai `glm-5.3-flash` weekly limit until **2026-10-14 09:25 CEST** (15:25
+  UTC+8; it also has a 5-hour usage window); the opencode free quota (shared by all free models) was exhausted at
+  11:00 on 2026-10-09 after ≈ 1.5 h of work and had not come back by 20:00 — it looks like a daily allowance.
+  Probe before dispatching: `bash ~/llm/scripts/csl/probe.sh <model> 0`.
+- **Queue for the next session (in order):** B-12 `C-178` … `C-182`, `C-184`, `C-185`, `C-186` … `C-188`, `C-189`
+  [hard → glm-5.3-flash if back], `C-190`, `C-191`, `C-192`; B-11 `C-140`, `C-146`, `C-156`, `C-157`; reviews
+  `C-139`, `C-160`, `C-193`. Routing: [hard] → glm-5.3-flash, [std] → the one opencode worker (bunny, else muse).
 - **Worker models, in order of priority** (details, benchmark and lessons:
   `~/Nextcloud/llm/opencode-model-comparison.md`):
   1. z.ai `glm-5.3-flash` — main worker, given the hardest cards (maintainer, 2026-10-07: **never the full
-     `glm-5.3`, only the flash model**); weekly z.ai limit (exhausted again 2026-10-09, reset **2026-10-14 09:25
-     CEST** = 15:25 UTC+8; also a 5-hour window);
-  2. opencode `space-bunny-free` — best free worker (`ht` cards in 6–30 min, honest
-     verification); check its gap claims (C-85: two invalid gaps) and its inventory
-     edits;
-  **Only one opencode (free) worker at a time (maintainer, 2026-10-07/08): space-bunny or muse-spark.** The free quota is an opencode account
-  limit shared by all free models (all five hit "Free usage exceeded" in the same minute on 2026-10-07), so the
-  models below are replacements only, if bunny is unavailable:
-  3. opencode `mimo-v2.6-flash-free`, `longcat-2.5-preview-free`,
-     `ling-3.1-flash-free` — qualified by the C-10 benchmark (exact reproduction of
-     `CSL-0011`); good quality but free quota throttled hard (6–18 limit pauses a
-     night);
-  4. opencode `muse-spark-1.3-contributor-free` — fast and faithful, but its free
-     quota has been exhausted since 2026-10-05 13:00 (probe before use).
-  Not to be used: `nemotron-3-ultra-free` (fabricated a model),
-  `nemotron-3.5-lightning-free` (overwrote an inventory, injected stored values as
-  equations, false gap), `fledge-alpha-free` (not available in this country),
-  `ling-3.0-flash-fin-free` (endpoint unavailable). A new model runs the C-10
-  benchmark first (`csl.py dispatch <lane> C-10 "<C-10 line>" --id CSL-0011
-  --extra-file bench_c10_extra.txt --prep bench_c10_prep.sh`, scored by
-  `~/llm/scripts/csl/bench_score.py`).
-- **Lanes:** the cards run in parallel isolated lanes, one per worker model
-  (`~/git/csl-lanes/<lane>`: a copy of the library + a CoolSolve folder of symlinks
-  with a private `docs/`), merged 3-way into the main trees by
-  `~/llm/scripts/csl/csl.py merge`. `roadmap.md` and the generated index files are
-  never merged from a lane; stray files outside the library folders are ignored;
-  **source inventories are merged row by row** (only the rows a worker changed; row
-  deletions and decision resets to `todo` are ignored and logged — workers rewrote
-  whole inventories from stale copies three times). IDs are pre-assigned in the card
-  lines (`— CSL-xxxx`; next free: `CSL-0125`). Next card number: `C-137`.
-- **Orchestrator checks per card:** `csl.py check <lane>` (folder, build_index,
-  test_models, files changed); for imports of the ULiège collection by a less
-  trusted worker, `~/llm/scripts/csl/src_check.py TM-xxxx <folder>` (equation
-  overlap with the extracted EES source + `compare_solution.py` summary). Reject a
-  new register row whose reproducer is not valid EES (an over- or under-determined
-  system is rejected by EES too) and move unconfirmed claims to §8 of the register.
-- **Pending CoolSolve suggestions** not in the register (unverified gaps, fixes
-  of CoolSolve examples found during imports): §8 *Unverified by a reviewer* of the
-  register `~/git/CoolSolve/docs/model_library_support.md` (the orchestrator adds the
-  worker suggestions it cannot confirm there). Notable bugs registered this run, all
-  reproduced: `CS-BUG-PI-FUNCTION` (**`pi` = 1 inside a FUNCTION/PROCEDURE body,
-  silent**), `CS-BUG-COMMON-PROC` (`$COMMON` variables read as 0),
-  `CS-BUG-NO-SOL-DELETE` (`--no-sol` deletes the `.sol` baseline),
-  `CS-BUG-TINY-VALUE`; new gaps `CS-GAP-PROP-SV`, `CS-GAP-INTEGRALVALUE`,
-  `CS-GAP-GOTO`, `CS-GAP-FLUIDS-C8H18`.
-- **Repository state:** the maintainer's last commit is `d44eb6a`; the cards merged
-  since are in the working tree, to review and commit; `work/` is empty.
-- **CoolSolve:** use the `main` build `~/git/CoolSolve/build/coolsolve` (`536d427`;
-  `docs/` modified by the register rows of this run, to commit in CoolSolve). Native
-  files blocked by CoolSolve gaps: the `blocked` rows of `library.csv` (22), each with
-  its `missing_features`; most have a verified `_coolsolve` variant. After a CoolSolve
-  release: `T-RECHECK` (workflow §6).
+     `glm-5.3`, only the flash model**);
+  2. opencode `space-bunny-free` — best free worker; check its gap claims and its header length.
+  **Only one opencode (free) worker at a time (maintainer, 2026-10-07/08): space-bunny or muse-spark** — the free
+  quota is shared by all free models of the account. Replacements only: `mimo-v2.6-flash-free`,
+  `longcat-2.5-preview-free`, `ling-3.1-flash-free` (qualified by the C-10 benchmark), `muse-spark-1.3`.
+  Not to be used: `nemotron-3-ultra-free` (fabricated a model), `nemotron-3.5-lightning-free` (overwrote an
+  inventory, false gap), `fledge-alpha-free`, `ling-3.0-flash-fin-free` (unavailable). A new model runs the C-10
+  benchmark first (`bench_c10_prep.sh`, scored by `bench_score.py`).
+- **Lanes:** the cards run in isolated lanes, one per worker model (`~/git/csl-lanes/<lane>`: a copy of the library
+  + a CoolSolve folder of symlinks with a private `docs/`), merged 3-way into the main trees by
+  `~/llm/scripts/csl/csl.py merge`. `roadmap.md` and the generated index files are never merged from a lane; stray
+  files outside the library folders are ignored; **source inventories are merged row by row** (only the rows a
+  worker changed; row deletions and decision resets are ignored and logged). IDs are pre-assigned in the card lines.
+  The supervisor is capped at 2 parallel tasks (`oc-orch.py config --max-parallel 2`: glm + one opencode worker).
+- **Orchestrator loop per card:** `csl.py check <lane>` (folder, **header lines** — rule ≤ ≈ 20, flagged > 25 —,
+  build_index, test_models, files changed) → for ULiège imports `src_check.py TM-xxxx <folder>` (equation overlap
+  with the extracted EES source, zip members handled, + `compare_solution.py` summary) → review new register rows
+  (`diff` of the lane register with the main one: duplicates are folded into the existing ID, rows without
+  valid-EES evidence move to §8, cheap claims are reproduced with a 3-line file) → `csl.py save` → `csl.py merge` →
+  `ls models/*/*/*/*.lane-*` (conflicts) → `csl.py tick C-xx "C-xx \`CSL-xxxx\`" "<result>"` → next dispatch.
+  Corrections go back to the same worker with `oc-orch.py send <task> "<message>"` (it keeps its context).
+  Waiting: `cd ~/llm/scripts/csl && python3 wait_event.py; python3 ../oc-orch.py beat; bash glm_probe.sh 30` in the
+  background (never kill it with `pkill -f` on a pattern that matches the calling shell).
+- **Pending CoolSolve suggestions** not in the register: §8 *Unverified by a reviewer* of
+  `~/git/CoolSolve/docs/model_library_support.md`. Bugs reproduced by the orchestrator in this run (priority for a
+  CoolSolve agent): `CS-BUG-PI-FUNCTION` (`pi` = 1 in a body, silent), `CS-BUG-CONVERT-UNIT`
+  (`convert('lbm/hr','kg/s')` = 1), `CS-BUG-DUPLICATE-INDEX-EXPR` (`T[i+1]` in DUPLICATE), `CS-BUG-DUPLICATE-VAR-BOUND`
+  (DUPLICATE with a variable bound dropped), `CS-BUG-NO-SOL-DELETE`, `CS-BUG-LOOKUP-WRITE`, `CS-BUG-COMMON-PROC`,
+  `CS-BUG-HASH-IDENT`, `CS-BUG-LOOKUP-COL-ARG`, `CS-BUG-IMPLICIT-PROC`, `CS-BUG-NEWTON-CYCLE`.
+- **Repository state:** library committed by the maintainer up to `3f0caaf` (working tree clean at the pause);
+  CoolSolve `docs/model_library_support.md` modified by the register rows since `7addbbc` (to commit in CoolSolve).
+- **CoolSolve:** use the `main` build `~/git/CoolSolve/build/coolsolve` (`536d427`, docs-only commits since).
+  Blocked native files list their gaps in `model.json` (`missing_features`). After a CoolSolve release:
+  `T-RECHECK` (workflow §6).
 - **Regression:** `python3 tools/test_models.py --coolsolve ~/git/CoolSolve/build/coolsolve`
-  (absolute path: the tool runs CoolSolve from each model folder) solves the main file
-  of every runnable model **and every variant that has a `.sol` next to it**
-  (`CSL-xxxx:variant`). `--exclude CSL-0009:coolsolve` (18 000 integration steps, 3 min)
-  for a quick run: 105 targets, 0 failure on 2026-10-06.
+  (absolute path) solves the main file of every runnable model **and every variant that has a `.sol` next to it**;
+  `--exclude CSL-0009:coolsolve` (3 min of integration) for a quick run: 150 targets, 0 failure on 2026-10-09.
 - **For the maintainer:** `solar/SETP.LIB` (TM-0591, textbook code of *Solar
   Engineering of Thermal Processes*) is `parked` — publication/licence question;
   pipe friction and two-phase pressure drop are not in `ht` but in its companion
@@ -981,3 +973,4 @@ and adds the log line in §8.
 | 2026-10-09 | C-175 `CSL-0130` | Added *pipe_pressure_drop_correlations* (LaboThapPy LTP-028: 22 FUNCTIONs — 6 friction factors, Friedel / Müller-Steinhagen-Heck / Choi two-phase dP, acceleration and gravity terms) — verified vs the LaboThapPy re-run (0 differ, max 1.0e-12); header trimmed on review; worker space-bunny |
 | 2026-10-09 | C-176 `CSL-0131` | Added *void_fraction_correlations* (LaboThapPy LTP-033: 13 void-fraction models) — native file blocked by CS-BUG-IMPLICIT-PROC (evidence appended); verified `_coolsolve` variant vs the LaboThapPy example re-run (130 values, 0 differ, max 2.2e-5); worker space-bunny (29 min) |
 | 2026-10-09 | C-177 `CSL-0132` | Added *r1233zd_thermal_conductivity* (LaboThapPy LTP-048: Perkins & Huber R1233zd(E) thermal conductivity, 2 FUNCTIONs) — verified (8/8); note: the CoolSolve build's bundled fluid data now include this conductivity (released CoolProp does not), documented; header trimmed on review; worker space-bunny (25 min) |
+| 2026-10-09 | handover | Work paused by the maintainer (opencode free quota exhausted since 11:00; glm-5.3-flash weekly limit until 2026-10-14). Since 2026-10-08: B-11 planned (C-137) and its 16 [hard] cards imported by glm-5.3-flash; B-12 planned (C-138) and 9 cards translated (C-170…C-177, C-183). Orchestrator reproduced and registered CS-BUG-DUPLICATE-INDEX-EXPR, CS-BUG-DUPLICATE-VAR-BOUND, CS-BUG-CONVERT-UNIT; duplicate register rows folded; header-length rule enforced by csl.py check. 148 models, 432 functions, regression 150/150 |
