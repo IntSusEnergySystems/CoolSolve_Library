@@ -7,18 +7,19 @@ coefficient of a chevron plate pack (chevron angle 25/30/45/60°): Thonon
 (single-phase), Kuo et al. (condensation, quality-integrated two-phase
 coefficient and frictional pressure drop), Hsieh & Lin (flow boiling), plus an
 identified fictitious orifice reproducing the measured pressure drop of two
-condensers in series. Properties come from the EES REFPROP interface for the
-mixture R245fa+R134a; the stored EES run uses `MM_fraction = 1` (pure R245fa).
+condensers in series. Properties of the mixture R245fa+R134a are CoolProp
+property calls (the source used the EES REFPROP interface); the stored EES run
+uses `MM_fraction = 1` (pure R245fa).
 
 | | |
 |---|---|
 | **Category** | Heat transfer › Pressure drop |
-| **Fluids** | R245fa+R134a (REFPROP mixture); R245fa (stored run and variant) |
+| **Fluids** | R245fa+R134a (CoolProp mixture string, not a CoolSolve fluid); R245fa (stored run and variant) |
 | **Size** | 37 equations (largest block: 2) + 3 procedures |
 | **Source** | ULiège — J. Lebrun laboratory, `optim/` folder (~2011), file `Identification pressure drops.EES` |
 | **Authors** | TBD (ULiège, J. Lebrun laboratory) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file blocked (`$common` in procedures: `CS-BUG-COMMON-PROC`; its `CALL EES_REFPROP` blocks are to be rewritten as CoolProp property calls, decision D12); runnable variant verified against the EES stored solution |
+| **CoolSolve** | v0.3.0 — native file blocked (`CS-BUG-COMMON-PROC`: `$common` in procedures; `CS-GAP-FLUIDS-MIXTURE`: no R245fa+R134a mixture); runnable pure-R245fa variant verified against the EES stored solution (see *Verification*) |
 
 ## Problem statement
 
@@ -34,8 +35,9 @@ p = 160 kPa, T = 88 °C (gas, condenser side), T_sat = 27 °C, q = 10 kW.
 
 ## Model
 
-Three `PROCEDURE`s, each retrieving properties with `CALL EES_REFPROP`
-(molar-based outputs, converted by the original with the molar mass `MM`):
+Three `PROCEDURE`s, each retrieving its properties with CoolProp calls on the
+mixture (the source's REFPROP calls, rewritten per decision D12; the enthalpies
+of `kuo` and `Hsieh_new` are mass-specific here, see the conversion log):
 
 - **Thonon**(fluid$, P, T, M_dot, b, L_w_tot, L_h, β: h, Δp) — single-phase:
   D_h = 2b, Re = G·D_h/μ with G = ṁ/(b·L_w_tot); Nu = C₁·Re^m·Pr^(1/3) and
@@ -64,9 +66,10 @@ efficiencies) are kept as in the original.
 
 ## How to run
 
-The native file is kept in valid EES and cannot run in CoolSolve
-(`CALL EES_REFPROP` → *"Unknown procedure: EES_REFPROP"*). The runnable
-variant is:
+The native file (CoolProp mixture calls, decision D12) cannot run in CoolSolve:
+the mixture is not a CoolSolve fluid (`CS-GAP-FLUIDS-MIXTURE`) and the
+`$common` variables do not reach the procedures (`CS-BUG-COMMON-PROC`). The
+runnable variant is:
 
 ```bash
 coolsolve ./plate_hx_pressure_drop_identification_coolsolve.eescode
@@ -124,6 +127,16 @@ Identification pressure drops.EES`, 34 variables decoded), compared with
 
 Verification concerns the **variant**; the native file cannot run (below).
 
+- **Native rewrite (2026-10-10)**: checked in a scratch copy with the variant's
+  workarounds (pure R245fa for the mixture string, `$common` dropped): its 36
+  common variables are identical to those of the variant run with the same
+  binary (maximum relative difference 0).
+- **Frozen binary (2026-10-10)**: with the CoolSolve binary of that day the
+  variant's solution is no longer its committed `.sol` (`0.3.0@7addbbc`, older
+  CoolProp build; the regression `CSL-0124:coolsolve` reports it): `h` = 277.05
+  W/m²K and `DELTAp` = 490.20 Pa against 259.43 and 479.24 in EES (the
+  transport properties of R245fa vapour differ between the two CoolProp builds).
+
 ## Source and attribution
 
 Working file of the ULiège Thermodynamics Laboratory (J. Lebrun laboratory
@@ -171,26 +184,33 @@ Source file (EES 8.652, comments mostly English), collection of S. Quoilin:
   procedures present (→ 1); not multi-zone (→ 0); semi-empirical
   correlations + identified parameter A_thr (→ 1); default guesses suffice
   (→ 0). Score 2 → **level 2**.
+- **2026-10-10 — native file rewritten (decision D12)**: the 11 `CALL EES_REFPROP` blocks replaced by CoolProp calls on `WorkingFluidMix$` at the same states; `MM` mole-weighted; `$common` kept; `h_l`, `h_v` as mass values, as in the variant (see *Limitations*). Scratch check: *Verification*. Still blocked.
 
 ## Limitations and CoolSolve gaps
 
-- `CALL EES_REFPROP(fluid$, code, in1, in2, comp: outputs)` — used here 11
-  times with the mixture file `C:\REFPROP8\R245fa+R134a` — is to be rewritten
-  as CoolProp property calls in the native file (decision D12; a mixture missing
-  from CoolProp would then be registered as a missing fluid).
+- `CS-GAP-FLUIDS-MIXTURE` — the native file's property calls use the CoolProp
+  mixture string `WorkingFluidMix$ = 'R245fa[1]&R134a[0]'` (x = `MM_fraction`
+  written as a number). CoolSolve has no R245fa+R134a mixture:
+  `enthalpy('R245fa[0.5]&R134a[0.5]', T=50, P=5E5)` gives *Unknown fluid*,
+  while CoolProp accepts the string.
 - `CS-BUG-COMMON-PROC`: the three procedures share `Workingfluidmix$`,
   `MM_fraction`, `MM` with the main program through `$common`; CoolSolve
-  evaluates them as zero (silent). Would corrupt the results even if
-  `EES_REFPROP` existed. Blocks the native file.
+  evaluates them as zero (silent). Blocks the native file.
 - The original's own quirks are kept: `D_h = 2*b` with its open question
   *"or 2*b/phi ??????"*; in `Hsieh_new`, `h_l` is overwritten with the HTC
   before `i_fg = h_v - h_l`, so the "latent heat" contains a heat-transfer
   coefficient (as in the original; it inflates Bo and h_tp_ev).
 - The stored EES values of `alpha_tp_cd`, `DELTAp_tp`, `h_tp_ev` are stale
-  (older runs at higher q, see *Verification*): a T-RECHECK after a
-  REFPROP/`$common` fix should re-verify against a freshly solved EES run.
-- No faithful variant exists for `MM_fraction ≠ 1`: CoolProp cannot provide
-  the R245fa+R134a mixture.
+  (older runs at higher q, see *Verification*): a freshly solved EES
+  run is needed to verify them.
+- No faithful variant exists for `MM_fraction ≠ 1`: CoolSolve cannot provide
+  the R245fa+R134a mixture (CoolProp can; see `CS-GAP-FLUIDS-MIXTURE`).
+- Enthalpies of `kuo` and `Hsieh_new`: the source assigns the molar REFPROP
+  output `h_ref` (J/mol) to `h_l` and `h_v` without conversion, so `i_fg` mixes
+  units. The native rewrite and the variant use mass enthalpies (J/kg). The
+  molar convention would give `alpha_tp_cd` = 2.18e4 W/m²K at the stored point
+  (variant: 211), so the choice needs the maintainer's decision; the
+  `CSL-0153` model keeps the molar convention of its source.
 
 ## Related models
 

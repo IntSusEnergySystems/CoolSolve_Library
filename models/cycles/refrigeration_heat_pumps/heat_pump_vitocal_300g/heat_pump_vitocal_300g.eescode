@@ -21,7 +21,8 @@
 
   This file is the native EES file: it is kept in valid EES syntax and is
   blocked in CoolSolve (gap IDs in README.md and model.json). Every edit is
-  logged in the README conversion log.
+  logged in the README conversion log. The (s,v) and (v,u) property calls are
+  written with supported input pairs (decision D12, same states).
 
   Inputs : fluid$ = 'R134a', compressortype$ = 'ari', t_cd, T_w_ex_cd,
            T_gw_su_ev (with the circuit DELTATs), the plate-HX geometry
@@ -721,9 +722,10 @@ V_dot_s_cp=V_s_cp*N_rot/60
 "the first compression is adiabatic-reversible and so isentropic, up to the adapted pressure"
 s_in_cp=s_su2_cp "isentropic compression"
 v_in_cp=v_su2_cp/r_v_in_cp "definition of internal built-in volume ratio"
-h_in_cp = enthalpy(fluid$,s=s_in_cp,v=v_in_cp)
+t_in_cp = temperature(fluid$,P=p_in_cp,s=s_in_cp) "(s,v) state written with the pairs (P,s) and (T,v), decision D12"
+h_in_cp = enthalpy(fluid$,P=p_in_cp,s=s_in_cp)
 w_in1_cp= h_in_cp-h_su2_cp
-p_in_cp=PRESSURE(fluid$,s=s_in_cp,v=v_in_cp) "adapted pressure"
+p_in_cp=pressure(fluid$,T=t_in_cp,v=v_in_cp) "adapted pressure"
 u_in_cp="intenergy(fluid$,p=p_in_cp,v=v_in_cp)"h_in_cp-p_in_cp*v_in_cp
 r_p_in_cp=p_in_cp/p_su2_cp
 
@@ -739,9 +741,10 @@ w_in2_cp=w_in2_cp_v"Winandy's model"
 
 v_in_cp|star=(1/r_v_in_cp+C)/(1/v_su2_cp+C/v_ex2_cp)
 C/v_ex2_cp*u_ex2_cp+u_in_cp/v_su2_cp=(C/v_ex2_cp+1/v_su2_cp)*u_in_cp|star
-p_in_cp|star=PRESSURE(fluid$,v=v_in_cp|star,u=u_in_cp|star)
-s_in_cp|star=entropy(fluid$,v=v_in_cp|star,u=u_in_cp|star)
-h_in_cp|star=enthalpy(fluid$,v=v_in_cp|star,u=u_in_cp|star)
+"(v,u) state written with the pair (P,h), decision D12: h = u + p v, and the adapted pressure gives the volume v"
+h_in_cp|star=u_in_cp|star+p_in_cp|star*v_in_cp|star
+volume(fluid$,P=p_in_cp|star,h=h_in_cp|star)=v_in_cp|star
+s_in_cp|star=entropy(fluid$,P=p_in_cp|star,h=h_in_cp|star)
 w_in2_cp_v|star= v_in_cp * (p_in_cp|star-p_in_cp)
 w_in2_cp_s|star=h_ex2_cp_s|star-h_in_cp|star
 h_ex2_cp_s|star = enthalpy(fluid$,s=s_in_cp|star,p=p_ex2_cp)

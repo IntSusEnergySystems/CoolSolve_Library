@@ -1,8 +1,8 @@
 {
  "snapshot": {
-  "content_hash": "sha256:1371e8e12935c14e",
+  "content_hash": "sha256:6deaf1bc7b5e9106",
   "files": 770,
-  "bytes": 6842480,
+  "bytes": 6852145,
   "models": 148,
   "functions": 432,
   "taxonomy_version": "0.2"
@@ -3367,7 +3367,7 @@
    "kind": "steady",
    "level": 3,
    "status": "blocked",
-   "summary": "Complete ORC recovering heat from an exhaust-gas/thermal-oil stream: three-zone plate evaporator and condenser with Thonon/Kuo/Hsieh correlations, scroll expander with fixed volume ratio, pump, pipe sizing and total equipment/investment cost; refrigerant properties from the EES REFPROP interface on the mixture file R245fa+R134a (stored run: pure R245fa).",
+   "summary": "Complete ORC recovering heat from an exhaust-gas/thermal-oil stream: three-zone plate evaporator and condenser with Thonon/Kuo/Hsieh correlations, scroll expander with fixed volume ratio, pump, pipe sizing and total equipment/investment cost; refrigerant properties as CoolProp calls on the mixture R245fa+R134a (the source uses the EES REFPROP interface; stored run: pure R245fa).",
    "fluids": [
     "R245fa+R134a",
     "R245fa",
@@ -3400,7 +3400,9 @@
    "license": "MIT",
    "url": "",
    "missing_features": [
-    "CS-GAP-END-PROCEDURE"
+    "CS-BUG-COMMON-PROC",
+    "CS-GAP-END-PROCEDURE",
+    "CS-GAP-FLUIDS-MIXTURE"
    ],
    "related": [
     "CSL-0019",
@@ -6053,7 +6055,7 @@
    "kind": "steady",
    "level": 2,
    "status": "blocked",
-   "summary": "Plate-HX pressure-drop and heat-transfer correlations for a chevron plate pack (Thonon single-phase, Kuo condensation, Hsieh & Lin flow boiling) plus an identified fictitious orifice reproducing the measured condenser pressure drop; properties from the EES REFPROP interface for the mixture R245fa+R134a (stored run: pure R245fa).",
+   "summary": "Plate-HX pressure-drop and heat-transfer correlations for a chevron plate pack (Thonon single-phase, Kuo condensation, Hsieh & Lin flow boiling) plus an identified fictitious orifice reproducing the measured condenser pressure drop; properties as CoolProp calls on the mixture R245fa+R134a (the source uses the EES REFPROP interface; stored run: pure R245fa).",
    "fluids": [
     "R245fa+R134a",
     "R245fa"
@@ -6082,7 +6084,8 @@
    "license": "MIT",
    "url": "",
    "missing_features": [
-    "CS-BUG-COMMON-PROC"
+    "CS-BUG-COMMON-PROC",
+    "CS-GAP-FLUIDS-MIXTURE"
    ],
    "related": [
     "CSL-0113",
@@ -10860,7 +10863,16 @@
    "state": "open",
    "priority": "P3",
    "text": "The **reference state of refrigerant enthalpies and entropies**: EES gives R410A the ASHRAE reference (h = 0 and s = 0 for the saturated liquid at −40 °C) while CoolProp uses the IIR one (h = 200 kJ/kg, s = 1 kJ/kg·K for the saturated liquid at 0 °C).",
-   "detail": "Absolute `enthalpy`/`entropy` (and `intenergy`) of R410A differ from EES by constant offsets (142 244.6 J/kg, 773.6 J/kg·K) **without warning**; differences, efficiencies and balances are right.",
+   "detail": "Absolute `enthalpy`/`entropy` (and `intenergy`) of R410A and R134a differ from EES by constant offsets (142 244.6 J/kg, 773.6 J/kg·K) **without warning**; differences, efficiencies and balances are …",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-GAP-FLUIDS-MIXTURE": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P2",
+   "text": "**Fluid mixtures** in property calls.",
+   "detail": "The fluid registry is a fixed table: any mixture string is *\"Unknown fluid\"* (also with the `HEOS::` prefix).",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },

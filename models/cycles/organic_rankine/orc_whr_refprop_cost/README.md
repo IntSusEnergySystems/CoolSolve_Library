@@ -8,22 +8,22 @@ Therminol VP-1 secondary loop of `fluidev$`, as in the original): three-zone
 plate evaporator and condenser rated with the Thonon, Kuo and Hsieh plate
 correlations, a scroll expander with fixed volume ratio and mechanical
 efficiency, a pump, pipe sizing and a full equipment/investment cost model.
-All refrigerant properties are taken from the EES REFPROP interface
-(`CALL EES_REFPROP`) on the mixture file `C:\REFPROP8\R245fa+R134a`; the
-stored run is at composition `MM_fraction = 1`, i.e. pure R245fa
-(molar mass stored: 134.048 kg/kmol). A `Summary` procedure writes the key
+All refrigerant properties are CoolProp property calls on the mixture
+R245fa+R134a (the source used the EES REFPROP interface on the mixture file
+`C:\REFPROP8\R245fa+R134a`); the stored run is at composition
+`MM_fraction = 1`, i.e. pure R245fa (molar mass stored: 134.048 kg/kmol). A `Summary` procedure writes the key
 results of each run into the `optim` lookup table (row 8), used for the
 optimisation sweeps of the original study.
 
 | | |
 |---|---|
 | **Category** | Cycles and machines › Organic Rankine cycles |
-| **Fluids** | R245fa+R134a (REFPROP mixture file; stored run: pure R245fa), Therminol VP-1, Water, Air |
+| **Fluids** | R245fa+R134a (CoolProp mixture string, not a CoolSolve fluid; stored run: pure R245fa), Therminol VP-1, Water, Air |
 | **Size** | 361 equations, largest block 24 (runnable variant; EES stored solution: 386 variables) |
 | **Source** | ULiège Thermodynamics Laboratory, EES 8.652 (`cycle ORC with refprop.EES`) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory) — the 2011-10-29 copies of the same model are by Sylvain Quoilin |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** (`CS-GAP-END-PROCEDURE`; its `CALL EES_REFPROP` blocks are to be rewritten as CoolProp property calls, decision D12); runnable variant `orc_whr_refprop_cost_coolsolve.eescode` verified against the EES stored solution (see *Verification*) |
+| **CoolSolve** | native file **blocked** (`CS-GAP-END-PROCEDURE`, `CS-BUG-COMMON-PROC`, `CS-GAP-FLUIDS-MIXTURE`); its REFPROP calls are rewritten as CoolProp property calls (decision D12); runnable variant `orc_whr_refprop_cost_coolsolve.eescode` (pure R245fa) verified against the EES stored solution (see *Verification*) |
 
 ## Problem statement
 
@@ -78,14 +78,15 @@ Open `orc_whr_refprop_cost_coolsolve.eescode` in the CoolSolve GUI and press
 coolsolve ./orc_whr_refprop_cost_coolsolve.eescode
 ```
 
-The variant is the native file with the REFPROP blocks, the `$common` lines,
-the two 5-argument `IF` calls and the `End procedure` terminator rewritten
-(every change logged in the conversion log); the guess values of
+The variant is a runnable transcription of the native file at the stored
+composition (pure R245fa): the REFPROP blocks, the `$common` lines, the two
+5-argument `IF` calls and the `End procedure` terminator differ from the
+native file (every change logged in the conversion log); the guess values of
 `orc_whr_refprop_cost_coolsolve.initials` come from the EES stored solution
 (66 iterations, no `coolsolve.conf`). The native file
-`orc_whr_refprop_cost.eescode` is kept in valid EES and does not run in
-CoolSolve (gaps below); in EES it solves as stored (386 variables) and
-`optim` row 8 collects the summary of the run.
+`orc_whr_refprop_cost.eescode` (CoolProp mixture calls, decision D12) does not
+run in CoolSolve (gaps below); in EES its REFPROP form solved as stored (386
+variables), and `optim` row 8 collects the summary of the run.
 
 ## Results
 
@@ -142,6 +143,18 @@ ees_variables.csv`):
 
 Regression: `tools/test_models.py CSL-0153` solves the variant and compares
 it with `orc_whr_refprop_cost_coolsolve.sol`.
+
+- **Native rewrite (2026-10-10, decision D12)**: checked in a scratch copy with
+  the variant's workarounds (mixture string read as `'R245fa'`, `$common`
+  dropped, `End`, `IF` as in the variant, dead block removed): the 362 common
+  variables of its solution equal those of the variant run with the same
+  binary (maximum relative difference 0).
+- **Frozen binary (2026-10-10)**: with the CoolSolve binary of that day, the
+  variant's solution is no longer its committed `.sol` (`0.3.0@7addbbc`, older
+  CoolProp build; the regression `CSL-0153:coolsolve` reports it). 216 of the
+  356 common variables then differ from the EES stored solution at rtol 1e-3;
+  `SIC` is 2.66e3 against 2.70e6 (a factor of about 1000, shared by the
+  native rewrite; not investigated).
 
 ## Source and attribution
 
@@ -228,15 +241,20 @@ itself.
   The equation count of the variant is 361 (largest block 24), vs the 293/331
   of the native parse, in which the REFPROP blocks are dropped with their
   output equations and variables.
+- **2026-10-10 — native file rewritten (decision D12)**: the 32 `CALL EES_REFPROP` statements replaced by the variant's CoolProp equations on `WorkingFluidMix$` (same states and molar conventions); `$common`, the 5-argument `IF`, `End procedure` and the `hx_cd` dead block kept. Scratch check: *Verification*.
 
 
 ## Limitations and CoolSolve gaps
 
-- All refrigerant properties go through
-  `CALL EES_REFPROP(WorkingFluidMix$, code, …)` (codes 0, 12, 17, 25, 26, 27,
-  90) on the mixture file `C:\REFPROP8\R245fa+R134a`; these calls are to be
-  rewritten as CoolProp property calls in the native file (decision D12). The variant substitutes pure
-  R245fa CoolProp calls, faithful only for the stored run (`MM_fraction = 1`).
+- `CS-GAP-FLUIDS-MIXTURE` — the native file's property calls use the CoolProp
+  mixture string `WorkingFluidMix$ = 'R245fa[1]&R134a[0]'` (x = `MM_fraction`
+  written as a number). CoolSolve has no R245fa+R134a mixture:
+  `enthalpy('R245fa[0.5]&R134a[0.5]', T=50, P=5E5)` gives *Unknown fluid*,
+  while CoolProp accepts the string. The variant substitutes pure R245fa,
+  faithful only for the stored run (`MM_fraction = 1`).
+- `CS-BUG-COMMON-PROC` — the procedures read the mixture string through
+  `$common`, which CoolSolve evaluates as zero (silently); the variant drops
+  the `$common` lines.
 - `CS-GAP-END-PROCEDURE` — the `Procedure Summary` is closed with
   `End procedure` (valid EES); the variant writes bare `End`.
 - The cost model prices are dated (2011) and the fluid price function is

@@ -2,7 +2,7 @@
   "id": "CSL-0124",
   "name": "plate_hx_pressure_drop_identification",
   "title": "Plate heat exchanger: two-phase pressure drops and heat-transfer coefficients, with a fictitious-orifice condenser pressure drop",
-  "summary": "Plate-HX pressure-drop and heat-transfer correlations for a chevron plate pack (Thonon single-phase, Kuo condensation, Hsieh & Lin flow boiling) plus an identified fictitious orifice reproducing the measured condenser pressure drop; properties from the EES REFPROP interface for the mixture R245fa+R134a (stored run: pure R245fa).",
+  "summary": "Plate-HX pressure-drop and heat-transfer correlations for a chevron plate pack (Thonon single-phase, Kuo condensation, Hsieh & Lin flow boiling) plus an identified fictitious orifice reproducing the measured condenser pressure drop; properties as CoolProp calls on the mixture R245fa+R134a (the source uses the EES REFPROP interface; stored run: pure R245fa).",
   "kind": "steady",
   "level": 2,
   "status": "blocked",
@@ -27,7 +27,7 @@
   "language_features": [
     "procedures",
     "$common",
-    "EES_REFPROP external call",
+    "CoolProp mixture string (decision D12)",
     "REPEAT-UNTIL",
     ":= assignment",
     "string variables",
@@ -59,7 +59,8 @@
     "notes": "Default run: q-independent variables agree (Thonon h 5.12e-03, DELTAp 6.0e-05, orifice block <= 5.6e-04); stale q-dependent outputs differ (alpha_tp_cd 6.41e-01, DELTAp_tp 1.44e-01, h_tp_ev 6.33e-01) — evidence of a stale stored solution (CS-BUG-EXTRACT-STALE)."
   },
   "missing_features": [
-    "CS-BUG-COMMON-PROC"
+    "CS-BUG-COMMON-PROC",
+    "CS-GAP-FLUIDS-MIXTURE"
   ],
   "related": [
     "CSL-0113",
@@ -79,6 +80,11 @@
       "date": "2026-10-10",
       "action": "CS-GAP-REFPROP removed from missing_features: not a CoolSolve gap (decision D12); the native file is to be rewritten with CoolProp property calls",
       "by": "Claude (Opus) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "native file rewritten per decision D12: the 11 CALL EES_REFPROP blocks replaced by CoolProp property calls on the mixture string WorkingFluidMix$ (same states; enthalpies in J/kg as in the variant); in a scratch copy with the variant's workarounds the solution equals the variant run with the frozen binary (36 common variables, identical); still blocked by CS-BUG-COMMON-PROC and CS-GAP-FLUIDS-MIXTURE (added: CoolSolve has no R245fa+R134a mixture)",
+      "by": "Claude (Haiku) for S. Quoilin"
     }
   ]
 }

@@ -187,14 +187,12 @@ Source file (EES 8.940, comments in English), collection of S. Quoilin:
   analysis is unavailable) and the rating stays consistent with the triage
   (C-121) and with the level-2 rating of the similar RefSim model `CSL-0078`
   (149 equations, same compressor physics).
+- **2026-10-10 — native file rewritten (decision D12)**: `(s, v)` as `(P, s)` and `(T, v)`; the corrected `(v, u)` branch as `(P, h)` with `h = u + p·v` and `volume(P, h) = v`. Same states; scratch check at the stored point within 1e-4 (EES values shifted to the IIR reference, `CS-GAP-REF-STATE`). Status unchanged.
+
 ## Limitations and CoolSolve gaps
 
 The native file is blocked by every ID of `model.json` `missing_features`:
 
-- To rewrite (decision D12, not a CoolSolve gap): the adapted-pressure state is evaluated with the
-  (s, v) pair: `h_in_cp = enthalpy(fluid$, s=s_in_cp, v=v_in_cp)`,
-  `p_in_cp = PRESSURE(fluid$, s=s_in_cp, v=v_in_cp)`; the corrected branch
-  uses the (v, u) pair similarly.
 - `CS-BUG-LOOKUP-WRITE` — the `lookup('ev',…) = …` diagnostic writes inside
   `PROCEDURE hx_evv` are silently dropped (the table keeps its values); the writes feed
   no equation, so they do not block the model.

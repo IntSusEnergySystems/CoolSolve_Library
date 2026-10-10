@@ -2,7 +2,7 @@
   "id": "CSL-0153",
   "name": "orc_whr_refprop_cost",
   "title": "Waste-heat-recovery ORC with a scroll expander, REFPROP mixtures and an equipment cost model",
-  "summary": "Complete ORC recovering heat from an exhaust-gas/thermal-oil stream: three-zone plate evaporator and condenser with Thonon/Kuo/Hsieh correlations, scroll expander with fixed volume ratio, pump, pipe sizing and total equipment/investment cost; refrigerant properties from the EES REFPROP interface on the mixture file R245fa+R134a (stored run: pure R245fa).",
+  "summary": "Complete ORC recovering heat from an exhaust-gas/thermal-oil stream: three-zone plate evaporator and condenser with Thonon/Kuo/Hsieh correlations, scroll expander with fixed volume ratio, pump, pipe sizing and total equipment/investment cost; refrigerant properties as CoolProp calls on the mixture R245fa+R134a (the source uses the EES REFPROP interface; stored run: pure R245fa).",
   "kind": "steady",
   "level": 3,
   "status": "blocked",
@@ -31,7 +31,7 @@
   "language_features": [
     "procedures",
     "$common",
-    "EES_REFPROP external call",
+    "CoolProp mixture string (decision D12)",
     "IF(A,B,X,Y,Z) 5-argument",
     "lookup write",
     "REPEAT-UNTIL",
@@ -62,10 +62,12 @@
     "date": "2026-10-08",
     "coolsolve_version": "0.3.0@7addbbc",
     "max_rel_diff": 0.252,
-    "notes": "Maximum over all common variables 0.252 = absolute Air enthalpies h_a_ex_liq/h_a_ex_vap (reference-state offset EES ideal gas vs CoolProp Air; their temperatures agree). Excluding that pair, the maximum is 0.114 on the evaporator pressure-drop correlation DELTAp_ev. The 9 REFPROP pseudo-quality outputs (Q_r_* outside 0..1) are not reproduced; 21 EES-only variables are stale values of an older EES session; the 6 CoolSolve-only names are the string variables and pi. Native file not runnable (CS-GAP-REFPROP, CS-GAP-IF5, CS-GAP-END-PROCEDURE)."
+    "notes": "Maximum over all common variables 0.252 = absolute Air enthalpies h_a_ex_liq/h_a_ex_vap (reference-state offset EES ideal gas vs CoolProp Air; their temperatures agree). Excluding that pair, the maximum is 0.114 on the evaporator pressure-drop correlation DELTAp_ev. The 9 REFPROP pseudo-quality outputs (Q_r_* outside 0..1) are not reproduced; 21 EES-only variables are stale values of an older EES session; the 6 CoolSolve-only names are the string variables and pi. Native file not runnable (CS-GAP-END-PROCEDURE, CS-BUG-COMMON-PROC, CS-GAP-FLUIDS-MIXTURE). Frozen binary 2026-10-10: the variant's solution is not its committed .sol (older CoolProp build); SIC differs by a factor of about 1000 from the EES value (see README)."
   },
   "missing_features": [
-    "CS-GAP-END-PROCEDURE"
+    "CS-BUG-COMMON-PROC",
+    "CS-GAP-END-PROCEDURE",
+    "CS-GAP-FLUIDS-MIXTURE"
   ],
   "related": [
     "CSL-0019",
@@ -108,6 +110,11 @@
       "date": "2026-10-10",
       "action": "CS-GAP-REFPROP removed from missing_features: not a CoolSolve gap (decision D12); the native file is to be rewritten with CoolProp property calls",
       "by": "Claude (Opus) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "native file rewritten per decision D12: the 32 CALL EES_REFPROP statements replaced by CoolProp property equations on the mixture string WorkingFluidMix$ (variant form, same states); in a scratch copy with the variant's workarounds the solution equals the variant run with the frozen binary (362 common variables); still blocked by CS-GAP-END-PROCEDURE, CS-BUG-COMMON-PROC (added: the procedures read the mixture through $common) and CS-GAP-FLUIDS-MIXTURE",
+      "by": "Claude (Haiku) for S. Quoilin"
     }
   ]
 }

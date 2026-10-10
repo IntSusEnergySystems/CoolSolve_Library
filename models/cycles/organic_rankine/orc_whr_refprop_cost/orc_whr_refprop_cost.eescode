@@ -5,15 +5,17 @@
   ORC recovering heat from an exhaust-gas stream: three-zone plate evaporator
   and condenser (procedures hx_ev and hx_cd), scroll expander with fixed
   volume ratio and mechanical efficiency, pump, pipe sizing and total
-  equipment/investment cost (TEC, SIC). Refrigerant properties come from the
-  EES REFPROP interface (CALL EES_REFPROP) on the mixture file
-  'C:\REFPROP8\R245fa+R134a'; the stored run is pure R245fa (MM_fraction = 1).
+  equipment/investment cost (TEC, SIC). Refrigerant properties are CoolProp property
+  calls on the mixture R245fa+R134a (WorkingFluidMix$ = 'R245fa[x]&R134a[1-x]', x = MM_fraction
+  written as a number: CoolProp form); the stored run is pure R245fa (MM_fraction = 1).
+  The EES REFPROP calls of the source are rewritten (decision D12).
   The Summary procedure writes the key results of each run into the 'optim'
   lookup table (row 8), used for the optimisation sweeps.
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
   Source : ULiège Thermodynamics Laboratory (EES 8.652) - see README.md
   Status : BLOCKED - END PROCEDURE (CS-GAP-END-PROCEDURE) is not supported by
-           CoolSolve; CALL EES_REFPROP to be rewritten as CoolProp calls (D12).
+           CoolSolve; the mixture fluid is not in CoolSolve (CS-GAP-FLUIDS-MIXTURE);
+           $common of the procedures (CS-BUG-COMMON-PROC).
 =============================================================================}
 
 
@@ -29,16 +31,12 @@ else
 
 endif
 cp_sf = cp(fluidcd$,t=t_sf_su,p=p_sf)
-Call EES_REFPROP(WorkingFluidMix$,27,P_cd/1000,1,MM_fraction : T_ref,p_ref,rho_ref,v_ref,h_ref,s_ref,x_ref,cv_ref,cp_ref,w_ref)
-T_r_sat = T_ref - 273.15
-h_r_sat_v = h_ref/MM*1000
-Call EES_REFPROP(WorkingFluidMix$,27,P_cd/1000,0,MM_fraction : T_ref,p_ref,rho_ref,v_ref,h_ref,s_ref,x_ref,cv_ref,cp_ref,w_ref)
-h_r_sat_l = h_ref/MM*1000
-rho_l = rho_ref*MM
-Call EES_REFPROP(WorkingFluidMix$,12,T_r_su+273.15,P_cd/1000,MM_fraction : T_ref,p_ref,rho_ref,v_ref,h_ref,s_ref,x_ref,cv_ref,cp_ref,w_ref)
-h_r_su= h_ref/MM*1000
-Call EES_REFPROP(WorkingFluidMix$,12,T_r_ex+273.15,P_cd/1000,MM_fraction : T_ref,p_ref,rho_ref,v_ref,h_ref,s_ref,x_ref,cv_ref,cp_ref,w_ref)
-h_r_ex = h_ref/MM*1000
+T_r_sat = temperature(WorkingFluidMix$,P=P_cd,x=1)
+h_r_sat_v = enthalpy(WorkingFluidMix$,P=P_cd,x=1)
+h_r_sat_l = enthalpy(WorkingFluidMix$,P=P_cd,x=0)
+rho_l = density(WorkingFluidMix$,P=P_cd,x=0)
+h_r_su= enthalpy(WorkingFluidMix$,T=T_r_su,P=P_cd)
+h_r_ex = enthalpy(WorkingFluidMix$,T=T_r_ex,P=P_cd)
 
 
 	h_r_ex_l = h_r_ex
@@ -217,17 +215,12 @@ $common Workingfluidmix$; MM_fraction; MM
 
 call prop_htf(fluidev$,T_sf_su_ev,p_sf:mu_sf,rho_sf,cp_sf,k_sf)
 
-Call EES_REFPROP(WorkingFluidMix$,27,P_ev/1000,1,MM_fraction : T_ref,p_ref,rho_ref,v_ref,h_ref,s_ref,x_ref,cv_ref,cp_ref,w_ref)
-
-T_r_sat = T_ref - 273.15
-h_r_sat_v = h_ref/MM*1000
-Call EES_REFPROP(WorkingFluidMix$,27,P_ev/1000,0,MM_fraction : T_ref,p_ref,rho_ref,v_ref,h_ref,s_ref,x_ref,cv_ref,cp_ref,w_ref)
-h_r_sat_l = h_ref/MM*1000
-rho_l = rho_ref*MM
-Call EES_REFPROP(WorkingFluidMix$,12,T_r_su_ev+273.15,P_ev/1000,MM_fraction : T_ref,p_ref,rho_ref,v_ref,h_ref,s_ref,x_ref,cv_ref,cp_ref,w_ref)
-h_r_su_ev= h_ref/MM*1000
-Call EES_REFPROP(WorkingFluidMix$,12,T_r_ex_ev+273.15,P_ev/1000,MM_fraction : T_ref,p_ref,rho_ref,v_ref,h_ref,s_ref,x_ref,cv_ref,cp_ref,w_ref)
-h_r_ex_ev = h_ref/MM*1000
+T_r_sat = temperature(WorkingFluidMix$,P=P_ev,x=1)
+h_r_sat_v = enthalpy(WorkingFluidMix$,P=P_ev,x=1)
+h_r_sat_l = enthalpy(WorkingFluidMix$,P=P_ev,x=0)
+rho_l = density(WorkingFluidMix$,P=P_ev,x=0)
+h_r_su_ev= enthalpy(WorkingFluidMix$,T=T_r_su_ev,P=P_ev)
+h_r_ex_ev = enthalpy(WorkingFluidMix$,T=T_r_ex_ev,P=P_ev)
 
 
 	h_r_su_l = h_r_su_ev
@@ -375,16 +368,10 @@ $common Workingfluidmix$; MM_fraction; MM
 if fluid$='glycol' then
 call prop_htf(fluid$,T,p:mu,rho,cp,k)
 else
-{cp = cp(fluid$,t=t,p=p)
-rho = density(fluid$,t=t,p=p)
-mu = viscosity(fluid$,p=p,t=t)
-k = conductivity(fluid$,t=t,p=p)}
-
-Call EES_REFPROP(WorkingFluidMix$,12,T+273.15,P/1000,MM_fraction : T_ref,p_ref,rho_ref,v_ref,h_ref,s_ref,x_ref,cv_ref,cp_ref,w_ref)
-rho = rho_ref * MM
-cp = cp_ref/MM * 1000
-call EES_REFPROP(WorkingFluidMix$,90,T_ref,rho_ref,MM_fraction:mu_ref,k)
-mu = mu_ref/10^6
+rho = density(WorkingFluidMix$,t=T,p=P)
+cp = cp(WorkingFluidMix$,t=T,p=P)
+mu = viscosity(WorkingFluidMix$,t=T,p=P)
+k = conductivity(WorkingFluidMix$,t=T,p=P)
 endif
 
 
@@ -464,19 +451,17 @@ refrigerant R410a in a vertical plate heat exchanger. Int J Heat Mass Trans
 
 	"average heat transfer coefficient:"
 	$common Workingfluidmix$; MM_fraction; MM
-
-Call EES_REFPROP(WorkingFluidMix$,17,T_sat+273.15,0,MM_fraction : T_ref,p_ref,rho_ref,v_ref,h_ref,s_ref,x_ref,cv_ref,cp_ref,w_ref)
-rho_l = rho_ref * MM
-cp_l = cp_ref/MM * 1000
-h_l = h_ref
-call EES_REFPROP(WorkingFluidMix$,90,T_ref,rho_ref,MM_fraction:mu_ref,k_l)
-mu_l = mu_ref/10^6
-
-Call EES_REFPROP(WorkingFluidMix$,17,T_sat+273.15,1,MM_fraction : T_ref,p_ref,rho_ref,v_ref,h_ref,s_ref,x_ref,cv_ref,cp_ref,w_ref)
-rho_g = rho_ref * MM
-h_v = h_ref
-call EES_REFPROP(WorkingFluidMix$,90,T_ref,rho_ref,MM_fraction:mu_ref,k_g)
-mu_g = mu_ref/10^6
+rho_l = density(WorkingFluidMix$,T=T_sat,x=0)
+cp_l = cp(WorkingFluidMix$,T=T_sat,x=0)
+"h_l, h_v: molar REFPROP convention of the source kept (kJ/kmol), so that i_fg is in the source units (decision D12)"
+h_l = enthalpy(WorkingFluidMix$,T=T_sat,x=0)*MM/1000
+mu_l = viscosity(WorkingFluidMix$,T=T_sat,x=0)
+k_l = conductivity(WorkingFluidMix$,T=T_sat,x=0)
+rho_g = density(WorkingFluidMix$,T=T_sat,x=1)
+"h_l, h_v: molar REFPROP convention of the source kept (kJ/kmol), so that i_fg is in the source units (decision D12)"
+h_v = enthalpy(WorkingFluidMix$,T=T_sat,x=1)*MM/1000
+mu_g = viscosity(WorkingFluidMix$,T=T_sat,x=1)
+k_g = conductivity(WorkingFluidMix$,T=T_sat,x=1)
 
 Pr_l = cp_l * mu_l/k_l
 
@@ -564,19 +549,17 @@ $bookmark kuo
 Procedure kuo(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef:DELTAp,alpha_tp_cd)
 
 	$common Workingfluidmix$; MM_fraction; MM
-
-Call EES_REFPROP(WorkingFluidMix$,27,p/1000,0,MM_fraction : T_ref,p_ref,rho_ref,v_ref,h_ref,s_ref,x_ref,cv_ref,cp_ref,w_ref)
-rho_l = rho_ref * MM
-cp_l = cp_ref/MM * 1000
-h_l = h_ref
-call EES_REFPROP(WorkingFluidMix$,90,T_ref,rho_ref,MM_fraction:mu_ref,k_l)
-mu_l = mu_ref/10^6
-
-Call EES_REFPROP(WorkingFluidMix$,27,p/1000,1,MM_fraction : T_ref,p_ref,rho_ref,v_ref,h_ref,s_ref,x_ref,cv_ref,cp_ref,w_ref)
-rho_g = rho_ref * MM
-h_v = h_ref
-call EES_REFPROP(WorkingFluidMix$,90,T_ref,rho_ref,MM_fraction:mu_ref,k_g)
-mu_g = mu_ref/10^6
+rho_l = density(WorkingFluidMix$,P=p,x=0)
+cp_l = cp(WorkingFluidMix$,P=p,x=0)
+"h_l, h_v: molar REFPROP convention of the source kept (kJ/kmol), so that i_fg is in the source units (decision D12)"
+h_l = enthalpy(WorkingFluidMix$,P=p,x=0)*MM/1000
+mu_l = viscosity(WorkingFluidMix$,P=p,x=0)
+k_l = conductivity(WorkingFluidMix$,P=p,x=0)
+rho_g = density(WorkingFluidMix$,P=p,x=1)
+"h_l, h_v: molar REFPROP convention of the source kept (kJ/kmol), so that i_fg is in the source units (decision D12)"
+h_v = enthalpy(WorkingFluidMix$,P=p,x=1)*MM/1000
+mu_g = viscosity(WorkingFluidMix$,P=p,x=1)
+k_g = conductivity(WorkingFluidMix$,P=p,x=1)
 
 Pr_l = cp_l * mu_l/k_l
 
@@ -667,7 +650,7 @@ r_v_in_exp=3.4                                                                  
 epsilon_m_exp=0.7                                                             "mechanical efficiency of the expander"
 epsilon_s_pp=0.6                                                               "isentropic efficiency of the pump"
 
-WorkingFluidMix$='C:\REFPROP8\R245fa+R134a'                  "Fluid"
+WorkingFluidMix$='R245fa[1]&R134a[0]'   "CoolProp mixture string: molar fractions of R245fa and R134a = MM_fraction and 1-MM_fraction (numbers in the string)"
 WorkingFluid$='R245fa'
 fluidev$='TherminolVP-1'
 
@@ -689,16 +672,42 @@ call prop_htf(fluidev$,T_a_su_vap,p_a:mu_a,rho_a,cp_a,k_a)
 
 "Surchauffe"
 
-CALL EES_REFPROP(WorkingFluidMix$,0,MM_fraction : MM)
-Call EES_REFPROP(WorkingFluidMix$,27,P_r_ev/1000,1,MM_fraction : T_r_su_vap+273.1,P_r_su_vap/1000,rho_r_su_vap/MM,v_r_su_vap*MM,h_r_su_vap*MM/1000,s_r_su_vap*MM/1000,Q_r_su_vap,Cv_r_su_vap,Cp_r_su_vap,w_r_su_vap)
-Call EES_REFPROP(WorkingFluidMix$,12,T_r_ex_tp+273.1+DELTAT_sh,P_r_ev/1000,MM_fraction : T_r_ex_vap+273.1,P_r_ex_vap/1000,rho_r_ex_vap/MM,v_r_ex_vap*MM,h_r_ex_vap*MM/1000,s_r_ex_vap*MM/1000,Q_r_ex_vap,Cv_r_ex_vap,Cp_r_ex_vap,w_r_ex_vap)
+MM = MM_fraction*molarmass(R245fa)+(1-MM_fraction)*molarmass(R134a)   "molar mass of the mixture (mole-weighted, as REFPROP)"
+T_r_su_vap = temperature(WorkingFluidMix$,P=P_r_ev,x=1)
+P_r_su_vap = P_r_ev
+rho_r_su_vap = density(WorkingFluidMix$,P=P_r_ev,x=1)
+v_r_su_vap = volume(WorkingFluidMix$,P=P_r_ev,x=1)
+h_r_su_vap = enthalpy(WorkingFluidMix$,P=P_r_ev,x=1)
+s_r_su_vap = entropy(WorkingFluidMix$,P=P_r_ev,x=1)
+Q_r_su_vap = 1
+Cv_r_su_vap = cv(WorkingFluidMix$,P=P_r_ev,x=1)*MM/1000
+Cp_r_su_vap = cp(WorkingFluidMix$,P=P_r_ev,x=1)*MM/1000
+w_r_su_vap = soundspeed(WorkingFluidMix$,P=P_r_ev,x=1)
+T_r_ex_vap = temperature(WorkingFluidMix$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)
+P_r_ex_vap = P_r_ev
+rho_r_ex_vap = density(WorkingFluidMix$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)
+v_r_ex_vap = volume(WorkingFluidMix$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)
+h_r_ex_vap = enthalpy(WorkingFluidMix$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)
+s_r_ex_vap = entropy(WorkingFluidMix$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)
+Cv_r_ex_vap = cv(WorkingFluidMix$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)*MM/1000
+Cp_r_ex_vap = cp(WorkingFluidMix$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)*MM/1000
+w_r_ex_vap = soundspeed(WorkingFluidMix$,T=T_r_ex_tp+DELTAT_sh,P=P_r_ev)
 T_a_su_vap=T_a_su
 //h_a_su_vap=Enthalpy(Air; T=T_a_su_vap)
 Q_dot_vap=M_dot_a*cp_a * (T_a_su_vap-T_a_ex_vap)
 T_a_ex_vap=Temperature(Air, h=h_a_ex_vap)
 
 "Evaporation"
-Call EES_REFPROP(WorkingFluidMix$,27,P_r_ev/1000,0,MM_fraction : T_r_su_tp+273.1,P_r_su_tp/1000,rho_r_su_tp/MM,v_r_su_tp*MM,h_r_su_tp*MM/1000,s_r_su_tp*MM/1000,Q_r_su_tp,Cv_r_su_tp,Cp_r_su_tp,w_r_su_tp)
+T_r_su_tp = temperature(WorkingFluidMix$,P=P_r_ev,x=0)
+P_r_su_tp = P_r_ev
+rho_r_su_tp = density(WorkingFluidMix$,P=P_r_ev,x=0)
+v_r_su_tp = volume(WorkingFluidMix$,P=P_r_ev,x=0)
+h_r_su_tp = enthalpy(WorkingFluidMix$,P=P_r_ev,x=0)
+s_r_su_tp = entropy(WorkingFluidMix$,P=P_r_ev,x=0)
+Q_r_su_tp = 0
+Cv_r_su_tp = cv(WorkingFluidMix$,P=P_r_ev,x=0)*MM/1000
+Cp_r_su_tp = cp(WorkingFluidMix$,P=P_r_ev,x=0)*MM/1000
+w_r_su_tp = soundspeed(WorkingFluidMix$,P=P_r_ev,x=0)
 T_r_ex_tp=T_r_su_vap
 P_r_ex_tp=P_r_ev
 h_r_ex_tp=h_r_su_vap
@@ -709,7 +718,15 @@ T_a_ex_tp=T_r_su_tp+DELTAT_pp_ev
 //h_a_ex_tp=Enthalpy(Air; T=T_a_ex_tp)
 
 "Preheating"
-Call EES_REFPROP(WorkingFluidMix$,12,T_r_ex_pp+273.1,P_r_ev/1000,MM_fraction : T_r_su_liq+273.1,P_r_su_liq/1000,rho_r_su_liq/MM,v_r_su_liq*MM,h_r_su_liq*MM/1000,s_r_su_liq*MM/1000,Q_r_su_liq,Cv_r_su_liq,Cp_r_su_liq,w_r_su_liq)
+T_r_su_liq = temperature(WorkingFluidMix$,T=T_r_ex_pp,P=P_r_ev)
+P_r_su_liq = P_r_ev
+rho_r_su_liq = density(WorkingFluidMix$,T=T_r_ex_pp,P=P_r_ev)
+v_r_su_liq = volume(WorkingFluidMix$,T=T_r_ex_pp,P=P_r_ev)
+h_r_su_liq = enthalpy(WorkingFluidMix$,T=T_r_ex_pp,P=P_r_ev)
+s_r_su_liq = entropy(WorkingFluidMix$,T=T_r_ex_pp,P=P_r_ev)
+Cv_r_su_liq = cv(WorkingFluidMix$,T=T_r_ex_pp,P=P_r_ev)*MM/1000
+Cp_r_su_liq = cp(WorkingFluidMix$,T=T_r_ex_pp,P=P_r_ev)*MM/1000
+w_r_su_liq = soundspeed(WorkingFluidMix$,T=T_r_ex_pp,P=P_r_ev)
 //Call EES_REFPROP(WorkingFluidMix$;12;47+273,1;17E5/1000;MM_fraction : T_r_su_liq+273,1;P_r_su_liq/1000;rho_r_su_liq/MM;v_r_su_liq*MM;h_r_su_liq*MM/1000;s_r_su_liq*MM/1000;Q_r_su_liq;Cv_r_su_liq;Cp_r_su_liq;w_r_su_liq)
 T_r_ex_liq=T_r_su_tp
 P_r_ex_liq=P_r_ev
@@ -738,22 +755,54 @@ $bookmark expander
 
 P_r_su_exp=P_r_ev - DELTAp_ev
 h_r_su_exp=h_r_ex_ev
-Call EES_REFPROP(WorkingFluidMix$,25,P_r_su_exp/1000.1,h_r_su_exp*MM/1000,MM_fraction : T_r_su_exp+273.1,P_r_su_exp_bis/1000,rho_r_su_exp/MM,v_r_su_exp*MM,h_r_su_exp_bis*MM/1000,s_r_su_exp*MM/1000,Q_r_su_exp,Cv_r_su_exp,Cp_r_su_exp,w_r_su_exp)
+T_r_su_exp = temperature(WorkingFluidMix$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)
+P_r_su_exp_bis = P_r_su_exp*1000/1000.1
+rho_r_su_exp = density(WorkingFluidMix$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)
+v_r_su_exp = volume(WorkingFluidMix$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)
+h_r_su_exp_bis = enthalpy(WorkingFluidMix$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)
+s_r_su_exp = entropy(WorkingFluidMix$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)
+Cv_r_su_exp = cv(WorkingFluidMix$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)*MM/1000
+Cp_r_su_exp = cp(WorkingFluidMix$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)*MM/1000
+w_r_su_exp = soundspeed(WorkingFluidMix$,P=P_r_su_exp*1000/1000.1,H=h_r_su_exp)
 {T_r_su_exp=T_r_ex_ev
 v_r_su_exp=v_r_ex_ev
 s_r_su_exp=s_r_ex_ev}
 
 v_r_in_exp=r_v_in_exp*v_r_su_exp
 s_r_in_exp=s_r_su_exp
-Call EES_REFPROP(WorkingFluidMix$,12,T_r_in_exp+273.1,P_r_in_exp/1000,MM_fraction : T_r_in_exp_bis+273.1,P_r_in_exp_bis/1000,rho_r_in_exp/MM,v_r_in_exp*MM,h_r_in_exp*MM/1000,s_r_in_exp*MM/1000,Q_r_in_exp,Cv_r_in_exp,Cp_r_in_exp,w_r_in_exp)
+T_r_in_exp_bis = T_r_in_exp
+P_r_in_exp_bis = P_r_in_exp
+v_r_in_exp = volume(WorkingFluidMix$,T=T_r_in_exp,P=P_r_in_exp)
+s_r_in_exp = entropy(WorkingFluidMix$,T=T_r_in_exp,P=P_r_in_exp)
+rho_r_in_exp = density(WorkingFluidMix$,T=T_r_in_exp,P=P_r_in_exp)
+h_r_in_exp = enthalpy(WorkingFluidMix$,T=T_r_in_exp,P=P_r_in_exp)
+Cv_r_in_exp = cv(WorkingFluidMix$,T=T_r_in_exp,P=P_r_in_exp)*MM/1000
+Cp_r_in_exp = cp(WorkingFluidMix$,T=T_r_in_exp,P=P_r_in_exp)*MM/1000
+w_r_in_exp = soundspeed(WorkingFluidMix$,T=T_r_in_exp,P=P_r_in_exp)
 W_dot_1=M_dot_r*(h_r_su_exp-h_r_in_exp)
 W_dot_2=M_dot_r*v_r_in_exp*(P_r_in_exp-P_r_ex_exp)
 W_dot_in=W_dot_1+W_dot_2
 P_r_ex_exp=P_r_su_vap_cd + DELTAp_cd
-Call EES_REFPROP(WorkingFluidMix$,26,P_r_ex_exp/1000.1,s_r_su_exp*MM/1000,MM_fraction : T_r_ex_exp_s+273.1,P_r_ex_exp_s/1000,rho_r_ex_exp_s/MM,v_r_ex_exp_s*MM,h_r_ex_exp_s*MM/1000,s_r_ex_exp_s*MM/1000,Q_r_ex_exp_s,Cv_r_ex_exp_s,Cp_r_ex_exp_s,w_r_ex_exp_s)
+T_r_ex_exp_s = temperature(WorkingFluidMix$,P=P_r_ex_exp*1000/1000.1,s=s_r_su_exp)
+P_r_ex_exp_s = P_r_ex_exp*1000/1000.1
+rho_r_ex_exp_s = density(WorkingFluidMix$,P=P_r_ex_exp*1000/1000.1,s=s_r_su_exp)
+v_r_ex_exp_s = volume(WorkingFluidMix$,P=P_r_ex_exp*1000/1000.1,s=s_r_su_exp)
+h_r_ex_exp_s = enthalpy(WorkingFluidMix$,P=P_r_ex_exp*1000/1000.1,s=s_r_su_exp)
+s_r_ex_exp_s = s_r_su_exp
+Cv_r_ex_exp_s = cv(WorkingFluidMix$,P=P_r_ex_exp*1000/1000.1,s=s_r_su_exp)*MM/1000
+Cp_r_ex_exp_s = cp(WorkingFluidMix$,P=P_r_ex_exp*1000/1000.1,s=s_r_su_exp)*MM/1000
+w_r_ex_exp_s = soundspeed(WorkingFluidMix$,P=P_r_ex_exp*1000/1000.1,s=s_r_su_exp)
 h_r_ex_exp=h_r_su_exp-W_dot_shaft/M_dot_r
 Q_dot_loss=W_dot_in-W_dot_shaft
-Call EES_REFPROP(WorkingFluidMix$,25,P_r_ex_exp/1000.1,h_r_ex_exp*MM/1000,MM_fraction : T_r_ex_exp+273.1,P_r_ex_exp_bis/1000,rho_r_ex_exp/MM,v_r_ex_exp*MM,h_r_ex_exp_bis*MM/1000,s_r_ex_exp*MM/1000,Q_r_ex_exp,Cv_r_ex_exp,Cp_r_ex_exp,w_r_ex_exp)
+T_r_ex_exp = temperature(WorkingFluidMix$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)
+P_r_ex_exp_bis = P_r_ex_exp*1000/1000.1
+rho_r_ex_exp = density(WorkingFluidMix$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)
+v_r_ex_exp = volume(WorkingFluidMix$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)
+h_r_ex_exp_bis = enthalpy(WorkingFluidMix$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)
+s_r_ex_exp = entropy(WorkingFluidMix$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)
+Cv_r_ex_exp = cv(WorkingFluidMix$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)*MM/1000
+Cp_r_ex_exp = cp(WorkingFluidMix$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)*MM/1000
+w_r_ex_exp = soundspeed(WorkingFluidMix$,P=P_r_ex_exp*1000/1000.1,H=h_r_ex_exp)
 W_dot_shaft=W_dot_in*epsilon_m_exp
 epsilon_s_exp=(W_dot_shaft/M_dot_r)/(h_r_su_exp-h_r_ex_exp_s)
 
@@ -777,7 +826,16 @@ DELTAT_w_cd = T_w_ex_vap_cd - T_w_su
 "Desuperheating"
 T_r_su_vap_cd=T_r_ex_exp
 h_r_su_vap_cd=h_r_ex_exp
-Call EES_REFPROP(WorkingFluidMix$,27,P_r_ex_vap_cd/1000,1,MM_fraction : T_r_ex_vap_cd+273.1,P_r_ex_vap_cd_bis/1000,rho_r_ex_vap_cd/MM,v_r_ex_vap_cd*MM,h_r_ex_vap_cd*MM/1000,s_r_ex_vap_cd*MM/1000,Q_r_ex_vap_cd,Cv_r_ex_vap_cd,Cp_r_ex_vap_cd,w_r_ex_vap_cd)
+T_r_ex_vap_cd = temperature(WorkingFluidMix$,P=P_r_ex_vap_cd,x=1)
+P_r_ex_vap_cd_bis = P_r_ex_vap_cd
+rho_r_ex_vap_cd = density(WorkingFluidMix$,P=P_r_ex_vap_cd,x=1)
+v_r_ex_vap_cd = volume(WorkingFluidMix$,P=P_r_ex_vap_cd,x=1)
+h_r_ex_vap_cd = enthalpy(WorkingFluidMix$,P=P_r_ex_vap_cd,x=1)
+s_r_ex_vap_cd = entropy(WorkingFluidMix$,P=P_r_ex_vap_cd,x=1)
+Q_r_ex_vap_cd = 1
+Cv_r_ex_vap_cd = cv(WorkingFluidMix$,P=P_r_ex_vap_cd,x=1)*MM/1000
+Cp_r_ex_vap_cd = cp(WorkingFluidMix$,P=P_r_ex_vap_cd,x=1)*MM/1000
+w_r_ex_vap_cd = soundspeed(WorkingFluidMix$,P=P_r_ex_vap_cd,x=1)
 P_r_ex_vap_cd=P_r_su_vap_cd
 T_w_su_vap_cd=IF(DELTAC_dot, 0, T_r_ex_vap_cd-DELTAT_pp_cd, T_r_ex_vap_cd-DELTAT_pp_cd, T_bis) "1)"
 Q_dot_vap_cd=cp_w*M_dot_w*(T_w_ex_vap_cd-T_w_su_vap_cd)
@@ -786,7 +844,16 @@ Q_dot_vap_cd=cp_w*M_dot_w*(T_w_ex_vap_cd-T_w_su_vap_cd)
 P_r_su_tp_cd=P_r_ex_vap_cd
 h_r_su_tp_cd=h_r_ex_vap_cd
 T_r_su_tp_cd=T_r_ex_vap_cd
-Call EES_REFPROP(WorkingFluidMix$,27,P_r_ex_tp_cd/1000,0,MM_fraction : T_r_ex_tp_cd+273.1,P_r_ex_tp_cd_bis/1000,rho_r_ex_tp_cd/MM,v_r_ex_tp_cd*MM,h_r_ex_tp_cd*MM/1000,s_r_ex_tp_cd*MM/1000,Q_r_ex_tp_cd,Cv_r_ex_tp_cd,Cp_r_ex_tp_cd,w_r_ex_tp_cd)
+T_r_ex_tp_cd = temperature(WorkingFluidMix$,P=P_r_ex_tp_cd,x=0)
+P_r_ex_tp_cd_bis = P_r_ex_tp_cd
+rho_r_ex_tp_cd = density(WorkingFluidMix$,P=P_r_ex_tp_cd,x=0)
+v_r_ex_tp_cd = volume(WorkingFluidMix$,P=P_r_ex_tp_cd,x=0)
+h_r_ex_tp_cd = enthalpy(WorkingFluidMix$,P=P_r_ex_tp_cd,x=0)
+s_r_ex_tp_cd = entropy(WorkingFluidMix$,P=P_r_ex_tp_cd,x=0)
+Q_r_ex_tp_cd = 0
+Cv_r_ex_tp_cd = cv(WorkingFluidMix$,P=P_r_ex_tp_cd,x=0)*MM/1000
+Cp_r_ex_tp_cd = cp(WorkingFluidMix$,P=P_r_ex_tp_cd,x=0)*MM/1000
+w_r_ex_tp_cd = soundspeed(WorkingFluidMix$,P=P_r_ex_tp_cd,x=0)
 P_r_ex_tp_cd=P_r_su_tp_cd
 Q_dot_tp_cd=cp_w*M_dot_w*(T_w_ex_tp_cd-T_w_su_tp_cd)
 T_w_ex_tp_cd=T_w_su_vap_cd
@@ -800,7 +867,15 @@ h_r_su_sc_cd=h_r_ex_tp_cd
 T_r_su_sc_cd=T_r_ex_tp_cd
 P_r_ex_sc_cd=P_r_su_sc_cd
 t_r_ex_sc_cd=T_r_su_sc_cd-DELTAT_sc
-Call EES_REFPROP(WorkingFluidMix$,12,T_r_ex_sc_cd+273.1,P_r_ex_sc_cd/1000,MM_fraction : T_r_ex_sc_cd_bis+273.1,P_r_ex_sc_cd_bis/1000,rho_r_ex_sc_cd/MM,v_r_ex_sc_cd*MM,h_r_ex_sc_cd*MM/1000,s_r_ex_sc_cd*MM/1000,Q_r_ex_sc_cd,Cv_r_ex_sc_cd,Cp_r_ex_sc_cd,w_r_ex_sc_cd)
+T_r_ex_sc_cd_bis = T_r_ex_sc_cd
+P_r_ex_sc_cd_bis = P_r_ex_sc_cd
+rho_r_ex_sc_cd = density(WorkingFluidMix$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)
+v_r_ex_sc_cd = volume(WorkingFluidMix$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)
+h_r_ex_sc_cd = enthalpy(WorkingFluidMix$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)
+s_r_ex_sc_cd = entropy(WorkingFluidMix$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)
+Cv_r_ex_sc_cd = cv(WorkingFluidMix$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)*MM/1000
+Cp_r_ex_sc_cd = cp(WorkingFluidMix$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)*MM/1000
+w_r_ex_sc_cd = soundspeed(WorkingFluidMix$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)
 Q_dot_sc_cd=cp_w*M_dot_w*(T_w_ex_sc_cd-T_w_su_sc_cd)
 T_w_ex_sc_cd=T_w_su_tp_cd
 T_w_su_sc_cd=IF(DELTAC_dot, 0, T_bis, T_bis, T_r_ex_sc_cd-DELTAT_pp_cd) "2)"
@@ -817,10 +892,26 @@ Q_dot_sc_cd=M_dot_r*(h_r_su_sc_cd-h_r_ex_sc_cd)
 $bookmark pump
 "!Pump"
 
-Call EES_REFPROP(WorkingFluidMix$,26,P_r_ex_pp/1000.1,s_r_su_pp*MM/1000,MM_fraction : T_r_ex_pp_s+273.1,P_r_ex_pp_s/1000,rho_r_ex_pp_s/MM,v_r_ex_pp_s*MM,h_r_ex_pp_s*MM/1000,s_r_ex_pp_s*MM/1000,Q_r_ex_pp_s,Cv_r_ex_pp_s,Cp_r_ex_pp_s,w_r_ex_pp_s)
+T_r_ex_pp_s = temperature(WorkingFluidMix$,P=P_r_ex_pp*1000/1000.1,s=s_r_su_pp)
+P_r_ex_pp_s = P_r_ex_pp*1000/1000.1
+rho_r_ex_pp_s = density(WorkingFluidMix$,P=P_r_ex_pp*1000/1000.1,s=s_r_su_pp)
+v_r_ex_pp_s = volume(WorkingFluidMix$,P=P_r_ex_pp*1000/1000.1,s=s_r_su_pp)
+h_r_ex_pp_s = enthalpy(WorkingFluidMix$,P=P_r_ex_pp*1000/1000.1,s=s_r_su_pp)
+s_r_ex_pp_s = s_r_su_pp
+Cv_r_ex_pp_s = cv(WorkingFluidMix$,P=P_r_ex_pp*1000/1000.1,s=s_r_su_pp)*MM/1000
+Cp_r_ex_pp_s = cp(WorkingFluidMix$,P=P_r_ex_pp*1000/1000.1,s=s_r_su_pp)*MM/1000
+w_r_ex_pp_s = soundspeed(WorkingFluidMix$,P=P_r_ex_pp*1000/1000.1,s=s_r_su_pp)
 P_r_ex_pp=P_r_su_liq
 epsilon_s_pp=(h_r_ex_pp_s-h_r_su_pp)/(h_r_ex_pp-h_r_su_pp)
-Call EES_REFPROP(WorkingFluidMix$,25,P_r_ex_pp/1000.1,h_r_ex_pp*MM/1000,MM_fraction : T_r_ex_pp+273.1,P_r_ex_pp_bis,rho_r_ex_pp/MM,v_r_ex_pp*MM,h_r_ex_pp_bis*MM/1000,s_r_ex_pp*MM/1000,Q_r_ex_pp,Cv_r_ex_pp,Cp_r_ex_pp,w_r_ex_pp)
+T_r_ex_pp = temperature(WorkingFluidMix$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)
+P_r_ex_pp_bis = P_r_ex_pp/1000.1   "kPa, as in the original (output without the /1000 scaling)"
+rho_r_ex_pp = density(WorkingFluidMix$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)
+v_r_ex_pp = volume(WorkingFluidMix$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)
+h_r_ex_pp_bis = enthalpy(WorkingFluidMix$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)
+s_r_ex_pp = entropy(WorkingFluidMix$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)
+Cv_r_ex_pp = cv(WorkingFluidMix$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)*MM/1000
+Cp_r_ex_pp = cp(WorkingFluidMix$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)*MM/1000
+w_r_ex_pp = soundspeed(WorkingFluidMix$,P=P_r_ex_pp*1000/1000.1,H=h_r_ex_pp)
 W_dot_pp=M_dot_r*(h_r_ex_pp-h_r_su_pp)
 h_r_su_pp=h_r_ex_sc_cd
 s_r_su_pp=s_r_ex_sc_cd
