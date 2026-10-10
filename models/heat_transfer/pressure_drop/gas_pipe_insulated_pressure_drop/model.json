@@ -55,7 +55,6 @@
     "notes": "48 common variables, 44 within 6.2e-4. h_i/SP[2] 7.97e-2: EES-vs-CoolProp R717 enthalpy reference offset (differences unaffected); Pr 4.43e-2 and cp: stale procedure-local records of an older EES run; DELTAT_total 1.82e-3 (cp backend). Excluded: DELTAp_elbows/DELTAp_Tees (stale, inconsistent with the stored DpF), SP[6] (dead)."
   },
   "missing_features": [
-    "CS-GAP-ACCENTED-IDENT",
     "CS-GAP-COLEBROOK",
     "CS-GAP-STRINGPOS",
     "CS-GAP-ARRAY-ARG",
@@ -86,6 +85,11 @@
       "date": "2026-10-10",
       "action": "CS-BUG-LOOKUP-COLNAME removed from missing_features: closed in the CoolSolve register (part b fixed in fix/library-gaps-2 @d5d6b37, part a not reproducible); the remaining column-name failure comes from the shipped companion CSV (header commas and inch marks of Pipedata.LKT lost), see README",
       "by": "Claude (Opus) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @6f10211 + uncommitted identifier-character fix (T-RECHECK, CS-GAP-ACCENTED-IDENT closed); still blocked: the ° identifiers now parse, the first error is SP[1..5] (line 333, CS-GAP-ARRAY-ARG), then the unknown Colebrook and StringPos; variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

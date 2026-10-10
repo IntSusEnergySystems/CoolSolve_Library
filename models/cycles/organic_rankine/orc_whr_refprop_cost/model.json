@@ -8,9 +8,9 @@
   "status": "blocked",
   "main_file": "orc_whr_refprop_cost.eescode",
   "fluids": [
-    "R245fa+R134a (REFPROP)",
+    "R245fa+R134a",
     "R245fa",
-    "TherminolVP-1",
+    "TherminolVP1",
     "Water",
     "Air"
   ],
@@ -65,7 +65,6 @@
     "notes": "Maximum over all common variables 0.252 = absolute Air enthalpies h_a_ex_liq/h_a_ex_vap (reference-state offset EES ideal gas vs CoolProp Air; their temperatures agree). Excluding that pair, the maximum is 0.114 on the evaporator pressure-drop correlation DELTAp_ev. The 9 REFPROP pseudo-quality outputs (Q_r_* outside 0..1) are not reproduced; 21 EES-only variables are stale values of an older EES session; the 6 CoolSolve-only names are the string variables and pi. Native file not runnable (CS-GAP-REFPROP, CS-GAP-IF5, CS-GAP-END-PROCEDURE)."
   },
   "missing_features": [
-    "CS-GAP-REFPROP",
     "CS-GAP-END-PROCEDURE"
   ],
   "related": [
@@ -104,6 +103,11 @@
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @57b22d3 (T-RECHECK, CS-GAP-CALL-EXPR-OUT closed); still blocked by CS-GAP-REFPROP and CS-GAP-END-PROCEDURE (first errors: lines 541/543 End procedure, then Unknown procedure EES_REFPROP); in a scratch copy with End procedure written End the file is square (447 equations) with the expression outputs accepted; README and missing_features updated, variant kept (its REFPROP replacement is still forced by CS-GAP-REFPROP)",
       "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "CS-GAP-REFPROP removed from missing_features: not a CoolSolve gap (decision D12); the native file is to be rewritten with CoolProp property calls",
+      "by": "Claude (Opus) for S. Quoilin"
     }
   ]
 }

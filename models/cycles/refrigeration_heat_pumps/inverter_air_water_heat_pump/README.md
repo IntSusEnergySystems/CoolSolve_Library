@@ -19,7 +19,7 @@ stored run).
 | **Source** | ULiège Thermodynamics Laboratory model bank — `~/Nextcloud/thermo_models/modeles/HP_INVERTER_REV_VLD05092007_DAIKIN-ALTHERMA3.EES` (EES 7.793, 2007, inventory candidate `TM-0274`) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory; file initials `VLD`, EES licence of the J. Lebrun lab) |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0+fix/library-gaps-2@59b2862 — **failing**: the native file now parses and evaluates every five-argument `IF` (`CS-GAP-IF5` closed), but the 151-variable block 106 does not converge (register §8, C-147; see *Verification*) |
+| **CoolSolve** | **failing**: the native file parses and evaluates every five-argument `IF`, but the 151-variable block 106 does not converge (register §8, C-147; see *Verification*) |
 
 ## Problem statement
 
@@ -43,8 +43,7 @@ compressor 3100 rpm).
 - **Heat exchangers**: effectiveness–NTU with refrigerant-phase-change
   temperatures; the evaporator is solved for a dry and a wet/frost coil, the
   branch selected by comparing the two capacities through the EES five-argument
-  `IF(A,B,X,Y,Z)` built-in (X if A<B, Y if A=B, Z if A>B; 14 call sites, gap
-  `CS-GAP-IF5`, closed in CoolSolve `fix/library-gaps-2`); frost flow from the wet-coil condensate below 0 °C
+  `IF(A,B,X,Y,Z)` built-in (X if A<B, Y if A=B, Z if A>B; 14 call sites); frost flow from the wet-coil condensate below 0 °C
   (`IceFactor`).
 - **Fans/pump**: polynomial flow–pressure characteristics (`alpha_i`, `beta_i`),
   speed corrections as FUNCTIONs of `t_out` and the operating mode.
@@ -58,8 +57,7 @@ compressor 3100 rpm).
 
 ## How to run
 
-The native file needs a CoolSolve with `CS-GAP-IF5` fixed (branch `fix/library-gaps-2`) and
-**does not converge yet**:
+The native file **does not converge yet** in CoolSolve:
 
 ```bash
 coolsolve ./inverter_air_water_heat_pump.eescode
@@ -94,7 +92,7 @@ equations were changed after the run):
 - `SHR_ev` = 95.8 (a sensible heat ratio above 1), `W_dot_fan_cd` = 0 and
   `M_dot_a_cd` = 0 while ≈ 8.9 kW are rejected.
 
-CoolSolve status (`fix/library-gaps-2` @59b2862, 2026-10-10, re-check after `CS-GAP-IF5` was closed):
+CoolSolve status:
 the native file parses, the 14 `IF` call sites evaluate (checked on a small file and in the model), 180 of 181
 blocks converge, but **block 106** (151 variables: the dry/wet evaporator selection, the compressor
 (heat transfers, isentropic + isochoric stages) and the condenser/water coupling, reached through the
@@ -168,29 +166,14 @@ the file, hence `TBD`. No student or personal data in the file.
   `Pump_speed$='High'` (`N_pump` = 1300 rpm/60 × 1 = stored 21.667 Hz),
   `fluid$='R410A'` (the Daikin Altherma refrigerant; stored saturation points
   agree within 0.7 %, R32 within 1.9 %; `R410A`/`R407C` named in the file).
-- **2026-10-08 — variant (removed 2026-10-10).** `inverter_air_water_heat_pump_coolsolve.eescode` differed
-  from the native file only by the 14 five-argument `IF` rewrites into nested three-argument CoolSolve `IF`
-  with comparison conditions (`IF(A<B, X, IF(A=B, Y, Z))`).
-- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @59b2862 (T-RECHECK, `CS-GAP-IF5`
-  closed).** The native file parses and evaluates every `IF`; block 106 still does not converge, so the
-  model is now *failing* (workflow §3: a convergence failure without a registered gap; it was *blocked* by
-  `CS-GAP-IF5` alone, `missing_features` is now empty). The variant was removed: it never solved (no `.sol`) and its `IF(A=B, …)` rewrite fails
-  by itself in a coupled block with *"Unknown fluid"*, because CoolSolve reads the equality inside the
-  call as a named argument (this was the cause of the *"Unknown fluid ''"* error recorded in the register
-  entry C-147 of 2026-10-08, not a string-variable propagation problem). `.initials` replaced by the
-  reference-state-consistent starting point described in *Verification*. The earlier statement that
-  `p_ev = IF(Q_dot_ev_dry, Q_dot_ev_wet, …)` "returns a power as a pressure" came from a wrong reading of
-  the argument order (`IF(A,B,X,Y,Z)`: the third and fourth arguments are the values, here `p_ev_wet` and
-  `p_ev_dry`) and was removed.
+
 
 ## Limitations and CoolSolve gaps
 
-- `CS-GAP-IF5` — **closed** in CoolSolve `fix/library-gaps-2` (commit 59b2862); CoolSolve v0.3.0 stops on
-  the first five-argument `IF`.
 - **Block 106 does not converge** (151 variables, register §8, C-147): the model is *failing*, no `.sol`.
   See *Verification* for the tests of initial guesses and the stored-solution reference-state offset of the
   R410A enthalpies and entropies.
-- `CS-GAP-ENTHALPY-FUSION` (registered here): `Enthalpy_Fusion` missing —
+- `CS-GAP-ENTHALPY-FUSION`: `Enthalpy_Fusion` missing —
   worked around by a stand-in FUNCTION.
 - The heating-mode branch only; the cooling branch of the original (identical
   structure, other parameters) was not imported.

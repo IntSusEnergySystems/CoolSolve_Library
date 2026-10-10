@@ -23,7 +23,7 @@ refrigerant hold-up.
 | **Source** | ULiège Thermodynamics Laboratory — consulting/study file `HeatPump_Vitocal 300G -110_CGSQ1112288.EES` |
 | **Authors** | Sylvain Quoilin (ULiège Thermodynamics Laboratory) — from the file-name initials `SQ`; the `{$ID$}` tag names the EES licence holder (J. Lebrun), not the author |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — blocked (native file; gap IDs below; `CS-GAP-IF-DIRECTIVE` and `CS-GAP-LOOKUP-PROC` closed in `fix/library-gaps-2` @9423934 and @d5d6b37). No runnable variant: the compressor catalogue table `ZH38K4E-TFD` is not recoverable (see *Verification*) |
+| **CoolSolve** | **blocked** (native file; gap IDs below). No runnable variant: the compressor catalogue table `ZH38K4E-TFD` is not recoverable (see *How to run*) |
 
 ## Problem statement
 
@@ -90,20 +90,17 @@ reproduce the stored values (`copeland` at the stored operating point gives
 closest `M` column, against the stored `W_dot_ari` = 3004.195839 W and
 `M_dot_ari` = 417.48 lbm/hr), so none of them is the missing table.
 
-**Re-check after C-134 (card of the "Then" clause).** The catalogue table is
-now in the library — `CSL-0123` *copeland_catalogue_correlation*, recovered
-from the binary of `TM-0560` — but it does **not** lift the block: the five
-named catalogues embedded in `TM-0560` are a different vintage than the table
-of the stored runs. Both stored runs read `Vs` = 82.61 cm³, while the
-recovered ZH38K4E-TFD has `Vs` row 1 = 211.22 cm³ and gives 12 100 W at the
-stored operating point (stored: 3004.2 W, factor ≈ 4); its `M` column gives
-4.28 lbm/hr there (stored: 417.48). A variant built on the recovered table
-would therefore contradict the stored solution by construction, and a variant
-on the semi-empirical Winandy branch would not reproduce the stored run
-either (it is an `'ari'` run) and would additionally need the BrineProp2
-library and the EES incompressible `EG` properties (`CS-GAP-INCLUDE`,
-`CS-GAP-INCOMPRESSIBLE`), which have no faithful substitute — so **no
-runnable variant is shipped** and the status stays `blocked`.
+The catalogue table is not reproduced by the library model `CSL-0123` either: the five
+named catalogues recovered from `TM-0560` are a different vintage than the table of the
+stored runs. Both stored runs read `Vs` = 82.61 cm³, while the recovered ZH38K4E-TFD has
+`Vs` row 1 = 211.22 cm³ and gives 12 100 W at the stored operating point (stored: 3004.2
+W, factor ≈ 4); its `M` column gives 4.28 lbm/hr there (stored: 417.48). A variant built on
+the recovered table would therefore contradict the stored solution by construction, and a
+variant on the semi-empirical Winandy branch would not reproduce the stored run either (it
+is an `'ari'` run) and would additionally need the BrineProp2 library and the EES
+incompressible `EG` properties (`CS-GAP-INCLUDE`, `CS-GAP-INCOMPRESSIBLE`), which have no
+faithful substitute, so no runnable variant is shipped and the status stays `blocked`.
+
 
 ## Results (EES stored solution, reference — not reproduced by CoolSolve)
 
@@ -190,52 +187,18 @@ Source file (EES 8.940, comments in English), collection of S. Quoilin:
   analysis is unavailable) and the rating stays consistent with the triage
   (C-121) and with the level-2 rating of the similar RefSim model `CSL-0078`
   (149 equations, same compressor physics).
-- **2026-10-10 — re-check** with CoolSolve `fix/library-gaps-2` @9423934
-  (`CS-GAP-IF-DIRECTIVE` closed): the `$if compressortype$='ari'` and
-  `$ifnot parametrictable` directives are resolved (`ARI` branch and parametric
-  block kept); the native file is still **blocked** — parse errors at line 541
-  (`=>`, `CS-GAP-GE-ARROW`), line 557 (`until i>9`, `CS-GAP-REPEAT-UNTIL-BARE`) and
-  lines 740–748 (`|star` names, `CS-GAP-NAME-PIPE`), warning *Unknown function
-  'BRINEPROP2'* (`CS-GAP-INCLUDE`) — and no runnable variant exists (missing catalogue
-  table, see *How to run*).
-
-- **2026-10-10 — re-check** with CoolSolve `fix/library-gaps-2` @d5d6b37
-  (`CS-GAP-LOOKUP-PROC` closed: a lookup inside a PROCEDURE/FUNCTION body finds
-  its companion table; `CS-BUG-LOOKUP-COL-ARG` closed: the column name of
-  `lookup(table$,i+1,coef$)` in `FUNCTION copeland` is read as a name): the native
-  file stops at the same parse errors as before (line 541 `=>`, line 557
-  `until i>9`, lines 740–748 `|star` names, warning *Unknown function
-  'BRINEPROP2'*), so the closed gaps change nothing for this model yet; it stays
-  **blocked**, no variant. The `copeland` read itself would now work on a table
-  that has the column names — but `ZH38K4E-TFD` of the stored run is not in
-  the collection (see *How to run*, `CS-GAP-LKT`).
-
 ## Limitations and CoolSolve gaps
 
-Blocked native file — every ID of `model.json` `missing_features`
-(`CS-GAP-IF-DIRECTIVE`, which covered `$if compressortype$='ari' then … $else … $endif`, the
-compressor model switch, and `$ifnot parametrictable`, was closed in CoolSolve
-`fix/library-gaps-2` @9423934: the directives are now resolved, the `ARI` branch and the
-`$ifnot parametrictable` block being kept; with v0.3.0 both the `ARI` and the Winandy
-branches stayed active and the system was not square):
+The native file is blocked by every ID of `model.json` `missing_features`:
 
-- `CS-GAP-NAME-PIPE` — the corrected-compression branch names its variables
-  with a pipe (`v_in_cp|star`, `h_in_cp|star`, `u_in_cp|star`,
-  `p_in_cp|star`, `s_in_cp|star`, `w_in2_cp|star`, `w_in2_cp_v|star`,
-  `w_in2_cp_s|star`, `h_ex2_cp_s|star`): parse errors on lines 740–748.
-- `CS-GAP-PROP-SV` — the adapted-pressure state is evaluated with the
+- To rewrite (decision D12, not a CoolSolve gap): the adapted-pressure state is evaluated with the
   (s, v) pair: `h_in_cp = enthalpy(fluid$, s=s_in_cp, v=v_in_cp)`,
   `p_in_cp = PRESSURE(fluid$, s=s_in_cp, v=v_in_cp)`; the corrected branch
   uses the (v, u) pair similarly.
-- ~~`CS-GAP-LOOKUP-PROC`~~ — **closed** in CoolSolve `fix/library-gaps-2`
-  (commit `d5d6b37`; removed from `missing_features`): the read
-  `C[i] = lookup(table$, i+1, coef$)` inside `FUNCTION copeland` now finds its
-  table (with the column name read as a name, `CS-BUG-LOOKUP-COL-ARG`, closed
-  in the same commit). The `lookup('ev',…) = …` diagnostic **writes** inside
-  `PROCEDURE hx_evv` are another matter: they are the registered bug
-  `CS-BUG-LOOKUP-WRITE` (silently dropped inside a procedure — checked on
-  2026-10-10, the table keeps its values; the writes feed no equation, so
-  they do not block the model).
+- `CS-BUG-LOOKUP-WRITE` — the `lookup('ev',…) = …` diagnostic writes inside
+  `PROCEDURE hx_evv` are silently dropped (the table keeps its values); the writes feed
+  no equation, so they do not block the model.
+
 - `CS-GAP-CONVERT-UNQUOTED` — `convert(lbm/hr,kg/s)` in the ARI mass-flow
   equation: the unquoted unit names are read as variables (silent wrong
   system: 6 unknowns instead of 2, checked with a reproducer).

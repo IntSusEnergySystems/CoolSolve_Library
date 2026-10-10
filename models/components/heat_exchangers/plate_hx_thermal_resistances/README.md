@@ -1,6 +1,6 @@
 # Single-phase plate heat exchanger: thermal-resistance model (Martin)
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0161`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0161`
 
 Heat-transfer coefficient, thermal resistance and pressure drop of a
 chevron-type plate heat exchanger on the single-phase side, computed from the
@@ -21,7 +21,7 @@ plate-HX modelling work of 2008.
 | **Source** | ULiège Thermodynamics Laboratory — `~/Nextcloud/thermo_models/modeles/plate_heat_exchanger_SB080104.EES` (inventory `TM-0319`) |
 | **Authors** | Stéphane Bertagnolio; Sylvain Quoilin (2008) |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0@7addbbc, re-checked with 0.3.0@57b22d3 — **blocked**: the native file does not parse (`CS-BUG-HASH-IDENT`; `CS-GAP-IF-DIRECTIVE` and `CS-GAP-CALL-EXPR-OUT` closed in `fix/library-gaps-2` @9423934 and @57b22d3); the runnable variant `plate_hx_thermal_resistances_coolsolve.eescode` (stored water run) is **verified** against the EES stored solution |
+| **CoolSolve** | **verified** against the EES stored solution (water run; 34 common variables, 4 differ because of the EES water conductivity, max 2.0 %) |
 
 ## Problem statement
 
@@ -73,43 +73,24 @@ Inputs: geometry (`A_bar`, `LAMBDA`, `L_p`, `L_w`, `beta`, `t`, `N_p`, `D_p`,
 
 ## How to run
 
-The native file `plate_hx_thermal_resistances.eescode` is valid EES and does
-not solve in CoolSolve (`fix/library-gaps-2` @9423934):
-
-```
-Parse failed:
-  Line 93: Could not parse line        (Nu#_f = …, CS-BUG-HASH-IDENT)
-  Line 95: Could not parse line        (Nu#_f = …, CS-BUG-HASH-IDENT)
-```
-
-(with CoolSolve v0.3.0 a third message, *Unknown function 'BRINEPROP2'*, showed that the
-`$IF fluid$='EG'` branch was kept although `fluid$ = 'Water'`: `CS-GAP-IF-DIRECTIVE`, closed
-in `fix/library-gaps-2` @9423934; the directives are now evaluated and the EG branch is
-dropped). Check of the re-check: with `Nu#_f` renamed `Nu_f` in a scratch copy the native
-file solves (37 equations, SUCCESS, 14 iterations), so `CS-BUG-HASH-IDENT` is the only
-blocker for `fluid$ = 'Water'`; with `fluid$ = 'EG'` (and `Nu_f`) the `BRINEPROP2`
-calls with an expression output now parse (`CS-GAP-CALL-EXPR-OUT` closed in @57b22d3), the
-file is not square (45 equations, 44 unknowns: the second call writes the brine
-conductivity into `k_w`, the plate conductivity input, see the model notes) and, once `k_w`
-is renamed in that call, stops at the unknown `BRINEPROP2` procedure (`CS-GAP-INCLUDE`). The faithful runnable
-transcription of the stored run is
+Open `plate_hx_thermal_resistances.eescode` in the CoolSolve GUI and press
+*Solve*, or from a terminal:
 
 ```bash
-coolsolve ./plate_hx_thermal_resistances_coolsolve.eescode
+coolsolve ./plate_hx_thermal_resistances.eescode
 ```
 
-It solves in 14 iterations without special guesses (no `.initials` needed);
-its baseline is `plate_hx_thermal_resistances_coolsolve.sol`
-(regression-tested as `CSL-0161:coolsolve`). The variant changes only what
-the gaps force (see *Conversion log*); it stays valid EES, with no
-CoolSolve-only syntax. No lookup tables. Since `CS-GAP-IF-DIRECTIVE` was closed, the
-`$IF` part of the workaround (water branch kept, EG branch removed) is no longer needed;
-the variant is kept for the `Nu#_f` renaming (`CS-BUG-HASH-IDENT`).
+The file is the original EES text (stored water run, `fluid$ = 'Water'`): the
+`$IF fluid$` directives keep the water property block and drop the
+ethylene-glycol branch. It solves in 14 iterations without special guesses (no
+`.initials` needed); `plate_hx_thermal_resistances.sol` is the regression
+baseline. No lookup tables. The `fluid$ = 'EG'` branch calls `BRINEPROP2`,
+which CoolSolve does not provide (see *Limitations*).
 
 ## Results
 
 Stored operating point (water, 25 °C, 1 bar, 150 m³/h, 105 plates,
-β = 45°), values of the variant:
+β = 45°):
 
 | Quantity | EES (stored) | CoolSolve |
 |---|---:|---:|
@@ -130,9 +111,8 @@ Stored operating point (water, 25 °C, 1 bar, 150 m³/h, 105 plates,
 
 ## Verification
 
-Status **blocked** (the native file does not parse); the **runnable variant**
-`plate_hx_thermal_resistances_coolsolve.eescode` is compared with the **EES
-stored solution** of the source file (38 variables, last run = water):
+Status **verified**: the model is compared with the **EES stored solution**
+of the source file (38 variables, last run = water):
 `34 common variables, 4 differ (rtol=0.001); only in EES: 4; only in
 CoolSolve: 4`. Maximum relative deviation **2.03e-02** (`Pr_f`).
 
@@ -149,10 +129,9 @@ CoolSolve: 4`. Maximum relative deviation **2.03e-02** (`Pr_f`).
   the current text (leftovers of earlier edits of the file, values 1, 1 and
   0.8818 m/s); `T_freezing` = −10.959 °C — a stale value of an earlier run
   with the EG branch (it is the freezing point of EG 25 % per BrineProp);
-  the stored water run does not compute it and neither does the variant.
+  the stored water run does not compute it and neither does this model.
 - Only in CoolSolve: `fluid$` (string variables are not exported by EES to
-  the reference), `PI`, `Regime$`, and `Nu_f` — the `Nu#_f` of the original,
-  renamed in the variant (`CS-BUG-HASH-IDENT`); EES does not store `Nu#_f`
+  the reference), `PI`, `Regime$`, and `Nu#_f`; EES does not store `Nu#_f`
   either (the value follows from the stored `h_f`, `d_h`, `k_f`:
   120.18 with the EES `k_f`).
 
@@ -182,7 +161,7 @@ inventory `TM-0480`). The copy `Steady-state models/plate_heat_exchanger_SB08010
   literature citations of the original header kept verbatim (including its
   "theoritical" typo, part of the cited title). The `{$ID$}` licence tag was
   removed by the extractor.
-- **2026-10-08 — data block restored** (allowed edit, both files): the whole
+- **2026-10-08 — data block restored** (allowed edit): the whole
   data block of the original is commented out in the stored text while EES
   stores values for every one of those variables (the file was solved before
   the block was commented out). The values were restored from the stored
@@ -196,37 +175,6 @@ inventory `TM-0480`). The copy `Steady-state models/plate_heat_exchanger_SB08010
   `mu_w` = `mu_f` = viscosity of water at 25 °C). With the data block active
   the model is square (37/37); the original equations are otherwise
   unchanged.
-- **2026-10-08 — runnable variant** `plate_hx_thermal_resistances_coolsolve.eescode`
-  (valid EES, no CoolSolve-only syntax). Changes forced by the gaps, logged
-  in the variant header:
-  1. `CS-GAP-IF-DIRECTIVE`: the `$IF fluid$` branches are resolved for the
-     stored run — the water property block is kept unconditional and the
-     ethylene-glycol `BRINEPROP2` branch is removed (kept as a comment). The
-     brine route is available in the library through `CSL-0079`
-     (BrineProp) and `CSL-0111` (plate correlations);
-  2. `CS-BUG-HASH-IDENT`: the Nusselt variable `Nu#_f` is renamed `Nu_f`
-     (same workaround as `CSL-0111`; valid EES, no equation change).
-- **2026-10-10 — re-check** with CoolSolve `fix/library-gaps-2` @9423934
-  (`CS-GAP-IF-DIRECTIVE` closed): the `$IF fluid$` directives are evaluated
-  (`'Water'` kept, `'EG'` removed); the native file still stops at the `Nu#_f`
-  identifier (`CS-BUG-HASH-IDENT`, lines 93 and 95), so it stays **blocked**.
-  The variant is kept (the `$IF` part of its changes is no longer needed, the
-  `Nu_f` renaming is). `CS-GAP-CALL-EXPR-OUT` remained listed: it concerns the EG
-  branch only (confirmed with `fluid$ = 'EG'` in a scratch copy).
-- **2026-10-10 — re-check** with CoolSolve `fix/library-gaps-2` @57b22d3
-  (`CS-GAP-CALL-EXPR-OUT` closed): the native file still stops at the `Nu#_f`
-  identifier (`CS-BUG-HASH-IDENT`, reported at lines 94 and 96), so it
-  stays **blocked**; the ID is removed from `missing_features`. Evidence, in a
-  scratch copy with `Nu#_f` renamed `Nu_f`: with `fluid$ = 'Water'` the file solves
-  (37 equations, SUCCESS, 14 iterations, as before); with `fluid$ = 'EG'` the two
-  `CALL BRINEPROP2(… : …, c_p_f/1000, …)` calls parse and each expression output
-  gets an auxiliary variable (`__out3_BRINEPROP2_L74`, `__out3_BRINEPROP2_L75`),
-  but the EG branch is not square (45 equations, 44 unknowns) because the second
-  call writes the brine conductivity into `k_w`, the plate conductivity input
-  (inherited from the original, see *Model*); with that output renamed the file
-  is square (45 equations) and stops at *"Unknown procedure: BRINEPROP2"*
-  (`CS-GAP-INCLUDE`, not blocking for the shipped `fluid$ = 'Water'`). The
-  variant is unchanged and kept (`Nu_f` renaming still needed).
 - **Level 2** although the raw score is 1 (37 equations → 0, largest block
   4 → 0, one procedure → 1, no multi-zone, no calibration, no curated
   guesses): moved +1 to the inventory guess — a complete component model
@@ -236,23 +184,12 @@ inventory `TM-0480`). The copy `Steady-state models/plate_heat_exchanger_SB08010
 
 ## Limitations and CoolSolve gaps
 
-The native file is **blocked**; `missing_features` lists every gap that
-blocks it:
-
-- `CS-BUG-HASH-IDENT` — the Nusselt variable is named `Nu#_f`: an identifier
-  containing `#` is a parse error in the main program (reported at lines 94 and 96);
-
-`CS-GAP-IF-DIRECTIVE` (the directives `$IF fluid$='Water'` / `$IF fluid$='EG'` /
-`$ENDIF` were parsed and ignored: both branches were kept) is **closed** in CoolSolve
-`fix/library-gaps-2` @9423934, and so is `CS-GAP-CALL-EXPR-OUT` (the EG branch calls
-`BRINEPROP2` with an expression output, `… : c_p_f/1000`, refused by CoolSolve v0.3.0;
-accepted since `fix/library-gaps-2` @57b22d3; the EG branch is anyway not runnable:
-`BRINEPROP2` is unknown, `CS-GAP-INCLUDE`, and the second call overwrites `k_w`).
-
-Worked around, not blocking: `CS-GAP-INCLUDE` (the `BRINEPROP2` procedure is
-implicit in EES — `USERLIB`; the variant removes the EG branch instead of
-copying the procedure, which has no runnable CoolSolve form in the library
-yet, see `CSL-0079`). Physics: single-phase side only, one fluid at a mean
+The shipped run is water. The `fluid$ = 'EG'` branch is kept
+as in the original but is not a runnable model: it calls the `BRINEPROP2`
+procedure of `Brineprop2.LIB`, which CoolSolve cannot load yet (the procedure
+is implicit in EES — `USERLIB`; see `CSL-0079`), and its second call
+overwrites the plate conductivity input `k_w` (see *Model*), which makes the
+system non-square. Physics: single-phase side only, one fluid at a mean
 state (no temperature profile, no LMTD); the correlations are valid for
 chevron plates inside the tested geometry (10 ≤ β ≤ 80° per Martin).
 
@@ -262,9 +199,8 @@ chevron plates inside the tested geometry (10 ≤ β ≤ 80° per Martin).
   library whose second-generation procedure `BRINEPROP2` (candidate
   `TM-0480`, merged there) computes the brine properties of the EG branch.
 - `CSL-0111` *plate_hx_correlations* — ULiège procedure library for plate
-  heat exchangers; its `martin` procedure (and the same `Nu#_f` workaround)
-  implements the same Martin correlation with more plate-HX correlations
-  around it.
-- `CSL-0162` *glycol_runaround_recovery_loop*: imported in the same wave with
-  the same pattern (native file blocked by `$IF`/`CALL` gaps, runnable
-  variant resolved for the stored run).
+  heat exchangers; its `martin` procedure implements the same Martin
+  correlation with more plate-HX correlations around it.
+- `CSL-0162` *glycol_runaround_recovery_loop*: air-to-air glycol run-around
+  heat-recovery loop, imported in the same wave (glycol properties from
+  BrineProp).

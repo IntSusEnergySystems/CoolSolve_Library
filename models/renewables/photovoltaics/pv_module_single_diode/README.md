@@ -16,7 +16,7 @@ gaps; the verified variant `pv_module_single_diode_coolsolve.eescode` runs it.
 | **Source** | ULiège Thermodynamics Laboratory course file `modeles/photovoltaique/PV_model.EES` (EES X7.991), derived from the University of Wisconsin Solar Energy Laboratory PV module model |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory); original formulation: W. De Soto, S. A. Klein, W. A. Beckman (Solar Energy Laboratory, UW-Madison) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0, re-checked with 0.3.0@d5d6b37 — native blocked (`CS-GAP-END-PROCEDURE`, `CS-GAP-LOOKUPROW`, `CS-BUG-LOOKUP-STRING`, `CS-GAP-CONVERT-UNQUOTED`; `CS-GAP-LOOKUP-PROC` is closed since `fix/library-gaps-2`); variant verified against the EES stored solution |
+| **CoolSolve** | native **blocked** (`CS-GAP-END-PROCEDURE`, `CS-GAP-LOOKUPROW`, `CS-BUG-LOOKUP-STRING`, `CS-GAP-CONVERT-UNQUOTED`); variant verified against the EES stored solution |
 
 ## Problem statement
 
@@ -150,27 +150,19 @@ ULiège course data.
   columns, same values).
 - **Variant changes** (each forced by a registered gap, valid EES throughout):
   1. `END ReadPV` → no PROCEDURE: `PROCEDURE ReadPV` is flattened into the
-     main program (`CS-GAP-LOOKUP-PROC`, closed since the re-check below, no
-     longer forces it; CoolSolve also rejects the named terminator,
-     `CS-GAP-END-PROCEDURE` — *"Procedure 'ReadPV' missing END"*, which still does).
+     main program; CoolSolve also rejects the named terminator
+     (`CS-GAP-END-PROCEDURE` — *"Procedure 'ReadPV' missing END"*).
+
   2. `Row = LOOKUP$ROW('PVModules','PV Name',PVModule$)` → `Row = 2` with the
      name→row mapping in a comment (`CS-GAP-LOOKUPROW`).
   3. The 16 named-column lookups → positional numeric lookups
      `Lookup('pvmodules', Row, <col nr>)` on the numeric-key companion table
-     (`CS-BUG-LOOKUP-STRING` string columns; column-name strings avoided per
-     `CS-BUG-LOOKUP-COLNAME`). Table name lowercase `pvmodules` = companion
+     (`CS-BUG-LOOKUP-STRING` string columns; column-name strings avoided). Table name lowercase `pvmodules` = companion
      file name convention; EES table names are case-insensitive.
   4. `ConvertTemp(C,K,·)` → `ConvertTemp('C','K',·)` (`CS-GAP-CONVERT-UNQUOTED`:
      unquoted unit names become variables, system not square).
   Variable names, equations and values are otherwise unchanged.
-- **2026-10-10 — re-check (`T-RECHECK`) with CoolSolve `fix/library-gaps-2`
-  @d5d6b37**: `CS-GAP-LOOKUP-PROC` is closed (a lookup inside a PROCEDURE/FUNCTION
-  body finds its companion table). The native file still stops at the parse
-  (line 40 and *"Procedure 'ReadPV' missing END"*, `CS-GAP-END-PROCEDURE`), before
-  any lookup is evaluated, so the first error does not change; it stays
-  `blocked` and the variant is kept. Even without that parse error the
-  procedure would still hit `CS-GAP-LOOKUPROW` (`LOOKUP$ROW`) and
-  `CS-BUG-LOOKUP-STRING` (string key column).
+
 - **Level**: score 4 of taxonomy §3 (equations band 2 for 337 equations,
   structures 1, semi-empirical parameters 1) → moved to level 2: the 300
   DUPLICATE equations are an output curve sweep (largest block 1, each point
@@ -179,12 +171,10 @@ ULiège course data.
 
 ## Limitations and CoolSolve gaps
 
-- Native file blocked (all registered; the file stays in valid EES):
-  `CS-GAP-END-PROCEDURE` (parse fails first), `CS-GAP-CONVERT-UNQUOTED`
-  (not square: `C`/`K` taken as variables), then `CS-GAP-LOOKUPROW`
-  and `CS-BUG-LOOKUP-STRING` on the table read (`CS-GAP-LOOKUP-PROC`, the lookup
-  inside the procedure, is closed in CoolSolve `fix/library-gaps-2` @d5d6b37 and
-  no longer listed).
+- Native file blocked (the file stays in valid EES): `CS-GAP-END-PROCEDURE` (parse fails
+  first), `CS-GAP-CONVERT-UNQUOTED` (not square: `C`/`K` taken as variables), then
+  `CS-GAP-LOOKUPROW` and `CS-BUG-LOOKUP-STRING` on the table read.
+
 - The `II-06` entry of the original diagram-window module list has no row in
   the local `PVModules` table (8 rows); selecting it in EES would fail — the
   default run uses `II-10`.

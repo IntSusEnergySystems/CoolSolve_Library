@@ -10,11 +10,9 @@
   epsilon-NTU exchangers, efficiency eta = Q_dot_u/Q_dot_c.
   The MODULEs of the original are flattened per call (decision D10) and the
   regime branches are selected by compile-time $if directives on the runtime
-  string regime$: the native file is BLOCKED in CoolSolve (CS-GAP-IF-NO-CONSTANT;
-  CS-GAP-IF-DIRECTIVE, CS-GAP-IF5 and CS-BUG-STRING-CALL-OUT are closed in
-  CoolSolve fix/library-gaps-2, so the IF5 rewrite and the removal of
-  CALL WRITERESULTS below are no longer forced). Only change that is still
-  forced: the four branches are resolved for the stored operating point
+  string regime$: the native file is BLOCKED in CoolSolve (CS-GAP-IF-NO-CONSTANT).
+  Change from the native file: the four branches are resolved for the
+  stored operating point
   (ON/OFF active, the three others kept as comments); the full change list is
   the conversion log of README.md.
   Source : ULiege model bank 2008-02-12, EES file BoilerWithModulatingBurner
@@ -288,7 +286,7 @@ CALL BOILER_REGIME(t_w_ex_set,t_w_ex_FL,t_w_ex_MIN,t_w_ex_OFF:regime$)
 "others as comments."
 
 {--- branch not active at the stored operating point (resolved from the
-$if regime$ directives, CS-GAP-IF-DIRECTIVE) ---
+$if regime$ directives) ---
 "OFF regime"
 t_w_ex=t_w_ex_OFF
 Q_dot_u=0
@@ -300,7 +298,7 @@ X_burner=0 [-]
 --- end of inactive branch ---}
 
 {--- branch not active at the stored operating point (resolved from the
-$if regime$ directives, CS-GAP-IF-DIRECTIVE) ---
+$if regime$ directives) ---
 "Full load"
 t_w_ex=t_w_ex_FL
 Q_dot_u=Q_dot_u_FL
@@ -312,7 +310,7 @@ X_burner=1 [-]
 --- end of inactive branch ---}
 
 {--- branch not active at the stored operating point (resolved from the
-$if regime$ directives, CS-GAP-IF-DIRECTIVE) ---
+$if regime$ directives) ---
 "Modulating regime - MODULE BOILERMOD flattened, tag mod (identical body to"
 "BOILERSS). Formal -> actual: V_dot_w_l\h_MOD -> V_dot_w_l\h, t_w_su_MOD ->"
 "t_w_su_MOD, M_dot_f_ss -> M_dot_f_MOD, y_C -> y_C, f_ss -> f_MOD, AU_gw_ss ->"
@@ -385,16 +383,14 @@ X_burner=1 [-]
 "!4.4. RESULTS"
 "!4.4. RESULTS: the WRITERESULTS call of the original is not made in this"
 "variant: it only writes the results lookup table (silently dropped in"
-"CoolSolve, CS-BUG-LOOKUP-WRITE) and returns Write_Results$='OK'; the call"
-"itself failed because regime$ is produced by another CALL"
-"(CS-BUG-STRING-CALL-OUT, closed in CoolSolve fix/library-gaps-2 @57b22d3:"
-"no longer forced). regime$ is still computed above by BOILER_REGIME."
+"CoolSolve, CS-BUG-LOOKUP-WRITE) and returns Write_Results$='OK'."
+"regime$ is computed above by BOILER_REGIME."
 
 
 "!4.4. AUXILIARY CONSUMPTIONS"
 "burner electric motor (pump and fan) electricity consumption"
 "Light liquid fuel boiler"
-W_dot_aux_lf=41.9+1.49E-3*Q_dot_u_n + 3E-10*Q_dot_u_n^2 + if(35000-Q_dot_u_n,100,0)   "IF(Q_dot_u_n,35000,100,0,0) of the original rewritten with the 3-argument if (CS-GAP-IF5): +100 W if Q_dot_u_n < 35000 W, else 0"
+W_dot_aux_lf=41.9+1.49E-3*Q_dot_u_n + 3E-10*Q_dot_u_n^2 + if(35000-Q_dot_u_n,100,0)   "IF(Q_dot_u_n,35000,100,0,0) of the original: +100 W if Q_dot_u_n < 35000 W, else 0"
 "the 100W added are due to the presence of a fuel heater used on boilers of nominal useful power < 35000 W"
 "Gaseous fuel boiler"
 W_dot_aux_gf=17.2+1.28E-3*Q_dot_u_n+8E-10*Q_dot_u_n^2

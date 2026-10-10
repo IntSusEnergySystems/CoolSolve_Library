@@ -23,7 +23,7 @@ optimisation sweeps of the original study.
 | **Source** | ULiège Thermodynamics Laboratory, EES 8.652 (`cycle ORC with refprop.EES`) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory) — the 2011-10-29 copies of the same model are by Sylvain Quoilin |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0, re-checked with 0.3.0@57b22d3 — native **blocked** (`CS-GAP-REFPROP`, `CS-GAP-END-PROCEDURE`; `CS-GAP-IF5` and `CS-GAP-CALL-EXPR-OUT` are closed in CoolSolve `fix/library-gaps-2` @59b2862 and @57b22d3); runnable variant verified against the EES stored solution |
+| **CoolSolve** | native file **blocked** (`CS-GAP-END-PROCEDURE`; its `CALL EES_REFPROP` blocks are to be rewritten as CoolProp property calls, decision D12); runnable variant `orc_whr_refprop_cost_coolsolve.eescode` verified against the EES stored solution (see *Verification*) |
 
 ## Problem statement
 
@@ -214,11 +214,11 @@ itself.
      `molarmass()`.
   4. **The two 5-argument `IF(DELTAC_dot, 0, X, Y, Z)` calls** (condenser
      water-side temperatures) **rewritten with CoolSolve's 3-argument
-     `if()`** — CoolSolve-only syntax, not valid EES (`CS-GAP-IF5`); the
+     `if()`** — CoolSolve-only syntax, not valid EES (CoolSolve accepts the
+     5-argument form now, so this rewrite is not required); the
      branch selection (sign of `DELTAC_dot`, > 0 at the stored point) is
      unchanged.
-  5. **`End procedure` written `End`** (`CS-GAP-END-PROCEDURE`, registered
-     with this file as evidence): CoolSolve does not recognise the
+  5. **`End procedure` written `End`** (`CS-GAP-END-PROCEDURE`): CoolSolve does not recognise the
      terminator, swallowing `Function FluidPrice`.
   6. **The dead `if fluidev$='glycol'` block of `hx_cd` removed**:
      `fluidev$` is not an argument of `hx_cd` (EES evaluated the comparison
@@ -228,31 +228,17 @@ itself.
   The equation count of the variant is 361 (largest block 24), vs the 293/331
   of the native parse, in which the REFPROP blocks are dropped with their
   output equations and variables.
-- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @59b2862 (T-RECHECK, `CS-GAP-IF5` closed).** The five-argument `IF` of the native file is now implemented; the native file is still blocked, the first error now comes from another gap (the system is not square (293 equations, 331 unknowns: `CALL EES_REFPROP` outputs and `End procedure`), `CS-GAP-REFPROP`, `CS-GAP-END-PROCEDURE`). The variant is kept.
-- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @57b22d3 (T-RECHECK, `CS-GAP-CALL-EXPR-OUT` closed).** The 13 `CALL EES_REFPROP` calls with an expression output (lines 696 ff., `T_r_su_vap+273.1`, `rho_r_su_vap/MM`, …) now parse: each expression gets an auxiliary variable `__out<k>_EES_REFPROP_L<line>` and an equation `expression = auxiliary`. The native file is still blocked and the first errors are lines 541 and 543 (`End procedure`, `CS-GAP-END-PROCEDURE`), then `EES_REFPROP` is an unknown procedure (`CS-GAP-REFPROP`). Evidence, in a scratch copy with only `End procedure` written `End`: the file is square (447 equations, 447 unknowns, largest block 54; it was 293 equations and 331 unknowns while the expression outputs were dropped) and the solve stops in block 26 (10 variables, `w_r_su_vap`, `Q_r_su_vap`, `Cv_r_su_vap`, …) with *"Unknown procedure: EES_REFPROP"*. The variant is kept; the replacement of the `CALL EES_REFPROP` blocks by pure-fluid CoolProp calls is still forced by `CS-GAP-REFPROP`.
+
 
 ## Limitations and CoolSolve gaps
 
-- `CS-GAP-REFPROP` — all refrigerant properties go through
+- All refrigerant properties go through
   `CALL EES_REFPROP(WorkingFluidMix$, code, …)` (codes 0, 12, 17, 25, 26, 27,
-  90) on the mixture file `C:\REFPROP8\R245fa+R134a`; the EES REFPROP
-  interface is not available in CoolSolve. The variant substitutes pure
+  90) on the mixture file `C:\REFPROP8\R245fa+R134a`; these calls are to be
+  rewritten as CoolProp property calls in the native file (decision D12). The variant substitutes pure
   R245fa CoolProp calls, faithful only for the stored run (`MM_fraction = 1`).
-- `CS-GAP-CALL-EXPR-OUT` — **closed in CoolSolve `fix/library-gaps-2` @57b22d3**: 13
-  `CALL EES_REFPROP` calls of the main program use an expression as output, e.g.
-  `… : T_r_su_vap+273.1` (line 693 ff.); CoolSolve v0.3.0 refused them
-  (*"Output 1 of 'EES_REFPROP' must be a variable, not the expression
-  'T_r_su_vap+273.1': …"*) and now accepts them (see the conversion log).
-  Removed from `missing_features`. The variant replaces the calls (each
-  output expression becomes one equation, see the conversion log), which is
-  forced by `CS-GAP-REFPROP`.
-- `CS-GAP-IF5` — **closed in CoolSolve `fix/library-gaps-2` @59b2862**: the 5-argument intrinsic
-  `IF(DELTAC_dot, 0, X, Y, Z)` used twice in the condenser block for the
-  water-side temperatures (not supported in CoolSolve v0.3.0); the variant
-  keeps its 3-argument `if()`.
 - `CS-GAP-END-PROCEDURE` — the `Procedure Summary` is closed with
-  `End procedure` (valid EES, this file is the register evidence); the
-  variant writes bare `End`.
+  `End procedure` (valid EES); the variant writes bare `End`.
 - The cost model prices are dated (2011) and the fluid price function is
   stubbed to 15 €/kg in the original.
 

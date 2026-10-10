@@ -72,7 +72,7 @@ decide for each of them with this decision tree:
    model.
 4. **Does the library already have a model of the same system and purpose?**
    (same component or cycle, same physics, same inputs/outputs up to
-   parameter values — check `library.csv` by category, tags and fluids)
+   parameter values — filter the dashboard `library.html` by category, tags and fluids)
    - **No** → `added` (task `T-IMPORT`/`T-FUNC`/`T-TRANSLATE`).
    - **Yes, and the candidate is better** (by order of importance:
      correctness, documentation, generality, verification data, recency) →
@@ -279,7 +279,7 @@ reference. The example itself stays in the CoolSolve repository.
    hand if needed.
 3. Name it after the main function or the family (`cpbar_combustion_gases`,
    `two_phase_htc_correlations`), `kind = function`. Its functions are listed
-   automatically in `functions.csv`.
+   automatically in the index (`library.json`, *Functions* tab of `library.html`).
 4. Function names must be unique across the library (`tools/build_index.py`
    warns otherwise): CoolSolve resolves `$INCLUDE library:<name>` and its
    editor quick-fixes through them.
@@ -405,8 +405,16 @@ A property call such as `quality(fluid$,H=h[4],T=T[4])` is therefore
   `CS-GAP-PROP-TH` is **not** listed in `missing_features`; the status follows
   the verification against the EES reference.
 
+**Other input pairs and REFPROP calls (decision D12).** The same rule applies to
+every property input pair that CoolProp does not support (`(s, v)`, `(T, h)`…) and
+to external REFPROP calls (`CALL EES_REFPROP(fluid$, code, …)`): rewrite them in
+the model itself as CoolProp property calls on equivalent states, log each
+rewrite, and keep the rewritten file as the main model file. They are not CoolSolve
+gaps and are never listed in `missing_features`; only a fluid or a mixture that
+CoolProp lacks is registered (as a missing fluid).
+
 **Re-checks (`T-RECHECK`).** When a CoolSolve release closes gaps, filter
-`library.csv` on `missing_features`, run the native files, and update status,
+the dashboard on the gap (or `library.json` on `missing_features`), run the native files, and update status,
 `missing_features`, README and baseline (`.sol` of the native file). Keep or
 delete the variant as the README decides; while it exists it stays in the
 regression.
@@ -440,7 +448,7 @@ included (`tools/build_index.py` lists the runnable models without figure):
    `figures/refrigeration_cycle_simple_compressor_ph.png`, and replace the
    figure placeholder of the README *Results* section by
    `![P-h diagram of the cycle](figures/<name>_ph.png)` with a one-line caption.
-4. Run `python3 tools/build_index.py` (the `figures` column of `library.csv` is
+4. Run `python3 tools/build_index.py` (the figure count of the index is
    updated) and commit.
 
 Workers prepare this step: the README contains the placeholder and the model

@@ -12,7 +12,7 @@ facets** stored in its `model.json`:
 | **Origin type** | `teaching`, `research`, `textbook`, `software_library`, `industry`, `coolsolve` | `origin.type` | README table |
 
 Free-form `tags` and `fluids` complete the description. The facets are
-exported to `library.csv` / `library.json`, so the CoolSolve library browser
+exported to `library.json` and the dashboard `library.html`, so the library browser
 can filter on any combination (e.g. *all verified level-1 heat-exchanger
 models*). The README of each model starts with the three badges:
 
@@ -106,7 +106,7 @@ as unknown parameters (square system), and `optimization` when they minimise
 an error over many points; both get the tag `parameter identification`.
 Dynamic and optimisation models
 are additionally tracked as separate work streams in the roadmap (Phase 4) and
-can be listed with the `kind` column of `library.csv`.
+can be listed with the *kind* filter of the dashboard `library.html`.
 
 *Why not top-level folders per kind?* Users look for models by physical
 system first (*storage tank*, *ORC*); kind folders would duplicate the whole
@@ -192,8 +192,7 @@ results used for the verification are summarised in the README.
 ## 6. Changing the taxonomy without breaking anything
 
 Paths are never the identity of a model: the ID is. Generated files
-(`library.csv`, `library.json`, `functions.csv`, `CATALOG.md`,
-`redirects.csv`) are rebuilt from the folders by `tools/build_index.py`.
+(`library.json`, `library.html`, `redirects.csv`) are rebuilt from the folders by `tools/build_index.py`.
 
 - **Move a model** to another category: `git mv` the folder, add the old path
   to `previous_paths` in `model.json`, run `tools/build_index.py`.

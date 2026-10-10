@@ -24,7 +24,7 @@ detailed model).
 | **Source** | ULiège model bank *Model data bank*, Distribution_Systems/Pumps, 2008-02-18 |
 | **Authors** | Vincent Lemort (file header; inventory adds V. Teodorese, J. Lebrun) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0, re-checked with 0.3.0@57b22d3 — native file **blocked** (it does not parse: `CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE`, `CS-GAP-STRING-ARRAY`; `CS-GAP-LOOKUP-PROC` and `CS-GAP-CALL-EXPR-OUT` are closed since `fix/library-gaps-2`); variant `*_coolsolve.eescode` verified against the EES stored solution (see *Verification*) |
+| **CoolSolve** | native file **blocked** (it does not parse: `CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE`, `CS-GAP-STRING-ARRAY`); variant `centrifugal_brine_pump_refsim_coolsolve.eescode` verified against the EES stored solution (see *Verification*) |
 
 ## Problem statement
 
@@ -168,8 +168,8 @@ folder.
 - **2026-10-05 — runnable variant** `centrifugal_brine_pump_refsim_coolsolve.eescode`
   (valid EES; no CoolSolve-only syntax). Changes forced by the gaps, logged
   in the variant header:
-  1. `CS-GAP-ELSEIF-CHAIN` + `CS-GAP-UPPERCASE` + `CS-GAP-STRING-ARRAY` +
-     `CS-GAP-LOOKUP-PROC` (closed since the re-check below) break `BRINEPROP`. It is split into (a) a selector
+  1. `CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE` and `CS-GAP-STRING-ARRAY` break
+     `BRINEPROP`. It is split into (a) a selector
      procedure `BRINEPROP_SELECT(Conc,Fl$:Fl_brine)` holding the 22
      concentration range checks and the 11-branch fluid ladder, rewritten as
      sequential single-line IF statements (mutually exclusive conditions;
@@ -181,62 +181,21 @@ folder.
      original; internal variables renamed per call (`<variable>_d`,
      `<variable>_cp`). The formal arguments `Conc`/`Fl$` are replaced by the
      actual `X_brine`/`brine$` (`Conc` → `x_d = X_brine - xm_d`).
-  2. `CS-GAP-CALL-EXPR-OUT` (closed since the re-check of 2026-10-10 @57b22d3,
-     so no longer forced): the expression output `:c_p_pump/1000` becomes
-     an output into `c_p_pump_kJ` plus `c_p_pump = c_p_pump_kJ*1000`.
+  2. The expression output `:c_p_pump/1000` of the `CALL` is written as an
+     output into `c_p_pump_kJ` plus `c_p_pump = c_p_pump_kJ*1000`, a split that
+     CoolSolve no longer requires.
   Verified against the same EES reference (see *Verification*).
-- **2026-10-10 — re-check (`T-RECHECK`) with CoolSolve `fix/library-gaps-2`
-  @d5d6b37**: `CS-GAP-LOOKUP-PROC` is closed (a lookup inside a PROCEDURE/FUNCTION
-  body finds its companion table). The native file still does not parse
-  (*"IF ... THEN without a matching ENDIF"*, `Uppercase$` unknown, expression as
-  `CALL` output), so it stays `blocked` and the variant is kept. Evidence that
-  the lookups themselves now work: in a scratch copy of the native file with
-  only those constructs rewritten (range-check ladder dropped, the `ELSE IF`
-  ladders written as sequential single-line `IF`s, `Uppercase$` and the `U$`
-  array removed, `:c_p_pump/1000` split into an auxiliary variable) the **native
-  `BRINEPROP`** (`REPEAT` loop, `c[k]=lookup('Brine1',Row[k],Pr)` inside the
-  procedure body) solves and agrees with the variant on its 35 common
-  variables to 2.1e-10 relative (the CoolSolve register quotes ≤ 2.1e-10 on 34).
-  The flattening of the variant is thus no longer needed for the lookups, only
-  for the other rewrites.
-- **2026-10-10 — re-check (`T-RECHECK`) with CoolSolve `fix/library-gaps-2`
-  @57b22d3** (`0.3.0@57b22d3`, `CS-GAP-CALL-EXPR-OUT` closed: an expression
-  as `CALL` output is accepted; CoolSolve adds an auxiliary variable
-  `__out<k>_<procedure>_L<line>` holding the raw procedure output and solves
-  the equation `expression = auxiliary`). The native file still does not parse
-  (*"IF ... THEN without a matching ENDIF"* on the `ELSE IF` ladders of
-  `BRINEPROP`, `CS-GAP-ELSEIF-CHAIN`; `Uppercase$` and the string array,
-  `CS-GAP-UPPERCASE`, `CS-GAP-STRING-ARRAY`), so it stays `blocked` and the
-  variant is kept. Evidence that the expression output works: in the scratch
-  copy of the previous re-check (the same rewrites of the `ELSE IF` ladders,
-  `Uppercase$` and `U$`) the auxiliary-variable split is replaced by the
-  **native** `CALL BRINEPROP('Specheat',brine$,X_brine,t_su_pump:c_p_pump/1000)`:
-  the file is square (34 equations), solves (SUCCESS), gives
-  `__out1_BRINEPROP_L197` = 3.852099956 and `c_p_pump` = 3852.099956 J/kg-K (EES:
-  3852.099981) and agrees with the variant on its 34 common variables to
-  2.1e-10 relative. The auxiliary variable of the variant (`c_p_pump_kJ`) is
-  therefore no longer forced by a gap; the variant is kept for the other
-  rewrites.
 
 ## Limitations and CoolSolve gaps
 
-The native file is **blocked**; `missing_features` lists every gap that
-blocks it (re-checked on 2026-10-10 with CoolSolve 0.3.0@57b22d3: these are the
-parse errors the native file now stops at):
+The native file is **blocked**; `missing_features` lists every gap that blocks
+it. These are the parse errors the native file stops at:
 
 - `CS-GAP-ELSEIF-CHAIN` — the `ELSE IF … ENDIF;ENDIF` ladders of
   `BRINEPROP` do not parse ("IF ... THEN without a matching ENDIF");
 - `CS-GAP-UPPERCASE` — the intrinsic `Uppercase$` is unknown;
-- ~~`CS-GAP-CALL-EXPR-OUT`~~ — **closed** in CoolSolve `fix/library-gaps-2`
-  (commit `57b22d3`): an expression as `CALL` output argument
-  (`…:c_p_pump/1000`) is accepted; removed from `missing_features`, see the
-  conversion log for the evidence;
 - `CS-GAP-STRING-ARRAY` — reading a string-array element (`UO$=U$[Pro]`)
   fails ("String variable not found");
-- ~~`CS-GAP-LOOKUP-PROC`~~ — **closed** in CoolSolve `fix/library-gaps-2`
-  (commit `d5d6b37`): `LOOKUP` inside a procedure now reads the companion
-  tables (it failed with "no table store is available in this context");
-  removed from `missing_features`, see the conversion log for the evidence.
 
 `CS-GAP-INCLUDE` (implicit USERLIB library) is worked around by copying
 `BRINEPROP` into the file; `CS-GAP-LKT` (binary `.lkt` tables) is worked

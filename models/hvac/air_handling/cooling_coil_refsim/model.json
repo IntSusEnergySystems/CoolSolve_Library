@@ -59,7 +59,6 @@
     "notes": "74 common variables, 21 differ above rtol=0.001, maximum relative difference 7.81e-01 (DELTA_t_cond, 10.107 K against 2.218 K). Cause: the stored EES value of t_dp_ex_coil_dry (4.28e-01) is stale and inconsistent with the equation W_ex_coil_dry = W_su_coil of the file itself (it equals t_a_ex_coil_dry exactly, while the dew point of W_su_coil = 0.0137708 kg/kg at 98000 Pa is 18.4 °C, the value stored for the identical supply call t_dp_su_coil = 18.442 °C); DELTA_t_cond is its only user. The 19 remaining deviations (1.2e-03 to 4.8e-03) come from the EES and CoolProp humid-air formulations (W_su_coil 4.64e-03, h_a_su_coil 2.14e-03, W_c_coil_wet and W_ex_coil 4.79e-03), as in the other humid-air models of the library (CSL-0070 4.4e-03, CSL-0016 5.1e-03). The algebraic results are reproduced to 7.9e-04 or better (resistances exact, epsilon_c_coil_wet 9.4e-06, RH_ex_coil 6.8e-06, t_a_ex_coil_dry 1.0e-04). No variable excluded; three variables only the variant has (the renamed Kstar_r, Kstar_r_n and the string input refrigerant$), one decoded EES variable (LAT) is not a variable of the model."
   },
   "missing_features": [
-    "CS-GAP-NAME-PIPE",
     "CS-GAP-INCLUDE",
     "CS-GAP-IFSTR"
   ],
@@ -96,6 +95,11 @@
     {
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @57b22d3 (T-RECHECK, CS-GAP-CALL-EXPR-OUT closed); still blocked by CS-GAP-NAME-PIPE, CS-GAP-INCLUDE, CS-GAP-IFSTR (lines 113-114 now parse; in a scratch copy with K|star renamed the file is square, 80 equations, and stops at Unknown procedure BRINEPROP); README and missing_features updated, variant kept (its BRINEPROP replacement is still forced by CS-GAP-INCLUDE)",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @6f10211 + uncommitted identifier-character fix (T-RECHECK, CS-GAP-NAME-PIPE closed); still blocked by CS-GAP-INCLUDE and CS-GAP-IFSTR (the K|star names parse; the file is square, 80 equations, and stops at Unknown procedure BRINEPROP; IF$ unknown, line 188); variant kept (its Kstar renaming is no longer forced, its brine-property replacement and WetHumide$ removal still are)",
       "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]

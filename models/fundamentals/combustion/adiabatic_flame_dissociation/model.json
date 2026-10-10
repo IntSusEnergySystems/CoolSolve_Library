@@ -63,7 +63,6 @@
   "missing_features": [
     "CS-GAP-CHEM-EQUIL",
     "CS-GAP-NASA",
-    "CS-GAP-NAME-SYMBOL",
     "CS-GAP-SUM-INDEXED"
   ],
   "related": [
@@ -83,6 +82,11 @@
     {
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @9423934 (T-RECHECK, CS-GAP-IF-DIRECTIVE closed); still blocked: the $IF/$IFNOT directives are now resolved (FUEL$='CH4', DISSOCIATION$='YES' kept, the 'Oil' lines no longer parse), the system is not square (65 equations, 68 unknowns) because of the CHEM_EQUIL and NASA calls (CS-GAP-CHEM-EQUIL, CS-GAP-NASA) and the indexed sum (CS-GAP-SUM-INDEXED); CS-GAP-NAME-SYMBOL (C%/H%) only concerns the 'Oil' branch (confirmed with FUEL$='Oil' in a scratch copy); no variant",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @6f10211 + uncommitted identifier-character fix (T-RECHECK, CS-GAP-NAME-SYMBOL closed); still blocked: as shipped (CH4, YES) 65 equations / 68 unknowns (CS-GAP-CHEM-EQUIL, CS-GAP-NASA, CS-GAP-SUM-INDEXED); the C%/H%/O%/S% names of the Oil branch now parse (scratch copy with FUEL$ = 'Oil': 76 equations / 80 unknowns); no variant",
       "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]

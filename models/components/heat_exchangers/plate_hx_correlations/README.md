@@ -21,7 +21,7 @@ single-phase correlations from the Python library `ht`.
 | **Source** | ULiège collection: `~/Nextcloud/thermo_models/procedures EES/PHEX correlations SQ150128.EES` (TM-0585, S. Quoilin) and `~/Nextcloud/thermo_models/procedures EES/single phase hx  martin - SQ080229.EES` (TM-0496, S. Bertagnolio and S. Quoilin) |
 | **Authors** | Sylvain Quoilin (procedures); Stéphane Bertagnolio (martin procedure of TM-0496) |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0@7addbbc — **verified** against the EES stored solution of TM-0585 and against `ht` 1.2.0 Python values (HT-010) |
+| **CoolSolve** | **verified** against the EES stored solution of TM-0585 and against `ht` 1.2.0 Python values (HT-010) |
 
 ## Problem statement
 
@@ -161,17 +161,12 @@ SQ080229.EES`:
 - **Workarounds forced by CoolSolve bugs** (the EES syntax of the source is
   valid; each change is behaviour-preserving):
   - `pi` → `pi()` inside the `martin`, `Muley` and `Han` bodies: the constant
-    `pi` evaluates as 1 in a subprogram body (`CS-BUG-PI-FUNCTION`,
-    registered; `pi()` works).
+    `pi` evaluates as 1 in a subprogram body (`CS-BUG-PI-FUNCTION`; `pi()`
+    works).
   - `g#` → literal `9.80665 m/s²` in `kuo` (`Fr_l`): the EES constant `g#`
     (standard gravitational acceleration) also evaluates as 1 in a subprogram
     body — same bug class, verified with a reproducer (t7 of the import
     notes); same workaround as `g` in `CSL-0096`.
-  - `Nu#_f` → `Nu_f` in `martin`: an identifier containing `#` is not parsed
-    by CoolSolve — a parse error in the main program, but the assignment is
-    **silently dropped** inside a procedure body and later reads return the
-    guess (h_f stayed at 1). Registered as `CS-BUG-HASH-IDENT`; EES accepts
-    the name (both source files use it and store computed `h_martin` values).
 - **Han not demonstrated**: the original main program leaves the Han call
   commented out, and for a reason: with its `Ge` coefficients built on
   `(p/D_h)^4.17` where `p` is the fluid pressure (the paper presumably used a

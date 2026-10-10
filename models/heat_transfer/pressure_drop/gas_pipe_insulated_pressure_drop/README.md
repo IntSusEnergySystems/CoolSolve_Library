@@ -20,7 +20,7 @@ to the pipe calculation, as in the original EES file.
 | **Source** | `~/Nextcloud/thermo_models/modeles/LABORELEC_2002/4_Pressure Drop/4_2_Gas Pipes/Gas Pipe/Gas_Pipe_Pressure_Drop.EES` (EES X6.596), companion `Fittings.LKT` / `Pipedata.LKT` decoded by hand |
 | **Authors** | Felipe Trebilcock (ULiège Thermodynamics Lab, Dec 2002, for Laborelec); reviewers J. Lebrun, E. Winandy |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0@7addbbc, re-checked with 0.3.0@d5d6b37 — native file blocked (CS-GAP-ACCENTED-IDENT, CS-GAP-COLEBROOK, CS-GAP-STRINGPOS, CS-GAP-ARRAY-ARG; CS-GAP-LOOKUP-PROC is closed since `fix/library-gaps-2`); runnable variant `gas_pipe_insulated_pressure_drop_coolsolve.eescode` verified against the EES stored solution |
+| **CoolSolve** | native file **blocked** (`CS-GAP-COLEBROOK`, `CS-GAP-STRINGPOS`, `CS-GAP-ARRAY-ARG`); runnable variant `gas_pipe_insulated_pressure_drop_coolsolve.eescode` verified against the EES stored solution |
 
 ## Problem statement
 
@@ -153,8 +153,7 @@ toolkit: inventory TM-0309 (not imported).
   integer combinations exist; the individual stale records `DELTAp_elbows` /
   `DELTAp_Tees` of the file belong to an older run and are not usable.
 - **2026-10-08 — variant** (`_coolsolve.eescode`, valid EES throughout):
-  lookups moved from the procedure bodies to the main program
-  (CS-GAP-LOOKUP-PROC); `Call Colebrook(Re_D, RR, f)` written as its
+  lookups moved from the procedure bodies to the main program; `Call Colebrook(Re_D, RR, f)` written as its
   implicit equation (CS-GAP-COLEBROOK, as CSL-0018); the copper/ammonia note
   loses its `StringPos` pipe-name test (CS-GAP-STRINGPOS); `SP[1..5]` array
   argument replaced by the five state scalars (CS-GAP-ARRAY-ARG); `pi`
@@ -163,28 +162,12 @@ toolkit: inventory TM-0309 (not imported).
   and unconditional (the original's `f = 64/Re_D` branch is reachable only
   at the clamped Re_D = 2000); single-line `IF`s of procedure bodies written
   as block `IF/ENDIF` (CS-BUG-IF-SINGLELINE); non-ASCII identifiers renamed
-  (`n°_90°elbow_reg` → `n_90_elbow_reg`, …, `n°_Fittings` → `n_fittings`,
-  CS-GAP-ACCENTED-IDENT); the nozzle equation inverted for `A`
+  (`n°_90°elbow_reg` → `n_90_elbow_reg`, …, `n°_Fittings` → `n_fittings`); the nozzle equation inverted for `A`
   (`A = m_dot*sqrt(v_spec/(2*DELTAp))` — CoolSolve's single-equation Newton
   failed on the `A^-2` form in this model); `pipe_nr`/`iso_nr` row indices
-  replace the string-keyed column reads (CS-BUG-LOOKUP-COLNAME); `SP[1..5]`
+  replace the string-keyed column reads; `SP[1..5]`
   kept in the main program so the stored arrays compare.
-- **2026-10-10 — re-check (`T-RECHECK`) with CoolSolve `fix/library-gaps-2`
-  @d5d6b37**: `CS-GAP-LOOKUP-PROC` is closed (a lookup inside a PROCEDURE/FUNCTION
-  body finds its companion table), as are `CS-BUG-LOOKUP-COL-ARG` and part (b)
-  of `CS-BUG-LOOKUP-COLNAME` (a column name held in a string variable, like
-  `lookup('pipedata',1,pipe$)`, was read as the first column). The native file
-  is still **blocked** and its first errors are unchanged: the parse errors of
-  `CS-GAP-ACCENTED-IDENT` (lines 106–312, the `n°_…` / `K_90°elbow_…`
-  identifiers), `CS-GAP-ARRAY-ARG` (line 332, `SP[1..5]`), and the unknown
-  `Colebrook` / `StringPos`. Probes on the shipped native `-pipedata.csv`
-  (scratch folder): `lookup('pipedata',1,pipe$)` and the two siblings,
-  inside a PROCEDURE and in the main program, now give the stored EES values
-  for `pipe$='ø88.9 Steel Seamless'` (88.9 mm, 3.2 mm, 0.05 mm) and 0.039 W/m-K
-  for `lambda$='Armaflex'`. The variant keeps its rewrites (the lookups moved to
-  the main program and the numeric-key table are no longer forced by
-  `CS-GAP-LOOKUP-PROC` / `CS-BUG-LOOKUP-COLNAME` (b); the other rewrites are
-  still needed).
+
 - **2026-10-08 — curation**: comments translated to English (paraphrasing
   the original), dead `SP[6]` (assigned in the Diagram window, used by no
   equation) and the unused `Row` argument of `PIPE_GAS` dropped.
@@ -197,11 +180,6 @@ toolkit: inventory TM-0309 (not imported).
 
 Native file (kept in valid EES) blocked by:
 
-- ~~`CS-GAP-LOOKUP-PROC`~~ — **closed** in CoolSolve `fix/library-gaps-2`
-  (commit `d5d6b37`): the four procedures read their lookup tables inside the
-  body, which now works (removed from `missing_features`).
-- `CS-GAP-ACCENTED-IDENT` — the fitting-count identifiers contain `°`
-  (`n°_90°elbow_reg`); every line with them fails to parse.
 - `CS-GAP-COLEBROOK` — the built-in `Colebrook` procedure is unknown.
 - `CS-GAP-STRINGPOS` — the built-in `StringPos` function is unknown.
 - `CS-GAP-ARRAY-ARG` — the array range `SP[1..5]` in the `PIPE_GAS` call
@@ -209,26 +187,15 @@ Native file (kept in valid EES) blocked by:
 
 Additionally met while building the variant (bugs, silently wrong without
 error — see the register for reproducers): `CS-BUG-PI-FUNCTION` (`pi` = 1
-in a procedure body), `CS-BUG-IMPLICIT-PROC` (an implicit equation in a
-multi-statement procedure body is not solved), `CS-BUG-LOOKUP-COLNAME`
-(companion-CSV column names: quoted headers not unquoted; string-keyed
-column matching unreliable).
+in a procedure body) and `CS-BUG-IMPLICIT-PROC` (an implicit equation in a
+multi-statement procedure body is not solved).
 
-`CS-BUG-LOOKUP-COLNAME` is closed in the register (part b fixed with
-`CS-BUG-LOOKUP-COL-ARG`; part a not reproducible) and no longer listed. Checked on 2026-10-10 with
-CoolSolve 0.3.0@d5d6b37 (and with the v0.3.0 baseline): a companion CSV with
-the header `"ø88.9 Steel, Seamless"` (or `"3/16"" Copper (ø4.76)"`) **is** read
-correctly — the column resolves by its full name, including a column after it
-(`Armaflex`) — so part (a) did not reproduce; the register entry may be stale.
-That matters for this model: the EES column names of `Pipedata.LKT`, read from
-the binary again, contain the comma (`ø88.9 Steel, Seamless`, `Z Steel,
-Seamless`) and, for the copper pipes, an inch mark (`3/16" Copper (ø4.76)`),
-and the native file writes `pipe$='ø88.9 Steel, Seamless'`; but the shipped
-native `-pipedata.csv` has the headers **without** the commas and the inch
-marks (`ø88.9 Steel Seamless`), so the lookup would fail with *"column
-'ø88.9 Steel, Seamless' not found"* (reproduced) once the parse errors are gone.
-To do at the next re-check: write the native table with the exact quoted names.
-The files were not changed in this re-check.
+Open point for the native file: the native `-pipedata.csv` headers lack the commas and
+inch marks of the EES column names (`ø88.9 Steel, Seamless`, `3/16" Copper (ø4.76)`),
+while the native file writes `pipe$='ø88.9 Steel, Seamless'`. Once the parse errors are
+gone, the lookup would fail with *"column 'ø88.9 Steel, Seamless' not found"*
+(reproduced). The native table should be written with the exact quoted names.
+
 
 Physical limitations, as in the original: `alpha_o` fixed at 10 W/m²-K,
 roughness 0.046 mm table value over the pipe data (`epsilon` = 4.6e-5 m),

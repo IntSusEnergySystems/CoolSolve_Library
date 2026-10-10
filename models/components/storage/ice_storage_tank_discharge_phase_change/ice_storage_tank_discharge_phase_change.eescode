@@ -11,12 +11,8 @@
    liquid water warming above 0 °C. Initial state: all ice at -0.01 °C.
 
    This file keeps the native EES syntax of the original solution, including
-   the 5-argument IF(A,B,X,Y,Z) intrinsics, the symbolic integration limits
-   tau_1, tau_2, the comma-separated $IntegralTable and the near-freezing
-   Water property calls -> it still does NOT run in CoolSolve: blocked by
-   CS-BUG-WATER-NEAR-FREEZING (Water at or below 0 °C returns NaN); CS-GAP-IF5,
-   CS-GAP-INTEGRAL-LIMITS, CS-BUG-INTEGRAL-TABLE-SEP, CS-BUG-INTEGRAL-MAXSTEPS
-   and CS-BUG-INTEGRAL-TABLE-CASE are closed in CoolSolve fix/library-gaps-2.
+   the near-freezing Water property calls -> it does NOT run in CoolSolve: blocked by
+   CS-BUG-WATER-NEAR-FREEZING (Water at or below 0 °C returns NaN).
    See README.md. The runnable transcription is
    ice_storage_tank_discharge_phase_change_coolsolve.eescode.
 
@@ -90,4 +86,4 @@ t_liq_ref = max(t_liq_0, t_liq)  "reference temperature for v_liq [°C]"
 
 $IntegralTable tau:10,  x_ice, u, t_w, Q_dot_br_sto, DELTAu, t_melt, v, t_ice, t_liq
 {Trajectory every 10 s from 0 to 50 000 s. EES accepts commas as column
- separators, and so does CoolSolve since CS-BUG-INTEGRAL-TABLE-SEP is closed.}
+ separators.}

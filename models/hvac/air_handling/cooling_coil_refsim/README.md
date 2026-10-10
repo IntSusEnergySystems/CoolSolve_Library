@@ -25,7 +25,7 @@ exhaust air and refrigerant states and the condensate flow rate.
 | **Source** | ULiège model bank — *Cooling coil RefSim model*, 18 March 2008 (EES file inside `COOLINGCOIL_REFSIM_MODEL_VL080318.zip`) |
 | **Authors** | Vincent Lemort, Jean Lebrun (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0, re-checked with 0.3.0@57b22d3 — native file **blocked** by `CS-GAP-NAME-PIPE`, `CS-GAP-INCLUDE`, `CS-GAP-IFSTR` (`CS-GAP-IF5` and `CS-GAP-CALL-EXPR-OUT` are closed in CoolSolve `fix/library-gaps-2`, @59b2862 and @57b22d3); the variant `cooling_coil_refsim_coolsolve.eescode` runs and is verified against the EES stored solution |
+| **CoolSolve** | native file **blocked** by `CS-GAP-INCLUDE` and `CS-GAP-IFSTR`; the variant `cooling_coil_refsim_coolsolve.eescode` runs and is verified against the EES stored solution (see *Verification*) |
 
 ## Problem statement
 
@@ -84,7 +84,7 @@ heat ratio of the coil.
 |---|---|---|---|
 | `t_a_su_coil` supply air temperature | 30 °C | `refrigerant$` secondary refrigerant | `'EG'` |
 | `RH_su_coil` supply relative humidity | 0.5 | `conc_r` glycol concentration | 35 % |
-| `P_atm` atmospheric pressure | 98 000 Pa | `K|star_r_n` nominal properties coefficient | 106 |
+| `P_atm` atmospheric pressure | 98 000 Pa | `K\|star_r_n` nominal properties coefficient | 106 |
 | `M_dot_a_coil` air flow | 1.8 kg/s | `R_a_coil_n` nominal air-side resistance | 1.319·10⁻⁴ K/W |
 | `M_dot_r_coil` brine flow | 1.7 kg/s | `R_r_coil_n` nominal refrigerant-side resistance | 1.199·10⁻⁴ K/W |
 | `t_r_su_coil` brine supply temperature | 6 °C | `R_m_coil` metal resistance | 6.596·10⁻⁶ K/W |
@@ -107,7 +107,7 @@ below: `0.622·0.5·4246/(98000 − 0.5·4246) = 0.013771 kg/kg` at
 ## How to run
 
 The native file `cooling_coil_refsim.eescode` keeps the native EES syntax and
-does **not** run in CoolSolve v0.3.0 (see *Limitations and CoolSolve gaps*). The
+does **not** run in CoolSolve (see *Limitations and CoolSolve gaps*). The
 runnable variant `cooling_coil_refsim_coolsolve.eescode` changes only what the
 gaps force (every change is logged in the conversion log and in the header of
 the variant):
@@ -163,8 +163,8 @@ is **cooled and dehumidified** (30 → 14.12 °C, 13.84 → 10.31 g/kg).
 
 ## Verification
 
-The **native file cannot be solved** by CoolSolve (`CS-GAP-NAME-PIPE`,
-`CS-GAP-INCLUDE`, `CS-GAP-IFSTR`; `CS-GAP-IF5` was a fourth one in v0.3.0), so the comparison concerns the runnable variant
+The **native file cannot be solved** by CoolSolve (`CS-GAP-INCLUDE`,
+`CS-GAP-IFSTR`), so the comparison concerns the runnable variant
 `cooling_coil_refsim_coolsolve.eescode`, which differs from the native file by
 the four changes of the conversion log. Compared with
 `compare_solution.py` against the 87 variables decoded from the source EES
@@ -283,9 +283,9 @@ drops the refrigerant side entirely. They have no `duplicate_group`.
   is kept as it is, as a comment.
 - **Runnable variant** `cooling_coil_refsim_coolsolve.eescode`, four changes,
   each forced by a CoolSolve gap (all logged in its header too):
-  1. `K|star_r_n` → `Kstar_r_n` and `K|star_r` → `Kstar_r`: CoolSolve cannot
-     parse the `|` character in a variable name (`CS-GAP-NAME-PIPE`). The
-     equations are unchanged.
+  1. `K|star_r_n` → `Kstar_r_n` and `K|star_r` → `Kstar_r`: a renaming that
+     CoolSolve no longer requires (the `|` character in a variable name is
+     accepted). The equations are unchanged.
   2. The four `CALL BRINEPROP(...)` calls are replaced by the four brine
      properties **stored by EES** for the default operating point
      (`rho_r_coil` = 1051.354719 kg/m³, `c_p_r_coil` = 3576.11699 J/(kg·K),
@@ -300,12 +300,11 @@ drops the refrigerant side entirely. They have no `duplicate_group`.
      returns kJ/(kg·K), `mu_r_coil*1000` because it returns milliPa·s) are
      absorbed in the stored values, which are the values of `c_p_r_coil` and
      `mu_r_coil` themselves.
-  3. The five EES 5-argument `IF(A,B,X,Y,Z)` calls are replaced by the
-     3-argument `IF` of CoolSolve, `if(Q_dot_coil_wet-Q_dot_coil_dry, X, Z)`:
-     `CS-GAP-IF5`. The three-argument form is valid EES as well, but the two
-     forms are not equivalent outside the regression point: the EES form
-     returns `Y` when the two capacities are equal, the CoolSolve form returns
-     `Z` (the dry branch).
+  3. The five EES 5-argument `IF(A,B,X,Y,Z)` calls are written as the
+     3-argument `if(Q_dot_coil_wet-Q_dot_coil_dry, X, Z)`. The EES form returns
+     `Y` when the two capacities are equal, this form returns `Z` (the dry
+     branch); CoolSolve now accepts the 5-argument form, so this change is not
+     required.
   4. `WetHumide$ = IF$(Q_dot_coil_dry, Q_dot_coil_wet,'Wet','Wet','Dry')` is
      **removed**: CoolSolve does not implement the string intrinsic `IF$` at
      any arity (`ees_vs_coolsolve.csv` line 35 lists it as *No*; a 3-argument
@@ -325,57 +324,23 @@ drops the refrigerant side entirely. They have no `duplicate_group`.
   or the wet block reaches *MaxIterations* (1) → 4 → **level 3**, moved by −1
   to **level 2** (card value) because the model is a single one-zone coil with
   explicit equations apart from the effectiveness loop.
-- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @59b2862 (T-RECHECK, `CS-GAP-IF5` closed).** The five-argument `IF` of the native file is now implemented; the native file is still blocked, the first error now comes from another gap (the parse stops at the `K|star_r_n` names, `CS-GAP-NAME-PIPE`). The variant is kept.
-- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @57b22d3 (T-RECHECK, `CS-GAP-CALL-EXPR-OUT` closed).** The two `CALL BRINEPROP` calls with an expression output (lines 113 and 114) now parse. The native file is still blocked: the parse stops at the `K|star_r_n` names (lines 78 and 111, `CS-GAP-NAME-PIPE`) and the `BRINEPROP` library procedure is unknown (`CS-GAP-INCLUDE`), `IF$` is unknown (`CS-GAP-IFSTR`, line 188). Evidence, in a scratch copy with only `K|star_r_n`/`K|star_r` renamed `Kstar_r_n`/`Kstar_r`: the file is square (80 equations, 80 unknowns), the expression outputs become the auxiliary variables `__out1_BRINEPROP_L113` (`c_p_r_coil/1000`) and its twin of line 114, and the solve stops with *"Unknown procedure: BRINEPROP"* (`CS-GAP-INCLUDE`). The variant is kept: its change 2 (stored brine properties instead of the `CALL BRINEPROP`) is still forced by `CS-GAP-INCLUDE`/`CS-GAP-LKT`, not by the expression outputs.
-
 ## Limitations and CoolSolve gaps
 
-- **`CS-GAP-NAME-PIPE` — the native file does not parse.** A variable name
-  containing the `|` character, `K|star_r_n` and `K|star_r` in the original, is
-  refused: *"Could not parse line"*, and on the line that uses them
-  *"Unknown function 'K|star_r_n/K|star_r*'"* (the `/`…`*` run is read as a call).
-  Reproducer (valid EES, 2 lines): `K|star_a = 106` ⏎ `K|star_b = 2*K|star_a` →
-  *"Parse failed: Line 1 … Line 2: Could not parse line"*; the same file with
-  `Kstar_a`/`Kstar_b` solves. Evidence that the syntax is valid EES: the two
-  cooling-coil model-bank files use it, the source of this model
-  (`CoolingCoil_RefSim_EES_Model_VL080318.EES`, whose lines 112 and 115 of the
-  extracted equations are `K|star_r_n` and `K|star_r`) and
-  `COOLINGCOIL_PARAMID_REFERENCE_MODEL_VL080321.EES` (inventory `TM-0470`),
-  where it appears even in an equation, `K|star_r_n=K|star_r`; both files store
-  a complete solution. Registered with this evidence; the family of the
-  already-registered `CS-GAP-NAME-SYMBOL` (`C%`).
 - **`CS-GAP-INCLUDE` (with `CS-GAP-LKT`) — the native file cannot be solved.**
   The four `CALL BRINEPROP('Density'|'SpecHeat'|'Dynvisc'|'thermalc', …)` calls
   resolve to the laboratory library procedure `Brineprop.lib` (and its two
   binary lookup tables `Brine1.lkt`, `Brine2.lkt`), which CoolSolve neither
   loads nor can read: the warning *"Unknown function 'BRINEPROP'"* is emitted
-  and the blocks that call it cannot be evaluated. Already registered
-  (found with `CSL-0011`), **not re-reported here**. The proper fix is the
+  and the blocks that call it cannot be evaluated. The proper fix is the
   function model of card `C-84`; the runnable variant uses the stored brine
   properties.
-- **`CS-GAP-CALL-EXPR-OUT` — closed in CoolSolve `fix/library-gaps-2` @57b22d3.** Two of the four
-  `CALL BRINEPROP` calls use an expression as output
-  (`CALL BRINEPROP('SpecHeat',…:c_p_r_coil/1000)`, line 113, and
-  `CALL BRINEPROP('Dynvisc',…:mu_r_coil*1000)`, line 114); CoolSolve v0.3.0
-  refused them (*"Output 1 of 'BRINEPROP' must be a variable, not the expression
-  'c_p_r_coil/1000': …"*) and now accepts them (auxiliary variable
-  `__out<k>_BRINEPROP_L<line>`; see the conversion log). Removed from
-  `missing_features`. The variant removes the calls altogether (change 2, still
-  forced by `CS-GAP-INCLUDE`).
-- **`CS-GAP-IF5` — closed in CoolSolve `fix/library-gaps-2` @59b2862.** The EES intrinsic
-  `IF(A,B,X,Y,Z)` raised *"Unknown or unsupported function: if
-  with 5 arguments"* in CoolSolve v0.3.0 and now evaluates; it is used five times here (regime selection of
-  `Q_dot_coil`, `AU_coil`, `M_dot_w_coil`, `t_a_ex_coil`, `W_ex_coil`).
-  Already registered (found with `CSL-0009`, blocked `CSL-0073`),
-  **not re-reported here**; the runnable variant uses `if(cond,a,b)`.
 - **`CS-GAP-IFSTR` — the native file cannot be solved.** The EES string
   conditional `IF$(cond,true$,false$)` raises *"Unknown or unsupported
   function: if$ with 3 arguments"* at every arity; it is used once here, for
   the output `WetHumide$`. Reproducer (valid EES, 3 lines): `a = 1` ⏎ `b = 2` ⏎
   `s$ = IF$(a-b,'Wet','Dry')` → *"Block 2 (size 1, vars: s$) failed:
   EvaluationError - Unknown or unsupported function: if$ with 3 arguments"*.
-  Newly registered with this model; the runnable variant drops `WetHumide$`
-  (it feeds no equation).
+  The runnable variant drops `WetHumide$` (it feeds no equation).
 - Physical limitations of the model itself: one zone (no air-side or
   temperature distribution along the coil, no frost formation, no condensate
   flow/bypass effect); the refrigerant side is a **secondary fluid** modelled

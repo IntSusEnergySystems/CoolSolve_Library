@@ -1,6 +1,6 @@
 # Engine derating according to ISO 3046/1 (ambient conditions)
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0151`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0151`
 
 Derating of a Diesel engine between the reference conditions of the standard
 ISO 3046/1 and the site conditions (altitude, ambient temperature, humidity):
@@ -11,17 +11,17 @@ standard; the power-correction factor is `alpha = K - 0.7*(1-K)*(1/eta_m - 1)`
 and the site shaft power is `W_dot_sh_x = W_dot_sh_ref*alpha`. The atmospheric
 pressure comes from an altitude polynomial (`FUNCTION patm`) and the
 water-vapour saturation pressure from the steam tables. Two exercises are
-provided, selected by a `$if` directive in the native file.
+provided, selected by a `$if` directive in the file.
 
 | | |
 |---|---|
 | **Category** | Cycles and machines › Engines |
 | **Fluids** | Water/steam (`STEAM`, for the saturation pressure of the intake-air moisture) |
-| **Size** | native file: 43 equations (largest block: 1, fully explicit); runnable variant: 22 equations |
+| **Size** | 43 equations in the file, 22 once the `$if` selects exercise 1 (largest block: 1, fully explicit) |
 | **Source** | `~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP2_Ex_1-3/Détarage moteurs_Exercices_1-2.EES` (EES X10.589) |
 | **Authors** | Philippe Ngendakumana (ULiège, course MCI), solution Rémi Dickes (ULiège) |
 | **License** | MIT |
-| **CoolSolve** | `fix/library-gaps-2` @9423934 — native file **blocked** by `CS-GAP-ACCENTED-IDENT` (accented variable names do not parse; `CS-GAP-IF-DIRECTIVE` is closed); the variant `engine_derating_iso3046_coolsolve.eescode` runs and is verified against the EES stored solution (14/14 common variables, max rel. diff 3.9e-6) |
+| **CoolSolve** | **verified** against the EES stored solution (14 common variables, max rel. diff 3.5e-5) |
 
 ## Problem statement
 
@@ -59,28 +59,24 @@ provided, selected by a `$if` directive in the native file.
 | `T_a_x` / `phi_a_x` | 45 °C / 80 % | `W_dot_sh_ref` required catalogue power | 444.6 kW |
 | `eta_m` | 0.85 | `p_atm_x` | 96.60 kPa |
 
-Exercise 2 (branch not shipped in the variant; recomputed with the same
-equations as a sanity check, see *Conversion log*): `K` = 0.8383,
-`alpha` = 0.8214, site power `W_dot_sh_x` = 821.4 kW from the 1000 kW
-catalogue rating.
+Exercise 2 (`Exercice$ = '2'`; sanity check with the same equations, no
+stored EES reference): `K` = 0.8383, `alpha` = 0.8214, site power
+`W_dot_sh_x` = 821.4 kW from the 1000 kW catalogue rating.
 
 ## How to run
 
-The native file `engine_derating_iso3046.eescode` keeps the original EES
-syntax (`$if` selection between the two exercises, accented variable names)
-and does **not** run in CoolSolve (the `$if` directives are now resolved, `Exercice$ = '1'`
-kept; the first parse error is the accented name of line 28, see *Limitations and CoolSolve
-gaps*). The runnable variant
+Open `engine_derating_iso3046.eescode` in the CoolSolve GUI and press *Solve*,
+or from a terminal:
 
 ```bash
-coolsolve ./engine_derating_iso3046_coolsolve.eescode
+coolsolve ./engine_derating_iso3046.eescode
 ```
 
-resolves the `$if` branches to the stored run (exercise 1; no longer needed since
-`CS-GAP-IF-DIRECTIVE` was closed) and renames the
-accented variables in ASCII (mapping in the *Conversion log*; still needed). It is fully
-explicit (largest block: 1 equation) and needs no particular guess (see
-`engine_derating_iso3046_coolsolve.initials`).
+The file keeps the original EES syntax (`$if` selection between the two
+exercises, accented variable names); `Exercice$ = '1'` is the stored run, set
+`Exercice$ = '2'` for the supercharged engine. It is fully explicit (largest
+block: 1 equation), needs no particular guess and solves in 14 iterations.
+`engine_derating_iso3046.sol` is the regression baseline.
 
 ## Results
 
@@ -95,17 +91,15 @@ Default run (exercise 1): the naturally aspirated engine needs
 ## Verification
 
 Reference: the EES stored solution of the source file (17 variables decoded;
-the stored run is exercise 1). Comparison of the runnable variant
-`engine_derating_iso3046_coolsolve.eescode` with
-`compare_solution.py … --ees-units` (the source unit system is kPa/K/kW):
+the stored run is exercise 1). Comparison of `engine_derating_iso3046.eescode`
+with `compare_solution.py … --ees-units` (the source unit system is kPa/K/kW):
 
 > 14 common variables, 0 differ (rtol=0.001); only in EES: 3; only in
 > CoolSolve: 8
 
-Maximum relative difference over the common variables: **3.9e-6** (on
-`alpha`), driven by the steam saturation pressures (`p_w_s_x`: EES
-9595.34 Pa vs CoolProp 9594.999 Pa at 45 °C, i.e. 3.5e-5). All fixed inputs
-agree exactly.
+Maximum relative difference over the common variables: **3.5e-5** (on
+`p_w_s_x`: EES 9595.34 Pa vs CoolProp 9594.999 Pa at 45 °C); on the results
+`K` 3.4e-6 and `alpha` 3.9e-6. All fixed inputs agree exactly.
 
 - The 3 variables "only in EES" (`altitude_x`, `q`, `Test_x`) are stale
   variable records of exercise 2 and of the commented *Influence de
@@ -149,26 +143,6 @@ Published under the library licence (MIT).
     offset; `pressure(STEAM,…)` now returns Pa;
   - the exponents and factors (`a`, `m`, `n`, `s`, `phi_a_*`, `eta_m`),
     altitudes and the correction equation are unchanged.
-- **2026-10-08 — runnable variant** `engine_derating_iso3046_coolsolve.eescode`
-  (only what the gaps force; the file stays valid EES):
-  - `$if` branches resolved to the stored run: exercise 1 kept, exercise-2
-    block omitted (`CS-GAP-IF-DIRECTIVE`); `Exercice$ = '1'` kept as
-    documentation;
-  - accented names renamed (`CS-GAP-ACCENTED-IDENT`): `W_dot_sh_réf` →
-    `W_dot_sh_ref`, `p_atm_réf` → `p_atm_ref`, `T_a_réf` → `T_a_ref`,
-    `T_c_réf` → `T_c_ref`, `T_réf` → `T_ref` (exercise 2 also has
-    `Altitude_réf` → `Altitude_ref`; not used in the variant);
-  - the commented `Test_réf`/`Test_x` diagnostic block of the original is
-    kept commented out, with `Test_ref` renamed as above.
-- **2026-10-10 — re-check** with CoolSolve `fix/library-gaps-2` @9423934
-  (`CS-GAP-IF-DIRECTIVE` closed): the `$if Exercice$` directives are resolved
-  (`'1'` kept, `'2'` removed) and the native file stops at the first accented
-  identifier (line 28, `CS-GAP-ACCENTED-IDENT`; also lines 39–44 and 48), so it
-  stays **blocked**. The variant is kept (its `$if` resolution is no longer needed,
-  the ASCII renaming of the accented names is). Check: in a scratch copy with
-  every `é` of the native file replaced by `e`, CoolSolve solves it (22 equations,
-  SUCCESS) and its `.sol` is identical to that of the variant, so
-  `CS-GAP-ACCENTED-IDENT` is the only blocker left.
 - **2026-10-08 — comment**: the exercise-2 comment of the original names the
   exponents "m, n et q" (the equation uses `s`); translated as in the
   original ("m, n and q"). No equation was changed for this.
@@ -177,17 +151,10 @@ Published under the library licence (MIT).
   correction law (ISO derating) → 1; no curated guesses needed → 0.
   Score 2 → **level 2**.
 
-## Limitations and CoolSolve gaps
+## Limitations
 
-- `CS-GAP-ACCENTED-IDENT` (registered with this model): variable names with
-  accented letters (`W_dot_sh_réf`, `T_a_réf`, …), valid in EES (the source
-  file stores a solution), fail to parse in CoolSolve (*"Could not parse
-  line"* on every line containing them) — the only blocker left.
-- `CS-GAP-IF-DIRECTIVE` (registered): the compile-time `$if`/`$endif` were
-  parsed and ignored — **all** branches were kept, so the native two-exercise
-  file was over-determined (e.g. `p_atm_réf` assigned twice: 100 kPa and
-  `patm(Altitude_réf)`). **Closed** in CoolSolve `fix/library-gaps-2`
-  @9423934 (`Exercice$ = '1'` kept, the exercise-2 block removed).
+- The file solves as written (the `STEAM` fluid name of `pressure()` is
+  accepted with a warning).
 - Physical note: the ISO 3046/1 correction uses the *saturation* vapour
   pressure at the intake-air temperature as the partial vapour pressure of
   the ambient humidity (multiplying the relative humidity), as in the

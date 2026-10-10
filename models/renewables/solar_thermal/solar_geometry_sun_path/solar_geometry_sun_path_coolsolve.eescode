@@ -1,7 +1,7 @@
 {=============================================================================
   Solar geometry and sun path
   CoolSolve Library model CSL-0119 - runnable variant
-  (CS-GAP-NDAY and CS-GAP-IF-DIRECTIVE worked around; every change logged
+  (CS-GAP-NDAY worked around; every change logged
   in the README conversion log; valid EES)
   -----------------------------------------------------------------------------
   Sun-path calculation for Port-au-Prince, Haiti: solar declination (day of
@@ -16,7 +16,7 @@
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
            (angles in degrees, times in hours)
   Source : ULiège collection, solar/angles.EES (inventory TM-0589) - see README.md
-  Status : blocked (native file) - CS-GAP-NDAY, CS-GAP-IF-DIRECTIVE;
+  Status : blocked (native file) - CS-GAP-NDAY;
            runnable variant solar_geometry_sun_path_coolsolve.eescode
 =============================================================================}
 
@@ -95,7 +95,7 @@ month = 12
 day = 4
 n = day_of_year(month, day)  "day of the year [-] (explicit month lengths: CS-GAP-NDAY workaround)"
 
-t = 24  "solar time [h] (parametric-table column in the original; default run = stored EES run: CS-GAP-IF-DIRECTIVE workaround)"
+t = 24  "solar time [h] (parametric-table column in the original; default run = stored EES run)"
 
 "Solar declination [deg], as in the original"
 delta = 23.45 * sin(360 * (284 + n)/365)

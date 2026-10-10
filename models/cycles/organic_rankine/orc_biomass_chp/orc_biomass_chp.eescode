@@ -23,12 +23,10 @@
   Source : S. Quoilin (ULiege Thermodynamics Laboratory), EES file orc_complex.EES
            (EES 9.920) - CoolSolve example examples/orc_complex.eescode - see
            README.md for the conversion log.
-  Status : BLOCKED in CoolSolve (see README "Blocked features"): the variable
-           names C%, H%, O% do not parse (CS-GAP-NAME-SYMBOL) and nine strings
-           of the $if tests have no value in the file (CS-GAP-IF-NO-CONSTANT);
-           the $if/$else directives themselves (CS-GAP-IF-DIRECTIVE) are handled
-           since CoolSolve fix/library-gaps-2. The file stays valid EES.
-  Flattening note (C-46 review): the formals A_leak_mm2 and pinch_ev of the
+  Status : BLOCKED in CoolSolve (see README "Blocked features"): nine strings
+           of the $if tests have no value in the file (CS-GAP-IF-NO-CONSTANT).
+           The file stays valid EES.
+  Flattening note: the formals A_leak_mm2 and pinch_ev of the
            expander/evaporator and Q_dot_3, T_w_ex_boil, m, n, p, Q_dot_gw of the
            burner were renamed (A_leak_exp_mm2, Pinch_ev_ev, Q_dot_3_boil,
            T_w_ex_boil_boil, m_boil, n_boil, p_boil, Q_dot_gw_boil) without the

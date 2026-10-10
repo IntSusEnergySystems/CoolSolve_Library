@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CoolSolve Library</title>
+<!--
+  Template of library.html, the dashboard of the CoolSolve Library.
+  tools/build_index.py replaces the DATA placeholder below with the library index
+  (taxonomy, models, functions, CoolSolve gaps) and writes library.html at the
+  repository root. Self-contained: no network access, works when opened from disk.
+
+  Views (hash routes, shareable and kept in the browser history):
+    #/                       Explore: the taxonomy and folder tree, with the models
+    #/models?category=…&status=…&q=…&open=CSL-0012   the table, with its filters
+    #/functions?q=…          every FUNCTION/PROCEDURE of the library
+    #/gaps?state=…&q=…       the CoolSolve gaps and the models they block
+    #CSL-0012                one model (the table, unfiltered, with its details open)
+-->
+<style>
+:root {
+  --bg: #f7f8fa; --surface: #ffffff; --surface-2: #f0f2f5; --border: #dde1e7;
+  --text: #1c2430; --muted: #5d6878; --accent: #1f6feb; --accent-soft: #e4eefc; --on-accent: #ffffff;
+  --ok: #1a7f37; --ok-soft: #dcf3e2; --run: #0b6aa2; --run-soft: #dbeefa;
+  --warn: #9a6700; --warn-soft: #fbefd0; --bad: #b42318; --bad-soft: #fbe2df;
+  --grey-soft: #e9ecf0; --shadow: 0 1px 2px rgba(16, 24, 40, .06);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1419; --surface: #161c24; --surface-2: #1d2530; --border: #2c3644;
+    --text: #e3e8ef; --muted: #98a3b3; --accent: #58a6ff; --accent-soft: #15283f; --on-accent: #0f1419;
+    --ok: #4ac26b; --ok-soft: #12301d; --run: #4fb3ea; --run-soft: #0f2a3b;
+    --warn: #e3b341; --warn-soft: #33290f; --bad: #f47067; --bad-soft: #3a1a18;
+    --grey-soft: #252e3a; --shadow: none;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+       font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px 0; }
+h1 { font-size: 20px; margin: 0 0 2px; }
+h1 a { color: inherit; }
+.sub { color: var(--muted); font-size: 12.5px; }
+.summary { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 14px; }
+.chip { border: 1px solid var(--border); background: var(--surface-2); color: var(--text); border-radius: 999px;
+        padding: 3px 11px; font-size: 12.5px; cursor: pointer; font-family: inherit; }
+a.chip { display: inline-block; text-decoration: none; }
+a.chip:hover { border-color: var(--accent); text-decoration: none; }
+.chip b { font-variant-numeric: tabular-nums; }
+.chip.active { background: var(--accent-soft); border-color: var(--accent); }
+nav.tabs { display: flex; gap: 2px; overflow-x: auto; }
+nav.tabs a { border-bottom: 2px solid transparent; color: var(--muted); font-weight: 600; padding: 8px 14px;
+             white-space: nowrap; }
+nav.tabs a:hover { text-decoration: none; color: var(--text); }
+nav.tabs a.active { color: var(--text); border-bottom-color: var(--accent); }
+main { padding: 16px 24px 40px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.filters input[type=search] { flex: 1 1 260px; min-width: 200px; }
+input, select { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border);
+                border-radius: 6px; padding: 5px 8px; }
+select { max-width: 220px; }
+button.reset { font: inherit; background: none; border: 1px solid var(--border); color: var(--muted);
+               border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+.count { color: var(--muted); font-size: 12.5px; margin-left: auto; }
+.table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+              box-shadow: var(--shadow); overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { background: var(--surface-2); font-size: 12px; text-transform: uppercase; letter-spacing: .03em;
+     color: var(--muted); white-space: nowrap; }
+th button { all: unset; cursor: pointer; }
+th button:focus-visible { outline: 2px solid var(--accent); }
+th[aria-sort=ascending] button::after { content: " ▲"; }
+th[aria-sort=descending] button::after { content: " ▼"; }
+tbody tr.row { cursor: pointer; }
+tbody tr.row:hover { background: var(--surface-2); }
+tbody tr.open { background: var(--accent-soft); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.id, .mono { font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+.title { font-weight: 600; }
+.muted { color: var(--muted); }
+.badge { display: inline-block; border-radius: 4px; padding: 1px 7px; font-size: 12px; font-weight: 600;
+         white-space: nowrap; }
+.s-verified { background: var(--ok-soft); color: var(--ok); }
+.s-runs { background: var(--run-soft); color: var(--run); }
+.s-modified { background: var(--warn-soft); color: var(--warn); }
+.s-blocked, .s-failing { background: var(--bad-soft); color: var(--bad); }
+.s-stub { background: var(--grey-soft); color: var(--muted); }
+.gap { font-family: var(--mono); font-size: 11.5px; background: var(--bad-soft); color: var(--bad);
+       border-radius: 4px; padding: 1px 5px; margin: 1px 3px 1px 0; display: inline-block; white-space: nowrap; }
+.gap.closed { background: var(--ok-soft); color: var(--ok); }
+td.detail { background: var(--surface-2); padding: 14px 18px; cursor: default; }
+.detail-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 860px) { .detail-grid { grid-template-columns: 1fr; } }
+.detail h3 { font-size: 13px; margin: 12px 0 4px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+.detail h3:first-child { margin-top: 0; }
+dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 12px; margin: 0; }
+dt { color: var(--muted); }
+dd { margin: 0; overflow-wrap: anywhere; }
+ul.gaps { list-style: none; margin: 0; padding: 0; }
+ul.gaps li { margin: 0 0 8px; }
+.links a { margin-right: 14px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: var(--mono); font-size: .92em; background: var(--grey-soft); border-radius: 3px; padding: 0 3px; }
+.tag { display: inline-block; background: var(--grey-soft); border-radius: 4px; padding: 0 6px; margin: 1px 3px 1px 0;
+       font-size: 12px; }
+.empty { padding: 28px; text-align: center; color: var(--muted); }
+.hidden { display: none; }
+footer { color: var(--muted); font-size: 12px; padding: 0 24px 24px; }
+
+/* ---------------------------------------------------------------- explore */
+.intro { max-width: 900px; margin: 0 0 14px; }
+.hero { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0 0 14px; }
+.hero input[type=search] { flex: 1 1 320px; max-width: 560px; padding: 7px 10px; }
+a.btn { display: inline-block; background: var(--accent); color: var(--on-accent); border-radius: 6px;
+        padding: 7px 14px; font-weight: 600; white-space: nowrap; }
+a.btn:hover { text-decoration: none; filter: brightness(1.08); }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 8px; }
+.quick .lbl { color: var(--muted); font-size: 12.5px; min-width: 52px; }
+.toc { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 16px 0 22px; padding: 10px 0;
+       border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.toc a { font-weight: 600; }
+.toc span { color: var(--muted); font-weight: 400; font-size: 12.5px; }
+section.cat { margin: 0 0 30px; scroll-margin-top: 12px; }
+.cat-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-bottom: 2px; }
+.cat-head h2 { font-size: 18px; margin: 0; }
+.cat-head .n { color: var(--muted); font-size: 12.5px; }
+.cat-desc { color: var(--muted); margin: 0 0 12px; max-width: 900px; }
+.bar { display: flex; height: 6px; width: 120px; border-radius: 3px; overflow: hidden; background: var(--grey-soft); }
+.bar span { display: block; height: 100%; }
+.bar .s-verified, .dot.s-verified { background: var(--ok); }
+.bar .s-runs, .bar .s-modified, .dot.s-runs, .dot.s-modified { background: var(--run); }
+.bar .s-blocked, .bar .s-failing, .dot.s-blocked, .dot.s-failing { background: var(--bad); }
+.bar .s-stub, .dot.s-stub { background: var(--muted); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px;
+        box-shadow: var(--shadow); min-width: 0; }
+.card h3 { font-size: 14px; margin: 0 0 2px; display: flex; justify-content: space-between; gap: 8px; }
+.card h3 .n { color: var(--muted); font-weight: 500; font-size: 12.5px; white-space: nowrap; }
+.card p { color: var(--muted); font-size: 12.5px; margin: 0 0 8px; }
+.card ul { list-style: none; margin: 0; padding: 0; }
+.card li { display: flex; gap: 7px; align-items: baseline; padding: 2px 0; min-width: 0; }
+.card li a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; color: var(--text); }
+.card li a:hover { color: var(--accent); }
+.card li .k { color: var(--muted); font-size: 12px; flex: none; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; position: relative; top: -1px; }
+.card .more { font-size: 12.5px; display: inline-block; margin-top: 4px; }
+.not-yet { color: var(--muted); font-size: 12.5px; margin-top: 8px; }
+.legend { color: var(--muted); font-size: 12px; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.legend .dot { display: inline-block; margin-right: 4px; top: 0; }
+@media (max-width: 600px) { header, main, footer { padding-left: 16px; padding-right: 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1><a href="#/">CoolSolve Library</a></h1>
+  <div class="sub" id="snapshot"></div>
+  <div class="summary" id="summary"></div>
+  <nav class="tabs" aria-label="Views">
+    <a href="#/" data-view="explore">Explore</a>
+    <a href="#/models" data-view="models">All models</a>
+    <a href="#/functions" data-view="functions">Functions</a>
+    <a href="#/gaps" data-view="gaps">CoolSolve gaps</a>
+  </nav>
+</header>
+<main>
+  <section id="view-explore"></section>
+  <section id="view-models" class="hidden">
+    <div class="filters">
+      <input type="search" id="q" placeholder="Search titles, summaries, tags, fluids, authors, functions, IDs…" aria-label="Search models">
+      <select id="f-category" aria-label="Category"></select>
+      <select id="f-status" aria-label="Status"></select>
+      <select id="f-kind" aria-label="Kind"></select>
+      <select id="f-level" aria-label="Level"></select>
+      <select id="f-fluid" aria-label="Fluid"></select>
+      <select id="f-origin" aria-label="Origin"></select>
+      <select id="f-gap" aria-label="CoolSolve gap"></select>
+      <button class="reset" id="reset">Reset</button>
+      <span class="count" id="m-count"></span>
+    </div>
+    <div class="table-wrap"><table id="models"><thead></thead><tbody></tbody></table></div>
+  </section>
+  <section id="view-functions" class="hidden">
+    <div class="filters">
+      <input type="search" id="fq" placeholder="Search function names, signatures, models…" aria-label="Search functions">
+      <span class="count" id="f-count"></span>
+    </div>
+    <div class="table-wrap"><table id="functions"><thead></thead><tbody></tbody></table></div>
+  </section>
+  <section id="view-gaps" class="hidden">
+    <div class="filters">
+      <input type="search" id="gq" placeholder="Search gap IDs and descriptions…" aria-label="Search gaps">
+      <select id="g-state" aria-label="Gap state">
+        <option value="used">Open, blocking library models</option>
+        <option value="open">All open</option>
+        <option value="closed">Closed</option>
+        <option value="all">All</option>
+      </select>
+      <span class="count" id="g-count"></span>
+    </div>
+    <div class="table-wrap"><table id="gaps"><thead></thead><tbody></tbody></table></div>
+  </section>
+</main>
+<footer id="footer"></footer>
+
+<script id="library-data" type="application/json">/*__LIBRARY_DATA__*/</script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById("library-data").textContent);
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+/** Escaped text with `code`, **bold** and *italic* of the register rendered. */
+const md = (s) => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+  .replace(/\*([^*\s][^*]*)\*/g, "<i>$1</i>");
+const byId = Object.fromEntries(D.models.map((m) => [m.id, m]));
+const gapInfo = (id) => D.gaps[id] || null;
+const statusLabel = (s) => D.labels.statuses[s] || s;
+const catTitle = (c) => D.categories[c] || c;
+const readmeUrl = (m) => D.repo_url + "/blob/main/" + m.path + "/README.md";
+const registerUrl = (g) => D.register_url + (g && g.anchor ? "#" + g.anchor : "");
+const STATUS_ORDER = ["verified", "runs", "modified", "blocked", "failing", "stub"];
+const FILTER_KEYS = ["q", "category", "status", "kind", "level", "fluid", "origin", "gap"];
+const inCategory = (m, c) => !c || m.category === c || m.category.startsWith(c + "/");
+const icon = (label) => String(label).split(" ")[0];
+
+/** Link to the table with the given filters (and optionally one model opened). */
+function modelsHref(filters) {
+  const p = new URLSearchParams();
+  Object.entries(filters).forEach(([k, v]) => { if (v) p.set(k, v); });
+  const qs = p.toString().replace(/%2F/g, "/");
+  return "#/models" + (qs ? "?" + qs : "");
+}
+
+// ---------------------------------------------------------------- state and routing
+const state = {view: "explore", q: "", category: "", status: "", kind: "", level: "", fluid: "", origin: "", gap: "",
+               open: null, sort: {key: "id", dir: 1}, fq: "", fsort: {key: "function", dir: 1},
+               gq: "", gstate: "used", gsort: {key: "n", dir: -1}};
+
+function stateToHash() {
+  if (state.view === "explore") return "#/";
+  if (state.view === "models") {
+    const f = Object.fromEntries(FILTER_KEYS.map((k) => [k, state[k]]));
+    return modelsHref({...f, open: state.open});
+  }
+  const p = new URLSearchParams();
+  if (state.view === "functions" && state.fq) p.set("q", state.fq);
+  if (state.view === "gaps") {
+    if (state.gq) p.set("q", state.gq);
+    if (state.gstate !== "used") p.set("state", state.gstate);
+  }
+  const qs = p.toString();
+  return "#/" + state.view + (qs ? "?" + qs : "");
+}
+/** Read the view and its filters from the address (initial load, links, back/forward). */
+function applyHash() {
+  const raw = location.hash;
+  const id = decodeURIComponent(raw.slice(1));
+  if (byId[id]) {                                            // #CSL-0012: one model, no filter
+    FILTER_KEYS.forEach((k) => { state[k] = ""; });
+    Object.assign(state, {view: "models", open: id});
+  } else {
+    const m = raw.match(/^#\/?([a-z]*)(?:\?(.*))?$/);
+    const view = m && ["models", "functions", "gaps"].includes(m[1]) ? m[1] : "explore";
+    const p = new URLSearchParams((m && m[2]) || "");
+    state.view = view;
+    if (view === "models") {
+      FILTER_KEYS.forEach((k) => { state[k] = p.get(k) || ""; });
+      state.open = byId[p.get("open")] ? p.get("open") : null;
+    } else if (view === "functions") {
+      state.fq = p.get("q") || "";
+    } else if (view === "gaps") {
+      state.gq = p.get("q") || "";
+      state.gstate = p.get("state") || "used";
+    }
+  }
+  syncInputs();
+  render();
+  if (state.view === "models" && state.open) {
+    const row = document.querySelector(`tr.row[data-id="${state.open}"]`);
+    if (row) row.scrollIntoView({block: "center"});
+  } else if (state.view === "explore" && pendingScroll) {
+    $(pendingScroll)?.scrollIntoView();
+  } else {
+    window.scrollTo(0, 0);
+  }
+  pendingScroll = null;
+}
+let pendingScroll = null;          // section of the explore view to show after the next route change
+/** Keep the address in step with filters typed or selected (no new history entry). */
+const updateHash = () => history.replaceState(null, "", stateToHash());
+
+function syncInputs() {
+  for (const k of FILTER_KEYS.slice(1)) $("f-" + k).value = state[k];
+  $("q").value = state.q;
+  $("fq").value = state.fq;
+  $("gq").value = state.gq;
+  $("g-state").value = state.gstate;
+}
+function render() {
+  document.querySelectorAll("nav.tabs a").forEach((a) => a.classList.toggle("active", a.dataset.view === state.view));
+  ["explore", "models", "functions", "gaps"].forEach((v) => $("view-" + v).classList.toggle("hidden", v !== state.view));
+  renderSummary();
+  if (state.view === "explore") renderExplore();
+  else if (state.view === "models") renderModels();
+  else if (state.view === "functions") renderFunctions();
+  else renderGaps();
+}
+
+// ---------------------------------------------------------------- header
+$("snapshot").textContent = `${D.snapshot.models} models · ${D.snapshot.functions} functions and procedures · ` +
+  `updated ${D.generated} · snapshot ${D.snapshot.content_hash}`;
+$("footer").innerHTML = `Generated by <code>tools/build_index.py</code> from the <code>model.json</code> of every model ` +
+  `— do not edit by hand. Gap descriptions come from the <a href="${esc(D.register_url)}">CoolSolve register</a>` +
+  (D.register_found ? "." : " (register not found when the page was built: IDs only).");
+
+function countBy(models, key) {
+  const n = {};
+  models.forEach((m) => { n[m[key]] = (n[m[key]] || 0) + 1; });
+  return n;
+}
+function renderSummary() {
+  const n = countBy(D.models, "status");
+  const active = state.view === "models" ? state.status : "";
+  $("summary").innerHTML = STATUS_ORDER.filter((s) => n[s]).map((s) =>
+    `<a class="chip${active === s ? " active" : ""}" href="${modelsHref({status: active === s ? "" : s})}">` +
+    `${esc(statusLabel(s))} <b>${n[s]}</b></a>`).join("");
+}
+
+// ---------------------------------------------------------------- explore
+function statusBar(models) {
+  const n = countBy(models, "status");
+  return `<span class="bar" title="${esc(STATUS_ORDER.filter((s) => n[s]).map((s) => `${n[s]} ${statusLabel(s)}`).join(", "))}">` +
+    STATUS_ORDER.filter((s) => n[s]).map((s) => `<span class="s-${s}" style="width:${(100 * n[s] / models.length).toFixed(1)}%"></span>`).join("") +
+    `</span>`;
+}
+const MAX_IN_CARD = 12;
+function card(title, desc, path, models) {
+  const sorted = [...models].sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) ||
+                                            a.title.localeCompare(b.title));
+  const shown = sorted.slice(0, MAX_IN_CARD);
+  return `<div class="card"><h3><a href="${modelsHref({category: path})}">${esc(title)}</a>` +
+    `<span class="n">${models.length} model${models.length > 1 ? "s" : ""}</span></h3>` +
+    (desc ? `<p>${esc(desc)}</p>` : "") + `<ul>` +
+    shown.map((m) => `<li><span class="dot s-${m.status}" title="${esc(statusLabel(m.status))}"></span>` +
+      `<a href="${modelsHref({category: path, open: m.id})}" title="${esc(m.id + " · " + m.title)}">${esc(m.title)}</a>` +
+      `<span class="k" title="${esc(D.labels.kinds[m.kind] || m.kind)} · ${esc(D.labels.levels[m.level] || m.level)}">` +
+      `${icon(D.labels.kinds[m.kind] || "")}${icon(D.labels.levels[m.level] || "")}</span></li>`).join("") +
+    `</ul>` + (models.length > MAX_IN_CARD
+      ? `<a class="more" href="${modelsHref({category: path})}">+ ${models.length - MAX_IN_CARD} more in the table →</a>` : "") +
+    `</div>`;
+}
+function quickLinks(label, key, entries) {
+  return `<div class="quick"><span class="lbl">${esc(label)}</span>` + entries.map(([v, text, n]) =>
+    `<a class="chip" href="${modelsHref({[key]: v})}">${esc(text)} <b>${n}</b></a>`).join("") + `</div>`;
+}
+function renderExplore() {
+  if ($("view-explore").dataset.built) return;          // static: built once
+  const kinds = countBy(D.models, "kind"), levels = countBy(D.models, "level"), status = countBy(D.models, "status");
+  const tops = D.taxonomy.filter((t) => D.models.some((m) => inCategory(m, t.key)));
+  let html = `<p class="intro">Thermodynamic models written in the EES language, solved by CoolSolve and verified ` +
+    `against their source. The library is organised like its <code>models/</code> folder: categories and ` +
+    `subcategories of the taxonomy below. Open a model to see its summary, verification and links, or browse all ` +
+    `models in a sortable table with filters.</p>` +
+    `<div class="hero"><input type="search" id="xq" placeholder="Search the library (title, tag, fluid, function, author, ID…) and press Enter" ` +
+    `aria-label="Search the library"><a class="btn" href="#/models">Browse all ${D.models.length} models →</a></div>` +
+    quickLinks("Status", "status", STATUS_ORDER.filter((s) => status[s]).map((s) => [s, statusLabel(s), status[s]])) +
+    quickLinks("Kind", "kind", Object.entries(D.labels.kinds).filter(([k]) => kinds[k]).map(([k, t]) => [k, t, kinds[k]])) +
+    quickLinks("Level", "level", Object.entries(D.labels.levels).filter(([k]) => levels[k]).map(([k, t]) => [k, t, levels[k]])) +
+    `<nav class="toc" aria-label="Categories">` + tops.map((t) =>
+      `<a href="#cat-${esc(t.key)}" data-scroll="cat-${esc(t.key)}">${esc(t.title)} ` +
+      `<span>${D.models.filter((m) => inCategory(m, t.key)).length}</span></a>`).join("") + `</nav>` +
+    `<div class="legend"><span><span class="dot s-verified"></span>verified</span><span><span class="dot s-runs"></span>runs</span>` +
+    `<span><span class="dot s-blocked"></span>blocked or failing in CoolSolve</span>` +
+    `<span>${Object.values(D.labels.kinds).map((k) => esc(k)).join(" · ")}</span></div><br>`;
+  for (const top of tops) {
+    const inTop = D.models.filter((m) => inCategory(m, top.key));
+    const direct = inTop.filter((m) => m.category === top.key);
+    const children = top.children || [];
+    const withModels = children.filter((c) => inTop.some((m) => m.category === top.key + "/" + c.key));
+    const empty = children.filter((c) => !withModels.includes(c));
+    html += `<section class="cat" id="cat-${esc(top.key)}"><div class="cat-head"><h2>${esc(top.title)}</h2>` +
+      `<span class="n">${inTop.length} models</span>${statusBar(inTop)}` +
+      `<a href="${modelsHref({category: top.key})}">Table view →</a></div>` +
+      `<p class="cat-desc">${esc(top.description || "")}</p><div class="cards">` +
+      (direct.length ? card(top.title, "Models filed directly under this category.", top.key, direct) : "") +
+      withModels.map((c) => card(c.title, c.description, top.key + "/" + c.key,
+                                 inTop.filter((m) => m.category === top.key + "/" + c.key))).join("") +
+      `</div>` + (empty.length ? `<div class="not-yet">No model yet: ${empty.map((c) => esc(c.title)).join(", ")}.</div>` : "") +
+      `</section>`;
+  }
+  $("view-explore").innerHTML = html;
+  $("view-explore").dataset.built = "1";
+  $("xq").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") location.hash = modelsHref({q: e.target.value.trim()});
+  });
+}
+
+// ---------------------------------------------------------------- models
+function options(sel, label, values) {
+  $(sel).innerHTML = `<option value="">${esc(label)}</option>` +
+    values.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join("");
+}
+function initFilters() {
+  const catOpts = [];
+  D.taxonomy.forEach((top) => {
+    if (!D.models.some((m) => inCategory(m, top.key))) return;
+    catOpts.push([top.key, top.title]);
+    (top.children || []).forEach((c) => {
+      const path = top.key + "/" + c.key;
+      if (D.models.some((m) => m.category === path)) catOpts.push([path, "  · " + c.title]);
+    });
+  });
+  options("f-category", "All categories", catOpts);
+  options("f-status", "All statuses", STATUS_ORDER.filter((s) => D.models.some((m) => m.status === s)).map((s) => [s, statusLabel(s)]));
+  options("f-kind", "All kinds", Object.entries(D.labels.kinds));
+  options("f-level", "All levels", Object.entries(D.labels.levels));
+  const fluids = [...new Set(D.models.flatMap((m) => m.fluids))].sort((a, b) => a.localeCompare(b));
+  options("f-fluid", "All fluids", fluids.map((f) => [f, f]));
+  const origins = [...new Set(D.models.map((m) => m.origin_type))].sort();
+  options("f-origin", "All origins", origins.map((o) => [o, o.replace("_", " ")]));
+  const gaps = [...new Set(D.models.flatMap((m) => m.missing_features))].sort();
+  options("f-gap", "Any CoolSolve gap", gaps.map((g) => [g, g]));
+}
+const MODEL_COLS = [
+  {key: "id", label: "ID"}, {key: "title", label: "Model"}, {key: "category", label: "Category"},
+  {key: "kind", label: "Kind"}, {key: "level", label: "Level"}, {key: "status", label: "Status"},
+  {key: "fluids", label: "Fluids"}, {key: "n_equations", label: "Eqs", num: true},
+  {key: "verified_on", label: "Verified"},
+];
+function sortValue(m, key) {
+  if (key === "fluids") return m.fluids.join(", ").toLowerCase();
+  if (key === "category") return catTitle(m.category).toLowerCase();
+  if (key === "status") return STATUS_ORDER.indexOf(m.status);
+  if (key === "n_equations") return m.n_equations === "" ? -1 : Number(m.n_equations);
+  const v = m[key];
+  return typeof v === "string" ? v.toLowerCase() : v ?? "";
+}
+const cmp = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const fnNames = {};
+D.functions.forEach((f) => { (fnNames[f.model_id] = fnNames[f.model_id] || []).push(f.function); });
+const modelIndex = Object.fromEntries(D.models.map((m) => [m.id, [m.id, m.name, m.title, m.summary, m.tags.join(" "),
+  m.fluids.join(" "), m.authors.join(" "), m.source, m.source_path, catTitle(m.category), m.missing_features.join(" "),
+  (fnNames[m.id] || []).join(" ")].join(" ").toLowerCase()]));
+function filteredModels() {
+  const words = state.q.toLowerCase().split(/\s+/).filter(Boolean);
+  return D.models.filter((m) => inCategory(m, state.category) &&
+    (!state.status || m.status === state.status) && (!state.kind || m.kind === state.kind) &&
+    (!state.level || String(m.level) === state.level) && (!state.fluid || m.fluids.includes(state.fluid)) &&
+    (!state.origin || m.origin_type === state.origin) && (!state.gap || m.missing_features.includes(state.gap)) &&
+    words.every((w) => modelIndex[m.id].includes(w)));
+}
+function headerRow(cols, sort, attr) {
+  return "<tr>" + cols.map((c) => {
+    const s = sort.key === c.key ? (sort.dir > 0 ? "ascending" : "descending") : "none";
+    return `<th aria-sort="${s}"${c.num ? ' style="text-align:right"' : ""}><button data-${attr}="${c.key}">${esc(c.label)}</button></th>`;
+  }).join("") + "</tr>";
+}
+function gapBadges(ids) {
+  return ids.map((g) => {
+    const info = gapInfo(g);
+    const tip = info ? info.text : "not found in the CoolSolve register";
+    return `<span class="gap${info && info.state === "closed" ? " closed" : ""}" title="${esc(tip)}">${esc(g)}</span>`;
+  }).join("");
+}
+function renderModels() {
+  const rows = filteredModels();
+  const {key, dir} = state.sort;
+  rows.sort((a, b) => dir * cmp(sortValue(a, key), sortValue(b, key)) || cmp(a.id, b.id));
+  $("models").tHead.innerHTML = headerRow(MODEL_COLS, state.sort, "sort");
+  $("m-count").textContent = `${rows.length} of ${D.models.length} models`;
+  if (!rows.length) {
+    $("models").tBodies[0].innerHTML = `<tr><td colspan="${MODEL_COLS.length}" class="empty">No model matches the filters.</td></tr>`;
+    return;
+  }
+  $("models").tBodies[0].innerHTML = rows.map((m) => {
+    const open = state.open === m.id;
+    const kind = D.labels.kinds[m.kind] || m.kind;
+    const level = D.labels.levels[m.level] || m.level;
+    let html = `<tr class="row${open ? " open" : ""}" data-id="${m.id}" aria-expanded="${open}">` +
+      `<td class="id">${m.id}</td>` +
+      `<td><div class="title">${esc(m.title)}</div>${gapBadges(m.missing_features)}</td>` +
+      `<td>${esc(catTitle(m.category))}</td>` +
+      `<td title="${esc(kind)}">${esc(icon(kind))}</td>` +
+      `<td title="${esc(level)}">${esc(icon(level))}</td>` +
+      `<td><span class="badge s-${m.status}">${esc(statusLabel(m.status))}</span></td>` +
+      `<td>${esc(m.fluids.join(", "))}</td>` +
+      `<td class="num">${esc(m.n_equations)}</td>` +
+      `<td class="mono">${esc(m.verified_on)}</td></tr>`;
+    if (open) html += `<tr><td class="detail" colspan="${MODEL_COLS.length}">${modelDetail(m)}</td></tr>`;
+    return html;
+  }).join("");
+}
+function modelDetail(m) {
+  const fns = D.functions.filter((f) => f.model_id === m.id);
+  const gaps = m.missing_features.map((g) => {
+    const info = gapInfo(g);
+    if (!info) return `<li><span class="gap">${esc(g)}</span> <span class="muted">not found in the register</span></li>`;
+    const meta = [info.kind, info.state === "closed" ? "closed" + (info.fixed_in ? " — " + info.fixed_in : "") : info.priority]
+      .filter(Boolean).join(" · ");
+    return `<li><a class="gap${info.state === "closed" ? " closed" : ""}" href="${esc(registerUrl(info))}">${esc(g)}</a> ` +
+      `<span class="muted">${md(meta)}</span><br>${md(info.text)}` +
+      (info.detail ? `<br><span class="muted">CoolSolve: ${md(info.detail)}</span>` : "") + `</li>`;
+  }).join("");
+  const related = m.related.map((r) => byId[r]
+    ? `<a href="#${r}">${r}</a> <span class="muted">${esc(byId[r].title)}</span>` : esc(r)).join("<br>");
+  const top = m.category.split("/")[0];
+  return `<div class="detail-grid"><div>
+      <h3>Summary</h3><p style="margin:0">${esc(m.summary)}</p>
+      ${m.missing_features.length ? `<h3>Why it does not run in CoolSolve yet</h3><ul class="gaps">${gaps}</ul>` : ""}
+      ${fns.length ? `<h3>Functions and procedures (${fns.length})</h3><p class="mono" style="margin:0;white-space:normal">` +
+        fns.map((f) => esc(f.function) + esc(f.signature)).join("<br>") + "</p>" : ""}
+      ${m.tags.length ? `<h3>Tags</h3>${m.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}` : ""}
+      <h3>Links</h3><div class="links"><a href="${esc(readmeUrl(m))}">README (GitHub)</a>` +
+      `<a href="${esc(m.path)}/README.md">README (local)</a><a href="${esc(m.path)}/">Folder (local)</a>` +
+      `<a href="#cat-${esc(top)}" data-explore="cat-${esc(top)}">In the library tree</a></div>
+    </div><div>
+      <h3>Model</h3><dl>
+        <dt>ID</dt><dd class="mono">${m.id}</dd><dt>Name</dt><dd class="mono">${esc(m.name)}</dd>
+        <dt>Main file</dt><dd class="mono">${esc(m.main_file)}</dd>
+        <dt>Category</dt><dd><a href="${modelsHref({category: m.category})}">${esc(catTitle(m.category))}</a></dd>
+        <dt>Kind</dt><dd>${esc(D.labels.kinds[m.kind] || m.kind)}</dd>
+        <dt>Level</dt><dd>${esc(D.labels.levels[m.level] || m.level)}</dd>
+        <dt>Size</dt><dd>${esc(m.n_equations || "?")} equations, largest block ${esc(m.largest_block || "?")}</dd>
+        <dt>Figures</dt><dd>${m.figures}</dd>
+      </dl>
+      <h3>Origin</h3><dl>
+        <dt>Authors</dt><dd>${esc(m.authors.join("; "))}</dd><dt>Type</dt><dd>${esc(m.origin_type)}</dd>
+        <dt>Source</dt><dd>${esc(m.source)}</dd>
+        ${m.source_path ? `<dt>Path</dt><dd class="mono" style="white-space:normal">${esc(m.source_path)}</dd>` : ""}
+        ${m.url ? `<dt>URL</dt><dd><a href="${esc(m.url)}">${esc(m.url)}</a></dd>` : ""}
+        <dt>Licence</dt><dd>${esc(m.license)}</dd>
+      </dl>
+      <h3>Verification</h3><dl>
+        <dt>Status</dt><dd><span class="badge s-${m.status}">${esc(statusLabel(m.status))}</span></dd>
+        <dt>CoolSolve</dt><dd class="mono">${esc(m.coolsolve_version || "—")}</dd>
+        <dt>Date</dt><dd class="mono">${esc(m.verified_on || "—")}</dd>
+      </dl>
+      ${related ? `<h3>Related models</h3><div>${related}</div>` : ""}
+    </div></div>`;
+}
+
+// ---------------------------------------------------------------- functions
+const FN_COLS = [{key: "function", label: "Function"}, {key: "type", label: "Type"},
+                 {key: "signature", label: "Arguments"}, {key: "model_id", label: "Model"}];
+function renderFunctions() {
+  const words = state.fq.toLowerCase().split(/\s+/).filter(Boolean);
+  const rows = D.functions.filter((f) => {
+    const t = [f.function, f.signature, f.model_id, (byId[f.model_id] || {}).title].join(" ").toLowerCase();
+    return words.every((w) => t.includes(w));
+  });
+  const {key, dir} = state.fsort;
+  rows.sort((a, b) => dir * cmp(String(a[key]).toLowerCase(), String(b[key]).toLowerCase()) ||
+                      cmp(a.function.toLowerCase(), b.function.toLowerCase()));
+  $("functions").tHead.innerHTML = headerRow(FN_COLS, state.fsort, "fsort");
+  $("f-count").textContent = `${rows.length} of ${D.functions.length} functions and procedures`;
+  $("functions").tBodies[0].innerHTML = rows.length ? rows.map((f) => {
+    const m = byId[f.model_id] || {};
+    return `<tr><td class="mono">${esc(f.function)}</td><td>${esc(f.type.toLowerCase())}</td>` +
+      `<td class="mono" style="white-space:normal">${esc(f.signature)}</td>` +
+      `<td><a href="#${f.model_id}">${f.model_id}</a> <span class="muted">${esc(m.title || "")}</span></td></tr>`;
+  }).join("") : `<tr><td colspan="4" class="empty">No function matches.</td></tr>`;
+}
+
+// ---------------------------------------------------------------- gaps
+const GAP_COLS = [{key: "id", label: "ID"}, {key: "priority", label: "Priority"}, {key: "n", label: "Models", num: true},
+                  {key: "text", label: "Description"}];
+const usage = {};
+D.models.forEach((m) => m.missing_features.forEach((g) => { (usage[g] = usage[g] || []).push(m.id); }));
+function renderGaps() {
+  const words = state.gq.toLowerCase().split(/\s+/).filter(Boolean);
+  const ids = new Set([...Object.keys(D.gaps), ...Object.keys(usage)]);
+  let rows = [...ids].map((id) => ({id, ...(D.gaps[id] || {state: "unknown", text: "Not found in the register", priority: ""}),
+                                    models: usage[id] || [], n: (usage[id] || []).length}));
+  rows = rows.filter((g) =>
+    (state.gstate === "all" || (state.gstate === "used" && g.n > 0 && g.state !== "closed") ||
+     (state.gstate === "open" && g.state === "open") || (state.gstate === "closed" && g.state === "closed")) &&
+    words.every((w) => (g.id + " " + g.text + " " + (g.detail || "")).toLowerCase().includes(w)));
+  const {key, dir} = state.gsort;
+  rows.sort((a, b) => dir * cmp(key === "n" ? a.n : String(a[key] || "").toLowerCase(),
+                                key === "n" ? b.n : String(b[key] || "").toLowerCase()) || cmp(a.id, b.id));
+  $("gaps").tHead.innerHTML = headerRow(GAP_COLS, state.gsort, "gsort");
+  $("g-count").textContent = `${rows.length} entries`;
+  $("gaps").tBodies[0].innerHTML = rows.length ? rows.map((g) =>
+    `<tr><td><a class="gap${g.state === "closed" ? " closed" : ""}" href="${esc(registerUrl(g))}">${esc(g.id)}</a></td>` +
+    `<td>${md(g.state === "closed" ? "closed" + (g.fixed_in ? " — " + g.fixed_in : "") : g.priority || "")}</td>` +
+    `<td class="num">${g.n ? `<a href="${modelsHref({gap: g.id})}">${g.n}</a>` : "0"}</td>` +
+    `<td>${md(g.text)}${g.detail ? `<br><span class="muted">CoolSolve: ${md(g.detail)}</span>` : ""}` +
+    (g.models.length ? `<br><span class="muted">${g.models.map((id) => `<a href="#${id}">${id}</a>`).join(", ")}</span>` : "") +
+    `</td></tr>`).join("") : `<tr><td colspan="4" class="empty">No entry matches.</td></tr>`;
+}
+
+// ---------------------------------------------------------------- events
+$("q").addEventListener("input", (e) => { state.q = e.target.value; updateHash(); renderModels(); });
+$("fq").addEventListener("input", (e) => { state.fq = e.target.value; updateHash(); renderFunctions(); });
+$("gq").addEventListener("input", (e) => { state.gq = e.target.value; updateHash(); renderGaps(); });
+$("g-state").addEventListener("change", (e) => { state.gstate = e.target.value; updateHash(); renderGaps(); });
+for (const k of FILTER_KEYS.slice(1))
+  $("f-" + k).addEventListener("change", (e) => { state[k] = e.target.value; state.open = null; updateHash(); render(); });
+$("reset").addEventListener("click", () => {
+  FILTER_KEYS.forEach((k) => { state[k] = ""; });
+  state.open = null;
+  syncInputs();
+  updateHash();
+  render();
+});
+document.addEventListener("click", (e) => {
+  const s = e.target.closest("button[data-sort], button[data-fsort], button[data-gsort]");
+  if (s) {
+    const [which, key] = s.dataset.sort ? ["sort", s.dataset.sort] : s.dataset.fsort ? ["fsort", s.dataset.fsort] : ["gsort", s.dataset.gsort];
+    state[which] = {key, dir: state[which].key === key ? -state[which].dir : (key === "n" ? -1 : 1)};
+    render();
+    return;
+  }
+  const scroll = e.target.closest("[data-scroll]");               // table of contents of the explore view
+  if (scroll) { e.preventDefault(); $(scroll.dataset.scroll).scrollIntoView({behavior: "smooth"}); return; }
+  const explore = e.target.closest("[data-explore]");              // "In the library tree" from a model
+  if (explore) {
+    e.preventDefault();
+    pendingScroll = explore.dataset.explore;
+    location.hash = "#/";
+    return;
+  }
+  const row = e.target.closest("tr.row");
+  if (row && !e.target.closest("a")) {
+    state.open = state.open === row.dataset.id ? null : row.dataset.id;
+    updateHash();
+    renderModels();
+  }
+});
+window.addEventListener("hashchange", applyHash);
+
+initFilters();
+applyHash();
+</script>
+</body>
+</html>

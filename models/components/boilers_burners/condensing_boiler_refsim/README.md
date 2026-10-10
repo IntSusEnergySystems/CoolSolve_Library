@@ -16,11 +16,11 @@ shipped and verified against the solution stored by EES (see *Verification*).
 |---|---|
 | **Category** | Components › Boilers and burners |
 | **Fluids** | Water (real), AirH2O (moist air), Air, N2, O2, CO2, H2O, CH4, C2H6, C3H8, C4H10 (ideal gases, formation enthalpy included), Methane (real) |
-| **Size** | 258 equations, largest block 52 (the variant); the native file has the same 258 equations, the block statistics cannot be measured because it does not parse |
+| **Size** | 258 equations, largest block 52 (the variant); the native file parses and reports 244 equations (largest block 30) before it stops |
 | **Source** | ULiège model bank (Laborelec toolkit lineage), heat production by combustion, condensing boiler reference simulation model, 9 January 2008 (`CondensingBoiler_RefSim_EES_Model_VLAR080109.EES`, EES 7.888) |
 | **Authors** | Vincent Lemort, Andrés Rodríguez (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file **blocked** by `CS-GAP-NAME-SYMBOL` (with `CS-GAP-FLUIDS-C8H18`, `CS-BUG-COMMON-PROC`; `CS-GAP-IF5` is closed in CoolSolve `fix/library-gaps-2` @59b2862); runnable variant `condensing_boiler_refsim_coolsolve.eescode` verified against the solution stored by EES |
+| **CoolSolve** | native file **blocked** by `CS-GAP-FLUIDS-C8H18` (with `CS-BUG-COMMON-PROC`); runnable variant `condensing_boiler_refsim_coolsolve.eescode` verified against the solution stored by EES |
 
 ## Problem statement
 
@@ -109,8 +109,8 @@ including the consistency checks of the original).
 
 ## How to run
 
-The native file does **not** run in CoolSolve v0.3.0 (parse error on the four
-lines that use the valid EES variable names `C%` and `H%`). The runnable variant
+The native file does **not** run in CoolSolve (it parses, and the solve stops at
+*"Unknown fluid: 'C4H10'"*). The runnable variant
 is `condensing_boiler_refsim_coolsolve.eescode` (baseline
 `condensing_boiler_refsim_coolsolve.sol`, tested as `CSL-0080:coolsolve`):
 
@@ -309,14 +309,16 @@ this file; they are separate candidates.
   No equation was touched.
 - **2026-10-06 — runnable variant** `condensing_boiler_refsim_coolsolve.eescode`,
   changes forced by the gaps only, each one valid EES (no CoolSolve-only
-  syntax): (1) `C%` → `C_pc` and `H%` → `H_pc` (`CS-GAP-NAME-SYMBOL`);
+  syntax): (1) `C%` → `C_pc` and `H%` → `H_pc`, a renaming that CoolSolve no
+  longer requires;
   (2) `MM_C4H10=molarmass(C4H10)` → `MM_C4H10=58.12` (the value EES returns,
   `CS-GAP-FLUIDS-C8H18`) and `h_C4H10_su`/`h_C4H10_ref` → 0 (they only enter
   `Q_dot_2_bis` multiplied by `y_C4H10_su = 0`); (3) the five five-argument
-  `IF(A,B,X,Y,Z)` calls rewritten as three-argument `IF(cond,X,Z)`: the original
-  returns X if A<B, Y if A=B and Z if A>B, so
-  `IF(A,B,X,X,Z) = IF(X−A, X, Z)` and `IF(A,B,1,1,0) = IF(B−A, 1, 0)`
-  (`CS-GAP-IF5`); (4) the body of `PROCEDURE COILWET` copied into the main
+  `IF(A,B,X,Y,Z)` calls rewritten as three-argument `IF(cond,X,Z)` (CoolSolve
+  accepts the five-argument form now, so this rewrite is not required): the
+  original returns X if A<B, Y if A=B and Z if A>B, so
+  `IF(A,B,X,X,Z) = IF(X−A, X, Z)` and `IF(A,B,1,1,0) = IF(B−A, 1, 0)`;
+  (4) the body of `PROCEDURE COILWET` copied into the main
   program at the place of the call, its two outputs written
   `Q_dot_coil_wet=if(flag_dp, Q_dot_coil_wet_if, 0)` and
   `T_wb_ex_coil_wet=if(flag_dp, T_wb_ex_coil_wet_if, T_wb_su_coil)`
@@ -332,24 +334,16 @@ this file; they are separate candidates.
   equations: above level 2 (several sub-models and closures, moist air,
   ideal-gas chemistry), below level 4 (no optimisation, no
   distribution/discretisation, no dynamic behaviour) → **level 3**.
-- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @59b2862 (T-RECHECK, `CS-GAP-IF5` closed).** The five-argument `IF` of the native file is now implemented; the native file is still blocked, the first error now comes from another gap (the parse stops at the `C%`/`H%` names, `CS-GAP-NAME-SYMBOL`). The variant is kept.
-
 ## Limitations and CoolSolve gaps
 
 Gaps blocking the native file (all in `model.json` `missing_features`, see the
 CoolSolve register `docs/model_library_support.md`):
 
-- **`CS-GAP-NAME-SYMBOL`** — the fuel composition variables `C%` and `H%`
-  (kg C/kg fuel, kg H/kg fuel) are valid EES names; CoolSolve cannot parse the
-  four lines that name them (*"Could not parse line"*, exit 1, no `.sol`).
 - **`CS-GAP-FLUIDS-C8H18`** — the EES ideal-gas substance `C4H10` of
   `molarmass(C4H10)` and `enthalpy(C4H10,T=…)` is unknown to CoolSolve
   (*"Unknown fluid: 'C4H10'"*); the same gap as `C8H18`, "the other hydrocarbons
   of the EES ideal-gas substance list beyond C3". `x_C4H10 = 0`, so the terms
   that use it vanish, but the calls must still evaluate.
-- **`CS-GAP-IF5`** — closed in CoolSolve `fix/library-gaps-2` @59b2862: the five-argument `IF(A,B,X,Y,Z)` of
-  section 8.2.4 raised *"Unknown or unsupported function: if with 5 arguments"*
-  in CoolSolve v0.3.0 and now evaluates.
 - **`CS-BUG-COMMON-PROC`** — the ten `$common` variables of `PROCEDURE COILWET`
   are evaluated as zero inside the body, so the wet coil is not solved at all
   (*SingularJacobian* in the block of the call outputs). The same row records,

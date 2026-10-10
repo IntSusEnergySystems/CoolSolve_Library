@@ -8,7 +8,7 @@
   "status": "blocked",
   "main_file": "plate_hx_pressure_drop_identification.eescode",
   "fluids": [
-    "R245fa+R134a (REFPROP)",
+    "R245fa+R134a",
     "R245fa"
   ],
   "tags": [
@@ -59,7 +59,6 @@
     "notes": "Default run: q-independent variables agree (Thonon h 5.12e-03, DELTAp 6.0e-05, orifice block <= 5.6e-04); stale q-dependent outputs differ (alpha_tp_cd 6.41e-01, DELTAp_tp 1.44e-01, h_tp_ev 6.33e-01) — evidence of a stale stored solution (CS-BUG-EXTRACT-STALE)."
   },
   "missing_features": [
-    "CS-GAP-REFPROP",
     "CS-BUG-COMMON-PROC"
   ],
   "related": [
@@ -75,6 +74,11 @@
       "date": "2026-10-07",
       "action": "added (blocked native file, runnable R245fa variant, card C-135)",
       "by": "GLM (Z.ai) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "CS-GAP-REFPROP removed from missing_features: not a CoolSolve gap (decision D12); the native file is to be rewritten with CoolProp property calls",
+      "by": "Claude (Opus) for S. Quoilin"
     }
   ]
 }

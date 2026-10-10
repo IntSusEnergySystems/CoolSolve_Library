@@ -12,9 +12,6 @@
     2. the $common lines dropped (silently zero in CoolSolve:
        CS-BUG-COMMON-PROC); the mixture is accessed as the literal 'R245fa',
        MM computed locally with molarmass();
-    3. the two 5-argument IF(DELTAC_dot,0,X,Y,Z) intrinsics (CS-GAP-IF5)
-       rewritten with CoolSolve's 3-argument if() - CoolSolve-only syntax,
-       not valid EES.
   Inputs : as the native file (exhaust/thermal-oil stream, cooling water,
            plate geometry, pinch points, plate numbers, expander ratios)
   Outputs: net power, efficiencies, heat-exchanger areas, pipe diameters,
@@ -858,7 +855,7 @@ Cv_r_ex_vap_cd = cv(WorkingFluid$,P=P_r_ex_vap_cd,x=1)*MM/1000
 Cp_r_ex_vap_cd = cp(WorkingFluid$,P=P_r_ex_vap_cd,x=1)*MM/1000
 w_r_ex_vap_cd = soundspeed(WorkingFluid$,P=P_r_ex_vap_cd,x=1)
 P_r_ex_vap_cd=P_r_su_vap_cd
-T_w_su_vap_cd=if(DELTAC_dot, T_bis, T_r_ex_vap_cd-DELTAT_pp_cd) "1) variant: 5-arg IF (CS-GAP-IF5) as CoolSolve 3-arg if()"
+T_w_su_vap_cd=if(DELTAC_dot, T_bis, T_r_ex_vap_cd-DELTAT_pp_cd) "1) original EES: IF(DELTAC_dot, 0, T_r_ex_vap_cd-DELTAT_pp_cd, T_r_ex_vap_cd-DELTAT_pp_cd, T_bis)"
 Q_dot_vap_cd=cp_w*M_dot_w*(T_w_ex_vap_cd-T_w_su_vap_cd)
 
 "Condensation"
@@ -899,7 +896,7 @@ Cp_r_ex_sc_cd = cp(WorkingFluid$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)*MM/1000
 w_r_ex_sc_cd = soundspeed(WorkingFluid$,T=T_r_ex_sc_cd,P=P_r_ex_sc_cd)
 Q_dot_sc_cd=cp_w*M_dot_w*(T_w_ex_sc_cd-T_w_su_sc_cd)
 T_w_ex_sc_cd=T_w_su_tp_cd
-T_w_su_sc_cd=if(DELTAC_dot, T_r_ex_sc_cd-DELTAT_pp_cd, T_bis) "2) variant: 5-arg IF (CS-GAP-IF5) as CoolSolve 3-arg if()"
+T_w_su_sc_cd=if(DELTAC_dot, T_r_ex_sc_cd-DELTAT_pp_cd, T_bis) "2) original EES: IF(DELTAC_dot, 0, T_bis, T_bis, T_r_ex_sc_cd-DELTAT_pp_cd)"
 T_w_su_sc_cd=T_w_su
 
 "Power"

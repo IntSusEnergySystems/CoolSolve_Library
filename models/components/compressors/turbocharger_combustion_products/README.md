@@ -18,11 +18,11 @@ recovered as a percentage of the fuel energy.
 |---|---|
 | **Category** | Components › Compressors (turbocharger compressor–turbine matching) |
 | **Fluids** | Air (compressor–intercooler–engine), EG 40 % (glycol-water loop), ideal-gas CO2, H2O, O2, N2 (exhaust products) |
-| **Size** | 219 equations, largest block 10 (runnable variant; the native file does not parse in CoolSolve, see *Limitations*) |
+| **Size** | 219 equations, largest block 10 (runnable variant; the native file parses and reports 219 equations and 240 unknowns, see *Limitations*) |
 | **Source** | ULiège — MCI course, TP4 exercise 1 (EES file `SURALIMENTATION_FORMULATION SIMPLE_V2017-1.EES`, "formulation simplifiée", PNG 24/03/2019) |
 | **Authors** | P. Ngendakumana (ULiège Thermodynamics Laboratory); R. Dickes (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0@7addbbc — native file **blocked** (4 gaps, see below); runnable variant `turbocharger_combustion_products_coolsolve.eescode` verified against the EES stored solution |
+| **CoolSolve** | native file **blocked** (3 gaps, see below); runnable variant `turbocharger_combustion_products_coolsolve.eescode` verified against the EES stored solution |
 
 ## Model
 
@@ -52,7 +52,7 @@ coolsolve ./turbocharger_combustion_products_coolsolve.eescode
 ```
 
 The native file `turbocharger_combustion_products.eescode` is the faithful
-transcription (valid EES, SUBPROGRAM flattened); it does not parse in
+transcription (valid EES, SUBPROGRAM flattened); it does not solve in
 CoolSolve (see *Limitations*).
 
 ## Results (runnable variant, default operating point)
@@ -76,7 +76,7 @@ Sanity checks of the original verified: `HR_bis = HR` (independent route),
 ## Verification
 
 Against the EES stored solution of the source file (`compare_solution.py`,
-runnable variant; the native file does not parse). The EES variable table
+runnable variant; the native file is not square in CoolSolve). The EES variable table
 holds 111 records, 109 with values (`AU` and `C` are dead variables without
 values; the subprogram-internal records `x[i]`, `h[i]`, `s[i]`, `MM[i]`,
 `pp[i]`, `temp`, `pres`, `f_st`, `e`, `ntkmol`, `h_p`, `s_p` are the state of
@@ -164,7 +164,7 @@ Source file (EES X10.589, comments in French):
   matching physics (1), curated guesses needed (1) → score 6 → level 3.
 - **2026-10-08 — runnable variant** `turbocharger_combustion_products_coolsolve.eescode`
   (only what the four gaps force; still valid EES):
-  1. `C%` → `C_pc`, `Q_dot_2_%` → `Q_dot_2_pc` (`CS-GAP-NAME-SYMBOL`);
+  1. `C%` → `C_pc`, `Q_dot_2_%` → `Q_dot_2_pc` (a renaming CoolSolve no longer requires);
   2. `molarmass(C)`/`molarmass(H)` → 12.0107 / 1.00794 kg/kmol, the values EES
      returns (recomputed from the stored `m`, `n`) (`CS-GAP-MOLARMASS-ELEMENT`), in
      `FUNCTION mm_p`, in `m`, `n` and in the five `f_st_<tag>` lines;
@@ -176,16 +176,15 @@ Source file (EES X10.589, comments in French):
      solution (CoolSolve EG 40 % at 44.6 °C: 3615.4 vs EES 3615.1 J/kg-K).
   Verified against the same EES reference (see *Verification*).
 
+
 ## Limitations and CoolSolve gaps
 
-The native file is **blocked** by four registered gaps (`missing_features`):
+The native file is **blocked** by three gaps (`missing_features`):
 
-- `CS-GAP-NAME-SYMBOL` — parse error on `C% = 86.9` and `Q_dot_2_% = …`
-  ("Line 76/141: Could not parse line");
 - `CS-GAP-SUM-INDEXED` — the 16 indexed `sum(expr,i=1,4)` make the system
   not-square (219 equations / 240 unknowns, no error on the sum lines);
 - `CS-GAP-MOLARMASS-ELEMENT` — `molarmass(C)`, `molarmass(H)` ("Unknown
-  fluid: 'C'"), registered with this card;
+  fluid: 'C'");
 - `CS-GAP-INCOMPRESSIBLE` — `Cp(EG,T=…,C=40)` ("cp requires exactly 2 input
   properties …, got 1"; adding `P=` unblocks the call, CoolSolve has the EG
   solution fluid and agrees with EES within 1e-4).

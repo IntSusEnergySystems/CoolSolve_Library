@@ -6,17 +6,11 @@
   Same model as the native file (two epsilon-NTU coils linked by a glycol
   loop and a pump, Braun hypothesis, winter/summer regimes), with the changes
   forced by the CoolSolve gaps, all logged in the README:
-    1. $IF recovery_regime$ branches resolved for the stored run 'winter'
-       (CS-GAP-IF-DIRECTIVE; valid EES);
-    2. the four IF(A,B,X,Y,Z) regime selections written with the 3-argument
-       if(cond,a,b), cond = Q_dot_cooling_wet-Q_dot_cooling_dry
-       (CS-GAP-IF5; CoolSolve-only syntax);
-    3. the three CALL BRINEPROP(...) calls (CS-GAP-INCLUDE) flattened into
-       the main program (CS-GAP-LOOKUP-PROC), one block per property, and
-       their expression outputs applied as separate equations
-       (CS-GAP-CALL-EXPR-OUT, closed in CoolSolve fix/library-gaps-2
-       @57b22d3: no longer forced); the concentration selector reduces to
+    1. the three CALL BRINEPROP(...) calls (CS-GAP-INCLUDE) flattened into
+       the main program, one block per property, and their expression outputs
+       applied as separate equations; the concentration selector reduces to
        Fl_brine=1 ('EG'), valid EES.
+
   Companion tables: glycol_runaround_recovery_loop_coolsolve-Brine1/2.csv
   (BrineProp coefficients, same decoded values as in CSL-0079).
   Source, authors, licence: see the native file.
@@ -65,7 +59,7 @@ c_p_a=1025  "air specific heat, constant [J/kg-K]"
 c_p_g=1840  "specific heat of water vapour [J/kg-K]"
 h_fg0=2.5E6  "latent heat of vaporisation at 0 C [J/kg]"
 "glycol (ethylene glycol 25 %): the native file calls the BrineProp library
- procedure; flattened here per property (CS-GAP-INCLUDE/CS-GAP-LOOKUP-PROC)"
+ procedure; flattened here per property (CS-GAP-INCLUDE)"
 t_gw_m=(t_ge_gw_su+t_ge_gw_ex)/2  "mean glycol temperature in the extracted-air coil [C]"
 X_gw=25  "glycol mass concentration [%]"
 "nominal glycol temperatures of the coils (data of the resistances)"
@@ -116,7 +110,7 @@ mu_gw=exp(Funkt_mu_gw)/1000  "glycol dynamic viscosity [Pa-s] (the procedure ret
 
 "!4. Operating regime: the native file branches on recovery_regime$ with
  $IF directives (winter/summer); resolved here for the stored run 'winter'
- (CS-GAP-IF-DIRECTIVE). Winter regime: heat is recovered from the extracted
+ Winter regime: heat is recovered from the extracted
  air (ge) to heat the fresh air (gp); the cooling coil is on the extraction
  side, the heating coil on the fresh-air side."
 "heating side"
@@ -250,11 +244,10 @@ t_cooling_w_cond=t_cooling_c_wet
 M_dot_cooling_cond_wet=M_dot_cooling_a*(w_cooling_a_su-w_cooling_a_ex_wet)
 
 "!8. Dry or wet regime? (Braun hypothesis: the regime of largest capacity is kept)
- The four IF(A,B,X,Y,Z) of the native file (CS-GAP-IF5) are written with the
- 3-argument CoolSolve if(cond,a,b), cond = Q_dot_cooling_wet-Q_dot_cooling_dry:
- cond>0 (wet capacity largest) selects the wet-regime value. In EES the
- equality case selects the wet value too (2nd branch); with cond=0 CoolSolve
- selects the dry value - a measure-zero case, not met in the stored run."
+ The four IF(A,B,X,Y,Z) of the native file select on cond = Q_dot_cooling_wet-Q_dot_cooling_dry
+ (written as if(cond,a,b) here): cond>0 (wet capacity largest) selects the wet-regime value. In EES the
+ equality case selects the wet value too (2nd branch); with cond=0 the dry value is selected here - a
+ measure-zero case, not met in the stored run."
 Q_dot_cooling=MAX(Q_dot_cooling_wet,Q_dot_cooling_dry)
 Q_dot_cooling_sensible=C_dot_cooling_a*(t_cooling_a_su-t_cooling_a_ex)
 Q_dot_cooling_latent=Q_dot_cooling-Q_dot_cooling_sensible

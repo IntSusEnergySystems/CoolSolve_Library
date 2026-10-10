@@ -5,14 +5,11 @@
   Insulated R717 gas line (Laborelec 2002 toolkit): heat gain from ambient
   air, Colebrook-White friction drop, fitting K-factors from a table,
   equivalent nozzle area A. Runnable CoolSolve variant of the native file
-  (blocked): lookups moved to the main program (CS-GAP-LOOKUP-PROC, closed
-  in CoolSolve fix/library-gaps-2: no longer forced; the string-keyed column
-  reads, CS-BUG-LOOKUP-COLNAME (b), work too),
-  Colebrook/StringPos built-ins replaced (CS-GAP-COLEBROOK,
+  (blocked): Colebrook/StringPos built-ins replaced (CS-GAP-COLEBROOK,
   CS-GAP-STRINGPOS), SP[1..5] array argument as scalars (CS-GAP-ARRAY-ARG),
-  non-ASCII identifiers renamed (CS-GAP-ACCENTED-IDENT), single-line IFs as
-  block IF (CS-BUG-IF-SINGLELINE), pi literal and friction factor in main
-  (CS-BUG-PI-FUNCTION, CS-BUG-IMPLICIT-PROC); all equations valid EES.
+  single-line IFs as block IF (CS-BUG-IF-SINGLELINE), pi literal and friction
+  factor in main (CS-BUG-PI-FUNCTION, CS-BUG-IMPLICIT-PROC); all equations
+  valid EES.
   Verified against the EES stored solution (README).
 
   Inputs : R$, pipe_nr, iso_nr, T_bub, DELTAT_oh, U, L, z_iso_mm, T_A,
@@ -39,7 +36,7 @@ end
 
 "!#######################################################"
 PROCEDURE PIPEDATA(pipe$,dy_mm_input,z_wall_mm_input,dy_tab_mm,z_tab_mm,e_tab_mm:di_mm,z_wall_mm,e_mm)
-"The pipe data columns are read in the main program (CS-GAP-LOOKUP-PROC) and
+"The pipe data columns are read in the main program and
 passed as dy_tab_mm, z_tab_mm, e_tab_mm."
 if pipe$='User defined' then
   z_wall_mm = z_wall_mm_input
@@ -55,7 +52,7 @@ end
 "!#######################################################"
 
 PROCEDURE INSULATIONDATA(lambda$,lambda_input,lambda_tab:Lambda_iso)
-"Insulation column read in the main program (CS-GAP-LOOKUP-PROC), passed as
+"Insulation column read in the main program, passed as
 lambda_tab."
 if lambda$='User defined' then
   Lambda_iso = lambda_input
@@ -68,7 +65,7 @@ end
 
 PROCEDURE Nearest(di_mm,D_equiv_1,D_equiv_2,D_equiv_3,D_equiv_4,D_equiv_5,D_equiv_6,D_equiv_7,D_equiv_8,D_equiv_9,D_equiv_10: Row,message$,fitting)
 "Equivalent diameter procedure. The D_equiv column of the Fittings table is
-passed from the main program (CS-GAP-LOOKUP-PROC); the row search of the
+passed from the main program; the row search of the
 original REPEAT loop written as block IF cascade (same result: the last row
 whose equivalent diameter does not exceed the pipe inner diameter)."
 D=di_mm/1000
@@ -166,7 +163,7 @@ end
 
 PROCEDURE Fittings(fitting,U,rho_i,K_90_elbow_reg,K_90_elbow_long,K_45_elbow,K_return_bend,K_Tee_line,K_Tee_branch,K_glove_valve,K_gate_valve,K_angle_valve,K_swing_check_valve,K_bell_mouth_inlet,K_square_inlet,K_projected_inlet,n_90_elbow_reg,n_90_elbow_long,n_45_elbow,n_return_bend,n_Tee_line,n_Tee_branch,n_glove_valve,n_gate_valve,n_angle_valve,n_swing_check_valve,n_bell_mouth_inlet,n_square_inlet,n_projected_inlet:DpF)
 "The K-factors of the selected fitting class are read in the main program
-(CS-GAP-LOOKUP-PROC) and passed as arguments."
+and passed as arguments."
 
 if (fitting=1) then
 DELTAp_90_elbow_reg=n_90_elbow_reg*K_90_elbow_reg*rho_i*(U^2/2)
@@ -373,12 +370,11 @@ SP[3]=p_i
 SP[4]=Ts_i
 SP[5]=rho_i
 
-"Tubing, insulation and fitting data, read in the main program
-(CS-GAP-LOOKUP-PROC). The decoded Pipedata.LKT is shipped transposed
+"Tubing, insulation and fitting data, read in the main program.
+The decoded Pipedata.LKT is shipped transposed
 (nr, p1, p2, p3; rows 1-41 tubing with p1=outer diameter [mm], p2=wall
 thickness [mm], p3=roughness [mm]; rows 42-45 insulation with p1=conductivity
-[W/(m-K)]), selected by row index: CoolSolve does not resolve string-keyed
-columns of companion tables reliably (CS-BUG-LOOKUP-COLNAME)."
+[W/(m-K)]), selected by row index."
 dy_tab_mm=lookup('pipedata',pipe_nr,2)   "outer diameter [mm]"
 z_tab_mm=lookup('pipedata',pipe_nr,3)    "wall thickness [mm]"
 e_tab_mm=lookup('pipedata',pipe_nr,4)    "roughness [mm]"

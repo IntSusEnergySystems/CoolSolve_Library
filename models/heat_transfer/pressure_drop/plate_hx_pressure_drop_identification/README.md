@@ -18,7 +18,7 @@ mixture R245fa+R134a; the stored EES run uses `MM_fraction = 1` (pure R245fa).
 | **Source** | ULiège — J. Lebrun laboratory, `optim/` folder (~2011), file `Identification pressure drops.EES` |
 | **Authors** | TBD (ULiège, J. Lebrun laboratory) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file blocked (`CALL EES_REFPROP` unsupported: `CS-GAP-REFPROP`; `$common` in procedures: `CS-BUG-COMMON-PROC`); runnable variant verified against the EES stored solution |
+| **CoolSolve** | v0.3.0 — native file blocked (`$common` in procedures: `CS-BUG-COMMON-PROC`; its `CALL EES_REFPROP` blocks are to be rewritten as CoolProp property calls, decision D12); runnable variant verified against the EES stored solution |
 
 ## Problem statement
 
@@ -174,10 +174,10 @@ Source file (EES 8.652, comments mostly English), collection of S. Quoilin:
 
 ## Limitations and CoolSolve gaps
 
-- `CS-GAP-REFPROP` (registered with this card): the EES REFPROP external
-  interface `CALL EES_REFPROP(fluid$, code, in1, in2, comp: outputs)` — used
-  here 11 times with the mixture file `C:\REFPROP8\R245fa+R134a` — is not
-  implemented; CoolProp has no such mixture. Blocks the native file.
+- `CALL EES_REFPROP(fluid$, code, in1, in2, comp: outputs)` — used here 11
+  times with the mixture file `C:\REFPROP8\R245fa+R134a` — is to be rewritten
+  as CoolProp property calls in the native file (decision D12; a mixture missing
+  from CoolProp would then be registered as a missing fluid).
 - `CS-BUG-COMMON-PROC`: the three procedures share `Workingfluidmix$`,
   `MM_fraction`, `MM` with the main program through `$common`; CoolSolve
   evaluates them as zero (silent). Would corrupt the results even if

@@ -62,7 +62,6 @@
     "notes": "The native file does not parse (C%); the comparison concerns the variant. The stored subprogram state (ref call) is reproduced under the flattened names (x_ref[i], h_ref[i], pp_ref[i]...)."
   },
   "missing_features": [
-    "CS-GAP-NAME-SYMBOL",
     "CS-GAP-SUM-INDEXED",
     "CS-GAP-MOLARMASS-ELEMENT",
     "CS-GAP-INCOMPRESSIBLE"
@@ -79,6 +78,11 @@
       "date": "2026-10-08",
       "action": "added (card C-144, batch B-11); native file blocked (CS-GAP-NAME-SYMBOL, CS-GAP-SUM-INDEXED, CS-GAP-MOLARMASS-ELEMENT, CS-GAP-INCOMPRESSIBLE), SUBPROGRAM flattened (D10), runnable _coolsolve variant verified against the EES stored solution",
       "by": "GLM (Z.ai) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @6f10211 + uncommitted identifier-character fix (T-RECHECK, CS-GAP-NAME-SYMBOL closed); still blocked: the C% and Q_dot_2_% lines parse, 219 equations / 240 unknowns (CS-GAP-SUM-INDEXED, CS-GAP-MOLARMASS-ELEMENT, CS-GAP-INCOMPRESSIBLE); variant kept (its C_pc/Q_dot_2_pc renaming is no longer forced)",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

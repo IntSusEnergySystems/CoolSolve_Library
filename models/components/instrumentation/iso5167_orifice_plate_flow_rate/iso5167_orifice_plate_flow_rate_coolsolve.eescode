@@ -21,31 +21,23 @@
            iso5167_orifice_plate_flow_rate.eescode; NOT valid EES as a whole.
            Changes, each forced by a registered gap and logged in the README
            conversion log:
-           1. the 5-argument intrinsic if(A,B,X,Y,Z) is rewritten with the
-              3-argument form if(B-A, X, Z), exactly equivalent here because
-              the A=B and A>B branches of the original both return 0.039
-              (CS-GAP-IF5);
-           2. isidealgas(Fluid$) is unsupported (CS-GAP-ISIDEALGAS): the
+           1. isidealgas(Fluid$) is unsupported (CS-GAP-ISIDEALGAS): the
               ideal-gas special case of the fluid-property procedure is
               dropped, viscosity/cp/cv are always called with (T=, P=);
               for the default fluid (AirH2O) the branch used was already the
               (T=, P=, R=) one;
-           3. density(AirH2O, ..., R=) returns the fallback value 1E4 in
+           2. density(AirH2O, ..., R=) returns the fallback value 1E4 in
               CoolSolve (CS-BUG-HUMIDAIR-PROPS): the EES-equivalent
               1/volume(AirH2O, ...) per kg of dry air is used, times (1+w)
               as in the original;
-           4. cv(AirH2O, ...) returns cp in CoolSolve (CS-BUG-HUMIDAIR-PROPS):
+           3. cv(AirH2O, ...) returns cp in CoolSolve (CS-BUG-HUMIDAIR-PROPS):
               cv is computed as cp - R_mix of the ideal-gas mixture, as in
               EES for AirH2O;
-           5. the six CALL WARNING statements of PROCEDURE warning_error are
+           4. the six CALL WARNING statements of PROCEDURE warning_error are
               replaced by comments with the same validity ranges: CoolSolve
               raises "Unknown procedure: warning" during the Newton
               evaluation of a procedure whose arguments are unknowns, even
-              when no branch is taken at the solution (CS-GAP-CALL-WARNING);
-           6. fluid$ = 'airh2o' in the original is written 'AirH2O' (same
-              fluid in EES): CoolSolve compares strings case-sensitively
-              (CS-BUG-STRING-CASE), so the lowercase spelling of the original
-              misses the AirH2O branch of fluidprop.
+              when no branch is taken at the solution (CS-GAP-CALL-WARNING).
 =============================================================================}
 
 PROCEDURE fluidprop(Fluid$,Temp, Pres,Rh:Rho,Mu,Gamma)
@@ -106,7 +98,7 @@ E_dph=(1-beta_dph^4)^(-0.5)                  "velocity of approach factor [-]"
 beta_dph =Di_dph/De_dph                      "diameter ratio [-]"
 m_dph=beta_dph^2                             "area ratio (as in the original) [-]"
 
-coef_dph = if(0.039/0.09 - L1_ratio_dph, 0.09, 0.039)   "Stolz coefficient of the L1 term; 5-argument if of the original rewritten (CS-GAP-IF5, see header) [-]"
+coef_dph = if(0.039/0.09 - L1_ratio_dph, 0.09, 0.039)   "Stolz coefficient of the L1 term; original EES: IF(L1_ratio_dph,0.039/0.09,0.09,0.039,0.039) [-]"
 C_D_dph=0.5959+0.0312*beta_dph^2.1-0.184*beta_dph^8+0.0029*beta_dph^2.5*(10^6/Re_D_dph)^0.75+coef_dph*L1_ratio_dph*beta_dph^4*(1-beta_dph^4)^(-1)-0.03371*L2_ratio_dph*beta_dph^3   "discharge coefficient, Stolz equation [-]"
 
 L1_ratio_dph=l1_dph/De_dph                   "upstream tapping distance ratio [-]"

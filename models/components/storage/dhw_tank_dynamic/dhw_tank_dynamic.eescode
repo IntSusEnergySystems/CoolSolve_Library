@@ -16,9 +16,7 @@
 
    This file keeps the native EES syntax of the original exercise (5-argument
    IF(A,B,X,Y,Z), symbolic integration limits tau_1, tau_2, ';'-separated
-   $IntegralTable). Status: verified with CoolSolve fix/library-gaps-2 @4cd0ca5
-   (CS-GAP-IF5, CS-GAP-INTEGRAL-LIMITS, CS-BUG-INTEGRAL-TABLE-SEP and
-   CS-BUG-INTEGRAL-MAXSTEPS are closed); solve time about 1.5 min, see README.md.
+   $IntegralTable). Status: verified; solve time about 1.5 min, see README.md.
 
    Inputs : T_tank_0, T_in_tank, T_amb, P_atm, cp_w, cp_tank, Vol_tank, AU_amb,
             heater and draw schedules
@@ -91,4 +89,4 @@ tau_2 = 5*3600 [s]     "end of the integration: 5 hours simulated [s]"
 $IntegralTable tau:1; dU\dtau; Q_dot_tap; Q_dot_amb; Q_dot_res;  M_dot_in_tank; t_tank
 {Creates an Integral Table (Ctrl+I) with all the variables of interest, to
  plot the trajectories (New Plot = Ctrl+Alt+X). EES accepts ; or , as column
- separators, and so does CoolSolve since CS-BUG-INTEGRAL-TABLE-SEP is closed.}
+ separators.}

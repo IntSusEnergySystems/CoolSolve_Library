@@ -5,7 +5,7 @@
   "summary": "Power correction of an engine between the ISO 3046/1 reference conditions and the site conditions: correction factor K from the dry atmospheric pressure, absolute intake-air temperature and coolant temperature ratios (factor a, exponents m, n, s of the ISO table), derating factor alpha = K - 0.7*(1-K)*(1/eta_m - 1), site shaft power. Two exercises: naturally aspirated Diesel (372 kW on site) and supercharged aftercooled engine (1000 kW catalogue).",
   "kind": "steady",
   "level": 2,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "engine_derating_iso3046.eescode",
   "fluids": [
     "Water"
@@ -44,15 +44,13 @@
     "course": "MCI TP2 exercises 1-2 (ULiège, P. Ngendakumana)"
   },
   "verification": {
-    "reference": "EES stored solution of the source file (exercise 1 is the stored run): the runnable variant engine_derating_iso3046_coolsolve.eescode agrees on all 14 common variables, max rel. diff 3.9e-6 (alpha); the 3 other stored values (altitude_x, q, Test_x) are stale leftovers of exercise 2 and of the commented Test block, absent from the stored run",
-    "date": "2026-10-08",
-    "coolsolve_version": "0.3.0@7addbbc",
-    "max_rel_diff": 3.9e-06,
-    "notes": "Unit system of the source: SI MASS DEG KPA K KJ, converted by hand to SI MASS DEG PA C J. Comparison with compare_solution.py --ees-units."
+    "reference": "EES stored solution of the source file (exercise 1 is the stored run): the native file agrees on all 14 common variables, max rel. diff 3.5e-5 (p_w_s_x, steam saturation pressure CoolProp vs EES); alpha 3.9e-6; the 3 other stored values (altitude_x, q, Test_x) are stale leftovers of exercise 2 and of the commented Test block, absent from the stored run",
+    "date": "2026-10-10",
+    "coolsolve_version": "0.3.0@6f10211",
+    "max_rel_diff": 3.5e-05,
+    "notes": "Native file (accented names, $if selection) solved in 14 iterations; the build also contains the uncommitted identifier-character fix of CoolSolve fix/library-gaps-2. Unit system of the source: SI MASS DEG KPA K KJ, converted by hand to SI MASS DEG PA C J. Comparison with compare_solution.py --ees-units. Exercise 2 (Exercice$ = '2') also solves (K 0.8383, alpha 0.8214), no EES reference."
   },
-  "missing_features": [
-    "CS-GAP-ACCENTED-IDENT"
-  ],
+  "missing_features": [],
   "related": [],
   "related_external": [],
   "supersedes": [],
@@ -66,6 +64,11 @@
     {
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @9423934 (T-RECHECK, CS-GAP-IF-DIRECTIVE closed); still blocked by CS-GAP-ACCENTED-IDENT (Exercice$ = '1' branch now kept alone, first parse error at line 28); _coolsolve variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @6f10211 + uncommitted identifier-character fix (T-RECHECK, CS-GAP-ACCENTED-IDENT closed): blocked -> verified; native file verified, _coolsolve variant removed, .sol baseline added",
       "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]

@@ -59,7 +59,6 @@
     "notes": "79 common variables, 23 differ above rtol=0.001, maximum relative difference 1.05e-02 (M_dot_w_coil, proportional to the difference W_su_coil - W_ex_coil of two humidity ratios, +1.30 % on the difference). All 23 deviations (1.45e-03 to 1.05e-02) come from the EES and CoolProp humid-air formulations (W_su_coil 5.52e-03, h_a_su_coil 2.22e-03, W_ex_coil 4.17e-03), as in the other humid-air models of the library (CSL-0074 4.8e-03, CSL-0070 4.4e-03). Q_dot_coil closes exactly on the brine side; the identified resistances agree to 6.0e-04 and AU_coil to 3.2e-05. The parametric Table 2 (3335x2) of the file is a leftover artifact (smooth R_a_coil sweep not containing the stored value; sparse junk k column) and is not used."
   },
   "missing_features": [
-    "CS-GAP-NAME-PIPE",
     "CS-GAP-INCLUDE"
   ],
   "related": [
@@ -81,6 +80,11 @@
     {
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @57b22d3 (T-RECHECK, CS-GAP-CALL-EXPR-OUT closed); still blocked by CS-GAP-NAME-PIPE, CS-GAP-INCLUDE (the CALL lines with expression outputs now parse; in a scratch copy with K|star renamed the file is square, 85 equations, and stops at Unknown procedure BRINEPROP); README and missing_features updated, variant kept (its BRINEPROP replacement is still forced by CS-GAP-INCLUDE)",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @6f10211 + uncommitted identifier-character fix (T-RECHECK, CS-GAP-NAME-PIPE closed); still blocked by CS-GAP-INCLUDE alone (the K|star names parse; the file is square, 85 equations, and stops at Unknown procedure BRINEPROP); variant kept (its Kstar renaming is no longer forced, its brine-property replacement still is)",
       "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]

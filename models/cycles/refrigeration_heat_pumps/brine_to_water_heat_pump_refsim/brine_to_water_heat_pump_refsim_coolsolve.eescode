@@ -7,13 +7,10 @@
   Faithful runnable transcription of the native file. It changes ONLY what the
   registered CoolSolve gaps force:
 
-  1. CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE, CS-GAP-STRING-ARRAY and
-     CS-GAP-LOOKUP-PROC (closed in CoolSolve fix/library-gaps-2: the
-     flattening below is no longer forced by it) break the BRINEPROP procedure
-     of the BrineProp library
+  1. CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE and CS-GAP-STRING-ARRAY break the
+     BRINEPROP procedure of the BrineProp library
      (EES "ELSE IF" chains closed by repeated "ENDIF", the string function
-     Uppercase$, string arrays read by index, and LOOKUP tables read inside a
-     procedure). It is split in two, as in CSL-0072:
+     Uppercase$, string arrays read by index). It is split in two, as in CSL-0072:
      - a selector PROCEDURE BRINEPROP_SELECT(Conc,Fl$:Fl_brine) holding the
        22 concentration range checks and the 11-branch fluid ladder, rewritten
        as sequential single-line IF statements with mutually exclusive
@@ -32,13 +29,10 @@
        Density, output = Funkt/1000 for SpecHeat) are kept exactly as in the
        original; the procedure-internal variables are renamed per call
        (<variable>_rho, <variable>_cp).
-  2. CS-GAP-CALL-EXPR-OUT: the expression output of the second call
-     (:cp_glw/1000) becomes the equation cp_glw = Funkt_cp: the procedure
-     output of Pr=3 is Funkt/1000, so the two factors of 1000 cancel and
-     cp_glw keeps the value of the original (3973.6 J/kg-K for this
-     operating point). This gap is closed in CoolSolve fix/library-gaps-2
-     (0.3.0@57b22d3): the native expression output is accepted, so this
-     change is no longer forced.
+  2. The expression output of the second call (:cp_glw/1000) becomes the
+     equation cp_glw = Funkt_cp: the procedure output of Pr=3 is Funkt/1000, so
+     the two factors of 1000 cancel and cp_glw keeps the value of the original
+     (3973.6 J/kg-K for this operating point).
 
   CoolSolve cannot solve the redundant equations of the original (four
   variables are defined twice: h_ex1_cp, M_dot_s_cp, Q_dot_ev and Q_dot_cd -
@@ -434,7 +428,7 @@ Funkt_cp=c_cp[1]+(c_cp[2]*yc_cp)+(c_cp[3]*yc_cp^2)+(c_cp[4]*yc_cp^3)+(c_cp[5]*xc
 
 {--- end of the specheat call ---}
 "output scaling of the original for Pr=3: output=Funkt/1000 [kJ/kg-K]"
-cp_glw=Funkt_cp                                                      "brine specific heat [J/kg-K] (CS-GAP-CALL-EXPR-OUT: the procedure output of Pr=3 is Funkt/1000 and the original passed the expression cp_glw/1000, so cp_glw = Funkt_cp)"
+cp_glw=Funkt_cp                                                      "brine specific heat [J/kg-K] (the procedure output of Pr=3 is Funkt/1000; the original passed the expression cp_glw/1000 as CALL output, so cp_glw = Funkt_cp)"
 C_dot_glw_ev=M_dot_glw_ev*cp_glw                                 "brine capacity flow rate [W/K]"
 t_glw_ex_ev=t_glw_su_ev-Q_dot_ev/C_dot_glw_ev                       "brine temperature at the evaporator exhaust [C]"
 Q_dot_ev_chk_brine=C_dot_glw_ev*(t_glw_su_ev-t_glw_ex_ev)           "check: evaporating power from the brine temperature rise (original 4.2.4) [W]"

@@ -21,7 +21,7 @@ A sixth correlation of the `ht` family, `dP_Zukauskas`, is **not** translated
 | **Source** | [`ht`](https://github.com/CalebBell/ht) 1.2.0, commit `85e0ee6` (2025-12-07), file `ht/conv_tube_bank.py` (MIT); inventory row `HT-017` of `sources/ht/inventory.csv` |
 | **Authors** | the authors of the correlations (see the comment block of each function); the library itself: Caleb Bell and Contributors |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0 — **verified** against `ht` 1.2.0 (23 values, max deviation 3.8·10⁻¹³) |
+| **CoolSolve** | **verified** against `ht` 1.2.0 (23 values, max deviation 3.8·10⁻¹³) |
 
 ## Problem statement
 
@@ -221,8 +221,8 @@ K. J. Bell (1963, 1988), E. U. Schlünder (1987), R. W. Serth (2014).
 - **Digitized curves** (`features` = `table-lookup`; rule 7 of
   `sources/ht/README.md` §7): the friction factor of the Kern method is
   implemented **exactly** as the cubic B-spline of `ht` in EES arithmetic
-  (Cox-de Boor), so no table and no `LOOKUP` inside the function is needed
-  (`CS-GAP-LOOKUP-PROC` is therefore not hit). For `Jc`, `Jl` and `Jb` the
+  (Cox-de Boor), so no table and no `LOOKUP` inside the function is needed.
+  For `Jc`, `Jl` and `Jb` the
   **plain forms that the original documents publish** are used: the Chebyshev
   fit of `ht` for `Jc` (its maximum error is 0.142% and its average error
   0.04%, i.e. within the error of the digitization of the graph — `ht` itself
@@ -235,17 +235,15 @@ K. J. Bell (1963, 1988), E. U. Schlünder (1987), R. W. Serth (2014).
   correction are bivariate splines of four digitized graphs with 104 to 228
   coefficients each (`ht/conv_tube_bank.py`), they have no published closed form
   and `ht` offers no polynomial alternative, so neither a lookup table inside the
-  function (`CS-GAP-LOOKUP-PROC`, registered) nor a spline expanded into EES
-  equations (several hundred per branch) is acceptable in a function library.
+  function nor a spline expanded into EES equations (several hundred per
+  branch) is acceptable in a function library.
 - The boolean options `laminar` are **1/0 integer arguments** and the choice of
   the coefficient is made with an EES `IF` block (a non-smooth regime switch,
   not a function call).
 - The conditions of `dP_Kern` are written with the **block** form
   `IF … THEN … ELSE … ENDIF` instead of the single-line `IF (c) THEN a ELSE b`,
-  because CoolSolve 0.3.0 evaluates the single-line form wrongly inside a
-  `FUNCTION` body (`CS-BUG-IF-SINGLELINE`, registered with a minimal
-  reproducer). Both forms are valid EES with the same behaviour, so the native
-  file needs no runnable variant.
+  which CoolSolve does not evaluate correctly inside a `FUNCTION` body
+  (`CS-BUG-IF-SINGLELINE`). Both forms are valid EES with the same behaviour.
 - **Selectors not translated**: none of the seven functions of the family is a
   dispatcher; `dP_Zukauskas` is excluded for the reason above.
 - **Level**: equations 67 → 1 point (50–300), largest block 1 → 0, functions
@@ -268,10 +266,10 @@ K. J. Bell (1963, 1988), E. U. Schlünder (1987), R. W. Serth (2014).
 - CoolSolve cannot yet import the functions of a library file with
   `$INCLUDE library:…` (`CS-FEAT-IMPORT`, planned): a model that uses these
   correlations copies the definitions for now.
-- `CS-BUG-IF-SINGLELINE` (registered by this card, not blocking): the
-  single-line `IF (c) THEN a ELSE b` inside a `FUNCTION` body returns the
-  `THEN`-branch value whatever the condition. All the conditionals of this file
-  use the block form, which is evaluated correctly.
+- `CS-BUG-IF-SINGLELINE` (not blocking this file): the single-line
+  `IF (c) THEN a ELSE b` inside a `FUNCTION` body returns the `THEN`-branch
+  value whatever the condition. All the conditionals of this file use the block
+  form, which is evaluated correctly.
 
 ## Related models
 

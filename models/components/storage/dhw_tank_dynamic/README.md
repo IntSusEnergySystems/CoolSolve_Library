@@ -16,7 +16,7 @@ EES `INTEGRAL`/`$IntegralTable` time-integration model.
 | **Source** | ULiège — course *Thermodynamique appliquée et introduction aux machines thermiques* (MECA0002-1), repetition 3, exercise 3 (EES file `R3_E3_2022.EES`) |
 | **Authors** | N. Paulus, B. Dechesne (ULiège repetition assistants, per the source inventory and its companion files) |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0@4cd0ca5 (branch `fix/library-gaps-2`) — **verified** against the EES integral table (18 001 points, max. 6.1·10⁻⁵). Needs the 5-argument `IF`, symbolic `INTEGRAL` limits, `;`-separated `$IntegralTable` columns and a correct step count (`CS-GAP-IF5`, `CS-GAP-INTEGRAL-LIMITS`, `CS-BUG-INTEGRAL-TABLE-SEP`, `CS-BUG-INTEGRAL-MAXSTEPS`, fixed in CoolSolve `fix/library-gaps-2`): CoolSolve v0.3.0 does not run the file |
+| **CoolSolve** | **verified** against the EES integral table (18 001 points, max. 6.1·10⁻⁵). The native file uses the 5-argument `IF`, symbolic `INTEGRAL` limits and `;`-separated `$IntegralTable` columns |
 
 ## Problem statement
 
@@ -57,9 +57,7 @@ $$\dot Q_{res} + \dot Q_{amb} + \dot Q_{tap} = \frac{dU}{d\tau},
 ## How to run
 
 The native file `dhw_tank_dynamic.eescode` keeps the EES syntax (5-argument
-`IF`, symbolic limits `tau_1`/`tau_2`, `;`-separated `$IntegralTable`) and needs
-a CoolSolve version with the four gaps listed above fixed (branch
-`fix/library-gaps-2`; CoolSolve v0.3.0 stops on the 5-argument `IF`). Open it in
+`IF`, symbolic limits `tau_1`/`tau_2`, `;`-separated `$IntegralTable`). Open it in
 the CoolSolve GUI and press *Solve*, or from a terminal:
 
 ```bash
@@ -67,8 +65,7 @@ coolsolve ./dhw_tank_dynamic.eescode    # ~1.5 min, 18 000 RK4 steps of 1 s
 ```
 
 No `coolsolve.conf` is needed: the explicit step of the `INTEGRAL` call (1 s)
-fixes the 18 000 steps (CoolSolve v0.3.0 stopped silently at 4000 s with the
-default `integralMaxSteps`). The trajectory is written every second to
+fixes the 18 000 steps. The trajectory is written every second to
 `dhw_tank_dynamic-integral.csv` (18 001 rows, a regenerated output not kept in
 the folder; the same table is stored in the `.sol` baseline) and shown in the GUI
 *Integral* tab.
@@ -98,12 +95,10 @@ import; the columns are mutually consistent to ~1e-12: `dU/dτ = Q̇_res +
 Q̇_tap + Q̇_amb`, `Q̇_amb = −20·(T−20)`, `Q̇_tap = −ṁ·4186·(T−12)` and the
 schedules match the `IF` equations exactly).
 
-The **native file** (CoolSolve `fix/library-gaps-2` @4cd0ca5) is the verified
-file. It was compared with this reference over **all 18 001 points** (RK4,
-1-s step; the columns `T_tank`, `Q_dot_amb`, `Q_dot_tap` and `Q_dot_res` were
-re-decoded from the plot objects of the source file for this re-check, `dU/dτ`
-and `M_dot_in_tank` rebuilt from them); its scalars and its trajectory equal
-those of the former runnable variant (removed):
+The **native file** is the verified file. It was compared with this reference
+over **all 18 001 points** (RK4, 1-s step; the columns `T_tank`, `Q_dot_amb`,
+`Q_dot_tap` and `Q_dot_res` were decoded from the plot objects of the source
+file, `dU/dτ` and `M_dot_in_tank` rebuilt from them):
 
 | Quantity | max. relative deviation |
 |---|---:|
@@ -156,41 +151,14 @@ Source file (EES X10.836, comments in French), collection of S. Quoilin:
   `IF` schedules. The stored main solution is stale (`T_tank = 1`,
   `T_out_tank = 31.07` from an older equation set; `M_tank`, `v_tank`,
   `tau = 18 000` valid).
-- **2026-10-05 — runnable variant** `dhw_tank_dynamic_coolsolve.eescode`
-  (removed on 2026-10-10, see below):
-  identical physics and 1-s step, three syntactic transcriptions — the EES
-  5-argument `IF(A,B,X,Y,Z)` replaced by the 3-argument `if(cond,a,b)` with
-  the condition shifted by half a step (`if(3600.5-tau,10000,0)` is true for
-  τ ≤ 3600 s, exactly the EES schedule at the 1-s grid; gap
-  `CS-GAP-IF5`); the symbolic limits `tau_1`, `tau_2` replaced by their
-  literal values (gap `CS-GAP-INTEGRAL-LIMITS`); `$IntegralTable` columns
-  space-separated (`CS-BUG-INTEGRAL-TABLE-SEP`). `coolsolve.conf` raises
-  `integralMaxSteps` because the default 1000 silently truncates the run at
-  τ = 4000 s with a SUCCESS message (`CS-BUG-INTEGRAL-MAXSTEPS`). Verified
-  against the EES integral table (see *Verification*).
-- **Level 1** (score 1: only the *dynamics* criterion; the `coolsolve.conf`
-  setting works around a CoolSolve bug, not an intrinsic difficulty; in line
-  with the inventory guess).
-- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @59b2862 (T-RECHECK, `CS-GAP-IF5` closed).** The five-argument `IF` of the native file is now implemented; the native file is still blocked, the first error now comes from another gap (*Non-constant integration limits are not yet supported*, `CS-GAP-INTEGRAL-LIMITS`). The variant is kept.
-- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @4cd0ca5 (T-RECHECK, `CS-GAP-INTEGRAL-LIMITS`, `CS-BUG-INTEGRAL-TABLE-SEP` and `CS-BUG-INTEGRAL-MAXSTEPS` closed).** The native file now solves (`SUCCESS`, 18 000 steps, 1 min 31 s, without `coolsolve.conf`): its `.sol` (19 common scalars) and its 18 001-row trajectory equal those of the former runnable variant (relative difference 0), and the comparison with the EES integral table gives the same deviations (see *Verification*). The variant `dhw_tank_dynamic_coolsolve.eescode`, its `.sol` and `coolsolve.conf` were removed; the native file is the verified file and the `.sol` baseline. The file header was updated (status line; the `;`-separated `$IntegralTable` comment).
+- **Level 1** (score 1: only the *dynamics* criterion; in line with the
+  inventory guess).
 
-## Limitations and CoolSolve gaps
+## Limitations
 
 - Fully mixed tank (no stratification), constant water cp, constant tank
   mass, UA_amb independent of temperature — the level of detail of the
   exercise.
-- CoolSolve v0.3.0 could not run the native file; the four gaps are **closed in
-  CoolSolve `fix/library-gaps-2`** (see CoolSolve `docs/model_library_support.md`
-  §7), `missing_features` is empty:
-  - `CS-GAP-IF5` (@59b2862) — the EES intrinsic `IF(A,B,X,Y,Z)` (5 arguments)
-    needed by the heater and draw schedules (CoolSolve v0.3.0: "Unknown or
-    unsupported function: if with 5 arguments");
-  - `CS-GAP-INTEGRAL-LIMITS` (@4cd0ca5) — `INTEGRAL` limits had to be
-    constants; the model uses the variables `tau_1`, `tau_2`;
-  - `CS-BUG-INTEGRAL-TABLE-SEP` (@4cd0ca5) — `;`-separated `$IntegralTable`
-    columns silently produced empty columns;
-  - `CS-BUG-INTEGRAL-MAXSTEPS` (@4cd0ca5) — the integration silently stopped at
-    `integralMaxSteps*4` steps before the final time and reported SUCCESS.
 - Solve time ≈ 1.5 min (18 000 RK4 steps, one property call per step for the
   initial state only).
 

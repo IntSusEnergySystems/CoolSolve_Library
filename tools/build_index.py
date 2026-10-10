@@ -8,12 +8,17 @@ The folder tree is the single source of truth: every model folder contains a
   * validates every model folder (required files and fields, unique IDs,
     category declared in taxonomy.json, allowed kind/level/status values);
   * regenerates, at the repository root:
-      library.csv    one row per model (the "large model library table")
-      library.json   same content + function index + snapshot identity, read by
-                     CoolSolve, which embeds the library at compile time
-      functions.csv  every FUNCTION/PROCEDURE defined in a library model
-      CATALOG.md     human-readable catalogue grouped by category
+      library.json   the index: one record per model, every FUNCTION/PROCEDURE,
+                     the CoolSolve gaps the models list, and the snapshot identity
+                     (read by CoolSolve, which embeds the library at compile time)
+      library.html   the dashboard: sortable/filterable tables of the models,
+                     functions and CoolSolve gaps (self-contained, opens from disk;
+                     template tools/library_dashboard.html)
       redirects.csv  previous paths of moved/renamed models -> current ID
+
+The gap descriptions are read from the CoolSolve register
+(docs/model_library_support.md of the CoolSolve checkout next to this
+repository, or --register PATH); without it the dashboard shows the IDs only.
 
 Model folders contain CoolSolve files and documentation only: source files
 (.ees, .lib, .lkt, .py, notebooks, archives) and `original/` or `reference/`
@@ -34,12 +39,16 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 MODELS = ROOT / "models"
+REPO_URL = "https://github.com/IntSusEnergySystems/CoolSolve_Library"
+REGISTER_URL = "https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md"
+DEFAULT_REGISTER = ROOT.parent / "CoolSolve" / "docs" / "model_library_support.md"
 
 KINDS = {"steady": "⚙️ Steady-state", "dynamic": "⏱️ Dynamic",
          "optimization": "🎯 Optimisation", "function": "🧩 Function library"}
@@ -79,12 +88,6 @@ def snapshot_identity(model_folders):
         n, size = n + 1, size + len(data)
     return "sha256:" + h.hexdigest()[:16], n, size
 
-COLUMNS = ["id", "name", "title", "category", "kind", "level", "status", "figures", "summary", "fluids",
-           "tags", "n_equations", "largest_block", "origin_type", "source", "source_path",
-           "authors", "license", "url", "missing_features", "related", "coolsolve_version",
-           "verified_on", "path", "main_file"]
-
-
 def load_taxonomy():
     tax = json.loads((ROOT / "taxonomy.json").read_text(encoding="utf-8"))
     paths = {}
@@ -115,7 +118,7 @@ VERSION_RE = re.compile(r"^\d+\.\d+\.\d+(\+[\w./-]+)?@[0-9a-f]{7,}$")
 def check_links_and_versions(rows):
     """Warnings on conventions of workflow section 3 (step 7) that the validation does not enforce."""
     known = {r["id"] for r in rows}
-    related = {r["id"]: [x for x in r["related"].split(";") if x] for r in rows}
+    related = {r["id"]: r["related"] for r in rows}
     prose = sorted(i for i, rel in related.items() if any(not ID_RE.match(x) for x in rel))
     if prose:
         print("warning: 'related' must hold model ids only (prose belongs in the README): " + ", ".join(prose))
@@ -185,10 +188,14 @@ def figures_of(folder):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--check", action="store_true", help="validate only, write nothing")
+    ap.add_argument("--register", type=Path,
+                    default=Path(os.environ.get("COOLSOLVE_REGISTER", DEFAULT_REGISTER)),
+                    help="CoolSolve gap register (default: %(default)s)")
     args = ap.parse_args(argv)
 
     tax, tax_paths = load_taxonomy()
     errors, rows, funcs, redirects, seen = [], [], [], [], {}
+    last_update = ""
     for folder in find_models():
         try:
             meta = json.loads((folder / "model.json").read_text(encoding="utf-8"))
@@ -207,13 +214,13 @@ def main(argv=None):
             "id": meta["id"], "name": meta.get("name"), "title": meta.get("title"),
             "category": folder.parent.relative_to(MODELS).as_posix(),
             "kind": meta.get("kind"), "level": meta.get("level"), "status": meta.get("status"),
-            "summary": meta.get("summary"), "fluids": ";".join(meta.get("fluids", [])),
-            "tags": ";".join(meta.get("tags", [])), "n_equations": s.get("n_equations", ""),
+            "summary": meta.get("summary"), "fluids": meta.get("fluids", []),
+            "tags": meta.get("tags", []), "n_equations": s.get("n_equations", ""),
             "largest_block": s.get("largest_block", ""), "origin_type": o.get("type"),
             "source": o.get("source"), "source_path": o.get("source_path", ""),
-            "authors": "; ".join(o.get("authors", [])), "license": o.get("license"),
-            "url": o.get("url", ""), "missing_features": ";".join(meta.get("missing_features", [])),
-            "related": ";".join(meta.get("related", [])),
+            "authors": o.get("authors", []), "license": o.get("license"),
+            "url": o.get("url", ""), "missing_features": meta.get("missing_features", []),
+            "related": meta.get("related", []),
             "coolsolve_version": v.get("coolsolve_version", ""), "verified_on": v.get("date", ""),
             "path": path, "main_file": meta.get("main_file"), "figures": len(figures_of(folder)),
         })
@@ -222,6 +229,8 @@ def main(argv=None):
             for kind, name, sig in functions_in(main_file):
                 funcs.append({"function": name, "type": kind, "signature": sig,
                               "model_id": meta["id"], "path": path + "/" + meta["main_file"]})
+        for h in meta.get("history", []):
+            last_update = max(last_update, str(h.get("date", "")))
         for old in meta.get("previous_paths", []):
             redirects.append({"previous_path": old, "id": meta["id"], "current_path": path})
 
@@ -253,7 +262,7 @@ def main(argv=None):
     content_hash, n_files, n_bytes = snapshot_identity([ROOT / r["path"] for r in rows])
     print("snapshot: %d files, %.1f MB, %s" % (n_files, n_bytes / 1e6, content_hash))
     check_links_and_versions(rows)
-    todo_authors = [r["id"] for r in rows if "TBD" in r["authors"]]
+    todo_authors = [r["id"] for r in rows if any("TBD" in a for a in r["authors"])]
     todo_figures = [r["id"] for r in rows if not r["figures"] and r["status"] in ("verified", "runs", "modified")]
     if todo_authors:
         print("maintainer: authors to complete (TBD): " + ", ".join(todo_authors))
@@ -263,53 +272,96 @@ def main(argv=None):
     if args.check:
         return 1 if errors else 0
 
-    with open(ROOT / "library.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, COLUMNS)
-        w.writeheader()
-        w.writerows(rows)
+    gaps = read_register(args.register)
+    used = sorted({g for r in rows for g in r["missing_features"]})
+    unknown_gaps = [g for g in used if gaps and g not in gaps]
+    if unknown_gaps:
+        print("warning: missing_features not found in the CoolSolve register: " + ", ".join(unknown_gaps))
+    funcs.sort(key=lambda r: r["function"].lower())
+    snapshot = {"content_hash": content_hash, "files": n_files, "bytes": n_bytes, "models": len(rows),
+                "functions": len(funcs), "taxonomy_version": tax.get("version")}
     (ROOT / "library.json").write_text(json.dumps(
-        {"snapshot": {"content_hash": content_hash, "files": n_files, "bytes": n_bytes,
-                      "models": len(rows), "functions": len(funcs),
-                      "taxonomy_version": tax.get("version")},
-         "models": rows,
-         "functions": sorted(funcs, key=lambda r: r["function"].lower())},
+        {"snapshot": snapshot, "models": rows, "functions": funcs, "gaps": gaps},
         indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
-    with open(ROOT / "functions.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, ["function", "type", "signature", "model_id", "path"])
-        w.writeheader()
-        w.writerows(sorted(funcs, key=lambda r: r["function"].lower()))
     with open(ROOT / "redirects.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, ["previous_path", "id", "current_path"])
         w.writeheader()
         w.writerows(redirects)
-    write_catalog(rows, tax, tax_paths)
+    categories = {}
+    for path, node in tax_paths.items():
+        top = path.split("/")[0]
+        categories[path] = node["title"] if path == top else tax_paths[top]["title"] + " › " + node["title"]
+    write_dashboard({
+        "generated": last_update, "snapshot": snapshot, "repo_url": REPO_URL, "register_url": REGISTER_URL,
+        "register_found": bool(gaps),
+        "labels": {"kinds": KINDS, "levels": {str(k): v for k, v in LEVELS.items()}, "statuses": STATUSES},
+        "taxonomy": tax["categories"], "categories": categories, "models": rows, "functions": funcs, "gaps": gaps})
     return 1 if errors else 0
 
 
-def write_catalog(rows, tax, tax_paths):
-    L = ["# CoolSolve Library — Catalogue", "",
-         "*Generated by `tools/build_index.py` — do not edit by hand.* "
-         "Legend: see [docs/taxonomy.md](docs/taxonomy.md).", "",
-         "| Models | Verified | Runs | Blocked / failing | Documented only |",
-         "|---:|---:|---:|---:|---:|",
-         "| %d | %d | %d | %d | %d |" % (
-             len(rows), sum(r["status"] == "verified" for r in rows),
-             sum(r["status"] in ("runs", "modified") for r in rows),
-             sum(r["status"] in ("blocked", "failing") for r in rows),
-             sum(r["status"] == "stub" for r in rows)), ""]
-    for top in tax["categories"]:
-        keys = [top["key"]] + [top["key"] + "/" + c["key"] for c in top.get("children", [])]
-        sel = [r for r in rows if r["category"] in keys]
-        if not sel:
+REGISTER_SECTIONS = {"3": "features", "4": "gaps", "5": "bugs", "7": "closed"}
+KIND_OF = {"GAP": "gap", "BUG": "bug", "FEAT": "feature", "DOC": "documentation"}
+
+
+def github_anchor(heading):
+    """Anchor GitHub gives to a Markdown heading."""
+    return re.sub(r"\s", "-", re.sub(r"[^\w\s-]", "", heading.strip().lower()))
+
+
+def plain(cell):
+    """A register cell as short plain Markdown: links unwrapped, escaped pipes restored."""
+    cell = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", cell.replace("\\|", "|")).strip()
+    return re.sub(r"\s+", " ", cell)
+
+
+def first_sentence(text, limit=260):
+    parts = re.split(r"(?<=[.!?])\s+(?=[A-Z(`*])", text)
+    out = parts[0]
+    if len(out) < 30 and len(parts) > 1:
+        out += " " + parts[1]
+    if len(out) > limit:
+        out = out[:limit].rsplit(" ", 1)[0] + " …"
+    if out.count("`") % 2:          # never leave an inline code span open
+        out = out.replace("`", "")
+    return out
+
+
+def read_register(path):
+    """ID -> {kind, state, priority, text, detail, fixed_in, anchor} from the CoolSolve register."""
+    if not path or not Path(path).is_file():
+        print("warning: CoolSolve register not found (%s): the dashboard shows gap IDs only" % path)
+        return {}
+    gaps, section, anchor = {}, None, ""
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        m = re.match(r"^## (\d+)\.", line)
+        if m:
+            section, anchor = REGISTER_SECTIONS.get(m.group(1)), github_anchor(line[3:])
             continue
-        L += ["## %s" % top["title"], "",
-              "| ID | Model | Category | Level | Kind | Status |", "|---|---|---|---|---|---|"]
-        for r in sel:
-            L.append("| `%s` | [%s](%s/README.md) | %s | %s | %s | %s |" % (
-                r["id"], r["title"], r["path"], tax_paths[r["category"]]["title"],
-                LEVELS[r["level"]], KINDS[r["kind"]], STATUSES[r["status"]]))
-        L.append("")
-    (ROOT / "CATALOG.md").write_text("\n".join(L), encoding="utf-8")
+        if not section or not line.startswith("| `CS-"):
+            continue
+        cells = [c.strip() for c in re.split(r"(?<!\\)\|", line.strip())[1:-1]]
+        gid = cells[0].strip("`")
+        if not GAP_RE.match(gid) or len(cells) < 2:
+            continue
+        prio = next((c for c in reversed(cells[1:]) if re.match(r"^P[123]\b", c)), "")
+        entry = {"kind": KIND_OF[gid.split("-")[1]], "state": "closed" if section == "closed" else "open",
+                 "priority": plain(prio)[:60], "text": first_sentence(plain(cells[1])), "detail": "",
+                 "fixed_in": "", "anchor": anchor}
+        if section == "gaps" and len(cells) > 2:
+            entry["detail"] = first_sentence(plain(cells[2]), 200)
+        if section == "closed":
+            entry["priority"], entry["fixed_in"] = "", plain(cells[2]) if len(cells) > 2 else ""
+        if gid not in gaps or section == "closed":
+            gaps[gid] = entry
+    return gaps
+
+
+def write_dashboard(data):
+    """library.html: the template with the index inlined (no network access needed)."""
+    template = (ROOT / "tools" / "library_dashboard.html").read_text(encoding="utf-8")
+    payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    (ROOT / "library.html").write_text(template.replace("/*__LIBRARY_DATA__*/", payload), encoding="utf-8")
 
 
 if __name__ == "__main__":

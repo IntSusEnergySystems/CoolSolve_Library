@@ -19,7 +19,7 @@ EES `INTEGRAL` function used for a non-time integral.
 | **Source** | ULiège — course *Thermodynamique appliquée* (MECA0002), repetition 2, exercise 3 (EES file `R2_E3_2022.EES`) |
 | **Authors** | TBD (ULiège course MECA0002 repetition team) |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0@4cd0ca5 (branch `fix/library-gaps-2`) — **verified** against the EES stored solution (12 common variables, max. 9.0e-08 on the integral). Needs symbolic `INTEGRAL` limits and a factor in front of the call (`CS-GAP-INTEGRAL-LIMITS`, `CS-BUG-INTEGRAL-FACTOR`, fixed in CoolSolve `fix/library-gaps-2`): CoolSolve v0.3.0 does not run the file |
+| **CoolSolve** | **verified** against the EES stored solution (12 common variables, max. 9.0e-08 on the integral). The native file uses symbolic `INTEGRAL` limits and a factor in front of the call |
 
 ## Problem statement
 
@@ -69,10 +69,7 @@ the surroundings, which do work on it.
 
 The native file `nonideal_gas_isothermal_work.eescode` keeps the EES syntax
 (the factor `-N` in front of `integral(…)`, the symbolic limits `v1_bar`,
-`v2_bar`) and needs a CoolSolve version with `CS-GAP-INTEGRAL-LIMITS` and
-`CS-BUG-INTEGRAL-FACTOR` fixed (branch `fix/library-gaps-2`; CoolSolve v0.3.0
-rejects the limits and would ignore the factor). Open it in the CoolSolve GUI
-and press *Solve*, or from a terminal:
+`v2_bar`). Open it in the CoolSolve GUI and press *Solve*, or from a terminal:
 
 ```bash
 coolsolve ./nonideal_gas_isothermal_work.eescode
@@ -101,11 +98,9 @@ regenerated output and is not kept in the folder.
 
 ## Verification
 
-The **native file** `nonideal_gas_isothermal_work.eescode` (CoolSolve
-`fix/library-gaps-2` @4cd0ca5) is the verified file: it gives the same values
-as the former runnable variant (12 digits on `W_b_EES`, `W_b_hand`, `P`), and
+The **native file** `nonideal_gas_isothermal_work.eescode` is the verified file:
 its `.sol` was compared with the solution stored in the original EES file
-(re-extracted with `tools/ees_extract.py` for this re-check):
+(extracted with `tools/ees_extract.py`):
 
 ```bash
 python3 tools/compare_solution.py nonideal_gas_isothermal_work.sol \
@@ -179,34 +174,6 @@ Source file (EES 10.836, comments in French), collection of S. Quoilin:
   step 5), which also makes the answer independent of the `T` unit setting.
   Comments translated to English (paraphrasing the original's own comments),
   standard header added, no equation changed otherwise.
-- **2026-10-05 — runnable variant** `nonideal_gas_isothermal_work_coolsolve.eescode`
-  (removed on 2026-10-10, see below): the native file stays in valid EES and is **not** rewritten around the gaps.
-  The variant changes exactly two things, both forced by CoolSolve v0.3.0, and
-  uses no CoolSolve-only syntax (it is valid EES):
-  1. the factor `-N` is moved out of the integral call —
-     `W_b_int = 0 + integral(P, v_bar, 10, 20, 0.01)` then
-     `W_b_EES = -N*W_b_int` — because CoolSolve silently ignores a factor
-     multiplying an `INTEGRAL` call (`CS-BUG-INTEGRAL-FACTOR`). Measured on the
-     native form: the same run with the limits inlined returns
-     **+2 016 489 J** (the bare integral) instead of −403 298 J, with
-     *SUCCESS* and no warning — the split form returns the correct value;
-  2. the integration limits `v1_bar` and `v2_bar` are inlined as the literal
-     constants `10` and `20` (they are constant expressions `V1/N` and `V2/N`)
-     because CoolSolve rejects symbolic limits
-     (`CS-GAP-INTEGRAL-LIMITS`, error *"Non-constant integration limits are not
-     yet supported"*). If `N`, `V1` or the ratio `V2/V1` are changed, the two
-     limits must be updated.
-  Variable names, constants, input values and all other equations are identical
-  to the native file; the added `W_b_int` is the only new symbol.
-- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @4cd0ca5
-  (T-RECHECK, `CS-GAP-INTEGRAL-LIMITS` and `CS-BUG-INTEGRAL-FACTOR` closed).**
-  The native file now solves (`SUCCESS`, 1000 integration steps): `W_b_EES` =
-  −403 297.796 J, `W_b_hand` = −403 297.796 J, `P` = 145 470 Pa, i.e. the
-  `.sol` values of the former variant on the 13 common variables (relative
-  difference 0). The variant `nonideal_gas_isothermal_work_coolsolve.eescode`
-  and its `.sol` were removed; the native file is the verified file and the
-  `.sol` baseline. The file header was updated (the variant paragraph replaced
-  by a status line).
 - **Duplicate group DG-0097** (2 files, triaged per workflow §2):
   - `TM-0405` (`save/R2_E3_2022.EES`, `duplicate`): the stripped-equation diff
     against TM-0399 is identical — all 12 equations match character by
@@ -224,24 +191,9 @@ Source file (EES 10.836, comments in French), collection of S. Quoilin:
   `INTEGRAL` call to its dynamic solver, which is why the `-d` analysis reports
   a non-square system and 0 blocks.
 
-## Limitations and CoolSolve gaps
+## Limitations
 
-CoolSolve v0.3.0 had two limitations that blocked the **native** file; both
-are **closed in CoolSolve `fix/library-gaps-2` @4cd0ca5** (CoolSolve
-`docs/model_library_support.md` §7), `missing_features` is empty:
-
-- `CS-GAP-INTEGRAL-LIMITS` — symbolic `INTEGRAL` limits (variables or
-  expressions) were rejected: the native call
-  `integral(P, v_bar, v1_bar, v2_bar, 0.01)` stopped the solver with
-  *"Non-constant integration limits are not yet supported (resolve parameters
-  before the INTEGRAL call)"*, although `v1_bar = V1/N` and `v2_bar = V2/N` are
-  constants of the model. They are now accepted.
-- `CS-BUG-INTEGRAL-FACTOR` — a factor multiplying an `INTEGRAL(...)` call was
-  silently ignored. The native call `W_b_EES = -N*integral(...)` returned the
-  bare integral ∫P dv = +2 016 489 J instead of −N·∫P dv = −403 298 J,
-  reporting *SUCCESS* with no warning. The factor is now applied.
-
-Model limits, unrelated to CoolSolve:
+Model limits:
 
 - the gas is fictitious: only $v(P + k/v^2) = R\,T$ is known, no real fluid
   corresponds to it, so the molar basis cannot be left;
@@ -257,7 +209,7 @@ Model limits, unrelated to CoolSolve:
 
 - `CSL-0010` *two_stage_steam_compressor_intercooling*: also a `INTEGRAL` model
   of the same course (limits that are variables, factor in front of the call),
-  verified on its native file by the same re-check.
+  verified on its native file.
 - `CSL-0044` *rigid_tank_water_mixture*: sibling introductory exercise of the
   same course (repetition 1), a property/quality problem solved with the real
   fluid Water.

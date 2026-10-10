@@ -3,23 +3,13 @@
    CoolSolve Library model CSL-0041 - runnable variant of
    ice_storage_tank_discharge_phase_change
   -----------------------------------------------------------------------------
-   Re-check 2026-10-10 (CoolSolve fix/library-gaps-2 @4cd0ca5): CS-GAP-IF5,
-   CS-GAP-INTEGRAL-LIMITS, CS-BUG-INTEGRAL-TABLE-SEP, CS-BUG-INTEGRAL-MAXSTEPS
-   and CS-BUG-INTEGRAL-TABLE-CASE are closed and no longer apply; only the Water
-   property calls (CS-BUG-WATER-NEAR-FREEZING) still force this variant. The
-   list below is the history of the transcription.
+   Only the Water property calls (CS-BUG-WATER-NEAR-FREEZING) still force this
+   variant; the list below describes the transcription.
 
    Same model, same inputs, same physics and same 10-s tabulation step as
    ice_storage_tank_discharge_phase_change.eescode, transcribed in the
-   CoolSolve v0.3.0 dialect because the native EES constructs below are
-   blocked (see the README of CSL-0041):
-     - the symbolic integration limits tau_1, tau_2 are replaced by their
-       literal values 0 and 50000 (CS-GAP-INTEGRAL-LIMITS);
-     - the four EES 5-argument IF(A,B,X,Y,Z) intrinsics are replaced by the
-       3-argument if(cond, a, b) (true when cond > 0), comparing u with the
-       threshold (u - u_ice_0); the u = u_ice_0 point of the trajectory
-       returns t_ice_0 where EES returns 0 (single grid point, no effect on
-       the trajectory) (CS-GAP-IF5; CoolSolve-only syntax, not valid EES);
+   CoolSolve dialect because the native EES constructs below are blocked (see
+   the README of CSL-0041):
      - the three Water property calls at or below 0 °C return NaN in
        CoolProp and are replaced by constants: u_ice_0 keeps the value EES
        stored for the same call in the sibling solution of the same
@@ -27,11 +17,6 @@
        v_ice and v_liq take the values of ice (916.7 kg/m^3) and liquid
        water at 0 °C; the original calls are kept in comments
        (CS-BUG-WATER-NEAR-FREEZING);
-     - the $IntegralTable columns are space-separated instead of comma-
-       separated (CS-BUG-INTEGRAL-TABLE-SEP), and the t_w column is written
-       T_w, the casing of the first occurrence of the variable in the file:
-       the column matching is case-sensitive and a t_w column stays silently
-       empty otherwise (CS-BUG-INTEGRAL-TABLE-CASE).
    Solve time is a few seconds (6000 steps of 8.33 s, rows every second step);
    the trajectory is written to
    ice_storage_tank_discharge_phase_change_coolsolve-integral.csv
@@ -65,8 +50,8 @@ NTU = AU/C_dot                   "number of transfer units [-]"
 C_dot = M_dot*c_p                "glycol heat capacity rate [W/K]"
 
 "!Integration of the internal energy per kg of water:"
-{Original: DELTAu = INTEGRAL(u_dot, tau, tau_1, tau_2) with tau_1 = 0,
- tau_2 = 50000; literal limits (CS-GAP-INTEGRAL-LIMITS).}
+{Original EES: DELTAu = INTEGRAL(u_dot, tau, tau_1, tau_2) with tau_1 = 0,
+ tau_2 = 50000.}
 DELTAu = INTEGRAL(u_dot, tau, 0, 50000)   "change of u between 0 and 50 000 s [J/kg]"
 DELTAu = u - u_1                 "same change, through the state variable u [J/kg]"
 u_1 = u_ice_0                    "initial state: all ice at t_ice_0 [J/kg]"
@@ -77,8 +62,8 @@ u_1 = u_ice_0                    "initial state: all ice at t_ice_0 [J/kg]"
 u_ice_0 = -333451.5              "internal energy of ice at t_ice_0 [J/kg]"
 P = 101325                       "tank pressure (atmospheric) [Pa]"
 
-"!Phase-change temperatures (3-argument if(cond, a, b): a if cond > 0, else b;
- CoolSolve-only syntax, not valid EES - CS-GAP-IF5)"
+"!Phase-change temperatures (original EES: 5-argument IF of the native file;
+ here 3-argument if(cond, a, b): a if cond > 0, else b)"
 t_ice_0 = -0.01                  "initial (subcooled ice) temperature [°C]"
 t_liq_0 = 0                      "temperature of the liquid at u_liq_0 [°C]"
 u_liq_0 = 0                      "internal energy of the liquid at the melting point [J/kg]"
@@ -110,6 +95,4 @@ v_liq = 0.001000                 "specific volume of liquid water at 0 °C [m^3/
 $IntegralTable tau:10 x_ice u T_w Q_dot_br_sto DELTAu t_melt v t_ice t_liq
 {Trajectory every 10 s from 0 to 50 000 s, written to
  ice_storage_tank_discharge_phase_change_coolsolve-integral.csv; plot it in
- the CoolSolve GUI Integral tab. T_w (capital, as in the Q_dot equation
- above): the column matching is case-sensitive
- (CS-BUG-INTEGRAL-TABLE-CASE).}
+ the CoolSolve GUI Integral tab.}

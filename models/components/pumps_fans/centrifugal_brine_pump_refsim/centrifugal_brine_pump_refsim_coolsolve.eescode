@@ -6,11 +6,9 @@
   parse/evaluate (native file kept in valid EES, see its header). This variant
   changes ONLY what the registered gaps force:
 
-  1. CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE, CS-GAP-STRING-ARRAY and
-     CS-GAP-LOOKUP-PROC all break the BRINEPROP procedure (ELSE IF ladders
-     and ENDIF;ENDIF groups, Uppercase$, string-array reads, LOOKUP inside a
-     procedure; CS-GAP-LOOKUP-PROC is closed in CoolSolve fix/library-gaps-2,
-     so the flattening below is no longer forced by it). It is split in two:
+  1. CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE and CS-GAP-STRING-ARRAY break the
+     BRINEPROP procedure (ELSE IF ladders and ENDIF;ENDIF groups, Uppercase$,
+     string-array reads). It is split in two:
      - a selector PROCEDURE BRINEPROP_SELECT(Conc,Fl$:Fl_brine) holding
        the 22 concentration range checks and the 11-branch fluid ladder,
        rewritten as sequential single-line IF statements (conditions
@@ -27,11 +25,9 @@
        output=Funkt/1000 for SpecHeat) are kept exactly as in the original;
        the procedure-internal variables are renamed per call (<variable>_d,
        <variable>_cp).
-  2. CS-GAP-CALL-EXPR-OUT: the expression output of the original call
-     (:c_p_pump/1000) becomes the auxiliary variable c_p_pump_kJ followed
-     by c_p_pump = c_p_pump_kJ*1000 (same value). This gap is closed in
-     CoolSolve fix/library-gaps-2 (0.3.0@57b22d3): the native expression
-     output is accepted, so this change is no longer forced.
+  2. the expression output of the original call (:c_p_pump/1000) becomes the
+     auxiliary variable c_p_pump_kJ followed by c_p_pump = c_p_pump_kJ*1000
+     (same value).
 
   Everything else - variable names, equations, defaults, units - is as in
   the native file. The companion tables of this variant
@@ -175,7 +171,7 @@ ym_cp=lookup('Brine2',Fl_brine,2)
 x_cp=X_brine-xm_cp
 y_cp=t_su_pump-ym_cp
 Funkt_cp=c_cp[1]+(c_cp[2]*y_cp)+(c_cp[3]*y_cp^2)+(c_cp[4]*y_cp^3)+(c_cp[5]*x_cp)+(c_cp[6]*x_cp*y_cp)+(c_cp[7]*x_cp*y_cp^2)+(c_cp[8]*x_cp*y_cp^3)+(c_cp[9]*x_cp^2)+(c_cp[10]*x_cp^2*y_cp)+(c_cp[11]*x_cp^2*y_cp^2)+(c_cp[12]*x_cp^2*y_cp^3)+(c_cp[13]*x_cp^3)+(c_cp[14]*x_cp^3*y_cp)+(c_cp[15]*x_cp^3*y_cp^2)+(c_cp[16]*x_cp^4)+(c_cp[17]*x_cp^4*y_cp)+(c_cp[18]*x_cp^5)
-"output scaling of the original: Pr=3 -> output=Funkt/1000 (CS-GAP-CALL-EXPR-OUT: the original passed the expression c_p_pump/1000 as CALL output)"
+"output scaling of the original: Pr=3 -> output=Funkt/1000 (the original passed the expression c_p_pump/1000 as CALL output)"
 c_p_pump_kJ=Funkt_cp/1000 "[kJ/kg-K]"
 c_p_pump=c_p_pump_kJ*1000 "[J/kg-K]"
 

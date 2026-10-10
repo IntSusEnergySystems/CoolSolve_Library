@@ -18,7 +18,7 @@ single-stage isentropic, two-stage with intercooling, isothermal
 | **Source** | ULiège — course *Thermodynamique appliquée* (MECA0002), repetition session R04, exercise 2 (EES file `R04_E2_2022.EES`) |
 | **Authors** | N. Paulus, B. Dechesne (repetition assistants) and S. Quoilin (course), per the source metadata — the EES file names no author |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0@4cd0ca5 (branch `fix/library-gaps-2`) — **verified** against the EES stored solution (34/34 variables ≤ 4.5·10⁻⁶). Needs `INTEGRAL` limits that are variables and a factor in front of the call (`CS-GAP-INTEGRAL-LIMITS`, `CS-BUG-INTEGRAL-FACTOR`, fixed in CoolSolve `fix/library-gaps-2`): CoolSolve v0.3.0 does not run the file. `CS-GAP-OPTIM` stays listed for information: the optimisation step is not reproducible, the model is shipped at the optimum |
+| **CoolSolve** | **verified** against the EES stored solution (34/34 variables ≤ 4.5·10⁻⁶). The native file uses `INTEGRAL` limits that are variables and a factor in front of the call. `CS-GAP-OPTIM` stays listed for information: the optimisation step is not reproducible, the model is shipped at the optimum |
 
 ## Problem statement
 
@@ -47,7 +47,7 @@ potential energy changes neglected.)*
   = **250 kPa** (equal ratios of 2.5 per stage).
 - **CoolSolve cannot search the optimum** (`CS-GAP-OPTIM`): the model is
   imported with $p_{int}$ fixed at that value and runs as a steady model.
-- **Check of the optimum** (CoolSolve sweep of $p_{int}$, this import): the
+- **Check of the optimum** (CoolSolve sweep of $p_{int}$): the
   work curve is very flat; the true minimum for real steam lies at
   $p_{int} \approx 251$ kPa, i.e. the equal-ratio value costs only ≈ 0.3 W of
   66.3 kW (+0.0003 %):
@@ -88,11 +88,9 @@ calls; differences of enthalpy for the isentropic adiabatic cases):
 ## How to run
 
 The native EES file keeps the EES syntax (the factor `m_dot` in front of
-`integral(…)`, the limits `p_in`, `p_out` that are variables) and needs a
-CoolSolve version with `CS-GAP-INTEGRAL-LIMITS` and `CS-BUG-INTEGRAL-FACTOR`
-fixed (branch `fix/library-gaps-2`; CoolSolve v0.3.0 stops on the limits and
-would ignore the factor). Open `two_stage_steam_compressor_intercooling.eescode`
-in the CoolSolve GUI and press *Solve*, or from a terminal:
+`integral(…)`, the limits `p_in`, `p_out` that are variables). Open
+`two_stage_steam_compressor_intercooling.eescode` in the CoolSolve GUI and press
+*Solve*, or from a terminal:
 
 ```bash
 coolsolve ./two_stage_steam_compressor_intercooling.eescode
@@ -123,9 +121,7 @@ the compression paths on the P-h or T-s diagram (CoolSolve *Diagram* tab,
 
 EES stored solution of the source file (35 variables), after the hand
 conversion kPa/kJ → Pa/J, compared with `compare_solution.py --ees-units`
-on the **native file** (CoolSolve `fix/library-gaps-2` @4cd0ca5, re-extracted
-from the source for this re-check; same values as the former transcription,
-removed): **34/34 common variables agree, maximum relative deviation
+on the **native file**: **34/34 common variables agree, maximum relative deviation
 4.47·10⁻⁶** on `W_dot_isoT` (`Q_dot_cp_isoT2` 4.20·10⁻⁶, the value quoted at
 import; every other variable ≤ 3.4·10⁻⁶; same water formulation in EES 10.836
 and CoolProp). The two largest differences are the integral-based quantities:
@@ -172,14 +168,6 @@ conversion log).
 - **2026-10-05 — variable renamed**: `v_gaz` → `v_liq` (it is the specific
   volume of *compressed liquid* water along the saturated-liquid isentrop,
   not a gas property; no result changes).
-- **2026-10-05 — runnable transcription** (removed on 2026-10-10, see below):
-  `…_coolsolve.eescode` created for CoolSolve v0.3.0: (a) each definite integral split into a state equation
-  (`w = 0 + integral(v, P, t0, tf, step)`) multiplied by `m_dot` in a separate
-  equation — in CoolSolve a factor multiplying an `INTEGRAL` call is silently
-  ignored (`CS-BUG-INTEGRAL-FACTOR`, new, reported with a minimal
-  reproducer); (b) integration limits inlined as literals
-  (`CS-GAP-INTEGRAL-LIMITS`). The native file is kept unchanged (blocked);
-  the transcription reproduces the EES solution exactly (≤ 4.2·10⁻⁶).
 - **2026-10-05 — optimisation documented and checked**: objective, decision
   variable, bounds and the EES-stored optimum (250 kPa, equal stage pressure
   ratios) recorded above; CoolSolve sweep of `p_int` (210–290 kPa) confirms
@@ -188,16 +176,6 @@ conversion log).
 - **2026-10-05 — diagram support**: block of 20 post-processing equations
   (state arrays `P[i]`, `h[i]`, `T[i]`, `s[i]`, 5 states) added at the end of
   both files; results unchanged.
-- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @4cd0ca5
-  (T-RECHECK, `CS-GAP-INTEGRAL-LIMITS` and `CS-BUG-INTEGRAL-FACTOR` closed).**
-  The native file now solves (`SUCCESS`, 525 steps): the 55 common variables
-  equal the `.sol` of the former transcription (relative difference 0) and
-  agree with the EES stored solution as before (see *Verification*). The
-  transcription `two_stage_steam_compressor_intercooling_coolsolve.eescode` and
-  its `.sol` were removed; the native file is the verified file and the `.sol`
-  baseline. The file header was updated (the note on the blocked state replaced
-  by a status line). `CS-GAP-OPTIM` stays in `missing_features` for information
-  (workflow §6: an optimisation model shipped at the optimum).
 - **Level**: scores 2 on the rubric only because of the 20 diagram equations
   added by the library (36 explicit exercise equations otherwise); exercise
   pedagogy → level 1 (±1 rule, docs/taxonomy.md §3).
@@ -207,12 +185,6 @@ conversion log).
 - `CS-GAP-OPTIM`: no Min/Max optimiser in CoolSolve — the model is shipped at
   the optimum found by EES (decision variable fixed); the sweep table above
   documents the neighbourhood of the optimum.
-- `CS-GAP-INTEGRAL-LIMITS` — **closed in CoolSolve `fix/library-gaps-2`
-  @4cd0ca5**: the native `integral(…, P, p_in, p_out, …)` with variable limits
-  was rejected by CoolSolve v0.3.0 and is now accepted.
-- `CS-BUG-INTEGRAL-FACTOR` — **closed in CoolSolve `fix/library-gaps-2`
-  @4cd0ca5**: `m_dot*integral(…)` silently dropped the factor in CoolSolve
-  v0.3.0 (wrong results without error); the factor is now applied.
 - Physical limitations: ideal intercooling to exactly $T_{in}$; ideal
   isothermal compression; no pressure drops; the pump cases assume incompressible
   saturated liquid (checked in the model by three consistent methods).
@@ -224,4 +196,4 @@ compressor) covers single-stage compressor laws on refrigerants.
 
 - `CSL-0047` *nonideal_gas_isothermal_work*: another `INTEGRAL` model of the
   same course (definite integral of P(v), symbolic limits, factor in front of
-  the call), verified on its native file by the same re-check.
+  the call), verified on its native file.
