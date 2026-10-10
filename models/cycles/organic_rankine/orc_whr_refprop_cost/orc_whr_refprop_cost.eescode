@@ -14,8 +14,7 @@
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
   Source : ULiège Thermodynamics Laboratory (EES 8.652) - see README.md
   Status : BLOCKED - END PROCEDURE (CS-GAP-END-PROCEDURE) is not supported by
-           CoolSolve; the mixture fluid is not in CoolSolve (CS-GAP-FLUIDS-MIXTURE);
-           $common of the procedures (CS-BUG-COMMON-PROC).
+           CoolSolve; $common of the procedures (CS-BUG-COMMON-PROC).
 =============================================================================}
 
 
@@ -453,13 +452,13 @@ refrigerant R410a in a vertical plate heat exchanger. Int J Heat Mass Trans
 	$common Workingfluidmix$; MM_fraction; MM
 rho_l = density(WorkingFluidMix$,T=T_sat,x=0)
 cp_l = cp(WorkingFluidMix$,T=T_sat,x=0)
-"h_l, h_v: molar REFPROP convention of the source kept (kJ/kmol), so that i_fg is in the source units (decision D12)"
-h_l = enthalpy(WorkingFluidMix$,T=T_sat,x=0)*MM/1000
+"h_sat_l, h_sat_v: saturated enthalpies [J/kg], so that Bo = q/(G*i_fg) is dimensionless (corrected: the original used molar enthalpies and overwrote h_l with the heat-transfer coefficient before computing i_fg)"
+h_sat_l = enthalpy(WorkingFluidMix$,T=T_sat,x=0)
 mu_l = viscosity(WorkingFluidMix$,T=T_sat,x=0)
 k_l = conductivity(WorkingFluidMix$,T=T_sat,x=0)
 rho_g = density(WorkingFluidMix$,T=T_sat,x=1)
-"h_l, h_v: molar REFPROP convention of the source kept (kJ/kmol), so that i_fg is in the source units (decision D12)"
-h_v = enthalpy(WorkingFluidMix$,T=T_sat,x=1)*MM/1000
+"h_sat_l, h_sat_v: saturated enthalpies [J/kg], so that Bo = q/(G*i_fg) is dimensionless (corrected: the original used molar enthalpies and overwrote h_l with the heat-transfer coefficient before computing i_fg)"
+h_sat_v = enthalpy(WorkingFluidMix$,T=T_sat,x=1)
 mu_g = viscosity(WorkingFluidMix$,T=T_sat,x=1)
 k_g = conductivity(WorkingFluidMix$,T=T_sat,x=1)
 
@@ -476,7 +475,7 @@ Pr_l = cp_l * mu_l/k_l
 	Re_l=G*D_h/mu_l	
 	h_l=0.2092*(k_l/D_h)*Re_l^0.78*Pr_l^(1/3)	
 	{i_fg=enthalpy(fluid$,T=T_sat,x=1)-enthalpy(fluid$,T=T_sat,x=0)}
-	i_fg = h_v - h_l
+	i_fg = h_sat_v - h_sat_l
 	{Bo=Max(q/(G*i_fg), 1)}
 	Bo=q/(G*i_fg)
 	h_tp_ev=88*Bo^0.5*h_l
@@ -551,13 +550,13 @@ Procedure kuo(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef:DELTAp,alpha_tp_cd)
 	$common Workingfluidmix$; MM_fraction; MM
 rho_l = density(WorkingFluidMix$,P=p,x=0)
 cp_l = cp(WorkingFluidMix$,P=p,x=0)
-"h_l, h_v: molar REFPROP convention of the source kept (kJ/kmol), so that i_fg is in the source units (decision D12)"
-h_l = enthalpy(WorkingFluidMix$,P=p,x=0)*MM/1000
+"h_l, h_v: saturated enthalpies [J/kg], so that Bo = q/(G*i_fg) is dimensionless (corrected: the original used molar enthalpies)"
+h_l = enthalpy(WorkingFluidMix$,P=p,x=0)
 mu_l = viscosity(WorkingFluidMix$,P=p,x=0)
 k_l = conductivity(WorkingFluidMix$,P=p,x=0)
 rho_g = density(WorkingFluidMix$,P=p,x=1)
-"h_l, h_v: molar REFPROP convention of the source kept (kJ/kmol), so that i_fg is in the source units (decision D12)"
-h_v = enthalpy(WorkingFluidMix$,P=p,x=1)*MM/1000
+"h_l, h_v: saturated enthalpies [J/kg], so that Bo = q/(G*i_fg) is dimensionless (corrected: the original used molar enthalpies)"
+h_v = enthalpy(WorkingFluidMix$,P=p,x=1)
 mu_g = viscosity(WorkingFluidMix$,P=p,x=1)
 k_g = conductivity(WorkingFluidMix$,P=p,x=1)
 

@@ -19,7 +19,7 @@ uses `MM_fraction = 1` (pure R245fa).
 | **Source** | ULiège — J. Lebrun laboratory, `optim/` folder (~2011), file `Identification pressure drops.EES` |
 | **Authors** | TBD (ULiège, J. Lebrun laboratory) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file blocked (`CS-BUG-COMMON-PROC`: `$common` in procedures; `CS-GAP-FLUIDS-MIXTURE`: no R245fa+R134a mixture); runnable pure-R245fa variant verified against the EES stored solution (see *Verification*) |
+| **CoolSolve** | v0.3.0 — native file blocked (`CS-BUG-COMMON-PROC`: `$common` in procedures); runnable pure-R245fa variant verified against the EES stored solution (see *Verification*) |
 
 ## Problem statement
 
@@ -36,8 +36,9 @@ p = 160 kPa, T = 88 °C (gas, condenser side), T_sat = 27 °C, q = 10 kW.
 ## Model
 
 Three `PROCEDURE`s, each retrieving its properties with CoolProp calls on the
-mixture (the source's REFPROP calls, rewritten per decision D12; the enthalpies
-of `kuo` and `Hsieh_new` are mass-specific here, see the conversion log):
+mixture (the source's REFPROP calls, rewritten per decision D12; the saturated
+enthalpies of `kuo` and `Hsieh_new` are in J/kg, so that the latent heat in the boiling
+number Bo = q/(G·i_fg) is in J/kg):
 
 - **Thonon**(fluid$, P, T, M_dot, b, L_w_tot, L_h, β: h, Δp) — single-phase:
   D_h = 2b, Re = G·D_h/μ with G = ṁ/(b·L_w_tot); Nu = C₁·Re^m·Pr^(1/3) and
@@ -55,9 +56,9 @@ of `kuo` and `Hsieh_new` are mass-specific here, see the conversion log):
 - **Hsieh_new**(fluid$, T_sat, M_dot, q, b, L_w_tot, L_h: Δp, h_tp_ev) — flow
   boiling after Hsieh & Lin (2002, R410A in a vertical plate HX, reference
   quoted in the file): h_l = 0.2092·(k_l/D_h)·Re_l^0.78·Pr_l^(1/3),
-  h_tp_ev = 88·Bo^0.5·h_l; f_tp = 61000·Re_eq^(−1.25). Note that, as in the
-  original, `h_l` is overwritten with the heat-transfer coefficient before
-  `i_fg = h_v - h_l` is evaluated.
+  h_tp_ev = 88·Bo^0.5·h_l; f_tp = 61000·Re_eq^(−1.25). The latent heat is
+  `i_fg = h_sat_v - h_sat_l` (saturated enthalpies at T_sat, J/kg); `h_l` is the
+  liquid heat-transfer coefficient only.
 - Fictitious orifice: V_thr = V_dot_su_cd/A_thr,
   Δp_cd_approx = V_thr²/(2·v_r_su_cd), with A_thr = 0.00012 m² (identified).
 
@@ -66,8 +67,7 @@ efficiencies) are kept as in the original.
 
 ## How to run
 
-The native file (CoolProp mixture calls, decision D12) cannot run in CoolSolve:
-the mixture is not a CoolSolve fluid (`CS-GAP-FLUIDS-MIXTURE`) and the
+The native file (CoolProp mixture calls) cannot run in CoolSolve yet: the
 `$common` variables do not reach the procedures (`CS-BUG-COMMON-PROC`). The
 runnable variant is:
 
@@ -86,19 +86,21 @@ CoolSolve-only syntax). It is regression-tested as `CSL-0124:coolsolve`.
 
 | Quantity | CoolSolve | EES stored | rel. diff |
 |---|---:|---:|---:|
-| `MM` molar mass [kg/kmol] | 134.048 | 134.048 | < 1e-9 |
-| `h` single-phase HTC, Thonon [W/m²-K] | 260.76 | 259.43 | 5.12e-03 |
-| `DELTAp` single-phase Δp, Thonon [Pa] | 479.21 | 479.24 | 6.0e-05 |
-| `v_r_su_cd` supply specific volume [m³/kg] | 0.136124 | 0.136048 | 5.6e-04 |
-| `DELTAp_cd_approx` orifice Δp [Pa] | 47 265 | 47 239 | 5.6e-04 |
-| `DELTAp_ev` evaporator Δp, Hsieh [Pa] | 33 098 | 33 742 | 1.91e-02 |
-| `DELTAp_tp` condenser Δp, Kuo [Pa] | 38 824 | 33 222 | 1.44e-01 |
-| `alpha_tp_cd` condensation HTC, Kuo [W/m²-K] | 211.1 | 588.1 | 6.41e-01 |
-| `h_tp_ev` boiling HTC, Hsieh [W/m²-K] | 1412 | 3848 | 6.33e-01 |
+| `MM` molar mass [kg/kmol] | 134.048 | 134.048 | 0 |
+| `h` single-phase HTC, Thonon [W/m²-K] | 277.05 | 259.43 | 6.36e-02 |
+| `DELTAp` single-phase Δp, Thonon [Pa] | 490.20 | 479.24 | 2.24e-02 |
+| `v_r_su_cd` supply specific volume [m³/kg] | 0.136124 | 0.136048 | 5.58e-04 |
+| `DELTAp_cd_approx` orifice Δp [Pa] | 47 265 | 47 239 | 5.58e-04 |
+| `DELTAp_ev` evaporator Δp, Hsieh [Pa] | 32 622 | 33 742 | 3.32e-02 |
+| `DELTAp_tp` condenser Δp, Kuo [Pa] | 38 315 | 33 222 | 1.33e-01 |
+| `alpha_tp_cd` condensation HTC, Kuo [W/m²-K] | 217.7 | 588.1 | 6.30e-01 |
+| `h_tp_ev` boiling HTC, Hsieh [W/m²-K] | 2185 | 3848 | 4.32e-01 |
 
-The last three EES values are **stale**: they cannot come from the file's
-current equations, see *Verification*. A figure (e.g. Δp vs mass flux for the
-three correlations) can be added by the maintainer.
+`rel. diff` is `|CoolSolve − EES| / max(|CoolSolve|, |EES|)`, as printed by
+`tools/compare_solution.py`. The three two-phase outputs `alpha_tp_cd`,
+`DELTAp_tp` and `h_tp_ev` are the ones affected by the corrections of the
+original (see *Verification*). A figure (e.g. Δp vs mass flux for the three
+correlations) can be added by the maintainer.
 
 <!-- FIGURE (added by the maintainer, docs/model_workflow.md §7): e.g. pressure drop vs mass flow for the three correlations,
      figures/plate_hx_pressure_drop_identification_dp.png -->
@@ -107,35 +109,36 @@ three correlations) can be added by the maintainer.
 
 Reference: the EES stored solution (`~/Nextcloud/thermo_models/optim/
 Identification pressure drops.EES`, 34 variables decoded), compared with
-`tools/compare_solution.py` (rtol = 0.001 as printed):
+`tools/compare_solution.py --ees-units` (rtol = 0.001).
 
-- **29 of the 34 common variables agree** within the tolerance at the stored
-  operating point (all the q-independent ones: Thonon's `h` at 5.12e-03 and
-  `DELTAp` at 6.3e-05, the molar mass `MM` exactly, the orifice block at
-  ≤ 5.6e-04, all geometry/hypothesis inputs). `h` and `DELTAp_ev` exceed the
-  property tolerance slightly (0.5 % / 1.9 %): REFPROP vs CoolProp transport
-  properties (viscosity, thermal conductivity), explained.
-- **`alpha_tp_cd`, `DELTAp_tp`, `h_tp_ev` differ by 14–64 %** — but they are
-  the only three variables that depend on `q`, and the stored solution is
-  inconsistent with the file's equations on them: re-running the variant at
-  q = 62 500 W reproduces the stored `DELTAp_tp` (33 223 vs 33 222, 4.4e-05)
-  and `alpha_tp_cd` (4.58e-02, transport-property level), while `h_tp_ev`
-  (∝ √q) corresponds to q ≈ 74 kW. No single q reproduces all three: the
-  stored two-phase values are a **mix of older runs** (stale stored solution,
-  CoolSolve register `CS-BUG-EXTRACT-STALE`), the file having been saved
-  after setting `q = 10000` without re-solving.
+- **28 of the 34 common variables agree** within the tolerance at the stored
+  operating point: the molar mass `MM`, the geometry and hypothesis inputs, and
+  the orifice block (≤ 5.6e-04).
+- **`alpha_tp_cd`, `DELTAp_tp`, `h_tp_ev` differ by 13–63 %.** These three
+  depend on the boiling number Bo, which the original computed with two errors,
+  corrected here:
+  1. in `kuo` and `Hsieh_new` the saturated enthalpies taken from REFPROP were
+     molar (J/mol) while the densities and heat capacities were mass-based, so
+     Bo = q/(G·i_fg) was about 7.5 times too large for R245fa (M = 134 kg/kmol);
+  2. in `Hsieh_new` the liquid heat-transfer coefficient overwrote `h_l` before
+     `i_fg = h_v − h_l` was evaluated, so the "latent heat" contained a
+     heat-transfer coefficient.
+
+  The corrected values are the reliable ones: `alpha_tp_cd` 217.7 (EES 588.1),
+  `DELTAp_tp` 38 315 (33 222), `h_tp_ev` 2185 (3848). A scratch run of the
+  variant with the original's molar convention and the `h_l` overwrite gives
+  647, 32 299 and 4 002, within 10 % of the stored values: the stored EES values
+  carry the two errors.
+- **`h`, `DELTAp`, `DELTAp_ev` differ by 2–6 %**, they are not affected by the
+  corrections and follow from the R245fa property backend. CoolProp 7 gives the
+  vapour viscosity and thermal conductivity of R245fa about 15–25 % above the
+  REFPROP 8 values used by EES (saturated vapour at 30 °C: 12.0 µPa·s and
+  16.2 mW/m·K), which explains the single-phase Thonon coefficient (+6.8 % of
+  the EES value) and the few-% deviations of the pressure drops.
 
 Verification concerns the **variant**; the native file cannot run (below).
-
-- **Native rewrite (2026-10-10)**: checked in a scratch copy with the variant's
-  workarounds (pure R245fa for the mixture string, `$common` dropped): its 36
-  common variables are identical to those of the variant run with the same
-  binary (maximum relative difference 0).
-- **Frozen binary (2026-10-10)**: with the CoolSolve binary of that day the
-  variant's solution is no longer its committed `.sol` (`0.3.0@7addbbc`, older
-  CoolProp build; the regression `CSL-0124:coolsolve` reports it): `h` = 277.05
-  W/m²K and `DELTAp` = 490.20 Pa against 259.43 and 479.24 in EES (the
-  transport properties of R245fa vapour differ between the two CoolProp builds).
+Regression: `tools/test_models.py CSL-0124` solves the variant and compares it
+with `plate_hx_pressure_drop_identification_coolsolve.sol`.
 
 ## Source and attribution
 
@@ -184,33 +187,25 @@ Source file (EES 8.652, comments mostly English), collection of S. Quoilin:
   procedures present (→ 1); not multi-zone (→ 0); semi-empirical
   correlations + identified parameter A_thr (→ 1); default guesses suffice
   (→ 0). Score 2 → **level 2**.
-- **2026-10-10 — native file rewritten (decision D12)**: the 11 `CALL EES_REFPROP` blocks replaced by CoolProp calls on `WorkingFluidMix$` at the same states; `MM` mole-weighted; `$common` kept; `h_l`, `h_v` as mass values, as in the variant (see *Limitations*). Scratch check: *Verification*. Still blocked.
+- **2026-10-10 — native file rewritten (decision D12)**: the 11 `CALL EES_REFPROP` blocks replaced by CoolProp calls on `WorkingFluidMix$` at the same states; `MM` mole-weighted; `$common` kept; `h_l`, `h_v` as mass values, as in the variant. Still blocked.
+- Two errors of the original are corrected: molar enthalpies in the boiling number of `kuo`/`Hsieh_new`, and `h_l` overwritten before `i_fg` in `Hsieh_new`.
 
 ## Limitations and CoolSolve gaps
 
-- `CS-GAP-FLUIDS-MIXTURE` — the native file's property calls use the CoolProp
-  mixture string `WorkingFluidMix$ = 'R245fa[1]&R134a[0]'` (x = `MM_fraction`
-  written as a number). CoolSolve has no R245fa+R134a mixture:
-  `enthalpy('R245fa[0.5]&R134a[0.5]', T=50, P=5E5)` gives *Unknown fluid*,
-  while CoolProp accepts the string.
+- Mixtures: the property calls use the CoolProp mixture string
+  `WorkingFluidMix$ = 'R245fa[1]&R134a[0]'` (x = `MM_fraction`, written as a number in
+  the string); other compositions use CoolProp's predictive mixture model (CoolSolve
+  warns that mixture properties may be less reliable).
 - `CS-BUG-COMMON-PROC`: the three procedures share `Workingfluidmix$`,
   `MM_fraction`, `MM` with the main program through `$common`; CoolSolve
   evaluates them as zero (silent). Blocks the native file.
-- The original's own quirks are kept: `D_h = 2*b` with its open question
-  *"or 2*b/phi ??????"*; in `Hsieh_new`, `h_l` is overwritten with the HTC
-  before `i_fg = h_v - h_l`, so the "latent heat" contains a heat-transfer
-  coefficient (as in the original; it inflates Bo and h_tp_ev).
-- The stored EES values of `alpha_tp_cd`, `DELTAp_tp`, `h_tp_ev` are stale
-  (older runs at higher q, see *Verification*): a freshly solved EES
-  run is needed to verify them.
-- No faithful variant exists for `MM_fraction ≠ 1`: CoolSolve cannot provide
-  the R245fa+R134a mixture (CoolProp can; see `CS-GAP-FLUIDS-MIXTURE`).
-- Enthalpies of `kuo` and `Hsieh_new`: the source assigns the molar REFPROP
-  output `h_ref` (J/mol) to `h_l` and `h_v` without conversion, so `i_fg` mixes
-  units. The native rewrite and the variant use mass enthalpies (J/kg). The
-  molar convention would give `alpha_tp_cd` = 2.18e4 W/m²K at the stored point
-  (variant: 211), so the choice needs the maintainer's decision; the
-  `CSL-0153` model keeps the molar convention of its source.
+- The original's own quirk is kept: `D_h = 2*b` with its open question
+  *"or 2*b/phi ??????"*.
+- No EES run of the corrected equations exists: the stored EES values of
+  `alpha_tp_cd`, `DELTAp_tp`, `h_tp_ev` reflect the two errors of the original
+  (see *Verification*); a freshly solved EES run of the corrected file is needed
+  to verify them in EES.
+- The variant is written for pure R245fa (`MM_fraction = 1`).
 
 ## Related models
 

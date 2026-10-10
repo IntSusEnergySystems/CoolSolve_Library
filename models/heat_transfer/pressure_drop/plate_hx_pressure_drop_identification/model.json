@@ -52,15 +52,14 @@
     "course": ""
   },
   "verification": {
-    "reference": "EES stored solution (34 variables), variant file; 29 of 34 common variables agree at the stored operating point, the three q-dependent two-phase outputs of the stored solution are stale (reproduced only at q = 62.5 kW / ~74 kW, see README)",
-    "date": "2026-10-07",
-    "coolsolve_version": "0.3.0@7addbbc",
-    "max_rel_diff": 0.641,
-    "notes": "Default run: q-independent variables agree (Thonon h 5.12e-03, DELTAp 6.0e-05, orifice block <= 5.6e-04); stale q-dependent outputs differ (alpha_tp_cd 6.41e-01, DELTAp_tp 1.44e-01, h_tp_ev 6.33e-01) — evidence of a stale stored solution (CS-BUG-EXTRACT-STALE)."
+    "reference": "EES stored solution (34 variables), variant file; 28 of 34 common variables agree at the stored operating point; alpha_tp_cd, DELTAp_tp and h_tp_ev differ because of the two errors of the original (corrected here, see README)",
+    "date": "2026-10-10",
+    "coolsolve_version": "0.3.0@1e005c0",
+    "max_rel_diff": 0.064,
+    "notes": "max_rel_diff excludes the outputs affected by the corrections: alpha_tp_cd (217.7 vs EES 588.1), DELTAp_tp (38315 vs 33222), h_tp_ev (2185 vs 3848). Maximum of the others: 6.4e-2 on h (single-phase HTC, R245fa vapour transport properties, CoolProp 7 vs REFPROP 8), then DELTAp_ev 3.3e-2 and DELTAp 2.2e-2 (same cause). The original's molar convention, emulated in a scratch copy, reproduces the three stored values within 10 %."
   },
   "missing_features": [
-    "CS-BUG-COMMON-PROC",
-    "CS-GAP-FLUIDS-MIXTURE"
+    "CS-BUG-COMMON-PROC"
   ],
   "related": [
     "CSL-0113",
@@ -85,6 +84,21 @@
       "date": "2026-10-10",
       "action": "native file rewritten per decision D12: the 11 CALL EES_REFPROP blocks replaced by CoolProp property calls on the mixture string WorkingFluidMix$ (same states; enthalpies in J/kg as in the variant); in a scratch copy with the variant's workarounds the solution equals the variant run with the frozen binary (36 common variables, identical); still blocked by CS-BUG-COMMON-PROC and CS-GAP-FLUIDS-MIXTURE (added: CoolSolve has no R245fa+R134a mixture)",
       "by": "Claude (Haiku) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "kuo/Hsieh_new: latent heat in J/kg and h_l overwrite corrected (errors of the original); variant baseline regenerated",
+      "by": "Claude (Haiku) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "CS-GAP-FLUIDS-MIXTURE closed in CoolSolve (CoolProp mixture fluids accepted): removed from missing_features",
+      "by": "Claude (Opus) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-baselined with CoolProp 75af7816 (pinned CoolSolve build)",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

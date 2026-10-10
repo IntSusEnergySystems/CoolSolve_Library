@@ -461,11 +461,12 @@ refrigerant R410a in a vertical plate heat exchanger. Int J Heat Mass Trans
 	MM = molarmass(fluid$)
 rho_l = density(fluid$,T=T_sat,x=0)
 cp_l = cp(fluid$,T=T_sat,x=0)
-h_l = enthalpy(fluid$,T=T_sat,x=0)*MM/1000
+"h_sat_l, h_sat_v: saturated enthalpies [J/kg], so that Bo = q/(G*i_fg) is dimensionless (corrected: the original used molar enthalpies and overwrote h_l with the heat-transfer coefficient before computing i_fg)"
+h_sat_l = enthalpy(fluid$,T=T_sat,x=0)
 mu_l = viscosity(fluid$,T=T_sat,x=0)
 k_l = conductivity(fluid$,T=T_sat,x=0)
 rho_g = density(fluid$,T=T_sat,x=1)
-h_v = enthalpy(fluid$,T=T_sat,x=1)*MM/1000
+h_sat_v = enthalpy(fluid$,T=T_sat,x=1)
 mu_g = viscosity(fluid$,T=T_sat,x=1)
 k_g = conductivity(fluid$,T=T_sat,x=1)
 
@@ -482,7 +483,7 @@ Pr_l = cp_l * mu_l/k_l
 	Re_l=G*D_h/mu_l	
 	h_l=0.2092*(k_l/D_h)*Re_l^0.78*Pr_l^(1/3)	
 	{i_fg=enthalpy(fluid$,T=T_sat,x=1)-enthalpy(fluid$,T=T_sat,x=0)}
-	i_fg = h_v - h_l
+	i_fg = h_sat_v - h_sat_l
 	{Bo=Max(q/(G*i_fg), 1)}
 	Bo=q/(G*i_fg)
 	h_tp_ev=88*Bo^0.5*h_l
@@ -562,11 +563,12 @@ Procedure kuo(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef:DELTAp,alpha_tp_cd)
 	MM = molarmass(fluid$)
 rho_l = density(fluid$,P=p,x=0)
 cp_l = cp(fluid$,P=p,x=0)
-h_l = enthalpy(fluid$,P=p,x=0)*MM/1000
+"h_l, h_v: saturated enthalpies [J/kg], so that Bo = q/(G*i_fg) is dimensionless (corrected: the original used molar enthalpies)"
+h_l = enthalpy(fluid$,P=p,x=0)
 mu_l = viscosity(fluid$,P=p,x=0)
 k_l = conductivity(fluid$,P=p,x=0)
 rho_g = density(fluid$,P=p,x=1)
-h_v = enthalpy(fluid$,P=p,x=1)*MM/1000
+h_v = enthalpy(fluid$,P=p,x=1)
 mu_g = viscosity(fluid$,P=p,x=1)
 k_g = conductivity(fluid$,P=p,x=1)
 

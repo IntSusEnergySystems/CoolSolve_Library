@@ -187,7 +187,7 @@ Source file (EES 8.940, comments in English), collection of S. Quoilin:
   analysis is unavailable) and the rating stays consistent with the triage
   (C-121) and with the level-2 rating of the similar RefSim model `CSL-0078`
   (149 equations, same compressor physics).
-- **2026-10-10 — native file rewritten (decision D12)**: `(s, v)` as `(P, s)` and `(T, v)`; the corrected `(v, u)` branch as `(P, h)` with `h = u + p·v` and `volume(P, h) = v`. Same states; scratch check at the stored point within 1e-4 (EES values shifted to the IIR reference, `CS-GAP-REF-STATE`). Status unchanged.
+- Unsupported property input pairs rewritten (decision D12): `(s, v)` as `(P, s)` and `(T, v)`; the `(v, u)` branch as `(P, h)` with `h = u + p·v` and `volume(P, h) = v` (same states).
 
 ## Limitations and CoolSolve gaps
 

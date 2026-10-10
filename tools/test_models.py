@@ -22,6 +22,11 @@ committed next to it (the regression baseline):
     python3 tools/test_models.py --exclude CSL-0009:coolsolve   # skip the slowest target (about 3 min)
     COOLSOLVE=/path/to/coolsolve python3 tools/test_models.py --rtol 1e-6
 
+The CoolProp revision of the binary (`coolsolve --version`) is printed in the run header and compared
+with COOLPROP_BASELINE: when they differ (or the binary has no `--version`), a warning is printed at the
+top and in the summary, because the failures may then be property-library differences and not model
+regressions (docs/model_workflow.md, "CoolProp pin and baselines").
+
 Exit status 1 if any target fails to solve or deviates from its baseline.
 """
 
@@ -37,6 +42,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 RUNNABLE = {"verified", "runs", "modified"}
+
+# CoolProp git commit (full SHA or an unambiguous prefix) that produced the `.sol` baselines of the
+# library. CoolSolve pins its CoolProp commit (COOLSOLVE_COOLPROP_PINNED_TAG in its CMakeLists.txt):
+# when that pin is bumped, update this constant, run the regression and re-baseline the targets whose
+# differences are explained by CoolProp (docs/model_workflow.md, "CoolProp pin and baselines").
+COOLPROP_BASELINE = "75af7816"
 
 
 def read_sol(path):
@@ -82,6 +93,32 @@ def targets(folder, meta, with_variants=True):
             sol = f.with_suffix(".sol")
             out.append((label, f.name, sol if sol.exists() else None))
     return out
+
+
+def coolsolve_versions(exe):
+    """(CoolSolve version, CoolProp version, CoolProp git revision) from `<exe> --version`.
+
+    Output format: `CoolSolve 0.3.0` / `CoolProp 8.1.0dev (git revision <sha>)`. A field is None when
+    the binary does not provide it (a CoolSolve without `--version` answers "Unknown option").
+    """
+    try:
+        proc = subprocess.run([exe, "--version"], capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.TimeoutExpired):
+        return None, None, None
+    if proc.returncode != 0:
+        return None, None, None
+    cs = re.search(r"^CoolSolve\s+(\S+)", proc.stdout, re.M)
+    cp = re.search(r"^CoolProp\s+(\S+)\s+\(git revision\s+([0-9a-fA-F]+)\)", proc.stdout, re.M)
+    return (cs.group(1) if cs else None), (cp.group(1) if cp else None), (cp.group(2).lower() if cp else None)
+
+
+def coolprop_warning(revision):
+    """Warning text when `revision` is not COOLPROP_BASELINE (None when it is, or a prefix of it)."""
+    if revision and (revision.startswith(COOLPROP_BASELINE.lower()) or COOLPROP_BASELINE.lower().startswith(revision)):
+        return None
+    found = ("CoolProp revision %s" % revision[:8]) if revision else "unknown CoolProp revision (no --version)"
+    return ("WARNING: %s, library baselines were produced with CoolProp %s: failures may be "
+            "property-library differences, not model regressions" % (found, COOLPROP_BASELINE))
 
 
 def run_target(exe, folder, main, baseline, label, name, args):
@@ -131,6 +168,15 @@ def main(argv=None):
     if not Path(exe).exists():
         sys.exit("CoolSolve executable not found: %s (use --coolsolve or $COOLSOLVE)" % args.coolsolve)
 
+    cs_version, cp_version, cp_revision = coolsolve_versions(exe)
+    cp_warning = coolprop_warning(cp_revision)
+    print("CoolSolve %s (%s)" % (cs_version or "version unknown", exe))
+    print("CoolProp  %s, git revision %s (library baseline: %s)" % (
+        cp_version or "version unknown", cp_revision or "unknown", COOLPROP_BASELINE))
+    if cp_warning:
+        print(cp_warning)
+    print()
+
     wanted = {}                                   # model id -> None (every target) or set of variant labels
     for item in args.ids:
         mid, _, var = item.partition(":")
@@ -178,6 +224,8 @@ def main(argv=None):
         print("note: variants without .sol baseline (not tested): " + ", ".join(untested))
     print("%d target(s) tested (%d model main file(s), %d variant(s)), %d failure(s)" % (
         tested, tested - n_variants, n_variants, failures))
+    if cp_warning:
+        print(cp_warning)
     return 1 if failures else 0
 
 

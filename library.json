@@ -1,8 +1,8 @@
 {
  "snapshot": {
-  "content_hash": "sha256:6deaf1bc7b5e9106",
+  "content_hash": "sha256:0b4580064b94c853",
   "files": 770,
-  "bytes": 6852145,
+  "bytes": 6854112,
   "models": 148,
   "functions": 432,
   "taxonomy_version": "0.2"
@@ -3401,8 +3401,7 @@
    "url": "",
    "missing_features": [
     "CS-BUG-COMMON-PROC",
-    "CS-GAP-END-PROCEDURE",
-    "CS-GAP-FLUIDS-MIXTURE"
+    "CS-GAP-END-PROCEDURE"
    ],
    "related": [
     "CSL-0019",
@@ -3412,8 +3411,8 @@
     "CSL-0124",
     "CSL-0159"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-08",
+   "coolsolve_version": "0.3.0@1e005c0",
+   "verified_on": "2026-10-10",
    "path": "models/cycles/organic_rankine/orc_whr_refprop_cost",
    "main_file": "orc_whr_refprop_cost.eescode",
    "figures": 0
@@ -6084,16 +6083,15 @@
    "license": "MIT",
    "url": "",
    "missing_features": [
-    "CS-BUG-COMMON-PROC",
-    "CS-GAP-FLUIDS-MIXTURE"
+    "CS-BUG-COMMON-PROC"
    ],
    "related": [
     "CSL-0113",
     "CSL-0115",
     "CSL-0153"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-07",
+   "coolsolve_version": "0.3.0@1e005c0",
+   "verified_on": "2026-10-10",
    "path": "models/heat_transfer/pressure_drop/plate_hx_pressure_drop_identification",
    "main_file": "plate_hx_pressure_drop_identification.eescode",
    "figures": 0
@@ -10858,24 +10856,6 @@
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
-  "CS-GAP-REF-STATE": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P3",
-   "text": "The **reference state of refrigerant enthalpies and entropies**: EES gives R410A the ASHRAE reference (h = 0 and s = 0 for the saturated liquid at −40 °C) while CoolProp uses the IIR one (h = 200 kJ/kg, s = 1 kJ/kg·K for the saturated liquid at 0 °C).",
-   "detail": "Absolute `enthalpy`/`entropy` (and `intenergy`) of R410A and R134a differ from EES by constant offsets (142 244.6 J/kg, 773.6 J/kg·K) **without warning**; differences, efficiencies and balances are …",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-GAP-FLUIDS-MIXTURE": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P2",
-   "text": "**Fluid mixtures** in property calls.",
-   "detail": "The fluid registry is a fixed table: any mixture string is *\"Unknown fluid\"* (also with the `HEOS::` prefix).",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
   "CS-GAP-IF-NO-CONSTANT": {
    "kind": "gap",
    "state": "open",
@@ -11493,6 +11473,15 @@
    "state": "closed",
    "priority": "",
    "text": "`#` inside variable names (`Nu#_f`); `.initials` no longer cut at `#`",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-2`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-FLUIDS-MIXTURE": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "CoolProp mixture fluids `A[x]&B[y]` in property calls (warning: predictive mixture properties)",
    "detail": "",
    "fixed_in": "post-v0.3.0, `fix/library-gaps-2`",
    "anchor": "7-closed-gaps-and-bugs"

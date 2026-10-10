@@ -58,16 +58,15 @@
     "course": ""
   },
   "verification": {
-    "reference": "EES stored solution of the source file (386 variables), compared with the runnable _coolsolve variant: 356 common variables; eta_cycle agrees to 7.1e-4, W_dot_net to 5.0e-3, SIC to 1.3e-2; the pressure-drop correlations deviate up to 0.114 (transport-property differences REFPROP vs CoolProp, see README)",
-    "date": "2026-10-08",
-    "coolsolve_version": "0.3.0@7addbbc",
+    "reference": "EES stored solution of the source file (386 variables), compared with the runnable _coolsolve variant: 356 common variables; 93 are affected by the corrections of kuo and Hsieh_new (condenser, evaporator area, costs and cycle outputs downstream); the others differ by a few % at most, apart from the air enthalpy reference offset (see README)",
+    "date": "2026-10-10",
+    "coolsolve_version": "0.3.0@1e005c0",
     "max_rel_diff": 0.252,
-    "notes": "Maximum over all common variables 0.252 = absolute Air enthalpies h_a_ex_liq/h_a_ex_vap (reference-state offset EES ideal gas vs CoolProp Air; their temperatures agree). Excluding that pair, the maximum is 0.114 on the evaporator pressure-drop correlation DELTAp_ev. The 9 REFPROP pseudo-quality outputs (Q_r_* outside 0..1) are not reproduced; 21 EES-only variables are stale values of an older EES session; the 6 CoolSolve-only names are the string variables and pi. Native file not runnable (CS-GAP-END-PROCEDURE, CS-BUG-COMMON-PROC, CS-GAP-FLUIDS-MIXTURE). Frozen binary 2026-10-10: the variant's solution is not its committed .sol (older CoolProp build); SIC differs by a factor of about 1000 from the EES value (see README)."
+    "notes": "max_rel_diff excludes the 93 outputs affected by the corrections (listed in the README). Maximum of the others: 0.252 = absolute air enthalpies h_a_ex_liq (reference-state offset EES ideal gas vs CoolProp Air); excluding that pair, 0.061 on Cp_r_ex_vap_cd (property backend). P_evap (26.18 bar in both files) is not counted: --ees-units scales its bar value by 1e5 (comparison tool artefact). Corrected values: A_cd 8.41 m2 (EES 5.46), W_dot_net 3290 W (3425), eta_cycle 6.65 % (6.96 %), SIC 3210 EUR/kW (2700). Native file not runnable (CS-GAP-END-PROCEDURE, CS-BUG-COMMON-PROC, CS-GAP-FLUIDS-MIXTURE)."
   },
   "missing_features": [
     "CS-BUG-COMMON-PROC",
-    "CS-GAP-END-PROCEDURE",
-    "CS-GAP-FLUIDS-MIXTURE"
+    "CS-GAP-END-PROCEDURE"
   ],
   "related": [
     "CSL-0019",
@@ -115,6 +114,21 @@
       "date": "2026-10-10",
       "action": "native file rewritten per decision D12: the 32 CALL EES_REFPROP statements replaced by CoolProp property equations on the mixture string WorkingFluidMix$ (variant form, same states); in a scratch copy with the variant's workarounds the solution equals the variant run with the frozen binary (362 common variables); still blocked by CS-GAP-END-PROCEDURE, CS-BUG-COMMON-PROC (added: the procedures read the mixture through $common) and CS-GAP-FLUIDS-MIXTURE",
       "by": "Claude (Haiku) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "kuo/Hsieh_new: latent heat in J/kg and h_l overwrite corrected (errors of the original); variant baseline regenerated",
+      "by": "Claude (Haiku) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "CS-GAP-FLUIDS-MIXTURE closed in CoolSolve (CoolProp mixture fluids accepted): removed from missing_features",
+      "by": "Claude (Opus) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-baselined with CoolProp 75af7816 (pinned CoolSolve build)",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

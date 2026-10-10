@@ -419,6 +419,31 @@ the dashboard on the gap (or `library.json` on `missing_features`), run the nati
 delete the variant as the README decides; while it exists it stays in the
 regression.
 
+**CoolProp pin and baselines.** A `.sol` baseline is a result of one CoolProp:
+its fluid models and transport correlations change between commits (e.g. the
+R245fa viscosity and conductivity, 14–25 % on the vapour), and a regression run
+with another CoolProp reports differences that are not model regressions.
+CoolSolve therefore **pins one CoolProp commit**
+(`COOLSOLVE_COOLPROP_PINNED_TAG` in `../CoolSolve/CMakeLists.txt`) and
+`tools/test_models.py` records the commit the baselines were produced with
+(`COOLPROP_BASELINE`). `coolsolve --version` prints the CoolProp revision of a
+binary; the tool shows it in the run header and warns, at the top and in the
+summary, when it differs from `COOLPROP_BASELINE` (or when the binary has no
+`--version`): failures are then possibly property-library differences. A bump of
+the pin is deliberate:
+
+1. change the pin in CoolSolve (its `docs/contributing.md`), rebuild, check
+   `coolsolve --version`;
+2. set `COOLPROP_BASELINE` in `tools/test_models.py`;
+3. run the full regression; for each failing target find the cause (variables
+   and sizes of the differences, CoolProp change);
+4. re-baseline only the targets whose differences CoolProp explains: re-solve in
+   place with the new binary (same command as the existing `.sol`) and add a
+   `history` entry to its `model.json` ("re-baselined with CoolProp `<commit>`
+   (pinned CoolSolve build)"). Any other failure is a model or CoolSolve
+   regression: investigate it, never re-baseline it;
+5. leave everything uncommitted for the maintainer, as for any library change.
+
 ## 7. Figures (`T-FIGURE`, maintainer)
 
 Every runnable model gets one figure — a thermodynamic diagram or another

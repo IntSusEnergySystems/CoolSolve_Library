@@ -108,6 +108,7 @@ Procedure kuo(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef:DELTAp,alpha_tp_cd)
 	mu_l=Viscosity(fluid$,P=P,x=0)
 	k_l=Conductivity(fluid$,P=P,x=0)
 	cp_l=cp(fluid$,P=P,x=0)
+"h_l, h_v: saturated enthalpies [J/kg], so that Bo = q/(G*i_fg) is dimensionless (corrected: the original used molar enthalpies)"
 	h_l=enthalpy(fluid$,P=P,x=0)
 	h_v=enthalpy(fluid$,P=P,x=1)
 
@@ -162,15 +163,16 @@ refrigerant R410a in a vertical plate heat exchanger. Int J Heat Mass Trans
 	mu_l=viscosity(fluid$,T=T_sat,x=0)
 	k_l=conductivity(fluid$,T=T_sat,x=0)
 	cp_l=cp(fluid$,T=T_sat,x=0)
-	h_l=enthalpy(fluid$,T=T_sat,x=0)
-	h_v=enthalpy(fluid$,T=T_sat,x=1)
+"h_sat_l, h_sat_v: saturated enthalpies [J/kg], so that Bo = q/(G*i_fg) is dimensionless (corrected: the original used molar enthalpies and overwrote h_l with the heat-transfer coefficient before computing i_fg)"
+	h_sat_l=enthalpy(fluid$,T=T_sat,x=0)
+	h_sat_v=enthalpy(fluid$,T=T_sat,x=1)
 
 	Pr_l = cp_l * mu_l/k_l
 	G=M_dot/(b*L_W_tot)
 	D_h= 2*b
 	Re_l=G*D_h/mu_l
 	h_l=0.2092*(k_l/D_h)*Re_l^0.78*Pr_l^(1/3)
-	i_fg = h_v - h_l
+	i_fg = h_sat_v - h_sat_l
 	{Bo=Max(q/(G*i_fg), 1)}
 	Bo=q/(G*i_fg)
 	h_tp_ev=88*Bo^0.5*h_l

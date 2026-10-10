@@ -23,7 +23,7 @@ optimisation sweeps of the original study.
 | **Source** | ULiège Thermodynamics Laboratory, EES 8.652 (`cycle ORC with refprop.EES`) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory) — the 2011-10-29 copies of the same model are by Sylvain Quoilin |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** (`CS-GAP-END-PROCEDURE`, `CS-BUG-COMMON-PROC`, `CS-GAP-FLUIDS-MIXTURE`); its REFPROP calls are rewritten as CoolProp property calls (decision D12); runnable variant `orc_whr_refprop_cost_coolsolve.eescode` (pure R245fa) verified against the EES stored solution (see *Verification*) |
+| **CoolSolve** | native file **blocked** (`CS-GAP-END-PROCEDURE`, `CS-BUG-COMMON-PROC`); its property calls use CoolProp, with the R245fa+R134a mixture; runnable variant `orc_whr_refprop_cost_coolsolve.eescode` (pure R245fa) verified against the EES stored solution (see *Verification*) |
 
 ## Problem statement
 
@@ -63,6 +63,9 @@ evaporation pressure in the input block).
   €), exchangers 190 + 310×area €, pump 900×(W/300)^0.25, pipes and hardware,
   refrigerant charge cost, +30 % labour → TIC, SIC = TIC / net power.
 
+The saturated enthalpies of `kuo` and `Hsieh_new` are in J/kg, so that the latent heat
+in the boiling number Bo = q/(G·i_fg) is in J/kg.
+
 The `Summary` procedure stores 19 key results per run in the `optim` lookup
 table (the 22×9 embedded grid of the file is an archived sweep). The
 five-argument `IF(DELTAC_dot, 0, …)` selects the condenser water-side
@@ -94,44 +97,61 @@ EES stored solution vs the CoolSolve variant (default operating point):
 
 | Quantity | EES | CoolSolve | dev. | Quantity | EES | CoolSolve | dev. |
 |---|---:|---:|---:|---|---:|---:|---:|
-| `M_dot_r` [kg/s] | 0.2235 | 0.2255 | 0.9 % | `A_ev` [m²] | 2.334 | 2.343 | 0.4 % |
-| `Q_dot_ev` [kW] | 49.19 | 49.47 | 0.6 % | `A_cd` [m²] | 5.459 | 5.249 | 3.9 % |
-| `W_dot_net` [kW] | 3.425 | 3.442 | 0.5 % | `DELTAp_ev` [kPa] | 26.1 | 23.2 | 11 % |
-| `eta_cycle` [%] | 6.964 | 6.959 | 0.07 % | `DELTAp_cd` [kPa] | 44.9 | 41.6 | 7.4 % |
-| `epsilon_s_exp` [-] | 0.6370 | 0.6363 | 0.1 % | `TEC` [€] | 7 114 | 7 055 | 0.8 % |
-| `epsilon_ev` [%] | 52.9 | 53.3 | 0.6 % | `SIC` [€/kW] | 2 700 | 2 664 | 1.3 % |
+| `M_dot_r` [kg/s] | 0.2235 | 0.2255 | 0.9 % | `A_ev` [m²] | 2.334 | 2.273 | 2.6 % |
+| `Q_dot_ev` [kW] | 49.19 | 49.47 | 0.6 % | `A_cd` [m²] | 5.459 | 8.410 | 35.1 % |
+| `W_dot_net` [kW] | 3.425 | 3.290 | 3.9 % | `DELTAp_ev` [kPa] | 26.15 | 27.96 | 6.5 % |
+| `eta_cycle` [%] | 6.964 | 6.652 | 4.5 % | `DELTAp_cd` [kPa] | 44.92 | 87.50 | 48.7 % |
+| `epsilon_s_exp` [-] | 0.6370 | 0.6501 | 2.0 % | `TEC` [€] | 7 114 | 8 125 | 12.4 % |
+| `epsilon_ev` [%] | 52.95 | 53.25 | 0.6 % | `SIC` [€/kW] | 2 700 | 3 210 | 15.9 % |
 
-The deviations on the cycle quantities come from the property backend
-(EES REFPROP vs CoolProp, both Helmholtz EOS for R245fa); the heat-exchanger
-pressure drops and areas additionally amplify the differences on the
-viscosity/conductivity correlations (see *Verification*).
+`dev.` is `|CoolSolve − EES| / max(|CoolSolve|, |EES|)`, as printed by
+`tools/compare_solution.py`. The condenser, evaporator-area, cost and cycle
+results (`A_cd`, `A_ev`, `DELTAp_cd`, `DELTAp_ev`, `TEC`, `SIC`, `W_dot_net`,
+`eta_cycle`) differ from the EES stored run because of the corrections of
+`kuo` and `Hsieh_new` (see *Verification*); the refrigerant flow rate and the
+evaporator heat input agree within 1 %.
 
 <!-- FIGURE (added by the maintainer, docs/model_workflow.md §7): diagram or plot made in CoolSolve,
      saved in figures/, e.g.  ![P-h diagram of the cycle](figures/orc_whr_refprop_cost_ph.png)  + one-line caption -->
 
 ## Verification
 
-The runnable variant is compared with the EES stored solution of the source
-file (`compare_solution.py orc_whr_refprop_cost_coolsolve.sol
-ees_variables.csv`):
+Reference: the EES stored solution of the source file, compared with the
+runnable variant by `tools/compare_solution.py --ees-units
+orc_whr_refprop_cost_coolsolve.sol ees_variables.csv` (356 common variables).
+`P_evap` is in bar in both files; `--ees-units` converts the EES value to Pa
+and reports a false factor of 10⁵ for this one variable.
 
-> 356 common variables, 224 differ (rtol=0.001); only in EES: 30; only in
-> CoolSolve: 6
-
-- **Key results within the property tolerance** (§11 of CoolSolve
-  `docs/ees_import.md`, different-EOS case): `eta_cycle` 7.1e-4,
-  `W_dot_net` 5.0e-3, `Q_dot_ev` 5.7e-3, `M_dot_r` 9.1e-3, `TEC`/`TIC`
-  8.4e-3, `SIC` 1.3e-2.
-- **Correlation-heavy outputs**: `DELTAp_ev` 1.14e-1, `DELTAp_cd` 7.4e-2,
-  `A_cd` 3.9e-2, `M_fluid_cd` 3.8e-2 — the Thonon/Kuo/Hsieh correlations
-  amplify the REFPROP vs CoolProp differences on viscosity and thermal
-  conductivity of R245fa.
+- **93 variables are affected by the corrections** of `kuo` and `Hsieh_new`
+  (the variant solution changes by more than 1e-6 when they are corrected):
+  the condenser (`A_cd` 8.410 m² against 5.459 m² in EES, `DELTAp_cd` 87.50 kPa
+  against 44.92 kPa, `M_fluid_cd`, `Cout_condenseur` 2 797 € against 1 882 €),
+  the evaporator (`A_ev` 2.273 m² against 2.334 m², `DELTAp_ev` 27.96 kPa against
+  26.15 kPa), the cost totals (`TEC` 8 125 € against 7 114 €, `TIC` 10 562 €
+  against 9 248 €, `SIC` 3 210 €/kW against 2 700 €/kW), and the cycle outputs
+  that depend on the condenser pressure (`P_r_ex_exp` 578.9 kPa against
+  531.8 kPa, `W_dot_net` 3 290 W against 3 425 W, `eta_cycle` 6.65 % against
+  6.96 %, `epsilon_s_exp` 0.650 against 0.637).
+  Errors 1 and 2 of the original are corrected: the saturated enthalpies of
+  `kuo` and `Hsieh_new` were molar (J/mol) while the densities and heat
+  capacities were mass-based, so the boiling number Bo = q/(G·i_fg) was about
+  7.5 times too large for R245fa (M = 134 kg/kmol); in `Hsieh_new` the liquid
+  heat-transfer coefficient overwrote `h_l` before `i_fg = h_v − h_l` was
+  evaluated. The corrected values are the reliable ones: the condensation
+  coefficient is lower, so the condenser needs a larger area. The EES stored run
+  carries the two errors: a scratch run of the variant with both restored gives
+  `eta_cycle` 6.963 % (EES 6.964 %), `W_dot_net` 3 444 W (3 425 W) and `SIC`
+  2 608 €/kW (2 700 €/kW, 3.4 %).
+- **The other variables differ by a few %**: `M_dot_r` 0.9 %, `Q_dot_ev` 0.6 %,
+  `epsilon_ev` 0.6 % and the vapour specific heats of the R245fa states up to
+  6.1 % (`Cp_r_ex_vap_cd`). They come from the property backend (CoolProp 7
+  against REFPROP 8 for R245fa, see `CSL-0124`). 152 of the 262 unaffected
+  variables differ by more than the tolerance 1e-3.
 - **Reference-state offset (excluded)**: the absolute air enthalpies
-  `h_a_ex_vap` (2.2e-1) and `h_a_ex_liq` (2.5e-1) carry the offset between
-  the EES ideal-gas JANAF reference and CoolProp's `Air`; they are pure
-  diagnostics (each appears only in its own `Temperature(Air, h=…)` inverse,
-  whose temperature agrees).
-- **Printed maximum over all common variables**: 2.5e-1 (the pair above).
+  `h_a_ex_vap` (2.2e-1) and `h_a_ex_liq` (2.5e-1) carry the offset between the
+  EES ideal-gas JANAF reference and CoolProp's `Air`; they are pure diagnostics
+  (each appears only in its own `Temperature(Air, h=…)` inverse, whose
+  temperature agrees).
 - **Only in EES (30)**: the 9 REFPROP pseudo-quality outputs `Q_r_*` outside
   0..1 (wrapper diagnostics, not reproduced), plus 21 stale values of an
   older EES session (`A`, `A_tp`, `AU`, `AU_tp`, `C`, `Cp`, `d`, `h`,
@@ -143,18 +163,6 @@ ees_variables.csv`):
 
 Regression: `tools/test_models.py CSL-0153` solves the variant and compares
 it with `orc_whr_refprop_cost_coolsolve.sol`.
-
-- **Native rewrite (2026-10-10, decision D12)**: checked in a scratch copy with
-  the variant's workarounds (mixture string read as `'R245fa'`, `$common`
-  dropped, `End`, `IF` as in the variant, dead block removed): the 362 common
-  variables of its solution equal those of the variant run with the same
-  binary (maximum relative difference 0).
-- **Frozen binary (2026-10-10)**: with the CoolSolve binary of that day, the
-  variant's solution is no longer its committed `.sol` (`0.3.0@7addbbc`, older
-  CoolProp build; the regression `CSL-0153:coolsolve` reports it). 216 of the
-  356 common variables then differ from the EES stored solution at rtol 1e-3;
-  `SIC` is 2.66e3 against 2.70e6 (a factor of about 1000, shared by the
-  native rewrite; not investigated).
 
 ## Source and attribution
 
@@ -203,10 +211,8 @@ itself.
      defining the same variable: REFPROP molar outputs follow the caller's
      scalings (`T` K, `p` kPa, `rho` kmol/m³, `v` m³/kmol, `h`/`s`
      kJ/kmol → `×MM/1000` gives the stored J/kg values; `cp`/`cv` are
-     reproduced in their stored kmol convention `×MM/1000`). The molar
-     convention of `h_l`, `h_v` in `Hsieh_new`/`kuo` (their `h_ref` is
-     kJ/kmol, so `i_fg` stays in kJ/kmol as in the original) is kept; the
-     stored `A_cd`/`A_ev` confirm it. The expander-inlet call, whose
+     reproduced in their stored kmol convention `×MM/1000`). The molar convention of `h_l`, `h_v` in `Hsieh_new`/`kuo` (their `h_ref` is kJ/kmol) is not used:
+     the saturated enthalpies of `kuo`/`Hsieh_new` are in J/kg (see the last line of this log). The expander-inlet call, whose
      `(T, P)` inputs are unknowns, is written through its two determined
      constraints (`v_r_in_exp` from the built-in volume ratio,
      `s_r_in_exp = s_r_su_exp`). The original's pressure inputs
@@ -241,17 +247,17 @@ itself.
   The equation count of the variant is 361 (largest block 24), vs the 293/331
   of the native parse, in which the REFPROP blocks are dropped with their
   output equations and variables.
-- **2026-10-10 — native file rewritten (decision D12)**: the 32 `CALL EES_REFPROP` statements replaced by the variant's CoolProp equations on `WorkingFluidMix$` (same states and molar conventions); `$common`, the 5-argument `IF`, `End procedure` and the `hx_cd` dead block kept. Scratch check: *Verification*.
+- **2026-10-10 — native file rewritten (decision D12)**: the 32 `CALL EES_REFPROP` statements replaced by the variant's CoolProp equations on `WorkingFluidMix$` (same states, saturated enthalpies in J/kg); `$common`, the 5-argument `IF`, `End procedure` and the `hx_cd` dead block kept.
+- Two errors of the original are corrected: molar enthalpies in the boiling number of `kuo`/`Hsieh_new`, and `h_l` overwritten before `i_fg` in `Hsieh_new`.
 
 
 ## Limitations and CoolSolve gaps
 
-- `CS-GAP-FLUIDS-MIXTURE` — the native file's property calls use the CoolProp
-  mixture string `WorkingFluidMix$ = 'R245fa[1]&R134a[0]'` (x = `MM_fraction`
-  written as a number). CoolSolve has no R245fa+R134a mixture:
-  `enthalpy('R245fa[0.5]&R134a[0.5]', T=50, P=5E5)` gives *Unknown fluid*,
-  while CoolProp accepts the string. The variant substitutes pure R245fa,
-  faithful only for the stored run (`MM_fraction = 1`).
+- Mixtures: the property calls use the CoolProp mixture string
+  `WorkingFluidMix$ = 'R245fa[1]&R134a[0]'` (x = `MM_fraction`, written as a number in
+  the string); other compositions use CoolProp's predictive mixture model (CoolSolve
+  warns that mixture properties may be less reliable).
+- The variant is written for pure R245fa (`MM_fraction = 1`).
 - `CS-BUG-COMMON-PROC` — the procedures read the mixture string through
   `$common`, which CoolSolve evaluates as zero (silently); the variant drops
   the `$common` lines.
