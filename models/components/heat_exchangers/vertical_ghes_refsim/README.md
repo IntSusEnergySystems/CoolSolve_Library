@@ -23,7 +23,7 @@ ULiège model data bank.
 | **Source** | ULiège model data bank — `VerticalGHES_RefSim_EES_Model_SB080213.EES` (EES X7.888), inside `VerticalGHES_EXE_Model_SB080213.zip` |
 | **Authors** | Stéphane Bertagnolio (ULiège Thermodynamics Laboratory, from the header of the file) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file **blocked** by `CS-GAP-IF-DIRECTIVE`, `CS-GAP-INTEGRAL-LIMITS`, `CS-GAP-INTEGRALVALUE`, `CS-GAP-GOTO`, `CS-GAP-IF5`, `CS-BUG-INTEGRAL-FACTOR` and `CS-BUG-INTEGRAL-TABLE-SEP`; no runnable variant |
+| **CoolSolve** | v0.3.0 — native file **blocked** by `CS-GAP-GOTO` and `CS-GAP-INTEGRALVALUE` (`CS-GAP-IF5`, `CS-GAP-IF-DIRECTIVE`, `CS-GAP-INTEGRAL-LIMITS`, `CS-BUG-INTEGRAL-FACTOR` and `CS-BUG-INTEGRAL-TABLE-SEP` are closed in CoolSolve `fix/library-gaps-2`, @59b2862, @9423934 and @4cd0ca5); no runnable variant |
 
 ## Problem statement
 
@@ -79,15 +79,20 @@ temperature of the loop, and the energy extracted from the ground.
 
 ## How to run
 
-The model **cannot be run in CoolSolve v0.3.0**: the native file keeps the
+The model **cannot be run in CoolSolve**: the native file keeps the
 original syntax and is blocked (see *Limitations and CoolSolve gaps*). There is
 **no runnable variant**, because the two gaps that block the physics of the
 model (`INTEGRALVALUE`, `GOTO`) cannot be worked around without replacing the
 Multiple Load Aggregation Algorithm by a different algorithm.
 
 ```bash
-coolsolve ./vertical_ghes_refsim.eescode    # -> "Algebraic subsystem analysis failed"
+coolsolve ./vertical_ghes_refsim.eescode    # -> "Parse failed: Line 108: Could not parse line" … (GOTO ladders)
 ```
+
+(with CoolSolve v0.3.0 the run stopped at *"Algebraic subsystem analysis failed"*, the
+three `$IF` branches being kept; since `fix/library-gaps-2` @9423934 the `$IF` directives
+are resolved — branch `'B'` is kept, the model is square — and the first error is the parse
+error of the `GOTO` statements and labels of the two procedures, lines 108–183.)
 
 The file is otherwise complete: no missing library function, no lookup table,
 no external data file, unit system already SI-°C-Pa-J.
@@ -233,6 +238,9 @@ properties are constant inputs here).
   `renewables/geothermal_biomass` ("borefields"). The card wins for this
   import; moving the model (or splitting the category) is a `T-TAXO`
   decision for the maintainer.
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @59b2862 (T-RECHECK, `CS-GAP-IF5` closed).** The five-argument `IF` of the native file is now implemented; the native file is still blocked, the first error now comes from another gap (*Algebraic subsystem analysis failed*, the `$IF` directives, `GOTO` and symbolic `INTEGRAL` limits). The variant is kept.
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @9423934 (T-RECHECK, `CS-GAP-IF-DIRECTIVE` closed).** The `$IF borehole_configuration$` directives are now resolved (branch `'B'` kept, square model); the native file is still **blocked**, the first error now being the parse error of the `GOTO` ladders (`CS-GAP-GOTO`, lines 108–183), followed by `CS-GAP-INTEGRAL-LIMITS`, `CS-GAP-INTEGRALVALUE`, `CS-BUG-INTEGRAL-FACTOR` and `CS-BUG-INTEGRAL-TABLE-SEP`. No variant.
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @4cd0ca5 (T-RECHECK, `CS-GAP-INTEGRAL-LIMITS`, `CS-BUG-INTEGRAL-FACTOR` and `CS-BUG-INTEGRAL-TABLE-SEP` closed).** The native file is still **blocked**: the run stops at the parse errors of the `GOTO` ladders (`CS-GAP-GOTO`, lines 108–183), then `CS-GAP-INTEGRALVALUE`. The three `INTEGRAL` items no longer trigger: a scratch model with the same forms as the main program (`tau - tau_1 = (tau_summer - tau_summer_1)*3600`, `tau_1`/`tau_2` from the `tau_summer_*` inputs, `Q_bf_kWh = integral(Q_dot_borefield, tau, tau_1, tau_2, DELTAtau)/3.6E6` with `DELTAtau` a variable, `$IntegralTable tau:DELTAtau_table,tau_summer,…` with comma-separated columns) solves and gives the exact value (10.5 kWh for a ramp of 1000 W + 10 W/h over 10 h, columns filled); the first two cannot be checked on the real file before the `GOTO` parse errors are removed. No variant.
 
 ## Limitations and CoolSolve gaps
 
@@ -250,18 +258,14 @@ CoolSolve gaps blocking the native file (CoolSolve
 obstruction was found step by step, by working around each gap in a scratch
 copy:
 
-- `CS-GAP-IF-DIRECTIVE` — `$IF borehole_configuration$='A'/'B'/'C'` selects
-  the two Remund coefficients `beta_0`, `beta_1`. CoolSolve recognises the
-  directives but keeps **all three branches**, so `beta_0` and `beta_1` get
-  three equations each: the algebraic subsystem has 73 equations for 69
-  unknowns (over-determined by exactly 4) and the run stops at *"Algebraic
-  subsystem analysis failed"*. With a single branch active the model is square
-  (69 equations / 69 unknowns), i.e. **the original is neither over- nor
+- `CS-GAP-IF-DIRECTIVE` — **closed in CoolSolve `fix/library-gaps-2` @9423934.**
+  `$IF borehole_configuration$='A'/'B'/'C'` selects the two Remund coefficients
+  `beta_0`, `beta_1`. CoolSolve v0.3.0 recognised the directives but kept **all
+  three branches**, so `beta_0` and `beta_1` got three equations each (73
+  equations for 69 unknowns, *"Algebraic subsystem analysis failed"*); the
+  directives are now resolved with `borehole_configuration$ = 'B'`, so the
+  original is square (69 equations / 69 unknowns), **neither over- nor
   under-determined**.
-- `CS-GAP-INTEGRAL-LIMITS` — `Q_bf_kWh = integral(Q_dot_borefield, tau,
-  tau_1, tau_2, DELTAtau)` uses the variables `tau_1`, `tau_2` as limits:
-  *"Non-constant integration limits are not yet supported (resolve parameters
-  before the INTEGRAL call)"*.
 - `CS-GAP-INTEGRALVALUE` (**new gap**, registered with this model) — the MLAA
   reads the load history of the trajectory being integrated:
   `INTEGRALVALUE((t-1)*DELTAtau, q_day)`, and the `summation` procedure loops
@@ -277,15 +281,20 @@ copy:
   labels and **silently ignores the jumps**, so every branch of a ladder is
   executed in turn: the values are wrong with a *SUCCESS* solver status. This
   is a silent wrong answer, not an error.
-- `CS-GAP-IF5` — `time_h\day = if(time_h\day_1, 0.0000001, 24, 24,
+- `CS-GAP-IF5` — **closed in CoolSolve `fix/library-gaps-2` @59b2862**: `time_h\day = if(time_h\day_1, 0.0000001, 24, 24,
   time_h\day_1)` and `time\day = if(round(time_h\day), 24, time_day_1,
-  time_day_1-1, time_day_1-1)`: the EES 5-argument `IF`, not supported.
-- `CS-BUG-INTEGRAL-FACTOR` — the factor `/3.6E6` multiplying
-  `integral(...)` in `Q_bf_kWh` would be silently dropped (wrong value, no
-  error).
-- `CS-BUG-INTEGRAL-TABLE-SEP` — the `$IntegralTable` columns of the file are
-  comma-separated, which CoolSolve takes as part of the variable name: every
-  column of the trajectory comes out empty.
+  time_day_1-1, time_day_1-1)`: the EES 5-argument `IF` (not supported in CoolSolve v0.3.0).
+- `CS-GAP-INTEGRAL-LIMITS` — **closed in CoolSolve `fix/library-gaps-2`
+  @4cd0ca5**: `Q_bf_kWh = integral(Q_dot_borefield, tau, tau_1, tau_2, DELTAtau)`
+  uses the variables `tau_1`, `tau_2` as limits (CoolSolve v0.3.0: *"Non-constant
+  integration limits are not yet supported"*).
+- `CS-BUG-INTEGRAL-FACTOR` — **closed in CoolSolve `fix/library-gaps-2`
+  @4cd0ca5**: the factor `/3.6E6` multiplying `integral(...)` in `Q_bf_kWh` was
+  silently dropped (wrong value, no error).
+- `CS-BUG-INTEGRAL-TABLE-SEP` — **closed in CoolSolve `fix/library-gaps-2`
+  @4cd0ca5**: the `$IntegralTable` columns of the file are comma-separated,
+  which CoolSolve v0.3.0 took as part of the variable name (every column of the
+  trajectory came out empty).
 - `CS-DOC-SQUARE-INTEGRAL` — the `-d` analysis of a model with `INTEGRAL`
   calls reports `System square: No` and lists *all* variables as unmatched
   (`Equations: 74, Variables: 70`), which is why the real diagnosis comes from
@@ -296,9 +305,9 @@ copy:
 the Multiple Load Aggregation Algorithm work: without them the five-zone
 aggregation of the load history cannot be expressed at all, and replacing it
 (keeping a `DUPLICATE` array of the whole trajectory, say) would be a
-different model, not a transcription of this one. The remaining four items
-(`$IF`, integral limits, integral factor, table separator) *are* transposable,
-but on their own they do not produce a running model.
+different model, not a transcription of this one. The three `INTEGRAL` items
+(limits, factor, table separator) and the `$IF` selection are now handled by
+CoolSolve, but on their own they do not produce a running model.
 
 ## Related models
 

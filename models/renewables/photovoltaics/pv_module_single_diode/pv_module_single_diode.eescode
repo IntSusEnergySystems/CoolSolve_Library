@@ -7,8 +7,9 @@
   ReadPV, LOOKUP$ROW) and the I-V curve is computed in 100 points at the cell
   temperature T_c and irradiance G of the default run.
   STATUS: blocked - CS-GAP-END-PROCEDURE (END ReadPV), CS-GAP-CONVERT-UNQUOTED
-  (ConvertTemp(C,K,.)), CS-GAP-LOOKUPROW (LOOKUP$ROW unsupported), CS-GAP-LOOKUP-PROC
-  (lookup inside a PROCEDURE), CS-BUG-LOOKUP-STRING (string key column). Run
+  (ConvertTemp(C,K,.)), CS-GAP-LOOKUPROW (LOOKUP$ROW unsupported),
+  CS-BUG-LOOKUP-STRING (string key column); CS-GAP-LOOKUP-PROC (lookup inside
+  a PROCEDURE) is closed since CoolSolve fix/library-gaps-2. Run
   the verified variant pv_module_single_diode_coolsolve.eescode (README.md).
   Inputs : PVModule$ (module name), T_c [°C], G [W/m^2]; table PVModules
   Outputs: module parameters, I[i], V[i], P[i] (100 points)

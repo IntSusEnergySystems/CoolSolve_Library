@@ -20,7 +20,7 @@ shipped and verified against the solution stored by EES (see *Verification*).
 | **Source** | ULiège model bank (Laborelec toolkit lineage), heat production by combustion, condensing boiler reference simulation model, 9 January 2008 (`CondensingBoiler_RefSim_EES_Model_VLAR080109.EES`, EES 7.888) |
 | **Authors** | Vincent Lemort, Andrés Rodríguez (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file **blocked** by `CS-GAP-NAME-SYMBOL` (with `CS-GAP-FLUIDS-C8H18`, `CS-GAP-IF5`, `CS-BUG-COMMON-PROC`); runnable variant `condensing_boiler_refsim_coolsolve.eescode` verified against the solution stored by EES |
+| **CoolSolve** | v0.3.0 — native file **blocked** by `CS-GAP-NAME-SYMBOL` (with `CS-GAP-FLUIDS-C8H18`, `CS-BUG-COMMON-PROC`; `CS-GAP-IF5` is closed in CoolSolve `fix/library-gaps-2` @59b2862); runnable variant `condensing_boiler_refsim_coolsolve.eescode` verified against the solution stored by EES |
 
 ## Problem statement
 
@@ -332,6 +332,7 @@ this file; they are separate candidates.
   equations: above level 2 (several sub-models and closures, moist air,
   ideal-gas chemistry), below level 4 (no optimisation, no
   distribution/discretisation, no dynamic behaviour) → **level 3**.
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @59b2862 (T-RECHECK, `CS-GAP-IF5` closed).** The five-argument `IF` of the native file is now implemented; the native file is still blocked, the first error now comes from another gap (the parse stops at the `C%`/`H%` names, `CS-GAP-NAME-SYMBOL`). The variant is kept.
 
 ## Limitations and CoolSolve gaps
 
@@ -346,8 +347,9 @@ CoolSolve register `docs/model_library_support.md`):
   (*"Unknown fluid: 'C4H10'"*); the same gap as `C8H18`, "the other hydrocarbons
   of the EES ideal-gas substance list beyond C3". `x_C4H10 = 0`, so the terms
   that use it vanish, but the calls must still evaluate.
-- **`CS-GAP-IF5`** — the five-argument `IF(A,B,X,Y,Z)` of section 8.2.4:
-  *"Unknown or unsupported function: if with 5 arguments"*.
+- **`CS-GAP-IF5`** — closed in CoolSolve `fix/library-gaps-2` @59b2862: the five-argument `IF(A,B,X,Y,Z)` of
+  section 8.2.4 raised *"Unknown or unsupported function: if with 5 arguments"*
+  in CoolSolve v0.3.0 and now evaluates.
 - **`CS-BUG-COMMON-PROC`** — the ten `$common` variables of `PROCEDURE COILWET`
   are evaluated as zero inside the body, so the wet coil is not solved at all
   (*SingularJacobian* in the block of the call outputs). The same row records,

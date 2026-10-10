@@ -57,7 +57,6 @@
     "notes": "46/57 variables agree within 1e-3 (51/57 within 0.5%; mostly exact); the 5 EES-side overwritten cells (E_dot_m, Q_dot_m, M_dot_CO2, T_sk, H_dot_sweat) mix a second operating point into the stored panel (see README); largest consistent-subset deviation 5.2e-3 on w_R_ex (humid-air formulation)."
   },
   "missing_features": [
-    "CS-GAP-IF-DIRECTIVE",
     "CS-GAP-LOOKUPROW",
     "CS-BUG-LOOKUP-STRING"
   ],
@@ -70,6 +69,11 @@
       "date": "2026-10-05",
       "action": "added (roadmap card C-11; DG-0061 triaged: TM-0263 duplicate)",
       "by": "opencode worker for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @9423934 (T-RECHECK, CS-GAP-IF-DIRECTIVE closed); still blocked by CS-GAP-LOOKUPROW (native file now resolves both $if, 59 equations/59 unknowns, first error LOOKUP$ROW) and CS-BUG-LOOKUP-STRING; _coolsolve variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

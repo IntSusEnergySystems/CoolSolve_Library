@@ -61,7 +61,6 @@
     "notes": "26 of the 28 stored variables carry values (CO and NO cleared); the Oil-case records (MM_f, LHV_f, c_f, H_rf, H_ra, HHV, LHV_f_bis) belong to the alternative fuel case of this multi-case file. The stored ntot = 0.54286 kmol is inconsistent with the stored H-atom balance for the same run (flagged in the README, not resolvable without EES)."
   },
   "missing_features": [
-    "CS-GAP-IF-DIRECTIVE",
     "CS-GAP-CHEM-EQUIL",
     "CS-GAP-NASA",
     "CS-GAP-NAME-SYMBOL",
@@ -80,6 +79,11 @@
       "date": "2026-10-08",
       "action": "added (card C-142, batch B-11); native file blocked (CS-GAP-IF-DIRECTIVE, CS-GAP-CHEM-EQUIL, CS-GAP-NASA, CS-GAP-NAME-SYMBOL, CS-GAP-SUM-INDEXED), no runnable variant (equilibrium physics has no faithful substitute)",
       "by": "GLM (Z.ai) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @9423934 (T-RECHECK, CS-GAP-IF-DIRECTIVE closed); still blocked: the $IF/$IFNOT directives are now resolved (FUEL$='CH4', DISSOCIATION$='YES' kept, the 'Oil' lines no longer parse), the system is not square (65 equations, 68 unknowns) because of the CHEM_EQUIL and NASA calls (CS-GAP-CHEM-EQUIL, CS-GAP-NASA) and the indexed sum (CS-GAP-SUM-INDEXED); CS-GAP-NAME-SYMBOL (C%/H%) only concerns the 'Oil' branch (confirmed with FUEL$='Oil' in a scratch copy); no variant",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

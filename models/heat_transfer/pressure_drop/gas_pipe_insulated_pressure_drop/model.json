@@ -55,14 +55,12 @@
     "notes": "48 common variables, 44 within 6.2e-4. h_i/SP[2] 7.97e-2: EES-vs-CoolProp R717 enthalpy reference offset (differences unaffected); Pr 4.43e-2 and cp: stale procedure-local records of an older EES run; DELTAT_total 1.82e-3 (cp backend). Excluded: DELTAp_elbows/DELTAp_Tees (stale, inconsistent with the stored DpF), SP[6] (dead)."
   },
   "missing_features": [
-    "CS-GAP-LOOKUP-PROC",
     "CS-GAP-ACCENTED-IDENT",
     "CS-GAP-COLEBROOK",
     "CS-GAP-STRINGPOS",
     "CS-GAP-ARRAY-ARG",
     "CS-BUG-PI-FUNCTION",
-    "CS-BUG-IMPLICIT-PROC",
-    "CS-BUG-LOOKUP-COLNAME"
+    "CS-BUG-IMPLICIT-PROC"
   ],
   "related": [
     "CSL-0018",
@@ -78,6 +76,16 @@
       "date": "2026-10-08",
       "action": "added (roadmap card C-150, batch B-11): native file blocked, runnable _coolsolve variant verified against the EES stored solution",
       "by": "opencode worker (glm-5.3-flash) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @d5d6b37 (T-RECHECK, CS-GAP-LOOKUP-PROC closed; CS-BUG-LOOKUP-COL-ARG closed and CS-BUG-LOOKUP-COLNAME part b fixed); still blocked: the first errors are still the parse errors of CS-GAP-ACCENTED-IDENT (lines 106-312), CS-GAP-ARRAY-ARG (line 332), plus CS-GAP-COLEBROOK, CS-GAP-STRINGPOS; variant kept; CS-BUG-LOOKUP-COLNAME stays listed (register: part a open) although a quoted header with a comma resolves in the frozen binary; the shipped native pipedata table has headers without the commas of the EES names",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "CS-BUG-LOOKUP-COLNAME removed from missing_features: closed in the CoolSolve register (part b fixed in fix/library-gaps-2 @d5d6b37, part a not reproducible); the remaining column-name failure comes from the shipped companion CSV (header commas and inch marks of Pipedata.LKT lost), see README",
+      "by": "Claude (Opus) for S. Quoilin"
     }
   ]
 }

@@ -5,7 +5,7 @@
   "summary": "Detailed steady-state model of an inverter-driven reversible air-to-water heat pump (Daikin Altherma type, 2007): inverter compressor with isentropic and isochoric compression stages, effectiveness heat exchangers, fan and pump characteristics, frost/ice correction. Heating-mode branch of the original two-mode (SUBPROGRAM) file, flattened per decision D10.",
   "kind": "steady",
   "level": 4,
-  "status": "blocked",
+  "status": "failing",
   "main_file": "inverter_air_water_heat_pump.eescode",
   "fluids": [
     "R410A",
@@ -49,14 +49,12 @@
   },
   "verification": {
     "reference": "EES stored solution (226 of 492 variables); partly self-inconsistent (condenser dew point 18.5 °C vs water heated to 42 °C), see README",
-    "date": "2026-10-08",
-    "coolsolve_version": "0.3.0@7addbbc",
+    "date": "2026-10-10",
+    "coolsolve_version": "0.3.0@59b2862",
     "max_rel_diff": null,
-    "notes": "Native file blocked by CS-GAP-IF5 (five-argument IF built-in, 14 call sites; gap registered). The _coolsolve variant (rewrites only the IF calls) solves 180 of 181 blocks; the 151-variable wet/dry selection block fails (Unknown fluid '' on two-phase (x,P) calls / MaxIterations; no .sol committed)."
+    "notes": "Not verified: the native file (CS-GAP-IF5 closed, all 14 five-argument IF evaluate) solves 180 of 181 blocks but the 151-variable block 106 (dry/wet evaporator selection + compressor + condenser coupling) does not converge (Newton SingularJacobian/LineSearchFailed, TrustRegion MaxIterations, residual about 1e4 from a CoolProp-consistent initial point; register section 8, C-147). The stored EES R410A enthalpies/entropies are in EES's reference state (offset 142244.6 J/kg for h, to be added for CoolProp) and 118 of the 151 block variables are not stored; the shipped .initials is the stored solution with the reference-state offset applied and a consistent cycle point for the unstored variables. No .sol. The _coolsolve variant was removed (it never solved)."
   },
-  "missing_features": [
-    "CS-GAP-IF5"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0078",
     "CSL-0116"
@@ -69,6 +67,11 @@
       "date": "2026-10-08",
       "action": "added (blocked: CS-GAP-IF-5ARG; heating branch of TM-0274 flattened per D10)",
       "by": "glm-5.3-flash (opencode worker) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @59b2862 (T-RECHECK, CS-GAP-IF5 closed): blocked -> failing, block 106 does not converge (initial-guess tests: README Verification); missing_features emptied (status failing: no registered gap left), _coolsolve variant removed, .initials rebuilt (R410A reference-state offset, consistent cycle point)",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

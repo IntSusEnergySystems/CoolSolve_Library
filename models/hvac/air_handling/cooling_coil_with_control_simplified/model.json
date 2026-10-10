@@ -5,7 +5,7 @@
   "summary": "Simplified cooling and dehumidifying coil of an air handling unit from the ULiège model bank: the refrigerant side is not modelled and the coil is represented by a contact temperature (approach fraction set by the contact-factor effectiveness), driven by a bounded proportional control law on the exhaust air temperature; computes the exhaust air state and the total, sensible and latent cooling powers.",
   "kind": "steady",
   "level": 1,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "cooling_coil_with_control_simplified.eescode",
   "fluids": [
     "AirH2O"
@@ -45,15 +45,13 @@
     "course": "ULiège model bank (Laborelec toolkit lineage), simplified model with control, 2008-01-16; published as Lemort, Cuevas, Lebrun, Teodorese, ASHRAE Transactions 114(1), 2008"
   },
   "verification": {
-    "reference": "EES stored solution in the source file (34 variables) against the runnable variant cooling_coil_with_control_simplified_coolsolve.eescode; the native file cannot be solved (CS-GAP-IF5)",
-    "date": "2026-10-05",
-    "coolsolve_version": "0.3.0@536d427",
+    "reference": "EES stored solution in the source file (34 variables) against the native file cooling_coil_with_control_simplified.eescode (the native file is the verified file)",
+    "date": "2026-10-10",
+    "coolsolve_version": "0.3.0@59b2862",
     "max_rel_diff": 0.0271,
-    "notes": "34 common variables, 14 differ above rtol=0.001, maximum relative difference 2.71e-02 (Q_dot_latent_coolingcoil, 6948.13 W against 7141.41 W): a residual of two large numbers. Cause: the EES and CoolProp humid-air formulations (dew point 3.9e-03, wet-bulb 2.3e-03, W_c 4.2e-03, h_a_ex 2.0e-03), as in the other humid-air models of the library (CSL-0070 4.4e-03, CSL-0016 5.1e-03). The algebraic results are reproduced exactly or below 1e-05 (t_a_ex, t_c, Q_dot_sensible, t_c_mindry). No variable excluded."
+    "notes": "34 common variables, 14 differ above rtol=0.001, maximum relative difference 2.71e-02 (Q_dot_latent_coolingcoil, 6948.13 W against 7141.41 W): a residual of two large numbers. Cause: the EES and CoolProp humid-air formulations (dew point 3.9e-03, wet-bulb 2.3e-03, W_c 4.2e-03, h_a_ex 2.0e-03), as in the other humid-air models of the library (CSL-0070 4.4e-03, CSL-0016 5.1e-03). The algebraic results are reproduced exactly or below 1e-05 (t_a_ex, t_c, Q_dot_sensible, t_c_mindry). No variable excluded. The native file, with the EES 5-argument IF (CS-GAP-IF5 closed in CoolSolve fix/library-gaps-2 @59b2862), solves in 2 iterations and gives the same 34 values as the former _coolsolve variant (identical .sol), which was removed."
   },
-  "missing_features": [
-    "CS-GAP-IF5"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0017",
     "CSL-0016",
@@ -69,6 +67,11 @@
       "date": "2026-10-05",
       "action": "added",
       "by": "opencode worker (t70) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @59b2862 (T-RECHECK, CS-GAP-IF5 closed): blocked -> verified; native file verified (identical to the variant on all 34 variables), _coolsolve variant removed, .sol baseline added",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

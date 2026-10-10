@@ -53,14 +53,12 @@
     "notes": "Variant (re-run with the TM-0095 inputs) vs EES: 19 common variables, 18 within 6.4e-8; printed maximum 5.23e-3 on u_dot (re-run at C-46) (excluded: final-time derivative ~1e-6 J/(kg s), proportional to 5-T_w ~ 4.3e-7, cancellation-limited); states agree to 2.5e-10 (u), 3.5e-10 (T_w, t_melt). Shipped inputs: trajectory matches the closed-form solution (melt complete at 30 460 s; final u 20 934.2 J/kg, T_w 4.9998 C)."
   },
   "missing_features": [
-    "CS-GAP-IF5",
-    "CS-GAP-INTEGRAL-LIMITS",
-    "CS-BUG-WATER-NEAR-FREEZING",
-    "CS-BUG-INTEGRAL-TABLE-SEP",
-    "CS-BUG-INTEGRAL-MAXSTEPS",
-    "CS-BUG-INTEGRAL-TABLE-CASE"
+    "CS-BUG-WATER-NEAR-FREEZING"
   ],
-  "related": ["CSL-0009", "CSL-0100"],
+  "related": [
+    "CSL-0009",
+    "CSL-0100"
+  ],
   "related_external": [
     "CoolSolve examples/ice_storage_tank.eescode (CoolSolve transcription of the same exercise, CSX-023, kept in CoolSolve as a test case)"
   ],
@@ -73,6 +71,16 @@
       "date": "2026-10-05",
       "action": "added (roadmap card C-43, batch B-02)",
       "by": "opencode worker (GLM) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @59b2862 (T-RECHECK, CS-GAP-IF5 closed); still blocked by CS-GAP-INTEGRAL-LIMITS, CS-BUG-WATER-NEAR-FREEZING, CS-BUG-INTEGRAL-TABLE-SEP, CS-BUG-INTEGRAL-MAXSTEPS, CS-BUG-INTEGRAL-TABLE-CASE; README and missing_features updated, variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @4cd0ca5 (T-RECHECK, CS-GAP-INTEGRAL-LIMITS, CS-BUG-INTEGRAL-TABLE-SEP, CS-BUG-INTEGRAL-MAXSTEPS and CS-BUG-INTEGRAL-TABLE-CASE closed); still blocked by CS-BUG-WATER-NEAR-FREEZING (the native file marches to 50000 s, then the final verification fails on INTENERGY at 273.14 K); README, headers and missing_features updated, variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

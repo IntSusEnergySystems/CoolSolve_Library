@@ -10,8 +10,9 @@ efficiencies — with and without regenerator — compared with the Carnot
 efficiency. Every quantity is computed a second time with the real-gas air
 property functions (the `_bis` variables of the original), and the works of the
 two isotherms are computed both in closed form and with the EES definite
-integral of `p dv`. The native file cannot run on CoolSolve v0.3.0 (three
-`INTEGRAL` limitations); the shipped variant
+integral of `p dv`. The native file still cannot run on CoolSolve (a single
+integration variable per model and the decreasing direction of one of the two
+integrals); the shipped variant
 `stirling_cycle_ideal_regenerator_coolsolve.eescode` runs and is verified
 against the EES stored solution.
 
@@ -23,7 +24,7 @@ against the EES stored solution.
 | **Source** | ULiège — course *Thermodynamique appliquée* (MECA0002), repetition R5, exercise 3 — EES file `R05_E03_2022.EES` |
 | **Authors** | TBD (ULiège course MECA0002; the session statement sheet `ThAp22_R05.docx` of the same folder lists the repetiteurs N. Paulus, A. Zeoli and V. Lemort; the EES file itself carries no author name, only the laboratory licence tag) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0@536d427 — the **native file is blocked** by `CS-GAP-INTEGRAL-LIMITS`, `CS-GAP-INTEGRAL-MULTIVAR` and `CS-BUG-INTEGRAL-FACTOR`; the shipped `_coolsolve` variant runs and reproduces the EES stored solution (see *Verification*) |
+| **CoolSolve** | v0.3.0@536d427 — the **native file is blocked** by `CS-GAP-INTEGRAL-MULTIVAR` and `CS-GAP-INTEGRAL-DECREASING` (`CS-GAP-INTEGRAL-LIMITS` and `CS-BUG-INTEGRAL-FACTOR` are closed in CoolSolve `fix/library-gaps-2` @4cd0ca5); the shipped `_coolsolve` variant runs and reproduces the EES stored solution (see *Verification*) |
 
 ## Problem statement
 
@@ -91,7 +92,7 @@ depend on `r_v` at all.
 ## How to run
 
 The native `stirling_cycle_ideal_regenerator.eescode` does **not** run on
-CoolSolve v0.3.0 (see *Limitations and CoolSolve gaps*); solve the runnable
+CoolSolve (see *Limitations and CoolSolve gaps*); solve the runnable
 variant, from the GUI or from a terminal:
 
 ```bash
@@ -337,6 +338,7 @@ exercises. No source file is copied into the library.
      differ from the stored EES values by 3–4 % (see *Verification*). No other
      equation, name, constant or input value was modified, and no CoolSolve-only
      syntax is used: the variant is valid EES.
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @4cd0ca5 (T-RECHECK, `CS-GAP-INTEGRAL-LIMITS` and `CS-BUG-INTEGRAL-FACTOR` closed).** The native file is still **blocked**. The first error is now `CS-GAP-INTEGRAL-MULTIVAR` (*"All INTEGRAL() calls must share the same integration variable; found 'v34' and 'v12'"*) instead of the symbolic limits. A scratch copy with the `v12` integral removed shows what remains: the symbolic limits are resolved and the compression integral stops with *"Invalid integration interval [0.855832, 0.085583]: the upper limit must be greater than the lower limit"* (`w_12_bis` integrates from `v[1]` to `v[2]` = `v[1]/r_v`, i.e. downwards, a compression work: new open gap `CS-GAP-INTEGRAL-DECREASING`, which the change of variable of the variant also avoids). With the `v12` integral replaced by `w_12_bis = w_12`, the native `w_34_bis = -integral(p_integrale34, v34, v[3], v[4], 0.1)` solves with its symbolic limits and its factor −1 (−846 107 J/kg with the 0.1 m³/kg step of the original, RK4; −845 200 J/kg in the variant with 0.001 in `x`; EES stored −883.3 kJ/kg, trapezoidal rule): `CS-GAP-INTEGRAL-LIMITS` and `CS-BUG-INTEGRAL-FACTOR` no longer trigger. The variant is kept (it still serves its purpose: one integration variable, increasing limits) and its `.sol` is unchanged; its header says which gaps no longer apply.
 - **Level** (taxonomy.md §3): 65 equations native / 69 variant (50–300 → 1);
   largest algebraic block ≤ 5 (0, estimated by reading the equations: the
   perfect-gas part is explicit and the real-gas part has blocks of 1–2
@@ -349,22 +351,30 @@ exercises. No source file is copied into the library.
 
 ## Limitations and CoolSolve gaps
 
-- **The native file is blocked** by three registered CoolSolve v0.3.0
-  limitations, all met by the two `INTEGRAL` calls of the original (they are
-  *definite integrals used as a numerical quadrature*, in a steady model — no
-  time integration at all):
-  - `CS-GAP-INTEGRAL-LIMITS`: symbolic integration limits (`v[1]`, `v[2]`,
-    `v[3]`, `v[4]`) are rejected — *"Non-constant integration limits are not yet
-    supported"*;
+- **The native file is blocked** by two registered CoolSolve limitations, met
+  by the two `INTEGRAL` calls of the original (they are *definite integrals used
+  as a numerical quadrature*, in a steady model — no time integration at all):
   - `CS-GAP-INTEGRAL-MULTIVAR`: a model may have only one integration variable —
     *"All INTEGRAL() calls must share the same integration variable; found 'v34'
     and 'v12'"* (registered with this model; the EES file solves both integrals,
     its stored solution holding `w_12_bis` = 202.65 and `w_34_bis` = −883.26
     kJ/kg);
-  - `CS-BUG-INTEGRAL-FACTOR`: the factor `−1` in front of the original
-    `w_12_bis = -integral(…)` is silently ignored, so even with constant limits
-    the native file would return `+196 824` instead of the correct `-196 824`.
-  The runnable variant above works around all three, as `CSL-0047` does.
+  - `CS-GAP-INTEGRAL-DECREASING`: the upper limit must be greater than the lower
+    one — *"Invalid integration interval [0.855832, 0.085583]: the upper limit
+    must be greater than the lower limit"*; `w_12_bis` integrates from `v[1]` to
+    `v[2]` = `v[1]/r_v` (EES integrates downwards: `INTEGRAL(1, t, 2, 1, 0.1)` = −1
+    per the CoolSolve register; registered when `CS-GAP-INTEGRAL-LIMITS` was
+    closed).
+  Closed in CoolSolve `fix/library-gaps-2` @4cd0ca5 (met by the v0.3.0 native
+  file, no longer triggered): `CS-GAP-INTEGRAL-LIMITS` (symbolic limits `v[1]`,
+  `v[2]`, `v[3]`, `v[4]` were rejected, *"Non-constant integration limits are not
+  yet supported"*) and `CS-BUG-INTEGRAL-FACTOR` (the factor `−1` in front of
+  `w_12_bis = -integral(…)` was silently ignored: `+196 824` instead of
+  `-196 824`).
+  The runnable variant above works around the two open gaps by a change of
+  variable on one integration variable over [0,1] (its other two changes, the
+  inlined limits and the separate factor, are no longer needed since the two
+  closed IDs, but they stay valid EES and harmless).
 - **The `-d` analysis of a model with `INTEGRAL` calls is unusable**
   (`CS-DOC-SQUARE-INTEGRAL`): it reports *System square: No* and zero blocks
   although the solve succeeds and verifies. The block/loop statistics used for
@@ -395,8 +405,10 @@ exercises. No source file is copied into the library.
   `p[i]`, `T[i]`, `v[i]`, `s[i]`, and an engine power on top of the cycle.
 - `CSL-0047` *nonideal_gas_isothermal_work*: the same idea on a single
   isothermal process — a non-ideal gas whose boundary work is computed with an
-  EES definite integral and with the closed form; same two `INTEGRAL`
-  limitations, same runnable-variant pattern.
+  EES definite integral and with the closed form; verified on its native file
+  since the re-check of 2026-10-10 (symbolic limits and factor in front of the
+  call), whereas this model also needs several integration variables and a
+  decreasing direction.
 - `CSL-0050` *two_shaft_gas_turbine_compressor_map*: the gas-turbine cycle of
   the same course family, also walked through station by station on air, with a
   real gas-turbine regenerator instead of the ideal Stirling one.

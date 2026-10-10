@@ -21,7 +21,7 @@ rows of the inventory name it).
 | **Source** | ULiège Thermodynamics Laboratory — EES library `Brineprop.lib` (1997 edition according to its EES help file; compiled stamp EES 7.793) with the binary lookup tables `Brine1.lkt` and `Brine2.lkt` (EES 4.631) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory; the EES help file of the library credits its 1997 edition and refers to IIR thermo-physical data, no personal name; the inventory attributes the library to the laboratory, J. Lebrun et al.) |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0@536d427 — **blocked**: the native file does not parse (`CS-GAP-ELSEIF-CHAIN`); the runnable variant `brineprop_secondary_refrigerants_coolsolve.eescode` is **verified** against the EES stored solution (≤ 4.77e-10) |
+| **CoolSolve** | 0.3.0@536d427, re-checked with 0.3.0@d5d6b37 — **blocked**: the native file does not parse (`CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE`, `CS-GAP-STRING-ARRAY`; `CS-GAP-LOOKUP-PROC` is closed since `fix/library-gaps-2`); the runnable variant `brineprop_secondary_refrigerants_coolsolve.eescode` is **verified** against the EES stored solution (≤ 4.77e-10) |
 
 ## Problem statement
 
@@ -259,7 +259,8 @@ folder (candidate `TM-0480`) holds the second-generation procedure
      labels only, feeding no equation) are dropped, and an explicit
      `Call ERROR` for an unrecognized solution name is added — the error the
      original raises only through its failed lookup.
-  2. `CS-GAP-LOOKUP-PROC`: the property evaluation is flattened into the main
+  2. `CS-GAP-LOOKUP-PROC` (**closed** since the re-check below: the flattening
+     is no longer forced by it): the property evaluation is flattened into the main
      program, one block per call of the demonstration program (library decision
      D10 style), the procedure-internal variables renamed per call
      (`<variable>_<tag>`, tags `_fz_1`, `_rho_1`, `_cp_1`, `_tc_1`, `_mu_1`
@@ -268,6 +269,20 @@ folder (candidate `TM-0480`) holds the second-generation procedure
      scaling are unchanged; the two outputs of case 2 are scaled to SI by the
      two explicit equations of the native file.
   3. `CS-GAP-LKT`: own companion tables (same decoded values).
+- **2026-10-10 — re-check (`T-RECHECK`) with CoolSolve `fix/library-gaps-2`
+  @d5d6b37**: `CS-GAP-LOOKUP-PROC` is closed (a lookup inside a PROCEDURE/FUNCTION
+  body finds its companion table). The native file still stops at the parse:
+  *"IF ... THEN without a matching ENDIF"* (`CS-GAP-ELSEIF-CHAIN`) and
+  `Uppercase$` is unknown (`CS-GAP-UPPERCASE`), so it stays `blocked` and the
+  variant is kept. Evidence that the lookups themselves now work: in a scratch
+  copy of the native file with only the three remaining constructs rewritten
+  (range-check ladder dropped, the two `ELSE IF` ladders written as sequential
+  single-line `IF`s, `Uppercase$` and the `U$` array removed) the **native
+  procedure** — `REPEAT` loop, `Row[k]=k+(Fl-1)*18`, `c[k]=lookup('Brine1',Row[k],Pr)`
+  inside the procedure body — solves and gives the 10 properties of the two
+  demonstration cases of the variant to 4.8e-10 relative (the CoolSolve register
+  quotes ≤ 5e-10). The flattening of the variant is thus no longer needed for
+  the lookups, only the three other rewrites are.
 - **Level 2** although the raw score is 4 (440 equations after the CoolSolve
   analysis, largest block 1, procedure present, semi-empirical correlation):
   the equation count comes entirely from the ten flattened repetitions of the
@@ -278,16 +293,18 @@ folder (candidate `TM-0480`) holds the second-generation procedure
 ## Limitations and CoolSolve gaps
 
 The native file is **blocked**; `missing_features` lists every gap that blocks
-it:
+it (re-checked on 2026-10-10 with CoolSolve 0.3.0@d5d6b37: the three gaps below
+are the first parse errors; the lookups are no longer an obstacle):
 
 - `CS-GAP-ELSEIF-CHAIN` — the two `ELSE IF … ENDIF;ENDIF` ladders of
   `BRINEPROP` do not parse ("IF ... THEN without a matching ENDIF", 20 errors);
 - `CS-GAP-UPPERCASE` — the intrinsic `Uppercase$` is unknown;
 - `CS-GAP-STRING-ARRAY` — reading a string-array element (`UO$=U$[Pro]`) fails
   ("String variable not found"); the unit labels it carries feed no equation;
-- `CS-GAP-LOOKUP-PROC` — `LOOKUP` inside a procedure fails ("no table store is
-  available in this context"); the main program reads the same companion tables
-  fine.
+- ~~`CS-GAP-LOOKUP-PROC`~~ — **closed** in CoolSolve `fix/library-gaps-2`
+  (commit `d5d6b37`): `LOOKUP` inside a procedure now reads the companion
+  tables (it failed with "no table store is available in this context");
+  removed from `missing_features`, see the conversion log for the evidence.
 
 Worked around, not blocking the native file: `CS-GAP-INCLUDE` (the library is
 implicit in EES, its definitions are copied into this file and into the models

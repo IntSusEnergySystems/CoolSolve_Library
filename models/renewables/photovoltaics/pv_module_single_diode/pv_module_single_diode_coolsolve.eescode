@@ -8,6 +8,8 @@
   module row is selected by its number (Row) instead of LOOKUP$ROW, and the
   parameters are read with positional numeric lookups from the companion
   numeric-key table pv_module_single_diode_coolsolve-pvmodules.csv.
+  (CS-GAP-LOOKUP-PROC, one of the reasons for the flattening, is closed in
+  CoolSolve fix/library-gaps-2; the other gaps and END ReadPV still apply.)
   Valid EES throughout (no CoolSolve-only syntax).
   Inputs : Row (module row, 1..8), T_c [°C], G [W/m^2]; table pvmodules
   Outputs: module parameters, I[i], V[i], P[i] (100 points)

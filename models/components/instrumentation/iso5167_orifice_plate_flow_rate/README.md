@@ -21,7 +21,7 @@ branches.
 | **Source** | ULiège model bank — `Model data bank/EES_Functions/iso5167/` (EES file `ISO5167 flow rate calculation - diaphragm.EES`) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory model bank, Laborelec toolkit lineage; EES licence stamp of the J. Lebrun lab) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file **blocked** (`CS-GAP-IF5`, `CS-GAP-ISIDEALGAS`, `CS-BUG-STRING-CASE`, `CS-BUG-HUMIDAIR-PROPS`); runnable variant `iso5167_orifice_plate_flow_rate_coolsolve.eescode` verified (see *Verification*) |
+| **CoolSolve** | v0.3.0 — native file **blocked** (`CS-GAP-ISIDEALGAS`, `CS-BUG-HUMIDAIR-PROPS`; `CS-GAP-IF5` and `CS-BUG-STRING-CASE` are closed in CoolSolve `fix/library-gaps-2`, @59b2862 and @9423934); runnable variant `iso5167_orifice_plate_flow_rate_coolsolve.eescode` verified (see *Verification*) |
 
 ## Problem statement
 
@@ -79,9 +79,15 @@ coolsolve ./iso5167_orifice_plate_flow_rate_coolsolve.eescode
 ```
 
 The native file `iso5167_orifice_plate_flow_rate.eescode` is valid EES and is
-kept unchanged (module flattened, comments translated); CoolSolve stops on it
-with *"Unknown or unsupported function: isidealgas"* (then, past that,
-*"if with 5 arguments"*). The runnable variant is documented in its header;
+kept unchanged (module flattened, comments translated). With CoolSolve v0.3.0 it
+stopped on *"Unknown or unsupported function: isidealgas"*, because the comparison
+`Fluid$ <> 'AirH2O'` missed the lowercase `fluid$ = 'airh2o'` of the file and took the
+dry-gas branch. Since `fix/library-gaps-2` (`CS-GAP-IF5` @59b2862, `CS-BUG-STRING-CASE`
+@9423934) the five-argument `if` is implemented and the strings are compared without regard
+to case: the native file takes the `AirH2O` branch and stops in block 16 (6 unknowns of the
+ISO 5167 iteration) with *SingularJacobian*, the wrong humid-air `density` and `cv` of
+`CS-BUG-HUMIDAIR-PROPS` being the cause (`isidealgas` is still unknown, but only the
+other-fluid branch uses it). The runnable variant is documented in its header;
 each of its changes is listed in the conversion log below.
 
 ## Results
@@ -177,10 +183,11 @@ Source file (EES 7.793), collection of S. Quoilin:
      `viscosity`/`cp`/`cv` are always called with (T=, P=), which CoolProp
      accepts for ideal gases too. For the default fluid the branch used was
      already the humid-air one: no effect on the verified operating point.
-  3. `fluid$ = 'airh2o'` written `'AirH2O'`: CoolSolve compares strings
-     **case-sensitively** (`CS-BUG-STRING-CASE`, new), so the lowercase
-     spelling of the original misses the `AirH2O` branch of `fluidprop` and
-     silently returns the fallback density 10⁴ kg/m³. Same fluid in EES.
+  3. `fluid$ = 'airh2o'` written `'AirH2O'`: CoolSolve compared strings
+     **case-sensitively** (`CS-BUG-STRING-CASE`, new; **closed** in `fix/library-gaps-2`
+     @9423934, so this rewrite is no longer needed), so the lowercase
+     spelling of the original missed the `AirH2O` branch of `fluidprop` and
+     silently returned the fallback density 10⁴ kg/m³. Same fluid in EES.
   4. `Rho = (1+w)/volume(AirH2O, T, P, R)`: `density(AirH2O, ..., R=)` returns
      the fallback value 1E4 in CoolSolve (`CS-BUG-HUMIDAIR-PROPS`, new);
      EES `density` = 1/`volume` for AirH2O (per kg of dry air), times (1+w)
@@ -197,15 +204,21 @@ Source file (EES 7.793), collection of S. Quoilin:
 - **Level justification** (taxonomy §3): 34 equations (0) + largest block 6
   (1) + procedures present (1) + no discretisation (0) + no calibration
   (0) + curated guesses needed (1) = score 3 → **level 2**.
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @59b2862 (T-RECHECK, `CS-GAP-IF5` closed).** The five-argument `IF` of the native file is now implemented; the native file is still blocked, the first error now comes from another gap (*Unknown or unsupported function: isidealgas*, `CS-GAP-ISIDEALGAS`, in block 9). The variant is kept.
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @9423934 (T-RECHECK, `CS-BUG-STRING-CASE` closed).** The native file now takes the `AirH2O` branch for `fluid$ = 'airh2o'` (it died on *Unknown function isidealgas* in block 9, the dry-gas branch); its first error is now *SingularJacobian* in block 16 (6 unknowns of the ISO 5167 iteration), caused by `CS-BUG-HUMIDAIR-PROPS` (with the guesses of the variant, a range check of `warning_error` then fires in block 23: *"Unknown procedure: warning"*, `CS-GAP-CALL-WARNING`). Check in a scratch copy: with only the two property rewrites of the variant (`Rho = (1+w)/volume(...)`, `Gamma = cp/(cp - R_mix)`) the native file, still with `fluid$ = 'airh2o'`, solves in 9 iterations and its `.sol` is identical to the variant's (only the string differs), which proves the case-insensitive match. Still **blocked** by `CS-GAP-ISIDEALGAS` (other fluids) and `CS-BUG-HUMIDAIR-PROPS`; the variant is kept (its `'AirH2O'` spelling change is no longer needed).
 
 ## Limitations and CoolSolve gaps
 
 - Native file blocked; `missing_features` (model.json) lists every gap that
-  blocks a faithful CoolSolve run: `CS-GAP-IF5` and `CS-GAP-ISIDEALGAS` (hard
-  errors, in this order) and `CS-BUG-STRING-CASE`,
-  `CS-BUG-HUMIDAIR-PROPS` (silent wrong results behind them).
+  blocks a faithful CoolSolve run: `CS-GAP-ISIDEALGAS` (hard error, only for a
+  fluid other than `AirH2O`) and `CS-BUG-HUMIDAIR-PROPS` (silent wrong results,
+  then *SingularJacobian* in block 16). `CS-GAP-IF5` and `CS-BUG-STRING-CASE`
+  are closed in CoolSolve `fix/library-gaps-2` (@59b2862, @9423934).
 - `CS-GAP-CALL-WARNING` (registered) concerns the native file too but does
-  not block it: at the stored operating point no warning branch is taken.
+  not block it: at the stored operating point no warning branch is taken (with
+  correct humid-air properties the native file solves, see the re-check line
+  of the conversion log; with the wrong ones of `CS-BUG-HUMIDAIR-PROPS` a range
+  check can fire and raise *"Unknown procedure: warning"*).
 - The variant inherits the CoolProp humid-air backend (see *Verification*):
   `w` +2.3 %, `Gamma` −0.8 % vs EES mixture rules, `Di_dph` within 2·10⁻⁴.
 - The `warning_error` procedure checks are documentation-only in the variant.

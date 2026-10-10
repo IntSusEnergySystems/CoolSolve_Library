@@ -16,7 +16,7 @@ solar-noon point used for the sun-path plot.
 | **Source** | ULiège collection, `solar/angles.EES` (inventory `TM-0589`) |
 | **Authors** | TBD (ULiège, J. Lebrun laboratory — the file carries only the laboratory licence stamp; to be completed by the maintainer) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file blocked by `CS-GAP-NDAY` (`nDay_`) and `CS-GAP-IF-DIRECTIVE` (`$ifnot parametrictable`); runnable variant `solar_geometry_sun_path_coolsolve.eescode` verified against EES (see *Verification*) |
+| **CoolSolve** | v0.3.0 — native file blocked by `CS-GAP-NDAY` (`nDay_`; `CS-GAP-IF-DIRECTIVE` is closed in `fix/library-gaps-2` @9423934); runnable variant `solar_geometry_sun_path_coolsolve.eescode` verified against EES (see *Verification*) |
 
 ## Problem statement
 
@@ -53,7 +53,9 @@ carried as in the original (it documents the site and feeds no equation).
 
 ## How to run
 
-The native file is blocked (see *Limitations and CoolSolve gaps*). Run the
+The native file is blocked by `nDay_` (see *Limitations and CoolSolve gaps*); since
+`fix/library-gaps-2` @9423934 CoolSolve keeps its `$ifnot parametrictable` block
+(`t = 0`) and the system is square (22 equations, 22 unknowns). Run the
 variant instead, in the CoolSolve GUI (*Solve*) or from a terminal:
 
 ```bash
@@ -138,6 +140,15 @@ Source file (EES X8.198, comments in French), collection of S. Quoilin:
   to 24 h, the solar time of the stored EES run (parametric-table inputs
   become the default run, `CS-GAP-IF-DIRECTIVE`). Nothing else changes
   (same variable names, same equations).
+- **2026-10-10 — re-check** with CoolSolve `fix/library-gaps-2` @9423934
+  (`CS-GAP-IF-DIRECTIVE` closed): the `$ifnot parametrictable` directive is now
+  evaluated (the block `t = 0` is kept, as EES does outside a parametric table);
+  the native file is square (22 equations) and stops at *Unknown function nDay_*
+  (`CS-GAP-NDAY`), so it stays **blocked**. Check in a scratch copy: with
+  `n = nDay_(month, day)` replaced by `n = 338` and `t = 24`, the native file gives
+  the same `.sol` as the variant (22 variables, identical). The variant is kept: its
+  `nDay_` replacement is still needed; its `t = 24` setting is not a workaround
+  but the default run chosen to reproduce the stored (parametric-table) EES values.
 - **2026-10-07 — checks.** The solar azimuth is equated to the hour angle
   (`gamma_s = omega`), as in the original; kept faithfully. The site
   longitude `L_loc` feeds no equation, as in the original; kept as site
@@ -152,9 +163,11 @@ Source file (EES X8.198, comments in French), collection of S. Quoilin:
   `nDay_(month, day)` is unknown to CoolSolve — the native file fails with
   *"Unknown or unsupported function: nDay_ with 2 arguments"* although the
   system is square (22 equations / 22 unknowns, largest block 1).
-- `CS-GAP-IF-DIRECTIVE` (already registered): `$ifnot parametrictable` is
-  parsed but ignored, so the native file always keeps `t = 0` and the stored
-  parametric run (`t` = 24) cannot be reproduced with the native file.
+- `CS-GAP-IF-DIRECTIVE` (already registered; **closed** in CoolSolve
+  `fix/library-gaps-2` @9423934): `$ifnot parametrictable` was parsed but ignored.
+  It is now evaluated (the `t = 0` block is kept, as in EES outside a parametric
+  table); the stored parametric run (`t` = 24) is a table value, not the default of
+  the native file, hence the `t = 24` of the variant.
 - The model covers one site and one date per run; a full sun-path curve is a
   parametric sweep of `t` (no EES parametric table is shipped with the file).
 

@@ -51,7 +51,7 @@
     "max_rel_diff": 0.361,
     "notes": "On the runnable variant against the EES stored values: '66 common variables, 13 differ (rtol=0.001); only in EES: 2; only in CoolSolve: 5'. The 13 differences are s[1..4] and u[1..4] (constant reference-state offsets of the entropy/internal energy, CS-GAP-IDEAL-ENTROPY family; the isothermal entropy steps and the internal-energy differences agree) and the two isothermal works w_12_bis/w_34_bis with the heats and the efficiency derived from them (2.9e-02 to 4.3e-02), which are the quadrature error of EES: its step of 0.1 m^3/kg over 0.77 m^3/kg gives -204923 and 880721 J/kg when recomputed with CoolProp properties (against 202654 and 883256 stored), while the accurate value is -196811 and 845195 J/kg, i.e. CoolSolve's 196824 and -845201. Excluding exactly those 13 variables: '53 common variables, 0 differ (rtol=0.001)', largest deviation of the whole comparison 1.51e-05 (EES R# = 8314.3 vs 8314.4626 J/kmol-K). Against the Python/CoolProp re-implementation: '49 common variables, 5 differ (rtol=1e-6)', the five being the two integrals and their derived heats (max 5.04e-05, quadrature). Only in EES: p and v, stale workspace records; only in CoolSolve: fluid$ (CS-BUG-SOL-STRING), R#, the two integrals split out by the variant and its integration variable x."
   },
-  "missing_features": ["CS-GAP-INTEGRAL-LIMITS", "CS-GAP-INTEGRAL-MULTIVAR", "CS-BUG-INTEGRAL-FACTOR"],
+  "missing_features": ["CS-GAP-INTEGRAL-MULTIVAR", "CS-GAP-INTEGRAL-DECREASING"],
   "related": ["CSL-0049", "CSL-0047", "CSL-0050"],
   "related_external": [
     "thermo_models TM-0434 (same file saved a second time in .../R5/save/, identical equations: duplicate of this model) and TM-0428 (.../R4bis/R05_E03_2022.EES, same exercise type in another session of the same course)"
@@ -63,6 +63,11 @@
       "date": "2026-10-05",
       "action": "added (roadmap card C-63, batch B-05)",
       "by": "opencode worker (space-bunny-free) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @4cd0ca5 (T-RECHECK, CS-GAP-INTEGRAL-LIMITS and CS-BUG-INTEGRAL-FACTOR closed); still blocked by CS-GAP-INTEGRAL-MULTIVAR (first error) and by the new CS-GAP-INTEGRAL-DECREASING (w_12_bis integrates from v[1] to v[2] < v[1]); README and missing_features updated, variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

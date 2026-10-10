@@ -15,11 +15,11 @@ insulation are either given directly or picked from two lookup tables
 |---|---|
 | **Category** | Buildings |
 | **Fluids** | Humid air (`AirH2O`), water |
-| **Size** | native file: 61 equations for 59 unknowns (CoolSolve keeps both `$if` branches); runnable variant: 57 equations (largest block: 7) |
+| **Size** | native file: 59 equations for 59 unknowns once CoolSolve has resolved the `$if` directives (the `$else` branches are kept); runnable variant: 57 equations (largest block: 7) |
 | **Source** | ULiège Thermodynamics Laboratory — thermal comfort model (EES file `thermal_confort_PMV_PPD SQSB080131.EES`) |
 | **Authors** | S. Quoilin, J. Lebrun, S. Bertagnolio (ULiège Thermodynamics Laboratory, 2008-01-30) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file **blocked** by `CS-GAP-IF-DIRECTIVE`, `CS-GAP-LOOKUPROW` (and then `CS-BUG-LOOKUP-STRING`, because its tables have string keys); the variant `thermal_comfort_pmv_ppd_coolsolve.eescode` runs and is verified against the EES stored solution (46/57 within 1e-3, 51/57 within 0.5 %, rest explained) |
+| **CoolSolve** | `fix/library-gaps-2` @9423934 — native file **blocked** by `CS-GAP-LOOKUPROW` (and then `CS-BUG-LOOKUP-STRING`, because its tables have string keys; `CS-GAP-IF-DIRECTIVE` is closed); the variant `thermal_comfort_pmv_ppd_coolsolve.eescode` runs and is verified against the EES stored solution (46/57 within 1e-3, 51/57 within 0.5 %, rest explained) |
 
 ## Problem statement
 
@@ -77,9 +77,12 @@ reads `thermal_comfort_pmv_ppd_coolsolve-*.csv`, whose first column is the row n
 
 The original file `thermal_comfort_pmv_ppd.eescode` keeps the native EES
 syntax (`$if` string selections `activite$` / `Veture$`, `LOOKUP$ROW`) and
-does **not** run in CoolSolve v0.3.0 (see *Limitations and CoolSolve gaps*). The runnable
+does **not** run in CoolSolve (the `$if` directives are now resolved, 59 equations for 59
+unknowns, but `LOOKUP$ROW` is unknown: see *Limitations and CoolSolve gaps*). The runnable
 variant fixes the EES selections of the default run (activity row 3,
-clothing row 2 — positional `lookup()`, same column numbering as EES):
+clothing row 2 — positional `lookup()`, same column numbering as EES; resolving the `$if`
+blocks by hand is no longer needed since `CS-GAP-IF-DIRECTIVE` was closed, the positional
+`lookup()` on numeric-key tables is still needed because of `CS-GAP-LOOKUPROW` and `CS-BUG-LOOKUP-STRING`):
 
 ```bash
 coolsolve ./thermal_comfort_pmv_ppd_coolsolve.eescode    # seconds, needs the *-coolsolve-*.csv tables next to it
@@ -203,6 +206,12 @@ recorded as `duplicate`).
   `row2 = 2`; positional `lookup()`, same columns as EES), physics
   unchanged; companion tables and initials duplicated under the
   variant stem (CoolSolve resolves them per file name).
+- **2026-10-10 — re-check** with CoolSolve `fix/library-gaps-2` @9423934
+  (`CS-GAP-IF-DIRECTIVE` closed): the native file now resolves both `$if`
+  directives (the `$else` branches are kept: 59 equations for 59 unknowns,
+  square) and stops at *Unknown function LOOKUP$ROW* (`CS-GAP-LOOKUPROW`);
+  still **blocked**, variant kept (its `$if` part is no longer needed, the
+  lookup part is).
 - **Level 2** (score 3: 57 equations in the variant, largest block 7, array
   assignments `PPD[1]`/`PMV_abs[1]`; explicit empirical model, solves
   from default guesses).
@@ -212,9 +221,11 @@ recorded as `duplicate`).
 
 - The native file is **blocked** by (see CoolSolve
   `docs/model_library_support.md`):
-  `CS-GAP-IF-DIRECTIVE` (`$if`/`$else`/`$endif` on string variables is
-  parsed but ignored — both branches compile),
   `CS-GAP-LOOKUPROW` (`LOOKUP$ROW('table','col',value)` is unsupported).
+  `CS-GAP-IF-DIRECTIVE` (the `$if`/`$else`/`$endif` directives on string
+  variables were ignored, both branches compiled) is **closed** in CoolSolve
+  `fix/library-gaps-2` (commit 9423934): the native file now keeps the
+  `$else` branches (`activite$ = 'Repos_debout'`, `Veture$ = 'Ete'`).
 - Extraction bugs found on the way: `CS-BUG-EXTRACT-LOOKUP-STRING`
   (string key columns dropped, adjacent tables merged into a spurious
   74×2 CSV), `CS-BUG-LOOKUP-STRING` (every lookup function is NaN on a
@@ -233,6 +244,8 @@ recorded as `duplicate`).
 ## Related models
 
 - `CSL-0042` *3R2C building thermal network with weather lookup*: the other
-  `buildings/` model, from the same CLIM course; also a blocked native file
-  with a verified runnable `_coolsolve` variant.
+  `buildings/` model, from the same CLIM course; its native file (lookup
+  inside an `INTEGRAL` model) is **verified** since CoolSolve `fix/library-gaps-2`
+  (2026-10-10), whereas this model keeps a blocked native file with a verified
+  runnable `_coolsolve` variant.
 - `CSL-0106` *conduction_resistances_and_shapes*: the conduction function library of the `ht` source (wall resistances, shape factors, R-value conversions); the envelope U-value/R-value bookkeeping of this model could be fed from its conversion functions.

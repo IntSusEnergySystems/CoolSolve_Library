@@ -27,7 +27,7 @@ of the flattening*).
 | **Source** | S. Quoilin (ULiège Thermodynamics Laboratory), EES file `orc_complex.EES` (EES 9.920), transcribed as CoolSolve example `examples/orc_complex.eescode` |
 | **Authors** | S. Quoilin (ULiège Thermodynamics Laboratory) — probable, to be confirmed by the maintainer |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0@536d427 — parses the file except the six lines using `C%`, `H%`, `O%`; the system is then not square (443 equations, 432 unknowns) |
+| **CoolSolve** | v0.3.0@536d427 — parses the file except the six lines using `C%`, `H%`, `O%`; the system is then not square (443 equations, 432 unknowns). `fix/library-gaps-2` @9423934: the `$if` directives are evaluated; the file stops on the six `C%`-type lines (`CS-GAP-NAME-SYMBOL`) and on the nine Diagram-window strings that have no value (`CS-GAP-IF-NO-CONSTANT`) |
 
 ## Model
 
@@ -164,12 +164,13 @@ Two properties of the reference material must be known before importing:
 
 `model.json` `missing_features` lists the registered gaps that block the native
 file (`CS-GAP-LKT`, listed by the import, was removed at the C-46 review: see
-*Not blocking, but noted*):
+*Not blocking, but noted*; `CS-GAP-IF-DIRECTIVE`, listed at the import, was replaced after the
+re-check of 2026-10-10 by the narrower `CS-GAP-IF-NO-CONSTANT`):
 
 | Gap | What it blocks here | Evidence |
 |---|---|---|
-| `CS-GAP-IF-DIRECTIVE` | The main program selects blocks with `$if <string>$='…' / $else / $endif` (nine switches, listed under *Runnable variant*). CoolSolve parses the directives and **keeps all branches**, so the system is **not square**: `coolsolve -d` on the file (with only the `%` names replaced) reports *Equations: 443, Variables: 432, System square: No*. | Reproducer already registered. C-46 check: with the nine switches resolved for the stored run in a scratch copy, 363 equations and 392 variables remain — the discarded branches carry 80 equations and 40 variables, so the unresolved file has 11 more equations than unknowns. |
-| `CS-GAP-NAME-SYMBOL` | The fuel mass fractions `C%`, `H%`, `O%` do not parse: *\"Parse failed: Line 479, 480, 481, 555, 556, 558: Could not parse line\"*, exit code 1, no `.sol`. These six lines are the whole main-program definition of the fuel composition and of the molar fractions `m`, `n`, `p` of the burner. | New gap, registered 2026-10-05 with the minimal reproducer `name_symbol.eescode` and the EES file that uses the names. |
+| `CS-GAP-IF-NO-CONSTANT` | The main program selects blocks with `$if <string>$='…' / $else / $endif` (nine switches, listed under *Runnable variant*). Since `fix/library-gaps-2` @9423934 CoolSolve evaluates the directives; the seven `*_exp$` tests of the flattened expander resolve (their strings are set in the file), but the nine strings of the main program (`water_overheater$`, `economiser$`, `overheater$`, `expanderType$` (twice), `pressuredrop$`, `heatTransfer$`, `unadaptedVolumeRatio$`, `mechanicalLosses$`, `regenerator$`) are values given in the **EES Diagram window**, absent from the `.eescode`: *\"$IF: the string variable 'economiser$' has no value when the directive is compiled: it must be set to a string constant … before the $IF (a value given in the EES Diagram window is not available in CoolSolve)\"* (10 errors, lines 592, 635, 708, 777, 803, 809, 817, 823, 833, 971). CoolSolve never chooses a branch silently. | Registered gap `CS-GAP-IF-NO-CONSTANT` (found with this model and `CSL-0166`). It replaces `CS-GAP-IF-DIRECTIVE` (closed in `fix/library-gaps-2` @9423934: directives were parsed and ignored, all branches kept, so the system was **not square** — *Equations: 443, Variables: 432* with only the `%` names replaced). C-46 check: with the nine switches resolved for the stored run in a scratch copy, 363 equations and 392 variables remain — the discarded branches carried 80 equations and 40 variables, so the unresolved file had 11 more equations than unknowns. |
+| `CS-GAP-NAME-SYMBOL` | The fuel mass fractions `C%`, `H%`, `O%` do not parse: *\"Parse failed: Line 483, 484, 485, 559, 560, 562: Could not parse line\"* (lines 479, 480, 481, 555, 556, 558 in the file of the import, which has since been shifted by four lines), exit code 1, no `.sol`. These six lines are the whole main-program definition of the fuel composition and of the molar fractions `m`, `n`, `p` of the burner. | New gap, registered 2026-10-05 with the minimal reproducer `name_symbol.eescode` and the EES file that uses the names. |
 
 Not blocking, but noted:
 
@@ -239,7 +240,10 @@ at the top of the `.eescode` points here.
 A runnable `_coolsolve` variant was not built within the card. The review
 checked, in a scratch copy (nothing shipped), that it is structurally feasible:
 
-1. resolve the nine `$if` switches for the stored run: `pressuredrop$='no'`,
+1. resolve the nine `$if` switches for the stored run — set each string as a constant in
+   the main program **before** its first `$if` (`CS-GAP-IF-NO-CONSTANT`: CoolSolve now
+   evaluates the directives but needs a constant value; the EES Diagram value is not in
+   the file): `pressuredrop$='no'`,
    `unadaptedVolumeRatio$='no'`, `heatTransfer$='no'`, `mechanicalLosses$='no'`,
    `economiser$='no'`, `overheater$='no'`, `regenerator$='no'`,
    `water_overheater$='no'`, `expanderType$='Open'` (the strings of the flattened
@@ -279,7 +283,7 @@ are the remaining work.
 ## How to run
 
 ```bash
-coolsolve ./orc_biomass_chp.eescode      # -> Parse failed (CS-GAP-NAME-SYMBOL)
+coolsolve ./orc_biomass_chp.eescode      # -> Parse failed (CS-GAP-NAME-SYMBOL, CS-GAP-IF-NO-CONSTANT)
 ```
 
 ## Source and attribution
@@ -372,6 +376,19 @@ the electrical output added.
   block size of the native file could not be measured (`coolsolve -d` stops at the
   not-square system); in the review's scratch copy with the stored-run switches
   and inputs it is 116.
+- **2026-10-10 — re-check** with CoolSolve `fix/library-gaps-2` @9423934
+  (`CS-GAP-IF-DIRECTIVE` closed): the `$if` directives are now evaluated (the seven
+  `*_exp$` tests resolve) and the native file stops with *Parse failed*: the six
+  `C%`/`H%`/`O%` lines (483–485, 559, 560, 562; `CS-GAP-NAME-SYMBOL`) and ten `$IF`
+  errors on the nine strings that EES takes from its Diagram window
+  (`CS-GAP-IF-NO-CONSTANT`, added to `missing_features` in place of
+  `CS-GAP-IF-DIRECTIVE`). Still **blocked**, no variant. The `$if` switches that a
+  variant must resolve are the same as before; the variant would now set them as
+  constants in the main program.
+  Check in a scratch copy (`C%`-type names renamed, the nine strings set to the stored-run
+  values before their first `$if`): `coolsolve -d` gives 372 equations and 401 unknowns, i.e.
+  the 363/392 of the C-46 hand resolution plus the nine string constants — the `$if`
+  evaluation agrees with the hand resolution; the 29-equation gap (24 numeric and 2 string diagram inputs, three links) is the rest of the variant work described above.
 - **Trajectory / sweep claims**: the model has no sweep or trajectory; the only
   numerical claim in this README is the EES solution report table, copied from
   `EES_ok/orc_complex.tex`.

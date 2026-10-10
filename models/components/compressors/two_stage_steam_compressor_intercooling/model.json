@@ -5,7 +5,7 @@
   "summary": "Superheated steam (0.15 kg/s, 100 kPa to 625 kPa, 100 K superheat) is compressed by a two-stage isentropic compressor with intercooling back to the supply temperature, the intermediate pressure being set by the rule of equal stage pressure ratios (the work-minimising choice for ideal gases, Cengel & Boles). The model compares the powers of the single-stage isentropic, two-stage and isothermal (INTEGRAL of v dP) compressors and of a liquid pump, and computes the heats rejected in the intercooler and by the isothermal compression.",
   "kind": "optimization",
   "level": 1,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "two_stage_steam_compressor_intercooling.eescode",
   "fluids": [
     "Water"
@@ -47,16 +47,14 @@
     "course": "Thermodynamique appliquee (ULiege MECA0002), repetition session R04, exercise 2"
   },
   "verification": {
-    "reference": "EES stored solution of the source file (35 variables), converted with --ees-units (kPa/kJ to Pa/J hand conversion of the model)",
-    "date": "2026-10-05",
-    "coolsolve_version": "0.3.0@536d427",
-    "max_rel_diff": 4.2e-06,
-    "notes": "Runnable variant two_stage_steam_compressor_intercooling_coolsolve.eescode vs EES: 34/34 common variables agree (max 4.2e-6; same water formulation), v_gaz renamed v_liq. Optimisation documented and checked: sweep of p_int confirms the equal-ratio intermediate pressure (250 kPa) within 1 kPa / 0.001 % of the true minimum-work optimum of real steam (~251 kPa)."
+    "reference": "EES stored solution of the source file (35 variables), converted with --ees-units (kPa/kJ to Pa/J hand conversion of the model); the native file two_stage_steam_compressor_intercooling.eescode is the verified file",
+    "date": "2026-10-10",
+    "coolsolve_version": "0.3.0@4cd0ca5",
+    "max_rel_diff": 4.47e-06,
+    "notes": "Native file vs EES: 34/34 common variables agree (max 4.47e-6 on W_dot_isoT, 4.2e-6 on Q_dot_cp_isoT2, the others <= 3.4e-6; same water formulation), v_gaz renamed v_liq. The largest deviations are the integral-based quantities: W_dot_isoT is the EES trapezoidal rule with a 1 kPa step (59065.135 W), CoolSolve integrates with RK4 and returns the exact integral of the CoolProp specific volume (59064.871 W, checked with scipy quad). Native file solved with CoolSolve branch fix/library-gaps-2 (CS-GAP-INTEGRAL-LIMITS and CS-BUG-INTEGRAL-FACTOR closed): 525 steps, the 55 common variables equal the former _coolsolve variant (removed) to 12 digits. Optimisation documented and checked: sweep of p_int confirms the equal-ratio intermediate pressure (250 kPa) within 1 kPa / 0.001 % of the true minimum-work optimum of real steam (~251 kPa). CS-GAP-OPTIM stays listed for information (model shipped at the optimum)."
   },
   "missing_features": [
-    "CS-GAP-OPTIM",
-    "CS-GAP-INTEGRAL-LIMITS",
-    "CS-BUG-INTEGRAL-FACTOR"
+    "CS-GAP-OPTIM"
   ],
   "related": ["CSL-0047"],
   "related_external": [],
@@ -67,6 +65,11 @@
       "date": "2026-10-05",
       "action": "added (roadmap C-09, fallback candidate TM-0422; first optimization-kind model, shipped at the EES optimum)",
       "by": "opencode (GLM) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @4cd0ca5 (T-RECHECK, CS-GAP-INTEGRAL-LIMITS and CS-BUG-INTEGRAL-FACTOR closed): blocked -> verified; native file verified (identical to the variant on all common variables), _coolsolve variant removed, .sol baseline added; CS-GAP-OPTIM kept for information (model shipped at the optimum, workflow section 6)",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

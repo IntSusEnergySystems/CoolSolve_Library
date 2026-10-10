@@ -9,7 +9,8 @@
   1. CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE, CS-GAP-STRING-ARRAY and
      CS-GAP-LOOKUP-PROC all break the BRINEPROP procedure (ELSE IF ladders
      and ENDIF;ENDIF groups, Uppercase$, string-array reads, LOOKUP inside a
-     procedure). It is split in two:
+     procedure; CS-GAP-LOOKUP-PROC is closed in CoolSolve fix/library-gaps-2,
+     so the flattening below is no longer forced by it). It is split in two:
      - a selector PROCEDURE BRINEPROP_SELECT(Conc,Fl$:Fl_brine) holding
        the 22 concentration range checks and the 11-branch fluid ladder,
        rewritten as sequential single-line IF statements (conditions
@@ -28,7 +29,9 @@
        <variable>_cp).
   2. CS-GAP-CALL-EXPR-OUT: the expression output of the original call
      (:c_p_pump/1000) becomes the auxiliary variable c_p_pump_kJ followed
-     by c_p_pump = c_p_pump_kJ*1000 (same value).
+     by c_p_pump = c_p_pump_kJ*1000 (same value). This gap is closed in
+     CoolSolve fix/library-gaps-2 (0.3.0@57b22d3): the native expression
+     output is accepted, so this change is no longer forced.
 
   Everything else - variable names, equations, defaults, units - is as in
   the native file. The companion tables of this variant

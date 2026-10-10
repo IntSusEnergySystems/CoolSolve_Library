@@ -18,11 +18,10 @@
   is also computed. Kinetic and potential energy changes are neglected.
 
   NOTE: this file is the faithful EES import (comments translated, units
-  converted by hand from kPa/kJ to Pa/J). It does NOT run in CoolSolve
-  v0.3.0: the INTEGRAL limits are variables (CS-GAP-INTEGRAL-LIMITS) and the
-  factor multiplying an INTEGRAL call is silently ignored
-  (CS-BUG-INTEGRAL-FACTOR). The runnable transcription (same physics) is
-  two_stage_steam_compressor_intercooling_coolsolve.eescode.
+  converted by hand from kPa/kJ to Pa/J). Status: verified with CoolSolve
+  fix/library-gaps-2 @4cd0ca5 (INTEGRAL limits that are variables and a factor
+  in front of the call: CS-GAP-INTEGRAL-LIMITS and CS-BUG-INTEGRAL-FACTOR are
+  closed); CS-GAP-OPTIM stays open (the model is shipped at the optimum).
 
   Inputs : m_dot, p_in, p_out (the 100 K superheat is part of the statement)
   Outputs: W_dot_mono, W_dot_bi_etage, p_int, Saving_Wcp,

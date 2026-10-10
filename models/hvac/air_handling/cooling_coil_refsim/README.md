@@ -25,7 +25,7 @@ exhaust air and refrigerant states and the condensate flow rate.
 | **Source** | ULiège model bank — *Cooling coil RefSim model*, 18 March 2008 (EES file inside `COOLINGCOIL_REFSIM_MODEL_VL080318.zip`) |
 | **Authors** | Vincent Lemort, Jean Lebrun (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file **blocked** by `CS-GAP-NAME-PIPE`, `CS-GAP-INCLUDE`, `CS-GAP-IF5`, `CS-GAP-IFSTR`; the variant `cooling_coil_refsim_coolsolve.eescode` runs and is verified against the EES stored solution |
+| **CoolSolve** | v0.3.0, re-checked with 0.3.0@57b22d3 — native file **blocked** by `CS-GAP-NAME-PIPE`, `CS-GAP-INCLUDE`, `CS-GAP-IFSTR` (`CS-GAP-IF5` and `CS-GAP-CALL-EXPR-OUT` are closed in CoolSolve `fix/library-gaps-2`, @59b2862 and @57b22d3); the variant `cooling_coil_refsim_coolsolve.eescode` runs and is verified against the EES stored solution |
 
 ## Problem statement
 
@@ -163,8 +163,8 @@ is **cooled and dehumidified** (30 → 14.12 °C, 13.84 → 10.31 g/kg).
 
 ## Verification
 
-The **native file cannot be solved** by CoolSolve v0.3.0 (`CS-GAP-NAME-PIPE`,
-`CS-GAP-INCLUDE`, `CS-GAP-IF5`, `CS-GAP-IFSTR`), so the comparison concerns the runnable variant
+The **native file cannot be solved** by CoolSolve (`CS-GAP-NAME-PIPE`,
+`CS-GAP-INCLUDE`, `CS-GAP-IFSTR`; `CS-GAP-IF5` was a fourth one in v0.3.0), so the comparison concerns the runnable variant
 `cooling_coil_refsim_coolsolve.eescode`, which differs from the native file by
 the four changes of the conversion log. Compared with
 `compare_solution.py` against the 87 variables decoded from the source EES
@@ -325,6 +325,8 @@ drops the refrigerant side entirely. They have no `duplicate_group`.
   or the wet block reaches *MaxIterations* (1) → 4 → **level 3**, moved by −1
   to **level 2** (card value) because the model is a single one-zone coil with
   explicit equations apart from the effectiveness loop.
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @59b2862 (T-RECHECK, `CS-GAP-IF5` closed).** The five-argument `IF` of the native file is now implemented; the native file is still blocked, the first error now comes from another gap (the parse stops at the `K|star_r_n` names, `CS-GAP-NAME-PIPE`). The variant is kept.
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @57b22d3 (T-RECHECK, `CS-GAP-CALL-EXPR-OUT` closed).** The two `CALL BRINEPROP` calls with an expression output (lines 113 and 114) now parse. The native file is still blocked: the parse stops at the `K|star_r_n` names (lines 78 and 111, `CS-GAP-NAME-PIPE`) and the `BRINEPROP` library procedure is unknown (`CS-GAP-INCLUDE`), `IF$` is unknown (`CS-GAP-IFSTR`, line 188). Evidence, in a scratch copy with only `K|star_r_n`/`K|star_r` renamed `Kstar_r_n`/`Kstar_r`: the file is square (80 equations, 80 unknowns), the expression outputs become the auxiliary variables `__out1_BRINEPROP_L113` (`c_p_r_coil/1000`) and its twin of line 114, and the solve stops with *"Unknown procedure: BRINEPROP"* (`CS-GAP-INCLUDE`). The variant is kept: its change 2 (stored brine properties instead of the `CALL BRINEPROP`) is still forced by `CS-GAP-INCLUDE`/`CS-GAP-LKT`, not by the expression outputs.
 
 ## Limitations and CoolSolve gaps
 
@@ -351,9 +353,18 @@ drops the refrigerant side entirely. They have no `duplicate_group`.
   (found with `CSL-0011`), **not re-reported here**. The proper fix is the
   function model of card `C-84`; the runnable variant uses the stored brine
   properties.
-- **`CS-GAP-IF5` — the native file cannot be solved.** The EES intrinsic
-  `IF(A,B,X,Y,Z)` is parsed but raises *"Unknown or unsupported function: if
-  with 5 arguments"*; it is used five times here (regime selection of
+- **`CS-GAP-CALL-EXPR-OUT` — closed in CoolSolve `fix/library-gaps-2` @57b22d3.** Two of the four
+  `CALL BRINEPROP` calls use an expression as output
+  (`CALL BRINEPROP('SpecHeat',…:c_p_r_coil/1000)`, line 113, and
+  `CALL BRINEPROP('Dynvisc',…:mu_r_coil*1000)`, line 114); CoolSolve v0.3.0
+  refused them (*"Output 1 of 'BRINEPROP' must be a variable, not the expression
+  'c_p_r_coil/1000': …"*) and now accepts them (auxiliary variable
+  `__out<k>_BRINEPROP_L<line>`; see the conversion log). Removed from
+  `missing_features`. The variant removes the calls altogether (change 2, still
+  forced by `CS-GAP-INCLUDE`).
+- **`CS-GAP-IF5` — closed in CoolSolve `fix/library-gaps-2` @59b2862.** The EES intrinsic
+  `IF(A,B,X,Y,Z)` raised *"Unknown or unsupported function: if
+  with 5 arguments"* in CoolSolve v0.3.0 and now evaluates; it is used five times here (regime selection of
   `Q_dot_coil`, `AU_coil`, `M_dot_w_coil`, `t_a_ex_coil`, `W_ex_coil`).
   Already registered (found with `CSL-0009`, blocked `CSL-0073`),
   **not re-reported here**; the runnable variant uses `if(cond,a,b)`.

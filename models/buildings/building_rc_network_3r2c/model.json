@@ -5,7 +5,7 @@
   "summary": "Single-zone building thermal network with three thermal capacitances (indoor air, opaque facade, internal masonry walls) coupled through thermal resistances, integrated over one week of July weather read from a lookup table; ventilation is the only heat sink (free-running zone).",
   "kind": "dynamic",
   "level": 2,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "building_rc_network_3r2c.eescode",
   "fluids": [],
   "tags": [
@@ -45,15 +45,13 @@
     "course": "CLIM (Climatisation, University of Liège), repetition exercise 2"
   },
   "verification": {
-    "reference": "no EES stored solution exists (the model is not in CoolSolve misc/EES_ok.zip and no file of ~/Nextcloud/thermo_models uses this system); the runnable variant building_rc_network_3r2c_coolsolve.eescode was verified (1) against INTERPOLATE of the shipped weather table itself (24 sampled points, 19 differences exactly 0, max 1.07e-14 °C = double round-off) and (2) against an independent RK4 integration of the same equations (h = 15 s): max 0.0081 K on T_in (at tau = 0 s, where CoolSolve reports the initial condition exactly), 0.0002 K on T_c_wall and T_c_in",
-    "date": "2026-10-05",
-    "coolsolve_version": "0.3.0@536d427",
-    "max_rel_diff": 0.00092,
-    "notes": "max_rel_diff is the largest relative deviation of the CoolSolve trajectory from the independent RK4 reference after linear interpolation of the 600 s output rows; it comes from the output-interval interpolation, not from the model (the RK4 reference converges to 9.21e-4 from h = 300 s to h = 15 s). In absolute terms the two trajectories agree to 0.0081 K on T_in and 0.0002 K on both wall temperatures."
+    "reference": "no EES stored solution exists (the model is not in CoolSolve misc/EES_ok.zip and no file of ~/Nextcloud/thermo_models uses this system); the native file was verified (1) against the former runnable variant (exact piecewise-linear reconstruction of the weather table, itself checked against INTERPOLATE of the shipped table: 24 sampled points, max 1.07e-14 C): all 56 common variables and the 13 columns of the 1001-row trajectory equal, max relative difference 5.1e-12; (2) against an independent classical RK4 integration (h = 15 s, Python, hourly linear interpolation of the same table) of the same equations: T_in(604800 s) 30.68246 (RK4) vs 30.68246 (CoolSolve), max |difference| over the trajectory 0.0028 K on T_in (at tau = 115517 s), 0.0002 K on T_c_wall and T_c_in",
+    "date": "2026-10-10",
+    "coolsolve_version": "0.3.0@d5d6b37",
+    "max_rel_diff": 9.8e-05,
+    "notes": "Native file (INTERPOLATE inside the INTEGRAL model) verified with CoolSolve fix/library-gaps-2 (CS-GAP-INTEGRAL-LOOKUP closed); the native file is now the verified file and the _coolsolve variant was removed. max_rel_diff is the largest relative deviation of the CoolSolve trajectory (T_in, T_c_wall, T_c_in at the 1001 output rows) from the RK4 reference interpolated at the same times; the RK45 time march of CoolSolve with default tolerances, not the model, sets it. No EES reference: the status follows the independent re-computation, as for the other verified models of the library without an EES file."
   },
-  "missing_features": [
-    "CS-GAP-INTEGRAL-LOOKUP"
-  ],
+  "missing_features": [],
   "related": ["CSL-0012", "CSL-0106"],
   "related_external": [
     "CoolSolve examples/building_rc_network.eescode (source of the import; stays in the CoolSolve repository)"
@@ -65,6 +63,11 @@
       "date": "2026-10-05",
       "action": "added (roadmap card C-44; native file blocked by CS-GAP-INTEGRAL-LOOKUP, verified runnable _coolsolve variant)",
       "by": "opencode worker for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @d5d6b37 (T-RECHECK, CS-GAP-INTEGRAL-LOOKUP closed): blocked -> verified; native file verified (equal to the former variant on all 56 variables, independent RK4 agrees), _coolsolve variant removed, native .sol added",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

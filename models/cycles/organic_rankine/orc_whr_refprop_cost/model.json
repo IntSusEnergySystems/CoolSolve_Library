@@ -66,14 +66,16 @@
   },
   "missing_features": [
     "CS-GAP-REFPROP",
-    "CS-GAP-IF5",
     "CS-GAP-END-PROCEDURE"
   ],
-  "related": ["CSL-0019",
+  "related": [
+    "CSL-0019",
     "CSL-0113",
     "CSL-0114",
     "CSL-0121",
-    "CSL-0124", "CSL-0159"],
+    "CSL-0124",
+    "CSL-0159"
+  ],
   "related_external": [],
   "supersedes": [],
   "previous_paths": [],
@@ -87,6 +89,21 @@
       "date": "2026-10-08",
       "action": "runnable _coolsolve variant added and verified against the EES stored solution (orchestrator review of C-145)",
       "by": "worker, CoolSolve Library batch B-11"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @59b2862 (T-RECHECK, CS-GAP-IF5 closed); still blocked by CS-GAP-REFPROP, CS-GAP-END-PROCEDURE; README and missing_features updated, variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "CS-GAP-CALL-EXPR-OUT added to missing_features (found by the CoolSolve agent of commit 6c36a30, confirmed with the frozen binary @9423934: 13 CALL EES_REFPROP outputs are expressions such as T_r_su_vap+273.1, lines 693 ff.); status unchanged (blocked), variant unchanged",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @57b22d3 (T-RECHECK, CS-GAP-CALL-EXPR-OUT closed); still blocked by CS-GAP-REFPROP and CS-GAP-END-PROCEDURE (first errors: lines 541/543 End procedure, then Unknown procedure EES_REFPROP); in a scratch copy with End procedure written End the file is square (447 equations) with the expression outputs accepted; README and missing_features updated, variant kept (its REFPROP replacement is still forced by CS-GAP-REFPROP)",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

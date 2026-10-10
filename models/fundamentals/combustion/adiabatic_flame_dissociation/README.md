@@ -19,7 +19,7 @@ is accounted for.
 | **Source** | ULiège — course MCI, TP1 exercises 3-4, 2016 (EES file `Ex_3-4_CH4-Fuel Oil_Tadiab with or without dissociation_2016.EES`) |
 | **Authors** | P. Ngendakumana, R. Dickes (ULiège Thermotechnics; see *Source and attribution*) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — **native file blocked** by `CS-GAP-IF-DIRECTIVE`, `CS-GAP-CHEM-EQUIL`, `CS-GAP-NASA`, `CS-GAP-NAME-SYMBOL`, `CS-GAP-SUM-INDEXED`; no runnable variant (see *Why no runnable variant*) |
+| **CoolSolve** | v0.3.0 — **native file blocked** by `CS-GAP-CHEM-EQUIL`, `CS-GAP-NASA`, `CS-GAP-NAME-SYMBOL` (`'Oil'` branch only), `CS-GAP-SUM-INDEXED` (`CS-GAP-IF-DIRECTIVE` is closed in `fix/library-gaps-2` @9423934); no runnable variant (see *Why no runnable variant*) |
 
 ## Problem statement
 
@@ -54,11 +54,14 @@ Unknowns of the stored run (CH4, dissociation): `T_adiab` (from
 
 The file is valid EES: open it in EES and select the case by
 commenting/uncommenting the `FUEL$` and `DISSOCIATION$` lines. In CoolSolve
-it does **not** run: the parse fails on the `C%`/`H%` names
-(`CS-GAP-NAME-SYMBOL`), the `$IF`/`$IFNOT` branches are all kept so the
-system is not square (`CS-GAP-IF-DIRECTIVE`), `CALL CHEM_EQUIL` /
-`CALL NASA` are unknown procedures (`CS-GAP-CHEM-EQUIL`, `CS-GAP-NASA`), and
-the indexed `sum(..., i=1, Nprod)` is not expanded (`CS-GAP-SUM-INDEXED`).
+it does **not** run: `CALL CHEM_EQUIL` / `CALL NASA` are unknown procedures
+(`CS-GAP-CHEM-EQUIL`, `CS-GAP-NASA`; with them the system is not square: 65
+equations, 68 unknowns), the indexed `sum(..., i=1, Nprod)` is not expanded
+(`CS-GAP-SUM-INDEXED`), and the `C%`/`H%` names of the `FUEL$ = 'Oil'` branch do
+not parse (`CS-GAP-NAME-SYMBOL`). With CoolSolve v0.3.0 the `$IF`/`$IFNOT` branches were all kept
+(`CS-GAP-IF-DIRECTIVE`); since `fix/library-gaps-2` @9423934 the directives are
+resolved: with the file as shipped (`FUEL$ = 'CH4'`, `DISSOCIATION$ = 'YES'`) the `'Oil'` lines are
+removed and no longer give parse errors.
 
 ## Results (EES stored solution)
 
@@ -152,13 +155,21 @@ S. Quoilin:
 - **Blocked in CoolSolve** (native file kept in valid EES): parse errors on
   the `C%`/`H%` names (`CS-GAP-NAME-SYMBOL`), `$IF FUEL$…`/`$IF
   DISSOCIATION$…`/`$IFNOT PARAMETRICTABLE` branches all kept → not square
-  (`CS-GAP-IF-DIRECTIVE`), `CALL CHEM_EQUIL` → *"Unknown procedure:
+  (`CS-GAP-IF-DIRECTIVE`, closed in `fix/library-gaps-2` @9423934), `CALL CHEM_EQUIL` → *"Unknown procedure:
   CHEM_EQUIL"* (`CS-GAP-CHEM-EQUIL`), `CALL NASA` → *"Unknown procedure:
   NASA"* (`CS-GAP-NASA`), indexed `sum(..., i=1, Nprod)` not expanded
   (`CS-GAP-SUM-INDEXED`). All five verified with minimal valid-EES
   reproducers in the gap register (the last three new). The EES stored
   bounds of `T` (1000–3500 K) also helped EES stay in the physical branch
   (`CS-GAP-BOUNDS`); not blocking on top of the above.
+- **2026-10-10 — re-check** with CoolSolve `fix/library-gaps-2` @9423934
+  (`CS-GAP-IF-DIRECTIVE` closed): the directives are resolved (`FUEL$ = 'CH4'` and
+  `DISSOCIATION$ = 'YES'` branches kept, the `'Oil'` block and the `'NO'` block removed); the
+  native file still stops with *not square* (65 equations, 68 unknowns), the
+  `CHEM_EQUIL`/`NASA` calls and the indexed `sum` being unsupported. `CS-GAP-NAME-SYMBOL`
+  stays listed: it is not reached with `FUEL$ = 'CH4'` but the file does contain the
+  `C%`/`H%`/`O%`/`S%` names of the `'Oil'` branch (with `FUEL$ = 'Oil'` in a scratch copy:
+  six parse errors, lines 32–48). Still **blocked**, no variant.
 - **No runnable variant**: see the section above.
 - **Level**: active-case equations ≈ 52 (score 1, 50–300) + largest block 2
   (0) + arrays/DUPLICATE and procedure calls (1) + no multi-zone (0) + no

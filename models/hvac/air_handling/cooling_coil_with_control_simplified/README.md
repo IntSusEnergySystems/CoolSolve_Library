@@ -1,6 +1,6 @@
 # Cooling coil with control, simplified model
 
-🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0073`
+🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0073`
 
 Simplified model of a cooling and dehumidifying coil of an air handling unit,
 from the ULiège model bank (Laborelec toolkit lineage): the refrigerant side
@@ -22,7 +22,7 @@ data.
 | **Source** | ULiège model bank — *Cooling coil with control: simplified model*, 18 March 2008 (EES file inside `COOLINGCOILWithControl_SIMPLIFIED_MODEL_VL080318.zip`) |
 | **Authors** | Vincent Lemort, Jean Lebrun (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file **blocked** by `CS-GAP-IF5` (EES 5-argument `IF`); the variant `cooling_coil_with_control_simplified_coolsolve.eescode` runs and is verified against the EES stored solution |
+| **CoolSolve** | 0.3.0+fix/library-gaps-2@59b2862 — **verified** against the EES stored solution (max. 2.7e-02 on the latent power, 14 of 34 variables above 1e-3, EES vs CoolProp humid air). Needs the EES 5-argument `IF` (`CS-GAP-IF5`, fixed in CoolSolve `fix/library-gaps-2`): CoolSolve v0.3.0 does not run the file |
 
 ## Problem statement
 
@@ -44,7 +44,9 @@ sensible heat ratio.
   the supply wet-bulb temperature `t_wb_su` and dew-point temperature `t_dp_su`
   come from the humid-air property calls `wetbulb(airH2O,P=…,W=…,T=…)` and
   `dewpoint(airH2O,P=…,W=…,T=…)`; the regime is selected by a 5-argument EES
-  `IF` (see *Limitations and CoolSolve gaps*).
+  `IF`: `IF(t_dp_su, t_c_minwet, t_c_mindry, t_c_mindry, t_c_minwet)` returns the
+  dry value when the supply dew point is below the minimum wet contact temperature
+  and the wet value when it is above.
 - Contact temperature: `t_c = t_a_su − X_control·(t_a_su − t_c_min)` with the
   bounded control variable `X_control = max(min(C_control·(t_a_ex − t_a_ex_set),1),0)`.
 - Outlet air temperature: `t_a_ex = t_a_su − epsilon_c·(t_a_su − t_c)`
@@ -80,15 +82,14 @@ the regression case.
 
 ## How to run
 
-The native file `cooling_coil_with_control_simplified.eescode` keeps the
-native EES syntax (the 5-argument `IF`) and does **not** run in CoolSolve
-v0.3.0 (see *Limitations and CoolSolve gaps*). The runnable variant
-`cooling_coil_with_control_simplified_coolsolve.eescode` replaces that single
-call by the 3-argument `IF` of CoolSolve; nothing else is changed (every
-change is logged in the conversion log):
+The native file keeps the native EES syntax (the 5-argument `IF`) and needs a
+CoolSolve version with `CS-GAP-IF5` fixed (branch `fix/library-gaps-2`;
+CoolSolve v0.3.0 stops on "IF with 5 arguments"). Open
+`cooling_coil_with_control_simplified.eescode` in the CoolSolve GUI and press
+*Solve*, or from a terminal:
 
 ```bash
-coolsolve ./cooling_coil_with_control_simplified_coolsolve.eescode
+coolsolve ./cooling_coil_with_control_simplified.eescode
 ```
 
 No `.initials` file is needed (the system converges from the default guesses
@@ -97,7 +98,7 @@ the set point or the parameters of the control panel; a sweep of
 `t_a_su_coolingcoil` or of `t_a_ex_coolingcoil_set` gives the coil capacity
 and the sensible heat ratio of the coil (see the figure placeholder below).
 
-## Results (default run of the variant)
+## Results (default run)
 
 | Quantity | CoolSolve | EES (stored) | rel. diff |
 |---|---:|---:|---:|
@@ -126,10 +127,12 @@ sensible and 6.9 kW latent (SHR 0.776).
 
 ## Verification
 
-The **native file cannot be solved** by CoolSolve v0.3.0 (`CS-GAP-IF5`), so
-the comparison concerns the runnable variant
-`cooling_coil_with_control_simplified_coolsolve.eescode`, which differs from
-the native file by that one call only. Solved with
+The **native file** (with the 5-argument `IF`, solved by CoolSolve
+`fix/library-gaps-2` @59b2862 in 2 iterations) is the verified file; it gives
+the same 34 values as the former runnable variant (3-argument `IF`, removed),
+checked on the regression point and on a dry-regime point (supply humidity
+ratio 0.004: dew point 0.74 °C below the minimum wet contact temperature 9.45 °C,
+dry value selected). Compared with
 `compare_solution.py` against the 34 variables stored in the source EES
 file: **34 common variables, 14 differ above rtol = 0.001, maximum relative
 difference 2.71e-02** (`Q_dot_latent_coolingcoil`, 6948.13 W against
@@ -210,17 +213,16 @@ parameter-identification model (ParamID, `TM-0470`).
 - **Units in comments.** Temperatures, powers, humidity ratios and
   heat capacities carry their SI unit; the air-side effectiveness values are
   dimensionless `[-]`.
-- **Runnable variant** `cooling_coil_with_control_simplified_coolsolve.eescode`:
-  the single call
-  `t_c_coolingcoil_min = IF(t_dp_su_coolingcoil, t_c_minwet, t_c_mindry, t_c_mindry, t_c_minwet)`
-  (EES 5-argument `IF`, valid EES, kept in the native file) is replaced by the
-  3-argument `IF(t_dp_su_coolingcoil, t_c_minwet, t_c_mindry)` of CoolSolve,
-  forced by `CS-GAP-IF5`. No other equation, name or value changes; the
-  header of the variant logs the change and the semantics of both forms (the
-  3-argument `if` is valid EES as well — EES accepts both — but the two forms
-  are not equivalent outside the regression point: the EES form compares the
-  dew point with the minimum *wet* contact temperature, the CoolSolve form
-  switches regime on the dew point being above 0 °C).
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @59b2862
+  (T-RECHECK, `CS-GAP-IF5` closed).** The native file now solves; its `.sol` is
+  identical to that of the former runnable variant
+  `cooling_coil_with_control_simplified_coolsolve.eescode` (34 variables), which
+  differed only by replacing the 5-argument `IF` of the minimum contact temperature
+  by the 3-argument `IF` of CoolSolve (switch on the dew point above 0 °C, not
+  equivalent to the EES form outside the regression point). The variant and its
+  `.sol` were removed; the native file is the verified file and the `.sol`
+  baseline. The file header was corrected (the description of the regime switch
+  now follows the EES 5-argument `IF`).
 - **No figure-ready state arrays.** This is a humid-air (`AirH2O`) component
   model, for which CoolSolve has no psychrometric diagram
   (`CS-FEAT-PSYCHRO`, decision D7): its figure is a parametric sweep plot,
@@ -232,20 +234,11 @@ parameter-identification model (ParamID, `TM-0470`).
 
 ## Limitations and CoolSolve gaps
 
-- **`CS-GAP-IF5` — the native file does not run in CoolSolve v0.3.0.** The
-  EES intrinsic `IF(A,B,X,Y,Z)` (5 arguments: X if A<B, Y if A=B, Z if A>B)
-  is parsed but raises *"Unknown or unsupported function: IF with 5
-  arguments"* (`CoolSolve`'s `if` has three arguments). It is used once, to
-  select the minimum contact temperature of the dry or wet regime:
-
-  ```
-  t_c_coolingcoil_min=IF(t_dp_su_coolingcoil, t_c_coolingcoil_minwet, t_c_coolingcoil_mindry, t_c_coolingcoil_mindry, t_c_coolingcoil_minwet)
-  ```
-
-  Reproducer (valid EES): `A = 16.6` ⏎ `B = 12.4` ⏎ `Q = IF(A,B,100,200,300)` → *"Block … failed: EvaluationError - Unknown or unsupported function: IF with 5 arguments"*;
-  the same line with `IF(A,B,100)` solves. Already registered (found with
-  `CSL-0009`), **not re-reported here**; the runnable variant uses
-  `if(cond,a,b)`.
+- **`CS-GAP-IF5` — closed.** The EES intrinsic `IF(A,B,X,Y,Z)` (5 arguments:
+  X if A<B, Y if A=B, Z if A>B) used once to select the minimum contact
+  temperature of the dry or wet regime is implemented in CoolSolve
+  `fix/library-gaps-2` (commit 59b2862); CoolSolve v0.3.0 stops with *"Unknown
+  or unsupported function: IF with 5 arguments"*.
 - Physical limitations: the refrigerant side is not modelled (the coil
   capacity is whatever the control law asks for); the outlet humidity ratio
   is that of the contact factor at the contact temperature, with no

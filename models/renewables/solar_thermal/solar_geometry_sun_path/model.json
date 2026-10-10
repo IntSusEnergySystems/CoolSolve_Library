@@ -47,8 +47,7 @@
     "notes": "Variant vs EES: 22 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Max 1.5e-6 on theta_z (trigonometric round-off); all others agree to at least 1e-7. No variable excluded."
   },
   "missing_features": [
-    "CS-GAP-NDAY",
-    "CS-GAP-IF-DIRECTIVE"
+    "CS-GAP-NDAY"
   ],
   "related": ["CSL-0082", "CSL-0083"],
   "related_external": [],
@@ -59,6 +58,11 @@
       "date": "2026-10-07",
       "action": "added (roadmap card C-130)",
       "by": "opencode worker (muse-spark) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @9423934 (T-RECHECK, CS-GAP-IF-DIRECTIVE closed); still blocked by CS-GAP-NDAY (native file now keeps the $ifnot parametrictable block, t = 0, 22 equations/22 unknowns, first error Unknown function nDay_); _coolsolve variant kept (nDay_ replacement still needed, t = 24 is the stored parametric run)",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

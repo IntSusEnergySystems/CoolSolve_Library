@@ -3,6 +3,12 @@
    CoolSolve Library model CSL-0041 - runnable variant of
    ice_storage_tank_discharge_phase_change
   -----------------------------------------------------------------------------
+   Re-check 2026-10-10 (CoolSolve fix/library-gaps-2 @4cd0ca5): CS-GAP-IF5,
+   CS-GAP-INTEGRAL-LIMITS, CS-BUG-INTEGRAL-TABLE-SEP, CS-BUG-INTEGRAL-MAXSTEPS
+   and CS-BUG-INTEGRAL-TABLE-CASE are closed and no longer apply; only the Water
+   property calls (CS-BUG-WATER-NEAR-FREEZING) still force this variant. The
+   list below is the history of the transcription.
+
    Same model, same inputs, same physics and same 10-s tabulation step as
    ice_storage_tank_discharge_phase_change.eescode, transcribed in the
    CoolSolve v0.3.0 dialect because the native EES constructs below are
@@ -26,9 +32,11 @@
        T_w, the casing of the first occurrence of the variable in the file:
        the column matching is case-sensitive and a t_w column stays silently
        empty otherwise (CS-BUG-INTEGRAL-TABLE-CASE).
-   Solve time is a few seconds (5000 steps of 10 s); the trajectory is
-   written to ice_storage_tank_discharge_phase_change_coolsolve-integral.csv
-   (coolsolve.conf raises integralMaxSteps, CS-BUG-INTEGRAL-MAXSTEPS).
+   Solve time is a few seconds (6000 steps of 8.33 s, rows every second step);
+   the trajectory is written to
+   ice_storage_tank_discharge_phase_change_coolsolve-integral.csv
+   (coolsolve.conf sets integralMaxSteps = 6000: the INTEGRAL call has no
+   explicit step, so this is the number of steps).
 
    Verified against the EES stored solution of the sibling copy of the same
    exercise (AU = 1 MW/K, P = 1 bar) and against the closed-form solution of

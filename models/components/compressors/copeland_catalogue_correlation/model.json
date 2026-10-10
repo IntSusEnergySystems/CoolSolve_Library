@@ -5,7 +5,7 @@
   "summary": "FUNCTION copeland_ari(table$, coef$, T_ev, T_cd): ARI 10-coefficient third-order polynomial of a Copeland ZH scroll compressor catalogue (power W, mass flow M, swept volume Vs), with the five catalogue tables recovered from the source file; the compressor correlation of the Vitocal 300-G heat pump model CSL-0116.",
   "kind": "function",
   "level": 1,
-  "status": "blocked",
+  "status": "runs",
   "main_file": "copeland_catalogue_correlation.eescode",
   "fluids": [
     "R134a"
@@ -46,15 +46,13 @@
     "course": ""
   },
   "verification": {
-    "reference": "EES stored solution of the source file for the property states (T_ev, T_cd, T_su_cp, v_su_cp within 0.03 %, h_su_cp shifted by the 148.16 kJ/kg R134a reference-state offset) and exactness self-checks for the function (W_err = 0; M polynomial recomputed in Python from the shipped tables). The catalogue-dependent outputs are not comparable: the stored run used an older external version of the ZH38K4E-TFD table (Vs = 82.61 cm^3, factor 3-4 in W) that is absent from the collection. Comparison run on the runnable variant.",
-    "date": "2026-10-07",
-    "coolsolve_version": "0.3.0@7addbbc",
+    "reference": "EES stored solution of the source file for the property states (T_ev, T_cd, T_su_cp, v_su_cp within 0.03 %, h_su_cp shifted by the 148.16 kJ/kg R134a reference-state offset) and exactness self-checks for the function (W_err = 0; M polynomial recomputed in Python from the shipped tables). The catalogue-dependent outputs are not comparable: the stored run used an older external version of the ZH38K4E-TFD table (Vs = 82.61 cm^3, factor 3-4 in W) that is absent from the collection. Comparison run on the native file; it equals the former _coolsolve variant on all 13 variables.",
+    "date": "2026-10-10",
+    "coolsolve_version": "0.3.0@d5d6b37",
     "max_rel_diff": 0.029,
-    "notes": "T_ev rel. diff 2.9e-2 as printed by compare_solution.py (0.019 K absolute on a 0.65 C saturation temperature); h_su_cp differs by the documented reference-state offset; W_dot/M_dot/Vs/epsilon_v differ by the documented catalogue vintage."
+    "notes": "Native file (lookup(table$, i+1, coef$) in a FUNCTION) now run and compared, with CoolSolve fix/library-gaps-2 (CS-BUG-LOOKUP-COL-ARG and CS-GAP-LOOKUP-PROC closed): the .sol equals the one of the former variant on the 13 variables (max relative difference 2e-12, h_su_cp). compare_solution.py: 12 common variables, 7 differ (rtol=0.001): T_ev rel. diff 2.9e-2 as printed (0.019 K absolute on a 0.65 C saturation temperature), T_su_cp 3.4e-3 (same cause); h_su_cp differs by the documented reference-state offset; W_dot/M_dot/Vs/epsilon_v differ by the documented catalogue vintage. Status runs, not verified: the function results (the purpose of the model) have no independent reference because the table of the stored run is lost; only the property states and the exactness of the polynomial are checked."
   },
-  "missing_features": [
-    "CS-BUG-LOOKUP-COL-ARG"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0116",
     "CSL-0007",
@@ -68,6 +66,11 @@
       "date": "2026-10-07",
       "action": "added (function library; catalogue tables hand-decoded from the binary; native file blocked by CS-BUG-LOOKUP-COL-ARG, verified runnable variant copeland_catalogue_correlation_coolsolve.eescode)",
       "by": "glm-5.3-flash for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @d5d6b37 (T-RECHECK, CS-BUG-LOOKUP-COL-ARG closed): blocked -> runs; native file solves and equals the former variant on all 13 variables, _coolsolve variant (and its five table copies) removed, native .sol replaced; status runs (not verified) because the catalogue-dependent outputs have no reference, as before",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

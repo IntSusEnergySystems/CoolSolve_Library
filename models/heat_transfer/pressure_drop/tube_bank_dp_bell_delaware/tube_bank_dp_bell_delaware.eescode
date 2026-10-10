@@ -70,12 +70,12 @@ Taken from: ht 1.2.0 (commit 85e0ee6), ht/conv_tube_bank.py, dP_Kern,
   Vs = m/Ss/rho
   Re = rho*De*Vs/mu
 
-  !Cox-de Boor basis functions of the cubic B-spline of ht (15 knots, 11 non-zero
-  !coefficients): it reproduces the friction factor f(Re) read from the graph of
-  !Kern. Knots: 9.9524 (x4), 17.9105, 27.7862, 47.2083, 83.9573, 281.996,
-  !1122.76, 42999.9, 1012440 (x4).
-  !Zero-length knot intervals (repeated knots) have an identically zero term in
-  !the recursion and are dropped, which leaves the equations below unchanged.
+  // Cox-de Boor basis functions of the cubic B-spline of ht (15 knots, 11 non-zero
+  // coefficients): it reproduces the friction factor f(Re) read from the graph of
+  // Kern. Knots: 9.9524 (x4), 17.9105, 27.7862, 47.2083, 83.9573, 281.996,
+  // 1122.76, 42999.9, 1012440 (x4).
+  // Zero-length knot intervals (repeated knots) have an identically zero term in
+  // the recursion and are dropped, which leaves the equations below unchanged.
   B0_3 = Kern_knot_step(Re, 9.9524, 17.9105)
   B0_4 = Kern_knot_step(Re, 17.9105, 27.7862)
   B0_5 = Kern_knot_step(Re, 27.7862, 47.2083)

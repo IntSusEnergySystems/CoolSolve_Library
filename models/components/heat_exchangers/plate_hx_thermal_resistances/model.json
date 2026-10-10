@@ -55,9 +55,7 @@
     "notes": "34 common variables, 4 differ (rtol=0.001); max relative deviation 2.03e-02 (Pr_f), inherited from the water thermal conductivity: EES 7.888 returns 0.59477 W/m-K at 25 °C, CoolProp/IAPWS 0.60652 W/m-K (the IAPWS value, 2 % above the old EES library). Geometric/algebraic outputs match to 4.2e-05 (DELTAP)."
   },
   "missing_features": [
-    "CS-GAP-IF-DIRECTIVE",
-    "CS-BUG-HASH-IDENT",
-    "CS-GAP-CALL-EXPR-OUT"
+    "CS-BUG-HASH-IDENT"
   ],
   "related": ["CSL-0079", "CSL-0111", "CSL-0162"],
   "related_external": [],
@@ -68,6 +66,16 @@
       "date": "2026-10-08",
       "action": "added (T-IMPORT, roadmap card C-153, batch B-11)",
       "by": "GLM (Z.ai) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @9423934 (T-RECHECK, CS-GAP-IF-DIRECTIVE closed); still blocked by CS-BUG-HASH-IDENT (Nu#_f, first error, lines 93 and 95); the $IF fluid$ directives now keep the Water branch and drop the EG branch, so CS-GAP-CALL-EXPR-OUT (EG branch only) is not reached; _coolsolve variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @57b22d3 (T-RECHECK, CS-GAP-CALL-EXPR-OUT closed); still blocked by CS-BUG-HASH-IDENT alone (Nu#_f, reported at lines 94 and 96); in a scratch copy with Nu_f the Water branch solves (37 equations), the EG branch parses the expression outputs but is not square (the second BRINEPROP2 call writes k_w) and BRINEPROP2 is unknown (CS-GAP-INCLUDE, not blocking as shipped); variant kept (Nu_f renaming still needed)",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

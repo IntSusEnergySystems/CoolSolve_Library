@@ -68,9 +68,7 @@
   },
   "missing_features": [
     "CS-GAP-NAME-PIPE",
-    "CS-GAP-IF-DIRECTIVE",
     "CS-GAP-PROP-SV",
-    "CS-GAP-LOOKUP-PROC",
     "CS-GAP-CONVERT-UNQUOTED",
     "CS-GAP-LKT",
     "CS-GAP-INCLUDE",
@@ -101,6 +99,16 @@
       "date": "2026-10-07",
       "action": "re-checked after C-134/CSL-0123 (catalogue tables recovered from TM-0560 are a different vintage than the stored run's table: no faithful variant possible, status stays blocked)",
       "by": "glm-5.3-flash for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @9423934 (T-RECHECK, CS-GAP-IF-DIRECTIVE closed); still blocked: the $if compressortype$='ari' (ARI branch kept) and $ifnot parametrictable directives are now resolved; first errors CS-GAP-GE-ARROW (line 541), CS-GAP-REPEAT-UNTIL-BARE (line 557), CS-GAP-NAME-PIPE (lines 740-748), plus the other listed gaps; no variant",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @d5d6b37 (T-RECHECK, CS-GAP-LOOKUP-PROC closed; CS-BUG-LOOKUP-COL-ARG closed, which the lookup(table$, i+1, coef$) of FUNCTION copeland also relies on); still blocked: the native file stops at the same parse errors (CS-GAP-GE-ARROW line 541, CS-GAP-REPEAT-UNTIL-BARE line 557, CS-GAP-NAME-PIPE lines 740-748) plus the other listed gaps, and the catalogue table of the stored run is still missing (CS-GAP-LKT); no variant",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

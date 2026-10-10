@@ -51,13 +51,11 @@
     "reference": "EES stored solution of the source file: only the inputs and the solved bore diameter Di_dph = 0.01702816341 are consistent with the current operating point (the other stored values are stale, see README); compared with the runnable variant",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
-    "max_rel_diff": 1.8e-4,
+    "max_rel_diff": 0.00018,
     "notes": "Variant iso5167_orifice_plate_flow_rate_coolsolve vs EES stored Di_dph: 0.01702515 vs 0.01702816341 (rel. diff 1.8e-4); compare_solution.py: 7 common variables, 0 differ (rtol=0.001). Independent psychrometric hand check of the humid-air state within 0.1 %."
   },
   "missing_features": [
-    "CS-GAP-IF5",
     "CS-GAP-ISIDEALGAS",
-    "CS-BUG-STRING-CASE",
     "CS-BUG-HUMIDAIR-PROPS"
   ],
   "related": [
@@ -71,6 +69,16 @@
       "date": "2026-10-05",
       "action": "added (card C-80, T-IMPORT; runnable variant verified, native file blocked)",
       "by": "worker for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @59b2862 (T-RECHECK, CS-GAP-IF5 closed); still blocked by CS-GAP-ISIDEALGAS, CS-BUG-STRING-CASE, CS-BUG-HUMIDAIR-PROPS; README and missing_features updated, variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @9423934 (T-RECHECK, CS-BUG-STRING-CASE closed); still blocked by CS-GAP-ISIDEALGAS and CS-BUG-HUMIDAIR-PROPS: the native file now takes the AirH2O branch for fluid$ = 'airh2o', its first error is SingularJacobian in block 16 (wrong humid-air density and gamma); the file solves, identical to the variant, once these two property calls are rewritten in a scratch copy; variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

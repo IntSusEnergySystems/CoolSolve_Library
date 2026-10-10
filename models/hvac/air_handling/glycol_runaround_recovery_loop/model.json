@@ -59,9 +59,6 @@
     "notes": "Native file blocked by CS-GAP-IF-DIRECTIVE (both $IF regime branches kept: 169 equations / 144 unknowns), CS-GAP-IF5, CS-GAP-CALL-EXPR-OUT and CS-GAP-INCLUDE (BrineProp USERLIB). The winter-resolved variant is square (271 equations, largest block 65) and stops on the solver bug CS-BUG-NEWTON-CYCLE; a T-RECHECK after that bug should solve it, verify against the stored solution and commit the .sol."
   },
   "missing_features": [
-    "CS-GAP-IF-DIRECTIVE",
-    "CS-GAP-IF5",
-    "CS-GAP-CALL-EXPR-OUT",
     "CS-GAP-INCLUDE",
     "CS-BUG-NEWTON-CYCLE"
   ],
@@ -81,6 +78,21 @@
       "date": "2026-10-08",
       "action": "added (card C-154, TM-0321, duplicate group DG-0076)",
       "by": "glm-5.3-flash (worker) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @59b2862 (T-RECHECK, CS-GAP-IF5 closed); still blocked by CS-GAP-IF-DIRECTIVE, CS-GAP-CALL-EXPR-OUT, CS-GAP-INCLUDE (and the variant by CS-BUG-NEWTON-CYCLE); README and missing_features updated, variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @9423934 (T-RECHECK, CS-GAP-IF-DIRECTIVE closed); still blocked by CS-GAP-CALL-EXPR-OUT (first error: BRINEPROP expression outputs, lines 67 and 69) and CS-GAP-INCLUDE; the $IF recovery_regime$ directives are now resolved (winter kept); variant kept (blocked by CS-BUG-NEWTON-CYCLE, its $IF resolution is no longer needed)",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @57b22d3 (T-RECHECK, CS-GAP-CALL-EXPR-OUT closed); still blocked by CS-GAP-INCLUDE (first error: the native file now parses completely, 146 equations square, and stops at Unknown procedure BRINEPROP) and CS-BUG-NEWTON-CYCLE (scratch copy with BRINEPROP supplied: the 61-variable block gives SingularJacobian); README and missing_features updated, variant kept (blocked by CS-BUG-NEWTON-CYCLE; its expression-output split is no longer forced)",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

@@ -19,7 +19,7 @@ power closes the glycol loop (the pump heat input warms the glycol).
 | **Source** | ULiège model bank — air-to-air glycol recovery loop, 10 January 2008 (`GLYCOL_RECOVERY_LOOP_SB080110.EES`) |
 | **Authors** | Stéphane Bertagnolio (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0@7addbbc — native file blocked (CS-GAP-IF-DIRECTIVE, CS-GAP-IF5, CS-GAP-CALL-EXPR-OUT, CS-GAP-INCLUDE); the runnable `_coolsolve` variant is in turn blocked by the solver bug `CS-BUG-NEWTON-CYCLE` |
+| **CoolSolve** | v0.3.0@7addbbc, re-checked with 0.3.0@57b22d3 — native file blocked (CS-GAP-INCLUDE, then the `CS-BUG-NEWTON-CYCLE` block; CS-GAP-IF5, CS-GAP-IF-DIRECTIVE and CS-GAP-CALL-EXPR-OUT are closed in CoolSolve `fix/library-gaps-2`, @59b2862, @9423934 and @57b22d3); the runnable `_coolsolve` variant is in turn blocked by the solver bug `CS-BUG-NEWTON-CYCLE` |
 
 ## Problem statement
 
@@ -147,16 +147,20 @@ Source file (EES 7.888, comments in English), collection of S. Quoilin:
   (logged here, listed in the README *Results* instead).
 - **Gaps blocking the native file** (all pre-registered; no new gap of the
   card): `CS-GAP-IF-DIRECTIVE` (the `$IF recovery_regime$='winter'` /
-  `'summer'` branches are both kept → 169 equations / 144 unknowns),
+  `'summer'` branches were both kept → 169 equations / 144 unknowns; closed in
+  CoolSolve `fix/library-gaps-2` @9423934),
   `CS-GAP-IF5` (four `IF(Q_dot_cooling_dry,Q_dot_cooling_wet,…)` regime
-  selections), `CS-GAP-CALL-EXPR-OUT` (the three `CALL BRINEPROP(…:c_p_gw/1000)`
-  style outputs), `CS-GAP-INCLUDE` (BrineProp comes from the implicit
+  selections; closed in CoolSolve `fix/library-gaps-2` @59b2862), `CS-GAP-CALL-EXPR-OUT` (the three `CALL BRINEPROP(…:c_p_gw/1000)`
+  style outputs; closed in CoolSolve `fix/library-gaps-2` @57b22d3), `CS-GAP-INCLUDE` (BrineProp comes from the implicit
   `USERLIB` of EES, `Brineprop.lib`, TM-0479).
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @59b2862 (T-RECHECK, `CS-GAP-IF5` closed).** The five-argument `IF` of the native file is now implemented; the native file is still blocked, the first error now comes from another gap (the system is not square (169 equations, 144 unknowns), `CS-GAP-IF-DIRECTIVE`). The variant is kept.
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @9423934 (T-RECHECK, `CS-GAP-IF-DIRECTIVE` closed).** The `$IF recovery_regime$` directives are now resolved (`'winter'` kept, the summer block removed), so the "not square" error is gone; the native file stops at the `CALL BRINEPROP(…:c_p_gw/1000)` and `(…:mu_gw*1000)` expression outputs (lines 67 and 69, `CS-GAP-CALL-EXPR-OUT`) and warns *Unknown function 'BRINEPROP'* (`CS-GAP-INCLUDE`). Still **blocked**; the variant is kept (its `$IF` resolution — change 1 below — is no longer needed; its `BRINEPROP` flattening, `if` rewriting and the `CS-BUG-NEWTON-CYCLE` blocker are unchanged).
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @57b22d3 (T-RECHECK, `CS-GAP-CALL-EXPR-OUT` closed).** The three `CALL BRINEPROP` calls with an expression output (lines 67–69: `c_p_gw/1000`, `mu_gw*1000`) now parse: the native file **parses completely** (146 equations, 146 unknowns, square, 86 blocks, largest block 61; each expression output gets an auxiliary variable `__out<k>_BRINEPROP_L<line>`) and the solve stops at block 51 (61 variables, `__out1_BRINEPROP_L67`, `mu_gw`, `nu_gw`, …) with *"Unknown procedure: BRINEPROP"* (`CS-GAP-INCLUDE`). Evidence of what follows: in a scratch copy where the BrineProp procedure is supplied (the native procedure of `CSL-0079`/`CSL-0078`, its unparsable constructs rewritten, with the `Brine1/Brine2` companion tables) the three native calls are accepted and the 61-variable block fails with *SingularJacobian* from the start (‖F‖ 2.5e6) — the `CS-BUG-NEWTON-CYCLE` of the variant. So the native file is now blocked by `CS-GAP-INCLUDE` and then by `CS-BUG-NEWTON-CYCLE`, like the variant; `CS-GAP-CALL-EXPR-OUT` is removed from `missing_features`. The variant is kept (blocked by `CS-BUG-NEWTON-CYCLE`; its change 4, the expression outputs written as separate equations, is no longer forced by a gap, its `BRINEPROP` flattening still is by `CS-GAP-INCLUDE`).
 - **2026-10-08 — runnable variant** `glycol_runaround_recovery_loop_coolsolve.eescode`,
   changing only what the gaps force, each change valid EES unless noted:
   1. the `$IF` branches are resolved for the stored run (winter): the winter
      block is kept unconditional, the summer block is removed
-     (`CS-GAP-IF-DIRECTIVE`), as in CSL-0009/CSL-0012/CSL-0161;
+     (`CS-GAP-IF-DIRECTIVE`, closed since; no longer needed), as in CSL-0009/CSL-0012/CSL-0161;
   2. the four 5-argument `IF(A,B,X,Y,Z)` regime selections are written with
      the 3-argument `if(cond, a, b)`, `cond = Q_dot_cooling_wet −
      Q_dot_cooling_dry` (`CS-GAP-IF5`; **CoolSolve-only syntax**, not valid

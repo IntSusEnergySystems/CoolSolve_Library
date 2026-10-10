@@ -57,24 +57,39 @@
     "date": "2026-10-06",
     "coolsolve_version": "0.3.0@536d427",
     "max_rel_diff": null,
-    "notes": "No numerical comparison with compare_solution.py is possible: the native file is blocked (CS-GAP-IF-DIRECTIVE, CS-GAP-INTEGRAL-LIMITS, CS-GAP-INTEGRALVALUE, CS-GAP-GOTO) and no faithful runnable variant exists. The stored EES solution is partly stale (see README): t_s, f_penalty, F_correlation_p, A_heating, B_heating, Q_dot, q, t, time, alpha, L_b, m_dot_f_b, D_p_i are leftovers of commented-out equation sets."
+    "notes": "No numerical comparison with compare_solution.py is possible: the native file is blocked (CS-GAP-INTEGRALVALUE, CS-GAP-GOTO; CS-GAP-IF-DIRECTIVE, CS-GAP-INTEGRAL-LIMITS, CS-BUG-INTEGRAL-FACTOR and CS-BUG-INTEGRAL-TABLE-SEP were blocking at the time of the import and are closed in CoolSolve fix/library-gaps-2) and no faithful runnable variant exists. The stored EES solution is partly stale (see README): t_s, f_penalty, F_correlation_p, A_heating, B_heating, Q_dot, q, t, time, alpha, L_b, m_dot_f_b, D_p_i are leftovers of commented-out equation sets."
   },
   "missing_features": [
-    "CS-GAP-IF-DIRECTIVE",
-    "CS-GAP-INTEGRAL-LIMITS",
     "CS-GAP-INTEGRALVALUE",
-    "CS-GAP-GOTO",
-    "CS-GAP-IF5",
-    "CS-BUG-INTEGRAL-FACTOR",
-    "CS-BUG-INTEGRAL-TABLE-SEP"
+    "CS-GAP-GOTO"
   ],
-  "related": ["CSL-0078",
+  "related": [
+    "CSL-0078",
     "CSL-0080"
   ],
   "related_external": [],
   "supersedes": [],
   "previous_paths": [],
   "history": [
-    {"date": "2026-10-06", "action": "added (blocked: no faithful runnable variant)", "by": "Claude (Opus 4.5) for S. Quoilin"}
+    {
+      "date": "2026-10-06",
+      "action": "added (blocked: no faithful runnable variant)",
+      "by": "Claude (Opus 4.5) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @59b2862 (T-RECHECK, CS-GAP-IF5 closed); still blocked by CS-GAP-IF-DIRECTIVE, CS-GAP-INTEGRAL-LIMITS, CS-GAP-INTEGRALVALUE, CS-GAP-GOTO, CS-BUG-INTEGRAL-FACTOR, CS-BUG-INTEGRAL-TABLE-SEP; README and missing_features updated, variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @9423934 (T-RECHECK, CS-GAP-IF-DIRECTIVE closed); still blocked: the $IF borehole_configuration$ directives are now resolved (branch 'B' kept), the first error is the GOTO ladders of the procedures (CS-GAP-GOTO, lines 108-183), then CS-GAP-INTEGRAL-LIMITS, CS-GAP-INTEGRALVALUE, CS-BUG-INTEGRAL-FACTOR, CS-BUG-INTEGRAL-TABLE-SEP; no variant",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @4cd0ca5 (T-RECHECK, CS-GAP-INTEGRAL-LIMITS, CS-BUG-INTEGRAL-FACTOR and CS-BUG-INTEGRAL-TABLE-SEP closed); still blocked by CS-GAP-GOTO (parse errors, lines 108-183) and CS-GAP-INTEGRALVALUE; README and missing_features updated, no variant",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    }
   ]
 }

@@ -19,7 +19,7 @@ closes the model.
 | **Source** | ULiège model bank (Laborelec toolkit lineage), heat production by vapour compression, reference simulation model, 8 January 2008 (`BrinetoWaterHeatPump_RefSim_EES_Model_VL080108.EES`, EES 7.888) |
 | **Authors** | Vincent Lemort (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file **blocked** by `CS-GAP-ELSEIF-CHAIN` (with `CS-GAP-UPPERCASE`, `CS-GAP-STRING-ARRAY`, `CS-GAP-LOOKUP-PROC`, `CS-GAP-CALL-EXPR-OUT`); runnable variant `brine_to_water_heat_pump_refsim_coolsolve.eescode` verified against the solution stored by EES (see *Verification*) |
+| **CoolSolve** | v0.3.0, re-checked with 0.3.0@57b22d3 — native file **blocked** by `CS-GAP-ELSEIF-CHAIN` (with `CS-GAP-UPPERCASE`, `CS-GAP-STRING-ARRAY`; `CS-GAP-LOOKUP-PROC` and `CS-GAP-CALL-EXPR-OUT` are closed since `fix/library-gaps-2`); runnable variant `brine_to_water_heat_pump_refsim_coolsolve.eescode` verified against the solution stored by EES (see *Verification*) |
 
 ## Problem statement
 
@@ -102,9 +102,10 @@ consistency-check structure of the RefSim models of the bank.
 The **native file** `brine_to_water_heat_pump_refsim.eescode` is valid EES but
 does not parse in CoolSolve (the `BRINEPROP` procedure of the BrineProp library
 uses the `ELSE IF` ladders closed by repeated `ENDIF`, `Uppercase$`, string
-arrays read by index and `LOOKUP` inside a procedure: `CS-GAP-ELSEIF-CHAIN`,
-`CS-GAP-UPPERCASE`, `CS-GAP-STRING-ARRAY`, `CS-GAP-LOOKUP-PROC`; the model also
-passes an expression as `CALL` output argument, `CS-GAP-CALL-EXPR-OUT`).
+arrays read by index: `CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE`,
+`CS-GAP-STRING-ARRAY`; the expression passed as `CALL` output argument,
+`CS-GAP-CALL-EXPR-OUT`, and the `LOOKUP` inside the procedure,
+`CS-GAP-LOOKUP-PROC`, no longer fail since CoolSolve `fix/library-gaps-2`).
 
 The **runnable variant** is `brine_to_water_heat_pump_refsim_coolsolve.eescode`
 (tested as `CSL-0078:coolsolve`, with its `.sol` baseline and its own companion
@@ -172,7 +173,9 @@ records hold a value) is the reference. The extraction is **over-determined by
 three equations** as the original stands (`coolsolve -d` on the extraction with
 the inputs and the library procedure restored: *Equations: 162, Variables: 159,
 System square: No*), because the original defines `h_ex1_cp`, `M_dot_s_cp`,
-`Q_dot_ev` and `Q_dot_cd` twice each — see *Conversion log*. No equation was
+`Q_dot_ev` and `Q_dot_cd` twice each — see *Conversion log* (the cause of the
+over-determination found at the re-check of 2026-10-10 is the assignment of
+`P_ev`, `P_cd` and `M_dot_r`, see *Limitations*). No equation was
 replaced by a stored value.
 
 `python3 tools/compare_solution.py brine_to_water_heat_pump_refsim_coolsolve.sol reference/ees_variables.csv`:
@@ -326,6 +329,32 @@ model bank, so nothing was merged into or split from this model.
   companion tables (`brine_to_water_heat_pump_refsim_coolsolve-Brine1/Brine2.csv`,
   same decoded values) and its own `.initials` (EES stored solution plus guesses
   for the flattened variables).
+- **2026-10-10 — re-check (`T-RECHECK`) with CoolSolve `fix/library-gaps-2`
+  @d5d6b37**: `CS-GAP-LOOKUP-PROC` is closed (a lookup inside a PROCEDURE/FUNCTION
+  body finds its companion table). The native file still does not parse
+  (*"IF ... THEN without a matching ENDIF"*, `Uppercase$` unknown, expression as
+  `CALL` output), so it stays `blocked` and the variant is kept. Evidence that
+  the lookups themselves now work: the native `BRINEPROP` (rewritten in a
+  scratch copy only where it does not parse, as in `CSL-0079`) gives the
+  variant's brine density (1025.9635 kg/m³) and specific heat (3973.619 J/kg·K) of
+  the 25 % propylene glycol at 0 °C to 1.1e-10 relative. The flattening of
+  the variant is thus no longer needed for the lookups. What the same scratch
+  copy shows about the model itself is in *Limitations*.
+- **2026-10-10 — re-check (`T-RECHECK`) with CoolSolve `fix/library-gaps-2`
+  @57b22d3** (`0.3.0@57b22d3`, `CS-GAP-CALL-EXPR-OUT` closed): the expression
+  output `CALL BRINEPROP('specheat',…:cp_glw/1000)` (line 409) is accepted
+  (auxiliary variable `__out1_BRINEPROP_L<line>` holding the procedure output).
+  The native file still does not parse (*"IF ... THEN without a matching
+  ENDIF"*, `CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE`, `CS-GAP-STRING-ARRAY`), so
+  it stays `blocked` and the variant is kept. Evidence, in the scratch copy of
+  the previous re-check (the unparsable constructs of `BRINEPROP` rewritten, the
+  three input assignments `P_ev`, `P_cd`, `M_dot_r` commented out, see
+  *Limitations*) with the auxiliary-variable split replaced by the **native**
+  `:cp_glw/1000`: square (161 equations, 161 unknowns, largest block 76), and the
+  76-variable block still fails (`MaxIterations`, from the shipped `.initials`:
+  ‖F‖ 5.5e5 → 4.7e5), as with the split written by hand (the register quotes the
+  same). The variant's change 2 (`cp_glw = Funkt_cp`) is therefore no longer
+  forced by a gap; the variant is kept for the other rewrites.
 - **Level**: score 6 with [taxonomy.md §3](../docs/taxonomy.md) (166 equations
   → 1, largest block 30 → 2, a procedure but no discretisation array → 0,
   three coupled components → 1, semi-empirical calibration referred to nominal
@@ -339,10 +368,38 @@ model bank, so nothing was merged into or split from this model.
 
 - The native file is **blocked** by `CS-GAP-ELSEIF-CHAIN` (the `BRINEPROP`
   ladders of the BrineProp library), with `CS-GAP-UPPERCASE`,
-  `CS-GAP-STRING-ARRAY`, `CS-GAP-LOOKUP-PROC` and `CS-GAP-CALL-EXPR-OUT`; the
-  runnable variant above is shipped next to it. The companion tables of the
+  `CS-GAP-STRING-ARRAY` (`CS-GAP-LOOKUP-PROC` and `CS-GAP-CALL-EXPR-OUT` were
+  closed in CoolSolve `fix/library-gaps-2`, @d5d6b37 and @57b22d3, and removed
+  from `missing_features`); the runnable variant above is shipped next to it. The companion tables of the
   native file are the ones EES expects for the procedure's `LOOKUP` calls
   (decoded from the binary `.lkt` files, `CS-GAP-LKT`, as in `CSL-0072`).
+- **Not square, found at the re-check of 2026-10-10 (not a CoolSolve gap, a
+  property of this import).** With the four parse errors above worked around in
+  a scratch copy (native file otherwise unchanged), CoolSolve 0.3.0@d5d6b37
+  reports *164 equations, 161 unknowns*. The three extra equations are the
+  three assignments `P_ev=436182.6219`, `P_cd=1730328.509` and
+  `M_dot_r=0.07561309079` of the *INPUTS* section: in the EES original
+  (extracted again with `tools/ees_extract.py`) these names are **not
+  assigned anywhere in the equations window** — they only appear on right-hand
+  sides (`P_ev` in the saturation temperatures of the evaporator, `P_cd` in
+  those of the condenser, `M_dot_r` in the compressor) — and the stored
+  variable records give them a guess different from the value (435 607.8 /
+  1 936 113.9 Pa and 0.0784 kg/s, `M_dot_r` bounded to [0, 1]), which is what
+  unknowns solved by EES look like. They are the three unknowns that three of
+  the "duplicated" relations close: the evaporator effectiveness relation
+  against the refrigerant-side balance (`Q_dot_ev`), the condenser (`Q_dot_cd`)
+  and the swept-volume flow against the mixing relation (`M_dot_s_cp`); the
+  fourth pair (`h_ex1_cp`) is balanced by `gamma_leak_cp`, an unknown in EES
+  (the isentropic relation across the orifice). With the three assignments commented out the scratch copy
+  is **square (161 equations, 161 unknowns, 86 blocks, largest block 76)**;
+  CoolSolve does not converge the 76-variable block from the shipped
+  `.initials` (EES stored solution: `MaxIterations`; without them
+  `SingularJacobian`; not investigated further). So the *redundant check
+  equations* of the import are not redundant in EES; the variant's "checks"
+  (`Q_dot_ev_chk` +4.8 %, `Q_dot_cd_chk` −3.8 %, `M_dot_s_cp_chk` +1.8 %) are
+  the relations that would move `P_ev`, `P_cd` and `M_dot_r` to the
+  CoolProp-consistent operating point; the variant evaluates the model **at the
+  EES operating point**. Native file and variant are left unchanged.
 - **`CS-GAP-PROP-SV` (registered with this model)**: property calls with the
   **(s, v)** input pair, `enthalpy(fluid$,s=…,v=…)` and
   `pressure(fluid$,s=…,v=…)`. Valid EES (the source file writes both and stores

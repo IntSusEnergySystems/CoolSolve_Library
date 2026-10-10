@@ -68,9 +68,7 @@
   "missing_features": [
     "CS-GAP-ELSEIF-CHAIN",
     "CS-GAP-UPPERCASE",
-    "CS-GAP-STRING-ARRAY",
-    "CS-GAP-LOOKUP-PROC",
-    "CS-GAP-CALL-EXPR-OUT"
+    "CS-GAP-STRING-ARRAY"
   ],
   "related": [
     "CSL-0077",
@@ -92,6 +90,16 @@
       "date": "2026-10-05",
       "action": "added (roadmap card C-83, T-IMPORT of TM-0495; blocked native file, runnable _coolsolve variant)",
       "by": "opencode worker (t78) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @d5d6b37 (T-RECHECK, CS-GAP-LOOKUP-PROC closed); still blocked by CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE, CS-GAP-STRING-ARRAY and CS-GAP-CALL-EXPR-OUT (native file does not parse); variant kept; in a scratch copy the native BRINEPROP (lookup inside the procedure) gives the variant brine density and specific heat to 1e-10; the scratch copy with those gaps worked around is not square (164 equations / 161 unknowns): P_ev, P_cd and M_dot_r are assigned although they are unknowns of the EES original (finding in README Limitations)",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @57b22d3 (T-RECHECK, CS-GAP-CALL-EXPR-OUT closed); still blocked by CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE, CS-GAP-STRING-ARRAY (native file does not parse); variant kept (its cp_glw = Funkt_cp change is no longer forced); in the scratch copy with those worked around and the three input assignments commented out, the native :cp_glw/1000 is accepted (161 equations, square) and the 76-variable block still does not converge (MaxIterations)",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

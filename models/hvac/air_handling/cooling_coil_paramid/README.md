@@ -25,7 +25,7 @@ with the measurement.
 | **Source** | ULiège model bank — *Cooling coil PARAMID reference model*, 21 March 2008 (EES file inside `COOLINGCOIL_PARAMID_REFERENCE_MODEL_VL080321.zip`) |
 | **Authors** | Vincent Lemort, Jean Lebrun (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file **blocked** by `CS-GAP-NAME-PIPE`, `CS-GAP-INCLUDE`, `CS-GAP-CALL-EXPR-OUT`; the variant `cooling_coil_paramid_coolsolve.eescode` runs and is verified against the EES stored solution |
+| **CoolSolve** | v0.3.0, re-checked with 0.3.0@57b22d3 — native file **blocked** by `CS-GAP-NAME-PIPE`, `CS-GAP-INCLUDE` (`CS-GAP-CALL-EXPR-OUT` is closed in CoolSolve `fix/library-gaps-2` @57b22d3); the variant `cooling_coil_paramid_coolsolve.eescode` runs and is verified against the EES stored solution |
 
 ## Problem statement
 
@@ -152,8 +152,9 @@ The physical words check against the numbers: the brine leaves 5.4 K warmer
 
 ## Verification
 
-The **native file cannot be solved** by CoolSolve v0.3.0 (`CS-GAP-NAME-PIPE`,
-`CS-GAP-INCLUDE`, `CS-GAP-CALL-EXPR-OUT`), so the comparison concerns the
+The **native file cannot be solved** by CoolSolve (`CS-GAP-NAME-PIPE`,
+`CS-GAP-INCLUDE`; `CS-GAP-CALL-EXPR-OUT` was a third gap in v0.3.0 and is closed
+since `fix/library-gaps-2` @57b22d3), so the comparison concerns the
 runnable variant `cooling_coil_paramid_coolsolve.eescode`, which differs from
 the native file by the two changes of the conversion log. Compared with
 `compare_solution.py` against the stored solution of the source EES file
@@ -298,7 +299,8 @@ refrigerant side. They have no `duplicate_group`.
      because the `Brineprop` procedure is a `USERLIB` library procedure
      (`CS-GAP-INCLUDE`, procedure of library model `CSL-0079`, reading two
      binary `.lkt` tables) and its calls return expressions
-     (`c_p/1000`, `mu*1000`: `CS-GAP-CALL-EXPR-OUT`). Consequence: in the
+     (`c_p/1000`, `mu*1000`: `CS-GAP-CALL-EXPR-OUT`, closed since the re-check
+     of 2026-10-10, so no longer a reason for this change). Consequence: in the
      variant the brine properties do not vary with `conc_r` or
      `t_r_su_coil_meas`, so the identified refrigerant-side resistance is
      constant — the variant is the regression case, not a parametric brine
@@ -317,6 +319,7 @@ refrigerant side. They have no `duplicate_group`.
   (card value) because the model is a single one-zone coil with explicit
   equations apart from the effectiveness/contact-surface loop, as for its
   sibling `CSL-0074`.
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @57b22d3 (T-RECHECK, `CS-GAP-CALL-EXPR-OUT` closed).** The `CALL BRINEPROP` calls with an expression output (`c_p_r_coil_meas/1000`, `mu_r_coil*1000`; lines 70, 94, 95) now parse. The native file stays blocked: the parse stops at the `K|star_r_n` names (lines 101 and 104, `CS-GAP-NAME-PIPE`) and `BRINEPROP` is a library procedure CoolSolve does not load (`CS-GAP-INCLUDE`). Evidence, in a scratch copy with only `K|star_r_n`/`K|star_r` renamed: the file is square (85 equations, 85 unknowns, largest block 24) and the solve stops at *"Unknown procedure: BRINEPROP"* (`CS-GAP-INCLUDE`). The variant is kept; its change 2 (stored brine properties) is still forced by `CS-GAP-INCLUDE`, no longer by the expression outputs.
 
 ## Limitations and CoolSolve gaps
 
@@ -333,12 +336,13 @@ refrigerant side. They have no `duplicate_group`.
   binary `.lkt` lookup tables), which CoolSolve neither loads nor can read.
   Already registered (found with `CSL-0011`), **not re-reported here**; the
   runnable variant uses the stored brine properties.
-- **`CS-GAP-CALL-EXPR-OUT` — the native file cannot be solved.** Two of the
+- **`CS-GAP-CALL-EXPR-OUT` — closed in CoolSolve `fix/library-gaps-2` @57b22d3.** Two of the
   calls return an expression, `CALL BRINEPROP('SpecHeat',…:c_p_r_coil_meas/1000)`
   and `CALL BRINEPROP('Dynvisc',…:mu_r_coil*1000)` (the procedure returns
-  kJ/(kg·K) and mPa·s). Already registered (found with `CSL-0072`),
-  **not re-reported here**; the runnable variant absorbs the factors in the
-  stored values.
+  kJ/(kg·K) and mPa·s); CoolSolve v0.3.0 refused them, it now accepts them
+  (auxiliary variable `__out<k>_BRINEPROP_L<line>`, see the conversion log).
+  Removed from `missing_features`; the runnable variant absorbs the factors in
+  the stored values, which is no longer forced by this gap.
 - Physical limitations of the model itself: one zone, wet regime only (the
   measured point must be wet — the card's dry-regime counterpart is the
   RefSim sibling `CSL-0074`); the two ratios `ratio_R_a_r`, `ratio_R_m_a` are

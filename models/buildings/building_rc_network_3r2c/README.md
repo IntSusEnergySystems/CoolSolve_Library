@@ -1,6 +1,6 @@
 # 3R2C building thermal network with weather lookup
 
-⏱️ **Level 2 · Intermediate** &nbsp;|&nbsp; ⏱️ **Dynamic** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0042`
+⏱️ **Level 2 · Intermediate** &nbsp;|&nbsp; ⏱️ **Dynamic** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0042`
 
 Single-zone building thermal network of the 3R2C type: three thermal
 capacitances (indoor air, opaque facade, internal masonry walls) coupled
@@ -16,11 +16,11 @@ equation-based time integration.
 |---|---|
 | **Category** | Buildings |
 | **Fluids** | none (property calls) — moist air treated as humid air with constant density and heat capacity |
-| **Size** | native file: 55 equations; runnable variant: 69 equations (largest block: 1) |
+| **Size** | 55 equations (largest block: 1) |
 | **Source** | CoolSolve example `examples/building_rc_network.eescode`, itself simplified from the EES model of the CLIM R06 repetition exercise 2 (University of Liège) |
 | **Authors** | S. Quoilin and the ULiège Thermodynamics Laboratory (CoolSolve example); course author of the original EES model `TBD` |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — the native file is **blocked** by `CS-GAP-INTEGRAL-LOOKUP`; the variant `building_rc_network_3r2c_coolsolve.eescode` runs and is verified against an independent RK4 integration of the same equations (max 0.008 K on `T_in`, 0.0002 K on the two wall temperatures) |
+| **CoolSolve** | 0.3.0@d5d6b37 (branch `fix/library-gaps-2`) — **verified** against an independent RK4 integration of the same equations (max 0.0028 K on `T_in`, 0.0002 K on the two wall temperatures); the native file runs as written (about 8 s) since `CS-GAP-INTEGRAL-LOOKUP` is closed |
 
 ## Problem statement
 
@@ -54,8 +54,9 @@ Three capacitances, three resistances, as in the original:
 
 Each state is written in the EES integral form and integrated over
 `[0, 604800] s` with `INTEGRAL` (CoolSolve time march, RK45 by default); the
-trajectory is recorded every 600 s in `building_rc_network_3r2c_coolsolve-integral.csv`
-and at the end of the `.sol` file.
+trajectory (`$IntegralTable tau:600 …`: 1001 rows, 604.8 s apart in the CoolSolve
+output) is written to `building_rc_network_3r2c-integral.csv` and at the end of the
+`.sol` file.
 
 The weather signals are the columns `T_out` [°C], `I_dot_south` [W/m²] and
 `f_occ` [−] of the table `building_rc_network_3r2c-week.csv` (169 hourly
@@ -89,21 +90,16 @@ rows, `tau` = 0 … 604800 s; a July sunny week, from the tables p. 4.12 and
 ## How to run
 
 ```bash
-coolsolve ./building_rc_network_3r2c.eescode        # blocked: CS-GAP-INTEGRAL-LOOKUP
-coolsolve ./building_rc_network_3r2c_coolsolve.eescode   # runnable variant (about 45 s)
+coolsolve ./building_rc_network_3r2c.eescode        # about 8 s
 ```
 
-No `.initials` and no `coolsolve.conf` are needed. The **native file**
-`building_rc_network_3r2c.eescode` keeps the three `INTERPOLATE` calls and is
-valid EES, but CoolSolve does not provide the lookup table store to the
-time-march loop, so it fails with
-`INTERPOLATE(): lookup table 'week' not found (no table store is available in
-this context)`; its table `building_rc_network_3r2c-week.csv` is shipped as
-EES expects it. The **runnable variant**
-`building_rc_network_3r2c_coolsolve.eescode` (+ `.sol`, regression baseline,
-tested as `CSL-0042:coolsolve`) replaces only those three calls; its own
-companion table `building_rc_network_3r2c_coolsolve-week.csv` holds the same
-169 rows (the variant does not read it — see the conversion log).
+No `.initials` and no `coolsolve.conf` are needed. The file keeps the three
+`INTERPOLATE` calls in valid EES; its table `building_rc_network_3r2c-week.csv`
+is shipped as EES expects it and CoolSolve reads it at every step of the time
+march. `building_rc_network_3r2c.sol` is the regression baseline. (Before
+CoolSolve `fix/library-gaps-2` the file stopped with *"lookup table 'week' not
+found"* and a `_coolsolve` variant with a reconstructed weather was used; it was
+removed on 2026-10-10, see the conversion log.)
 
 ## Verification
 
@@ -112,42 +108,44 @@ CoolSolve `misc/EES_ok.zip`, no file of the ULiège collection
 (`~/Nextcloud/thermo_models`) uses this system (`A_opaque`, `C_opaque`,
 `R_in_1`, `I_dot_south`, `f_occ` … were searched for), and the CoolSolve
 example carries no `.sol`. There is therefore **no EES stored solution to
-compare with**, and the verification was done in two independent ways:
+compare with**; the status **verified** rests on independent re-computations
+(the same criterion as the other verified models of the library without an EES
+file), done in two ways at the import (on the runnable variant) and repeated on
+the native file at the re-check:
 
-1. **Weather reconstruction against `INTERPOLATE` itself.** A check model
-   (`work/` folder of the import, not shipped) evaluated the analytic
-   reconstruction of the variant and `INTERPOLATE('week', 'tau', …, tau)` of
-   the shipped table at eight times of the week (knots 0/1 h, midpoints
-   0.5/1.5 h, 20.33 h, 47.25 h, 83.5 h and the end 168 h) for the three
-   signals: **19 of the 24 differences are exactly 0 and the other 5 sit at
-   double round-off level (max |difference| = 1.07e-14 °C on `T_out`, i.e.
-   1.3e-17 relative to a peak signal of 850 W/m²)** — the residue of summing
-   the 168 hourly increments instead of interpolating between two of them.
-   The reconstruction is therefore numerically identical to the native
-   lookup, not an approximation.
-2. **Trajectory against an independent integration.** The variant was solved
-   with CoolSolve (RK45, trajectory every 600 s) and compared with an
-   independent classical RK4 integration of the *same* equations written from
-   the native file (fixed step 15 s, hourly linear interpolation of the same
-   table), evaluated at the 1002 tabulated times:
+1. **Weather against `INTERPOLATE` itself.** At the import, a check model
+   evaluated the analytic reconstruction of the variant and
+   `INTERPOLATE('week', 'tau', …, tau)` of the shipped table at eight times of
+   the week for the three signals: 19 of the 24 differences were exactly 0 and
+   the other 5 at double round-off level (max 1.07e-14 °C). Since the native
+   file now calls `INTERPOLATE` directly, this check is the file itself.
+2. **Trajectory against an independent integration.** Classical RK4 integration
+   (Python, fixed step 15 s, hourly linear interpolation of the same table) of
+   the *same* equations written from the native file, compared with the
+   CoolSolve trajectory (RK45, 1001 output rows) at the output times
+   (re-check of 2026-10-10, native file, CoolSolve 0.3.0@d5d6b37):
 
    | Variable | max &#124;CoolSolve − RK4(h = 15 s)&#124; | at |
    |---|---|---|
-   | `T_in` | 0.0081 K | `tau` = 0 s (25.0000 vs 24.9919 °C) |
+   | `T_in` | 0.0028 K (relative 9.8e-5) | `tau` = 115 517 s |
    | `T_c_wall` | 0.0002 K | `tau` = 113 702 s |
    | `T_c_in` | 0.0002 K | `tau` = 503 798 s |
 
-   The `T_in` deviation is largest at `tau` = 0, where CoolSolve reports the
-   initial condition exactly (25 °C) while the RK4 grid starts one step later;
-   the RK4 reference itself converges (300 s → 9.18e-4, 60 s → 9.20e-4,
-   15 s → 9.21e-4 relative on the linearly interpolated tabulated values,
-   i.e. the difference is the linear interpolation of the 600 s output
-   interval, not a modelling error).
+   `T_in` at the end of the week: 30.68246 (RK4) against 30.6825 (CoolSolve).
+   The import-time comparison used the 600 s output rows, interpolated: 0.0081 K
+   on `T_in` (at `tau` = 0, RK4 grid offset), relative 9.2e-4 — it measured the
+   interpolation of the output rows, not the model.
+3. **Native file against the former variant.** The `.sol` of the native file
+   equals the one of the `_coolsolve` variant (weather reconstructed by
+   `clamp01` sums, removed on 2026-10-10) on all 56 common variables (max
+   relative difference 5.1e-12, `Q_dot_capa_c_wall`) and on the 13 columns of
+   the 1001-row trajectory (identical to the 6 digits printed). The CoolSolve
+   example `building_rc_network` (same model, register `CS-GAP-INTEGRAL-LOOKUP`)
+   gives the same `T_in` = 30.6825 °C.
 
-Because no independent *reference solution* (EES, publication, other tool)
-was available, the status of the model is the status of its **native file**
-(`blocked`), as the taxonomy prescribes; the numbers above are the
-verification of the runnable variant.
+Range checks (physical sanity): `T_in` 23.99 – 35.91 °C, `T_c_wall`
+21.64 – 28.09 °C, `T_c_in` 24.65 – 33.75 °C, `Q_dot_sens` 0 – 2572.5 W over the
+week.
 
 ## Source and attribution
 
@@ -198,12 +196,21 @@ verification of the runnable variant.
   cond>0 returns true_val*): this is **CoolSolve-only syntax, not valid EES**
   (EES has the 5-argument `IF(A,B,X,Y,Z)`, see `CS-GAP-IF5`; wording corrected
   at the C-46 review). Everything else of the variant is valid EES.
+- **2026-10-10 — re-check (`T-RECHECK`) with CoolSolve `fix/library-gaps-2`
+  @d5d6b37**: `CS-GAP-INTEGRAL-LOOKUP` is closed (the lookup table store is
+  now given to the `IntegralSolver`). The native file solves as written (8 s,
+  `SUCCESS`), equals the `.sol` of the variant on all 56 common variables
+  (max relative difference 5.1e-12) and agrees with an independent RK4
+  integration (*Verification*). Status `blocked` → `verified`; the
+  `_coolsolve` variant (`.eescode`, `.sol`, its two CSV files) was removed;
+  `building_rc_network_3r2c.sol` is the regression baseline. No equation of the
+  native file changed (header comment only).
 - **2026-10-05 — level**: taxonomy §3 score of the *native* file: equations
   55 (50–300 band → 1), largest algebraic block ≤ 5 (0), no
   functions/procedures/arrays in the native file (0), three coupled
   capacitances → multi-zone (1), dynamics (1), no curated guesses needed (0)
   = **3 → level 2**. The variant adds a `FUNCTION` and the data expansion
-  (69 equations, still level ≤ 2 on the count criterion); the pedagogical
+  (69 equations, still level ≤ 2 on the count criterion; the variant no longer exists); the pedagogical
   content is unchanged, so the level of the model stays 2 (taxonomy allows
   ±1 with justification).
 
@@ -218,28 +225,24 @@ original).
 
 CoolSolve gaps (`../CoolSolve/docs/model_library_support.md`):
 
-- **`CS-GAP-INTEGRAL-LOOKUP`** — a lookup function (`INTERPOLATE`, …) inside
-  an `INTEGRAL` model: the lookup table store is not wired into the
-  `IntegralSolver`, so the native file fails at the initial algebraic solve
-  with *"INTERPOLATE(): lookup table 'week' not found (no table store is
-  available in this context)"*. Already registered (P2, with this example as
-  its reproducer); not re-reported here. Minimal reproducer confirming it is
-  unchanged: 3 equations — `T_out = INTERPOLATE('wk','tau','T_out',tau)` /
-  `y = 1 + INTEGRAL(dydt, tau, 0, 604800)` / `dydt = (T_out − y)/3600` with a
-  `wk` table of two rows → same error (also when the lookup is called from a
-  `FUNCTION`, so it is not a scoping accident of the main program).
-- *Unverified suggestion (not registered)*: the trajectory table repeats its
-  last row (`604800` appears twice in `$IntegralTable` output) when the
-  output interval divides the integration interval; the 600 s interval over
-  604800 s also yields 1002 rows instead of 1009 (the rows are written at the
-  solver's own step times). Reproduced on a 4-equation minimal model
+- **`CS-GAP-INTEGRAL-LOOKUP`** — **closed** in CoolSolve `fix/library-gaps-2`
+  (commit `d5d6b37`): a lookup function inside an `INTEGRAL` model now finds
+  its table; no gap is left for this model (`missing_features` is empty). A
+  lookup written *inline in the base of a state*, `y = LOOKUP(…) + INTEGRAL(…)`,
+  is still refused (`CS-GAP-INTEGRAL-BASE-CALL`); this model does not use that
+  form (its bases are the variables `T_in_0`, `T_c_wall_0`, `T_c_in_0`).
+- *Unverified suggestion (not registered)*: the `$IntegralTable tau:600`
+  output interval over 604800 s gives 1001 rows 604.8 s apart (1000 equal
+  intervals of the solver's own steps) instead of 1009 rows 600 s apart. The
+  repeated last row noted at the import (`604800` twice) no longer occurs with
+  CoolSolve 0.3.0@d5d6b37. Reproduced on a 2-equation minimal model
   (`y = 1 + integral(dydt, tau, 0, 604800)`, `dydt = -1e-5·y + 2e-4`,
   `$IntegralTable tau:600 y`), so it is not specific to this import; whether
-  EES writes exactly one row per output interval was not verified here.
+  EES writes one row per output interval was not verified here.
 
 ## Related models
 
 - `CSL-0012` *thermal_comfort_pmv_ppd*: the other model of the `buildings/`
-  category (also from the CLIM course, also blocked, with a runnable
-  `_coolsolve` variant).
+  category (also from the CLIM course; its native file is still blocked, with a
+  runnable `_coolsolve` variant).
 - `CSL-0106` *conduction_resistances_and_shapes*: the conduction function library of the `ht` source (plane-wall resistance, cylindrical-wall resistance, shape factors, R-value conversions) - the wall resistances written inline in this model as `R = t/(k*A)` are available there as reusable functions.

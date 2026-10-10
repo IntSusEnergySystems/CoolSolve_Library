@@ -11,9 +11,10 @@
   between 0 and 1. Computes the exhaust air temperature and humidity ratio,
   the total, sensible and latent cooling powers and the sensible heat ratio.
 
-  The minimum contact temperature is the dry-regime value when the supply air
-  dew point is below 0 degC (no condensation on the coil, as in the original)
-  and the wet-regime value otherwise.
+  The minimum contact temperature is selected by the EES 5-argument IF: the
+  dry-regime value when the supply air dew point is below the minimum wet
+  contact temperature (no condensation on the coil, as in the original) and
+  the wet-regime value when it is above.
 
   Inputs : t_a_ex_coolingcoil_set, t_a_su_coolingcoil, W_su_coolingcoil,
            t_w_su_coolingcoil, M_dot_a_coolingcoil, P_atm
@@ -23,9 +24,6 @@
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
   Source : ULiège model bank (Laborelec toolkit lineage), V. Lemort, J. Lebrun -
            see README.md
-  Variant: cooling_coil_with_control_simplified_coolsolve.eescode replaces the
-           EES 5-argument IF of the minimum contact temperature by the
-           3-argument IF of CoolSolve (CS-GAP-IF5); nothing else is changed.
 =============================================================================}
 
 "!Title: cooling coil with control, simplified model"

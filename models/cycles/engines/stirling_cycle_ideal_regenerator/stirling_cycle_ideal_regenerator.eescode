@@ -29,11 +29,13 @@
   Source : ULiege, course "Thermodynamique appliquee" (MECA0002), repetition
            R05, exercise 3 (EES file R05_E03_2022.EES) - see README.md
   Variant: stirling_cycle_ideal_regenerator_coolsolve.eescode - same model and
-           same results; the definite integrals are written in the canonical
-           state-equation form and their limits are inlined, because CoolSolve
-           v0.3.0 ignores a factor in front of an INTEGRAL call
-           (CS-BUG-INTEGRAL-FACTOR) and rejects symbolic integration limits
-           (CS-GAP-INTEGRAL-LIMITS). Every change is logged in README.md.
+           same results; the two definite integrals are written on one
+           integration variable over [0,1] (change of variable), because
+           CoolSolve still allows one integration variable per model
+           (CS-GAP-INTEGRAL-MULTIVAR) and only increasing limits
+           (CS-GAP-INTEGRAL-DECREASING: w_12_bis runs from v[1] to v[2] < v[1]).
+           CS-GAP-INTEGRAL-LIMITS and CS-BUG-INTEGRAL-FACTOR are closed in
+           CoolSolve fix/library-gaps-2. Every change is logged in README.md.
 =============================================================================}
 
 "!Data"

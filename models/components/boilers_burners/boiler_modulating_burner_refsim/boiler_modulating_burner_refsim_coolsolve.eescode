@@ -10,11 +10,13 @@
   epsilon-NTU exchangers, efficiency eta = Q_dot_u/Q_dot_c.
   The MODULEs of the original are flattened per call (decision D10) and the
   regime branches are selected by compile-time $if directives on the runtime
-  string regime$: the native file is BLOCKED in CoolSolve (CS-GAP-IF-DIRECTIVE,
-  CS-GAP-IF5, CS-BUG-STRING-CALL-OUT). Only change of this variant: the four
-  branches are resolved for the stored operating point (ON/OFF active, the
-  three others kept as comments); the full change list is the conversion log
-  of README.md.
+  string regime$: the native file is BLOCKED in CoolSolve (CS-GAP-IF-NO-CONSTANT;
+  CS-GAP-IF-DIRECTIVE, CS-GAP-IF5 and CS-BUG-STRING-CALL-OUT are closed in
+  CoolSolve fix/library-gaps-2, so the IF5 rewrite and the removal of
+  CALL WRITERESULTS below are no longer forced). Only change that is still
+  forced: the four branches are resolved for the stored operating point
+  (ON/OFF active, the three others kept as comments); the full change list is
+  the conversion log of README.md.
   Source : ULiege model bank 2008-02-12, EES file BoilerWithModulatingBurner
            _RefSim_EES_Model_SB080212.EES; Authors: Stephane Bertagnolio
            (ULiege Thermodynamics Laboratory); License: MIT
@@ -384,8 +386,9 @@ X_burner=1 [-]
 "!4.4. RESULTS: the WRITERESULTS call of the original is not made in this"
 "variant: it only writes the results lookup table (silently dropped in"
 "CoolSolve, CS-BUG-LOOKUP-WRITE) and returns Write_Results$='OK'; the call"
-"itself fails because regime$ is produced by another CALL"
-"(CS-BUG-STRING-CALL-OUT). regime$ is still computed above by BOILER_REGIME."
+"itself failed because regime$ is produced by another CALL"
+"(CS-BUG-STRING-CALL-OUT, closed in CoolSolve fix/library-gaps-2 @57b22d3:"
+"no longer forced). regime$ is still computed above by BOILER_REGIME."
 
 
 "!4.4. AUXILIARY CONSUMPTIONS"

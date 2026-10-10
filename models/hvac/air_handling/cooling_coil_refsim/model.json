@@ -61,7 +61,6 @@
   "missing_features": [
     "CS-GAP-NAME-PIPE",
     "CS-GAP-INCLUDE",
-    "CS-GAP-IF5",
     "CS-GAP-IFSTR"
   ],
   "related": [
@@ -83,6 +82,21 @@
       "date": "2026-10-05",
       "action": "added",
       "by": "opencode worker (t71) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @59b2862 (T-RECHECK, CS-GAP-IF5 closed); still blocked by CS-GAP-NAME-PIPE, CS-GAP-INCLUDE, CS-GAP-IFSTR; README and missing_features updated, variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "CS-GAP-CALL-EXPR-OUT added to missing_features (found by the CoolSolve agent of commit 6c36a30, confirmed with the frozen binary @9423934: the native file refuses the BRINEPROP calls with an expression output, lines 113-114: c_p_r_coil/1000, mu_r_coil*1000); status unchanged (blocked), variant unchanged",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @57b22d3 (T-RECHECK, CS-GAP-CALL-EXPR-OUT closed); still blocked by CS-GAP-NAME-PIPE, CS-GAP-INCLUDE, CS-GAP-IFSTR (lines 113-114 now parse; in a scratch copy with K|star renamed the file is square, 80 equations, and stops at Unknown procedure BRINEPROP); README and missing_features updated, variant kept (its BRINEPROP replacement is still forced by CS-GAP-INCLUDE)",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

@@ -10,11 +10,9 @@
   cooling (no active HVAC), as in the original.
 
   This file keeps the native EES syntax (INTERPOLATE inside an INTEGRAL
-  model) and does NOT run in CoolSolve yet (CS-GAP-INTEGRAL-LOOKUP: the
-  lookup store is not wired into the IntegralSolver); the runnable variant
-  building_rc_network_3r2c_coolsolve.eescode replaces the three lookups by
-  an exact piecewise-linear reconstruction of the same table and reproduces
-  the same trajectory - see README.md.
+  model). It is verified: since CoolSolve fix/library-gaps-2
+  (CS-GAP-INTEGRAL-LOOKUP closed) it runs as written and agrees with an
+  independent RK4 integration - see README.md.
 
   Inputs : geometry (Haut, Prof, Larg), V_dot_su_m3h, T_su, peak internal
            gains (Q_dot_occ_max, Q_dot_light_max, Q_dot_appl_max), glazing

@@ -19,7 +19,7 @@ epsilon-NTU exchanger, water-environment exchanger, efficiency.
 | **Source** | ULiège model bank 2008-02-12 — `BoilerWithModulatingBurner_RefSim_Model_SB080212.zip` |
 | **Authors** | Stéphane Bertagnolio (ULiège Thermodynamics Laboratory) |
 | **License** | MIT (lab disclaimer of the original: freely distributed, may not be sold, cite origin) |
-| **CoolSolve** | v0.3.0@7addbbc — native file **blocked** by `CS-GAP-IF-DIRECTIVE`, `CS-GAP-IF5`, `CS-BUG-STRING-CALL-OUT`; runnable variant verified against the EES stored solution |
+| **CoolSolve** | v0.3.0@7addbbc, re-checked with 0.3.0@57b22d3 — native file **blocked** by `CS-GAP-IF-NO-CONSTANT` alone (`CS-GAP-IF5`, `CS-GAP-IF-DIRECTIVE` and `CS-BUG-STRING-CALL-OUT` are closed in CoolSolve `fix/library-gaps-2`, @59b2862, @9423934 and @57b22d3); runnable variant verified against the EES stored solution |
 
 ## Problem statement
 
@@ -78,11 +78,16 @@ run); see *Conversion log*.
 ## How to run
 
 The native file `boiler_modulating_burner_refsim.eescode` is valid EES and is
-**refused by CoolSolve** (*"There are 198 equations and 176 unknowns. The
-system is not square"*, then `IF with 5 arguments` and
-*"String variable not found: regime$"* once the first gap is worked around):
-the compile-time `$if` directives on the runtime string `regime$` are parsed
-but not evaluated, so all four regime branches are kept as equations.
+**refused by CoolSolve** (at v0.3.0: *"There are 198 equations and 176 unknowns. The
+system is not square"*, then *"String variable not found: regime$"*; the five-argument `IF`
+is implemented since `fix/library-gaps-2` @59b2862). Since `fix/library-gaps-2` @9423934 the
+`$if` directives are evaluated, and the four `$if regime$='…'` are refused with an
+explicit error (*"the string variable 'regime$' is set by a CALL or an expression: $IF is
+evaluated when the equations are compiled, so its value must be a string constant"*,
+`CS-GAP-IF-NO-CONSTANT`): `regime$` is produced by `CALL BOILER_REGIME`, and EES compiled
+the directives with its value from the previous calculation. The string
+`regime$` computed by `CALL BOILER_REGIME` and passed on to `CALL WRITERESULTS`
+no longer fails since `fix/library-gaps-2` @57b22d3 (`CS-BUG-STRING-CALL-OUT`).
 
 The runnable variant resolves the branches for the stored operating point
 (ON/OFF regime):
@@ -90,6 +95,10 @@ The runnable variant resolves the branches for the stored operating point
 ```bash
 coolsolve ./boiler_modulating_burner_refsim_coolsolve.eescode
 ```
+
+(the native file with the four `$if regime$` resolved by hand to the `ON\OFF`
+branch solves in CoolSolve `fix/library-gaps-2` @57b22d3, see the conversion log;
+the variant's remaining purpose is exactly that resolution).
 
 It needs `.initials` (guesses; the implicit blocks are the three
 combustion/exchanger evaluations). Tested by `tools/test_models.py` as
@@ -216,8 +225,9 @@ the combustion library, imported as `CSL-0005`).
      directives in CoolSolve, no effect on the equation set) removed;
   2. `IF(Q_dot_u_n,35000,100,0,0)` → `if(35000-Q_dot_u_n,100,0)`
      (`CS-GAP-IF5`; same value 100 W below 35 kW, 0 above, tie included);
-  3. the `CALL WRITERESULTS` removed (`CS-BUG-STRING-CALL-OUT`: the call
-     fails because `regime$` is produced by another CALL; its lookup writes
+  3. the `CALL WRITERESULTS` removed (`CS-BUG-STRING-CALL-OUT`, closed since
+     the re-check of 2026-10-10 @57b22d3, so no longer forced: the call
+     failed because `regime$` is produced by another CALL; its lookup writes
      are silently dropped anyway per `CS-BUG-LOOKUP-WRITE`, its only
      surviving effect was `Write_Results$ = 'OK'`). `regime$` is still
      computed by `CALL BOILER_REGIME`;
@@ -229,22 +239,31 @@ the combustion library, imported as `CSL-0005`).
   procedures/copied library (1) + three coupled components — combustion
   chamber, gas-water HX, water-environment HX (1) + part-load modulating
   physics (1) + curated guesses (1) = score 5 → **level 3**.
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @59b2862 (T-RECHECK, `CS-GAP-IF5` closed).** The five-argument `IF` of the native file is now implemented; the native file is still blocked, the first error now comes from another gap (the system is not square (198 equations, 176 unknowns), `CS-GAP-IF-DIRECTIVE`). The variant is kept.
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @9423934 (T-RECHECK, `CS-GAP-IF-DIRECTIVE` closed).** The `$if` directives are now evaluated, so the "not square" error is gone; the native file stops at the four `$if regime$='…'` (lines 282, 292, 302, 359) with the error of the new, narrower gap `CS-GAP-IF-NO-CONSTANT` (a string produced by a `CALL` has no compile-time constant), added to `missing_features` in place of `CS-GAP-IF-DIRECTIVE`. Still **blocked**; the variant is kept (its by-hand resolution of the branches is still needed: the string must be set to a constant before the directive).
+- **2026-10-10 — re-check with CoolSolve `fix/library-gaps-2` @57b22d3 (T-RECHECK, `CS-BUG-STRING-CALL-OUT` closed).** A string only ever produced by a `CALL` (`regime$` from `CALL BOILER_REGIME`) is now found when passed to another `CALL` (`CALL WRITERESULTS(…,regime$,…:Write_Results$)`). The native file as distributed still stops at the four `$if regime$='…'` directives (lines 283, 293, 303, 360; `CS-GAP-IF-NO-CONSTANT`), so it stays **blocked** and `CS-BUG-STRING-CALL-OUT` is removed from `missing_features`. Evidence, in a scratch copy of the native file in which only the four `$if regime$` blocks are resolved by hand to the `ON\OFF` branch (the three others deleted, `$DOLAST`/`$ENDDOLAST` removed) and with the variant's `.initials`: square (132 equations, 132 unknowns, largest block 13), SUCCESS in 43 iterations, `regime$ = 'ON\OFF'`, `Write_Results$ = 'OK'` (the native `CALL WRITERESULTS` is executed), and the 128 variables common with the variant's `.sol` agree to 1.2e-11 relative (the CoolSolve register quotes 8.2e-7 on a run of its own); the four extra variables are the MODULATING-call inputs (`f_MOD`, `AU_wenv_MOD`, `t_w_su_MOD`) that the variant keeps commented and `Write_Results$`. The variant is kept: its by-hand branch choice is the only change that is still forced (the removal of `CALL WRITERESULTS` and the `IF5` rewrite are not).
 
 ## Limitations and CoolSolve gaps
 
 Gaps blocking the native file (all in `missing_features`):
 
-- `CS-GAP-IF-DIRECTIVE`: the compile-time `$if` directives of the original
+- `CS-GAP-IF-NO-CONSTANT`: the compile-time `$if` directives of the original
   select one regime branch from the runtime string `regime$` (value
   available in EES from the previous calculation — the stored solution mixes
   the ON/OFF run with stale MODULATING values, proving that idiom);
-  CoolSolve parses but does not evaluate them, keeps all four branches, and
-  refuses the over-determined system (198 equations / 176 unknowns).
-- `CS-GAP-IF5`: the 5-argument `IF(Q_dot_u_n,35000,100,0,0)` of the
-  auxiliary-consumption correlations is not implemented (evaluation error).
-- `CS-BUG-STRING-CALL-OUT`: `regime$`, produced by `CALL BOILER_REGIME`,
-  is not found when passed as an argument to `CALL WRITERESULTS`
-  (*"String variable not found: regime$"*).
+  `regime$` is the output of `CALL BOILER_REGIME`, so it has no constant value
+  when the directive is compiled and CoolSolve refuses the four directives
+  with an error (it never chooses a branch silently). The general gap
+  `CS-GAP-IF-DIRECTIVE` (directives parsed and ignored: all four branches kept,
+  198 equations / 176 unknowns) is closed in CoolSolve `fix/library-gaps-2`
+  @9423934.
+- `CS-GAP-IF5` — closed in CoolSolve `fix/library-gaps-2` @59b2862: the 5-argument
+  `IF(Q_dot_u_n,35000,100,0,0)` of the auxiliary-consumption correlations
+  was not implemented in CoolSolve v0.3.0 (evaluation error).
+- ~~`CS-BUG-STRING-CALL-OUT`~~ — **closed** in CoolSolve `fix/library-gaps-2`
+  (commit `57b22d3`): `regime$`, produced by `CALL BOILER_REGIME`, was not found
+  when passed as an argument to `CALL WRITERESULTS` (*"String variable not found:
+  regime$"*); removed from `missing_features`, see the conversion log.
 
 Non-blocking, documented:
 

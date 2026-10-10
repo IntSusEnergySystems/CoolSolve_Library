@@ -7,7 +7,14 @@
   "level": 3,
   "status": "blocked",
   "main_file": "boiler_modulating_burner_refsim.eescode",
-  "fluids": ["Air", "CO2", "CO", "H2O", "N2", "O2"],
+  "fluids": [
+    "Air",
+    "CO2",
+    "CO",
+    "H2O",
+    "N2",
+    "O2"
+  ],
   "tags": [
     "boiler",
     "combustion",
@@ -58,11 +65,13 @@
     "notes": "43 common variables, 0 differ (rtol=0.001); maximum relative difference 2.25e-4 on Q_dot_u_FL (CoolProp vs EES mean specific heats of the combustion products at 1930 °C). Stale stored values of the module variables (a mix of an earlier MODULATING run, CS-BUG-EXTRACT-STALE) are skipped by name; the D10-renamed module internals were checked by hand against them (n exact, e/f_st ~5e-5, t_adiab 0.07 %)."
   },
   "missing_features": [
-    "CS-GAP-IF-DIRECTIVE",
-    "CS-GAP-IF5",
-    "CS-BUG-STRING-CALL-OUT"
+    "CS-GAP-IF-NO-CONSTANT"
   ],
-  "related": ["CSL-0005", "CSL-0006", "CSL-0080"],
+  "related": [
+    "CSL-0005",
+    "CSL-0006",
+    "CSL-0080"
+  ],
   "related_external": [
     "ASHRAE TC4.7 HVAC1 Toolkit (J.P. Bourdouxhe, M. Grodent, J. Lebrun, C. Saavedra), cited by the original model"
   ],
@@ -73,6 +82,21 @@
       "date": "2026-10-09",
       "action": "added (card C-158, MODULE flatten D10, cpbar from CSL-0005)",
       "by": "glm-5.3-flash for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @59b2862 (T-RECHECK, CS-GAP-IF5 closed); still blocked by CS-GAP-IF-DIRECTIVE, CS-BUG-STRING-CALL-OUT; README and missing_features updated, variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @9423934 (T-RECHECK, CS-GAP-IF-DIRECTIVE closed); still blocked: the four $if regime$=... directives test a string produced by CALL BOILER_REGIME, now the error of the new gap CS-GAP-IF-NO-CONSTANT (added to missing_features), then CS-BUG-STRING-CALL-OUT; variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @57b22d3 (T-RECHECK, CS-BUG-STRING-CALL-OUT closed); still blocked by CS-GAP-IF-NO-CONSTANT (the four $if regime$ directives); in a scratch copy with them resolved by hand to the ON\\OFF branch the native file (CALL WRITERESULTS included) solves and agrees with the variant .sol on 128 variables to 1.2e-11; variant kept (its branch choice is the only change still forced; the CALL WRITERESULTS removal and the IF5 rewrite are not)",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

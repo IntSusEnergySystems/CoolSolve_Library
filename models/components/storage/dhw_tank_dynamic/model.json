@@ -5,7 +5,7 @@
   "summary": "Transient energy balance of a fully mixed 500 L domestic hot-water tank over a 5-hour scenario (10 kW heater for 1 h, cooldown, 2 h tap draw with 12 C make-up water, ambient losses), integrated with INTEGRAL and a 1-s step.",
   "kind": "dynamic",
   "level": 1,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "dhw_tank_dynamic.eescode",
   "fluids": [
     "Water"
@@ -44,19 +44,17 @@
     "course": "MECA0002-1 Thermodynamique appliquée et introduction aux machines thermiques (ULiège), repetition 3, exercise 3"
   },
   "verification": {
-    "reference": "Integral table stored in the source EES file (18 001 rows at 1 s, decoded from the embedded plot data): tank trajectory compared point by point with the runnable variant",
-    "date": "2026-10-05",
-    "coolsolve_version": "0.3.0@536d427",
+    "reference": "Integral table stored in the source EES file (18 001 rows at 1 s, decoded from the embedded plot data): tank trajectory of the native file dhw_tank_dynamic.eescode compared point by point (the native file is the verified file)",
+    "date": "2026-10-10",
+    "coolsolve_version": "0.3.0@4cd0ca5",
     "max_rel_diff": 6.1e-05,
-    "notes": "Variant vs EES over all 18 001 points: T_tank max 3.1e-5, dU/dtau and Q_dot_amb max 6.1e-5, schedules exact; final T 39.4397 vs 39.4409 C. M_tank and v_tank agree with the EES stored solution to 10 digits."
+    "notes": "Native file vs EES over all 18 001 points (re-decoded from the plot objects for this re-check): T_tank max 3.1e-5, dU/dtau and Q_dot_amb max 6.1e-5, Q_dot_tap max 1.3e-5, schedules exact; final T 39.4409 vs 39.4397 C. M_tank and v_tank agree with the EES stored solution to 10 digits. Native file solved with CoolSolve branch fix/library-gaps-2 (CS-GAP-IF5, CS-GAP-INTEGRAL-LIMITS, CS-BUG-INTEGRAL-TABLE-SEP, CS-BUG-INTEGRAL-MAXSTEPS closed): 18 000 steps in about 1 min 30 s, without coolsolve.conf; the 19 scalars common to the two .sol files and the 18 001-row trajectory are equal to those of the former _coolsolve variant (removed)."
   },
-  "missing_features": [
-    "CS-GAP-IF5",
-    "CS-GAP-INTEGRAL-LIMITS",
-    "CS-BUG-INTEGRAL-TABLE-SEP",
-    "CS-BUG-INTEGRAL-MAXSTEPS"
+  "missing_features": [],
+  "related": [
+    "CSL-0041",
+    "CSL-0100"
   ],
-  "related": ["CSL-0041", "CSL-0100"],
   "related_external": [],
   "supersedes": [],
   "previous_paths": [],
@@ -65,6 +63,16 @@
       "date": "2026-10-05",
       "action": "added (first dynamic model of the library, roadmap card C-08)",
       "by": "opencode worker (GLM) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @59b2862 (T-RECHECK, CS-GAP-IF5 closed); still blocked by CS-GAP-INTEGRAL-LIMITS, CS-BUG-INTEGRAL-TABLE-SEP, CS-BUG-INTEGRAL-MAXSTEPS; README and missing_features updated, variant kept",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @4cd0ca5 (T-RECHECK, CS-GAP-INTEGRAL-LIMITS, CS-BUG-INTEGRAL-TABLE-SEP and CS-BUG-INTEGRAL-MAXSTEPS closed): blocked -> verified; native file verified (identical to the variant: scalars and 18 001-row trajectory), _coolsolve variant and coolsolve.conf removed, .sol baseline added",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

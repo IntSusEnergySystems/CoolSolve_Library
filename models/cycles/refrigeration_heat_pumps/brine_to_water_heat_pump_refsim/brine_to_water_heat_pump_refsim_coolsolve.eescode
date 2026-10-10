@@ -8,7 +8,9 @@
   registered CoolSolve gaps force:
 
   1. CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE, CS-GAP-STRING-ARRAY and
-     CS-GAP-LOOKUP-PROC break the BRINEPROP procedure of the BrineProp library
+     CS-GAP-LOOKUP-PROC (closed in CoolSolve fix/library-gaps-2: the
+     flattening below is no longer forced by it) break the BRINEPROP procedure
+     of the BrineProp library
      (EES "ELSE IF" chains closed by repeated "ENDIF", the string function
      Uppercase$, string arrays read by index, and LOOKUP tables read inside a
      procedure). It is split in two, as in CSL-0072:
@@ -34,7 +36,9 @@
      (:cp_glw/1000) becomes the equation cp_glw = Funkt_cp: the procedure
      output of Pr=3 is Funkt/1000, so the two factors of 1000 cancel and
      cp_glw keeps the value of the original (3973.6 J/kg-K for this
-     operating point).
+     operating point). This gap is closed in CoolSolve fix/library-gaps-2
+     (0.3.0@57b22d3): the native expression output is accepted, so this
+     change is no longer forced.
 
   CoolSolve cannot solve the redundant equations of the original (four
   variables are defined twice: h_ex1_cp, M_dot_s_cp, Q_dot_ev and Q_dot_cd -

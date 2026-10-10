@@ -21,7 +21,7 @@ provided, selected by a `$if` directive in the native file.
 | **Source** | `~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP2_Ex_1-3/Détarage moteurs_Exercices_1-2.EES` (EES X10.589) |
 | **Authors** | Philippe Ngendakumana (ULiège, course MCI), solution Rémi Dickes (ULiège) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file **blocked** by `CS-GAP-IF-DIRECTIVE` (both `$if` branches kept → over-determined) and `CS-GAP-ACCENTED-IDENT` (accented variable names do not parse); the variant `engine_derating_iso3046_coolsolve.eescode` runs and is verified against the EES stored solution (14/14 common variables, max rel. diff 3.9e-6) |
+| **CoolSolve** | `fix/library-gaps-2` @9423934 — native file **blocked** by `CS-GAP-ACCENTED-IDENT` (accented variable names do not parse; `CS-GAP-IF-DIRECTIVE` is closed); the variant `engine_derating_iso3046_coolsolve.eescode` runs and is verified against the EES stored solution (14/14 common variables, max rel. diff 3.9e-6) |
 
 ## Problem statement
 
@@ -68,15 +68,17 @@ catalogue rating.
 
 The native file `engine_derating_iso3046.eescode` keeps the original EES
 syntax (`$if` selection between the two exercises, accented variable names)
-and does **not** run in CoolSolve v0.3.0 (see *Limitations and CoolSolve
+and does **not** run in CoolSolve (the `$if` directives are now resolved, `Exercice$ = '1'`
+kept; the first parse error is the accented name of line 28, see *Limitations and CoolSolve
 gaps*). The runnable variant
 
 ```bash
 coolsolve ./engine_derating_iso3046_coolsolve.eescode
 ```
 
-resolves the `$if` branches to the stored run (exercise 1) and renames the
-accented variables in ASCII (mapping in the *Conversion log*). It is fully
+resolves the `$if` branches to the stored run (exercise 1; no longer needed since
+`CS-GAP-IF-DIRECTIVE` was closed) and renames the
+accented variables in ASCII (mapping in the *Conversion log*; still needed). It is fully
 explicit (largest block: 1 equation) and needs no particular guess (see
 `engine_derating_iso3046_coolsolve.initials`).
 
@@ -158,6 +160,15 @@ Published under the library licence (MIT).
     `Altitude_réf` → `Altitude_ref`; not used in the variant);
   - the commented `Test_réf`/`Test_x` diagnostic block of the original is
     kept commented out, with `Test_ref` renamed as above.
+- **2026-10-10 — re-check** with CoolSolve `fix/library-gaps-2` @9423934
+  (`CS-GAP-IF-DIRECTIVE` closed): the `$if Exercice$` directives are resolved
+  (`'1'` kept, `'2'` removed) and the native file stops at the first accented
+  identifier (line 28, `CS-GAP-ACCENTED-IDENT`; also lines 39–44 and 48), so it
+  stays **blocked**. The variant is kept (its `$if` resolution is no longer needed,
+  the ASCII renaming of the accented names is). Check: in a scratch copy with
+  every `é` of the native file replaced by `e`, CoolSolve solves it (22 equations,
+  SUCCESS) and its `.sol` is identical to that of the variant, so
+  `CS-GAP-ACCENTED-IDENT` is the only blocker left.
 - **2026-10-08 — comment**: the exercise-2 comment of the original names the
   exponents "m, n et q" (the equation uses `s`); translated as in the
   original ("m, n and q"). No equation was changed for this.
@@ -168,14 +179,15 @@ Published under the library licence (MIT).
 
 ## Limitations and CoolSolve gaps
 
-- `CS-GAP-IF-DIRECTIVE` (registered): compile-time `$if`/`$endif` are parsed
-  and ignored — **all** branches are kept, so the native two-exercise file is
-  over-determined (e.g. `p_atm_réf` assigned twice: 100 kPa and
-  `patm(Altitude_réf)`).
 - `CS-GAP-ACCENTED-IDENT` (registered with this model): variable names with
   accented letters (`W_dot_sh_réf`, `T_a_réf`, …), valid in EES (the source
   file stores a solution), fail to parse in CoolSolve (*"Could not parse
-  line"* on every line containing them).
+  line"* on every line containing them) — the only blocker left.
+- `CS-GAP-IF-DIRECTIVE` (registered): the compile-time `$if`/`$endif` were
+  parsed and ignored — **all** branches were kept, so the native two-exercise
+  file was over-determined (e.g. `p_atm_réf` assigned twice: 100 kPa and
+  `patm(Altitude_réf)`). **Closed** in CoolSolve `fix/library-gaps-2`
+  @9423934 (`Exercice$ = '1'` kept, the exercise-2 block removed).
 - Physical note: the ISO 3046/1 correction uses the *saturation* vapour
   pressure at the intake-air temperature as the partial vapour pressure of
   the ambient humidity (multiplying the relative humidity), as in the
