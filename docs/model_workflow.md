@@ -405,13 +405,56 @@ A property call such as `quality(fluid$,H=h[4],T=T[4])` is therefore
   `CS-GAP-PROP-TH` is **not** listed in `missing_features`; the status follows
   the verification against the EES reference.
 
-**Other input pairs and REFPROP calls (decision D12).** The same rule applies to
-every property input pair that CoolProp does not support (`(s, v)`, `(T, h)`…) and
-to external REFPROP calls (`CALL EES_REFPROP(fluid$, code, …)`): rewrite them in
-the model itself as CoolProp property calls on equivalent states, log each
-rewrite, and keep the rewritten file as the main model file. They are not CoolSolve
-gaps and are never listed in `missing_features`; only a fluid or a mixture that
-CoolProp lacks is registered (as a missing fluid).
+**Other input pairs, REFPROP and NASA calls (decision D12).** The same rule applies to
+every property input pair that CoolProp does not support (`(s, v)`, `(T, h)`…), to
+external REFPROP calls (`CALL EES_REFPROP(fluid$, code, …)`) and to the EES `NASA`
+procedure (`CALL NASA(X$, T : cp, h, s)`): rewrite them in the model itself as
+CoolProp property calls on equivalent states (for `NASA`: the ideal-gas species of
+CoolSolve used as fluids, `h = MolarMass(X$)*enthalpy(X$,T=T)` [J/kmol], the formation
+enthalpy included; `s` only for a single species, the entropies are not absolute),
+log each rewrite, and keep the rewritten file as the main model file. They are not
+CoolSolve gaps and are never listed in `missing_features`; only a fluid or a mixture
+that CoolProp lacks is registered (as a missing fluid).
+
+**`$COMMON` (decision D13).** CoolSolve does not support `$COMMON` (the variables of
+the main program that a `FUNCTION`/`PROCEDURE` body reads without receiving them as
+arguments): a `$COMMON` line in a body is an error that names the variables and the
+routine. The model is rewritten in itself, as valid EES with the same results:
+
+- delete the `$common` lines and add to each routine's input arguments only the
+  shared variables its body actually uses (after the existing inputs, before the
+  `:`; a routine that calls another one passes them on, so it takes them too);
+- pass them in every `CALL` and function call, in the same order; the bodies do not
+  change otherwise;
+- log it in one line of the README conversion log (*"`$COMMON` of <routines>
+  replaced by input arguments (not supported by CoolSolve)"*); the rewritten file
+  is the main model file, `CS-BUG-COMMON-PROC` is never listed in
+  `missing_features` and `$common` is not a `language_features` entry; the status
+  follows the verification.
+
+**String arrays (decision D14).** CoolSolve does not support string arrays (`Prod$[i]`,
+`U$[Pro]`): an element of a string variable, assigned or read, in the main program, in a
+`FUNCTION`/`PROCEDURE` body or in a `DUPLICATE`, is an error that gives the line number
+and the rewrite (`CS-GAP-STRING-ARRAY`, closed); `LOOKUP$('table', row, col)`, the text of
+a lookup-table cell, is implemented. The model is rewritten in itself, with the same
+results:
+
+- put the strings in a lookup table, one per row, in a file `<name>-<table>.csv` next to
+  the model (header row = the column name; the table name is the part after the first
+  hyphen, as for the numeric tables); one table per `$IF` branch when the lists differ;
+- delete the assignments of the array and replace each read `X$[i]` by
+  `LOOKUP$('<table>', i, 1)` (the index the element had is the row); `LOOKUP$` is a string
+  expression: it is accepted as the fluid of a property call
+  (`enthalpy(LOOKUP$('Species', i, 1), T=T)`), in `=`/`<>` comparisons and as the value of a
+  string variable inside a `FUNCTION`/`PROCEDURE` body; at the top level of the main
+  program `s$ = LOOKUP$(…)` is an error (`CS-BUG-STRING-ALIAS`), so the call is used where
+  the string is needed;
+- log it in one line of the README conversion log (*"string array `X$[…]` replaced by the
+  lookup table `<file>` and `LOOKUP$`, decision D14"*); the rewritten file is the main
+  model file, `CS-GAP-STRING-ARRAY` is never listed in `missing_features` and "string
+  arrays" is not a `language_features` entry (write `LOOKUP$`); a runnable variant that
+  never carried the array (the unit labels, which feed no equation) is left as it is, its
+  header says so; the status follows the verification.
 
 **Re-checks (`T-RECHECK`).** When a CoolSolve release closes gaps, filter
 the dashboard on the gap (or `library.json` on `missing_features`), run the native files, and update status,

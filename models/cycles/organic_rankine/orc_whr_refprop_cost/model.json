@@ -30,7 +30,6 @@
   ],
   "language_features": [
     "procedures",
-    "$common",
     "CoolProp mixture string (decision D12)",
     "IF(A,B,X,Y,Z) 5-argument",
     "lookup write",
@@ -60,12 +59,11 @@
   "verification": {
     "reference": "EES stored solution of the source file (386 variables), compared with the runnable _coolsolve variant: 356 common variables; 93 are affected by the corrections of kuo and Hsieh_new (condenser, evaporator area, costs and cycle outputs downstream); the others differ by a few % at most, apart from the air enthalpy reference offset (see README)",
     "date": "2026-10-10",
-    "coolsolve_version": "0.3.0@1e005c0",
+    "coolsolve_version": "0.3.0@20b59a6",
     "max_rel_diff": 0.252,
-    "notes": "max_rel_diff excludes the 93 outputs affected by the corrections (listed in the README). Maximum of the others: 0.252 = absolute air enthalpies h_a_ex_liq (reference-state offset EES ideal gas vs CoolProp Air); excluding that pair, 0.061 on Cp_r_ex_vap_cd (property backend). P_evap (26.18 bar in both files) is not counted: --ees-units scales its bar value by 1e5 (comparison tool artefact). Corrected values: A_cd 8.41 m2 (EES 5.46), W_dot_net 3290 W (3425), eta_cycle 6.65 % (6.96 %), SIC 3210 EUR/kW (2700). Native file not runnable (CS-GAP-END-PROCEDURE, CS-BUG-COMMON-PROC, CS-GAP-FLUIDS-MIXTURE)."
+    "notes": "max_rel_diff excludes the 93 outputs affected by the corrections (listed in the README). Maximum of the others: 0.252 = absolute air enthalpies h_a_ex_liq (reference-state offset EES ideal gas vs CoolProp Air); excluding that pair, 0.061 on Cp_r_ex_vap_cd (property backend). P_evap (26.18 bar in both files) is not counted: --ees-units scales its bar value by 1e5 (comparison tool artefact). Corrected values: A_cd 8.89 m2 (EES 5.46), W_dot_net 3288 W (3425), eta_cycle 6.65 % (6.96 %), SIC 3288 EUR/kW (2700). Native file not runnable (CS-GAP-END-PROCEDURE; then the undefined local string fluidev$ of hx_cd)."
   },
   "missing_features": [
-    "CS-BUG-COMMON-PROC",
     "CS-GAP-END-PROCEDURE"
   ],
   "related": [
@@ -128,6 +126,11 @@
     {
       "date": "2026-10-10",
       "action": "re-baselined with CoolProp 75af7816 (pinned CoolSolve build)",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @20b59a6 (T-RECHECK, CS-BUG-COMMON-PROC closed: $COMMON rejected, WorkingFluidMix$ passed as argument of the five procedures); still blocked by CS-GAP-END-PROCEDURE (first error: lines 518/520, End procedure; with End, the next is 'String variable not found: fluidev$' in hx_cd); variant kept, unchanged (its .sol identical); README results refreshed",
       "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]

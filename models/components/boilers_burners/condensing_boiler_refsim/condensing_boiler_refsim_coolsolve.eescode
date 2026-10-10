@@ -28,15 +28,15 @@
   the environment appear.
 
   Imports from the source file (see README.md, conversion log):
-   - the SUBPROGRAM WETCOIL is flattened into the PROCEDURE COILWET
-     (decision D10 on MODULE/SUBPROGRAM), tag of the call: wc. Formal and actual
-     arguments are identical (M_dot_a_coil, C_dot_w_coil, c_p_a_su_coil,
-     T_w_su_coil, T_wb_su_coil, h_a_su_coil -> Q_dot_coil_wet,
-     T_wb_ex_coil_wet); the internal variables of the subprogram take the
-     suffix _wc (C_dot_af_coil -> C_dot_af_coil_wc, R_af_coil -> R_af_coil_wc,
-     ...), because the main program uses the same names without the suffix.
-     $common R_a_coil,R_m_coil,R_w_coil,P_atm of the subprogram is dropped:
-     those four variables are already $common of COILWET.
+   - the PROCEDURE COILWET and the SUBPROGRAM WETCOIL it calls are flattened into
+     the main program (decision D10 on MODULE/SUBPROGRAM), tag of the call: wc.
+     Formal and actual arguments are identical (flag_dp, M_dot_a_coil,
+     C_dot_w_coil, c_p_a_su_coil, T_w_su_coil, T_wb_su_coil, h_a_su_coil,
+     R_a_coil, R_m_coil, R_w_coil, P_atm -> Q_dot_coil_wet, T_wb_ex_coil_wet); the
+     internal variables of the subprogram take the suffix _wc (C_dot_af_coil ->
+     C_dot_af_coil_wc, R_af_coil -> R_af_coil_wc, ...), because the main program
+     uses the same names without the suffix. The test flag_dp = 0 of the
+     procedure (no wet power) is written with an IF function (item 3 below).
    - the 7 input values (section 1) and the 11 model parameters (section 2.2)
      that EES holds in its control panel, not in the equations window, are
      restored as statements with their original values (CS-GAP-PARAMETRIC);
@@ -64,13 +64,9 @@
                ;
              2) molarmass(C4H10) and the two C4H10 enthalpies replaced by the
                 values EES returns (CS-GAP-FLUIDS-C8H18);
-             3) the five five-argument IF(A,B,X,Y,Z) calls rewritten as
-                three-argument IF(cond,X,Z);
-             4) the body of the PROCEDURE COILWET copied into the main program
-                and its two outputs written with the three-argument IF
-                (CS-BUG-COMMON-PROC: the ten $common variables are zero inside a
-                body, and a body local used before it is assigned - here
-                c_p_af_coil - is not iterated).
+             3) the seven five-argument IF(A,B,X,Y,Z) calls (the five of the source
+                and the two that select the outputs of the flattened coil,
+                flag_dp) rewritten as three-argument IF(cond,X,Z).
            No equation of the original is changed and the syntax used is valid
            EES (no CoolSolve-only construct). The operating point is the one of
            the stored EES solution of the source file (x_load 0.37, T_w_su_boil
@@ -590,8 +586,7 @@ h_w_su_coil_wb=ENTHALPY(Water,T=T_wb_su_coil,P=P_atm)
 "exchanged power"
 Q_dot_coil_wet = C_dot_w_coil * (  T_w_ex_coil_wet - T_w_su_coil  )  
 Q_dot_coil_wet_bis=M_dot_a_coil*(h_a_su_coil-h_a_ex_coil_wet)
-"Body of the PROCEDURE COILWET of the source file, copied into the main program:"
-"the two outputs of the procedure are written with the three-argument IF (see README)"
+"Equations of the SUBPROGRAM WETCOIL (internal variables with the suffix _wc, see the header of this file):"
 		C_dot_af_coil_wc  = M_dot_a_coil * c_p_af_coil_wc
 		C_dot_max_coil_wet_wc = max ( C_dot_af_coil_wc , C_dot_w_coil )
 		C_dot_min_coil_wet_wc = min ( C_dot_af_coil_wc , C_dot_w_coil )
@@ -606,6 +601,7 @@ Q_dot_coil_wet_bis=M_dot_a_coil*(h_a_su_coil-h_a_ex_coil_wet)
 		RH_a_ex_coil_wet_wc=1
 		h_a_ex_coil_wet_wc=enthalpy(airH2O,P=P_atm,T=T_a_ex_coil_wet_wc,R=RH_a_ex_coil_wet_wc)
 		c_p_af_coil_wc=(h_a_su_coil-h_a_ex_coil_wet_wc)/(MAX((T_wb_su_coil-T_wb_ex_coil_wet),0.0001))
+"No wet power when flag_dp = 0 (water inlet temperature above the dew point of the fumes):"
 Q_dot_coil_wet=if(flag_dp, Q_dot_coil_wet_if, 0)
 T_wb_ex_coil_wet=if(flag_dp, T_wb_ex_coil_wet_if, T_wb_su_coil)
 

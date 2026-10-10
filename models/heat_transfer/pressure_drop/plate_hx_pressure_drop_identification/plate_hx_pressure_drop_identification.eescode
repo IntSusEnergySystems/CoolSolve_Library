@@ -19,12 +19,10 @@
            DELTAp_cd_approx
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
   Source : ULiège, J. Lebrun laboratory (optim folder, ~2011) - see README.md
-  Status : BLOCKED in CoolSolve (CS-BUG-COMMON-PROC: $common of the procedures);
-           a runnable variant *_coolsolve.eescode is shipped (pure R245fa).
+  Status : verified against the EES stored solution (README.md)
 =============================================================================}
 
-Procedure Thonon(fluid$,P,T,M_dot,b,L_w_tot,L_h,beta:h,DELTAp)
-$common Workingfluidmix$, MM_fraction, MM
+Procedure Thonon(fluid$,P,T,M_dot,b,L_w_tot,L_h,beta,WorkingFluidMix$:h,DELTAp)
 
 {cp = cp(fluid$,t=t,p=p)
 rho = density(fluid$,t=t,p=p)
@@ -100,9 +98,7 @@ DELTAp = (f*2*G^2/rho * L_h)/D_h
 end
 
 $bookmark kuo
-Procedure kuo(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef:DELTAp,alpha_tp_cd)
-
-	$common Workingfluidmix$, MM_fraction, MM
+Procedure kuo(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef,WorkingFluidMix$:DELTAp,alpha_tp_cd)
 
 "h_l, h_v: saturated enthalpies [J/kg], so that Bo = q/(G*i_fg) is dimensionless (corrected: the original used molar enthalpies)"
 rho_l = density(WorkingFluidMix$,P=p,x=0)
@@ -158,7 +154,7 @@ Pr_l = cp_l * mu_l/k_l
 End
 
 $bookmark Hsieh
-Procedure Hsieh_new(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h:DELTAp,h_tp_ev)
+Procedure Hsieh_new(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h,WorkingFluidMix$:DELTAp,h_tp_ev)
 
 
 "Hsieh YY, Lin TF. Saturated flow boiling heat transfer and pressure drop of
@@ -166,7 +162,6 @@ refrigerant R410a in a vertical plate heat exchanger. Int J Heat Mass Trans
 2002;45:033-1044"
 
 	"average heat transfer coefficient:"
-	$common Workingfluidmix$, MM_fraction, MM
 
 "h_sat_l, h_sat_v: saturated enthalpies [J/kg], so that Bo = q/(G*i_fg) is dimensionless (corrected: the original used molar enthalpies and overwrote h_l with the heat-transfer coefficient before computing i_fg)"
 rho_l = density(WorkingFluidMix$,T=T_sat,x=0)
@@ -243,9 +238,9 @@ T_sat = 27
 
 MM = MM_fraction*molarmass(R245fa)+(1-MM_fraction)*molarmass(R134a)   "molar mass of the mixture (mole-weighted, as REFPROP)"
 
-call Thonon(workingfluid$,P,T,M_dot,b,L_w_tot,L_h,beta:h,DELTAp)
+call Thonon(workingfluid$,P,T,M_dot,b,L_w_tot,L_h,beta,WorkingFluidMix$:h,DELTAp)
 
-call kuo(workingfluid$,P,M_dot,q,N_p,b,L_w_tot,2*L_h,coef:DELTAp_tp,alpha_tp_cd)
+call kuo(workingfluid$,P,M_dot,q,N_p,b,L_w_tot,2*L_h,coef,WorkingFluidMix$:DELTAp_tp,alpha_tp_cd)
 
 q = 10000
 N_p = 1
@@ -259,4 +254,4 @@ V_dot_su_cd = M_dot * v_r_su_cd
 V_thr = V_dot_su_cd/A_thr
 DELTAp_cd_approx = V_thr^2/(2*v_r_su_cd)
 
-call Hsieh_new(workingfluid$,T_sat,M_dot,q,b,L_w_tot,2*L_h:DELTAp_ev,h_tp_ev)
+call Hsieh_new(workingfluid$,T_sat,M_dot,q,b,L_w_tot,2*L_h,WorkingFluidMix$:DELTAp_ev,h_tp_ev)

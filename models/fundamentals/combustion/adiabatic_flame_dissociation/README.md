@@ -14,12 +14,12 @@ is accounted for.
 | | |
 |---|---|
 | **Category** | Fundamentals › Combustion |
-| **Fluids** | Ideal-gas species CH4, O2, N2, CO2, H2O, CO, H2, NO (+ equilibrium radicals OH, H, O, N and NO2, Ar via `Chem_Equil`) |
-| **Size** | 85 equations over the four `$IF` cases (≈ 52 for the stored run; largest block: 2) |
+| **Fluids** | The 14 equilibrium species as ideal-gas fluids in property calls: CH4, O2, N2, CO2, H2O, CO, H2, Ar (registered in CoolSolve) and OH, H, O, N, NO, NO2 (not registered); their mole fractions come from `Chem_Equil` |
+| **Size** | 84 equations over the four `$IF` cases (≈ 51 for the stored run; largest block: 2) |
 | **Source** | ULiège — course MCI, TP1 exercises 3-4, 2016 (EES file `Ex_3-4_CH4-Fuel Oil_Tadiab with or without dissociation_2016.EES`) |
 | **Authors** | P. Ngendakumana, R. Dickes (ULiège Thermotechnics; see *Source and attribution*) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** by `CS-GAP-CHEM-EQUIL`, `CS-GAP-NASA`, `CS-GAP-SUM-INDEXED`; no runnable variant (see *Why no runnable variant*) |
+| **CoolSolve** | native file **blocked** by `CS-GAP-CHEM-EQUIL`, `CS-GAP-FLUIDS-NASA-SPECIES`, `CS-GAP-SUM-INDEXED`; no runnable variant (see *Why no runnable variant*) |
 
 ## Problem statement
 
@@ -39,13 +39,21 @@ heat, with an empirical HHV/LHV check on the ultimate analysis (as in the
 original). The enthalpy balance is written per kmol of fuel:
 
 - **Without dissociation**: products `m CO2 + n/2 H2O + (m+n/4)·e·O2 +
-  (m+n/4)·(79/21)·(1+e)·N2`; species enthalpies from the built-in `NASA`
-  routine (DUPLICATE over the species) at the reference and flame temperatures.
+  (m+n/4)·(79/21)·(1+e)·N2`; molar species enthalpies
+  `MolarMass(X)·enthalpy(X, T=T)` [J/kmol] (DUPLICATE over the species) at the
+  reference and flame temperatures; the ideal-gas enthalpies include the heat of
+  formation, so the balance needs no heat of reaction.
 - **With dissociation**: `CALL CHEM_EQUIL(P, T, A\O, C\O, H\O, N\O : x_H2 …
   x_Ar)` returns the equilibrium mole fractions from the element ratios and
-  the pressure; `Nprod = 14` species enthalpies again from `CALL NASA`; the
+  the pressure; `Nprod = 14` species enthalpies again as property calls; the
   total product amount `ntot` follows from the H-atom balance
   `n = ntot·(2·x_H2 + 2·x_H2O + x_OH + x_H + 4·x_CH4)`.
+
+The species names are not an array of strings but the rows of two lookup tables,
+read with `LOOKUP$('Species14', i, 1)` (the 14 equilibrium species, in the order of
+`x[i]`) and `LOOKUP$('Species4', i, 1)` (CO2, H2O, O2, N2, the order of `nkmol[i]`) in
+the `DUPLICATE` loops: companion files `adiabatic_flame_dissociation-Species14.csv` and
+`-Species4.csv`.
 
 Unknowns of the stored run (CH4, dissociation): `T_adiab` (from
 `H_react = H_prod`) and `ntot`; the 14 mole fractions are procedure outputs.
@@ -54,13 +62,14 @@ Unknowns of the stored run (CH4, dissociation): `T_adiab` (from
 
 The file is valid EES: open it in EES and select the case by
 commenting/uncommenting the `FUEL$` and `DISSOCIATION$` lines. In CoolSolve
-it does **not** run: `CALL CHEM_EQUIL` / `CALL NASA` are unknown procedures
-(`CS-GAP-CHEM-EQUIL`, `CS-GAP-NASA`; with them the system is not square: 65
-equations, 68 unknowns), the indexed `sum(..., i=1, Nprod)` is not expanded
-(`CS-GAP-SUM-INDEXED`). The `$IF`/`$IFNOT` directives are resolved (with the
-file as shipped, `FUEL$ = 'CH4'` and `DISSOCIATION$ = 'YES'`, the `'Oil'` lines are
-removed) and the `C%`/`H%` names of the `'Oil'` branch parse (with `FUEL$ = 'Oil'` the
-system has 76 equations and 80 unknowns).
+it does **not** run: `CALL CHEM_EQUIL` is an unknown procedure
+(`CS-GAP-CHEM-EQUIL`), six of the fourteen species (OH, H, O, N, NO, NO2) are no
+CoolSolve fluids (`CS-GAP-FLUIDS-NASA-SPECIES`) and the indexed
+`sum(..., i=1, Nprod)` is not expanded (`CS-GAP-SUM-INDEXED`); as shipped the
+system is not square (50 equations, 53 unknowns). The `$IF`/`$IFNOT` directives are
+resolved (with the file as shipped, `FUEL$ = 'CH4'` and `DISSOCIATION$ = 'YES'`, the
+`'Oil'` lines are removed) and the `C%`/`H%` names of the `'Oil'` branch parse (with
+`FUEL$ = 'Oil'` the system has 61 equations and 65 unknowns).
 
 ## Results (EES stored solution)
 
@@ -91,20 +100,33 @@ equations!"* (translated; kept in the model file).
 
 ## Verification
 
-**None yet in CoolSolve** — the native file is blocked (status `blocked`, no
-runnable variant, see below). The EES stored solution above is the
-verification reference for a future re-check when the blocking gaps are closed. The unit conversion itself is therefore unverified
-numerically; the reactant-side conversion was hand-checked against the stored
-values (`H_react` = −78 333.0 kJ/kmol is consistent with the formation
-enthalpy of CH4 (−74 873 kJ/kmol) plus the sensible enthalpies of the 288 K
-air).
+**Partial, in a scratch copy.** The file as shipped does not run in CoolSolve
+(status `blocked`, no runnable variant, see below). The no-dissociation case (CH4,
+`DISSOCIATION$ = 'NO'`, e = 0.2, reactants at 288 K), solved in a scratch copy in which
+the indexed sum was written out and the `DUPLICATE` bound `Nprod` replaced by its value
+(4; a `DUPLICATE` with a variable bound is dropped silently, `CS-BUG-DUPLICATE-VAR-BOUND`;
+worked around in the copy only), the species names being read from `Species4` with
+`LOOKUP$`, gives `T_adiab` = 1788.2 °C
+(2061.3 K) and `H_react` = `H_prod` = −78 601 kJ/kmol fuel. An independent hand
+balance (sensible enthalpies from the NIST-JANAF tables, formation enthalpies −74 850,
+−393 520 and −241 820 kJ/kmol for CH4, CO2 and H2O vapour as in CoolSolve) gives
+1788.5 °C and −78 593 kJ/kmol, i.e. 0.3 K (0.02 %) and 0.01 % apart. The molar enthalpy rise of
+the species from 25 °C to 2127 °C agrees with JANAF within 0.11 % (N2, O2, CO2, H2O,
+CO, H2).
+
+The EES stored solution above (dissociation, `H_react` = −78 333.0 kJ/kmol fuel) is the
+verification reference for a future re-check when the blocking gaps are closed. Its
+reactant side is 0.34 % less negative than the scratch value; the 0.27 MJ/kmol
+difference is of the size of the spread of the CH4 formation enthalpy between sources
+(about −74.6 to −74.9 MJ/kmol).
 
 ## Why no runnable variant
 
 A faithful transcription of the stored operating point (dissociation ON) is
 not possible: it would require re-implementing the 14-species Gibbs-energy
 equilibrium solver inside the model, and six of the fourteen equilibrium
-species (H, O, OH, N, NO, NO2) are not registered as CoolSolve fluids at all.
+species (H, O, OH, N, NO, NO2) are not registered as CoolSolve fluids at all
+(`CS-GAP-FLUIDS-NASA-SPECIES`).
 A no-dissociation variant would answer a different question than the stored
 reference (and has no stored EES values to verify against). The model is
 therefore shipped blocked, like `CSL-0081`, without a `_coolsolve` variant.
@@ -133,29 +155,30 @@ S. Quoilin:
     `T_ref` (non-ASCII identifiers are avoided);
   - `P_comb = 30*Convert('bar','kPa')` → `P_comb = 30E5 [Pa]`;
   - `T_fuel = T_air = 288 [K]` → `14.85 [°C]`; `T_adiab` in °C with
-    `T_adiab_K = T_adiab+273.15` passed to the `NASA`/`Chem_Equil` calls
-    (their data are defined in K); likewise `T_ref_K`;
+    `T_adiab_K = T_adiab+273.15` passed to the `Chem_Equil` call (its data are
+    defined in K);
   - **molar → mass basis**: the ideal-gas `Enthalpy` calls of the original
     (kJ/kmol in the MOLE unit system) become
     `molarmass(X)*enthalpy(X,T=…)` [J/kmol]; `LHV_f = 42855E3`, `c_f = 1885`;
     the empirical HHV/LHV correlations keep their kJ-based coefficients and
     feed a local `HHV_kJ`, converted to J only afterwards;
-  - **NASA chain**: `CALL NASA(...)` is kept native; its molar enthalpy
-    outputs (kJ/kmol — the molar convention of the NASA routine, per the
-    dedicated NASA exercise TM-0232 of the same TP) are converted with
-    `×1000` inside the `H_prod` sums so that the balance stays in J/kmol.
-    This convention could not be verified against EES; to be re-checked;
+  - EES `NASA` procedure calls replaced by ideal-gas property calls, decision D12
+    (`MolarMass(X)*enthalpy(X,T=…)` [J/kmol] at `T_ref` and `T_adiab`, in °C);
+  - string array `Prod$[…]` replaced by the lookup tables
+    `adiabatic_flame_dissociation-Species14.csv` and `-Species4.csv` and `LOOKUP$`,
+    decision D14 (string arrays are not supported by CoolSolve);
   - everything else (the `$IF`/`$IFNOT` structure, the commented case lines,
     the `{T_adiab = 2000}` guess-update hint, `C%`/`H%`/`O%`/`S%` names,
-    the `A\O`-style names, the CALL signatures) is unchanged.
+    the `A\O`-style names, the `CHEM_EQUIL` call signature) is unchanged.
 - **Blocked in CoolSolve** (native file kept in valid EES): `CALL CHEM_EQUIL` →
-  *"Unknown procedure: CHEM_EQUIL"* (`CS-GAP-CHEM-EQUIL`), `CALL NASA` → *"Unknown
-  procedure: NASA"* (`CS-GAP-NASA`), indexed `sum(..., i=1, Nprod)` not expanded
-  (`CS-GAP-SUM-INDEXED`). The EES stored bounds of `T` (1000–3500 K) also keep EES in
-  the physical branch (`CS-GAP-BOUNDS`); not blocking.
+  *"Unknown procedure: CHEM_EQUIL"* (`CS-GAP-CHEM-EQUIL`), `enthalpy(OH, …)` and the
+  five other species → *"Unknown fluid"* (`CS-GAP-FLUIDS-NASA-SPECIES`), indexed
+  `sum(..., i=1, Nprod)` not expanded (`CS-GAP-SUM-INDEXED`). The EES stored bounds
+  of `T` (1000–3500 K) also keep EES in the physical branch (`CS-GAP-BOUNDS`); not
+  blocking.
 
 - **No runnable variant**: see the section above.
-- **Level**: active-case equations ≈ 52 (score 1, 50–300) + largest block 2
+- **Level**: active-case equations ≈ 51 (score 1, 50–300) + largest block 2
   (0) + arrays/DUPLICATE and procedure calls (1) + no multi-zone (0) + no
   calibration/dynamics (0) + no curated guesses needed by the equations
   themselves (0) = 2 → level 2 by the score; consistent with the inventory

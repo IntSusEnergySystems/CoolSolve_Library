@@ -15,14 +15,15 @@
            Pr$ (property name)
   Outputs: output (freezing point [°C], density [kg/m^3], specific heat
            [kJ/kg-K], thermal conductivity [W/m-K] or dynamic viscosity
-           [milliPa-s], as declared by the U$ array of the procedure)
+           [milliPa-s]; the unit labels are rows 1 to 5 of the lookup table Units)
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
   Source : ULiege Thermodynamics Laboratory, Brineprop.lib (1997), collection of
            S. Quoilin - see README.md
   Companion tables: brineprop_secondary_refrigerants-Brine1.csv (198 x 5
            polynomial coefficients) and -Brine2.csv (11 x 2 mean concentration
            and temperature), decoded from the binary EES 4.631 lookup files
-           Brine1.lkt and Brine2.lkt of the library (CS-GAP-LKT).
+           Brine1.lkt and Brine2.lkt of the library (CS-GAP-LKT); -Units.csv
+           (5 x 1 unit labels of the outputs, read with LOOKUP$).
   Variant: brineprop_secondary_refrigerants_coolsolve.eescode is a faithful
            runnable transcription of this file (valid EES; no CoolSolve-only
            syntax); every change is logged in its header and in the README.
@@ -32,7 +33,8 @@
      candidate TM-0479). Only the dead code that followed END in the library
      file (a statement x=1 and a commented example block) and the commented
      duplicate of the unit ladder are removed; the procedure is otherwise
-     unchanged, including its ELSE IF chains and its string arrays. ---}
+     unchanged, including its ELSE IF chains; its string array of unit labels is
+     the lookup table Units, read with LOOKUP$ (library decision D14). ---}
 
 Procedure BRINEPROP(Pr$,Fl$,Conc,Temp:output)
 
@@ -106,7 +108,7 @@ ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;EN
 "Sets property parameter"
 Pro=0
 Freeze=1;Density=2;SpecHeat=3;ThermalC=4;DynVisc=5
-U$[Freeze]='C'; U$[Density]='kg/m^3'; U$[SpecHeat]='kJ/kg-K'; U$[ThermalC]='W/m-K'; U$[DynVisc]='milliPa-s'
+"Unit labels (C, kg/m^3, kJ/kg-K, W/m-K, milliPa-s): rows Freeze ... DynVisc of the lookup table Units"
 Pr$=Uppercase$(Pr$)
 IF (Pr$='FREEZE') THEN Pro:=Freeze ELSE
 	IF (Pr$='DENSITY') THEN Pro:=Density ELSE
@@ -117,7 +119,7 @@ ENDIF;ENDIF;ENDIF;ENDIF
 
 UO$=''
 Pr:=Pro
-UO$=U$[Pro]
+UO$=LOOKUP$('Units',Pro,1)
 
 "Sets fluid parameter"
 EG=1;PG=2;EA=3;MA=4;GL=5;NH3=6;K2CO3=7;CaCl2=8;MgCl2=9;NaCl=10;KAc=11

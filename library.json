@@ -1,10 +1,10 @@
 {
  "snapshot": {
-  "content_hash": "sha256:0b4580064b94c853",
-  "files": 770,
-  "bytes": 6854112,
+  "content_hash": "sha256:097e16cbfeff6fa9",
+  "files": 774,
+  "bytes": 6855902,
   "models": 148,
-  "functions": 432,
+  "functions": 431,
   "taxonomy_version": "0.2"
  },
  "models": [
@@ -204,8 +204,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": [
-    "CS-GAP-FLUIDS-C8H18",
-    "CS-BUG-COMMON-PROC"
+    "CS-GAP-FLUIDS-C8H18"
    ],
    "related": [
     "CSL-0006",
@@ -2376,8 +2375,7 @@
    "url": "",
    "missing_features": [
     "CS-GAP-ELSEIF-CHAIN",
-    "CS-GAP-UPPERCASE",
-    "CS-GAP-STRING-ARRAY"
+    "CS-GAP-UPPERCASE"
    ],
    "related": [
     "CSL-0079",
@@ -3400,7 +3398,6 @@
    "license": "MIT",
    "url": "",
    "missing_features": [
-    "CS-BUG-COMMON-PROC",
     "CS-GAP-END-PROCEDURE"
    ],
    "related": [
@@ -3411,7 +3408,7 @@
     "CSL-0124",
     "CSL-0159"
    ],
-   "coolsolve_version": "0.3.0@1e005c0",
+   "coolsolve_version": "0.3.0@20b59a6",
    "verified_on": "2026-10-10",
    "path": "models/cycles/organic_rankine/orc_whr_refprop_cost",
    "main_file": "orc_whr_refprop_cost.eescode",
@@ -3974,8 +3971,7 @@
    "url": "",
    "missing_features": [
     "CS-GAP-ELSEIF-CHAIN",
-    "CS-GAP-UPPERCASE",
-    "CS-GAP-STRING-ARRAY"
+    "CS-GAP-UPPERCASE"
    ],
    "related": [
     "CSL-0077",
@@ -4395,7 +4391,7 @@
    "kind": "steady",
    "level": 2,
    "status": "blocked",
-   "summary": "Adiabatic, constant-pressure combustion of CH4 or fuel oil with excess air: adiabatic flame temperature from H_reactants = H_products, with either complete-combustion products (CO2, H2O, O2, N2) or the 14-species chemical-equilibrium mixture from the EES built-in Chem_Equil procedure; species enthalpies from the EES built-in NASA procedure.",
+   "summary": "Adiabatic, constant-pressure combustion of CH4 or fuel oil with excess air: adiabatic flame temperature from H_reactants = H_products, with either complete-combustion products (CO2, H2O, O2, N2) or the 14-species chemical-equilibrium mixture from the EES built-in Chem_Equil procedure; species enthalpies as ideal-gas property calls (formation enthalpy included).",
    "fluids": [
     "CH4",
     "O2",
@@ -4404,7 +4400,13 @@
     "H2O",
     "CO",
     "H2",
-    "NO"
+    "Ar",
+    "OH",
+    "H",
+    "O",
+    "N",
+    "NO",
+    "NO2"
    ],
    "tags": [
     "combustion",
@@ -4415,7 +4417,7 @@
     "fuel oil",
     "exercise"
    ],
-   "n_equations": 85,
+   "n_equations": 84,
    "largest_block": 2,
    "origin_type": "teaching",
    "source": "thermo_models",
@@ -4428,16 +4430,17 @@
    "url": "",
    "missing_features": [
     "CS-GAP-CHEM-EQUIL",
-    "CS-GAP-NASA",
-    "CS-GAP-SUM-INDEXED"
+    "CS-GAP-FLUIDS-NASA-SPECIES",
+    "CS-GAP-SUM-INDEXED",
+    "CS-BUG-DUPLICATE-VAR-BOUND"
    ],
    "related": [
     "CSL-0005",
     "CSL-0046",
     "CSL-0152"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-08",
+   "coolsolve_version": "0.3.0@f319f0c",
+   "verified_on": "2026-10-10",
    "path": "models/fundamentals/combustion/adiabatic_flame_dissociation",
    "main_file": "adiabatic_flame_dissociation.eescode",
    "figures": 0
@@ -4789,8 +4792,7 @@
    "url": "",
    "missing_features": [
     "CS-GAP-ELSEIF-CHAIN",
-    "CS-GAP-UPPERCASE",
-    "CS-GAP-STRING-ARRAY"
+    "CS-GAP-UPPERCASE"
    ],
    "related": [
     "CSL-0072",
@@ -6053,7 +6055,7 @@
    "category": "heat_transfer/pressure_drop",
    "kind": "steady",
    "level": 2,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Plate-HX pressure-drop and heat-transfer correlations for a chevron plate pack (Thonon single-phase, Kuo condensation, Hsieh & Lin flow boiling) plus an identified fictitious orifice reproducing the measured condenser pressure drop; properties as CoolProp calls on the mixture R245fa+R134a (the source uses the EES REFPROP interface; stored run: pure R245fa).",
    "fluids": [
     "R245fa+R134a",
@@ -6082,15 +6084,13 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-BUG-COMMON-PROC"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0113",
     "CSL-0115",
     "CSL-0153"
    ],
-   "coolsolve_version": "0.3.0@1e005c0",
+   "coolsolve_version": "0.3.0@20b59a6",
    "verified_on": "2026-10-10",
    "path": "models/heat_transfer/pressure_drop/plate_hx_pressure_drop_identification",
    "main_file": "plate_hx_pressure_drop_identification.eescode",
@@ -7465,13 +7465,6 @@
    "path": "models/components/instrumentation/nozzle_discharge_coefficients/nozzle_discharge_coefficients.eescode"
   },
   {
-   "function": "COILWET",
-   "type": "PROCEDURE",
-   "signature": "(flag_dp:Q_dot_coil_wet,T_wb_ex_coil_wet)",
-   "model_id": "CSL-0080",
-   "path": "models/components/boilers_burners/condensing_boiler_refsim/condensing_boiler_refsim.eescode"
-  },
-  {
    "function": "cond",
    "type": "PROCEDURE",
    "signature": "(fluid$,T_r_su_cd,M_dot_r_cd,DELTAT_r_ex_cd,Q_dot_cd1,T_w_ex_cd,T_w_su_cd,T_a_su_cd2,T_a_ex_cd2,p_r_cd:pinch_cd,h_r_ex_cd_v,t_r_ex_cd_v,h_r_ex_cd_tp,t_r_ex_cd_tp,T_r_ex_cd,h_r_ex_cd,M_dot_w_cd1,M_dot_a_cd2)",
@@ -8426,14 +8419,14 @@
   {
    "function": "Hsieh_new",
    "type": "PROCEDURE",
-   "signature": "(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h:DELTAp,h_tp_ev)",
+   "signature": "(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h,WorkingFluidMix$:DELTAp,h_tp_ev)",
    "model_id": "CSL-0153",
    "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
   },
   {
    "function": "Hsieh_new",
    "type": "PROCEDURE",
-   "signature": "(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h:DELTAp,h_tp_ev)",
+   "signature": "(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h,WorkingFluidMix$:DELTAp,h_tp_ev)",
    "model_id": "CSL-0124",
    "path": "models/heat_transfer/pressure_drop/plate_hx_pressure_drop_identification/plate_hx_pressure_drop_identification.eescode"
   },
@@ -8447,7 +8440,7 @@
   {
    "function": "hx_cd",
    "type": "PROCEDURE",
-   "signature": "(fluid$,fluidcd$,T_sf_su,M_dot_sf,T_r_su,T_r_ex,M_dot_r,p_cd,p_sf,b,L_w_tot,L_h,beta:A_cd,DELTAp,DELTAp_sf,M_fluid)",
+   "signature": "(fluid$,fluidcd$,T_sf_su,M_dot_sf,T_r_su,T_r_ex,M_dot_r,p_cd,p_sf,b,L_w_tot,L_h,beta,WorkingFluidMix$:A_cd,DELTAp,DELTAp_sf,M_fluid)",
    "model_id": "CSL-0153",
    "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
   },
@@ -8475,7 +8468,7 @@
   {
    "function": "hx_ev",
    "type": "PROCEDURE",
-   "signature": "(fluid$,fluidev$,T_sf_su_ev,M_dot_sf,T_r_su_ev,T_r_ex_ev,M_dot_r,p_ev,p_sf,b,L_w_tot,L_h,beta:A_ev,DELTAp,DELTAp_sf,M_fluid)",
+   "signature": "(fluid$,fluidev$,T_sf_su_ev,M_dot_sf,T_r_su_ev,T_r_ex_ev,M_dot_r,p_ev,p_sf,b,L_w_tot,L_h,beta,WorkingFluidMix$:A_ev,DELTAp,DELTAp_sf,M_fluid)",
    "model_id": "CSL-0153",
    "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
   },
@@ -8622,7 +8615,7 @@
   {
    "function": "kuo",
    "type": "PROCEDURE",
-   "signature": "(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef:DELTAp,alpha_tp_cd)",
+   "signature": "(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef,WorkingFluidMix$:DELTAp,alpha_tp_cd)",
    "model_id": "CSL-0153",
    "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
   },
@@ -8636,7 +8629,7 @@
   {
    "function": "kuo",
    "type": "PROCEDURE",
-   "signature": "(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef:DELTAp,alpha_tp_cd)",
+   "signature": "(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef,WorkingFluidMix$:DELTAp,alpha_tp_cd)",
    "model_id": "CSL-0124",
    "path": "models/heat_transfer/pressure_drop/plate_hx_pressure_drop_identification/plate_hx_pressure_drop_identification.eescode"
   },
@@ -10029,7 +10022,7 @@
   {
    "function": "Thonon",
    "type": "PROCEDURE",
-   "signature": "(fluid$,P,T,M_dot,b,L_w_tot,L_h,beta:h,DELTAp)",
+   "signature": "(fluid$,P,T,M_dot,b,L_w_tot,L_h,beta,WorkingFluidMix$:h,DELTAp)",
    "model_id": "CSL-0153",
    "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
   },
@@ -10043,7 +10036,7 @@
   {
    "function": "Thonon",
    "type": "PROCEDURE",
-   "signature": "(fluid$,P,T,M_dot,b,L_w_tot,L_h,beta:h,DELTAp)",
+   "signature": "(fluid$,P,T,M_dot,b,L_w_tot,L_h,beta,WorkingFluidMix$:h,DELTAp)",
    "model_id": "CSL-0124",
    "path": "models/heat_transfer/pressure_drop/plate_hx_pressure_drop_identification/plate_hx_pressure_drop_identification.eescode"
   },
@@ -10523,15 +10516,6 @@
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
-  "CS-GAP-IDEAL-ENTROPY": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P3",
-   "text": "Absolute entropies of the ideal-gas species (JANAF `s°` at 25 °C, 1 atm: N2 191.61, O2 205.04, CO2 213.80, CO 197.65, H2O(g) 188.83 kJ/kmol·K), needed for Gibbs-energy, chemical-equilibrium and exergy calculations with species",
-   "detail": "`entropy(CO2,T=…,P=…)` keeps CoolProp's per-fluid reference state (only the enthalpy got the EES reference, `CS-GAP-FORMATION-ENTHALPY`)",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
   "CS-GAP-END-PROCEDURE": {
    "kind": "gap",
    "state": "open",
@@ -10581,8 +10565,8 @@
    "kind": "gap",
    "state": "open",
    "priority": "P2",
-   "text": "`LOOKUP$ROW('table','col',key)` (row whose column `col` matches a string or a number) and `LOOKUP$('table',row,col)` (string cell): the way EES reads tables with a key column (`ees_vs_coolsolve.csv` lines 154–155, 248, 252 list both as *No*).",
-   "detail": "Evaluation error *\"Unknown or unsupported function: LOOKUP$ROW with 3 arguments\"* (warning *\"Unknown function 'LOOKUP$ROW'\"*); same for `LOOKUP$`.",
+   "text": "`LOOKUP$ROW('table','col',key)` (the row whose column `col` matches a string or a number): the way EES reads tables with a key column (`ees_vs_coolsolve.csv` lines 159 and 256 list it as *No*).",
+   "detail": "Evaluation error *\"Unknown or unsupported function: LOOKUP$ROW with 3 arguments\"* (warning *\"Unknown function 'LOOKUP$ROW'\"*).",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
@@ -10599,7 +10583,7 @@
    "kind": "bug",
    "state": "open",
    "priority": "P3",
-   "text": "Every property call on the ideal-gas fluid `CO2` (`molarmass(CO2)`, `enthalpy(CO2,T=…)`) raises the warning *\"Did you mean 'CO2'?\"*: the fluid-name hint table (`src/user_hints.cpp`) maps `co2` to `CO2`",
+   "text": "Every property call on the ideal-gas fluid `CO2` (`molarmass(CO2)`, `enthalpy(CO2,T=…)`) raises the warning *\"Did you mean 'CO2'?\"*: the fluid-name hint table (`src/user_hints.cpp`) maps `co2` to `CO2` and does not check that the name already is the …",
    "detail": "–",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
@@ -10673,15 +10657,6 @@
    "priority": "P3",
    "text": "The intrinsic string functions `Uppercase$(S)` / `Lowercase$(S)` (EES string functions; used by the distributed ULiège `Brineprop.lib`, TM-0479: `Pr$=Uppercase$(Pr$)` before comparing the property name)",
    "detail": "Parse warning *\"Unknown function 'Uppercase$'\"*, then evaluation error *\"String-valued function not supported: Uppercase$\"* when the line runs.",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-GAP-STRING-ARRAY": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P3",
-   "text": "**String arrays** in FUNCTION/PROCEDURE bodies: element assignment works, element read fails.",
-   "detail": "*\"String variable not found: U$[2]\"* on the read (the written elements are not retrievable); assignment alone is silently accepted.",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
@@ -10796,9 +10771,18 @@
   "CS-GAP-NASA": {
    "kind": "gap",
    "state": "open",
-   "priority": "P2",
+   "priority": "",
    "text": "The EES built-in **`NASA` procedure**: `CALL NASA(Species$, T : cp, h, s)` evaluates the molar specific heat, enthalpy and entropy of a NASA-Glenn species at temperature T (molar outputs: the NASA exercise TM-0232 of the same ULiège TP is described as …",
    "detail": "Warning *\"Unknown function 'NASA'\"*, then the block of the call fails: *\"Block 1 (size 3) failed: EvaluationError - [Newton] Unknown procedure: NASA\"*.",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-GAP-FLUIDS-NASA-SPECIES": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P3",
+   "text": "**Ideal-gas species of the EES NASA database that neither CoolSolve nor CoolProp has: `OH`, `H`, `O`, `N`, `NO`, `NO2`** (the radicals and nitrogen oxides of the `CHEM_EQUIL` equilibrium mixture).",
+   "detail": "Evaluation error *\"Unknown fluid: 'OH'.",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
@@ -10869,24 +10853,33 @@
    "kind": "gap",
    "state": "open",
    "priority": "P3",
-   "text": "**Fewer outputs in a `CALL` than the procedure declares**: since EES 9.513 an internal or external procedure may be called with fewer output variables than its `PROCEDURE` statement lists (EES help, *Internal Procedures*; the exact placeholder syntax for a …",
-   "detail": "Evaluation error *\"Procedure three returns 3 outputs, but 2 were provided\"* for `CALL three(1 : x, , z)` (the empty position is dropped, the outputs shift) and for `CALL three(1 : x)`.",
+   "text": "**Fewer outputs in a `CALL` than the procedure declares**: since EES 9.513 an internal or external procedure may be called with fewer output variables than its `PROCEDURE` statement lists.",
+   "detail": "Evaluation error *\"Procedure three returns 3 outputs, but N were provided\"* for every documented form: the empty and the commented positions are dropped, so the outputs also shift.",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
-  "CS-BUG-COMMON-PROC": {
-   "kind": "bug",
+  "CS-GAP-STRING-LOCAL-UNSET": {
+   "kind": "gap",
    "state": "open",
-   "priority": "P1 (silent)",
-   "text": "Variables shared with the calling program by the **`$common` directive** of a `PROCEDURE`/`FUNCTION` body: the body is evaluated with **zero** for them instead of the value of the caller's variable.",
-   "detail": "",
+   "priority": "P3",
+   "text": "A **string variable that a `FUNCTION`/`PROCEDURE` body reads without ever assigning it** (not an argument, not `$COMMON`), typically in the condition of an `IF`.",
+   "detail": "Evaluation error *\"String variable not found: fl$\"* as soon as the body runs.",
    "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-GAP-BODY-LOCALS-SOL": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P3",
+   "text": "The **local variables of a `FUNCTION`/`PROCEDURE` body are displayed in EES's Solution window**: *\"Variables that are defined in the Function will display in Solution window\"* and *\"All variables used in the Procedure will display in Solution window\"* (EES …",
+   "detail": "The locals of a body appear nowhere: not in the `.sol`, not in the JSON result, the GUI or `coolsolve_residuals.md`.",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
   },
   "CS-BUG-TINY-VALUE": {
    "kind": "bug",
    "state": "open",
-   "priority": "P2 (silent)",
+   "priority": "",
    "text": "A **computed variable value below about 1E-16 is silently stored and reported as 0** (the literals and the arithmetic are fine: the value is lost when it is assigned to the solution of a block, so every variable of the `.sol` file below ~1E-16 reads …",
    "detail": "",
    "fixed_in": "",
@@ -11030,7 +11023,7 @@
   "CS-BUG-EXTRACT-FMT-BYTE": {
    "kind": "bug",
    "state": "open",
-   "priority": "P3; also found independently in `CSL-0056` (C-60)",
+   "priority": "P2",
    "text": "`tools/ees_extract.py` accepts a variable-information record only when the format byte at record offset **+74 equals 3**; valid records of EES 7.x files can carry other values (value **1** in the file below), so the tool **silently drops** them from the …",
    "detail": "",
    "fixed_in": "",
@@ -11185,6 +11178,87 @@
    "state": "open",
    "priority": "P3",
    "text": "**The `CALL`s of a `DUPLICATE` loop that land in the same coupled block are not all evaluated**: the evaluator and the structural analysis recognise the output equations of one `CALL` by their **source line**, and every copy of a statement of a loop has the …",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-RECURSION-CRASH": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P1 (crash)",
+   "text": "A **self-recursive or mutually recursive `FUNCTION`/`PROCEDURE` that does not terminate crashes the process** with a segmentation fault (stack overflow, exit code 139, no message; in the GUI server the whole server would go down).",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-LOCAL-UNASSIGNED": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P1 (silent)",
+   "text": "A `FUNCTION`/`PROCEDURE` body that **reads a local variable it has not assigned yet** (used before its assignment, never assigned, a misspelt name, or a main-program variable that was not passed as an argument) is **accepted silently and the variable reads as …",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-INPUT-CLAMP": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P2 (valid inputs unusable, loud)",
+   "text": "**Property inputs below a floor are clamped silently during the solve and not in the final verification**: `src/evaluator.cpp` (`clampInput`) raises a pressure below **1000 Pa** to 1000 Pa, a temperature below **50 K** to 50 K and a density below 1e-4 kg/m³, …",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-NEWTON1D-DIVERGE": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P2",
+   "text": "A **size-1 block whose equation is hyperbolic in its unknown diverges in `Newton1D` and is reported as `SingularJacobian`**: `phi = V/(U*A)` from the default guess `A` = 1 with the root 0.0157 — the first step (‖dx‖ = 63) throws `A` to the negative side, ‖F‖ …",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-NONSQUARE-DIAG": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3",
+   "text": "The diagnostic of a **non-square system is of little use**: CoolSolve lists **every** variable and **every** equation as unmatched, the equations by index only (`StructuralAnalyzer::analyze` returns at the square test, `src/structural_analysis.cpp`, before …",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-INTEGRAL-TABLE-INTERVAL": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3",
+   "text": "**`$IntegralTable t:n` places its rows on the integration steps**, so an output interval that is not a multiple of the step is rounded up to one.",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-EX-REFRIGERATION-COMPRESSOR": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3",
+   "text": "**Example fix**: `examples/refrigeration_compressor.eescode` (CSX-041) line 94 reads `V_dot_su_2=M_dot_1*v_1_2` (the regime-1 flow rate in the regime-2 volumetric efficiency); it must be `V_dot_su_2=M_dot_2*v_1_2`.",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-EX-TURBOCOMPRESSOR": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3",
+   "text": "**Example fix**: `examples/turbocompressor.eescode` (CSX-044) imposes the impeller pressure ratio (`r_p_i=1.25`, *\"provisional estimate, without diffuser\"*, line 33) and has the defining equation commented out (`//r_p_i=p_2/p_1`, line 31).",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-EX-RANKINE2": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3",
+   "text": "**Example fix**: `examples/rankine2.eescode` (CSX-037) announces a 25 bar extraction in its title and header (*\"Steam Rankine Cycle with Regenerative Extraction at 25 bar\"*) but sets `P_3a=14E5 \"see parametric table\"` (line 29), so it solves the 14 bar case …",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -11482,6 +11556,33 @@
    "state": "closed",
    "priority": "",
    "text": "CoolProp mixture fluids `A[x]&B[y]` in property calls (warning: predictive mixture properties)",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-2`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-COMMON-PROC": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "`$COMMON` rejected with an error naming the variables to pass as arguments (not supported: rewrite the model)",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-2`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-STRING-ARRAY": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "String arrays rejected with an error; rewrite with a lookup table and `LOOKUP$` (not supported by decision); `LOOKUP$('table', row, col)` and a string expression as the fluid of a property call implemented",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-2`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-IDEAL-ENTROPY": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "The ideal gases `N2`, `O2`, `H2`, `He`, `Ar`, `CO2`, `CO`, `CH4`, `C2H6`, `C3H8`, `H2O` have the absolute (third-law) entropy of the NASA-Glenn tables (1 bar reference, as in EES: stored `entropy(CO2,T=300,P=1E6)` = 194 858.9 J/kmol-K = s°(1 bar) − R ln 10), …",
    "detail": "",
    "fixed_in": "post-v0.3.0, `fix/library-gaps-2`",
    "anchor": "7-closed-gaps-and-bugs"

@@ -82,7 +82,7 @@ values; the subprogram-internal records `x[i]`, `h[i]`, `s[i]`, `MM[i]`,
 `pp[i]`, `temp`, `pres`, `f_st`, `e`, `ntkmol`, `h_p`, `s_p` are the state of
 the last subprogram execution, i.e. the `ref` call at 25 °C / 1 bar).
 
-- 82 common variables (`compare_solution.py`, rtol = 0.001): the 50 passing
+- 82 common variables (`compare_solution.py`, rtol = 0.001): the 52 passing
   include `T_p_su_e` 636.14 / 636.27 °C, `p_a_ex_c` 214 941 Pa (1.8e-7),
   `Q_dot_p` 32 544.5 / 32 545.9 W, `HR` 5.612 / 5.627 %, `phi_e`
   17.054 / 17.040 mm, `MM_p` 28.9364 / 28.9367 kg/kmol, `rho_ex_e`, `c_w`,
@@ -91,11 +91,21 @@ the last subprogram execution, i.e. the `ref` call at 25 °C / 1 bar).
   `w_c`/`w_c_s`/`w_e`/`w_e_s` at 2.79e-3, `Q_dot_hex`, `C_dot_h`/`C_dot_min`,
   `C_ex_e`, `c_p_a_hex`, `c_p_p_e`, `c_v_p_e`) — property-backend
   differences (EES 10.589 vs CoolProp) within the ≤ 0.5 % tolerance.
-- Absolute enthalpies/entropies of `Air` (`h_a_*`, `s_a_*`) and of the
-  products (`s_m_su_e`, `s_p_ex_e`, `s_p_ref`, `s_ref[i]`) differ by the
+- Absolute enthalpies/entropies of `Air` (`h_a_*`, `s_a_*`) differ by the
   reference-state offsets of the two backends; all differences agree (e.g.
   compressor Δh 103 487 / 103 776 J/kg). `CS-GAP-AIR-ENTHALPY-REF` documents
   the Air offset; it does not block this model (differences only).
+- The ideal gases CO2, H2O, O2, N2 have absolute (third-law) entropies in
+  CoolSolve, as in EES: the entropies of
+  the products agree with the stored values: `s_m_su_e` 8 190.30 / 8 190.71
+  (5.0e-5) and `s_p_ex_e` 8 054.27 / 8 055.08 (1.0e-4) J/kg-K. The remaining
+  difference of the reference call, `s_p_ref` (6 520.9 / 6 951.0, 6.2 %;
+  it was 13.6 %), is the water of the 25 °C / 1 bar state: its partial
+  pressure (8.95 kPa) is above the saturation pressure at 25 °C (3.17 kPa),
+  so CoolSolve returns the entropy of liquid water where EES gives the ideal
+  vapour (`s_ref[2]` 3 880.9 against the stored `s[2]` 11 594.2 J/kg-K);
+  `s_ref[1]`, `s_ref[3]`, `s_ref[4]` (CO2, O2, N2) agree with the stored
+  `s[1]`, `s[3]`, `s[4]` within 1.8e-5, 5.2e-5 and 3.8e-5.
 - **8 stored values are stale** (a mix of older EES sessions, cf.
   `CS-BUG-EXTRACT-STALE`) and cannot be reproduced by the file's own
   equations: `h_p_ref`, `h_p_su_e`, `h_p_ex_e`, `h_p_ex_e_s` carry a constant

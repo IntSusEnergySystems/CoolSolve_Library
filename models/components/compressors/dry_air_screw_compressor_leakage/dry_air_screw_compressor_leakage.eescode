@@ -21,7 +21,10 @@
 
   SOLVER NOTE: the Newton solver alone fails on this model (highly nonlinear
   leakage loop); the default pipeline falls back to TrustRegion. Keep the
-  .initials file (guesses from the EES stored solution) for convergence.
+  .initials file (guesses from the EES stored solution) for convergence:
+  since CoolProp 75af7816 (p,T flash rework, CoolProp #3360) the model does
+  not converge without it at the default tolerance 1e-9 (SingularJacobian in
+  block 13; it does from 1e-8). Cause not analysed yet.
 =============================================================================}
 
 "Compressor model parameters imposed: V_s (swept volume), T_m (mechanical loss torque), A_thr_leak (equivalent leakage throat area)"

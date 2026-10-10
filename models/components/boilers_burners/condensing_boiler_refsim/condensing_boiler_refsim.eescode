@@ -28,15 +28,15 @@
   the environment appear.
 
   Imports from the source file (see README.md, conversion log):
-   - the SUBPROGRAM WETCOIL is flattened into the PROCEDURE COILWET
-     (decision D10 on MODULE/SUBPROGRAM), tag of the call: wc. Formal and actual
-     arguments are identical (M_dot_a_coil, C_dot_w_coil, c_p_a_su_coil,
-     T_w_su_coil, T_wb_su_coil, h_a_su_coil -> Q_dot_coil_wet,
-     T_wb_ex_coil_wet); the internal variables of the subprogram take the
-     suffix _wc (C_dot_af_coil -> C_dot_af_coil_wc, R_af_coil -> R_af_coil_wc,
-     ...), because the main program uses the same names without the suffix.
-     $common R_a_coil,R_m_coil,R_w_coil,P_atm of the subprogram is dropped:
-     those four variables are already $common of COILWET.
+   - the PROCEDURE COILWET and the SUBPROGRAM WETCOIL it calls are flattened into
+     the main program (decision D10 on MODULE/SUBPROGRAM), tag of the call: wc.
+     Formal and actual arguments are identical (flag_dp, M_dot_a_coil,
+     C_dot_w_coil, c_p_a_su_coil, T_w_su_coil, T_wb_su_coil, h_a_su_coil,
+     R_a_coil, R_m_coil, R_w_coil, P_atm -> Q_dot_coil_wet, T_wb_ex_coil_wet); the
+     internal variables of the subprogram take the suffix _wc (C_dot_af_coil ->
+     C_dot_af_coil_wc, R_af_coil -> R_af_coil_wc, ...), because the main program
+     uses the same names without the suffix. The test flag_dp = 0 of the
+     procedure (no wet power) is written with the five-argument IF.
    - the 7 input values (section 1) and the 11 model parameters (section 2.2)
      that EES holds in its control panel, not in the equations window, are
      restored as statements with their original values (CS-GAP-PARAMETRIC);
@@ -141,35 +141,6 @@ wet					wet"
 "!Help us improving this model : any feedback comment is very welcome" 
 
 "!*************************************************** MODEL ***************************************************"
-
-" ----------------------------------------------------------- Cooling coil in wet regime ------------------------------------------------------------ "
-"SUBPROGRAM WETCOIL of the source file, flattened into the PROCEDURE COILWET below (decision D10);"
-" its internal variables carry the suffix _wc, see the header of this file."
-" $common R_a_coil,R_m_coil,R_w_coil,P_atm of the SUBPROGRAM: already $common of COILWET."
-PROCEDURE COILWET (flag_dp:Q_dot_coil_wet,T_wb_ex_coil_wet)
-$common R_a_coil,R_m_coil,R_w_coil,P_atm,M_dot_a_coil,C_dot_w_coil,c_p_a_su_coil,T_w_su_coil,T_wb_su_coil,h_a_su_coil
-	if (flag_dp=0) then
-		Q_dot_coil_wet=0
-		T_wb_ex_coil_wet=T_wb_su_coil
-	else
-		C_dot_af_coil_wc  = M_dot_a_coil * c_p_af_coil_wc
-		C_dot_max_coil_wet_wc = max ( C_dot_af_coil_wc , C_dot_w_coil )
-		C_dot_min_coil_wet_wc = min ( C_dot_af_coil_wc , C_dot_w_coil )
-		omega_coil_wet_wc = C_dot_min_coil_wet_wc / C_dot_max_coil_wet_wc
-		R_af_coil_wc  = R_a_coil * c_p_a_su_coil / c_p_af_coil_wc "(according to Merckel theory and assuming that Lewis = 1)"
-		AU_coil_wet_wc = 1/(R_af_coil_wc + R_m_coil + R_w_coil)
-		NTU_coil_wet_wc =AU_coil_wet_wc / C_dot_min_coil_wet_wc
-		epsilon_coil_wet_wc = ( 1 - exp ( -NTU_coil_wet_wc * ( 1 - omega_coil_wet_wc ) ) )/( 1 - omega_coil_wet_wc * exp ( -NTU_coil_wet_wc * ( 1 - omega_coil_wet_wc ) ) ) "Hypothesis : counterflow:"
-		Q_dot_coil_wet = epsilon_coil_wet_wc * C_dot_min_coil_wet_wc * ( T_wb_su_coil - T_w_su_coil )
-		T_wb_ex_coil_wet=  T_wb_su_coil -Q_dot_coil_wet / C_dot_af_coil_wc
-		T_a_ex_coil_wet_wc=T_wb_ex_coil_wet
-		RH_a_ex_coil_wet_wc=1
-		h_a_ex_coil_wet_wc=enthalpy(airH2O,P=P_atm,T=T_a_ex_coil_wet_wc,R=RH_a_ex_coil_wet_wc)
-		c_p_af_coil_wc=(h_a_su_coil-h_a_ex_coil_wet_wc)/(MAX((T_wb_su_coil-T_wb_ex_coil_wet),0.0001))
-	endif
-END
-
-
 
 " ----------------------------------------------------------- Average Specific heat of the combustion products ------------------------------------------------------------ "
 FUNCTION  cpbar(m,n,f,T_p1,T_p2)
@@ -598,7 +569,24 @@ h_w_su_coil_wb=ENTHALPY(Water,T=T_wb_su_coil,P=P_atm)
 "exchanged power"
 Q_dot_coil_wet = C_dot_w_coil * (  T_w_ex_coil_wet - T_w_su_coil  )  
 Q_dot_coil_wet_bis=M_dot_a_coil*(h_a_su_coil-h_a_ex_coil_wet)
-CALL COILWET(flag_dp:Q_dot_coil_wet,T_wb_ex_coil_wet)
+"Equations of the SUBPROGRAM WETCOIL (internal variables with the suffix _wc, see the header of this file):"
+		C_dot_af_coil_wc  = M_dot_a_coil * c_p_af_coil_wc
+		C_dot_max_coil_wet_wc = max ( C_dot_af_coil_wc , C_dot_w_coil )
+		C_dot_min_coil_wet_wc = min ( C_dot_af_coil_wc , C_dot_w_coil )
+		omega_coil_wet_wc = C_dot_min_coil_wet_wc / C_dot_max_coil_wet_wc
+		R_af_coil_wc  = R_a_coil * c_p_a_su_coil / c_p_af_coil_wc "(according to Merckel theory and assuming that Lewis = 1)"
+		AU_coil_wet_wc = 1/(R_af_coil_wc + R_m_coil + R_w_coil)
+		NTU_coil_wet_wc =AU_coil_wet_wc / C_dot_min_coil_wet_wc
+		epsilon_coil_wet_wc = ( 1 - exp ( -NTU_coil_wet_wc * ( 1 - omega_coil_wet_wc ) ) )/( 1 - omega_coil_wet_wc * exp ( -NTU_coil_wet_wc * ( 1 - omega_coil_wet_wc ) ) ) "Hypothesis : counterflow:"
+		Q_dot_coil_wet_if = epsilon_coil_wet_wc * C_dot_min_coil_wet_wc * ( T_wb_su_coil - T_w_su_coil )
+		T_wb_ex_coil_wet_if = T_wb_su_coil - Q_dot_coil_wet_if / C_dot_af_coil_wc
+		T_a_ex_coil_wet_wc=T_wb_ex_coil_wet
+		RH_a_ex_coil_wet_wc=1
+		h_a_ex_coil_wet_wc=enthalpy(airH2O,P=P_atm,T=T_a_ex_coil_wet_wc,R=RH_a_ex_coil_wet_wc)
+		c_p_af_coil_wc=(h_a_su_coil-h_a_ex_coil_wet_wc)/(MAX((T_wb_su_coil-T_wb_ex_coil_wet),0.0001))
+"No wet power when flag_dp = 0 (water inlet temperature above the dew point of the fumes):"
+Q_dot_coil_wet=IF(flag_dp,0,Q_dot_coil_wet_if,0,Q_dot_coil_wet_if)
+T_wb_ex_coil_wet=IF(flag_dp,0,T_wb_ex_coil_wet_if,T_wb_su_coil,T_wb_ex_coil_wet_if)
 
 
 RH_a_ex_coil_wet=1 "Simplification" 

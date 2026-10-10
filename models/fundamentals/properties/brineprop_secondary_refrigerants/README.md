@@ -17,11 +17,11 @@ rows of the inventory name it).
 |---|---|
 | **Category** | Fundamentals › Properties |
 | **Fluids** | aqueous solutions EG, PG, EA, MA, GL, NH3, K2CO3, CaCl2, MgCl2, NaCl, KAc (secondary refrigerants; not CoolProp fluids) |
-| **Size** | 440 equations after analysis (largest block: 1); the procedure itself is ~60 lines; two lookup tables (198 × 5 and 11 × 2 coefficients) |
+| **Size** | 440 equations after analysis (largest block: 1); the procedure itself is ~60 lines; two lookup tables (198 × 5 and 11 × 2 coefficients) and a third one with the 5 unit labels |
 | **Source** | ULiège Thermodynamics Laboratory — EES library `Brineprop.lib` (1997 edition according to its EES help file; compiled stamp EES 7.793) with the binary lookup tables `Brine1.lkt` and `Brine2.lkt` (EES 4.631) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory; the EES help file of the library credits its 1997 edition and refers to IIR thermo-physical data, no personal name; the inventory attributes the library to the laboratory, J. Lebrun et al.) |
 | **License** | MIT |
-| **CoolSolve** | **blocked**: the native file does not parse (`CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE`, `CS-GAP-STRING-ARRAY`); the runnable variant `brineprop_secondary_refrigerants_coolsolve.eescode` is **verified** against the EES stored solution (≤ 4.77e-10) |
+| **CoolSolve** | **blocked**: the native file does not parse (`CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE`); the runnable variant `brineprop_secondary_refrigerants_coolsolve.eescode` is **verified** against the EES stored solution (≤ 4.77e-10) |
 
 ## Problem statement
 
@@ -83,9 +83,9 @@ the table above. The concentration ranges are those tested by the procedure
 itself, not those of the help file.
 
 Units: the file is already SI-°C-Pa-J (EES unit system `SI MASS DEG PA C J`),
-so **no unit conversion was needed**; the units of the outputs are the ones
-declared by the original in its `U$` array: kg/m³, kJ/kg·K, W/m·K, milliPa·s
-and °C.
+so **no unit conversion was needed**; the units of the outputs are the unit labels
+of the procedure (the rows of the lookup table `Units`, read with `LOOKUP$`): kg/m³,
+kJ/kg·K, W/m·K, milliPa·s and °C.
 
 ## How to run
 
@@ -218,7 +218,8 @@ folder (candidate `TM-0480`) holds the second-generation procedure
   the `{$DS.}`-like stamp `$SB1-X7.793` was dropped. Unit system already
   SI-°C-Pa-J on mass basis → **no unit conversion**. The procedure is copied
   unchanged (22 `Call ERROR` range checks, `Uppercase$` normalisation, the two
-  `ELSE IF` ladders, the `U$` string array, the `REPEAT` loop, the polynomial
+  `ELSE IF` ladders, the unit labels (the `U$` string array of the original, see the
+  `2026-10-10` line below), the `REPEAT` loop, the polynomial
   and the output scaling); the only edits are the removal of the dead code that
   followed `END` in the library file (a stray `x=1` statement and the
   commented example block, which became the demonstration program) and of a
@@ -247,16 +248,21 @@ folder (candidate `TM-0480`) holds the second-generation procedure
   5 significant digits of an EES CSV export: the 18-term polynomial cancels, and
   the 5-digit rounding shifts the results by up to 1.4e-5 (viscosity), while the
   full precision keeps them at 5e-10.
+- **2026-10-10 — unit labels**: string array `U$[…]` replaced by the lookup table
+  `brineprop_secondary_refrigerants-Units.csv` and `LOOKUP$`
+  (`UO$=LOOKUP$('Units',Pro,1)`), decision D14 (CoolSolve does not support string
+  arrays); the five labels are the rows of the table in the order of the property
+  indices `Freeze` … `DynVisc`.
 - **2026-10-05 — runnable variant** `brineprop_secondary_refrigerants_coolsolve.eescode`
   (valid EES; no CoolSolve-only syntax). Changes forced by the gaps, logged in
   the variant header:
-  1. `CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE` and `CS-GAP-STRING-ARRAY` break
+  1. `CS-GAP-ELSEIF-CHAIN` and `CS-GAP-UPPERCASE` break
      `BRINEPROP`. The 22 range checks and the 11-branch solution ladder become a
      selector procedure `BRINEPROP_SELECT(Conc,Fl$ : Fl_brine)` of sequential
      single-line `IF` statements (conditions mutually exclusive, behaviour
      unchanged; kept in a procedure because `IF` statements are procedure-only
-     in EES). The `Uppercase$` normalisation and the string array `U$` (unit
-     labels only, feeding no equation) are dropped, and an explicit
+     in EES). The `Uppercase$` normalisation and the unit label `UO$` (read from the
+     lookup table `Units` in the native file; it feeds no equation) are dropped, and an explicit
      `Call ERROR` for an unrecognized solution name is added — the error the
      original raises only through its failed lookup.
   2. The property evaluation is flattened into the main program, one block per call of the demonstration program (library decision
@@ -277,13 +283,12 @@ folder (candidate `TM-0480`) holds the second-generation procedure
 ## Limitations and CoolSolve gaps
 
 The native file is **blocked**; `missing_features` lists every gap that blocks
-it. The three gaps below are the first parse errors:
+it. The two gaps below are the first parse errors:
 
 - `CS-GAP-ELSEIF-CHAIN` — the two `ELSE IF … ENDIF;ENDIF` ladders of
   `BRINEPROP` do not parse ("IF ... THEN without a matching ENDIF", 20 errors);
-- `CS-GAP-UPPERCASE` — the intrinsic `Uppercase$` is unknown;
-- `CS-GAP-STRING-ARRAY` — reading a string-array element (`UO$=U$[Pro]`) fails
-  ("String variable not found"); the unit labels it carries feed no equation;
+- `CS-GAP-UPPERCASE` — the intrinsic `Uppercase$` is unknown.
+
 Worked around, not blocking the native file: `CS-GAP-INCLUDE` (the library is
 implicit in EES, its definitions are copied into this file and into the models
 that call them) and `CS-GAP-LKT` (binary `.lkt` tables decoded to CSV

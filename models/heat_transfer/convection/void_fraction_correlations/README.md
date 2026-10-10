@@ -210,7 +210,7 @@ guess/default."* This model is the second occurrence, and the first with a
 `void_fraction_Hughmark` is such a body: `mu_mix = mu_l +
 void_fraction_Hughmark*(mu_v - mu_l)` uses the function's own (unknown) result
 before the last statement defines it. CoolSolve evaluates the body
-procedurally — as the `CS-BUG-COMMON-PROC` note of the register describes —
+procedurally — as the register §8 note on a body variable used before its assignment describes —
 and the result is the *last statement evaluated with the default guess* rather
 than the root, with `SUCCESS` and no warning. Evidence on this build:
 

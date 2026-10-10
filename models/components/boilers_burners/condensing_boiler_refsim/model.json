@@ -43,7 +43,6 @@
     "moist-air property functions (humrat, relhum, dewpoint)",
     "ideal-gas substances (CO2, H2O, O2, N2, CH4, C2H6, C3H8, C4H10)",
     "FUNCTION cpbar",
-    "PROCEDURE COILWET with $common",
     "SUBPROGRAM flattened",
     "5-argument IF function",
     "CALL ERROR in a function body",
@@ -78,11 +77,10 @@
     "date": "2026-10-06",
     "coolsolve_version": "0.3.0@536d427",
     "max_rel_diff": 1.0,
-    "notes": "225 common variables, 74 differ above rtol=0.001. Maximum relative difference 1.00 on h_C4H10_ref and h_C4H10_su, which the variant replaces by constants (CS-GAP-FLUIDS-C8H18; x_C4H10 = 0, so no result is affected); excluding those two, the maximum is 0.75 on ratio_loss, a consequence of the stale AU_wenv of the stored solution (see below). All the results of the boiler agree to better than 2e-05: Q_dot_u_boil 106671.004 / 106670.473 W (5e-06), eta_HHV 0.978721 / 0.978704 (1.8e-05), T_w_ex_boil 34.5739 / 34.5734 C (1.4e-05), M_dot_f_boil_kgh and M_dot_g_boil_kgh identical. The remaining differences: (a) the stored EES solution is stale (CS-BUG-EXTRACT-STALE): it uses a_gw = 0.62 (AU_gw = 310*(0.04060649/0.09423)^0.62 = 183.9474 W/K is the stored value, while the equations window has 0.65, which gives 179.36), R_a_coil_n = 0.003 K/W (R_a_coil = 0.0056699 K/W stored, 0.0047249 with the 0.0025 of the file), R_m_coil = 1e-4 K/W and AU_wenv = 0.5 W/K (Q_dot_wenv 7.2868 W stored, 29.149 W with the 2 W/K of the file) - this family accounts for epsilon_gw (+3.4e-03), Q_dot_gw (-2.9e-03), Q_dot_coil (+2.5e-02), Q_dot_sens_coil (+1.1e-01) and ratio_loss; re-running the variant with those four parameters gives Q_dot_u_boil 106660.6 W (-9e-05), eta_HHV 0.978626 (-8e-05), T_w_ex_boil 34.57344 C, Q_dot_coil 11888.4 W (+4.8e-04), Q_dot_wenv 7.28680 W (2e-08) and 43 differing variables; (b) moist-air properties of EES 7.888 vs CoolProp (c_p_a_coil +1.1e-02, c_p_a_su_coil +8.3e-03, c_p_a_ex_coil_dry +2.1e-02, T_wb_su_coil +2.4e-03, W_a_ex_coil_dry +9.7e-03, h_a_su_coil +8.7e-03); (c) RH_a_ex_coil_dry (1.55e-01 with the parameter set of the stored solution) is a diagnostic output of the dry regime which feeds no equation when the wet regime is selected. The native file also depends on CS-BUG-COMMON-PROC: the ten $common variables of COILWET are evaluated as zero inside the body, so the wet coil is not solved at all (SingularJacobian); the only forward-referenced body local of the model is c_p_af_coil (of SUBPROGRAM WETCOIL), which the stored EES solution shows to be part of the simultaneous solution of the body (Q_dot_coil_wet 11882.65 W with c_p_af_coil 14793 J/kg.K). No reference variable excluded: the 18 variables only in the EES reference are the local variables of the cpbar FUNCTION, the 33 only in the CoolSolve solution the internal variables of the flattened coil, the state points of the diagrams and the diagnostic variables."
+    "notes": "225 common variables, 74 differ above rtol=0.001. Maximum relative difference 1.00 on h_C4H10_ref and h_C4H10_su, which the variant replaces by constants (CS-GAP-FLUIDS-C8H18; x_C4H10 = 0, so no result is affected); excluding those two, the maximum is 0.75 on ratio_loss, a consequence of the stale AU_wenv of the stored solution (see below). All the results of the boiler agree to better than 2e-05: Q_dot_u_boil 106671.004 / 106670.473 W (5e-06), eta_HHV 0.978721 / 0.978704 (1.8e-05), T_w_ex_boil 34.5739 / 34.5734 C (1.4e-05), M_dot_f_boil_kgh and M_dot_g_boil_kgh identical. The remaining differences: (a) the stored EES solution is stale (CS-BUG-EXTRACT-STALE): it uses a_gw = 0.62 (AU_gw = 310*(0.04060649/0.09423)^0.62 = 183.9474 W/K is the stored value, while the equations window has 0.65, which gives 179.36), R_a_coil_n = 0.003 K/W (R_a_coil = 0.0056699 K/W stored, 0.0047249 with the 0.0025 of the file), R_m_coil = 1e-4 K/W and AU_wenv = 0.5 W/K (Q_dot_wenv 7.2868 W stored, 29.149 W with the 2 W/K of the file) - this family accounts for epsilon_gw (+3.4e-03), Q_dot_gw (-2.9e-03), Q_dot_coil (+2.5e-02), Q_dot_sens_coil (+1.1e-01) and ratio_loss; re-running the variant with those four parameters gives Q_dot_u_boil 106660.6 W (-9e-05), eta_HHV 0.978626 (-8e-05), T_w_ex_boil 34.57344 C, Q_dot_coil 11888.4 W (+4.8e-04), Q_dot_wenv 7.28680 W (2e-08) and 43 differing variables; (b) moist-air properties of EES 7.888 vs CoolProp (c_p_a_coil +1.1e-02, c_p_a_su_coil +8.3e-03, c_p_a_ex_coil_dry +2.1e-02, T_wb_su_coil +2.4e-03, W_a_ex_coil_dry +9.7e-03, h_a_su_coil +8.7e-03); (c) RH_a_ex_coil_dry (1.55e-01 with the parameter set of the stored solution) is a diagnostic output of the dry regime which feeds no equation when the wet regime is selected. No reference variable excluded: the 18 variables only in the EES reference are the local variables of the cpbar FUNCTION, the 33 only in the CoolSolve solution the internal variables of the flattened coil, the state points of the diagrams and the diagnostic variables."
   },
   "missing_features": [
-    "CS-GAP-FLUIDS-C8H18",
-    "CS-BUG-COMMON-PROC"
+    "CS-GAP-FLUIDS-C8H18"
   ],
   "related": [
     "CSL-0006",
@@ -109,6 +107,16 @@
     {
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @6f10211 + uncommitted identifier-character fix (T-RECHECK, CS-GAP-NAME-SYMBOL closed); still blocked: the C%/H% names parse, the native file is square (244 equations) and stops at Unknown fluid C4H10 (CS-GAP-FLUIDS-C8H18); with the C4H10 calls replaced by constants (scratch) the next failure is the COILWET block (SingularJacobian, CS-BUG-COMMON-PROC); variant kept (its C_pc/H_pc renaming is no longer forced)",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @20b59a6 (T-RECHECK, CS-BUG-COMMON-PROC closed: $COMMON rejected, the ten shared variables passed as arguments of COILWET); still blocked by CS-GAP-FLUIDS-C8H18 (first error: Unknown fluid C4H10); with constants for the C4H10 calls and the variant's operating point the native file solves but the COILWET body gives Q_dot_coil_wet 1.1 W (variant 12176 W): a local used before assignment is not iterated in a procedure body (README); variant kept, unchanged (its .sol identical)",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "PROCEDURE COILWET / SUBPROGRAM WETCOIL flattened into the main program of the native file (decision D10, as the variant already was; five-argument IF for the flag_dp test, guesses of the twelve _wc variables added to the .initials); still blocked by CS-GAP-FLUIDS-C8H18; a scratch copy of the native file with the C4H10 calls and the operating point of the variant reproduces the .sol of the variant (258 variables, identical to the printed digits); variant header and README log updated, its .sol unchanged",
       "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]

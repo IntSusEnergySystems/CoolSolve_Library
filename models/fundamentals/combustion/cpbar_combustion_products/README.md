@@ -232,5 +232,5 @@ Source file (plain-text EES library, comments in French):
   flame temperature and between `t_6` and `t_7`.
 - `CSL-0150` *adiabatic_flame_dissociation*: adiabatic flame temperature of
   CH4 or fuel oil with chemical-equilibrium dissociation (EES built-in
-  `Chem_Equil`/`NASA`, native file blocked), same combustion-course material.
+  `Chem_Equil`, native file blocked), same combustion-course material.
 - `CSL-0166` *boiler_modulating_burner_refsim*: its cpbar procedure is copied into this model (modulating-burner RefSim model, 2008 model bank).

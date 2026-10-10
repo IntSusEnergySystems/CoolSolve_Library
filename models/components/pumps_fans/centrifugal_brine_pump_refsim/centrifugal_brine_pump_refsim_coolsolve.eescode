@@ -6,9 +6,11 @@
   parse/evaluate (native file kept in valid EES, see its header). This variant
   changes ONLY what the registered gaps force:
 
-  1. CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE and CS-GAP-STRING-ARRAY break the
-     BRINEPROP procedure (ELSE IF ladders and ENDIF;ENDIF groups, Uppercase$,
-     string-array reads). It is split in two:
+  1. CS-GAP-ELSEIF-CHAIN and CS-GAP-UPPERCASE break the
+     BRINEPROP procedure (ELSE IF ladders and ENDIF;ENDIF groups, Uppercase$).
+     The unit label UO$ of the native file (row Pro of the lookup table Units,
+     read with LOOKUP$) feeds no equation and is not carried by this variant.
+     It is split in two:
      - a selector PROCEDURE BRINEPROP_SELECT(Conc,Fl$:Fl_brine) holding
        the 22 concentration range checks and the 11-branch fluid ladder,
        rewritten as sequential single-line IF statements (conditions

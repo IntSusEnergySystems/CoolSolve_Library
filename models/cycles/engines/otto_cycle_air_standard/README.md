@@ -205,7 +205,7 @@ workspace; the two only in CoolSolve are `R#` and `r`.) Of the 26 differences:
   kPa → Pa conversion of the exercise data;
 - **`s[1]` = 5672.12 vs 3856.91 J/(kg·K)** is a constant offset between the
   entropy reference states of the EES ideal-gas `Air` table and of CoolProp
-  `Air` (the same `CS-GAP-IDEAL-ENTROPY` family; the entropy *differences*,
+  `Air` (a reference-state offset; the entropy *differences*,
   which are what the model uses, agree — see the isentropy check in *Results*);
 - the other **25 variables** (`T[2]`, `T[3]`, `T[4]`, `p[2]`, `p[3]`, `p[4]`,
   `p_max`, `T_max`, `gamma01`, `gamma34`, `cv12`, `cv23`, `cv34`, `cv41`,
@@ -305,7 +305,7 @@ reference of the *Verification* section).
   needed.
 - The entropy reference states differ between EES (ideal-gas `Air` table) and
   CoolProp (`Air`), as for every model computing absolute entropies
-  (`CS-GAP-IDEAL-ENTROPY`): only differences are meaningful, and the model's
+  of `Air` (a reference-state offset): only differences are meaningful, and the model's
   `s[i]` are "for information" post-processing anyway.
 - CoolSolve prints a warning for every property call on the fluid `'Air'`
   ("*For moist air properties use AirH2O, not 'air'*"). It is a hint, not an

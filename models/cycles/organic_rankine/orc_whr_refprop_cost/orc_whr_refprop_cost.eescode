@@ -14,14 +14,13 @@
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
   Source : ULiège Thermodynamics Laboratory (EES 8.652) - see README.md
   Status : BLOCKED - END PROCEDURE (CS-GAP-END-PROCEDURE) is not supported by
-           CoolSolve; $common of the procedures (CS-BUG-COMMON-PROC).
+           CoolSolve.
 =============================================================================}
 
 
 
 $bookmark hx_cd
-procedure hx_cd(fluid$,fluidcd$,T_sf_su,M_dot_sf,T_r_su,T_r_ex,M_dot_r,p_cd,p_sf,b,L_w_tot,L_h,beta:A_cd,DELTAp,DELTAp_sf,M_fluid)
-$common Workingfluidmix$; MM_fraction; MM
+procedure hx_cd(fluid$,fluidcd$,T_sf_su,M_dot_sf,T_r_su,T_r_ex,M_dot_r,p_cd,p_sf,b,L_w_tot,L_h,beta,WorkingFluidMix$:A_cd,DELTAp,DELTAp_sf,M_fluid)
 
 
 if fluidev$='glycol' then
@@ -139,10 +138,10 @@ pinch=min(pinch,min(T_sf_su_l - T_r_ex_l,T_sf_ex_l - T_r_su_l))
 
 "Actual heat transfer coefficient and heat transfer area :"
 
-call Thonon(fluid$,P_cd,(T_r_ex+T_r_sat)/2,M_dot_r,b,L_w_tot,L_h,beta:h_l,DELTAp_l)
-call Thonon(fluid$,P_cd,(T_r_su+T_r_sat)/2,M_dot_r,b,L_w_tot,L_h,beta:h_v,DELTAp_v)
-call Thonon(fluidcd$,P_sf,(T_sf_su+T_sf_ex)/2,M_dot_sf,b,L_w_tot,L_h,beta:h_sf,DELTAp_sf)
-call kuo(fluid$,P_cd,M_dot_r,10000,1,b,L_w_tot,L_h,1:DELTAp_tp,h_tp)
+call Thonon(fluid$,P_cd,(T_r_ex+T_r_sat)/2,M_dot_r,b,L_w_tot,L_h,beta,WorkingFluidMix$:h_l,DELTAp_l)
+call Thonon(fluid$,P_cd,(T_r_su+T_r_sat)/2,M_dot_r,b,L_w_tot,L_h,beta,WorkingFluidMix$:h_v,DELTAp_v)
+call Thonon(fluidcd$,P_sf,(T_sf_su+T_sf_ex)/2,M_dot_sf,b,L_w_tot,L_h,beta,WorkingFluidMix$:h_sf,DELTAp_sf)
+call kuo(fluid$,P_cd,M_dot_r,10000,1,b,L_w_tot,L_h,1,WorkingFluidMix$:DELTAp_tp,h_tp)
 {h_tp = 1E5
 DELTAp_tp = 0}
 
@@ -208,8 +207,7 @@ end
 
 
 $bookmark hx_ev
-procedure hx_ev(fluid$,fluidev$,T_sf_su_ev,M_dot_sf,T_r_su_ev,T_r_ex_ev,M_dot_r,p_ev,p_sf,b,L_w_tot,L_h,beta:A_ev,DELTAp,DELTAp_sf,M_fluid)
-$common Workingfluidmix$; MM_fraction; MM
+procedure hx_ev(fluid$,fluidev$,T_sf_su_ev,M_dot_sf,T_r_su_ev,T_r_ex_ev,M_dot_r,p_ev,p_sf,b,L_w_tot,L_h,beta,WorkingFluidMix$:A_ev,DELTAp,DELTAp_sf,M_fluid)
 
 
 call prop_htf(fluidev$,T_sf_su_ev,p_sf:mu_sf,rho_sf,cp_sf,k_sf)
@@ -323,10 +321,10 @@ pinch=min(pinch,min(T_sf_su_l - T_r_ex_l,T_sf_ex_l - T_r_su_l))
 
 "Actual heat transfer coefficient and heat transfer area :"
 
-call Thonon(fluid$,P_ev,(T_r_su_ev+T_r_sat)/2,M_dot_r,b,L_w_tot,L_h,beta:h_l,DELTAp_l)
-call Thonon(fluid$,P_ev,(T_r_ex_ev+T_r_sat)/2,M_dot_r,b,L_w_tot,L_h,beta:h_v,DELTAp_v)
-call Thonon(fluidev$,P_sf,(T_sf_su_ev+T_sf_ex_l)/2,M_dot_sf,b,L_w_tot,L_h,beta:h_sf,DELTAp_sf)
-call Hsieh_new(fluid$,T_r_sat,M_dot_r,10000,b,L_w_tot,L_h:DELTAp_tp,h_tp)
+call Thonon(fluid$,P_ev,(T_r_su_ev+T_r_sat)/2,M_dot_r,b,L_w_tot,L_h,beta,WorkingFluidMix$:h_l,DELTAp_l)
+call Thonon(fluid$,P_ev,(T_r_ex_ev+T_r_sat)/2,M_dot_r,b,L_w_tot,L_h,beta,WorkingFluidMix$:h_v,DELTAp_v)
+call Thonon(fluidev$,P_sf,(T_sf_su_ev+T_sf_ex_l)/2,M_dot_sf,b,L_w_tot,L_h,beta,WorkingFluidMix$:h_sf,DELTAp_sf)
+call Hsieh_new(fluid$,T_r_sat,M_dot_r,10000,b,L_w_tot,L_h,WorkingFluidMix$:DELTAp_tp,h_tp)
 
 
 
@@ -361,8 +359,7 @@ end
 
 $Bookmark Thonon
 "Thonon correlation : Single phase correlation, tested for various chevron angles"
-Procedure Thonon(fluid$,P,T,M_dot,b,L_w_tot,L_h,beta:h,DELTAp)
-$common Workingfluidmix$; MM_fraction; MM
+Procedure Thonon(fluid$,P,T,M_dot,b,L_w_tot,L_h,beta,WorkingFluidMix$:h,DELTAp)
 
 if fluid$='glycol' then
 call prop_htf(fluid$,T,p:mu,rho,cp,k)
@@ -441,7 +438,7 @@ end
 
 
 $bookmark Hsieh
-Procedure Hsieh_new(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h:DELTAp,h_tp_ev)
+Procedure Hsieh_new(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h,WorkingFluidMix$:DELTAp,h_tp_ev)
 
 
 "Hsieh YY, Lin TF. Saturated flow boiling heat transfer and pressure drop of
@@ -449,7 +446,6 @@ refrigerant R410a in a vertical plate heat exchanger. Int J Heat Mass Trans
 2002;45:033-1044"
 
 	"average heat transfer coefficient:"
-	$common Workingfluidmix$; MM_fraction; MM
 rho_l = density(WorkingFluidMix$,T=T_sat,x=0)
 cp_l = cp(WorkingFluidMix$,T=T_sat,x=0)
 "h_sat_l, h_sat_v: saturated enthalpies [J/kg], so that Bo = q/(G*i_fg) is dimensionless (corrected: the original used molar enthalpies and overwrote h_l with the heat-transfer coefficient before computing i_fg)"
@@ -545,9 +541,8 @@ End
 
 
 $bookmark kuo
-Procedure kuo(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef:DELTAp,alpha_tp_cd)
+Procedure kuo(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef,WorkingFluidMix$:DELTAp,alpha_tp_cd)
 
-	$common Workingfluidmix$; MM_fraction; MM
 rho_l = density(WorkingFluidMix$,P=p,x=0)
 cp_l = cp(WorkingFluidMix$,P=p,x=0)
 "h_l, h_v: saturated enthalpies [J/kg], so that Bo = q/(G*i_fg) is dimensionless (corrected: the original used molar enthalpies)"
@@ -662,7 +657,7 @@ $bookmark evaporator
 L_w_tot_ev = L_w * (N_p_ev - 1)/2
 
 beta = 45
-call hx_ev(Workingfluid$,fluidev$,T_a_su_vap,M_dot_a,T_r_su_liq,T_r_ex_ev,M_dot_r,p_r_ev,1E5,b,L_w_tot_ev,L_h,beta:A_ev,DELTAp_ev,DELTAp_ev_sf,M_fluid_ev)
+call hx_ev(Workingfluid$,fluidev$,T_a_su_vap,M_dot_a,T_r_su_liq,T_r_ex_ev,M_dot_r,p_r_ev,1E5,b,L_w_tot_ev,L_h,beta,WorkingFluidMix$:A_ev,DELTAp_ev,DELTAp_ev_sf,M_fluid_ev)
 
 V_ev=A_ev*b      "Evaporator volume, m3"
 
@@ -815,7 +810,7 @@ L_w_tot_cd = L_w * (N_p_cd - 1)/2
 fluidcd$='water'
 p_w = 1E5
 
-call hx_cd(workingfluid$,fluidcd$,T_w_su,M_dot_w,T_r_su_vap_cd,T_r_ex_sc_cd,M_dot_r,p_r_su_tp_cd,p_w,2*b,L_w_tot_cd,L_h,beta:A_cd,DELTAp_cd,DELTAp_sf_cd,M_fluid_cd)
+call hx_cd(workingfluid$,fluidcd$,T_w_su,M_dot_w,T_r_su_vap_cd,T_r_ex_sc_cd,M_dot_r,p_r_su_tp_cd,p_w,2*b,L_w_tot_cd,L_h,beta,WorkingFluidMix$:A_cd,DELTAp_cd,DELTAp_sf_cd,M_fluid_cd)
 
 V_cd=A_cd*b      "Condenser volume, m3"
 

@@ -2,7 +2,7 @@
   "id": "CSL-0150",
   "name": "adiabatic_flame_dissociation",
   "title": "Adiabatic flame temperature of CH4 or fuel oil with or without dissociation",
-  "summary": "Adiabatic, constant-pressure combustion of CH4 or fuel oil with excess air: adiabatic flame temperature from H_reactants = H_products, with either complete-combustion products (CO2, H2O, O2, N2) or the 14-species chemical-equilibrium mixture from the EES built-in Chem_Equil procedure; species enthalpies from the EES built-in NASA procedure.",
+  "summary": "Adiabatic, constant-pressure combustion of CH4 or fuel oil with excess air: adiabatic flame temperature from H_reactants = H_products, with either complete-combustion products (CO2, H2O, O2, N2) or the 14-species chemical-equilibrium mixture from the EES built-in Chem_Equil procedure; species enthalpies as ideal-gas property calls (formation enthalpy included).",
   "kind": "steady",
   "level": 2,
   "status": "blocked",
@@ -15,7 +15,13 @@
     "H2O",
     "CO",
     "H2",
-    "NO"
+    "Ar",
+    "OH",
+    "H",
+    "O",
+    "N",
+    "NO",
+    "NO2"
   ],
   "tags": [
     "combustion",
@@ -29,14 +35,15 @@
   "language_features": [
     "string variables",
     "arrays",
+    "LOOKUP$ (species names in lookup tables)",
     "DUPLICATE",
     "$IF directives",
     "CALL CHEM_EQUIL (EES built-in)",
-    "CALL NASA (EES built-in)",
+    "ideal-gas species property calls (MolarMass*enthalpy)",
     "sum"
   ],
   "stats": {
-    "n_equations": 85,
+    "n_equations": 84,
     "largest_block": 2
   },
   "origin": {
@@ -55,15 +62,16 @@
     "course": "MCI (ULiège), TP1 exercises 3-4 (2016)"
   },
   "verification": {
-    "reference": "EES stored solution of the source file (last run: CH4, DISSOCIATION$ = 'YES', e = 0.2, 30 bar, reactants at 288 K): T_adiab = 2417.129 K, H_react = H_prod = -78333.02 kJ/kmol fuel. The native file is blocked in CoolSolve (missing_features); no CoolSolve comparison yet - to be re-verified when the gaps close (T-RECHECK).",
-    "date": "2026-10-08",
-    "coolsolve_version": "0.3.0@7addbbc",
-    "notes": "26 of the 28 stored variables carry values (CO and NO cleared); the Oil-case records (MM_f, LHV_f, c_f, H_rf, H_ra, HHV, LHV_f_bis) belong to the alternative fuel case of this multi-case file. The stored ntot = 0.54286 kmol is inconsistent with the stored H-atom balance for the same run (flagged in the README, not resolvable without EES)."
+    "reference": "EES stored solution of the source file (last run: CH4, DISSOCIATION$ = 'YES', e = 0.2, 30 bar, reactants at 288 K): T_adiab = 2417.129 K, H_react = H_prod = -78333.02 kJ/kmol fuel. The native file is blocked in CoolSolve (missing_features); no CoolSolve comparison of the full model yet - to be re-verified when the gaps close (T-RECHECK). No-dissociation case (CH4, e = 0.2, 288 K) run in a scratch copy of the native file (species names read from the lookup table Species4 with LOOKUP$) with the indexed sum written out and the DUPLICATE bound replaced by its value (CS-BUG-DUPLICATE-VAR-BOUND): T_adiab = 1788.2 degC, H_react = -78601 kJ/kmol fuel, against an independent JANAF hand balance of 1788.5 degC and -78593 kJ/kmol.",
+    "date": "2026-10-10",
+    "coolsolve_version": "0.3.0@f319f0c",
+    "notes": "26 of the 28 stored variables carry values (CO and NO cleared); the Oil-case records (MM_f, LHV_f, c_f, H_rf, H_ra, HHV, LHV_f_bis) belong to the alternative fuel case of this multi-case file. The stored ntot = 0.54286 kmol is inconsistent with the stored H-atom balance for the same run (flagged in the README, not resolvable without EES). CoolSolve fix/library-gaps-2 (uncommitted LOOKUP$ build); the scratch run changes no status (still blocked). The stored H_react is 0.34 % less negative than the scratch value, of the size of the spread of the CH4 formation enthalpy between sources."
   },
   "missing_features": [
     "CS-GAP-CHEM-EQUIL",
-    "CS-GAP-NASA",
-    "CS-GAP-SUM-INDEXED"
+    "CS-GAP-FLUIDS-NASA-SPECIES",
+    "CS-GAP-SUM-INDEXED",
+    "CS-BUG-DUPLICATE-VAR-BOUND"
   ],
   "related": [
     "CSL-0005",
@@ -88,6 +96,21 @@
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @6f10211 + uncommitted identifier-character fix (T-RECHECK, CS-GAP-NAME-SYMBOL closed); still blocked: as shipped (CH4, YES) 65 equations / 68 unknowns (CS-GAP-CHEM-EQUIL, CS-GAP-NASA, CS-GAP-SUM-INDEXED); the C%/H%/O%/S% names of the Oil branch now parse (scratch copy with FUEL$ = 'Oil': 76 equations / 80 unknowns); no variant",
       "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "EES NASA procedure calls replaced by ideal-gas property calls (decision D12: CS-GAP-NASA is not a gap); missing_features: CS-GAP-NASA replaced by CS-GAP-FLUIDS-NASA-SPECIES, CS-GAP-STRING-ARRAY added (Prod$[i] as fluid name, found with the rewrite); still blocked; no-dissociation case run in a scratch copy: T_adiab 1788.2 degC vs hand balance 1788.5 degC",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "string array Prod$[i] replaced by the lookup tables Species14 and Species4 and LOOKUP$ (decision D14: string arrays are not supported by CoolSolve); missing_features: CS-GAP-STRING-ARRAY removed; still blocked (CS-GAP-CHEM-EQUIL, CS-GAP-FLUIDS-NASA-SPECIES, CS-GAP-SUM-INDEXED); as shipped 50 equations / 53 unknowns, no string-array error; no-dissociation case in a scratch copy (indexed sum written out, DUPLICATE bound as literal): T_adiab 1788.2 degC, unchanged",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "missing_features: CS-BUG-DUPLICATE-VAR-BOUND added (Duplicate i=1,Nprod with a variable bound)",
+      "by": "Claude (Opus) for S. Quoilin"
     }
   ]
 }

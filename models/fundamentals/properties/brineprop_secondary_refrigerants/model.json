@@ -37,7 +37,7 @@
     "procedure with string arguments",
     "IF/THEN/ELSE ladders closed by ENDIF;ENDIF groups",
     "Uppercase$ string function",
-    "string arrays",
+    "LOOKUP$ (unit labels in a lookup table)",
     "REPEAT loop",
     "lookup tables read inside a procedure",
     "CALL ERROR"
@@ -69,8 +69,7 @@
   },
   "missing_features": [
     "CS-GAP-ELSEIF-CHAIN",
-    "CS-GAP-UPPERCASE",
-    "CS-GAP-STRING-ARRAY"
+    "CS-GAP-UPPERCASE"
   ],
   "related": [
     "CSL-0072",
@@ -100,6 +99,11 @@
     {
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @d5d6b37 (T-RECHECK, CS-GAP-LOOKUP-PROC closed); still blocked by CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE and CS-GAP-STRING-ARRAY (native file does not parse); variant kept; in a scratch copy with those three worked around the native BRINEPROP (REPEAT loop, lookup inside the procedure) gives the variant values to 4.8e-10",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "string array U$[…] of BRINEPROP replaced by the lookup table brineprop_secondary_refrigerants-Units.csv and LOOKUP$ (decision D14: string arrays are not supported by CoolSolve); missing_features: CS-GAP-STRING-ARRAY removed; still blocked (CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE); native file checked in a scratch copy with the frozen binary: no string-array error, first error is the ELSE IF chain (CS-GAP-ELSEIF-CHAIN); in a scratch copy with the ELSE IF chains and Uppercase$ worked around the native BRINEPROP (UO$ read from Units with LOOKUP$) gives the variant values to 4.8e-10; variant unchanged, its .sol unchanged",
       "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]

@@ -72,7 +72,10 @@ coolsolve ./dry_air_screw_compressor_leakage.eescode
 
 The `.initials` file (guesses from the EES stored solution) is required:
 the Newton solver alone fails on the leakage loop and the default pipeline
-falls back to TrustRegion. Set `N = rpm/60` with `rpm` as in the `simple`
+falls back to TrustRegion. Since CoolProp `75af7816` (the CoolProp commit
+pinned by CoolSolve; p,T flash rework #3360) the model does not converge
+without it at the default tolerance 1e-9 (SingularJacobian in block 13; it
+does from 1e-8); the cause is not analysed yet. Set `N = rpm/60` with `rpm` as in the `simple`
 variant to sweep the speed (see *Related models*).
 
 ## Results

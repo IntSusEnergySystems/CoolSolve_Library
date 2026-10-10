@@ -16,11 +16,11 @@ shipped and verified against the solution stored by EES (see *Verification*).
 |---|---|
 | **Category** | Components › Boilers and burners |
 | **Fluids** | Water (real), AirH2O (moist air), Air, N2, O2, CO2, H2O, CH4, C2H6, C3H8, C4H10 (ideal gases, formation enthalpy included), Methane (real) |
-| **Size** | 258 equations, largest block 52 (the variant); the native file parses and reports 244 equations (largest block 30) before it stops |
+| **Size** | 258 equations, largest block 52 (native file and variant; the native file stops at its first `C4H10` call) |
 | **Source** | ULiège model bank (Laborelec toolkit lineage), heat production by combustion, condensing boiler reference simulation model, 9 January 2008 (`CondensingBoiler_RefSim_EES_Model_VLAR080109.EES`, EES 7.888) |
 | **Authors** | Vincent Lemort, Andrés Rodríguez (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** by `CS-GAP-FLUIDS-C8H18` (with `CS-BUG-COMMON-PROC`); runnable variant `condensing_boiler_refsim_coolsolve.eescode` verified against the solution stored by EES |
+| **CoolSolve** | native file **blocked** by `CS-GAP-FLUIDS-C8H18`; runnable variant `condensing_boiler_refsim_coolsolve.eescode` verified against the solution stored by EES |
 
 ## Problem statement
 
@@ -79,7 +79,9 @@ nominal flows by the exponents `a_coil` and `b_coil`. The coil is solved **twice
   effectiveness of the wet coil (Merckel theory, Lewis number = 1,
   `R_af_coil = R_a_coil·c_p_a_su_coil/c_p_af_coil`, fictitious air capacity rate
   `C_dot_af_coil`), and the exhaust air is saturated
-  (`RH_a_ex_coil_wet = 1`, "simplification" in the original);
+  (`RH_a_ex_coil_wet = 1`, "simplification" in the original); the wet power is
+  zero when `flag_dp = 0` (water inlet above the dew point of the fumes), written
+  with the five-argument `IF`;
 - the **regime of highest cooling power is kept** (Jim Braun's proposal, as in
   the original): `Q_dot_coil = max(Q_dot_coil_dry, Q_dot_coil_wet)`, written with
   the five-argument EES `IF`, and the condensed water `M_dot_w_cond_coil` is set
@@ -281,12 +283,12 @@ this file; they are separate candidates.
   line are **display strings in the source file**, not equations, and are kept as
   comments (reading them as equations — as a first transcription of this import
   did — invents twelve redundant equations and makes the system non-square).
-- **2026-10-06 — SUBPROGRAM flattened (decision D10)**: `SUBPROGRAM WETCOIL` is
-  not supported (`CS-GAP-MODULE`, not planned) and its equations were copied
-  into the `else` branch of `PROCEDURE COILWET` that called it, call tag `wc`.
-  Formal = actual arguments (the call passed the main program's own variables):
-  `M_dot_a_coil`, `C_dot_w_coil`, `c_p_a_su_coil`, `T_w_su_coil`, `T_wb_su_coil`,
-  `h_a_su_coil` → `Q_dot_coil_wet`, `T_wb_ex_coil_wet`. Renamed internal
+- **`PROCEDURE COILWET` / `SUBPROGRAM WETCOIL` flattened into the main program,
+  decision D10**: the source calls the subprogram from the `else` branch of
+  `COILWET` (`if (flag_dp=0)`: no wet power). Call tag `wc`; formal = actual
+  arguments (`flag_dp`, `M_dot_a_coil`, `C_dot_w_coil`, `c_p_a_su_coil`,
+  `T_w_su_coil`, `T_wb_su_coil`, `h_a_su_coil`, `R_a_coil`, `R_m_coil`,
+  `R_w_coil`, `P_atm` → `Q_dot_coil_wet`, `T_wb_ex_coil_wet`). Renamed internal
   variables: `C_dot_af_coil` → `C_dot_af_coil_wc`, `C_dot_max_coil_wet` →
   `C_dot_max_coil_wet_wc`, `C_dot_min_coil_wet` → `C_dot_min_coil_wet_wc`,
   `omega_coil_wet` → `omega_coil_wet_wc`, `R_af_coil` → `R_af_coil_wc`,
@@ -295,9 +297,11 @@ this file; they are separate candidates.
   `T_a_ex_coil_wet_wc`, `RH_a_ex_coil_wet` → `RH_a_ex_coil_wet_wc`,
   `h_a_ex_coil_wet` → `h_a_ex_coil_wet_wc`, `c_p_af_coil` → `c_p_af_coil_wc`
   (the suffix is needed because the main program uses the same names without it;
-  no collision was created). `$common R_a_coil,R_m_coil,R_w_coil,P_atm` of the
-  subprogram was dropped: those four variables are already `$common` of
-  `COILWET`.
+  no collision was created). The two outputs of the procedure are
+  `Q_dot_coil_wet = IF(flag_dp,0,Q_dot_coil_wet_if,0,Q_dot_coil_wet_if)` and
+  `T_wb_ex_coil_wet = IF(flag_dp,0,T_wb_ex_coil_wet_if,T_wb_su_coil,T_wb_ex_coil_wet_if)`,
+  where `Q_dot_coil_wet_if` and `T_wb_ex_coil_wet_if` are the two equations of the
+  subprogram that define them.
 - **2026-10-06 — comment-only edit**: the stoichiometry block of section 5.7.1
   (a display string whose opening `"` ended its line) was written as one string
   per line (`CS-BUG-MULTILINE-COMMENT-START`), which changes no equation.
@@ -313,24 +317,21 @@ this file; they are separate candidates.
   longer requires;
   (2) `MM_C4H10=molarmass(C4H10)` → `MM_C4H10=58.12` (the value EES returns,
   `CS-GAP-FLUIDS-C8H18`) and `h_C4H10_su`/`h_C4H10_ref` → 0 (they only enter
-  `Q_dot_2_bis` multiplied by `y_C4H10_su = 0`); (3) the five five-argument
-  `IF(A,B,X,Y,Z)` calls rewritten as three-argument `IF(cond,X,Z)` (CoolSolve
-  accepts the five-argument form now, so this rewrite is not required): the
-  original returns X if A<B, Y if A=B and Z if A>B, so
-  `IF(A,B,X,X,Z) = IF(X−A, X, Z)` and `IF(A,B,1,1,0) = IF(B−A, 1, 0)`;
-  (4) the body of `PROCEDURE COILWET` copied into the main
-  program at the place of the call, its two outputs written
-  `Q_dot_coil_wet=if(flag_dp, Q_dot_coil_wet_if, 0)` and
-  `T_wb_ex_coil_wet=if(flag_dp, T_wb_ex_coil_wet_if, T_wb_su_coil)`
-  (`CS-BUG-COMMON-PROC`: the ten `$common` variables are zero inside a body, and a
-  body local that the body uses before assigning it — here `c_p_af_coil` — is not
-  iterated); the interior of the body is unchanged. The operating point of the variant is the one of the stored EES
-  solution (see *How to run*).
+  `Q_dot_2_bis` multiplied by `y_C4H10_su = 0`); (3) the seven five-argument
+  `IF(A,B,X,Y,Z)` calls (the five of the source and the two that select the
+  outputs of the flattened coil) rewritten as three-argument `IF(cond,X,Z)`
+  (CoolSolve accepts the five-argument form now, so this rewrite is not
+  required): the original returns X if A<B, Y if A=B and Z if A>B, so
+  `IF(A,B,X,X,Z) = IF(X−A, X, Z)` and `IF(A,B,1,1,0) = IF(B−A, 1, 0)`; the two
+  coil outputs read `Q_dot_coil_wet=if(flag_dp, Q_dot_coil_wet_if, 0)` and
+  `T_wb_ex_coil_wet=if(flag_dp, T_wb_ex_coil_wet_if, T_wb_su_coil)`. The
+  operating point of the variant is the one of the stored EES solution (see
+  *How to run*).
 - **Level**: taxonomy §3 — one adiabatic combustion chamber (five fictitious
   processes), three heat exchangers (two of them ε-NTU models, one of them
   solved twice with a regime selection), a moist-air block (wet-bulb by
   adiabatic saturation, humidity ratios, dew points), a user `FUNCTION`
-  (`cpbar`) and a user `PROCEDURE`, a parametric study in the original and 258
+  (`cpbar`), a parametric study in the original and 258
   equations: above level 2 (several sub-models and closures, moist air,
   ideal-gas chemistry), below level 4 (no optimisation, no
   distribution/discretisation, no dynamic behaviour) → **level 3**.
@@ -344,15 +345,6 @@ CoolSolve register `docs/model_library_support.md`):
   (*"Unknown fluid: 'C4H10'"*); the same gap as `C8H18`, "the other hydrocarbons
   of the EES ideal-gas substance list beyond C3". `x_C4H10 = 0`, so the terms
   that use it vanish, but the calls must still evaluate.
-- **`CS-BUG-COMMON-PROC`** — the ten `$common` variables of `PROCEDURE COILWET`
-  are evaluated as zero inside the body, so the wet coil is not solved at all
-  (*SingularJacobian* in the block of the call outputs). The same row records,
-  as a **lower-priority feature limitation and not a solver bug**, that CoolSolve
-  accepts silently a body which uses a local variable before assigning it (EES
-  refuses such a file) and that the body local variables never appear in the
-  `-d` residuals nor in the `.sol`: the one forward-referenced local of this
-  model, `c_p_af_coil` of `SUBPROGRAM WETCOIL`, is worth 11 882.65 W of wet
-  cooling power in the stored EES solution.
 - **`CS-BUG-MULTILINE-COMMENT-START`** is worked around by a comment-only edit
   (stoichiometry block) and does not block the file.
 

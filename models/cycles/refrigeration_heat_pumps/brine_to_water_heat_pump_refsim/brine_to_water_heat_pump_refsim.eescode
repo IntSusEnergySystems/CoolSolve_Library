@@ -24,13 +24,13 @@
            polynomial coefficients) and -Brine2.csv (11 x 2 mean
            concentration and temperature), decoded from the binary lookup
            files Brine1.lkt / Brine2.lkt of the BrineProp library (CS-GAP-LKT,
-           library model CSL-0079).
+           library model CSL-0079); -Units.csv (5 x 1 unit labels of
+           BRINEPROP, read with LOOKUP$).
 
   Status: BLOCKED in CoolSolve (the native file is kept in valid EES): the
   BRINEPROP procedure copied below uses the EES "ELSE IF" chains closed by
-  repeated "ENDIF" keywords (CS-GAP-ELSEIF-CHAIN), the intrinsic string
-  function Uppercase$ (CS-GAP-UPPERCASE) and string arrays read by index
-  (CS-GAP-STRING-ARRAY). A faithful runnable variant is shipped as
+  repeated "ENDIF" keywords (CS-GAP-ELSEIF-CHAIN) and the intrinsic string
+  function Uppercase$ (CS-GAP-UPPERCASE). A faithful runnable variant is shipped as
   brine_to_water_heat_pump_refsim_coolsolve.eescode; every change is logged in
   its header and in the README.
 =============================================================================}
@@ -39,7 +39,9 @@
      the ULiège model bank, inventory candidate TM-0479, tables Brine1/
      Brine2): EES loads it implicitly from the USERLIB folder. Copied
      unchanged except for the removal of the dead code after END (this is
-     the standard workaround of CS-GAP-INCLUDE / CS-FEAT-IMPORT). ---}
+     the standard workaround of CS-GAP-INCLUDE / CS-FEAT-IMPORT) and the
+     string array U$ of the unit labels, which is the lookup table Units
+     read with LOOKUP$ (library decision D14). ---}
 
 Procedure BRINEPROP(Pr$,Fl$,Conc,Temp:output)
 
@@ -113,7 +115,7 @@ ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;EN
 "Sets property parameter"
 Pro=0
 Freeze=1;Density=2;SpecHeat=3;ThermalC=4;DynVisc=5
-U$[Freeze]='C'; U$[Density]='kg/m^3'; U$[SpecHeat]='kJ/kg-K'; U$[ThermalC]='W/m-K'; U$[DynVisc]='milliPa-s'
+"Unit labels (C, kg/m^3, kJ/kg-K, W/m-K, milliPa-s): rows Freeze ... DynVisc of the lookup table Units"
 Pr$=Uppercase$(Pr$)
 IF (Pr$='FREEZE') THEN Pro:=Freeze ELSE
 	IF (Pr$='DENSITY') THEN Pro:=Density ELSE
@@ -133,7 +135,7 @@ ENDIF;ENDIF;ENDIF;ENDIF;ENDIF}
 
 if (Pro=0) then Call ERROR('Unrecognized property indicator:  note that the first parameter must be Freeze, Density, SpecHeat, ThermalC or DynVisc and it must be surrounded with single quotes.' )
 Pr:=Pro
-UO$=U$[Pro]
+UO$=LOOKUP$('Units',Pro,1)
 
 "Sets fluid parameter"
 EG=1;PG=2;EA=3;MA=4;GL=5;NH3=6;K2CO3=7;CaCl2=8;MgCl2=9;NaCl=10;KAc=11

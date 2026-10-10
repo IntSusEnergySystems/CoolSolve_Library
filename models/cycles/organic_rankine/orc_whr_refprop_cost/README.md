@@ -23,7 +23,7 @@ optimisation sweeps of the original study.
 | **Source** | ULiège Thermodynamics Laboratory, EES 8.652 (`cycle ORC with refprop.EES`) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory) — the 2011-10-29 copies of the same model are by Sylvain Quoilin |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** (`CS-GAP-END-PROCEDURE`, `CS-BUG-COMMON-PROC`); its property calls use CoolProp, with the R245fa+R134a mixture; runnable variant `orc_whr_refprop_cost_coolsolve.eescode` (pure R245fa) verified against the EES stored solution (see *Verification*) |
+| **CoolSolve** | native file **blocked** (`CS-GAP-END-PROCEDURE`); its property calls use CoolProp, with the R245fa+R134a mixture; runnable variant `orc_whr_refprop_cost_coolsolve.eescode` (pure R245fa) verified against the EES stored solution (see *Verification*) |
 
 ## Problem statement
 
@@ -82,11 +82,12 @@ coolsolve ./orc_whr_refprop_cost_coolsolve.eescode
 ```
 
 The variant is a runnable transcription of the native file at the stored
-composition (pure R245fa): the REFPROP blocks, the `$common` lines, the two
-5-argument `IF` calls and the `End procedure` terminator differ from the
-native file (every change logged in the conversion log); the guess values of
+composition (pure R245fa): the property calls (pure R245fa instead of the
+mixture string), the two 5-argument `IF` calls, the `End procedure` terminator
+and the dead `if fluidev$='glycol'` block of `hx_cd` differ from the native file
+(every change logged in the conversion log); the guess values of
 `orc_whr_refprop_cost_coolsolve.initials` come from the EES stored solution
-(66 iterations, no `coolsolve.conf`). The native file
+(67 iterations, no `coolsolve.conf`). The native file
 `orc_whr_refprop_cost.eescode` (CoolProp mixture calls, decision D12) does not
 run in CoolSolve (gaps below); in EES its REFPROP form solved as stored (386
 variables), and `optim` row 8 collects the summary of the run.
@@ -97,12 +98,12 @@ EES stored solution vs the CoolSolve variant (default operating point):
 
 | Quantity | EES | CoolSolve | dev. | Quantity | EES | CoolSolve | dev. |
 |---|---:|---:|---:|---|---:|---:|---:|
-| `M_dot_r` [kg/s] | 0.2235 | 0.2255 | 0.9 % | `A_ev` [m²] | 2.334 | 2.273 | 2.6 % |
-| `Q_dot_ev` [kW] | 49.19 | 49.47 | 0.6 % | `A_cd` [m²] | 5.459 | 8.410 | 35.1 % |
-| `W_dot_net` [kW] | 3.425 | 3.290 | 3.9 % | `DELTAp_ev` [kPa] | 26.15 | 27.96 | 6.5 % |
-| `eta_cycle` [%] | 6.964 | 6.652 | 4.5 % | `DELTAp_cd` [kPa] | 44.92 | 87.50 | 48.7 % |
-| `epsilon_s_exp` [-] | 0.6370 | 0.6501 | 2.0 % | `TEC` [€] | 7 114 | 8 125 | 12.4 % |
-| `epsilon_ev` [%] | 52.95 | 53.25 | 0.6 % | `SIC` [€/kW] | 2 700 | 3 210 | 15.9 % |
+| `M_dot_r` [kg/s] | 0.2235 | 0.2255 | 0.9 % | `A_ev` [m²] | 2.334 | 2.358 | 1.0 % |
+| `Q_dot_ev` [kW] | 49.19 | 49.47 | 0.6 % | `A_cd` [m²] | 5.459 | 8.893 | 38.6 % |
+| `W_dot_net` [kW] | 3.425 | 3.288 | 4.0 % | `DELTAp_ev` [kPa] | 26.15 | 23.60 | 9.8 % |
+| `eta_cycle` [%] | 6.964 | 6.646 | 4.6 % | `DELTAp_cd` [kPa] | 44.92 | 89.31 | 49.7 % |
+| `epsilon_s_exp` [-] | 0.6370 | 0.6502 | 2.0 % | `TEC` [€] | 7 114 | 8 315 | 14.4 % |
+| `epsilon_ev` [%] | 52.95 | 53.25 | 0.6 % | `SIC` [€/kW] | 2 700 | 3 288 | 17.9 % |
 
 `dev.` is `|CoolSolve − EES| / max(|CoolSolve|, |EES|)`, as printed by
 `tools/compare_solution.py`. The condenser, evaporator-area, cost and cycle
@@ -124,13 +125,13 @@ and reports a false factor of 10⁵ for this one variable.
 
 - **93 variables are affected by the corrections** of `kuo` and `Hsieh_new`
   (the variant solution changes by more than 1e-6 when they are corrected):
-  the condenser (`A_cd` 8.410 m² against 5.459 m² in EES, `DELTAp_cd` 87.50 kPa
-  against 44.92 kPa, `M_fluid_cd`, `Cout_condenseur` 2 797 € against 1 882 €),
-  the evaporator (`A_ev` 2.273 m² against 2.334 m², `DELTAp_ev` 27.96 kPa against
-  26.15 kPa), the cost totals (`TEC` 8 125 € against 7 114 €, `TIC` 10 562 €
-  against 9 248 €, `SIC` 3 210 €/kW against 2 700 €/kW), and the cycle outputs
-  that depend on the condenser pressure (`P_r_ex_exp` 578.9 kPa against
-  531.8 kPa, `W_dot_net` 3 290 W against 3 425 W, `eta_cycle` 6.65 % against
+  the condenser (`A_cd` 8.893 m² against 5.459 m² in EES, `DELTAp_cd` 89.31 kPa
+  against 44.92 kPa, `M_fluid_cd`, `Cout_condenseur` 2 947 € against 1 882 €),
+  the evaporator (`A_ev` 2.358 m² against 2.334 m², `DELTAp_ev` 23.60 kPa against
+  26.15 kPa), the cost totals (`TEC` 8 315 € against 7 114 €, `TIC` 10 810 €
+  against 9 248 €, `SIC` 3 288 €/kW against 2 700 €/kW), and the cycle outputs
+  that depend on the condenser pressure (`P_r_ex_exp` 580.7 kPa against
+  531.8 kPa, `W_dot_net` 3 288 W against 3 425 W, `eta_cycle` 6.65 % against
   6.96 %, `epsilon_s_exp` 0.650 against 0.637).
   Errors 1 and 2 of the original are corrected: the saturated enthalpies of
   `kuo` and `Hsieh_new` were molar (J/mol) while the densities and heat
@@ -140,13 +141,14 @@ and reports a false factor of 10⁵ for this one variable.
   evaluated. The corrected values are the reliable ones: the condensation
   coefficient is lower, so the condenser needs a larger area. The EES stored run
   carries the two errors: a scratch run of the variant with both restored gives
-  `eta_cycle` 6.963 % (EES 6.964 %), `W_dot_net` 3 444 W (3 425 W) and `SIC`
-  2 608 €/kW (2 700 €/kW, 3.4 %).
+  `eta_cycle` 6.959 % (EES 6.964 %), `W_dot_net` 3 442 W (3 425 W) and `SIC`
+  2 664 €/kW (2 700 €/kW, 1.3 %).
 - **The other variables differ by a few %**: `M_dot_r` 0.9 %, `Q_dot_ev` 0.6 %,
   `epsilon_ev` 0.6 % and the vapour specific heats of the R245fa states up to
-  6.1 % (`Cp_r_ex_vap_cd`). They come from the property backend (CoolProp 7
-  against REFPROP 8 for R245fa, see `CSL-0124`). 152 of the 262 unaffected
-  variables differ by more than the tolerance 1e-3.
+  6.1 % (`Cp_r_ex_vap_cd`). They come from the property backend (CoolProp, at
+  the revision pinned by CoolSolve, against REFPROP 8 for R245fa, see
+  `CSL-0124`). 150 of the 262 unaffected variables differ by more than the
+  tolerance 1e-3.
 - **Reference-state offset (excluded)**: the absolute air enthalpies
   `h_a_ex_vap` (2.2e-1) and `h_a_ex_liq` (2.5e-1) carry the offset between the
   EES ideal-gas JANAF reference and CoolProp's `Air`; they are pure diagnostics
@@ -196,7 +198,7 @@ itself.
 - **Level** (docs/taxonomy.md §3): equations 361 (1) + largest block > 30
   (2, coupled cycle) + procedures/arrays (1) + multi-zone multi-component
   (1) + semi-empirical correlations (1) + curated guesses (1, EES stored
-  guesses needed, 66 iterations) = 7 → level 3 (level moved −1 from the
+  guesses needed, 67 iterations) = 7 → level 3 (level moved −1 from the
   score: the model is a plain engineering sizing/cost model, as the
   inventory).
 
@@ -225,12 +227,11 @@ itself.
      reproduced**: they are wrapper diagnostics (subcooled/superheated
      flags), unused elsewhere; the four exactly-0/1 ones are kept. Named as
      excluded in *Verification*.
-  3. **`$common` lines dropped** (`CS-BUG-COMMON-PROC`: shared variables are
-     silently zero): the procedures use their `fluid$` argument (`'R245fa'`
-     at every call site) or the literal `'R245fa'` — the original's REFPROP
-     blocks used the `$common` mixture whatever the `fluid$` argument, which
-     the literal reproduces — and `MM` is computed locally with
-     `molarmass()`.
+  3. **No `WorkingFluidMix$` in the procedures**: they use their `fluid$`
+     argument (`'R245fa'` at every call site) or the literal `'R245fa'` — the
+     original's REFPROP blocks used the mixture of the main program whatever
+     the `fluid$` argument, which the literal reproduces — and `MM` is
+     computed locally with `molarmass()`.
   4. **The two 5-argument `IF(DELTAC_dot, 0, X, Y, Z)` calls** (condenser
      water-side temperatures) **rewritten with CoolSolve's 3-argument
      `if()`** — CoolSolve-only syntax, not valid EES (CoolSolve accepts the
@@ -247,7 +248,8 @@ itself.
   The equation count of the variant is 361 (largest block 24), vs the 293/331
   of the native parse, in which the REFPROP blocks are dropped with their
   output equations and variables.
-- **2026-10-10 — native file rewritten (decision D12)**: the 32 `CALL EES_REFPROP` statements replaced by the variant's CoolProp equations on `WorkingFluidMix$` (same states, saturated enthalpies in J/kg); `$common`, the 5-argument `IF`, `End procedure` and the `hx_cd` dead block kept.
+- **2026-10-10 — native file rewritten (decision D12)**: the 32 `CALL EES_REFPROP` statements replaced by the variant's CoolProp equations on `WorkingFluidMix$` (same states, saturated enthalpies in J/kg); the 5-argument `IF`, `End procedure` and the `hx_cd` dead block kept.
+- **2026-10-10**: `$COMMON` of `hx_cd`, `hx_ev`, `Thonon`, `Hsieh_new` and `kuo` replaced by input arguments (not supported by CoolSolve): `WorkingFluidMix$` is the last input of each procedure and of each `CALL`.
 - Two errors of the original are corrected: molar enthalpies in the boiling number of `kuo`/`Hsieh_new`, and `h_l` overwritten before `i_fg` in `Hsieh_new`.
 
 
@@ -258,11 +260,13 @@ itself.
   the string); other compositions use CoolProp's predictive mixture model (CoolSolve
   warns that mixture properties may be less reliable).
 - The variant is written for pure R245fa (`MM_fraction = 1`).
-- `CS-BUG-COMMON-PROC` — the procedures read the mixture string through
-  `$common`, which CoolSolve evaluates as zero (silently); the variant drops
-  the `$common` lines.
 - `CS-GAP-END-PROCEDURE` — the `Procedure Summary` is closed with
   `End procedure` (valid EES); the variant writes bare `End`.
+- Once `End procedure` is accepted the next error of the native file is
+  *"String variable not found: fluidev$"*: the dead `if fluidev$='glycol'`
+  block of `hx_cd` reads a string that is not defined in the procedure (EES
+  evaluates the comparison as false; not registered in CoolSolve yet). The
+  variant removes the block.
 - The cost model prices are dated (2011) and the fluid price function is
   stubbed to 15 €/kg in the original.
 

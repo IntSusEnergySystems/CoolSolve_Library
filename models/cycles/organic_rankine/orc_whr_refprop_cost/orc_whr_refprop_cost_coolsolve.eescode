@@ -9,9 +9,10 @@
        CS-GAP-REFPROP) replaced by pure-fluid CoolSolve property calls on
        R245fa - faithful at MM_fraction = 1 (pure R245fa), the value of the
        stored EES run; molar REFPROP outputs (cp, cv) keep their convention;
-    2. the $common lines dropped (silently zero in CoolSolve:
-       CS-BUG-COMMON-PROC); the mixture is accessed as the literal 'R245fa',
-       MM computed locally with molarmass();
+    2. the $common lines dropped ($COMMON is not supported by CoolSolve; the
+       native file passes WorkingFluidMix$ to the procedures as an argument);
+       the mixture is accessed as the literal 'R245fa', MM computed locally
+       with molarmass();
   Inputs : as the native file (exhaust/thermal-oil stream, cooling water,
            plate geometry, pinch points, plate numbers, expander ratios)
   Outputs: net power, efficiencies, heat-exchanger areas, pipe diameters,
@@ -24,7 +25,7 @@
 
 $bookmark hx_cd
 procedure hx_cd(fluid$,fluidcd$,T_sf_su,M_dot_sf,T_r_su,T_r_ex,M_dot_r,p_cd,p_sf,b,L_w_tot,L_h,beta:A_cd,DELTAp,DELTAp_sf,M_fluid)
-{variant: $common dropped (CS-BUG-COMMON-PROC); the REFPROP blocks below replaced by
+{variant: $common dropped ($COMMON is not supported); the REFPROP blocks below replaced by
  pure-fluid calls on R245fa (CS-GAP-REFPROP), faithful at MM_fraction = 1}
 
 
@@ -211,7 +212,7 @@ end
 
 $bookmark hx_ev
 procedure hx_ev(fluid$,fluidev$,T_sf_su_ev,M_dot_sf,T_r_su_ev,T_r_ex_ev,M_dot_r,p_ev,p_sf,b,L_w_tot,L_h,beta:A_ev,DELTAp,DELTAp_sf,M_fluid)
-{variant: $common dropped (CS-BUG-COMMON-PROC); the REFPROP blocks below replaced by
+{variant: $common dropped ($COMMON is not supported); the REFPROP blocks below replaced by
  pure-fluid calls on R245fa (CS-GAP-REFPROP), faithful at MM_fraction = 1}
 
 
@@ -371,7 +372,7 @@ call prop_htf(fluid$,T,p:mu,rho,cp,k)
 else
 {variant: the two CALL EES_REFPROP blocks (CS-GAP-REFPROP) used the $common
  mixture (R245fa) whatever the fluid$ argument; pure R245fa called at the same
- (T, P), faithful at MM_fraction = 1. $common dropped (CS-BUG-COMMON-PROC)}
+ (T, P), faithful at MM_fraction = 1. $common dropped ($COMMON is not supported)}
 rho = density('R245fa',t=T,p=P)
 cp = cp('R245fa',t=T,p=P)
 mu = viscosity('R245fa',t=T,p=P)
@@ -457,7 +458,7 @@ refrigerant R410a in a vertical plate heat exchanger. Int J Heat Mass Trans
 	{variant: the four CALL EES_REFPROP blocks (CS-GAP-REFPROP) replaced by pure-fluid
 	 calls on R245fa, faithful at MM_fraction = 1; h_l and h_v keep the REFPROP
 	 molar convention of the original (h_ref, kJ/kmol) so that i_fg is unchanged;
-	 $common dropped (CS-BUG-COMMON-PROC), MM computed locally}
+	 $common dropped ($COMMON is not supported), MM computed locally}
 	MM = molarmass(fluid$)
 rho_l = density(fluid$,T=T_sat,x=0)
 cp_l = cp(fluid$,T=T_sat,x=0)
@@ -559,7 +560,7 @@ Procedure kuo(fluid$,P,M_dot,q,N_p,b,L_w,L_h,coef:DELTAp,alpha_tp_cd)
 	{variant: the four CALL EES_REFPROP blocks (CS-GAP-REFPROP) replaced by pure-fluid
 	 calls on R245fa, faithful at MM_fraction = 1; h_l and h_v keep the REFPROP
 	 molar convention of the original (h_ref, kJ/kmol) so that i_fg is unchanged;
-	 $common dropped (CS-BUG-COMMON-PROC), MM computed locally}
+	 $common dropped ($COMMON is not supported), MM computed locally}
 	MM = molarmass(fluid$)
 rho_l = density(fluid$,P=p,x=0)
 cp_l = cp(fluid$,P=p,x=0)

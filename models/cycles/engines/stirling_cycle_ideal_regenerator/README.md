@@ -201,7 +201,7 @@ quantity the model uses:
 - **absolute entropies** `s[1..4]` (3.18e-01, 3.61e-01, 2.94e-01, 2.65e-01) carry
   the entropy reference state of their backend: EES returns the values of its
   ideal-gas `Air` table, CoolSolve those of CoolProp `Air`
-  (`CS-GAP-IDEAL-ENTROPY` family). They are "for information" post-processing,
+  (a reference-state offset, not a CoolSolve gap). They are "for information" post-processing,
   and what is physically meaningful — the isothermal entropy steps — comes out
   right: `s[2]−s[1]` = −667.0 and `s[4]−s[3]` = +661.5 J/(kg·K) in CoolSolve
   against exactly −660.95 = −`r_bis`·ln(r_v) in EES (both isotherms are
@@ -368,7 +368,7 @@ exercises. No source file is copied into the library.
   although the solve succeeds and verifies. The block/loop statistics used for
   the level rating were therefore taken from the equations, not from `-d`.
 - The entropy and internal-energy reference states differ between EES and
-  CoolProp (`CS-GAP-IDEAL-ENTROPY` and the same family for `u`): only
+  CoolProp (reference-state offsets of `Air`, not CoolSolve gaps): only
   differences are meaningful, and the model uses them (the `_bis` heats and the
   two posted `s[i]`).
 - The EES fluid name `Air_ha` (humid air in EES) is mapped by CoolSolve to the

@@ -24,7 +24,7 @@ detailed model).
 | **Source** | ULiège model bank *Model data bank*, Distribution_Systems/Pumps, 2008-02-18 |
 | **Authors** | Vincent Lemort (file header; inventory adds V. Teodorese, J. Lebrun) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** (it does not parse: `CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE`, `CS-GAP-STRING-ARRAY`); variant `centrifugal_brine_pump_refsim_coolsolve.eescode` verified against the EES stored solution (see *Verification*) |
+| **CoolSolve** | native file **blocked** (it does not parse: `CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE`); variant `centrifugal_brine_pump_refsim_coolsolve.eescode` verified against the EES stored solution (see *Verification*) |
 
 ## Problem statement
 
@@ -165,10 +165,13 @@ folder.
   property polynomial, not from model depth. Moved down to **1** as
   pre-assigned by the roadmap card: a small, fully explicit single-
   component model.
+- **2026-10-10 — unit labels**: string array `U$[…]` of `BRINEPROP` replaced by the lookup
+  table `centrifugal_brine_pump_refsim-Units.csv` and `LOOKUP$`
+  (`UO$=LOOKUP$('Units',Pro,1)`), decision D14 (CoolSolve does not support string arrays).
 - **2026-10-05 — runnable variant** `centrifugal_brine_pump_refsim_coolsolve.eescode`
   (valid EES; no CoolSolve-only syntax). Changes forced by the gaps, logged
   in the variant header:
-  1. `CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE` and `CS-GAP-STRING-ARRAY` break
+  1. `CS-GAP-ELSEIF-CHAIN` and `CS-GAP-UPPERCASE` break
      `BRINEPROP`. It is split into (a) a selector
      procedure `BRINEPROP_SELECT(Conc,Fl$:Fl_brine)` holding the 22
      concentration range checks and the 11-branch fluid ladder, rewritten as
@@ -193,9 +196,7 @@ it. These are the parse errors the native file stops at:
 
 - `CS-GAP-ELSEIF-CHAIN` — the `ELSE IF … ENDIF;ENDIF` ladders of
   `BRINEPROP` do not parse ("IF ... THEN without a matching ENDIF");
-- `CS-GAP-UPPERCASE` — the intrinsic `Uppercase$` is unknown;
-- `CS-GAP-STRING-ARRAY` — reading a string-array element (`UO$=U$[Pro]`)
-  fails ("String variable not found");
+- `CS-GAP-UPPERCASE` — the intrinsic `Uppercase$` is unknown.
 
 `CS-GAP-INCLUDE` (implicit USERLIB library) is worked around by copying
 `BRINEPROP` into the file; `CS-GAP-LKT` (binary `.lkt` tables) is worked

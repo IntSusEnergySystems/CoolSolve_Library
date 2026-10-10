@@ -7,13 +7,18 @@
   H_products. With DISSOCIATION$ = 'YES' the products are the 14-species
   chemical-equilibrium mixture returned by the EES built-in Chem_Equil
   procedure; with 'NO' they are complete combustion (CO2, H2O, O2, N2).
-  Molar species enthalpies come from the EES built-in NASA procedure.
+  Molar species enthalpies are ideal-gas property calls, MolarMass(X)*
+  enthalpy(X,T=T) [J/kmol], with the enthalpy of formation included.
   Units  : SI - temperatures in °C, pressures in Pa, energies in J; the
            enthalpy balance is written per kmol of fuel
   Source : ULiège, course MCI, TP1 exercises 3-4 (2016), P. Ngendakumana,
            R. Dickes - see README.md
-  Status : blocked in CoolSolve (CS-GAP-CHEM-EQUIL, CS-GAP-NASA,
-           CS-GAP-SUM-INDEXED); native valid EES kept
+  Companion tables: adiabatic_flame_dissociation-Species14.csv (the 14
+           equilibrium species, in the order of x[i]) and -Species4.csv (the 4
+           complete-combustion products), the species names read with LOOKUP$
+           (they were the string array Prod$ of the original)
+  Status : blocked in CoolSolve (CS-GAP-CHEM-EQUIL, CS-GAP-FLUIDS-NASA-
+           SPECIES, CS-GAP-SUM-INDEXED); native valid EES kept
 =============================================================================}
 
 "Case selection: comment/uncomment the alternatives, as in the original"
@@ -64,8 +69,7 @@ e = 0.2                     "excess air [-]"
 $ENDIF
 
 "!Combustion products"
-T_ref_K = T_ref+273.15      "absolute reference temperature [K] (NASA data are defined in K)"
-T_adiab_K = T_adiab+273.15  "absolute adiabatic flame temperature [K] (NASA and Chem_Equil data are defined in K)"
+T_adiab_K = T_adiab+273.15  "absolute adiabatic flame temperature [K] (Chem_Equil data are defined in K)"
 
 $IF DISSOCIATION$ = 'YES'
 "!CHEM_EQUIL external routine"
@@ -81,14 +85,13 @@ CALL CHEM_EQUIL(P,T,A\O,C\O,H\O,N\O:x_H2,x_O2,x_H2O,x_CO,x_CO2,x_OH,x_H,x_O,x_N2
 "Array variables"
 x[1] = x_H2 ; x[2] = x_O2 ; x[3] = x_H2O ; x[4] = x_CO ; x[5] = x_CO2 ; x[6] = x_OH ; x[7] = x_H ; x[8] = x_O
 x[9] = x_N2 ; x[10] = x_N ; x[11] = x_NO ; x[12] = x_NO2 ; x[13] = x_CH4 ; x[14] = x_Ar
-Prod$[1] = 'H2' ; Prod$[2] = 'O2' ; Prod$[3] = 'H2O' ; Prod$[4] = 'CO' ; Prod$[5] = 'CO2' ; Prod$[6] = 'OH' ; Prod$[7] = 'H'
-Prod$[8] = 'O' ; Prod$[9] = 'N2' ; Prod$[10] = 'N' ; Prod$[11] = 'NO' ; Prod$[12] = 'NO2' ; Prod$[13] = 'CH4' ; Prod$[14] = 'Ar'
 
-"!NASA external routine"
+"!Molar enthalpies of the species [J/kmol]; ideal-gas property calls, the formation enthalpy is included"
+"The species names are the rows of the lookup table Species14, in the order of x[i]"
 Nprod = 14                  "number of molar species in the combustion products"
 Duplicate i=1,Nprod
-  CALL NASA(Prod$[i],T_ref_K:{CP_ref[i]},H_ref[i],{S_ref[i]})
-  CALL NASA(Prod$[i],T_adiab_K:{CP[i]},H[i],{S[i]})
+  H_ref[i] = MolarMass(LOOKUP$('Species14',i,1))*enthalpy(LOOKUP$('Species14',i,1),T=T_ref)
+  H[i] = MolarMass(LOOKUP$('Species14',i,1))*enthalpy(LOOKUP$('Species14',i,1),T=T_adiab)
 End
 "Conservation of H atoms and thus ntot"
 n = ntot*(2*X_H2+2*x_H2O+x_OH+x_H+4*x_CH4)
@@ -97,28 +100,29 @@ $ENDIF
 $IF DISSOCIATION$ = 'NO'
 "Array variables for the combustion products : CO2, H2O, O2 and N2"
 nkmol[1] = m ; nkmol[2] = n/2 ; nkmol[3] = (m+n/4)*e ; nkmol[4] = (m+n/4)*(79/21)*(1+e)
-Prod$[1] = 'CO2' ; Prod$[2] = 'H2O' ; Prod$[3] = 'O2' ; Prod$[4] = 'N2'
-"!NASA external routine"
+
+"!Molar enthalpies of the species [J/kmol]; ideal-gas property calls, the formation enthalpy is included"
+"The species names are the rows of the lookup table Species4: CO2, H2O, O2, N2, the order of nkmol[i]"
 Nprod = 4                   "number of molar species in the combustion products"
 Duplicate i=1,Nprod
-  CALL NASA(Prod$[i],T_ref_K:{CP_ref[i]},H_ref[i],{S_ref[i]})
-  CALL NASA(Prod$[i],T_adiab_K:{CP[i]},H[i],{S[i]})
+  H_ref[i] = MolarMass(LOOKUP$('Species4',i,1))*enthalpy(LOOKUP$('Species4',i,1),T=T_ref)
+  H[i] = MolarMass(LOOKUP$('Species4',i,1))*enthalpy(LOOKUP$('Species4',i,1),T=T_adiab)
 End
 $ENDIF
 
-"!Enthalpy of the combustion products [J/kmol fuel]; NASA returns molar enthalpies (kJ/kmol), converted with x1000"
+"!Enthalpy of the combustion products [J/kmol fuel]"
 
 $IF DISSOCIATION$ = 'YES'
 $IF FUEL$ ='Oil'
-H_prod = sum(ntot*x[i]*1000*(H[i]-H_ref[i]), i =1,Nprod)
+H_prod = sum(ntot*x[i]*(H[i]-H_ref[i]), i =1,Nprod)
 $ELSE " FUEL$ = 'CH4' "
-H_prod = sum(ntot*x[i]*1000*H[i], i =1,Nprod)
+H_prod = sum(ntot*x[i]*H[i], i =1,Nprod)
 $ENDIF
 $ELSE " DISSOCIATION$ = 'NO' "
 $IF FUEL$ ='Oil'
-H_prod = sum(nkmol[i]*1000*(H[i]-H_ref[i]), i =1,Nprod)
+H_prod = sum(nkmol[i]*(H[i]-H_ref[i]), i =1,Nprod)
 $ELSE " FUEL$ = 'CH4' "
-H_prod = sum(nkmol[i]*1000*H[i], i =1,Nprod)
+H_prod = sum(nkmol[i]*H[i], i =1,Nprod)
 $ENDIF
 $ENDIF
 

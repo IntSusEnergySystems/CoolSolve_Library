@@ -19,7 +19,7 @@ closes the model.
 | **Source** | ULiège model bank (Laborelec toolkit lineage), heat production by vapour compression, reference simulation model, 8 January 2008 (`BrinetoWaterHeatPump_RefSim_EES_Model_VL080108.EES`, EES 7.888) |
 | **Authors** | Vincent Lemort (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** by `CS-GAP-ELSEIF-CHAIN` (with `CS-GAP-UPPERCASE`, `CS-GAP-STRING-ARRAY`); runnable variant `brine_to_water_heat_pump_refsim_coolsolve.eescode` verified against the solution stored by EES (see *Verification*) |
+| **CoolSolve** | native file **blocked** by `CS-GAP-ELSEIF-CHAIN` (with `CS-GAP-UPPERCASE`); runnable variant `brine_to_water_heat_pump_refsim_coolsolve.eescode` verified against the solution stored by EES (see *Verification*) |
 
 ## Problem statement
 
@@ -101,9 +101,8 @@ consistency-check structure of the RefSim models of the bank.
 
 The **native file** `brine_to_water_heat_pump_refsim.eescode` is valid EES but
 does not parse in CoolSolve (the `BRINEPROP` procedure of the BrineProp library
-uses the `ELSE IF` ladders closed by repeated `ENDIF`, `Uppercase$`, string
-arrays read by index: `CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE`,
-`CS-GAP-STRING-ARRAY`).
+uses the `ELSE IF` ladders closed by repeated `ENDIF` and `Uppercase$`:
+`CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE`).
 
 The **runnable variant** is `brine_to_water_heat_pump_refsim_coolsolve.eescode`
 (tested as `CSL-0078:coolsolve`, with its `.sol` baseline and its own companion
@@ -302,6 +301,9 @@ model bank, so nothing was merged into or split from this model.
   `h[i]`, `T[i]`, `s[i]`, i = 1…4) added at the end of the model, as the
   workflow asks for cycles on a real fluid; they add no physics and change no
   result of the model.
+- **2026-10-10 — unit labels**: string array `U$[…]` of `BRINEPROP` replaced by the lookup
+  table `brine_to_water_heat_pump_refsim-Units.csv` and `LOOKUP$`
+  (`UO$=LOOKUP$('Units',Pro,1)`), decision D14 (CoolSolve does not support string arrays).
 - **2026-10-05 — runnable variant** `brine_to_water_heat_pump_refsim_coolsolve.eescode`
   (same pattern as `CSL-0072`/`CSL-0079`): the `BRINEPROP` procedure is split
   into the selector `BRINEPROP_SELECT` (range checks and fluid number, the
@@ -339,8 +341,7 @@ model bank, so nothing was merged into or split from this model.
 ## Limitations and CoolSolve gaps
 
 - The native file is **blocked** by `CS-GAP-ELSEIF-CHAIN` (the `BRINEPROP`
-  ladders of the BrineProp library), with `CS-GAP-UPPERCASE` and
-  `CS-GAP-STRING-ARRAY`; the runnable variant above is shipped next to it. The
+  ladders of the BrineProp library), with `CS-GAP-UPPERCASE`; the runnable variant above is shipped next to it. The
   companion tables of the native file are the ones EES expects for the
   procedure's `LOOKUP` calls (decoded from the binary `.lkt` files, `CS-GAP-LKT`,
   as in `CSL-0072`).

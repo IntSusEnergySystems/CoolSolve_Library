@@ -37,7 +37,7 @@
     "string arguments",
     "IF/THEN/ELSE ladders closed by ENDIF;ENDIF groups",
     "Uppercase$ string function",
-    "string arrays",
+    "LOOKUP$ (unit labels in a lookup table)",
     "lookup tables read inside a procedure",
     "expression as CALL output argument"
   ],
@@ -68,8 +68,7 @@
   },
   "missing_features": [
     "CS-GAP-ELSEIF-CHAIN",
-    "CS-GAP-UPPERCASE",
-    "CS-GAP-STRING-ARRAY"
+    "CS-GAP-UPPERCASE"
   ],
   "related": [
     "CSL-0077",
@@ -100,6 +99,11 @@
     {
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @57b22d3 (T-RECHECK, CS-GAP-CALL-EXPR-OUT closed); still blocked by CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE, CS-GAP-STRING-ARRAY (native file does not parse); variant kept (its cp_glw = Funkt_cp change is no longer forced); in the scratch copy with those worked around and the three input assignments commented out, the native :cp_glw/1000 is accepted (161 equations, square) and the 76-variable block still does not converge (MaxIterations)",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "string array U$[…] of BRINEPROP replaced by the lookup table brine_to_water_heat_pump_refsim-Units.csv and LOOKUP$ (decision D14: string arrays are not supported by CoolSolve); missing_features: CS-GAP-STRING-ARRAY removed; still blocked (CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE); native file checked in a scratch copy with the frozen binary: no string-array error, first error is the ELSE IF chain (CS-GAP-ELSEIF-CHAIN); variant unchanged, its .sol unchanged",
       "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]

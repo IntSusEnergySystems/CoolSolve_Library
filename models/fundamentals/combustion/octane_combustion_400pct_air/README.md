@@ -186,5 +186,5 @@ Source file (EES 10.836, comments in French), collection of S. Quoilin:
   whose `CH_n` is fitted from its mass fractions.
 - `CSL-0150` *adiabatic_flame_dissociation*: the same adiabatic flame
   temperature with **chemical-equilibrium dissociation** of the products
-  (EES built-in `Chem_Equil`/`NASA`, native file blocked), for CH4 or fuel
+  (EES built-in `Chem_Equil`, native file blocked), for CH4 or fuel
   oil instead of octane.

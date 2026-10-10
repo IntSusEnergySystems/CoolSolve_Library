@@ -22,7 +22,7 @@
   ],
   "language_features": [
     "user-library procedure BRINEPROP (implicit library, copied in the file; string arguments, IF ladders)",
-    "string arrays",
+    "LOOKUP$ (unit labels in a lookup table)",
     "lookup tables in procedures",
     "expression as CALL output argument"
   ],
@@ -55,8 +55,7 @@
   },
   "missing_features": [
     "CS-GAP-ELSEIF-CHAIN",
-    "CS-GAP-UPPERCASE",
-    "CS-GAP-STRING-ARRAY"
+    "CS-GAP-UPPERCASE"
   ],
   "related": [
     "CSL-0079",
@@ -82,6 +81,11 @@
     {
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @57b22d3 (T-RECHECK, CS-GAP-CALL-EXPR-OUT closed); still blocked by CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE, CS-GAP-STRING-ARRAY (native file does not parse); variant kept (its c_p_pump_kJ split is no longer forced); in the scratch copy with those three worked around, the native :c_p_pump/1000 solves (c_p_pump = 3852.099956) and agrees with the variant on 34 variables to 2.1e-10",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "string array U$[…] of BRINEPROP replaced by the lookup table centrifugal_brine_pump_refsim-Units.csv and LOOKUP$ (decision D14: string arrays are not supported by CoolSolve); missing_features: CS-GAP-STRING-ARRAY removed; still blocked (CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE); native file checked in a scratch copy with the frozen binary: no string-array error, first error is the ELSE IF chain (CS-GAP-ELSEIF-CHAIN); variant unchanged, its .sol unchanged",
       "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]

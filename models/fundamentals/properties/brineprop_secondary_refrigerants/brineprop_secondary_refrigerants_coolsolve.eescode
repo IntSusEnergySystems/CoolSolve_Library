@@ -9,18 +9,18 @@
   changes ONLY what the registered gaps force; it is valid EES and uses no
   CoolSolve-only syntax:
 
-  1. CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE and CS-GAP-STRING-ARRAY break the
+  1. CS-GAP-ELSEIF-CHAIN and CS-GAP-UPPERCASE break the
      procedure BRINEPROP (ELSE IF ladders closed by ENDIF;ENDIF groups,
-     Uppercase$, and the read of the unit string UO$=U$[Pro]). It is split in
-     two parts:
+     Uppercase$). It is split in two parts:
      - a selector PROCEDURE BRINEPROP_SELECT(Conc,Fl$:Fl_brine) with the 22
        concentration range checks and the 11-branch solution ladder, rewritten
        as sequential single-line IF statements (the conditions are mutually
        exclusive, so the behaviour is unchanged; kept in a procedure because
        IF statements are procedure-only in EES). The property selection needs
        no selector here: each call site of the demonstration program carries
-       its own property tag. The string array U$ and the unit string UO$,
-       which carry unit labels only and feed no equation, are dropped, as is
+       its own property tag. The unit string UO$ (in the native file, row Pro
+       of the lookup table Units read with LOOKUP$), which carries a unit label
+       only and feeds no equation, is dropped, as is
        the Uppercase$ normalisation of the property name (the call sites write
        the literals 'Freeze', 'Density', 'SpecHeat', 'ThermalC' and 'DynVisc',
        so they are compared directly). An explicit Call ERROR for an

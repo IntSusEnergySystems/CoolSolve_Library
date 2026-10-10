@@ -55,7 +55,7 @@
     "course": "MCI (ULiège), TP4 exercise 1: supercharging (formulation simplifiée, PNG 24/03/2019)"
   },
   "verification": {
-    "reference": "EES stored solution of the source file (last consistent run of 109 stored values), compared with the runnable _coolsolve variant: 50 variables agree within 4.5e-3 relative (max, Q_dot_2; most within 1e-3). 12 absolute-enthalpy/entropy variables carry backend reference offsets (differences agree); 8 stored values are stale (h_p_* constant offset -82.87 MJ/kg, s_p_ex_e_s/s_p_su_e off-scale, p_su_e/r_p_e inconsistent with the stored w_e_s) - documented in the README.",
+    "reference": "EES stored solution of the source file (last consistent run of 109 stored values), compared with the runnable _coolsolve variant: 52 variables agree within 4.5e-3 relative (max, Q_dot_2; most within 1e-3). 10 absolute-enthalpy/entropy variables carry backend reference offsets (`Air` h and s, `s_p_ref`: water liquid at 25 C in CoolSolve; differences agree); the entropies of the combustion products agree since CoolSolve gives the ideal gases absolute entropies; 8 stored values are stale (h_p_* constant offset -82.87 MJ/kg, s_p_ex_e_s/s_p_su_e off-scale, p_su_e/r_p_e inconsistent with the stored w_e_s) - documented in the README.",
     "date": "2026-10-08",
     "coolsolve_version": "0.3.0@7addbbc",
     "max_rel_diff": 0.0045,
@@ -82,6 +82,11 @@
     {
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @6f10211 + uncommitted identifier-character fix (T-RECHECK, CS-GAP-NAME-SYMBOL closed); still blocked: the C% and Q_dot_2_% lines parse, 219 equations / 240 unknowns (CS-GAP-SUM-INDEXED, CS-GAP-MOLARMASS-ELEMENT, CS-GAP-INCOMPRESSIBLE); variant kept (its C_pc/Q_dot_2_pc renaming is no longer forced)",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-baselined: absolute ideal-gas entropies (CoolSolve ff78257); only the 25 entropy variables of the combustion products of the _coolsolve variant changed (s_m_su_e and s_p_ex_e now agree with the EES stored values within 1e-4)",
       "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
