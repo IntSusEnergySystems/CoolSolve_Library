@@ -45,8 +45,7 @@ END
 
 PROCEDURE warning_error_ashrae(var1_in : var1_out)
   "throat velocity of the ASHRAE 41.2 nozzles should be between 15 and 35 m/s; the CALL WARNING
-   branch of the original is not implemented in CoolSolve (CS-GAP-CALL-WARNING), it fires only
-   for out-of-range values"
+   of the original fires only for out-of-range values"
   if(var1_in < 15) and (var1_in <> 0)  or (var1_in  > 35) then call warning(' Throat velocity should be between 15 and 35.  A value of  xxxE4 was supplied',var1_in)
   var1_out := var1_in
 END
@@ -54,8 +53,7 @@ END
 "!ISO 5167 long-radius nozzle procedure (source: airflowrate - long radius.EES)"
 PROCEDURE warning_error_iso5167(var1_in,var2_in,var3_in:var1_out,var2_out,var3_out)
   "ISO 5167 validity ranges of the long-radius nozzle: pipe diameter, diameter ratio, pipe Reynolds
-   number, as in the original; the CALL WARNING branches are not implemented in CoolSolve
-   (CS-GAP-CALL-WARNING), they fire only for out-of-range values"
+   number, as in the original; the CALL WARNING branches fire only for out-of-range values"
   if(var1_in < 0.05) or (var1_in  > 0.63) then call warning(' De_noz  should be between 0.05 and 0.63.  A value of  xxxE4 was supplied',var1_in)
   if(var2_in< 0.2) or (var2_in  > 0.8) then call warning(' beta_noz  should be between 0.2 and 0.8.  A value of  xxxE4 was supplied',var2_in)
   if(var3_in < 1E4) or (var3_in > 1E7) then call warning(' Re_d_noz  should be between 1E4 and 1E7.  A value of  xxxE4 was supplied',var3_in)
@@ -184,8 +182,8 @@ gamma=1.4                                   "isentropic exponent of air [-]"
 M_dot_a_noz*(1+w_a_su_noz)=E_noz*C_D_noz*epsilon_noz*A_di_noz*sqrt(2*DELTAP_noz*rho_a_su_noz)   "dry-air mass flow rate [kg/s]"
 
 "Validity check (as in the original): at this operating point the branches of the checker would
- fire (De_noz = 0.8 > 0.63, beta_noz = 0.1 < 0.2): EES prints a warning, CoolSolve raises an
- error on CALL WARNING (CS-GAP-CALL-WARNING); the checker is demonstrated on in-range values"
+ fire (De_noz = 0.8 > 0.63, beta_noz = 0.1 < 0.2): EES prints a warning; the checker is
+ demonstrated on in-range values"
 call warning_error_iso5167(0.05,0.4,1E5:var1_out,var2_out,var3_out)
 
 "!Demonstration 3: admission procedure (choked, subsonic and closed cases)"

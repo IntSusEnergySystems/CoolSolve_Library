@@ -106,19 +106,21 @@ equations!"* (translated; kept in the model file).
 the indexed sum was written out and the `DUPLICATE` bound `Nprod` replaced by its value
 (4; a `DUPLICATE` with a variable bound is dropped silently, `CS-BUG-DUPLICATE-VAR-BOUND`;
 worked around in the copy only), the species names being read from `Species4` with
-`LOOKUP$`, gives `T_adiab` = 1788.2 °C
-(2061.3 K) and `H_react` = `H_prod` = −78 601 kJ/kmol fuel. An independent hand
-balance (sensible enthalpies from the NIST-JANAF tables, formation enthalpies −74 850,
-−393 520 and −241 820 kJ/kmol for CH4, CO2 and H2O vapour as in CoolSolve) gives
-1788.5 °C and −78 593 kJ/kmol, i.e. 0.3 K (0.02 %) and 0.01 % apart. The molar enthalpy rise of
+`LOOKUP$`, gives `T_adiab` = 1788.7 °C
+(2061.8 K) and `H_react` = `H_prod` = −78 351 kJ/kmol fuel. An independent hand
+balance (Python; sensible enthalpies from the NASA-Glenn polynomials of `thermo.inp`, formation
+enthalpies −74 600, −393 510 and −241 826 kJ/kmol for CH4, CO2 and H2O vapour as in
+CoolSolve) gives 1787.85 °C and −78 344 kJ/kmol, i.e. 0.8 K (CoolProp's ideal-gas specific
+heats) and 0.01 % apart. The molar enthalpy rise of
 the species from 25 °C to 2127 °C agrees with JANAF within 0.11 % (N2, O2, CO2, H2O,
 CO, H2).
 
 The EES stored solution above (dissociation, `H_react` = −78 333.0 kJ/kmol fuel) is the
 verification reference for a future re-check when the blocking gaps are closed. Its
-reactant side is 0.34 % less negative than the scratch value; the 0.27 MJ/kmol
-difference is of the size of the spread of the CH4 formation enthalpy between sources
-(about −74.6 to −74.9 MJ/kmol).
+reactant side is 0.02 % less negative than the scratch value (0.34 % with the rounded
+JANAF formation enthalpy of CH4, −74 850, that CoolSolve used before taking the NASA-Glenn
+data of the EES ideal gases); the 18 kJ/kmol difference is of the size of the R = 8.314
+scaling of the EES enthalpies (6e-5) and of CoolProp's specific heats.
 
 ## Why no runnable variant
 

@@ -192,14 +192,14 @@ variant** at the operating point of that stored solution:
 
 ```
 compare_solution.py condensing_boiler_refsim_coolsolve.sol <reference>/ees_variables.csv
-225 common variables, 74 differ (rtol=0.001)
+225 common variables, 81 differ (rtol=0.001)
 ```
 
 The useful power, the efficiencies and the water temperature agree to better
 than 2·10⁻⁵ (`Q_dot_u_boil` 106 671.004 / 106 670.473 W = 5·10⁻⁶,
 `eta_HHV` 0.978721 / 0.978704 = 1.8·10⁻⁵, `T_w_ex_boil` 34.5739 / 34.5734 °C =
 1.4·10⁻⁵, `M_dot_g_boil_kgh` and `M_dot_f_boil_kgh` identical). The remaining
-differences have three documented causes:
+differences have four documented causes:
 
 1. **The stored EES solution is stale** (`CS-BUG-EXTRACT-STALE`): it belongs to
    an older set of model parameters than the equations window of the file, and to
@@ -229,6 +229,18 @@ differences have three documented causes:
 3. **`h_C4H10_ref` and `h_C4H10_su`**: relative difference 1 (the variant
    replaces them by constants, `CS-GAP-FLUIDS-C8H18`); `x_C4H10 = 0`, so the
    enthalpy difference cancels in `Q_dot_2_bis` and no result is affected.
+
+4. **Absolute enthalpies of the fuels** (`h_CH4_ref`/`h_CH4_su`, `h_C2H6_ref`/`h_C2H6_su`,
+   `h_C3H8_ref`/`h_C3H8_su`; relative differences 3.6·10⁻³, 9.6·10⁻³, 8.0·10⁻³): the
+   source file was stored by EES 7.888 (2008), whose ideal-gas fuels carry heats of
+   formation of about −74 870 (CH4), −84 666 (C2H6) and −103 844 kJ/kmol (C3H8), derived
+   from the stored enthalpies at 20 °C, i.e. the JANAF-type values (Çengel and Boles:
+   −74 850, −84 680, −103 850), while CoolSolve uses the NASA-Glenn data of the current EES
+   (−74 600, −83 851.5, −104 680 kJ/kmol): the six variables differed by less than
+   3·10⁻⁴ before CoolSolve took NASA-Glenn's formation enthalpies. They enter only
+   through enthalpy differences of one species and the `Q_dot_2_bis` check, no result of
+   the model is affected. The absolute enthalpies of CO2 and H2O agree with the stored
+   values within 6·10⁻⁵.
 
 **Maximum relative difference over the 225 common variables: 1.00** (`h_C4H10_ref`
 and `h_C4H10_su`, the constants of the variant); excluding those two, **0.75**

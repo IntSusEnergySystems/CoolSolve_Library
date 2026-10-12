@@ -1,8 +1,8 @@
 {
  "snapshot": {
-  "content_hash": "sha256:097e16cbfeff6fa9",
-  "files": 774,
-  "bytes": 6855902,
+  "content_hash": "sha256:4d2b03133c3bd30c",
+  "files": 771,
+  "bytes": 6864552,
   "models": 148,
   "functions": 431,
   "taxonomy_version": "0.2"
@@ -2279,8 +2279,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": [
-    "CS-GAP-SUM-INDEXED",
-    "CS-GAP-CALL-WARNING"
+    "CS-GAP-SUM-INDEXED"
    ],
    "related": [
     "CSL-0075",
@@ -2527,7 +2526,7 @@
    "category": "components/valves_nozzles_piping",
    "kind": "steady",
    "level": 3,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Air ejector: a pressurised primary flow expands through a converging nozzle and entrains a low-pressure secondary flow; mass flows from the total free air delivery and the secondary mass fraction, subsonic orifice-type nozzle equation, momentum/energy mixing at the exit plane, diffuser efficiency correlated with the nozzle diameter and entrainment; returns the suction pressure (suction effect) and the discharge pressure rise.",
    "fluids": [
     "Air"
@@ -2542,7 +2541,7 @@
     "free air delivery",
     "suction effect"
    ],
-   "n_equations": 65,
+   "n_equations": 70,
    "largest_block": 6,
    "origin_type": "research",
    "source": "thermo_models",
@@ -2552,15 +2551,12 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-CALL-WARNING",
-    "CS-GAP-AIR-ENTHALPY-REF"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0122"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-07",
+   "coolsolve_version": "0.3.0@47bb416",
+   "verified_on": "2026-10-11",
    "path": "models/components/valves_nozzles_piping/air_nozzle_ejector",
    "main_file": "air_nozzle_ejector.eescode",
    "figures": 0
@@ -10507,15 +10503,6 @@
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
-  "CS-GAP-CALL-WARNING": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P3",
-   "text": "`CALL WARNING('message', value)` (and `CALL NOTE`) in functions and procedures, used by the ULiège correlation toolkits and by `examples/orc_solar_complex.eescode` to flag out-of-range inputs, e.g.",
-   "detail": "`CALL ERROR` exists (`CS-GAP-UNITSYSTEM-FUNC`, closed) but `CALL WARNING` raises *\"Unknown procedure: warning\"* when its branch is taken",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
   "CS-GAP-END-PROCEDURE": {
    "kind": "gap",
    "state": "open",
@@ -10729,15 +10716,6 @@
    "priority": "P3",
    "text": "The **`UNTIL` condition without parentheses**: `REPEAT … UNTIL i>9` (parentheses optional in EES; the EES manual writes `UNTIL (cond)` but the files use both forms).",
    "detail": "Parse error *\"REPEAT missing UNTIL(condition)\"* pointing at the `REPEAT` line; the parenthesised form `until (i>9)` parses and solves.",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-GAP-AIR-ENTHALPY-REF": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P1 (silent)",
-   "text": "The **absolute enthalpy of the ideal-gas substance `Air`**: EES references it to 0 at 0 K (h = ∫₀ᵀ cp dT; 303 595.07 J/kg at 30 °C, stored as `h_tot_0_su_noz` in the source file of CSL-0118, TM-0593), so equations taking a **ratio of absolute enthalpies** — …",
-   "detail": "`enthalpy(Air,T=…)` keeps CoolProp's arbitrary reference; enthalpy *differences* and `(h,P)`/`(h)` property calls are self-consistent within the backend, so only absolute-enthalpy ratio equations …",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
@@ -11263,6 +11241,33 @@
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
+  "CS-BUG-EXPLICIT-ROUNDOFF": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3",
+   "text": "An **explicit equation is solved as `x − residual`** (`Solver::tryExplicitSolve`), which leaves round-off on an exact constant: `D = 0.02` is stored as 0.02 + 1.7e-17, so a strict bound test on the value (`IF (v > 0.02) THEN CALL WARNING(…)`) fires at the …",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-CALL-ERROR-ITERATE": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3",
+   "text": "**`CALL ERROR` raised at an intermediate iterate does not stop the calculation**: the error is caught as an evaluation failure, the line search backtracks and the solver may converge elsewhere; EES halts the calculation (help `_error.htm`).",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-GUI-WARNING-CASE": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3",
+   "text": "**GUI warnings are not colour-coded**: diagnostics reach the Console as `[warning]`, but `gui/src/components/Console.tsx` and `CodeEditor.tsx` test for `[Warning]` / `'Warning'` (case-sensitive), so no warning line is highlighted (contributing §3.9).",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
   "CS-BUG-IF-IGNORED": {
    "kind": "bug",
    "state": "closed",
@@ -11303,7 +11308,7 @@
    "kind": "gap",
    "state": "closed",
    "priority": "",
-   "text": "Ideal-gas species enthalpies include the heat of formation (EES/JANAF reference)",
+   "text": "Ideal-gas species enthalpies include the heat of formation (EES/JANAF reference); the values are NASA-Glenn's since the decision of `CS-GAP-IDEAL-ENTROPY` (first Cengel & Boles's)",
    "detail": "",
    "fixed_in": "post-v0.3.0, `fix/library-gaps` `5ac4a10`",
    "anchor": "7-closed-gaps-and-bugs"
@@ -11583,6 +11588,15 @@
    "state": "closed",
    "priority": "",
    "text": "The ideal gases `N2`, `O2`, `H2`, `He`, `Ar`, `CO2`, `CO`, `CH4`, `C2H6`, `C3H8`, `H2O` have the absolute (third-law) entropy of the NASA-Glenn tables (1 bar reference, as in EES: stored `entropy(CO2,T=300,P=1E6)` = 194 858.9 J/kmol-K = s°(1 bar) − R ln 10), …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-2`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-CALL-WARNING": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "`CALL WARNING('message XXXF1', value)`, `CALL WARNING('message')` and `CALL WARNING(value)` in FUNCTION/PROCEDURE bodies (EES help, WARNING procedure): a warning diagnostic `W001` (CLI stderr, GUI console) with the line of the call, reported once per distinct …",
    "detail": "",
    "fixed_in": "post-v0.3.0, `fix/library-gaps-2`",
    "anchor": "7-closed-gaps-and-bugs"

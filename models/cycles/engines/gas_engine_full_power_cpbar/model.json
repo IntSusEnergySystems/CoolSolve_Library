@@ -61,7 +61,7 @@
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
     "max_rel_diff": 0.0094,
-    "notes": "compare_solution.py (rtol = 0.001): '69 common variables, 3 differ'. t_6/t_7 (0.084 %, 1.7 K: they follow the mean specific heat c_p_g_6 of the products, +0.086 %, EES vs CoolSolve ideal-gas species enthalpies; the point is also degenerate, t_7 = t_6, see README) and the cpbar outputs / cooling terms derived from them (<= 0.09 %); the exercise results P_2, p_3, p_4, v_3, v_4, V_dot_3, t_3, Q_dot_gw, Q_dot_wa, t_w_ex_1, t_w_ex, W_dot_in_act, W_dot_p, W_dot_m <= 6.2e-6 (Q_dot_1 4.4e-4). Two deviations remain: c_f = CP(CH4, 20 C) 2220.6 vs 2241.7 J/kg-K (0.94 %, EES ideal-gas CH4 vs CoolProp) and Q_dot_2 (2.57 vs 2.59 W) which follows it; s_2 = 4360.94 vs 6175.19 J/kg-K is a constant entropy reference-state offset (EES Air table vs CoolProp Air): all entropy-derived results (t_3, v_3, C_3) agree. Needs the shipped .initials (EES guesses) and coolsolve.conf (tolerance 1E-4, see README)."
+    "notes": "compare_solution.py (rtol = 0.001): '69 common variables, 3 differ'. t_6/t_7 (0.084 %, 1.7 K: they follow the mean specific heat c_p_g_6 of the products, +0.086 %, EES vs CoolSolve ideal-gas species enthalpies; the point is also degenerate, t_7 = t_6, see README) and the cpbar outputs / cooling terms derived from them (<= 0.09 %); the exercise results P_2, p_3, p_4, v_3, v_4, V_dot_3, t_3, Q_dot_gw, Q_dot_wa, t_w_ex_1, t_w_ex, W_dot_in_act, W_dot_p, W_dot_m <= 6.2e-6 (Q_dot_1 4.4e-4). Two deviations remain: c_f = CP(CH4, 20 C) 2220.6 vs 2241.7 J/kg-K (0.94 %, EES ideal-gas CH4 vs CoolProp) and Q_dot_2 (2.57 vs 2.59 W) which follows it; s_2 = 4360.94 vs 6175.19 J/kg-K is a constant entropy reference-state offset (EES Air table vs CoolProp Air): all entropy-derived results (t_3, v_3, C_3) agree. Needs the shipped .initials (EES guesses)."
   },
   "missing_features": [],
   "related": [
@@ -85,6 +85,11 @@
       "date": "2026-10-05",
       "action": "added (T-IMPORT card C-35, verified against the EES stored solution)",
       "by": "opencode worker (space-bunny) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-11",
+      "action": "cpbar: 0/0 guard when the two temperatures coincide (mean cp evaluated over ±0.005 K); coolsolve.conf (tolerance 1E-4 workaround for the 0/0) removed, the model solves at the default tolerance; .sol re-baselined (t_7 1961.444156 -> 1961.444168, NTU_gw 7.5e-7 relative, all others <= 2e-7)",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

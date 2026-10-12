@@ -410,8 +410,9 @@ every property input pair that CoolProp does not support (`(s, v)`, `(T, h)`…)
 external REFPROP calls (`CALL EES_REFPROP(fluid$, code, …)`) and to the EES `NASA`
 procedure (`CALL NASA(X$, T : cp, h, s)`): rewrite them in the model itself as
 CoolProp property calls on equivalent states (for `NASA`: the ideal-gas species of
-CoolSolve used as fluids, `h = MolarMass(X$)*enthalpy(X$,T=T)` [J/kmol], the formation
-enthalpy included; `s` only for a single species, the entropies are not absolute),
+CoolSolve used as fluids, `h = MolarMass(X$)*enthalpy(X$,T=T)` [J/kmol], the NASA-Glenn
+formation enthalpy included, and `s = MolarMass(X$)*entropy(X$,T=T,P=1E5)`, the absolute
+1-bar entropy, for every species but `Air`),
 log each rewrite, and keep the rewritten file as the main model file. They are not
 CoolSolve gaps and are never listed in `missing_features`; only a fluid or a mixture
 that CoolProp lacks is registered (as a missing fluid).

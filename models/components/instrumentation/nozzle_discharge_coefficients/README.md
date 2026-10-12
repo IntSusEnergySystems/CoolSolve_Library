@@ -16,7 +16,7 @@ through a valve or nozzle opening) and three validity-range checkers.
 | **Source** | ULiège collection — `procedures EES/`: `airflow rate - ashrae 41.2.EES` (TM-0558), `airflowrate - long radius.EES` (TM-0559), `tuyere.EES` (TM-0587), `Out of range warning.EES` (TM-0581) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory, `procedures EES/` toolkit; EES licence stamp of the J. Lebrun lab) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — library file runs and is verified; the source files need `CS-GAP-SUM-INDEXED` and `CS-GAP-CALL-WARNING` (see *Limitations*) |
+| **CoolSolve** | v0.3.0 + `CALL WARNING` (CoolSolve branch `fix/library-gaps-2`) — library file runs and is verified; the source files need `CS-GAP-SUM-INDEXED` (see *Limitations*) |
 
 ## Functions
 
@@ -30,8 +30,8 @@ through a valve or nozzle opening) and three validity-range checkers.
 | `warning_error_6` | `(6 inputs : 6 outputs)` | Generic six-input range checker (hard-coded ranges of the original file's nozzle/orifice model); reports with `CALL ERROR` | TM-0581 |
 
 The two `CALL WARNING` checkers keep the original statements: the branches
-fire only for out-of-range inputs (`CS-GAP-CALL-WARNING` — the demo points
-stay in range, except where noted below). The functions `velo`,
+fire only for out-of-range inputs (the demo points stay in range, except
+where noted below). The functions `velo`,
 `coeficiente` and `warning_error_ashrae` are the complete procedure part of
 TM-0558; TM-0559 and TM-0558 share the generic `warning_error` shape with
 TM-0581 and with the ejector file of `CSL-0118` (same lab toolkit; the three
@@ -51,8 +51,7 @@ renames).
    discharge coefficient `C_D = 0.9965 − 0.00653·β^0.5·(10⁶/Re_D)^0.5`,
    expansibility factor with γ = 1.4. The stored operating point (β = 0.1,
    De = 0.8) is **outside** the ISO validity range of the original's own
-   checker; EES printed a warning, CoolSolve would stop on
-   `CALL WARNING` (`CS-GAP-CALL-WARNING`), so the checker is demonstrated on
+   checker; EES printed a warning, so the checker is demonstrated on
    in-range values next to the flow calculation.
 3. **Admission procedure** (TM-0587): choked case (pressure ratio 0.1),
    subsonic case (0.8) and closed-valve case, with a check against the
@@ -191,10 +190,10 @@ Source files, collection of S. Quoilin:
 ## Limitations and CoolSolve gaps
 
 - The library file runs, but a faithful import of the **source files** would
-  be blocked by two registered gaps: `CS-GAP-SUM-INDEXED` (TM-0558 uses the
-  indexed `SUM`, worked around in the demonstration as above) and
-  `CS-GAP-CALL-WARNING` (TM-0559's checker branches fire at its own
-  operating point; in the library file the branches are not taken).
+  be blocked by the registered gap `CS-GAP-SUM-INDEXED` (TM-0558 uses the
+  indexed `SUM`, worked around in the demonstration as above). TM-0559's
+  checker branches fire at its own operating point; in the library file the
+  branches are not taken.
 - `CS-GAP-MODULE` (not planned) is not a blocker: the modules are flattened
   (decision D10).
 - The `warning_error_6` ranges are those of the original file (a

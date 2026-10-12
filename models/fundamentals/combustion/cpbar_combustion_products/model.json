@@ -54,7 +54,7 @@
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0+fix/library-gaps@fbdb6a7",
     "max_rel_diff": 0.0022,
-    "notes": "All 7 EES values within 0.22 % (c_bar_p 0.22 %, gamma 0.07 %, Q_4/e 0.05 %, x 0.004 %, e_min exact); the other regimes within 0.12 % of an independent computation. Requires the CoolSolve fixes of branch fix/library-gaps; CoolSolve v0.3.0 gives wrong results."
+    "notes": "All 7 EES values within 0.22 % (c_bar_p 0.22 %, gamma 0.07 %, e 0.05 %, Q_4 0.04 %, x 0.004 %, e_min exact); the other regimes within 0.12 % of an independent computation. Requires the CoolSolve fixes of branch fix/library-gaps; CoolSolve v0.3.0 gives wrong results."
   },
   "missing_features": [],
   "related": [
@@ -90,6 +90,16 @@
       "date": "2026-10-05",
       "action": "re-checked with CoolSolve fix/library-gaps (T-RECHECK): blocked -> verified; unit-system guards and pure-air cpbar call restored, .sol baseline added",
       "by": "CoolSolve developer agent (Claude) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-11",
+      "action": "re-baselined: NASA-Glenn formation enthalpies (CoolSolve 9aa2842); only Q_4_i changed (-5.4e-5, the lower heating value of CO is 282 974.8 instead of 282 990 kJ/kmol), now 4.0e-4 from the EES stored 1.51725e8 instead of 4.5e-4",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-11",
+      "action": "cpbar: 0/0 guard when the two temperatures coincide (mean cp evaluated over ±0.005 K) in PROCEDURE cpbar and FUNCTION gamma; regression baselines unchanged (checked at rtol 1e-9)",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

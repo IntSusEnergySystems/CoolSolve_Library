@@ -54,6 +54,13 @@ and `IF (f>f_st)` statements. Units: SI, mass basis, °C, Pa, J — the routines
 guard this with `UNITSYSTEM()`/`CALL ERROR` checks, which are kept as in the
 EES original (CoolSolve's unit system is fixed to SI-°C-Pa-J, so they never fire).
 
+The mean specific heat is an enthalpy difference divided by `T_p1 − T_p2`: it is
+0/0 when the two temperatures coincide (an expansion without work, for example),
+and its limit is the specific heat at that temperature. `cpbar` and `gamma` therefore
+evaluate the enthalpies at `(T_p1 + T_p2)/2 ± 0.005` when `|T_p1 − T_p2| < 0.01`
+(continuous at the threshold; the result is the limit to about 10⁻¹⁰ relative),
+and at `T_p1`, `T_p2` otherwise.
+
 ## How to run
 Open `cpbar_combustion_products.eescode` in the CoolSolve GUI and press
 *Solve*, or from a terminal:
@@ -77,7 +84,7 @@ CₘHₙ with m = 86/12, n = 14, 25 °C → 200 °C):
 | Quantity | Case | EES reference | CoolSolve | Deviation |
 |---|---|---:|---:|---:|
 | `c_bar_p` [J/kg·K] | incomplete combustion, f = 0.07 | 1090.60 | 1093.02 | 0.22 % |
-| `Q_4` [J/kmol fuel] | idem | 1.51725e8 | 1.51794e8 | 0.05 % |
+| `Q_4` [J/kmol fuel] | idem | 1.51725e8 | 1.51786e8 | 0.04 % |
 | `x` [−] | idem | 0.925188 | 0.925155 | 0.004 % |
 | `e_min` [−] | idem | −0.3359375 | −0.3359375 | exact |
 | `e` [−] | idem | −0.025132 | −0.025143 | 0.05 % |
@@ -96,7 +103,9 @@ independent computation, see *Verification*):
 | `MM_prod` [kg/kmol] | complete combustion, f = 0.05 | 28.8396 | 28.8396 | exact |
 
 `Q_4` is the heat of reaction of the unburned CO (b kmol of CO per kmol of fuel
-times the lower heating value of CO, 282 990 kJ/kmol).
+times the lower heating value of CO: 282 974.8 kJ/kmol with the NASA-Glenn heats of
+formation of CoolSolve, 282 990 with the JANAF-based tables of the EES 7.966 that stored
+the reference, hence the 0.04 % on `Q_4`).
 
 <!-- FIGURE (added by the maintainer if the model becomes runnable, docs/model_workflow.md §7):
      e.g. c_bar_p of the fuel-oil products vs the fuel-air ratio across the three regimes. -->
@@ -167,7 +176,7 @@ Source file (plain-text EES library, comments in French):
   `UNITSYSTEM()`/`CALL ERROR` guards were kept but commented out (CoolSolve
   supported neither; `CS-GAP-UNITSYSTEM-FUNC` — restored by the re-check
   below). **No equation was changed**: the routines are byte-faithful to the
-  original apart from the comment edits above.
+  original apart from the comment edits above and the 0/0 guard of the last entry.
 - **2026-10-04 — demonstration program**: written after the definitions, in
   the pattern of the CoolSolve example `cpbar.eescode` (CSX-013) and of the
   original test file TM-0254: the same fuel oil and temperatures, one call
@@ -192,6 +201,7 @@ Source file (plain-text EES library, comments in French):
   procedures/functions present): kept in line with the inventory guess and
   with the level-2/3 boiler, engine and gas-turbine models that call these
   routines (three-branch combustion logic, 9 outputs).
+- **2026-10-11**: cpbar: 0/0 guard when the two temperatures coincide (mean cp evaluated over ±0.005 K) in PROCEDURE cpbar and FUNCTION gamma.
 
 ## Limitations and CoolSolve gaps
 - **Needs CoolSolve with the fixes of the branch `fix/library-gaps`**

@@ -111,7 +111,12 @@ hand-checked:
 
 Over all common variables the maximum relative deviation is **2.2e-4**, on
 `TAF` (688.56 °C vs 688.71 °C): it comes from the ideal-gas enthalpy data
-(CoolSolve Çengel-based species data vs EES JANAF). The dosages agree to
+(CoolProp's ideal-gas enthalpy rise vs the EES NASA-Glenn polynomials; the formation
+enthalpies of the products are inputs of the model and do not enter `TAF`). The
+absolute species enthalpies `h_CO2_ref`/`h_CO2_taf`, `h_H2O_ref`/`h_H2O_taf` carry the
+NASA-Glenn formation enthalpies of CoolSolve (CO2 −393 510, H2O −241 826 kJ/kmol; EES 10:
+−393 486 and −241 811, the same data with R = 8.314): they agree with the stored values
+within 1.4e-4 (CO2 6.6e-5, H2O 1.0e-4). The dosages agree to
 1.2e-5. The stored records `x`, `y`, `mm` of the EES file are stale variables
 of an earlier version, not part of the equations; ignored.
 

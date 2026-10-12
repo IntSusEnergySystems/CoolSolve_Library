@@ -1,5 +1,5 @@
 {=============================================================================
-  Air ejector with a choked primary nozzle (entrainment model)
+  Air ejector with a primary nozzle (entrainment model)
   CoolSolve Library model CSL-0118
  -----------------------------------------------------------------------------
   An air ejector sucks atmospheric air (low-pressure side, index 0) with a
@@ -11,6 +11,11 @@
   efficiency from a polynomial in the nozzle diameter and FF, and the
   resulting suction pressure p_0_su_ej (ejector "suction effect"). A
   warning_error procedure checks the validity range of the six inputs.
+  Isentropic relations (constant gamma): written with absolute temperatures
+  [K] and the enthalpies from the property calls (T_1_ex_noz, T_mix_ex_noz,
+  T_tot_mix_ex_diff_s, T_tot_mix_ex_diff, T_mix_ex_diff are added), so they
+  hold for any enthalpy reference of Air; the original wrote ratios of
+  absolute enthalpies (h = 0 at 0 K in EES).
   Inputs : FF, FAD_tot, T_1_su_ej, T_0_su_ej, p_1_su_ej, D_in_ex_noz (fixed in
            EES through the Variable Information dialog; values below are the
            default operating point = the stored EES solution, see README)
@@ -18,11 +23,10 @@
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
   Source : ULiège collection, ~/Nextcloud/thermo_models/Steady-state models/
            air-nozzle ejector.EES (EES 7.793) - see README.md
-  Status : blocked - the warning branch of warning_error is taken at the
-           default point (CS-GAP-CALL-WARNING) and the model takes ratios of
-           absolute enthalpies, which need the EES reference of ideal-gas Air
-           (CS-GAP-AIR-ENTHALPY-REF); runnable variant air_nozzle_ejector_
-           coolsolve.eescode verifies against the EES stored solution
+  Status : verified against the EES stored solution (see README.md). The
+           CALL WARNING of warning_error that hold at the solution are
+           reported: FF = 0.1, the stored EES operating point, is below its
+           range 0.18-0.46
 =============================================================================}
 
 "!Inputs (fixed in EES via the Variable Information dialog; stored-solution run)"
@@ -87,7 +91,9 @@ A_duct_ex_diff = D_duct_ex_diff^2*pi/4
 
 
 "Isentropic evolution through the nozzle (the geometry is not taken into account)"
-h_1_ex_noz/h_tot_1_su_noz = (p_0_su_noz/p_tot_1_su_noz)^((gamma-1)/gamma)
+"The isentropic relations (constant gamma) are written with absolute temperatures [K], so that they hold for any enthalpy reference"
+(T_1_ex_noz+273.15)/(t_1_su_noz+273.15) = (p_0_su_noz/p_tot_1_su_noz)^((gamma-1)/gamma)
+h_1_ex_noz = enthalpy(air,t=T_1_ex_noz)
 C_1_ex_noz^2/2 = h_tot_1_su_noz - h_1_ex_noz
 
 "Mixing between both flows :"
@@ -108,10 +114,14 @@ T_mix_ex_diff_pred = temperature(air,h=h_tot_mix_ex_diff)
 
 "Nozzle efficiency :"
 epsilon_diff = C_mix_ex_noz_s^2/C_mix_ex_noz^2
-h_tot_mix_ex_diff_s/h_mix_ex_noz = (p_tot_mix_ex_diff/p_mix_ex_noz)^((gamma-1)/gamma)
+T_mix_ex_noz = temperature(air,h=h_mix_ex_noz)
+(T_tot_mix_ex_diff_s+273.15)/(T_mix_ex_noz+273.15) = (p_tot_mix_ex_diff/p_mix_ex_noz)^((gamma-1)/gamma)
+h_tot_mix_ex_diff_s = enthalpy(air,t=T_tot_mix_ex_diff_s)
 h_tot_mix_ex_diff_s = h_mix_ex_noz + C_mix_ex_noz_s^2/2
 p_tot_mix_ex_diff_bis = p_mix_ex_diff + rho_mix_ex_diff*C_mix_ex_diff^2/2
-p_tot_mix_ex_diff/p_mix_ex_diff =( h_tot_mix_ex_diff/h_mix_ex_diff)^(gamma/(gamma-1))
+T_tot_mix_ex_diff = temperature(air,h=h_tot_mix_ex_diff)
+T_mix_ex_diff = temperature(air,h=h_mix_ex_diff)
+p_tot_mix_ex_diff/p_mix_ex_diff =((T_tot_mix_ex_diff+273.15)/(T_mix_ex_diff+273.15))^(gamma/(gamma-1))
 p_dyn_mix_ex_diff = rho_mix_ex_diff*C_mix_ex_diff^2/2
 
 "Prediction of DELTAp_su_ej with contraction factor K_noz"

@@ -193,11 +193,12 @@ Source file (EES 7.793), collection of S. Quoilin:
      `cv(AirH2O, ...)` returns cp in CoolSolve (`CS-BUG-HUMIDAIR-PROPS`);
      cv = cp − R_mix is the EES relation for the ideal-gas humid-air mixture.
   6. The six `CALL WARNING` statements of `warning_error` are replaced by
-     comments with the same validity ranges: with the broken humid-air
-     properties (points 4–5) or any iterate far from the solution a range check fires
-     and CoolSolve raises *"Unknown procedure: warning"*
-     (`CS-GAP-CALL-WARNING`); with correct properties and the shipped guesses
-     none of the ranges is violated at the solution.
+     comments with the same validity ranges (change made when CoolSolve had no
+     `CALL WARNING`: it raised *"Unknown procedure: warning"* when a range check fired
+     on the broken humid-air properties of points 4–5 or on an iterate far from the
+     solution; `CS-GAP-CALL-WARNING` is closed since, and the native statements
+     run); with correct properties and the shipped guesses none of the ranges is
+     violated at the solution.
 - **Level justification** (taxonomy §3): 34 equations (0) + largest block 6
   (1) + procedures present (1) + no discretisation (0) + no calibration
   (0) + curated guesses needed (1) = score 3 → **level 2**.
@@ -207,10 +208,9 @@ Source file (EES 7.793), collection of S. Quoilin:
   blocks a faithful CoolSolve run: `CS-GAP-ISIDEALGAS` (hard error, only for a
   fluid other than `AirH2O`) and `CS-BUG-HUMIDAIR-PROPS` (silent wrong results,
   then *SingularJacobian* in block 16).
-- `CS-GAP-CALL-WARNING` concerns the native file too but does not block it: at
-  the stored operating point no warning branch is taken; with the wrong
-  humid-air properties of `CS-BUG-HUMIDAIR-PROPS` a range check can fire and
-  raise *"Unknown procedure: warning"*.
+- `CALL WARNING` does not block the native file: at the stored operating point
+  no warning branch is taken, and CoolSolve reports the warnings that hold at the
+  solution without stopping.
 - The variant inherits the CoolProp humid-air backend (see *Verification*):
   `w` +2.3 %, `Gamma` −0.8 % vs EES mixture rules, `Di_dph` within 2·10⁻⁴.
 - The `warning_error` procedure checks are documentation-only in the variant.

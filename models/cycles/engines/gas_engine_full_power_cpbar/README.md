@@ -100,18 +100,16 @@ All the equations of the original are kept; nothing was added or removed.
 coolsolve ./gas_engine_full_power_cpbar.eescode      # note the ./
 ```
 
-Two companion files are needed:
+One companion file is needed: `gas_engine_full_power_cpbar.initials` — guess
+values taken from the EES stored solution; the flame temperature sits inside the
+`cpbar` calls and the model does not converge from the default guesses.
 
-* `gas_engine_full_power_cpbar.initials` — guess values taken from the EES
-  stored solution; the flame temperature sits inside the `cpbar` calls and the
-  model does not converge from the default guesses.
-* `coolsolve.conf` — `tolerance = 1E-4`. The nominal point imposes
-  `W_dot_sh = 0`, so `t_7 = t_6` and `c_p_g_67` is the limit
-  `hp/(T_p1 − T_p2) = (h(t_6) − h(t_7))/(t_6 − t_7)` as `t_7 → t_6`: the expansion
-  equation is then satisfied identically, but the 0/0 limit cannot be resolved
-  below the accuracy of the property evaluation, and the block residual stops at
-  ≈ 1·10⁻⁵ W instead of 1·10⁻⁹ W. EES stores the same degenerate point
-  (`t_6 = t_7 = 1963.098531 °C`).
+The nominal point imposes `W_dot_sh = 0`, so `t_7 = t_6` and `c_p_g_67` is the
+limit `hp/(T_p1 − T_p2) = (h(t_6) − h(t_7))/(t_6 − t_7)` as `t_7 → t_6`: the
+expansion equation is then satisfied identically. `cpbar` evaluates this 0/0 limit
+over a ±0.005 K window around the mean temperature (see the conversion log), so
+the model solves at the default tolerance. EES stores the same degenerate point
+(`t_6 = t_7 = 1963.098531 °C`).
 
 ## Results
 
@@ -163,8 +161,8 @@ which reports
     the entropy reference states of the EES Air table and of CoolProp Air; every
     entropy-*difference* result (`t_3`, `v_3`, `C_3`) agrees within 1.2·10⁻⁶.
 * Sanity checks: the charge mass balance `M_dot_g = M_dot_a + M_dot_f` is closed,
-  the energy balance of the combustor is satisfied (residual of the model ≤
-  1·10⁻⁵ W with `coolsolve.conf`), `eta_in_act` and `W_dot_in_act` are imposed and
+  the energy balance of the combustor is satisfied (the model solves at the
+  default tolerance, 1·10⁻⁹), `eta_in_act` and `W_dot_in_act` are imposed and
   recovered, `t_7 ≤ t_6` and `t_8 ≈ t_w_su` as expected for a zero-power point.
 
 ## Source and attribution
@@ -227,9 +225,8 @@ which reports
   removed or modified; `Q_dot_4 = 0` and the display string `p_2 = p_1` are kept
   as they are in the original.
 * **2026-10-05 — numerics**: `.initials` = the guess column of the EES stored
-  solution; `coolsolve.conf` = `tolerance = 1E-4` for the degenerate `t_6 = t_7`
-  point (see *How to run*). Neither changes the physics; the baseline `.sol` is
-  the solution of the shipped configuration.
+  solution. It does not change the physics; the baseline `.sol` is the solution
+  of the shipped configuration.
 * No `$UnitSystem` directive is kept, no EES GUI tag remains
   (`{$ID$…}` was removed by the extraction), no lookup table is involved.
 * **Level 2** (card): the taxonomy score of the analysis is 4 (85 equations,
@@ -237,6 +234,7 @@ which reports
   because 16 of the 85 equations belong to the copied `cpbar` routine and the
   exercise itself is a single operating point of explicit, mostly linear
   bookkeeping balances with no iteration and no off-design treatment.
+* **2026-10-11**: cpbar: 0/0 guard when the two temperatures coincide (mean cp evaluated over ±0.005 K).
 
 ## Limitations and CoolSolve gaps
 
@@ -255,8 +253,9 @@ which reports
   suggestion `CS-GAP-PROC-MULTIOUT`, not registered); if EES turns out to accept
   the function form with the V2 procedure, the native file should be restored to
   it and the `CALL` form moved to a `_coolsolve` variant.
-* The degenerate point `W_dot_sh = 0` (see `coolsolve.conf`) is a property of the
-  exercise, not a CoolSolve limitation: EES stores `t_6 = t_7` exactly as well.
+* The degenerate point `W_dot_sh = 0` (`t_6 = t_7`, `c_p_g_67` is a 0/0 limit) is
+  a property of the exercise, not a CoolSolve limitation: EES stores `t_6 = t_7`
+  exactly as well.
 * The engine is not a cycle model: no thermodynamic diagram can be overlaid
   (`CS-FEAT-DIAGRAM-IDEAL`, all gases are ideal in EES), hence a sweep plot as
   figure.

@@ -34,10 +34,11 @@
               cv is computed as cp - R_mix of the ideal-gas mixture, as in
               EES for AirH2O;
            4. the six CALL WARNING statements of PROCEDURE warning_error are
-              replaced by comments with the same validity ranges: CoolSolve
-              raises "Unknown procedure: warning" during the Newton
+              replaced by comments with the same validity ranges (made when
+              CoolSolve raised "Unknown procedure: warning" during the Newton
               evaluation of a procedure whose arguments are unknowns, even
-              when no branch is taken at the solution (CS-GAP-CALL-WARNING).
+              when no branch is taken at the solution; CS-GAP-CALL-WARNING is
+              closed since, the native statements run).
 =============================================================================}
 
 PROCEDURE fluidprop(Fluid$,Temp, Pres,Rh:Rho,Mu,Gamma)
@@ -55,7 +56,7 @@ ENDIF
 END
 
 procedure warning_error(var1_in,var2_in,var3_in, var4_in:var1_out,var2_out,var3_out,var4_out)
-"Validity ranges checked by the original with CALL WARNING (comments in this variant, CS-GAP-CALL-WARNING):"
+"Validity ranges checked by the original with CALL WARNING (comments in this variant):"
 "{ Di_dph must be above 0.0125 }"
 "{ De_dph must be between 0.050 and 1 }"
 "{ beta_dph must be between 0.23 and 0.8 }"

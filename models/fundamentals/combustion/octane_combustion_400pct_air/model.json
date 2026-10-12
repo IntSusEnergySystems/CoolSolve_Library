@@ -47,7 +47,7 @@
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0",
     "max_rel_diff": 0.00022,
-    "notes": "35 common variables, 3 differ (rtol=0.001) - all 3 are unit-annotation artifacts, hand-checked (h_H2O_*_bis stored without units in kJ/kg: 8.7e-5; TAF_K stored in K but converted by the tool: 1.5e-4). Max over all common variables 2.2e-4 on TAF (ideal-gas species data). Stale EES records x, y, mm ignored."
+    "notes": "35 common variables, 3 differ (rtol=0.001) - all 3 are unit-annotation artifacts, hand-checked (h_H2O_*_bis stored without units in kJ/kg: 8.7e-5; TAF_K stored in K but converted by the tool: 1.5e-4). Max over all common variables 2.2e-4 on TAF (CoolProp's ideal-gas enthalpy rise vs EES; the absolute species enthalpies h_CO2_*, h_H2O_* agree with the stored values within 1.4e-4). Stale EES records x, y, mm ignored."
   },
   "missing_features": [
     "CS-GAP-FLUIDS-C8H18"
@@ -65,6 +65,11 @@
       "date": "2026-10-05",
       "action": "added (card C-49, batch B-05); native file blocked by CS-GAP-FLUIDS-C8H18, runnable _coolsolve variant verified",
       "by": "GLM (Z.ai) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-11",
+      "action": "re-baselined: NASA-Glenn formation enthalpies (CoolSolve 9aa2842); only the 4 absolute species-enthalpy variables of the _coolsolve variant changed (h_CO2_ref/taf +227 J/kg, h_H2O_ref/taf -333 J/kg, 2.5e-5 relative; TAF and every other result unchanged): CO2 closer to the EES stored values (9.1e-5 to 6.6e-5), H2O farther (7.7e-5 to 1.0e-4)",
+      "by": "Claude (Sonnet) for S. Quoilin"
     }
   ]
 }

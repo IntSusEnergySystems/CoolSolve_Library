@@ -180,10 +180,9 @@ Source file (EES 8.652, comments in English), collection of S. Quoilin:
 
 ## Limitations and CoolSolve gaps
 
-- `CALL WARNING` (validity range check inside `hermeticexpander`) is the
-  registered gap `CS-GAP-CALL-WARNING`; it only triggers outside the validity
-  range, which is not the case here — CoolSolve prints a parse warning
-  ("Unknown function 'WARNING'") but the run is unaffected. Not blocking.
+- `CALL WARNING` (validity range check inside `hermeticexpander`) only
+  triggers outside the validity range, which is not the case here: the run
+  reports no warning.
 - The correlations extrapolate the single-stage machine behaviour to each
   stage of the two-stage arrangement (as in the original); outside
   30 < rho_su < 200 kg/m³ and 1.2 < r_p < 12 the results carry no

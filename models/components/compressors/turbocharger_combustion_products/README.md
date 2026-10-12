@@ -93,8 +93,9 @@ the last subprogram execution, i.e. the `ref` call at 25 °C / 1 bar).
   differences (EES 10.589 vs CoolProp) within the ≤ 0.5 % tolerance.
 - Absolute enthalpies/entropies of `Air` (`h_a_*`, `s_a_*`) differ by the
   reference-state offsets of the two backends; all differences agree (e.g.
-  compressor Δh 103 487 / 103 776 J/kg). `CS-GAP-AIR-ENTHALPY-REF` documents
-  the Air offset; it does not block this model (differences only).
+  compressor Δh 103 487 / 103 776 J/kg). The Air offset is a reference-state
+  matter (EES: h = 0 at 0 K), not a gap; it does not affect this model
+  (differences only).
 - The ideal gases CO2, H2O, O2, N2 have absolute (third-law) entropies in
   CoolSolve, as in EES: the entropies of
   the products agree with the stored values: `s_m_su_e` 8 190.30 / 8 190.71
@@ -106,12 +107,18 @@ the last subprogram execution, i.e. the `ref` call at 25 °C / 1 bar).
   vapour (`s_ref[2]` 3 880.9 against the stored `s[2]` 11 594.2 J/kg-K);
   `s_ref[1]`, `s_ref[3]`, `s_ref[4]` (CO2, O2, N2) agree with the stored
   `s[1]`, `s[3]`, `s[4]` within 1.8e-5, 5.2e-5 and 3.8e-5.
+- The absolute enthalpies of the ideal gases carry the NASA-Glenn formation
+  enthalpies of CoolSolve (the source of the entropies; EES 10 uses the same data
+  with R = 8.314): `h_ref[1]` (CO2) −8 941 418 J/kg against the stored
+  −8 940 832 (6.6e-5), `h_ref[2]` (H2O) −13 423 392 against −13 422 025 (1.0e-4);
+  N2 and O2 are 0 as stored. Enthalpy differences, hence every result of the
+  model, do not depend on them.
 - **8 stored values are stale** (a mix of older EES sessions, cf.
   `CS-BUG-EXTRACT-STALE`) and cannot be reproduced by the file's own
   equations: `h_p_ref`, `h_p_su_e`, `h_p_ex_e`, `h_p_ex_e_s` carry a constant
   offset of -82.87 MJ/kg w.r.t. the file's own subprogram evaluated with the
   species enthalpies stored in the same file (`h[1]` = -8 940 832 J/kg at
-  25 °C gives `h_p` = -2 104 110 J/kg at 25 °C, the value CoolSolve finds;
+  25 °C gives `h_p` = -2 104 110 J/kg at 25 °C, CoolSolve finds -2 104 099 (5e-6);
   all four stored differences are correct and match CoolSolve within 4e-5);
   `s_p_ex_e_s` and `s_p_su_e` (65 073.58 J/kg-K) are off the scale of the
   same file's `s_p_ex_e` (8 055.08) for nearly identical states; `p_su_e`
