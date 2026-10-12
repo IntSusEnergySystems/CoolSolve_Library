@@ -1,6 +1,6 @@
 # Solar geometry and sun path
 
-🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0119`
+🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0119`
 
 Solar geometry for a fixed site (Port-au-Prince, Haiti): day of the year
 from month and day, solar declination, hour angle, angle of incidence on a
@@ -16,7 +16,7 @@ solar-noon point used for the sun-path plot.
 | **Source** | ULiège collection, `solar/angles.EES` (inventory `TM-0589`) |
 | **Authors** | TBD (ULiège, J. Lebrun laboratory — the file carries only the laboratory licence stamp; to be completed by the maintainer) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** by `CS-GAP-NDAY` (`nDay_`); runnable variant `solar_geometry_sun_path_coolsolve.eescode` verified against EES (see *Verification*) |
+| **CoolSolve** | v0.3.0+fix/library-gaps-3@36cdbcf — verified against the EES stored solution (see *Verification*) |
 
 ## Problem statement
 
@@ -32,15 +32,16 @@ angle `omega_s` with the sunset and sunrise solar times `t_coucher` and
 
 ## Model
 
-Day of the year `n` from month and day (EES date function `nDay_` in the
-original), declination `delta = 23.45·sin(360·(284 + n)/365)`, hour angle
-`omega = 15·(t − 12)`, incidence and zenith angles from their cosine laws,
-altitude `alpha_s = max(0, 90 − theta_z)`, azimuth equated to the hour angle
+Day of the year `n` from month and day, `n = nDay_(month, day)`, with `nDay_`
+the EES date function (day of a non-leap year), declination
+`delta = 23.45·sin(360·(284 + n)/365)`, hour angle `omega = 15·(t − 12)`,
+incidence and zenith angles from their cosine laws, altitude
+`alpha_s = max(0, 90 − theta_z)`, azimuth equated to the hour angle
 `gamma_s = omega` (as in the original), and sunrise/sunset from
 `omega_s = arccos(−tan(phi)·tan(delta))`. The site longitude `L_loc` is
 carried as in the original (it documents the site and feeds no equation).
 
-| Inputs | Value (default run) | Outputs (default run) | Value |
+| Inputs | Value (stored EES run) | Outputs (stored EES run) | Value |
 |---|---|---|---|
 | `phi` site latitude | 18.53 ° | `n` day of the year | 338 |
 | `month` / `day` | 12 / 4 | `delta` declination | −22.48 ° |
@@ -53,24 +54,25 @@ carried as in the original (it documents the site and feeds no equation).
 
 ## How to run
 
-The native file is blocked by `nDay_` (see *Limitations and CoolSolve gaps*);
-CoolSolve keeps its `$ifnot parametrictable` block (`t = 0`) and the system is square (22 equations, 22 unknowns). Run the
-variant instead, in the CoolSolve GUI (*Solve*) or from a terminal:
+Outside a parametric table the `$ifnot parametrictable` block sets `t = 0`
+(midnight), and the system is square (22 equations, 22 unknowns). Run the
+file in the CoolSolve GUI (*Solve*) or from a terminal:
 
 ```bash
-coolsolve ./solar_geometry_sun_path_coolsolve.eescode
+coolsolve ./solar_geometry_sun_path.eescode
 ```
 
 Change `t` (0–24 h), `month`/`day` and `phi` for another hour, date or site.
+The Results below use `t` = 24 h, the stored EES run (midnight, like `t` = 0).
 No `.initials` or `coolsolve.conf` is needed (fully explicit cascade, 24
-iterations). The variant is regression-tested as `CSL-0119:coolsolve`.
+iterations). The model is regression-tested as `CSL-0119`.
 
 ## Results
 
-Default run (stored EES run: 4 December, solar midnight; noon point at
+Stored EES run (4 December, `t` = 24 h, solar midnight; noon point at
 `t_solaire` = 12 h):
 
-| Quantity | EES | CoolSolve (variant) |
+| Quantity | EES | CoolSolve (native file) |
 |---|---:|---:|
 | `n` | 338 | 338 |
 | `delta` [°] | −22.4819 | −22.4819 |
@@ -92,12 +94,13 @@ symmetric about noon (6.53 h / 17.47 h, day length 10.94 h).
 
 ## Verification
 
-**Runnable variant vs the EES stored solution** of `solar/angles.EES`
-(22 variables decoded by `tools/ees_extract.py`):
+**Native file vs the EES stored solution** of `solar/angles.EES`
+(22 variables decoded by `tools/ees_extract.py`), run at `t` = 24 h (the
+stored parametric run):
 
 `22 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0`
 
-Maximum relative difference 1.5e-6 (on `theta_z`, pure trigonometric
+Maximum relative difference 1.6e-6 (on `theta_z`, pure trigonometric
 round-off near the flat cosine extremum; all other variables agree to at
 least 1e-7). No variable was excluded. Spot checks against closed-form
 re-evaluation: `n` = 338 for 4 December, `omega_s` = 82.03 °,
@@ -129,16 +132,6 @@ Source file (EES X8.198, comments in French), collection of S. Quoilin:
   `t_solaire` = 12 h); `t` follows the `$ifnot parametrictable` branch
   (`t` = 0 outside a parametric table). Note: the commented date in the
   text is June 4 (`month` = 6), the stored run used December 4 (`n` = 338).
-- **2026-10-07 — runnable variant** `solar_geometry_sun_path_coolsolve.eescode`
-  (valid EES, verified above): (1) the EES date function `n = nDay_(month, day)`
-  is replaced by an explicit `FUNCTION day_of_year(month, day)` summing the
-  month lengths before `month` with eleven sequential block `IF/ELSE/ENDIF`s
-  (`CS-GAP-NDAY`; block form, since the single-line `IF…THEN…ELSE` must not
-  be followed by `ENDIF`); (2) the `$ifnot parametrictable` branch is
-  resolved for the stored run — the `t = 0` line is dropped and `t` is set
-  to 24 h, the solar time of the stored EES run (parametric-table inputs
-  become the default run). Nothing else changes
-  (same variable names, same equations).
 - **2026-10-07 — checks.** The solar azimuth is equated to the hour angle
   (`gamma_s = omega`), as in the original; kept faithfully. The site
   longitude `L_loc` feeds no equation, as in the original; kept as site
@@ -147,12 +140,8 @@ Source file (EES X8.198, comments in French), collection of S. Quoilin:
   `alpha_s[1]` (1) + single-zone, explicit physics (0) + no curated guesses
   needed (0) = score 1 → level 1.
 
-## Limitations and CoolSolve gaps
+## Limitations
 
-- `CS-GAP-NDAY`: the EES date function
-  `nDay_(month, day)` is unknown to CoolSolve — the native file fails with
-  *"Unknown or unsupported function: nDay_ with 2 arguments"* although the
-  system is square (22 equations / 22 unknowns, largest block 1).
 - The model covers one site and one date per run; a full sun-path curve is a
   parametric sweep of `t` (no EES parametric table is shipped with the file).
 

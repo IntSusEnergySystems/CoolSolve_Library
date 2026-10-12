@@ -1,8 +1,8 @@
 {
  "snapshot": {
-  "content_hash": "sha256:4d2b03133c3bd30c",
-  "files": 771,
-  "bytes": 6864552,
+  "content_hash": "sha256:d3a3d5181f465b4c",
+  "files": 770,
+  "bytes": 6858654,
   "models": 148,
   "functions": 431,
   "taxonomy_version": "0.2"
@@ -7166,8 +7166,8 @@
    "category": "renewables/solar_thermal",
    "kind": "steady",
    "level": 1,
-   "status": "blocked",
-   "summary": "Solar geometry for a fixed site (Port-au-Prince, Haiti): day of year, declination, hour angle, incidence and zenith angles, solar altitude and azimuth, sunrise/sunset times; native file blocked by nDay_ and $ifnot parametrictable, runnable variant verified.",
+   "status": "verified",
+   "summary": "Solar geometry for a fixed site (Port-au-Prince, Haiti): day of year, declination, hour angle, incidence and zenith angles, solar altitude and azimuth, sunrise/sunset times.",
    "fluids": [],
    "tags": [
     "solar geometry",
@@ -7187,15 +7187,13 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-NDAY"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0082",
     "CSL-0083"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-07",
+   "coolsolve_version": "0.3.0+fix/library-gaps-3@36cdbcf",
+   "verified_on": "2026-10-12",
    "path": "models/renewables/solar_thermal/solar_geometry_sun_path",
    "main_file": "solar_geometry_sun_path.eescode",
    "figures": 0
@@ -10235,7 +10233,7 @@
   {
    "function": "weibe",
    "type": "PROCEDURE",
-   "signature": "(theta, theta_s, theta_d : x_b, x_dot_b)",
+   "signature": "(theta, theta_s, theta_d, a_weibe, n_weibe : x_b, x_dot_b)",
    "model_id": "CSL-0024",
    "path": "models/cycles/engines/single_cylinder_engine_weibe/single_cylinder_engine_weibe.eescode"
   },
@@ -10461,7 +10459,7 @@
   "CS-GAP-LKT": {
    "kind": "gap",
    "state": "open",
-   "priority": "P3",
+   "priority": "",
    "text": "External binary lookup files (`.lkt`) and file-based tables in `INTERPOLATE('file.txt',…)`",
    "detail": "Not readable",
    "fixed_in": "",
@@ -10515,7 +10513,7 @@
   "CS-GAP-INTEGRAL-MULTIVAR": {
    "kind": "gap",
    "state": "open",
-   "priority": "P3",
+   "priority": "",
    "text": "A model with **several INTEGRAL calls using different integration variables** (and different limits or directions), e.g. a steady model that quadratures two different definite integrals: w12 = -integral(p12, v12, v1, v2, 0.1) and w34 = -integral(p34, …",
    "detail": "*\"All INTEGRAL() calls must share the same integration variable; found 'v34' and 'v12'\"*.",
    "fixed_in": "",
@@ -10683,15 +10681,6 @@
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
-  "CS-GAP-NDAY": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P3",
-   "text": "The EES date function **`nDay_(month, day)`** (day of the year, 1-365/366; EES Manual, *Built-in Functions - Date*: `nDay_` with the month and day-of-month as arguments) and its siblings (`Day_`, `Month_`, `Year_`, `Hour_`, `Minute_`, `Second_`, …",
-   "detail": "Evaluation error *\"Unknown or unsupported function: nDay_ with 2 arguments\"* (warning *\"Unknown function 'nDay_'\"*); the block of the call fails although the system is square.",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
   "CS-GAP-INCOMPRESSIBLE": {
    "kind": "gap",
    "state": "open",
@@ -10803,7 +10792,7 @@
   "CS-GAP-STRINGPOS": {
    "kind": "gap",
    "state": "open",
-   "priority": "P3",
+   "priority": "",
    "text": "The EES built-in **`StringPos(S1$, S2$)`** function (position of the first occurrence of string `S2$` within string `S1$`; EES manual, *String Functions*), used to test pipe/material designators that carry a symbol.",
    "detail": "Warning *\"Unknown function 'StringPos'\"*, then evaluation error *\"Unknown or unsupported function: stringpos with 2 arguments\"*.",
    "fixed_in": "",
@@ -10833,15 +10822,6 @@
    "priority": "P3",
    "text": "**Fewer outputs in a `CALL` than the procedure declares**: since EES 9.513 an internal or external procedure may be called with fewer output variables than its `PROCEDURE` statement lists.",
    "detail": "Evaluation error *\"Procedure three returns 3 outputs, but N were provided\"* for every documented form: the empty and the commented positions are dropped, so the outputs also shift.",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-GAP-STRING-LOCAL-UNSET": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P3",
-   "text": "A **string variable that a `FUNCTION`/`PROCEDURE` body reads without ever assigning it** (not an argument, not `$COMMON`), typically in the condition of an `IF`.",
-   "detail": "Evaluation error *\"String variable not found: fl$\"* as soon as the body runs.",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
@@ -11025,15 +11005,6 @@
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
-  "CS-BUG-NO-SOL-DELETE": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P2",
-   "text": "The option `--no-sol` (*\"Disable generation of .sol file\"*, `coolsolve --help`) **deletes an existing `<model>.sol`** when the run succeeds instead of leaving the file untouched, so a check run removes a committed baseline (the library keeps `<model>.sol` …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
   "CS-BUG-LOOKUP-WRITE": {
    "kind": "bug",
    "state": "open",
@@ -11084,15 +11055,6 @@
    "state": "open",
    "priority": "P1 (silent)",
    "text": "A **`DUPLICATE` loop whose bounds are variables** — `DUPLICATE i = 1, n` with `n` assigned before the loop, the standard way to keep the row count in one place — is **silently dropped**: the loop body does not enter the equation set at all, and the model …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-IMPLICIT-PROC": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P1 (silent)",
-   "text": "An **implicit equation in a `FUNCTION`/`PROCEDURE` body that has other statements is silently not solved**: the implicit variable keeps its guess/default (single-statement bodies do solve it, as in `examples/…`; an implicit equation under a block `IF` in a …",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -11165,15 +11127,6 @@
    "state": "open",
    "priority": "P1 (crash)",
    "text": "A **self-recursive or mutually recursive `FUNCTION`/`PROCEDURE` that does not terminate crashes the process** with a segmentation fault (stack overflow, exit code 139, no message; in the GUI server the whole server would go down).",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-LOCAL-UNASSIGNED": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P1 (silent)",
-   "text": "A `FUNCTION`/`PROCEDURE` body that **reads a local variable it has not assigned yet** (used before its assignment, never assigned, a misspelt name, or a main-program variable that was not passed as an argument) is **accepted silently and the variable reads as …",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -11599,6 +11552,51 @@
    "text": "`CALL WARNING('message XXXF1', value)`, `CALL WARNING('message')` and `CALL WARNING(value)` in FUNCTION/PROCEDURE bodies (EES help, WARNING procedure): a warning diagnostic `W001` (CLI stderr, GUI console) with the line of the call, reported once per distinct …",
    "detail": "",
    "fixed_in": "post-v0.3.0, `fix/library-gaps-2`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-NDAY": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "The time functions of the EES library SETP.LIB (Duffie & Beckman) built in: `nDay_(month, day)` (day of a non-leap year, `nDay_(12, 4)` = 338), `NumDay_`, `AveDay_`, `EqnTime_`; month rounded, errors outside 1..12 and for a day beyond the month length, exact …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-3`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-IMPLICIT-PROC": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "An implicit statement in a FUNCTION/PROCEDURE body (left-hand side not a variable) is a parse error with its line (was skipped silently, output = 1); bodies are explicit, routines may be called implicitly (maintainer decision 2026-10-12); lookup-cell writes …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-3`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-LOCAL-UNASSIGNED": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "A body that reads a local before assigning it (text order, flow-insensitive) or never assigns an output is a parse error (was read as 1); example `engine_weibe_cycle` passes `a_weibe`, `n_weibe` as inputs",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-3`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-STRING-LOCAL-UNSET": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "Same check for string locals: a parse error (was a run-time *\"String variable not found\"*); an uninitialised read is an error of the source, corrected in the model",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-3`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-NO-SOL-DELETE": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "`--no-sol` leaves an existing `.sol` untouched (it deleted it before the solve, removing library baselines); CLI test `[library-gaps][no-sol]`",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-3`",
    "anchor": "7-closed-gaps-and-bugs"
   }
  }

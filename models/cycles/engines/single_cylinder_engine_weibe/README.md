@@ -244,6 +244,11 @@ Sources (not copied into the library):
   the example was left untouched (see *Limitations* for the test done with the
   wider window). `V_bdc`, `theta_evo`, `theta_evc`, `theta_1` and `theta_2`
   are unused in the equations but were kept, as in the original.
+- **2026-10-12 — correction of the original**: `PROCEDURE weibe` read the
+  main-program parameters `a_weibe` and `n_weibe`, which a procedure body does
+  not see (unset locals); they are now input arguments of the procedure and of
+  its `CALL`. The solution is unchanged (75/75 variables), since the integrated
+  window does not reach the combustion.
 - **Level** (taxonomy.md §3, added at the `C-25` review): 72 equations (1) +
   `PROCEDURE` (1) + dynamics, crank-angle `INTEGRAL` (1) = 3 → the rubric gives
   level 2; the card's level 3 (five coupled integrated states, discontinuous

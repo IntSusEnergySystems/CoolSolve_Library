@@ -83,8 +83,8 @@ coolsolve ./orc_whr_refprop_cost_coolsolve.eescode
 
 The variant is a runnable transcription of the native file at the stored
 composition (pure R245fa): the property calls (pure R245fa instead of the
-mixture string), the two 5-argument `IF` calls, the `End procedure` terminator
-and the dead `if fluidev$='glycol'` block of `hx_cd` differ from the native file
+mixture string), the two 5-argument `IF` calls and the `End procedure` terminator
+differ from the native file
 (every change logged in the conversion log); the guess values of
 `orc_whr_refprop_cost_coolsolve.initials` come from the EES stored solution
 (67 iterations, no `coolsolve.conf`). The native file
@@ -251,6 +251,7 @@ itself.
 - **2026-10-10 — native file rewritten (decision D12)**: the 32 `CALL EES_REFPROP` statements replaced by the variant's CoolProp equations on `WorkingFluidMix$` (same states, saturated enthalpies in J/kg); the 5-argument `IF`, `End procedure` and the `hx_cd` dead block kept.
 - **2026-10-10**: `$COMMON` of `hx_cd`, `hx_ev`, `Thonon`, `Hsieh_new` and `kuo` replaced by input arguments (not supported by CoolSolve): `WorkingFluidMix$` is the last input of each procedure and of each `CALL`.
 - Two errors of the original are corrected: molar enthalpies in the boiling number of `kuo`/`Hsieh_new`, and `h_l` overwritten before `i_fg` in `Hsieh_new`.
+- **2026-10-12 — correction of the original**: the dead `if fluidev$='glycol'` block of `hx_cd` is removed from the native file too: it read `fluidev$` and `T_sf_su_ev`, which are no inputs of the procedure (unset locals, an error in CoolSolve); its outputs are unused or overwritten (`cp_sf` is set just below).
 
 
 ## Limitations and CoolSolve gaps
@@ -262,11 +263,6 @@ itself.
 - The variant is written for pure R245fa (`MM_fraction = 1`).
 - `CS-GAP-END-PROCEDURE` — the `Procedure Summary` is closed with
   `End procedure` (valid EES); the variant writes bare `End`.
-- Once `End procedure` is accepted the next error of the native file is
-  *"String variable not found: fluidev$"*: the dead `if fluidev$='glycol'`
-  block of `hx_cd` reads a string that is not defined in the procedure (EES
-  evaluates the comparison as false; not registered in CoolSolve yet). The
-  variant removes the block.
 - The cost model prices are dated (2011) and the fluid price function is
   stubbed to 15 €/kg in the original.
 

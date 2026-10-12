@@ -2,10 +2,10 @@
   "id": "CSL-0119",
   "name": "solar_geometry_sun_path",
   "title": "Solar geometry and sun path",
-  "summary": "Solar geometry for a fixed site (Port-au-Prince, Haiti): day of year, declination, hour angle, incidence and zenith angles, solar altitude and azimuth, sunrise/sunset times; native file blocked by nDay_ and $ifnot parametrictable, runnable variant verified.",
+  "summary": "Solar geometry for a fixed site (Port-au-Prince, Haiti): day of year, declination, hour angle, incidence and zenith angles, solar altitude and azimuth, sunrise/sunset times.",
   "kind": "steady",
   "level": 1,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "solar_geometry_sun_path.eescode",
   "fluids": [],
   "tags": [
@@ -40,15 +40,13 @@
     "course": ""
   },
   "verification": {
-    "reference": "EES stored solution of solar/angles.EES (22 variables) compared with the runnable variant solar_geometry_sun_path_coolsolve.eescode",
-    "date": "2026-10-07",
-    "coolsolve_version": "0.3.0@7addbbc",
+    "reference": "EES stored solution of solar/angles.EES (22 variables, stored parametric run t = 24) compared with the native file run at t = 24",
+    "date": "2026-10-12",
+    "coolsolve_version": "0.3.0+fix/library-gaps-3@36cdbcf",
     "max_rel_diff": 1.6e-06,
-    "notes": "Variant vs EES: 22 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Max 1.5e-6 on theta_z (trigonometric round-off); all others agree to at least 1e-7. No variable excluded."
+    "notes": "22 common variables, 0 differ at rtol 1e-3; max 1.5e-6 on theta_z (trigonometric round-off); the shipped default run is t = 0."
   },
-  "missing_features": [
-    "CS-GAP-NDAY"
-  ],
+  "missing_features": [],
   "related": ["CSL-0082", "CSL-0083"],
   "related_external": [],
   "supersedes": [],
@@ -63,6 +61,11 @@
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @9423934 (T-RECHECK, CS-GAP-IF-DIRECTIVE closed); still blocked by CS-GAP-NDAY (native file now keeps the $ifnot parametrictable block, t = 0, 22 equations/22 unknowns, first error Unknown function nDay_); _coolsolve variant kept (nDay_ replacement still needed, t = 24 is the stored parametric run)",
       "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-12",
+      "action": "re-checked with CoolSolve fix/library-gaps-3@36cdbcf: verified",
+      "by": "Claude (Haiku) for S. Quoilin"
     }
   ]
 }

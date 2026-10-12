@@ -23,11 +23,6 @@ $bookmark hx_cd
 procedure hx_cd(fluid$,fluidcd$,T_sf_su,M_dot_sf,T_r_su,T_r_ex,M_dot_r,p_cd,p_sf,b,L_w_tot,L_h,beta,WorkingFluidMix$:A_cd,DELTAp,DELTAp_sf,M_fluid)
 
 
-if fluidev$='glycol' then
-call prop_htf(fluidev$,T_sf_su_ev,p_sf:mu_sf,rho_sf,cp_sf,k_sf)
-else
-
-endif
 cp_sf = cp(fluidcd$,t=t_sf_su,p=p_sf)
 T_r_sat = temperature(WorkingFluidMix$,P=P_cd,x=1)
 h_r_sat_v = enthalpy(WorkingFluidMix$,P=P_cd,x=1)
