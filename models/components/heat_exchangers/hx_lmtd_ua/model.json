@@ -1,0 +1,81 @@
+{
+  "id": "CSL-0137",
+  "name": "hx_lmtd_ua",
+  "title": "Counterflow heat exchanger and condenser rated by UA and a smoothed LMTD (TESPy)",
+  "summary": "Translation of the TESPy component classes HeatExchanger and its condensing subclass Condenser: a counterflow exchanger with the duty closed by a terminal temperature difference, by a duty or by the heat-transfer coefficient UA through the smoothed LMTD (Quoilin 2011), with pinch and effectiveness results, plus the off-design UA characteristic lines. Each file ships the design and the off-design run of the corresponding TESPy class doctest (air/water exchanger and air-cooled waste-steam condenser).",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "hx_lmtd_ua.eescode",
+  "fluids": [
+    "Water",
+    "Air"
+  ],
+  "tags": [
+    "heat exchanger",
+    "counterflow",
+    "LMTD",
+    "UA",
+    "terminal temperature difference",
+    "pinch",
+    "effectiveness",
+    "off-design",
+    "characteristic lines",
+    "condenser",
+    "saturation state",
+    "reference model"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE (block form)",
+    "INTERPOLATE (lookup table)",
+    "MIN / MAX / LN / ABS",
+    "property functions",
+    "arrays for the diagram state points"
+  ],
+  "stats": {
+    "n_equations": 70,
+    "largest_block": 8
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/src/tespy/components/heat_exchangers/base.py; ~/git/tespy/src/tespy/components/heat_exchangers/condenser.py",
+    "candidate_id": "TSP-008, TSP-009",
+    "authors": [
+      "Francesco Witte (TESPy lead developer) and the TESPy contributors",
+      "Sylvain Quoilin (smoothed LMTD, PhD thesis, University of Liege, 2011)"
+    ],
+    "url": "https://github.com/oemof/tespy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "TESPy commit 19425523; also src/tespy/data/char_lines.json (DEFAULT UA characteristic lines, shipped as the lookup tables). The condenser variant is the _condenser variant of the same card (TSP-009). Translation published under the CoolSolve_Library MIT licence (decision D3)."
+  },
+  "verification": {
+    "reference": "the HeatExchanger and Condenser class doctests of TESPy re-run from the local clone (commit 19425523) in a throw-away virtual environment (pip install -e ~/git/tespy, CoolProp 8.1.0dev): design and off-design run of each, 22 + 21 compared quantities via tools/compare_solution.py",
+    "date": "2026-10-13",
+    "coolsolve_version": "0.3.0@4c80b25",
+    "max_rel_diff": 4.3e-05,
+    "notes": "compare_solution.py --all: main file 22 common variables, 0 differ (rtol=0.001), max 3.30e-07 (T_h_ex_2); condenser 21 common variables, 0 differ, max 4.28e-05 (M_dot_c_2). The residual deviation is the air density: EES Air is the ideal-gas substance, TESPy uses the CoolProp air mixture (4e-05 at 30 C, 1.001 bar). Absolute enthalpies/entropies are excluded (different reference states, same offsets in numerator and denominator so duties and effectivenesses still agree)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0105",
+    "CSL-0014",
+    "CSL-0013"
+  ],
+  "related_external": [
+    "TESPy HeatExchanger and Condenser component classes (github.com/oemof/tespy, commit 19425523)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-13",
+      "action": "added (T-TRANSLATE card C-182, batch B-12: TESPy TSP-008 HeatExchanger and TSP-009 Condenser)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

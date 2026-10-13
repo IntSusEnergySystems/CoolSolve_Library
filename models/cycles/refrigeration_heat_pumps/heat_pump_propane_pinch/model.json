@@ -1,0 +1,73 @@
+{
+  "id": "CSL-0133",
+  "name": "heat_pump_propane_pinch",
+  "title": "Propane heat pump with pinch-sized evaporator and condenser",
+  "summary": "Vapour-compression heat pump on propane whose condenser and evaporator are each sized by an imposed pinch point (superheat / two-phase / subcooling zones), with a constant-efficiency compressor and an isenthalpic valve. The refrigerant flow rate is imposed and the two saturation pressures are the unknowns, closed by the pinch condition of each exchanger. Translation of the LaboThapPy basic_HP example.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "heat_pump_propane_pinch.eescode",
+  "fluids": [
+    "R290",
+    "Water"
+  ],
+  "tags": [
+    "heat pump",
+    "vapour compression",
+    "pinch point",
+    "three zones",
+    "design",
+    "propane"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "arrays",
+    "MIN function"
+  ],
+  "stats": {
+    "n_equations": 83,
+    "largest_block": 38
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/machine/examples/Heat_Pumps/fpi_HeatPump_example.py",
+    "candidate_id": "LTP-055",
+    "authors": [
+      "Basile Chaudoir",
+      "Elise Neven",
+      "Titouan Janod"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "LaboThapPy example basic_HP (Example case), components HexCstPinch, CompressorCstEff, ValveIsenthalpic (commit f03f7f47)"
+  },
+  "verification": {
+    "reference": "LaboThapPy fpi_HeatPump_example.py (basic_HP, Example case) re-run from the local snapshot ~/git/LaboThapPy commit f03f7f47 in a throw-away venv (CoolProp 8.0.0, SciPy 1.18.1, Python 3.12): converged in 2 Wegstein iterations, P_HP = 2390774.39 Pa, P_LP = 711746.78 Pa; 54 component state/duty/pinch variables dumped as a name,value,units CSV and compared with tools/compare_solution.py --ees-units",
+    "date": "2026-10-12",
+    "coolsolve_version": "0.3.0@4c80b25",
+    "max_rel_diff": 2.97e-05,
+    "notes": "54 common variables, 0 differ at rtol 1e-3. Maximum relative difference 2.97e-05 on T_1 (16.9995 C in the reference against exactly 17 C): it is the convergence tolerance of the original sequential-modular solver (1e-3 relative residual tolerance on pressure and enthalpy), same CoolProp EOS on both sides. Imposed pinch exact on both exchangers (3.000000 K, active at the condenser dew-point interface and at the evaporator hot end, the other candidate differences being 3.011 K and 5.479 K)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0014",
+    "CSL-0013",
+    "CSL-0001",
+    "CSL-0039", "CSL-0134"],
+  "related_external": [
+    "CoolSolve examples/refrigeration1.eescode (basic R134a vapour-compression cycle)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-12",
+      "action": "added (T-TRANSLATE of the LaboThapPy basic_HP propane pinch heat-pump example, verified vs a re-run of the original script)",
+      "by": "opencode worker (space-bunny-free) for S. Quoilin"
+    }
+  ]
+}

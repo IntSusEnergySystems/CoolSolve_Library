@@ -52,10 +52,10 @@
   },
   "verification": {
     "reference": "EES stored solution (34 variables), native file; 29 of 34 common variables agree at the stored operating point; alpha_tp_cd, DELTAp_tp and h_tp_ev differ because of the two errors of the original (corrected here, see README)",
-    "date": "2026-10-10",
+    "date": "2026-10-13",
     "coolsolve_version": "0.3.0@20b59a6",
     "max_rel_diff": 0.019,
-    "notes": "max_rel_diff excludes the outputs affected by the corrections: alpha_tp_cd (211.1 vs EES 588.1), DELTAp_tp (38824 vs 33222), h_tp_ev (2112 vs 3848). Maximum of the others: 1.9e-2 on DELTAp_ev, then 5.1e-3 on h (R245fa transport properties, CoolProp as pinned by CoolSolve vs REFPROP 8). The original's molar convention, emulated in a scratch copy, reproduces the three stored values within 7 %. The native file is the verified file (CoolSolve branch fix/library-gaps-2); it reproduces the former pure-R245fa variant to 3e-13 on every common variable."
+    "notes": "max_rel_diff excludes the outputs affected by the corrections: alpha_tp_cd (170.8 vs EES 588.1), DELTAp_tp (38824 vs 33222), h_tp_ev (2112 vs 3848). Maximum of the others: 1.9e-2 on DELTAp_ev, then 5.1e-3 on h (R245fa transport properties, CoolProp as pinned by CoolSolve vs REFPROP 8). The original's molar convention, emulated in a scratch copy (re-run 2026-10-13 after the CS-BUG-PI-FUNCTION fix), reproduces the three stored values within 1.5 %. The native file is the verified file (CoolSolve branch fix/library-gaps-2); it reproduces the former pure-R245fa variant to 3e-13 on every common variable."
   },
   "missing_features": [],
   "related": [

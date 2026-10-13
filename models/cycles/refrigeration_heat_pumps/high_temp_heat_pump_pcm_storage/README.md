@@ -157,6 +157,13 @@ the same exercise, so no cross-source triage was needed.
 
 ## Related models
 
+- `CSL-0134` (*orc_preheated_recuperated_cyclopentane*): the ORC counterpart of
+  the Zorlu plant — same site data (141 °C / 10 000 kg/s hot water, 113.1 °C
+  brine) and the same `CycloPentane`, from the LaboThapPy sources.
 - No related library model yet: this is the only high-temperature heat pump
   with thermal storage. See the CoolSolve example
   `zorlu_heat_pump.eescode` for the original transcription.
+- `CSL-0133` *heat_pump_propane_pinch*: the LaboThapPy `basic_IHX_HP` case of
+  the same script (the Zorlu cyclopentane plant with an internal heat exchanger)
+  is not translated there; the propane pinch heat pump of its `basic_HP` case
+  is, and was cross-checked against this plant's component pattern.

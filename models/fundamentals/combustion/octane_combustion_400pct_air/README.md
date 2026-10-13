@@ -186,6 +186,9 @@ Source file (EES 10.836, comments in French), collection of S. Quoilin:
 
 - `CSL-0005` *cpbar_combustion_products*: function library for the mean
   specific heat of combustion products (same course, combustion session).
+- `CSL-0139` *combustion_chamber*: the species-resolved, general version of
+  the same combustion balance, translated from TESPy (methane/hydrogen fuel,
+  excess-air ratio lambda, flue-gas composition).
 - `CSL-0058` *diesel_engine_excess_air_exhaust_analysis*: exercise 3 of the
   same repetition series, same five-box combustion balance with a diesel fuel
   whose `CH_n` is fitted from its mass fractions.

@@ -1,0 +1,198 @@
+{=============================================================================
+  Preheated + recuperated ORC on cyclopentane (Zorlu geothermal site)
+  CoolSolve Library model CSL-0134
+ -----------------------------------------------------------------------------
+  Translation of the LaboThapPy Zorlu ORC example: an organic Rankine cycle on
+  cyclopentane whose evaporator and condenser are each sized by an imposed
+  pinch point (plus superheating / subcooling), with a constant-isentropic-
+  efficiency pump and expander, a constant-effectiveness recuperator (internal
+  heat exchanger) and water preheater, and three water source streams. The two
+  saturation pressures are the unknowns, closed by the two pinch conditions;
+  no pressure drop anywhere. The preheater source is built here from its own
+  supply values (T_pre_su, P_pre_su, M_dot_pre_su): the original main block
+  feeds the cold-source values to it instead (bug, see README.md).
+
+  Inputs : site data, M_dot, eta_pp, eta_exp, eff_rec, PP_cd, SC_cd, PP_ev, SH_ev
+  Outputs: P_low, P_high, Q_dot_ev/cd/rec/pre, W_dot_net, eta_th, state points
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : LaboThapPy fpi_orc_example.py, by B. Chaudoir, E. Neven,
+           T. Janod - see README.md
+  Status : verified vs the Python example (CoolSolve 0.3.0), no gap, MIT
+=============================================================================}
+
+"!Design inputs (site data of the Zorlu example)"
+fluid$ = 'CycloPentane'    "working fluid (CoolProp 'Cyclopentane' = EES 'CycloPentane')"
+M_dot = 34.51              "cyclopentane mass flow rate [kg/s]"
+T_HS = 141                  "hot source (evaporator) supply temperature [C]"
+P_HS = 10E5                 "hot source supply pressure [Pa]"
+M_dot_HS = 10000         "hot source mass flow rate [kg/s], emulating a PCM store as in the original"
+T_CS = 24                   "cold source (condenser) supply temperature [C]"
+P_CS = 3E5                  "cold source supply pressure [Pa]"
+M_dot_CS = 900              "cold source mass flow rate [kg/s]"
+T_pre_su = 113.1            "preheater source supply temperature [C]"
+P_pre_su = 2E5              "preheater source supply pressure [Pa]"
+M_dot_pre_su = 60           "preheater source mass flow rate [kg/s]"
+eta_pp = 0.7                "pump isentropic efficiency [-]"
+eta_exp = 0.8               "expander isentropic efficiency [-]"
+eff_rec = 0.8               "effectiveness of the recuperator and of the preheater [-]"
+PP_cd = 5                   "condenser pinch point difference [K]"
+SC_cd = 3                   "condenser subcooling [K]"
+PP_ev = 5                   "evaporator pinch point difference [K]"
+SH_ev = 3                   "evaporator superheating [K]"
+
+"!Water supply enthalpies (each source keeps its pressure along its exchanger)"
+h_HS = ENTHALPY('Water', T=T_HS, P=P_HS)   "hot source enthalpy [J/kg]"
+h_CS = ENTHALPY('Water', T=T_CS, P=P_CS)   "cold source enthalpy [J/kg]"
+h_pre_su = ENTHALPY('Water', T=T_pre_su, P=P_pre_su) "preheater source enthalpy [J/kg]"
+
+"!Working-fluid states: 1 pump inlet, 2 pump outlet = recuperator cold inlet,
+ 3 recuperator cold outlet = preheater inlet, 4 preheater outlet = evaporator
+ inlet, 5 evaporator outlet = expander inlet, 6 expander outlet = recuperator
+ hot inlet, 7 recuperator hot outlet = condenser inlet"
+T_1 = T_sat_cd - SC_cd                     "condenser outlet temperature [C] (subcooling, as in the original)"
+h_1 = ENTHALPY(fluid$, P=P_low, T=T_1)     "pump inlet / condenser outlet enthalpy [J/kg]"
+s_1 = ENTROPY(fluid$, P=P_low, h=h_1)      "pump inlet entropy [J/kg-K]"
+
+"!Pump: constant isentropic efficiency"
+h_2s = ENTHALPY(fluid$, P=P_high, s=s_1)   "isentropic discharge enthalpy [J/kg]"
+h_2 = h_1 + (h_2s - h_1)/eta_pp             "pump outlet enthalpy [J/kg]"
+T_2 = TEMPERATURE(fluid$, P=P_high, h=h_2)  "pump outlet temperature [C]"
+s_2 = ENTROPY(fluid$, P=P_high, h=h_2)     "pump outlet entropy [J/kg-K]"
+W_dot_pp = M_dot*(h_2 - h_1)                "pump power [W]"
+
+"!Recuperator: constant effectiveness, duty limited by the enthalpy rates
+ (the ideal enthalpies are taken at the inlet temperature of the other stream,
+ as in the original HexCstEff)"
+h_h_id_rec = ENTHALPY(fluid$, P=P_low, T=T_2)   "hot-side ideal enthalpy at the cold inlet temperature [J/kg]"
+h_c_id_rec = ENTHALPY(fluid$, P=P_high, T=T_6)  "cold-side ideal enthalpy at the hot inlet temperature [J/kg]"
+Q_dot_max_rec_H = M_dot*ABS(h_h_id_rec - h_6)   "hot-side enthalpy-rate limit [W]"
+Q_dot_max_rec_C = M_dot*ABS(h_c_id_rec - h_2)   "cold-side enthalpy-rate limit [W]"
+Q_dot_rec = eff_rec*MIN(Q_dot_max_rec_H, Q_dot_max_rec_C)  "recuperator duty [W]"
+h_3 = h_2 + Q_dot_rec/M_dot                       "recuperator cold outlet enthalpy [J/kg]"
+T_3 = TEMPERATURE(fluid$, P=P_high, h=h_3)       "recuperator cold outlet temperature [C]"
+s_3 = ENTROPY(fluid$, P=P_high, h=h_3)           "recuperator cold outlet entropy [J/kg-K]"
+h_7 = h_6 - Q_dot_rec/M_dot                       "recuperator hot outlet enthalpy [J/kg]"
+T_7 = TEMPERATURE(fluid$, P=P_low, h=h_7)        "recuperator hot outlet temperature [C]"
+s_7 = ENTROPY(fluid$, P=P_low, h=h_7)            "recuperator hot outlet entropy [J/kg-K]"
+
+"!Preheater: constant effectiveness, water source on the hot side"
+h_h_id_pre = ENTHALPY('Water', P=P_pre_su, T=T_3)   "hot-side ideal enthalpy at the cold inlet temperature [J/kg]"
+h_c_id_pre = ENTHALPY(fluid$, P=P_high, T=T_pre_su)  "cold-side ideal enthalpy at the hot inlet temperature [J/kg]"
+Q_dot_max_pre_H = M_dot_pre_su*ABS(h_h_id_pre - h_pre_su)  "hot-side enthalpy-rate limit [W]"
+Q_dot_max_pre_c = M_dot*ABS(h_c_id_pre - h_3)        "cold-side enthalpy-rate limit [W]"
+Q_dot_pre = eff_rec*MIN(Q_dot_max_pre_H, Q_dot_max_pre_c)  "preheater duty [W]"
+h_4 = h_3 + Q_dot_pre/M_dot                        "preheater outlet (evaporator inlet) enthalpy [J/kg]"
+T_4 = TEMPERATURE(fluid$, P=P_high, h=h_4)          "preheater outlet temperature [C]"
+s_4 = ENTROPY(fluid$, P=P_high, h=h_4)              "evaporator inlet entropy [J/kg-K]"
+h_ex_H_pre = h_pre_su - Q_dot_pre/M_dot_pre_su            "preheater source outlet enthalpy [J/kg]"
+T_ex_H_pre = TEMPERATURE('Water', P=P_pre_su, h=h_ex_H_pre)  "preheater source outlet temperature [C]"
+
+"!Evaporator, refrigerant side: subcooling, evaporation, superheating
+ (the preheater leaves the fluid as subcooled liquid, as in the example)"
+x_4 = QUALITY(fluid$, P=P_high, h=h_4)            "vapour quality at the evaporator inlet, below 0 when subcooled [-]"
+x_start_ev = MAX(x_4, 0)                           "state where the two-phase zone starts, as in the original [-]"
+T_sat_ev = TEMPERATURE(fluid$, P=P_high, x=0)   "evaporating temperature [C]"
+h_f_ev = ENTHALPY(fluid$, P=P_high, x=0)        "saturated liquid enthalpy [J/kg]"
+h_g_ev = ENTHALPY(fluid$, P=P_high, x=1)        "saturated vapour enthalpy [J/kg]"
+h_C_x0_ev = h_f_ev + x_start_ev*(h_g_ev - h_f_ev)  "enthalpy at the start of the evaporation zone [J/kg] (linear in quality)"
+Q_dot_sc_ev = M_dot*(h_C_x0_ev - h_4)           "subcooling duty [W]"
+Q_dot_tp_ev = M_dot*(h_g_ev - h_f_ev)           "evaporation duty [W]"
+T_5 = T_sat_ev + SH_ev                          "evaporator outlet temperature [C]"
+h_5 = ENTHALPY(fluid$, P=P_high, T=T_5)         "evaporator outlet enthalpy [J/kg]"
+s_5 = ENTROPY(fluid$, P=P_high, h=h_5)          "evaporator outlet entropy [J/kg-K]"
+Q_dot_sh_ev = M_dot*(h_5 - h_g_ev)              "superheating duty [W]"
+Q_dot_ev = Q_dot_sc_ev + Q_dot_tp_ev + Q_dot_sh_ev  "total evaporator duty [W]"
+
+"!Evaporator, water side: cooled through the three zones (counterflow)"
+h_H_x1_ev = h_HS - Q_dot_sh_ev/M_dot_HS         "water enthalpy after the superheating zone [J/kg]"
+T_H_x1_ev = TEMPERATURE('Water', P=P_HS, h=h_H_x1_ev)  "water temperature after the superheating zone [C]"
+h_H_x0_ev = h_H_x1_ev - Q_dot_tp_ev/M_dot_HS    "water enthalpy after the evaporation zone [J/kg]"
+T_H_x0_ev = TEMPERATURE('Water', P=P_HS, h=h_H_x0_ev)  "water temperature after the evaporation zone [C]"
+h_ex_H_ev = h_H_x0_ev - Q_dot_sc_ev/M_dot_HS    "water outlet enthalpy [J/kg]"
+T_ex_H_ev = TEMPERATURE('Water', P=P_HS, h=h_ex_H_ev)  "water outlet temperature [C]"
+
+"!Evaporator pinch point: the minimum over the three candidate locations,
+ imposed by the design: it closes the evaporating pressure P_high"
+PP_hot_ev = T_HS - T_5                         "hot end of the evaporator [K]"
+PP_int_ev = T_H_x0_ev - T_sat_ev                "bubble point interface [K]"
+PP_cold_ev = T_ex_H_ev - T_4                    "cold end of the evaporator [K]"
+PPTD_ev = MIN(PP_hot_ev, MIN(PP_int_ev, PP_cold_ev))  "pinch point difference [K]"
+PPTD_ev = PP_ev                                 "design condition imposed by the evaporator"
+
+"!Expander: constant isentropic efficiency"
+h_6s = ENTHALPY(fluid$, P=P_low, s=s_5)        "isentropic exhaust enthalpy [J/kg]"
+h_6 = h_5 - (h_5 - h_6s)*eta_exp               "expander outlet enthalpy [J/kg]"
+T_6 = TEMPERATURE(fluid$, P=P_low, h=h_6)       "expander outlet temperature [C]"
+s_6 = ENTROPY(fluid$, P=P_low, h=h_6)           "expander outlet entropy [J/kg-K]"
+W_dot_exp = M_dot*(h_5 - h_6)                   "expander power [W]"
+
+"!Condenser, working-fluid side: zone duties with the clamps of the original
+ system_cond; the recuperator leaves the fluid two-phase, hence no desuperheat"
+x_7 = QUALITY(fluid$, P=P_low, h=h_7)                "vapour quality at the condenser inlet [-]"
+T_sat_cd = TEMPERATURE(fluid$, P=P_low, x=0)   "condensing temperature [C]"
+h_f_cd = ENTHALPY(fluid$, P=P_low, x=0)        "saturated liquid enthalpy [J/kg]"
+h_g_cd = ENTHALPY(fluid$, P=P_low, x=1)        "saturated vapour enthalpy (dew point) [J/kg]"
+Q_dot_sh_cd = M_dot*MAX(h_7 - h_g_cd, 0)       "desuperheating duty [W], zero: the recuperator leaves the fluid two-phase"
+Q_dot_tp_cd = M_dot*MAX(MIN(h_g_cd - h_f_cd, h_7 - h_f_cd), 0)  "condensation duty [W]"
+Q_dot_sc_cd = M_dot*MAX(MIN(h_f_cd, h_7) - h_1, 0)  "subcooling duty [W]"
+Q_dot_cd = Q_dot_sh_cd + Q_dot_tp_cd + Q_dot_sc_cd  "total condenser duty [W]"
+
+"!Condenser, water side: heated through the zones (counterflow)"
+h_C_x0_cd = h_CS + Q_dot_sc_cd/M_dot_CS         "water enthalpy after the subcooling zone [J/kg]"
+T_C_x0_cd = TEMPERATURE('Water', P=P_CS, h=h_C_x0_cd)  "water temperature after the subcooling zone [C]"
+h_C_x1_cd = h_C_x0_cd + Q_dot_tp_cd/M_dot_CS    "water enthalpy after the condensation zone [J/kg]"
+T_C_x1_cd = TEMPERATURE('Water', P=P_CS, h=h_C_x1_cd)  "water temperature after the condensation zone [C]"
+h_ex_C_cd = h_C_x1_cd + Q_dot_sh_cd/M_dot_CS    "water outlet enthalpy [J/kg]"
+T_ex_C_cd = TEMPERATURE('Water', P=P_CS, h=h_ex_C_cd)  "water outlet temperature [C]"
+
+"!Condenser pinch point: the minimum over the three candidate locations,
+ imposed by the design: it closes the condensing pressure P_low"
+PP_hot_cd = T_7 - T_ex_C_cd                    "hot end of the condenser [K]"
+PP_int_cd = T_sat_cd - T_C_x1_cd               "dew point interface [K]"
+PP_cold_cd = T_1 - T_CS                        "cold end of the condenser [K]"
+PPTD_cd = MIN(PP_hot_cd, MIN(PP_int_cd, PP_cold_cd))  "pinch point difference [K]"
+PPTD_cd = PP_cd                                "design condition imposed by the condenser"
+
+"!Cycle performance and balance checks (diagnostics, no equation)"
+W_dot_net = W_dot_exp - W_dot_pp                          "net power [W]"
+eta_th = W_dot_net/Q_dot_ev                               "thermal efficiency [-]"
+Q_dot_HS = M_dot_HS*(h_HS - h_ex_H_ev)                    "heat taken from the hot source [W]"
+Q_dot_pre_su = M_dot_pre_su*(h_pre_su - h_ex_H_pre)       "heat taken from the preheater source [W]"
+Q_dot_CS = M_dot_CS*(h_ex_C_cd - h_CS)                    "heat rejected to the cold source [W]"
+bal_1 = Q_dot_ev + Q_dot_pre + W_dot_pp - W_dot_exp - Q_dot_cd  "cycle energy balance residual (recuperator internal) [W] (expected 0)"
+bal_2 = Q_dot_cd - M_dot_CS*(h_ex_C_cd - h_CS)            "condenser duty vs heat gained by the cooling water [W] (expected 0)"
+bal_3 = Q_dot_pre - Q_dot_pre_su                          "preheater duty vs heat lost by its source [W] (expected 0)"
+bal_4 = Q_dot_ev - Q_dot_HS                               "evaporator duty vs heat gained by the hot source [W] (expected 0)"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: pump inlet, 2: pump outlet, 3: recuperator cold outlet, 4: evaporator inlet,
+ 5: evaporator outlet, 6: expander outlet, 7: condenser inlet. Use the arrays
+ h[i]/P[i] or s[i]/T[i] with the "Overlay array path" option of the Diagram tab.}
+P[1] = P_low
+h[1] = h_1
+T[1] = T_1
+s[1] = s_1
+P[2] = P_high
+h[2] = h_2
+T[2] = T_2
+s[2] = s_2
+P[3] = P_high
+h[3] = h_3
+T[3] = T_3
+s[3] = s_3
+P[4] = P_high
+h[4] = h_4
+T[4] = T_4
+s[4] = s_4
+P[5] = P_high
+h[5] = h_5
+T[5] = T_5
+s[5] = s_5
+P[6] = P_low
+h[6] = h_6
+T[6] = T_6
+s[6] = s_6
+P[7] = P_low
+h[7] = h_7
+T[7] = T_7
+s[7] = s_7

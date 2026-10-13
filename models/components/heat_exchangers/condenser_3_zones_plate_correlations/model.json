@@ -46,10 +46,10 @@
   },
   "verification": {
     "reference": "EES stored solution stored in the source file (18 variables)",
-    "date": "2026-10-07",
-    "coolsolve_version": "0.3.0@7addbbc",
-    "max_rel_diff": 0.0556,
-    "notes": "compare_solution.py: 17 common variables, 5 differ (rtol=0.001), max 5.56e-02 on DELTAp_cd; every input agrees exactly. The 5 differing variables are the integrated outputs (A_cd, DELTAp_cd, DELTAp_sf_cd, M_fluid_cd, V_cd), all traced to the R123 property library of EES 8 (2008) vs CoolProp in the superheated region (desuperheating duty = small difference of large enthalpies); within the 'older EES fluid models: up to a few %' tolerance of ees_import.md §11, explained in the README."
+    "date": "2026-10-13",
+    "coolsolve_version": "0.3.0@3a5d5ce",
+    "max_rel_diff": 0.00774,
+    "notes": "compare_solution.py: 17 common variables, 5 differ (rtol=0.001), max 7.74e-03 on DELTAp_sf_cd; every input agrees exactly. The 5 differing variables are the integrated outputs (A_cd, DELTAp_cd, DELTAp_sf_cd, M_fluid_cd, V_cd), remaining deviation attributed to the R123 property library of EES 8 (2008) vs CoolProp in the superheated region (desuperheating duty = small difference of large enthalpies); within the 'older EES fluid models: up to a few %' tolerance of ees_import.md §11. Re-baselined 2026-10-13 after the CoolSolve fix of CS-BUG-PI-FUNCTION (g# read as 1 in the Kuo function: the earlier 5.56e-02 was mostly that bug), see the README."
   },
   "missing_features": [],
   "related": [

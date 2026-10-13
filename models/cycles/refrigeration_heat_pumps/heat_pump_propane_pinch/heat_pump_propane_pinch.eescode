@@ -1,0 +1,128 @@
+{=============================================================================
+  Propane heat pump with pinch-sized evaporator and condenser
+  CoolSolve Library model CSL-0133
+ -----------------------------------------------------------------------------
+  Translation of the LaboThapPy heat-pump example (basic_HP, "Example" case):
+  constant-isentropic-efficiency compressor, condenser and evaporator each
+  sized by an imposed pinch point (plus subcooling / superheating), isenthalpic
+  expansion valve. The two saturation pressures are the unknowns, closed by
+  the two pinch conditions; no pressure drop on either exchanger (DP = 0, the
+  defaults of the original). Propane R290 between two water streams.
+
+  Inputs : fluid$, M_dot, eta_cp, PP_cd, SC_cd, PP_ev, SH_ev, water supply states
+  Outputs: P_low, P_high, Q_dot_cd, Q_dot_ev, W_dot, COP, state points
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : LaboThapPy fpi_HeatPump_example.py / hex_cstpinch.py, by
+           B. Chaudoir, E. Neven, T. Janod - see README.md
+  Status : verified vs the Python example (CoolSolve 0.3.0), no gap, MIT
+=============================================================================}
+
+"Design inputs (values of the 'Example' case of the original script)"
+fluid$ = 'R290'                 "working fluid (the CoolProp name 'Propane' is EES 'R290')"
+M_dot = 0.1                      "refrigerant mass flow rate [kg/s]"
+T_HS = 60                        "hot source water supply temperature [C]"
+P_HS = 3E5                       "hot source water supply pressure [Pa]"
+M_dot_HS = 2                     "hot source water mass flow rate [kg/s]"
+T_CS = 20                        "cold source water supply temperature [C]"
+P_CS = 3E5                       "cold source water supply pressure [Pa]"
+M_dot_CS = 10                    "cold source water mass flow rate [kg/s]"
+eta_cp = 0.7                     "compressor isentropic efficiency [-]"
+PP_cd = 3                        "condenser pinch point difference [K]"
+SC_cd = 3                        "condenser subcooling [K]"
+PP_ev = 3                        "evaporator pinch point difference [K]"
+SH_ev = 3                        "evaporator superheating [K]"
+
+"!Saturation states of the refrigerant at the two (unknown) cycle pressures"
+T_sat_ev = TEMPERATURE(fluid$, P=P_low, x=0)     "evaporating temperature [C]"
+h_f_ev = ENTHALPY(fluid$, P=P_low, x=0)         "saturated liquid enthalpy [J/kg]"
+h_g_ev = ENTHALPY(fluid$, P=P_low, x=1)         "saturated vapour enthalpy [J/kg]"
+T_sat_cd = TEMPERATURE(fluid$, P=P_high, x=0)   "condensing temperature [C]"
+h_f_cd = ENTHALPY(fluid$, P=P_high, x=0)        "saturated liquid enthalpy [J/kg]"
+h_g_cd = ENTHALPY(fluid$, P=P_high, x=1)        "saturated vapour enthalpy [J/kg]"
+
+"!Condenser, refrigerant side: desuperheating, condensation, subcooling"
+Q_dot_sh_cd = M_dot*(h_2 - h_g_cd)              "desuperheating duty [W]"
+Q_dot_tp_cd = M_dot*(h_g_cd - h_f_cd)           "condensation duty [W]"
+T_3 = T_sat_cd - SC_cd                          "condenser outlet temperature [C]"
+h_3 = ENTHALPY(fluid$, P=P_high, T=T_3)         "condenser outlet enthalpy [J/kg]"
+Q_dot_sc_cd = M_dot*(h_f_cd - h_3)              "subcooling duty [W]"
+Q_dot_cd = Q_dot_sh_cd + Q_dot_tp_cd + Q_dot_sc_cd  "total condenser duty [W]"
+
+"!Condenser, water side: heated through the three zones (no pressure drop)"
+h_su_C_cd = ENTHALPY('Water', T=T_HS, P=P_HS)   "water inlet enthalpy [J/kg]"
+h_C_x0_cd = h_su_C_cd + Q_dot_sc_cd/M_dot_HS    "water enthalpy after the subcooling zone [J/kg]"
+T_C_x0_cd = TEMPERATURE('Water', P=P_HS, h=h_C_x0_cd)  "water temperature after the subcooling zone [C]"
+h_C_x1_cd = h_C_x0_cd + Q_dot_tp_cd/M_dot_HS    "water enthalpy after the condensation zone [J/kg]"
+T_C_x1_cd = TEMPERATURE('Water', P=P_HS, h=h_C_x1_cd)  "water temperature after the condensation zone [C]"
+h_ex_C_cd = h_C_x1_cd + Q_dot_sh_cd/M_dot_HS    "water outlet enthalpy [J/kg]"
+T_ex_C_cd = TEMPERATURE('Water', P=P_HS, h=h_ex_C_cd)  "water outlet temperature [C]"
+
+"!Condenser pinch point: the smallest of the three candidate temperature differences"
+PP_hot_cd = T_2 - T_ex_C_cd            "hot end of the condenser [K]"
+PP_int_cd = T_sat_cd - T_C_x1_cd       "dew point interface of the condenser [K]"
+PP_cold_cd = T_3 - T_HS                "cold end of the condenser [K]"
+PPTD_cd = MIN(PP_hot_cd, MIN(PP_int_cd, PP_cold_cd))  "pinch point difference of the condenser [K]"
+PPTD_cd = PP_cd                        "design condition: closes P_high"
+
+"!Expansion valve: isenthalpic"
+h_4 = h_3                              "valve outlet enthalpy [J/kg]"
+T_4 = TEMPERATURE(fluid$, P=P_low, h=h_4)  "valve outlet temperature [C]"
+x_4 = QUALITY(fluid$, P=P_low, h=h_4)      "valve outlet vapour quality [-]"
+
+"!Evaporator, refrigerant side: evaporation and superheating"
+Q_dot_sc_ev = 0                        "no subcooling zone: the supply is two-phase [W]"
+Q_dot_tp_ev = M_dot*(h_g_ev - h_4)     "evaporation duty [W]"
+T_1 = T_sat_ev + SH_ev                 "evaporator outlet temperature [C]"
+h_1 = ENTHALPY(fluid$, P=P_low, T=T_1) "evaporator outlet enthalpy [J/kg]"
+Q_dot_sh_ev = M_dot*(h_1 - h_g_ev)     "superheating duty [W]"
+Q_dot_ev = Q_dot_sc_ev + Q_dot_tp_ev + Q_dot_sh_ev  "total evaporator duty [W]"
+
+"!Evaporator, water side: cooled through the two zones (no pressure drop)"
+h_su_H_ev = ENTHALPY('Water', T=T_CS, P=P_CS)   "water inlet enthalpy [J/kg]"
+h_H_x1_ev = h_su_H_ev - Q_dot_sh_ev/M_dot_CS    "water enthalpy after the superheating zone [J/kg]"
+T_H_x1_ev = TEMPERATURE('Water', P=P_CS, h=h_H_x1_ev)  "water temperature after the superheating zone [C]"
+h_H_x0_ev = h_H_x1_ev - Q_dot_tp_ev/M_dot_CS    "water enthalpy after the evaporation zone [J/kg]"
+T_H_x0_ev = TEMPERATURE('Water', P=P_CS, h=h_H_x0_ev)  "water temperature after the evaporation zone [C]"
+h_H_ex_ev = h_H_x0_ev - Q_dot_sc_ev/M_dot_CS    "water outlet enthalpy [J/kg]"
+T_H_ex_ev = TEMPERATURE('Water', P=P_CS, h=h_H_ex_ev)  "water outlet temperature [C]"
+
+"!Evaporator pinch point: the smallest of the three candidate temperature differences"
+PP_cold_ev = T_H_ex_ev - T_4           "cold end of the evaporator [K]"
+PP_int_ev = T_H_x0_ev - T_sat_ev       "bubble point interface of the evaporator [K]"
+PP_hot_ev = T_CS - T_1                 "hot end of the evaporator [K]"
+PPTD_ev = MIN(PP_cold_ev, MIN(PP_int_ev, PP_hot_ev))  "pinch point difference of the evaporator [K]"
+PPTD_ev = PP_ev                        "design condition: closes P_low"
+
+"!Compressor: constant isentropic efficiency"
+s_1 = ENTROPY(fluid$, P=P_low, h=h_1)       "suction entropy [J/kg-K]"
+h_2s = ENTHALPY(fluid$, P=P_high, s=s_1)    "isentropic discharge enthalpy [J/kg]"
+h_2 = h_1 + (h_2s - h_1)/eta_cp             "discharge enthalpy [J/kg]"
+T_2 = TEMPERATURE(fluid$, P=P_high, h=h_2)  "discharge temperature [C]"
+s_2 = ENTROPY(fluid$, P=P_high, h=h_2)      "discharge entropy [J/kg-K]"
+W_dot = M_dot*(h_2 - h_1)                   "compressor power [W]"
+
+"!Performance"
+COP = Q_dot_cd/W_dot                             "heating coefficient of performance [-]"
+Q_dot_water_cd = M_dot_HS*(h_ex_C_cd - h_su_C_cd)  "heat received by the hot water [W]"
+Q_dot_water_ev = M_dot_CS*(h_su_H_ev - h_H_ex_ev)  "heat taken from the cold water [W]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: evaporator outlet = compressor supply, 2: compressor discharge = condenser
+ inlet, 3: condenser outlet, 4: evaporator inlet after the valve. Use the arrays
+ h[i]/P[i] or s[i]/T[i] with the "Overlay array path" option of the Diagram tab.}
+P[1] = P_low
+h[1] = h_1
+T[1] = T_1
+s[1] = s_1
+P[2] = P_high
+h[2] = h_2
+T[2] = T_2
+s[2] = s_2
+P[3] = P_high
+h[3] = h_3
+T[3] = T_3
+s[3] = ENTROPY(fluid$, P=P_high, h=h_3)
+P[4] = P_low
+h[4] = h_4
+T[4] = T_4
+s[4] = ENTROPY(fluid$, P=P_low, h=h_4)

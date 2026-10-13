@@ -1,0 +1,138 @@
+{=============================================================================
+  Condenser rated by UA and a smoothed LMTD (TESPy), variant of CSL-0137
+ -----------------------------------------------------------------------------
+  Translation of the TESPy component class Condenser (TSP-009), the condensing
+  variant of the counterflow exchanger of hx_lmtd_ua.eescode. The hot side is a
+  pure condensing fluid that leaves the exchanger as saturated liquid, the
+  upper terminal temperature difference ttd_u and the LMTD are referred to the
+  dew-line temperature T_dew at the hot inlet pressure. Case 1 is the design
+  run of the TESPy Condenser doctest (waste steam chilled with air), case 2 its
+  off-design run (UA = UA_design*f_UA from the characteristic lines).
+
+  Source: TESPy, Witte & Tuschy (MIT, commit 19425523),
+          src/tespy/components/heat_exchangers/condenser.py, src/tespy/data/char_lines.json
+  Authors: Francesco Witte and the TESPy contributors; LMTD smoothing: Sylvain Quoilin
+  License: MIT
+  Status: verified against the TESPy Condenser class doctest (README.md)
+=============================================================================}
+
+FUNCTION LMTD_smoothed(td_a, td_b)
+{----------------------------------------------------------------------------
+  Smoothed logarithmic mean temperature difference of a counterflow exchanger,
+  as in tespy.components.heat_exchangers.base.smoothed_lmtd (commit 19425523),
+  itself from S. Quoilin, "Study of cooling and heat pump systems", PhD thesis,
+  University of Liege, 2011 (threshold 1 K and slope 1e4 there; TESPy lowers
+  both for lower pinches and lower stiffness).
+  The same FUNCTION is used by the main file hx_lmtd_ua.eescode; a model can
+  only have one body per name, hence the copy (CoolSolve CS-FEAT-IMPORT).
+----------------------------------------------------------------------------}
+  eps = 0.001        "threshold of the smoothing [K] (_LMTD_SMOOTHING_EPS)"
+  xi = 5             "slope of the extrapolation [1/K] (_LMTD_SMOOTHING_XI)"
+  IF (td_a > eps AND td_b > eps) THEN
+    IF (ABS(td_a - td_b) <= 1E-6) THEN
+      LMTD_smoothed = (td_a + td_b)/2
+    ELSE
+      LMTD_smoothed = (td_a - td_b)/LN(td_a/td_b)
+    ENDIF
+  ELSE
+    IF (td_a > eps) THEN
+      LMTD_smoothed = (td_a - eps)/(LN(td_a/eps)*(1 - xi*(td_b - eps)))
+    ELSE
+      IF (td_b > eps) THEN
+        LMTD_smoothed = (td_b - eps)/(LN(td_b/eps)*(1 - xi*(td_a - eps)))
+      ELSE
+        LMTD_smoothed = eps/((1 - xi*(td_a - eps))*(1 - xi*(td_b - eps)))
+      ENDIF
+    ENDIF
+  ENDIF
+END
+
+"!Case 1 - design run of the TESPy Condenser doctest (waste steam on the hot side, air on the cold side)"
+M_dot_h_1 = 1              "hot mass flow rate of the condensing steam [kg/s]"
+h_h_su_1 = 2700E3          "hot supply enthalpy [J/kg] (doctest h = 2700 kJ/kg)"
+P_h_su_1 = 15762.10        "hot supply pressure [Pa] (value of the design run)"
+P_h_ex_1 = 15446.86        "hot outlet pressure [Pa] (value of the design run)"
+T_c_su_1 = 20              "cold supply temperature [C]"
+P_c_su_1 = 100100.10       "cold supply pressure [Pa] (pr2 = 0.999, doctest pr2)"
+P_c_ex_1 = 1E5             "cold outlet pressure [Pa] (doctest p = 1 bar)"
+T_c_ex_1 = 40              "cold outlet temperature, design specification [C] (doctest T = 40)"
+ttd_u_1 = 15               "upper terminal temperature difference to the dew line, design specification [K]"
+
+"!Case 2 - off-design run of the same doctest (steam flow reduced to 0.7 kg/s, air inlet at 30 C)"
+M_dot_h_2 = 0.7            "hot mass flow rate of the condensing steam [kg/s]"
+h_h_su_2 = 2700E3          "hot supply enthalpy [J/kg]"
+P_h_ex_2 = 16045.09        "hot outlet pressure [Pa] (value of the off-design run, pr1 = 0.98)"
+T_c_su_2 = 30              "cold supply temperature [C]"
+P_c_su_2 = 100100.10       "cold supply pressure [Pa]"
+P_c_ex_2 = 1E5             "cold outlet pressure [Pa]"
+V_dot_c_2 = 103.1737471    "cold-side volumetric flow at the inlet [m3/s] (held at its design value, TESPy offdesign ['v'])"
+UA_design = 105428.9983    "design heat transfer coefficient of case 1 [W/K]"
+M_dot_h_design = 1         "hot design mass flow rate of case 1 [kg/s] (value of the design run)"
+M_dot_c_design = 122.7775757 "cold design mass flow rate of case 1 [kg/s] (value of the design run)"
+
+"!Hot side of case 1: the steam leaves as saturated liquid (TESPy subcooling_func)"
+T_h_su_1 = TEMPERATURE(Water, P=P_h_su_1, H=h_h_su_1)  "hot supply temperature of the superheated steam [C]"
+T_dew_1 = TEMPERATURE(Water, P=P_h_su_1, x=1)   "dew-line temperature at the hot supply pressure [C]"
+h_h_ex_1 = ENTHALPY(Water, P=P_h_ex_1, x=0)     "hot outlet enthalpy, saturated liquid [J/kg]"
+T_h_ex_1 = TEMPERATURE(Water, P=P_h_ex_1, x=0)   "hot outlet temperature, saturation temperature [C]"
+M_dot_h_1*(h_h_ex_1 - h_h_su_1) = Q_dot_1        "heat transfer from the hot side [W]"
+
+"!Cold side of case 1: the air flow is the unknown closed by the energy balance"
+h_c_su_1 = ENTHALPY(Air, T=T_c_su_1, P=P_c_su_1) "cold supply enthalpy [J/kg]"
+h_c_ex_1 = ENTHALPY(Air, T=T_c_ex_1, P=P_c_ex_1) "cold outlet enthalpy [J/kg]"
+M_dot_c_1*(h_c_ex_1 - h_c_su_1) = -Q_dot_1       "energy balance of the cold side [W]"
+
+"!Rating of case 1: ttd_u and the LMTD are referred to the dew line (TESPy Condenser.calculate_lmtd)"
+ttd_l_1 = T_h_ex_1 - T_c_su_1                    "lower terminal temperature difference [K]"
+lmtd_1 = LMTD_smoothed(T_dew_1 - T_c_ex_1, ttd_l_1)  "effective logarithmic mean temperature difference [K]"
+UA_1 = -Q_dot_1/lmtd_1                           "heat transfer coefficient considering the ttd's [W/K]"
+ttd_min_1 = MIN(T_dew_1 - T_c_ex_1, ttd_l_1)     "minimum terminal temperature difference (pinch) [K]"
+eff_hot_1 = (h_h_ex_1 - h_h_su_1)/(ENTHALPY(Water, T=T_c_su_1, P=P_h_ex_1) - h_h_su_1)  "hot-side effectiveness [-]"
+eff_cold_1 = (h_c_ex_1 - h_c_su_1)/(ENTHALPY(Air, T=T_h_su_1, P=P_c_ex_1) - h_c_su_1)    "cold-side effectiveness [-]"
+eff_max_1 = MAX(eff_hot_1, eff_cold_1)           "maximum effectiveness [-]"
+
+"!Hot side of case 2: the steam supply pressure is the unknown closed by the UA equation"
+T_dew_2 = TEMPERATURE(Water, P=P_h_su_2, x=1)     "dew-line temperature at the hot supply pressure [C]"
+h_h_ex_2 = ENTHALPY(Water, P=P_h_ex_2, x=0)       "hot outlet enthalpy, saturated liquid [J/kg]"
+T_h_ex_2 = TEMPERATURE(Water, P=P_h_ex_2, x=0)     "hot outlet temperature, saturation temperature [C]"
+M_dot_h_2*(h_h_ex_2 - h_h_su_2) = Q_dot_2          "heat transfer from the hot side [W]"
+
+"!Cold side of case 2: the air volumetric flow is held at its design value"
+M_dot_c_2 = V_dot_c_2/VOLUME(Air, T=T_c_su_2, P=P_c_su_2)  "cold mass flow rate [kg/s]"
+h_c_su_2 = ENTHALPY(Air, T=T_c_su_2, P=P_c_su_2)  "cold supply enthalpy [J/kg]"
+h_c_ex_2 = h_c_su_2 - Q_dot_2/M_dot_c_2            "cold outlet enthalpy [J/kg]"
+T_c_ex_2 = TEMPERATURE(Air, H=h_c_ex_2, P=P_c_ex_2) "cold outlet temperature [C]"
+
+"!Off-design rating of case 2: UA = UA_design*f_UA, f_UA = 2/(1/f_1 + 1/f_2) (TESPy UA_char_func)"
+m_ratio_h = M_dot_h_2/M_dot_h_design               "hot-side mass flow ratio to the design value [-]"
+m_ratio_c = M_dot_c_2/M_dot_c_design               "cold-side mass flow ratio to the design value [-]"
+f_1 = INTERPOLATE('uachar', 'm_hot_design', 'f_hot', m_ratio_h)   "hot-side UA factor [-]"
+f_2 = INTERPOLATE('uachar', 'm_cold_design', 'f_cold', m_ratio_c) "cold-side UA factor [-]"
+f_UA_2 = 2/(1/f_1 + 1/f_2)                         "combined UA factor [-]"
+UA_2 = UA_design*f_UA_2                            "heat transfer coefficient off design [W/K]"
+ttd_u_2 = T_dew_2 - T_c_ex_2                      "upper terminal temperature difference [K]"
+ttd_l_2 = T_h_ex_2 - T_c_su_2                      "lower terminal temperature difference [K]"
+lmtd_2 = LMTD_smoothed(ttd_u_2, ttd_l_2)           "effective logarithmic mean temperature difference [K]"
+-Q_dot_2 - UA_2*lmtd_2 = 0                         "heat transfer closed by the UA equation, Q + UA*lmtd = 0 [W]"
+ttd_min_2 = MIN(ttd_u_2, ttd_l_2)                  "minimum terminal temperature difference (pinch) [K]"
+
+"!Condensing fluid of both cases, for the thermodynamic diagrams (no effect on the results)"
+{1: steam inlet of case 1, 2: saturated liquid at the outlet pressure of case 1,
+ 3: steam inlet of case 2, 4: saturated liquid at the outlet pressure of case 2.
+ Overlay the h/P arrays in the Diagram tab.}
+P[1] = P_h_su_1
+h[1] = h_h_su_1
+T[1] = T_dew_1
+s[1] = ENTROPY(Water, H=h_h_su_1, P=P_h_su_1)
+P[2] = P_h_ex_1
+h[2] = h_h_ex_1
+T[2] = T_h_ex_1
+s[2] = ENTROPY(Water, P=P_h_ex_1, x=0)
+P[3] = P_h_su_2
+h[3] = h_h_su_2
+T[3] = T_dew_2
+s[3] = ENTROPY(Water, H=h_h_su_2, P=P_h_su_2)
+P[4] = P_h_ex_2
+h[4] = h_h_ex_2
+T[4] = T_h_ex_2
+s[4] = ENTROPY(Water, P=P_h_ex_2, x=0)

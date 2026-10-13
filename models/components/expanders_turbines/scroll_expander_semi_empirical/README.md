@@ -160,3 +160,7 @@ Source files (MIT, collection of S. Quoilin):
   semi-empirical model was validated on.
 - See also the CoolSolve example `expander_module.eescode` (kept in CoolSolve
   as a test case).
+- `CSL-0135` *turbine_stodola_offdesign*: an expander/turbine off-design
+  model built on Stodola's cone law and an efficiency characteristic line
+  (translation of the TESPy `Turbine` class) instead of on the machine
+  geometry of this model.

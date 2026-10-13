@@ -231,6 +231,9 @@ Source file (plain-text EES library, comments in French):
   (copied in its runnable variants).
 - `CSL-0046` *octane_combustion_400pct_air*: combustion exercise of the same
   course (species formation enthalpies and ideal-gas enthalpies, no `cpbar`).
+- `CSL-0139` *combustion_chamber*: generic fuel/air combustion chamber (TESPy
+  translation) whose flue-gas composition is species-resolved rather than
+  `cpbar`-based.
 - Engine models of the collection also call `cpbar`/`gamma`.
 - `CSL-0050` *gas_turbine_two_shaft_intercooled_regenerative*: gas turbine of the
   same course, combustion chamber of the air assumed unchanged (no `cpbar`).

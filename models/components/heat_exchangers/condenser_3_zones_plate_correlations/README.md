@@ -20,7 +20,7 @@ and secondary-side pressure drops and the refrigerant hold-up mass.
 | **Source** | ULiège Thermodynamics Laboratory — `procedures EES/condenser 3 zones with correlations.EES` |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — verified against the EES stored solution (5.56e-02 max rel. diff, see *Verification*) |
+| **CoolSolve** | v0.3.0 — verified against the EES stored solution (7.74e-03 max rel. diff, see *Verification*) |
 
 ## Problem statement
 
@@ -63,11 +63,11 @@ calculation (the `Thonon` calls pass a unit length; zone lengths come out of
 
 | Inputs | Value | Outputs | Value |
 |---|---:|---|---:|
-| `N_p_cd` plates | 75 | `A_cd` area | 5.59 m² |
-| `L_w` plate width | 0.112 m | `DELTAp_cd` refrigerant Δp | 48.4 kPa |
-| `b` channel gap | 0.0024 m | `DELTAp_sf_cd` water-side Δp | 373 Pa |
-| `beta` chevron angle | 45° | `M_fluid_cd` hold-up | 7.63 kg |
-| `T_r_su_cd` / `T_r_ex_sc_cd` | 84.56 / 36.02 °C | `V_cd` volume | 0.0134 m³ |
+| `N_p_cd` plates | 75 | `A_cd` area | 5.85 m² |
+| `L_w` plate width | 0.112 m | `DELTAp_cd` refrigerant Δp | 51.4 kPa |
+| `b` channel gap | 0.0024 m | `DELTAp_sf_cd` water-side Δp | 391 Pa |
+| `beta` chevron angle | 45° | `M_fluid_cd` hold-up | 8.07 kg |
+| `T_r_su_cd` / `T_r_ex_sc_cd` | 84.56 / 36.02 °C | `V_cd` volume | 0.0140 m³ |
 | `M_dot_r` / `M_dot_w` | 0.1976 / 0.5 kg/s | | |
 | `p_cd` / `p_w` | 159 463 / 100 000 Pa | | |
 
@@ -94,24 +94,32 @@ or T-s diagram (post-processing block, no effect on the results).
 
 Against the EES stored solution of the source file (EES 8.940, saved with its
 last solution): `compare_solution.py` reports "17 common variables, 5 differ
-(rtol=0.001)" with relative differences 3.71e-02 (A_cd), 5.56e-02
-(DELTAp_cd), 3.69e-02 (DELTAp_sf_cd), 5.26e-02 (M_fluid_cd), 3.71e-02
+(rtol=0.001)" with relative differences 7.56e-03 (A_cd), 2.75e-03
+(DELTAp_cd), 7.74e-03 (DELTAp_sf_cd), 2.50e-03 (M_fluid_cd), 7.56e-03
 (V_cd); all other common variables (every input) agree exactly; `L_h` exists
 only in the EES reference (vestigial stored value of an earlier version of
 the file, not defined by the current equations).
 
-The five differing variables are the integrated outputs, and all of them
-inherit the same cause: the model equations and inputs are identical, so the
-deviation can only come from the property values. The results are sensitive
-through the desuperheating duty `Q_dot_v = M_dot_r·(h_su − h_sat_v)`, a small
-difference of large enthalpies (CoolProp: 438.4 − 406.1 = 32.3 kJ/kg,
-≈ 16 % of the total duty) evaluated 43.6 K above saturation; the 2008-era EES
-R123 property library differs from CoolProp's Helmholtz formulation in this
-region. The CoolProp saturation values check against published R123 tables:
-T_sat = 40.97 °C and h_fg = 164.5 kJ/kg at 159.463 kPa. The deviation is
-within the "older EES fluid models: up to a few %" tolerance of CoolSolve
-`docs/ees_import.md` §11, explained here; the 5.56e-02 on `DELTAp_cd` is the
-same zone-split difference amplified by the pressure-drop correlation.
+The five differing variables are the integrated outputs. The model equations
+and inputs are identical, so the remaining deviation (below 0.8 %) can only
+come from the property values. The results are sensitive through the
+desuperheating duty `Q_dot_v = M_dot_r·(h_su − h_sat_v)`, a small difference of
+large enthalpies (CoolProp: 438.4 − 406.1 = 32.3 kJ/kg, ≈ 16 % of the total
+duty) evaluated 43.6 K above saturation; the 2008-era EES R123 property library
+differs from CoolProp's Helmholtz formulation in this region. The CoolProp
+saturation values check against published R123 tables: T_sat = 40.97 °C and
+h_fg = 164.5 kJ/kg at 159.463 kPa. The deviation is within the "older EES fluid
+models: up to a few %" tolerance of CoolSolve `docs/ees_import.md` §11.
+
+*Correction of 2026-10-13.* The first import reported 3.7–5.6 % deviations
+(`A_cd` 5.59 m², `DELTAp_cd` 48.4 kPa) and attributed all of them to the
+property library. Most of that gap was a CoolSolve bug, not a property
+difference: the built-in constant `g#` read as 1 instead of 9.81 inside the
+`FUNCTION` that evaluates the Kuo correlation (Froude number
+`Fr_l = G²/(ρ_l²·g#·D_h)`), registered as `CS-BUG-PI-FUNCTION` and fixed in
+CoolSolve after v0.3.0. With the fix, the baseline `.sol` was recomputed
+(CoolSolve 0.3.0, CoolProp 75af7816) and the deviations dropped to the values
+above.
 
 ## Source and attribution
 
@@ -130,6 +138,11 @@ Source file (EES 8.940), collection of S. Quoilin:
 (inventory candidate `TM-0563`).
 
 ## Conversion log
+
+- **2026-10-13 — re-baseline**: `.sol` recomputed after the CoolSolve fix of
+  `CS-BUG-PI-FUNCTION` (`g#` was read as 1 in function bodies); `A_cd` 5.59 → 5.85 m²,
+  `DELTAp_cd` 48.4 → 51.4 kPa; deviation from the EES stored solution 5.56e-02 →
+  7.74e-03. No equation changed.
 
 - **2026-10-07 — import** (`tools/ees_extract.py`): unit system already
   SI-°C-Pa-J; the file uses the European decimal-comma display convention

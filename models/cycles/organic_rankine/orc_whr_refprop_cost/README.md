@@ -99,11 +99,11 @@ EES stored solution vs the CoolSolve variant (default operating point):
 | Quantity | EES | CoolSolve | dev. | Quantity | EES | CoolSolve | dev. |
 |---|---:|---:|---:|---|---:|---:|---:|
 | `M_dot_r` [kg/s] | 0.2235 | 0.2255 | 0.9 % | `A_ev` [m²] | 2.334 | 2.358 | 1.0 % |
-| `Q_dot_ev` [kW] | 49.19 | 49.47 | 0.6 % | `A_cd` [m²] | 5.459 | 8.893 | 38.6 % |
-| `W_dot_net` [kW] | 3.425 | 3.288 | 4.0 % | `DELTAp_ev` [kPa] | 26.15 | 23.60 | 9.8 % |
-| `eta_cycle` [%] | 6.964 | 6.646 | 4.6 % | `DELTAp_cd` [kPa] | 44.92 | 89.31 | 49.7 % |
-| `epsilon_s_exp` [-] | 0.6370 | 0.6502 | 2.0 % | `TEC` [€] | 7 114 | 8 315 | 14.4 % |
-| `epsilon_ev` [%] | 52.95 | 53.25 | 0.6 % | `SIC` [€/kW] | 2 700 | 3 288 | 17.9 % |
+| `Q_dot_ev` [kW] | 49.19 | 49.47 | 0.6 % | `A_cd` [m²] | 5.459 | 10.96 | 50.2 % |
+| `W_dot_net` [kW] | 3.425 | 3.213 | 6.2 % | `DELTAp_ev` [kPa] | 26.15 | 23.60 | 9.8 % |
+| `eta_cycle` [%] | 6.964 | 6.496 | 6.7 % | `DELTAp_cd` [kPa] | 44.92 | 112.1 | 59.9 % |
+| `epsilon_s_exp` [-] | 0.6370 | 0.6563 | 2.9 % | `TEC` [€] | 7 114 | 9 029 | 21.2 % |
+| `epsilon_ev` [%] | 52.95 | 53.25 | 0.6 % | `SIC` [€/kW] | 2 700 | 3 653 | 26.1 % |
 
 `dev.` is `|CoolSolve − EES| / max(|CoolSolve|, |EES|)`, as printed by
 `tools/compare_solution.py`. The condenser, evaporator-area, cost and cycle
@@ -123,16 +123,17 @@ orc_whr_refprop_cost_coolsolve.sol ees_variables.csv` (356 common variables).
 `P_evap` is in bar in both files; `--ees-units` converts the EES value to Pa
 and reports a false factor of 10⁵ for this one variable.
 
-- **93 variables are affected by the corrections** of `kuo` and `Hsieh_new`
+- **About 90 variables are affected by the corrections** of `kuo` and `Hsieh_new`
+  (93 in the first analysis of 2026-10-10, not recounted after the re-baseline)
   (the variant solution changes by more than 1e-6 when they are corrected):
-  the condenser (`A_cd` 8.893 m² against 5.459 m² in EES, `DELTAp_cd` 89.31 kPa
-  against 44.92 kPa, `M_fluid_cd`, `Cout_condenseur` 2 947 € against 1 882 €),
+  the condenser (`A_cd` 10.96 m² against 5.459 m² in EES, `DELTAp_cd` 112.1 kPa
+  against 44.92 kPa, `M_fluid_cd`, `Cout_condenseur` 3 589 € against 1 882 €),
   the evaporator (`A_ev` 2.358 m² against 2.334 m², `DELTAp_ev` 23.60 kPa against
-  26.15 kPa), the cost totals (`TEC` 8 315 € against 7 114 €, `TIC` 10 810 €
-  against 9 248 €, `SIC` 3 288 €/kW against 2 700 €/kW), and the cycle outputs
-  that depend on the condenser pressure (`P_r_ex_exp` 580.7 kPa against
-  531.8 kPa, `W_dot_net` 3 288 W against 3 425 W, `eta_cycle` 6.65 % against
-  6.96 %, `epsilon_s_exp` 0.650 against 0.637).
+  26.15 kPa), the cost totals (`TEC` 9 029 € against 7 114 €, `TIC` 11 737 €
+  against 9 248 €, `SIC` 3 653 €/kW against 2 700 €/kW), and the cycle outputs
+  that depend on the condenser pressure (`P_r_ex_exp` 603.5 kPa against
+  531.8 kPa, `W_dot_net` 3 213 W against 3 425 W, `eta_cycle` 6.50 % against
+  6.96 %, `epsilon_s_exp` 0.656 against 0.637).
   Errors 1 and 2 of the original are corrected: the saturated enthalpies of
   `kuo` and `Hsieh_new` were molar (J/mol) while the densities and heat
   capacities were mass-based, so the boiling number Bo = q/(G·i_fg) was about
@@ -140,9 +141,17 @@ and reports a false factor of 10⁵ for this one variable.
   heat-transfer coefficient overwrote `h_l` before `i_fg = h_v − h_l` was
   evaluated. The corrected values are the reliable ones: the condensation
   coefficient is lower, so the condenser needs a larger area. The EES stored run
-  carries the two errors: a scratch run of the variant with both restored gives
-  `eta_cycle` 6.959 % (EES 6.964 %), `W_dot_net` 3 442 W (3 425 W) and `SIC`
-  2 664 €/kW (2 700 €/kW, 1.3 %).
+  carries the two errors: a scratch run of the variant with both restored (lines 487 and 591 of the
+  variant replaced by `i_fg = h_sat_v*0.134048 - h_l` and
+  `i_fg = (h_v - h_l)*0.134048`) gives `eta_cycle` 6.942 % (EES 6.964 %),
+  `W_dot_net` 3 434 W (3 425 W), `A_cd` 5.531 m² (5.459 m²), `DELTAp_cd` 44.21 kPa
+  (44.92 kPa) and `SIC` 2 708 €/kW (2 700 €/kW, 0.3 %).
+  *Correction of 2026-10-13:* the first analysis was made while CoolSolve read
+  the built-in constant `g#` as 1 instead of 9.81 inside the correlation
+  functions (Froude number of `kuo`; `CS-BUG-PI-FUNCTION`, fixed after v0.3.0).
+  The baseline `.sol` was recomputed with the fix; the corrected values above
+  (e.g. `A_cd` 8.893 → 10.96 m², `SIC` 3 288 → 3 653 €/kW) and the scratch run
+  (`SIC` 2 664 → 2 708 €/kW) were updated accordingly.
 - **The other variables differ by a few %**: `M_dot_r` 0.9 %, `Q_dot_ev` 0.6 %,
   `epsilon_ev` 0.6 % and the vapour specific heats of the R245fa states up to
   6.1 % (`Cp_r_ex_vap_cd`). They come from the property backend (CoolProp, at
@@ -177,6 +186,10 @@ copies, TM-0555/TM-0556, by Sylvain Quoilin). No author is named in the file
 itself.
 
 ## Conversion log
+
+- **2026-10-13 — re-baseline**: `_coolsolve.sol` recomputed after the CoolSolve fix of
+  `CS-BUG-PI-FUNCTION` (`g#` read as 1 in function bodies, Froude number of `kuo`);
+  results and verification text updated, no equation changed.
 
 - **2026-10-08 — import** (`tools/ees_extract.py`): unit system already
   `SI MASS DEG PA C J`; decimal comma converted to dot by the tool; licence

@@ -91,7 +91,7 @@ converges without them. Regression: `tools/test_models.py CSL-0124`.
 | `DELTAp_cd_approx` orifice Δp [Pa] | 47 265 | 47 239 | 5.58e-04 |
 | `DELTAp_ev` evaporator Δp, Hsieh [Pa] | 33 098 | 33 742 | 1.91e-02 |
 | `DELTAp_tp` condenser Δp, Kuo [Pa] | 38 824 | 33 222 | 1.44e-01 |
-| `alpha_tp_cd` condensation HTC, Kuo [W/m²-K] | 211.1 | 588.1 | 6.41e-01 |
+| `alpha_tp_cd` condensation HTC, Kuo [W/m²-K] | 170.8 | 588.1 | 7.09e-01 |
 | `h_tp_ev` boiling HTC, Hsieh [W/m²-K] | 2112 | 3848 | 4.51e-01 |
 
 `rel. diff` is `|CoolSolve − EES| / max(|CoolSolve|, |EES|)`, as printed by
@@ -122,11 +122,16 @@ Identification pressure drops.EES`, 34 variables decoded), compared with
      `i_fg = h_v − h_l` was evaluated, so the "latent heat" contained a
      heat-transfer coefficient.
 
-  The corrected values are the reliable ones: `alpha_tp_cd` 211.1 (EES 588.1),
+  The corrected values are the reliable ones: `alpha_tp_cd` 170.8 (EES 588.1),
   `DELTAp_tp` 38 824 (33 222), `h_tp_ev` 2112 (3848). A scratch run with the
-  original's molar convention and the `h_l` overwrite gives 628, 32 727 and
-  3 868, within 7 % of the stored values: the stored EES values carry the two
-  errors.
+  original's molar convention and the `h_l` overwrite (lines 129 and 191 of the
+  native file replaced by `i_fg = (h_v - h_l)*0.134048` and
+  `i_fg = h_sat_v*0.134048 - h_l`) gives 587.4, 32 727 and 3 868, within 1.5 % of
+  the stored values (0.12 %, 1.5 %, 0.5 %): the stored EES values carry the two
+  errors. (Re-run on 2026-10-13 after the CoolSolve fix of `CS-BUG-PI-FUNCTION`:
+  the first run, with `g#` read as 1 in the function bodies, gave 628 for
+  `alpha_tp_cd` and a 7 % agreement; the baseline value of `alpha_tp_cd` moved
+  from 211.1 to 170.8 for the same reason.)
 - **`h` and `DELTAp_ev` differ by 0.5 % and 1.9 %**, they are not affected by the
   corrections and follow from the R245fa property backend (CoolProp, at the
   revision pinned by CoolSolve, against the REFPROP 8 of EES; see *CoolProp pin
@@ -151,6 +156,10 @@ Source file (EES 8.652, comments mostly English), collection of S. Quoilin:
 (inventory candidate `TM-0554`).
 
 ## Conversion log
+
+- **2026-10-13 — re-baseline**: `.sol` recomputed after the CoolSolve fix of
+  `CS-BUG-PI-FUNCTION` (`g#` was read as 1 in function bodies, Froude number of the
+  Kuo correlation); only `alpha_tp_cd` changes (211.1 → 170.8 W/m²-K). No equation changed.
 
 - **2026-10-07 — import** (`tools/ees_extract.py`, CoolSolve v0.3.0@7addbbc):
   unit system already SI-°C-Pa-J; the EES licence tag was removed; no lookup

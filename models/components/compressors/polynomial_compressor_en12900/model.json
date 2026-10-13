@@ -1,0 +1,76 @@
+{
+  "id": "CSL-0136",
+  "name": "polynomial_compressor_en12900",
+  "title": "Positive-displacement compressor with EN12900 efficiency-map polynomials",
+  "summary": "Translation of the TESPy class PolynomialCompressor: isentropic and volumetric efficiency as 10-coefficient EN12900 polynomials of the evaporation and condensation temperature of a compressor catalogue, heat dissipation ratio, mass flow from swept volume x frequency x eta_v; four operating points (three with a fixed frequency, one with an imposed volumetric flow).",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "polynomial_compressor_en12900.eescode",
+  "fluids": [
+    "R134a"
+  ],
+  "tags": [
+    "compressor",
+    "screw compressor",
+    "semi-hermetic",
+    "EN12900",
+    "efficiency map",
+    "polynomial map",
+    "catalogue data",
+    "offdesign",
+    "heat dissipation",
+    "R134a"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "FUNCTION",
+    "DUPLICATE",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 152,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/src/tespy/components/displacementmachinery/polynomial_compressor.py",
+    "candidate_id": "TSP-006",
+    "authors": [
+      "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+    ],
+    "url": "https://github.com/oemof/tespy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "TESPy class PolynomialCompressor and its tests/test_components/test_polynomial_compressor.py; Bitzer SP-111-1 map of docs/model_library/heat_pump_partload.ipynb (commit 19425523)"
+  },
+  "verification": {
+    "reference": "TESPy 0.11.3.dev0 (commit 19425523, CoolProp 8.0.0) run from the local snapshot in a throw-away venv: the class docstring (doctest) cases 1 to 3, tests/test_components/test_polynomial_compressor.py (19 tests pass; catalogue power/cooling tables of the fixtures) and the compressor-map cell of docs/model_library/heat_pump_partload.ipynb (Bitzer SP-111-1 map at 30/50/90 Hz)",
+    "date": "2026-10-13",
+    "coolsolve_version": "0.3.0@4c80b25",
+    "max_rel_diff": 8.7e-09,
+    "notes": "compare_solution.py: 63 common variables, 0 differ (rtol=1e-06); at rtol=1e-09 three differ with a maximum of 8.7e-09 (T_su[3], an input temperature). Variables not compared: h_2 (virtual adiabatic discharge enthalpy, no TESPy counterpart printed), P_cat/Q_0_cat/P_dev (catalogue polynomials of this model's own data), V_dot_4/T_ev_4/T_cd_ref_4 are compared. Bitzer map: eta_s/eta_v at 2/57 degC reproduced to 3 digits for 30, 50 and 90 Hz. Catalogue fit: the fitted power and cooling polynomials reproduce the 18 catalogue points to 6.4e-04 and 2.3e-04."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0001",
+    "CSL-0007",
+    "CSL-0123",
+    "CSL-0135"
+  ],
+  "related_external": [
+    "TESPy docs/model_library/heat_pump_partload.ipynb (Bitzer SP-111-1 map and its frequency-dependent subclass, the off-design follow-up of the source component)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-13",
+      "action": "added (T-TRANSLATE of the TESPy PolynomialCompressor, card C-181, inventory row TSP-006)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

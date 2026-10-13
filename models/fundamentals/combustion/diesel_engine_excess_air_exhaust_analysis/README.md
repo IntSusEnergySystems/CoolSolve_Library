@@ -244,3 +244,5 @@ Source file (EES 10.836, comments in French), collection of S. Quoilin:
 - `CSL-0005` *cpbar_combustion_products*: mean specific heats of combustion
   gases (`cpbar`, `gamma`), the property functions of the ULiège combustion
   toolkit.
+- `CSL-0139` *combustion_chamber*: the same fuel/air stoichiometry solved
+  forwards instead of read from an exhaust-gas analysis (TESPy translation).

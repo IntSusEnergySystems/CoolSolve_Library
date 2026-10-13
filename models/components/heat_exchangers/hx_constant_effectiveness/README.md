@@ -275,6 +275,8 @@ URL + paths as above. No student names or personal data involved.
 
 ## Related models
 
+- `CSL-0134` (*orc_preheated_recuperated_cyclopentane*, level 3): its
+  recuperator and its water preheater are this component, in the Zorlu ORC.
 - `CSL-0014` (*hx_constant_pinch*, level 2): translation of the sibling
   LaboThapPy component `HexCstPinch`; the *design* counterpart of this model
   (pinch imposed and the saturation pressure solved instead of the duty given).

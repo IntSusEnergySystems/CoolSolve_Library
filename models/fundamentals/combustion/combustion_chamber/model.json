@@ -1,0 +1,69 @@
+{
+  "id": "CSL-0139",
+  "name": "combustion_chamber",
+  "title": "Generic combustion chamber (TESPy CombustionChamber)",
+  "summary": "Steady-flow combustion chamber translated from TESPy: methane (diluted with CO2, blended with H2) burned with air, mandatory equations = mass balance, pressure equality, one stoichiometry equation per fluid and the lower-heating-value energy balance; returns the fuel flow, the flue-gas composition and the flue-gas temperature for a given air flow and excess-air ratio lambda, with the pressure ratio pr and heat dissipation eta of the diabatic variant.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "combustion_chamber.eescode",
+  "fluids": [
+    "CH4",
+    "CO2",
+    "H2O",
+    "O2",
+    "N2",
+    "Ar",
+    "H2"
+  ],
+  "tags": [
+    "combustion",
+    "combustion chamber",
+    "stoichiometry",
+    "excess air",
+    "lambda",
+    "flue gas composition",
+    "thermal input",
+    "ideal gas mixture"
+  ],
+  "language_features": [
+    "property functions",
+    "FUNCTION"
+  ],
+  "stats": {"n_equations": 81, "largest_block": 1},
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/src/tespy/components/combustion/base.py",
+    "candidate_id": "TSP-022",
+    "authors": [
+      "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+    ],
+    "url": "https://github.com/oemof/tespy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "TESPy component CombustionChamber and DiabaticCombustionChamber (commit 19425523); verification against tests/test_components/test_combustion.py and tests/test_models/test_CGAM_model.py (cgam-ebsilon-results.csv)"
+  },
+  "verification": {
+    "reference": "TESPy runs of the source (local snapshot ~/git/tespy commit 19425523, throw-away venv with CoolProp 8.0.0, TESPy 0.11.3.dev0): 5 cases - test_CombustionChamberHighTemperature, both steps of test_CombustionChamber, the CombustionChamber docstring example and the combustion chamber of the CGAM model compared with tests/test_models/cgam-ebsilon-results.csv; work scripts run_tespy.py, run_cgam.py and verify.py (README, Verification)",
+    "date": "2026-10-13",
+    "coolsolve_version": "0.3.0@4c80b25",
+    "max_rel_diff": 2e-04,
+    "notes": "Base case also compared with tools/compare_solution.py against tespy_case_A.csv: 15 common variables, 0 differ (rtol=0.001), maximum relative deviation 9.74e-06 on T_fg_K, all other variables <= 1.6e-13 (x_fg_O2 = 1.1e-15 in absolute value). Maximum over the 5 cases 2e-04 (CGAM, T_fg_K 1520.306 K against 1520.000 K); 6.4e-05 for the four component cases. Deviation cause: the two tools use different ideal-gas enthalpy data (CoolSolve NASA-Glenn species against CoolProp 8.0.0 in TESPy); the formation enthalpies agree (LHV_CH4 identical to 14 digits), so only the temperature that follows from the energy balance is affected. Against the Ebsilon table of the CGAM benchmark: 1.4e-03, TESPy's own run deviates by 1.3e-03 (test tolerance 5e-03)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0005",
+    "CSL-0013",
+    "CSL-0046",
+    "CSL-0058",
+    "CSL-0150"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-13", "action": "added (T-TRANSLATE of the TESPy CombustionChamber / DiabaticCombustionChamber, card C-184, inventory row TSP-022); verified against 5 TESPy runs", "by": "opencode worker (space-bunny-free) for S. Quoilin"}
+  ]
+}
