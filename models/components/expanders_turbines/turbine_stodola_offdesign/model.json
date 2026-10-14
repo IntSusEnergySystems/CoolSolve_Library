@@ -1,0 +1,71 @@
+{
+  "id": "CSL-0135",
+  "name": "turbine_stodola_offdesign",
+  "title": "Steam turbine with Stodola's cone law and efficiency characteristic",
+  "summary": "Gas/steam turbine off-design model: a design point (isentropic efficiency given) supplies the reference values of Stodola's cone law, and an off-design point gets its inlet pressure from the cone law and its isentropic efficiency from a characteristic line eta_s/eta_s,design = f(m/m_ref).",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "turbine_stodola_offdesign.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "turbine",
+    "offdesign",
+    "cone law",
+    "Stodola",
+    "characteristic line",
+    "isentropic efficiency",
+    "steam",
+    "translation"
+  ],
+  "language_features": [
+    "property functions",
+    "lookup tables",
+    "INTERPOLATE",
+    "string variables"
+  ],
+  "stats": {
+    "n_equations": 32,
+    "largest_block": 3
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/src/tespy/components/turbomachinery/turbine.py",
+    "candidate_id": "TSP-003",
+    "authors": [
+      "Francesco Witte (TESPy lead developer)",
+      "the TESPy contributors"
+    ],
+    "url": "https://github.com/oemof/tespy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "reference": "Example of the class docstring of TESPy src/tespy/components/turbomachinery/turbine.py (commit 19425523), re-run in a throw-away virtual environment (tespy 0.11.3.dev0 from the local clone, CoolProp 8.0.0): design P = -10452573.7 W and x = 0.9138, off-design at 28.8 t/h p_in = 88.6433 bar, eta_s = 0.8982",
+    "date": "2026-10-13",
+    "coolsolve_version": "0.3.0@4c80b25",
+    "max_rel_diff": 3.71e-05,
+    "notes": "16 common variables, 0 differ at the default tolerance rtol=1e-3; max. relative deviation 3.71e-05 (v_in, off-design), from the CoolProp version (8.0.0 in the reference run, 8.1.0dev in the CoolSolve build). The design point agrees to 1.1e-10."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0037",
+    "CSL-0013",
+    "CSL-0136"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-13",
+      "action": "added (translation of the TESPy Turbine class, roadmap C-180)",
+      "by": "space-bunny for S. Quoilin"
+    }
+  ]
+}

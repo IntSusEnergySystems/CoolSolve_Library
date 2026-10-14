@@ -212,6 +212,10 @@ solution of 186 variables, no tables).
 
 ## Related models
 
+- `CSL-0134` (*orc_preheated_recuperated_cyclopentane*, level 3): the same
+  category, but pinch-designed (the saturation pressures come out of the pinch
+  conditions) with a recuperator and a preheater; this model imposes an
+  effectiveness and a pressure ratio instead.
 - CoolSolve example `orc_simple.eescode` (same thesis screening model with
   air source/sink and no recuperator — merged here, kept in CoolSolve as
   a test case).

@@ -240,6 +240,8 @@ Roetzel and Nicole, *Journal of Heat Transfer* 97(1), 1975 (`Ft_aircooler`).
 
 ## Related models
 
+
+- `CSL-0137` *hx_lmtd_ua*: the generic counterflow exchanger rated by UA and the smoothed LMTD (translation of the TESPy `HeatExchanger` class), which calls its own `LMTD_smoothed` and adds the terminal-temperature-difference, pinch and off-design characteristic-line features.
 - `CSL-0090` *hx_effectiveness_ntu*: the effectiveness-NTU relations of the
   same `ht` triage (same file `ht/hx.py`, same layout); a rating model uses
   either the LMTD method of this file or the ε-NTU method of that one.

@@ -1,0 +1,59 @@
+{=============================================================================
+  Steam turbine with Stodola's cone law and efficiency characteristic (off-design)
+  CoolSolve Library model CSL-0135
+ -----------------------------------------------------------------------------
+  Translation of the TESPy class `Turbine`. Two operating points of the same
+  machine are solved simultaneously: the design point (inlet state, mass flow
+  and isentropic efficiency given) supplies the reference values of Stodola's
+  cone law, and the off-design point (mass flow given) gets its inlet pressure
+  from the cone law and its isentropic efficiency from the characteristic
+  line eta_s/eta_s,design = f(m/m_ref).
+ Inputs : fluid$, M_dot_ref, T_in_ref, P_in_ref, P_out_ref, eta_s_des (design point),
+           M_dot (off-design point); T_in and P_out are taken from the design point
+  Outputs: P_in, eta_s, P_dot, x_out (both points)
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : TESPy, src/tespy/components/turbomachinery/turbine.py and data/char_lines.json
+           (commit 19425523), Francesco Witte and the TESPy contributors, MIT - see README.md
+  Status : verified against the class docstring example (design P = 10452574 W, x = 0.914;
+           off-design at 8 kg/s: 88.6 bar, eta_s = 0.898)
+=============================================================================}
+
+"!Design point (TESPy mode 'design': eta_s given)"
+fluid$ = 'Water'              "working fluid (the original example: {'water': 1})"
+M_dot_ref = 10                "design mass flow rate, 36 t/h in the original [kg/s]"
+T_in_ref = 550                "design inlet temperature [C]"
+P_in_ref = 110E5              "design inlet pressure, 110 bar in the original [Pa]"
+P_out_ref = 0.5E5             "design outlet pressure, 0.5 bar in the original [Pa]"
+eta_s_des = 0.9               "design isentropic efficiency [-]"
+h_in_ref = enthalpy(fluid$,T=T_in_ref,P=P_in_ref)  "design inlet enthalpy [J/kg]"
+s_in_ref = entropy(fluid$,T=T_in_ref,P=P_in_ref)   "design inlet entropy [J/(kg-K)]"
+h_out_ref_s = enthalpy(fluid$,s=s_in_ref,P=P_out_ref)  "isentropic design outlet enthalpy [J/kg]"
+h_out_ref = h_in_ref - eta_s_des*(h_in_ref - h_out_ref_s)  "design outlet enthalpy, as TESPy eta_s_func [J/kg]"
+v_in_ref = volume(fluid$,h=h_in_ref,P=P_in_ref)    "design inlet specific volume [m^3/kg]"
+x_out_ref = quality(fluid$,h=h_out_ref,P=P_out_ref) "design outlet vapour quality [-]"
+P_dot_ref = M_dot_ref*(h_in_ref - h_out_ref)       "design shaft power output [W]"
+T_out_ref = temperature(fluid$,h=h_out_ref,P=P_out_ref)  "design outlet temperature, saturation value of the two-phase outlet [C]"
+pr_ref = P_out_ref/P_in_ref                        "design pressure ratio, TESPy pr.design [-]"
+
+"!Off-design point (TESPy mode 'offdesign': cone law and eta_s_char)"
+M_dot = 8                      "off-design mass flow rate, 28.8 t/h in the original [kg/s]"
+T_in = T_in_ref                "off-design inlet temperature [C]"
+P_out = P_out_ref              "off-design outlet pressure [Pa]"
+h_in = enthalpy(fluid$,T=T_in,P=P_in)     "off-design inlet enthalpy [J/kg]"
+s_in = entropy(fluid$,T=T_in,P=P_in)      "off-design inlet entropy [J/(kg-K)]"
+h_out_s = enthalpy(fluid$,s=s_in,P=P_out) "isentropic off-design outlet enthalpy [J/kg]"
+v_in = volume(fluid$,h=h_in,P=P_in)       "off-design inlet specific volume [m^3/kg]"
+x_char = M_dot/M_dot_ref                   "characteristic line argument m/m_ref [-]"
+f_eta_s = INTERPOLATE('char_lines','m_ref_ratio','eta_s_ratio',x_char)  "efficiency factor, TESPy DEFAULT line [-]"
+eta_s = eta_s_des*f_eta_s                  "off-design isentropic efficiency [-]"
+h_out = h_in - eta_s*(h_in - h_out_s)     "off-design outlet enthalpy, as TESPy eta_s_char_func [J/kg]"
+x_out = quality(fluid$,h=h_out,P=P_out)   "off-design outlet vapour quality [-]"
+P_dot = M_dot*(h_in - h_out)              "off-design shaft power output [W]"
+T_out = temperature(fluid$,h=h_out,P=P_out)  "off-design outlet temperature, saturation value of the two-phase outlet [C]"
+
+"!Stodola's cone law (TESPy cone_func), exponent (n+1)/n = 2 for n = 1"
+LOG(M_dot/M_dot_ref) = LOG(P_in/P_in_ref) + 0.5*LOG(P_in_ref*v_in_ref/(P_in*v_in)) + 0.5*LOG(ABS((1-(P_out/P_in)^2)/(1-pr_ref^2)))  "cone law, logarithmic form"
+
+"!Traupel (2001) line, the second characteristic shipped with TESPy, at the same point"
+f_eta_s_traupel = INTERPOLATE('char_lines','m_ref_ratio_trau','eta_s_ratio_trau',x_char)  "Traupel line factor at the same argument [-]"
+eta_s_traupel = eta_s_des*f_eta_s_traupel      "isentropic efficiency of the Traupel line [-]"

@@ -57,9 +57,20 @@ Refresh with `python3 tools/build_index.py` (models) and
 - **State:** B-01 … B-10 are closed. **Open batches:**
   - **B-11** (ULiège wave1/high, cards C-140…C-159): all 16 [hard] cards done; open the 4 [std] cards
     `C-140`, `C-146`, `C-156`, `C-157`, then the review `C-160`, and the taxonomy review `C-139` (M2, P6.2).
-  - **B-12** (LaboThapPy + TESPy wave1/high, C-170…C-192): done `C-170` … `C-177`, `C-183`; open `C-178` … `C-182`,
-    `C-184` … `C-192` (`C-189` [hard]; dependencies `C-185` after `C-180`, `C-191` after `C-184`), then the review
+  - **B-12** (LaboThapPy + TESPy wave1/high, C-170…C-192): done `C-170` … `C-184` (session of 2026-10-12/13, all with
+    `space-bunny-free`, one worker at a time: `CSL-0133` … `CSL-0137`, `CSL-0139`); open `C-185` … `C-192`
+    (`C-189`, `C-192` [hard]; dependencies `C-191` after `C-184` — now met), then the review
     `C-193`. Worker notes: `b11_extra.txt` / `b12_extra.txt` in `~/llm/scripts/csl/`.
+    **Session of 2026-10-13 stopped at 07:07:** the free quota of `space-bunny-free` ran out during `C-185`
+    ("Free usage exceeded, subscribe to Go"; the lane holds no result, restart `C-185` from scratch; task `t176` is
+    `limited`, the supervisor was stopped with `oc-orch.py down`). CoolSolve was rebuilt on 2026-10-12 with CoolProp
+    pinned to `75af7816` (cmake from a venv: the old Anaconda path no longer exists; build dir `CoolSolve/build`) and
+    again on 2026-10-13 after `git pull` (CoolSolve `main` @`3a5d5ce`, which has `nDay_`, `CS-BUG-PI-FUNCTION`,
+    `CS-GAP-COLEBROOK`, array ranges, `CS-BUG-NO-SOL-DELETE`). Regression with that build: 158 targets, 0 failure after
+    re-baselining `CSL-0113`, `CSL-0124` and `CSL-0153:coolsolve` (their baselines were computed with `g#` = 1 in the
+    Kuo function; README/`model.json` numbers and verification text updated: `CSL-0113` now 0.8 % from EES instead
+    of 5.6 %). `solar_geometry_sun_path.sol` (`CSL-0119`) had been deleted by the old binary's `--no-sol` bug and was
+    restored from git.
   - After that: plan the next batches from the backlog (`thermo_models` medium, LaboThapPy/TESPy medium) with a
     T-PLAN card as C-137/C-138 did (notes `b11_plan.txt`, `b12_plan.txt`).
 - **Work paused by the maintainer on 2026-10-09 at 20:00.** No task is running, the supervisor and the event watcher
@@ -714,13 +725,13 @@ C-170), tagged [hard]/[std]. Worker notes: `~/llm/scripts/csl/b12_plan.txt` (pla
 [x] C-175 T-FUNC LTP-028 → heat_transfer/pressure_drop/pipe_pressure_drop_correlations — [std] 6 friction factors + Friedel/MSH/Choi dP, acceleration, gravity; verification: original papers (Churchill 1977, Friedel 1979, MSH 1986) — CSL-0130
 [x] C-176 T-FUNC LTP-033 → heat_transfer/convection/void_fraction_correlations — [std] 13 void-fraction models; verification: void_fraction_example.py re-run in a venv + original papers/ACHP — CSL-0131
 [x] C-177 T-FUNC LTP-048 → fundamentals/properties/r1233zd_thermal_conductivity — [std] R1233zd(E) conductivity (CoolProp has none); verification: Perkins & Huber 2017 coefficients (same source as the EES data) — CSL-0132
-[ ] C-178 T-TRANSLATE LTP-055 → cycles/refrigeration_heat_pumps/heat_pump_propane_pinch — [std] propane pinch-based HP (IHX case = CSL-0039, cross-check only); verification: fpi_HeatPump_example.py (p_low/p_high, COP) + exact pinch — CSL-0133
-[ ] C-179 T-TRANSLATE LTP-056 → cycles/organic_rankine/orc_preheated_recuperated_cyclopentane — [std] preheated+recuperated ORC, Zorlu site (correct the preheater-source bug); verification: fpi_orc_example.py re-run + CSL-0039 states — CSL-0134
-[ ] C-180 T-TRANSLATE TSP-003 → components/expanders_turbines/turbine_stodola_offdesign — [std] Stodola cone law + efficiency characteristic; verification: doctest P=-10 452 574 W, x=0.914; test_Turbine 28.8 t/h → 88.6 bar, eta 0.898 — CSL-0135
-[ ] C-181 T-TRANSLATE TSP-006 → components/compressors/polynomial_compressor_en12900 — [std] EN12900 10-coeff. eta_is/eta_v polynomials + dissipation; verification: test_polynomial_compressor.py catalogue tables, Bitzer map; cross-check CSL-0123 — CSL-0136
-[ ] C-182 T-TRANSLATE TSP-008,TSP-009 → components/heat_exchangers/hx_lmtd_ua — [std] UA/smoothed-LMTD HX with ttd+pinch specs (Condenser as _condenser variant); verification: test_HeatExchanger/test_Condenser doctests — CSL-0137
+[x] C-178 T-TRANSLATE LTP-055 → cycles/refrigeration_heat_pumps/heat_pump_propane_pinch — [std] propane pinch-based HP (IHX case = CSL-0039, cross-check only); verification: fpi_HeatPump_example.py (p_low/p_high, COP) + exact pinch — CSL-0133
+[x] C-179 T-TRANSLATE LTP-056 → cycles/organic_rankine/orc_preheated_recuperated_cyclopentane — [std] preheated+recuperated ORC, Zorlu site (correct the preheater-source bug); verification: fpi_orc_example.py re-run + CSL-0039 states — CSL-0134
+[x] C-180 T-TRANSLATE TSP-003 → components/expanders_turbines/turbine_stodola_offdesign — [std] Stodola cone law + efficiency characteristic; verification: doctest P=-10 452 574 W, x=0.914; test_Turbine 28.8 t/h → 88.6 bar, eta 0.898 — CSL-0135
+[x] C-181 T-TRANSLATE TSP-006 → components/compressors/polynomial_compressor_en12900 — [std] EN12900 10-coeff. eta_is/eta_v polynomials + dissipation; verification: test_polynomial_compressor.py catalogue tables, Bitzer map; cross-check CSL-0123 — CSL-0136
+[x] C-182 T-TRANSLATE TSP-008,TSP-009 → components/heat_exchangers/hx_lmtd_ua — [std] UA/smoothed-LMTD HX with ttd+pinch specs (Condenser as _condenser variant); verification: test_HeatExchanger/test_Condenser doctests — CSL-0137
 [x] C-183 T-TRANSLATE TSP-014 → components/heat_exchangers/hx_moving_boundary_bell — [hard] Bell 2015 moving boundary (zone UA, area constraint); verification: bell2015_five_cases.json Q 452-4582 W (0.1 %/0.5 K) — CSL-0138
-[ ] C-184 T-TRANSLATE TSP-022 → fundamentals/combustion/combustion_chamber — [std] fuel/air stoichiometry, lambda, flue-gas species; verification: test_combustion.py + cgam-ebsilon-results.csv — CSL-0139
+[x] C-184 T-TRANSLATE TSP-022 → fundamentals/combustion/combustion_chamber — [std] fuel/air stoichiometry, lambda, flue-gas species; verification: test_combustion.py + cgam-ebsilon-results.csv — CSL-0139
 [ ] C-185 T-TRANSLATE TSP-034 → cycles/steam_power/rankine_cycle_part_load — [std] Rankine + cooling water + motor/generator + part load (needs C-180); verification: rankine.py re-run 13.21/0.224/33.69 MW, eta 38.6 %, x 0.866 — CSL-0140
 [ ] C-186 T-TRANSLATE TSP-036 → cycles/gas_turbines/gas_turbine_open_cycle — [std] open Brayton with combustion chamber + generator; verification: gas_turbine.py re-run in a venv, blocks vs the CGAM reference — CSL-0141
 [ ] C-187 T-TRANSLATE TSP-037 → energy_systems/district_heating/district_heating_loop — [std] DH loop: consumer, feed pump, pipes with dP and heat loss; verification: district_heating.py re-run + loop energy balance — CSL-0142
@@ -993,3 +1004,9 @@ and adds the log line in §8.
 | 2026-10-11 | T-RECHECK `CS-GAP-CALL-WARNING` | CoolSolve `fix/library-gaps-2` @47bb416 + the uncommitted `CALL WARNING` build (`CALL WARNING('message xxxE4', value)` in functions and procedures: a warning diagnostic `W001` with the line of the call, reported once per distinct text from one more evaluation of each converged block at its solution, not per Newton iterate; the value placeholder is shared with `CALL ERROR`; `$Warnings` is ignored; `CALL NOTE` is not EES): `CSL-0118` blocked → **verified**: the native file solves (38 iterations, shipped `coolsolve.conf` and `.initials`) and its 71 variables equal those of the former `_coolsolve` variant (removed; `.sol` baseline of the native file added); the run reports the `FF` = 0.1 range warning and a spurious `D_in_ex_noz` = 0.02 boundary warning (a CoolSolve round-off of the explicit solve, 0.02 + 1.7e-17, noted in the README; not registered). `CSL-0122`: the ID is removed from `missing_features` (still `CS-GAP-SUM-INDEXED`), README and comments updated, code unchanged; `CSL-0075` and `CSL-0117`: README (and the comments of the `CSL-0075` variant) no longer cite the gap as open, `CSL-0075` stays blocked by `CS-GAP-ISIDEALGAS` and `CS-BUG-HUMIDAIR-PROPS`. Regression 151 targets (115 main files + 36 variants), 0 failure; counts verified/runs/blocked/failing 107 / 8 / 32 / 1, register open 96 / closed 37 |
 | 2026-10-12 | T-RECHECK `CS-GAP-NDAY` | CoolSolve `fix/library-gaps-3` @36cdbcf (built-in `nDay_`): `CSL-0119` native file verified (t = 24 identical to the former variant, which agreed with EES to 1.6e-6); variant deleted, native `.sol` written (t = 0). |
 | 2026-10-12 | Body check (`CS-BUG-IMPLICIT-PROC`, `CS-BUG-LOCAL-UNASSIGNED`, `CS-GAP-STRING-LOCAL-UNSET`) | CoolSolve `fix/library-gaps-3` @3130543 rejects implicit statements, reads of unset locals and unassigned outputs in FUNCTION/PROCEDURE bodies; library regression 151 targets, 1 failure (`CSL-0024`, a real error). Corrected: `CSL-0024` (`PROCEDURE weibe` takes `a_weibe`, `n_weibe` as inputs, solution identical 75/75), `CSL-0153` native (dead `fluidev$` block of `hx_cd` removed; still blocked by `CS-GAP-END-PROCEDURE`). |
+| 2026-10-13 | C-178 `CSL-0133` | heat_pump_propane_pinch (cycles/refrigeration_heat_pumps): propane pinch HP translated from LaboThapPy, verified vs a re-run of fpi_HeatPump_example.py (54 vars, max rel. diff 3e-5, pinch exact); bunny |
+| 2026-10-13 | C-179 `CSL-0134` | orc_preheated_recuperated_cyclopentane (organic_rankine): LaboThapPy Zorlu ORC (pinch evaporator/condenser, recuperator + preheater), verified vs fpi_orc_example.py re-run; bunny |
+| 2026-10-13 | C-180 `CSL-0135` | turbine_stodola_offdesign (expanders_turbines): Stodola cone law + efficiency characteristic from TESPy, verified vs doctest re-run (3.7e-5); bunny |
+| 2026-10-13 | C-181 `CSL-0136` | polynomial_compressor_en12900 (compressors): EN12900 10-coefficient polynomial compressor from TESPy, verified vs TESPy (max 8.7e-9); bunny |
+| 2026-10-13 | C-182 `CSL-0137` | hx_lmtd_ua (heat_exchangers): TESPy UA/smoothed-LMTD HX with ttd/pinch specs + Condenser variant, verified vs doctests; bunny |
+| 2026-10-13 | C-184 `CSL-0139` | combustion_chamber (combustion): TESPy fuel/air stoichiometry, lambda, flue-gas species, LHV energy balance, verified vs TESPy re-run; bunny |

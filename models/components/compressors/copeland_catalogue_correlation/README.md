@@ -182,3 +182,9 @@ no author (initials `SQ` by the folder convention of the collection).
   (effectiveness maps from manufacturer rows) for the R717 reciprocating
   member of the same 2002 Laborelec 5-file family, as a `DUPLICATE` array
   model instead of a correlation function.
+- `CSL-0136` *polynomial_compressor_en12900*: the other catalogue polynomial of
+  the library — the EN 12900 map of a screw compressor (translation of the
+  TESPy `PolynomialCompressor`, Cecchinato et al. 2010). Same ten monomials in
+  the same order (°C instead of °F) but evaluated for the isentropic and the
+  volumetric efficiency instead of power and mass flow; its README cross-checks
+  the two at a shared operating point.

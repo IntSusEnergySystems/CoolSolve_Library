@@ -1,0 +1,71 @@
+{
+  "id": "CSL-0134",
+  "name": "orc_preheated_recuperated_cyclopentane",
+  "title": "Preheated + recuperated ORC on cyclopentane (Zorlu geothermal site)",
+  "summary": "Organic Rankine cycle on cyclopentane for the Zorlu geothermal plant: evaporator and condenser each sized by an imposed pinch point (plus superheating / subcooling), constant-isentropic-efficiency pump and expander, constant-effectiveness recuperator (internal heat exchanger) and water preheater, three water sources. The two saturation pressures are the unknowns closed by the two pinch conditions; no pressure drop anywhere. Translation of the LaboThapPy Zorlu ORC example, whose preheater-source bug is corrected here.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "orc_preheated_recuperated_cyclopentane.eescode",
+  "fluids": [
+    "CycloPentane",
+    "Water"
+  ],
+  "tags": [
+    "organic Rankine cycle",
+    "geothermal",
+    "pinch point",
+    "recuperator",
+    "preheater",
+    "case study",
+    "constant effectiveness",
+    "constant isentropic efficiency",
+    "cyclopentane"
+  ],
+  "language_features": [
+    "property functions",
+    "min (2 arguments, nested)",
+    "max",
+    "abs",
+    "arrays"
+  ],
+  "stats": {"n_equations": 135, "largest_block": 61},
+  "origin": {
+    "type": "research",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/machine/examples/ORC/fpi_orc_example.py",
+    "candidate_id": "LTP-056",
+    "authors": [
+      "Basile Chaudoir",
+      "Elise Neven",
+      "Titouan Janod"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "components: hex_cstpinch.py (HexCstPinch), hex_csteff.py (HexCstEff), pump_csteff.py (PumpCstEff), expander_csteff.py (ExpanderCstEff), same commit f03f7f47; example case study_case = \"Zorlu\""
+  },
+  "verification": {
+    "reference": "Re-run of the source example labothappy/machine/examples/ORC/fpi_orc_example.py (case Zorlu, function preheated_rec_orc) in a throw-away virtual environment (pip install of the local clone, commit f03f7f47; CoolProp 8.0.0, SciPy 1.18.1): converges in 6 Wegstein iterations, PPTD_cond = 5.000000, PPTD_evap = 5.000003. Both the as-shipped main block (preheater source built from the cold-source values, the bug) and the corrected one (T_PRE, p_PRE, m_dot_PRE) were run and compared with the model.",
+    "date": "2026-10-13",
+    "coolsolve_version": "0.3.0@4c80b25",
+    "max_rel_diff": 1.93e-1,
+    "notes": "tools/compare_solution.py against the 38 hand-mapped values of the corrected Python run: \"38 common variables, 17 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 97\". The largest relative deviation (1.93e-01) is on Q_dot_sh_ev (0.197 vs 0.159 MW, 0.29 % of Q_dot_ev); pressures, saturation temperatures, pump power and condenser duties agree to <= 7.1e-04. The deviations above 0.1 % all follow from one stale state of the sequential-modular Python circuit: its evaporator outlet (h_5 = 500644.24 J/kg at 408.5715 K) is 0.5785 K below the state its own pinch residual enforces (T_C_ex = 409.15 K); recomputed with the same CoolProp, enthalpy(Cyclopentane, P=849551 Pa, T=409.15 K) = 501745.38 J/kg = the h_5 of the model, and at 408.5715 K = 500644.16 J/kg = the value stored by Python. See README *Verification*."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0013",
+    "CSL-0014",
+    "CSL-0019",
+    "CSL-0039",
+    "CSL-0126",
+    "CSL-0133"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-13", "action": "added (roadmap card C-179, batch B-12); T-TRANSLATE of LTP-056 (LaboThapPy Zorlu ORC example); preheater-source bug of the original main block corrected and documented; status verified", "by": "opencode worker for S. Quoilin"}
+  ]
+}

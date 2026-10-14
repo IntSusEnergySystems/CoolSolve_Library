@@ -198,6 +198,9 @@ S. Quoilin:
 - `CSL-0005` *cpbar_combustion_products*: function library for the mean
   specific heat of CmHn combustion products, from the same ULiège
   combustion-course material.
+- `CSL-0139` *combustion_chamber*: combustion chamber translated from TESPy;
+  complete combustion only (the dissociation this model adds is not included
+  there), species-resolved flue gas for an excess-air ratio lambda.
 - Inventory neighbours of the same TP series (not yet imported): TM-0230
   (T&P effects on dissociation, `Chem_Equil`), TM-0232 (NASA properties of
   CO2), TM-0234/TM-0235 (RD solution variants of exercises 1-3).

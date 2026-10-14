@@ -237,3 +237,7 @@ Source files (collection of S. Quoilin):
 - `CSL-0167` *reciprocating_polynomial_r22*: the reciprocating (piston)
   counterpart in the same JL080205 reference series (clearance-volume
   re-expansion and motor slip instead of leakage and adapted pressure).
+- `CSL-0136` *polynomial_compressor_en12900*: a compressor map taken from
+  catalogue data (EN 12900 polynomials for the isentropic and the volumetric
+  efficiency) instead of a semi-empirical identification; the other way of
+  getting the two efficiencies this model computes.

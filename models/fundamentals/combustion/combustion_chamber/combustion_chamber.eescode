@@ -1,0 +1,158 @@
+{=============================================================================
+  Generic combustion chamber: fuel/air stoichiometry, excess-air ratio
+  lambda and flue-gas species balances (TESPy CombustionChamber)
+  CoolSolve Library model CSL-0139
+-----------------------------------------------------------------------------
+  Translation of the combustion chamber of TESPy (components/combustion/
+  base.py, commit 19425523): a steady-flow reactor fed with a fuel (methane,
+  diluted with CO2, blended with H2) and air; mandatory equations = mass
+  balance, pressure equality, one stoichiometry equation per fluid and the
+  energy balance (lower heating value basis, reference state 25 C). Given
+  the air mass flow and the available/stoichiometric oxygen ratio lambda,
+  the model returns the fuel flow, the flue-gas species and the flue-gas
+  temperature; pr and eta are the inputs of the diabatic variant (1, 1 = the
+  adiabatic chamber).
+
+  Inputs : m_dot_air, lambda, p_air, T_air, T_fuel, pr, eta, T_ref, x_air_N2,
+           x_air_O2, x_air_Ar, x_air_CO2, x_air_H2O, x_fuel_CH4, x_fuel_CO2, x_fuel_H2
+  Outputs: m_dot_fuel, ti, Q_loss, T_fg, T_fg_K, p_fg, flue-gas mass and
+           molar fractions (N2, O2, Ar, CO2, H2O, H2, CH4), MM_fg
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : TESPy CombustionChamber / DiabaticCombustionChamber, Francesco
+           Witte and the TESPy contributors, MIT - see README.md
+  Status : VERIFIED against TESPy (test_combustion.py, cgam-ebsilon-results.csv)
+=============================================================================}
+
+{--- Function: lower heating value of a C/H/O fuel, as in TESPy
+     CombustionChamber.calc_lhv: LHV = -(sum_i hf_i - sum_j hf_j)/M_fuel,
+     with the molar formation enthalpies of the combustion products
+     (CODATA 1989 in the source: CO2 -393.51, H2O(g) -241.826, O2 0 kJ/mol,
+     and 0 for the elements H2 and O2). -}
+FUNCTION LHV_fuel(n_C, n_H, n_O, hf_fuel, hf_CO2, hf_H2O, hf_O2, MM_fuel)
+  LHV_fuel = -(n_H/2*hf_H2O + n_C*hf_CO2 - ((n_C + n_H/4 - n_O/2)*hf_O2 + hf_fuel))/MM_fuel
+End
+
+"!Inputs (base case = TESPy test_CombustionChamberHighTemperature)"
+m_dot_air = 1             "air mass flow at inlet 1 [kg/s]"
+lambda = 1                "available oxygen / stoichiometric oxygen (TESPy lamb) [-]"
+p_air = 100000            "pressure of the air at inlet 1 [Pa]"
+T_air = 30                "temperature of the air at inlet 1 [C]"
+T_fuel = 30               "temperature of the fuel at inlet 2 [C]"
+pr = 1                    "outlet/inlet-1 pressure ratio (TESPy pr, diabatic variant; 1 = no pressure drop) [-]"
+eta = 1                   "heat dissipation ratio relative to the thermal input (TESPy eta, diabatic variant; 1 = adiabatic) [-]"
+T_ref = 25                "reference temperature of the energy balance [C] (298.15 K in the source)"
+
+"!Composition of the air (mass fractions, as the fluid dict of TESPy)"
+x_air_N2 = 0.8            "mass fraction of N2 in the air [-]"
+x_air_O2 = 0.2            "mass fraction of O2 in the air [-]"
+x_air_Ar = 0              "mass fraction of Ar in the air [-]"
+x_air_CO2 = 0             "mass fraction of CO2 in the air [-]"
+x_air_H2O = 0             "mass fraction of H2O in the air [-]"
+
+"!Composition of the fuel: the combustible is methane (the source is
+   generic, any C/H/O mixture); CO2 dilutes it, H2 is blended with it"
+x_fuel_CH4 = 1            "mass fraction of CH4 in the fuel [-]"
+x_fuel_CO2 = 0            "mass fraction of CO2 in the fuel [-]"
+x_fuel_H2 = 0             "mass fraction of H2 in the fuel [-]"
+
+"!Molar masses and formation enthalpies of the species"
+MM_CH4 = molarmass(CH4)   "molar mass of the fuel [kg/kmol]"
+MM_H2 = molarmass(H2)     "molar mass of H2 [kg/kmol]"
+MM_O2 = molarmass(O2)     "molar mass of O2 [kg/kmol]"
+MM_N2 = molarmass(N2)     "molar mass of N2 [kg/kmol]"
+MM_Ar = molarmass(Ar)     "molar mass of Ar [kg/kmol]"
+MM_CO2 = molarmass(CO2)   "molar mass of CO2 [kg/kmol]"
+MM_H2O = molarmass(H2O)   "molar mass of H2O [kg/kmol]"
+hf_CH4 = -74.6E6          "formation enthalpy of methane (TESPy COMBUSTION_FLUIDS) [J/kmol]"
+hf_H2 = 0                 "formation enthalpy of hydrogen (element in its reference state) [J/kmol]"
+hf_CO2 = -393.51E6        "formation enthalpy of CO2 (CODATA 1989, as in the source) [J/kmol]"
+hf_H2O = -241.826E6       "formation enthalpy of water vapour (CODATA 1989, as in the source) [J/kmol]"
+hf_O2 = 0                 "formation enthalpy of O2 (element in its reference state) [J/kmol]"
+n_C_fuel = 1              "number of C atoms of CH4 [-] (TESPy fuels['CH4']['C'])"
+n_H_fuel = 4              "number of H atoms of CH4 [-] (TESPy fuels['CH4']['H'])"
+n_O_fuel = 0              "number of O atoms of CH4 [-] (TESPy fuels['CH4']['O'])"
+LHV_CH4 = LHV_fuel(n_C_fuel, n_H_fuel, n_O_fuel, hf_CH4, hf_CO2, hf_H2O, hf_O2, MM_CH4)  "lower heating value of CH4 [J/kg]"
+LHV_H2 = LHV_fuel(0, 2, 0, hf_H2, hf_CO2, hf_H2O, hf_O2, MM_H2)    "lower heating value of H2 (2 H atoms) [J/kg]"
+LHV_fuel = x_fuel_CH4*LHV_CH4 + x_fuel_H2*LHV_H2   "lower heating value of the fuel mixture [J/kg]"
+
+"!Pressure of the flue gas (TESPy pr_structure_matrix) and pressure equality
+   (TESPy combustion_pressure_structure_matrix: p_in1 = p_in2 = p_out; with
+   pr = 1 all three pressures are equal, as in the adiabatic chamber. The
+   diabatic variant disconnects the pressure of inlet 2, which does not
+   change the results here since the species are ideal gases)"
+p_fg = pr*p_air           "pressure of the flue gas at outlet 1 [Pa]"
+p_fuel = p_air            "pressure of the fuel at inlet 2 [Pa]"
+
+"!Stoichiometry (TESPy stoichiometry_func): molar flows of the fuel species,
+   oxygen demand and excess-air ratio lambda. lambda is a specification of the
+   source (an equation of the component when it is set); it fixes the fuel
+   flow through the available/stoichiometric oxygen ratio"
+m_dot_fuel = n_dot_O2_air/(lambda*nu_O2)          "fuel mass flow at inlet 2 [kg/s]"
+nu_O2 = x_fuel_CH4*(n_C_fuel + n_H_fuel/4 - n_O_fuel/2)/MM_CH4 + x_fuel_H2*0.5/MM_H2   "stoichiometric oxygen demand per kg of fuel [kmol/kg] (H2: 2 H atoms -> 0.5 mol O2)"
+n_dot_O2_stoich = nu_O2*m_dot_fuel                "stoichiometric oxygen demand of the fuel [kmol/s]"
+n_dot_O2_air = m_dot_air*x_air_O2/MM_O2          "molar flow of O2 in the air [kmol/s]"
+n_dot_CH4 = m_dot_fuel*x_fuel_CH4/MM_CH4          "molar flow of CH4 in the fuel [kmol/s]"
+n_dot_H2 = m_dot_fuel*x_fuel_H2/MM_H2            "molar flow of H2 in the fuel [kmol/s]"
+n_dot_C = n_C_fuel*n_dot_CH4                      "molar flow of C atoms of the fuel [kmol/s]"
+n_dot_H = n_H_fuel*n_dot_CH4 + 2*n_dot_H2         "molar flow of H atoms of the fuel [kmol/s]"
+lambda_calc = n_dot_O2_air/n_dot_O2_stoich       "available oxygen / stoichiometric oxygen, recomputed [-] (equal to lambda)"
+
+"!Species balances (TESPy stoichiometry_func, complete combustion): the
+   inerts and the CO2 of the air and the CO2 diluent pass through, the C
+   atoms of the fuel go to CO2 and the H atoms to H2O, the oxygen left over
+   is the excess air"
+m_dot_N2_fg = m_dot_air*x_air_N2                 "mass flow of N2 in the flue gas [kg/s]"
+m_dot_Ar_fg = m_dot_air*x_air_Ar                 "mass flow of Ar in the flue gas [kg/s]"
+m_dot_CO2_fg = m_dot_air*x_air_CO2 + m_dot_fuel*x_fuel_CO2 + n_dot_C*MM_CO2   "mass flow of CO2 in the flue gas [kg/s]"
+m_dot_H2O_fg = m_dot_air*x_air_H2O + n_dot_H/2*MM_H2O  "mass flow of H2O in the flue gas (water vapour, as in the source) [kg/s]"
+m_dot_O2_fg = m_dot_air*x_air_O2 - n_dot_O2_stoich*MM_O2         "mass flow of O2 in the flue gas (excess air) [kg/s]"
+m_dot_CH4_fg = 0                                "no unburned CH4 (complete combustion) [kg/s]"
+m_dot_H2_fg = 0                                 "no unburned H2 (complete combustion) [kg/s]"
+m_dot_fg = m_dot_air + m_dot_fuel               "mass flow of the flue gas (mass balance) [kg/s]"
+
+"!Thermal input (TESPy _calc_ti sums the lower heating value over the fuel
+   species) and heat dissipation of the diabatic variant"
+ti = m_dot_fuel*LHV_fuel                         "thermal input of the fuel [W]"
+Q_loss = -(1 - eta)*ti                          "heat dissipation to the ambient (TESPy Qloss) [W]"
+
+"!Mixture enthalpies (TESPy mixing rule 'forced-gas': mass-weighted sum of
+   the ideal-gas species enthalpies, formation enthalpies included)"
+h_air = x_air_N2*enthalpy(N2,T=T_air) + x_air_O2*enthalpy(O2,T=T_air) + x_air_Ar*enthalpy(Ar,T=T_air) + x_air_CO2*enthalpy(CO2,T=T_air) + x_air_H2O*enthalpy(H2O,T=T_air)  "mixture enthalpy of the air at T_air [J/kg]"
+h_air_ref = x_air_N2*enthalpy(N2,T=T_ref) + x_air_O2*enthalpy(O2,T=T_ref) + x_air_Ar*enthalpy(Ar,T=T_ref) + x_air_CO2*enthalpy(CO2,T=T_ref) + x_air_H2O*enthalpy(H2O,T=T_ref)  "mixture enthalpy of the air at the reference temperature [J/kg]"
+h_fuel = x_fuel_CH4*enthalpy(CH4,T=T_fuel) + x_fuel_CO2*enthalpy(CO2,T=T_fuel) + x_fuel_H2*enthalpy(H2,T=T_fuel)   "mixture enthalpy of the fuel [J/kg]"
+h_fuel_ref = x_fuel_CH4*enthalpy(CH4,T=T_ref) + x_fuel_CO2*enthalpy(CO2,T=T_ref) + x_fuel_H2*enthalpy(H2,T=T_ref)   "mixture enthalpy of the fuel at the reference temperature [J/kg]"
+h_fg = (m_dot_N2_fg*enthalpy(N2,T=T_fg) + m_dot_Ar_fg*enthalpy(Ar,T=T_fg) + m_dot_O2_fg*enthalpy(O2,T=T_fg) + m_dot_CO2_fg*enthalpy(CO2,T=T_fg) + m_dot_H2O_fg*enthalpy(H2O,T=T_fg) + m_dot_CH4_fg*enthalpy(CH4,T=T_fg) + m_dot_H2_fg*enthalpy(H2,T=T_fg))/m_dot_fg  "mixture enthalpy of the flue gas at T_fg [J/kg]"
+h_fg_ref = (m_dot_N2_fg*enthalpy(N2,T=T_ref) + m_dot_Ar_fg*enthalpy(Ar,T=T_ref) + m_dot_O2_fg*enthalpy(O2,T=T_ref) + m_dot_CO2_fg*enthalpy(CO2,T=T_ref) + m_dot_H2O_fg*enthalpy(H2O,T=T_ref) + m_dot_CH4_fg*enthalpy(CH4,T=T_ref) + m_dot_H2_fg*enthalpy(H2,T=T_ref))/m_dot_fg  "mixture enthalpy of the flue gas at the reference temperature [J/kg]"
+
+"!Energy balance (TESPy energy_balance_func), lower heating value basis:
+   sum_in m*(h - h_ref) - m_fg*(h_fg - h_fg_ref) + eta*ti = 0"
+Q_dot_reactants = m_dot_air*(h_air - h_air_ref) + m_dot_fuel*(h_fuel - h_fuel_ref) + eta*ti   "enthalpy rise of the reactants plus the released fuel energy [W]"
+Q_dot_flue = m_dot_fg*(h_fg - h_fg_ref)            "enthalpy rise of the flue gas [W]"
+Q_dot_reactants = Q_dot_flue                       "energy balance of the chamber [W]"
+T_fg_K = T_fg + 273.15         "flue-gas temperature in kelvin (the temperature unit TESPy stores and prints) [K]"
+
+"!Flue-gas composition: mass fractions (as the fluid dict of TESPy)"
+x_fg_N2 = m_dot_N2_fg/m_dot_fg   "mass fraction of N2 in the flue gas [-]"
+x_fg_O2 = m_dot_O2_fg/m_dot_fg   "mass fraction of O2 in the flue gas [-]"
+x_fg_Ar = m_dot_Ar_fg/m_dot_fg   "mass fraction of Ar in the flue gas [-]"
+x_fg_CO2 = m_dot_CO2_fg/m_dot_fg "mass fraction of CO2 in the flue gas [-]"
+x_fg_H2O = m_dot_H2O_fg/m_dot_fg "mass fraction of H2O in the flue gas [-]"
+x_fg_H2 = m_dot_H2_fg/m_dot_fg   "mass fraction of unburned H2 in the flue gas [-]"
+x_fg_CH4 = m_dot_CH4_fg/m_dot_fg "mass fraction of unburned CH4 in the flue gas [-]"
+
+"!Flue-gas composition: molar fractions (the cgam-ebsilon-results.csv table
+   of the TESPy test suite gives the flue gas in molar fractions)"
+n_dot_fg = m_dot_N2_fg/MM_N2 + m_dot_Ar_fg/MM_Ar + m_dot_O2_fg/MM_O2 + m_dot_CO2_fg/MM_CO2 + m_dot_H2O_fg/MM_H2O + m_dot_CH4_fg/MM_CH4 + m_dot_H2_fg/MM_H2  "molar flow of the flue gas [kmol/s]"
+y_fg_N2 = (m_dot_N2_fg/MM_N2)/n_dot_fg  "molar fraction of N2 in the flue gas [-]"
+y_fg_O2 = (m_dot_O2_fg/MM_O2)/n_dot_fg  "molar fraction of O2 in the flue gas [-]"
+y_fg_Ar = (m_dot_Ar_fg/MM_Ar)/n_dot_fg  "molar fraction of Ar in the flue gas [-]"
+y_fg_CO2 = (m_dot_CO2_fg/MM_CO2)/n_dot_fg  "molar fraction of CO2 in the flue gas [-]"
+y_fg_H2O = (m_dot_H2O_fg/MM_H2O)/n_dot_fg  "molar fraction of H2O in the flue gas [-]"
+y_fg_H2 = (m_dot_H2_fg/MM_H2)/n_dot_fg  "molar fraction of unburned H2 in the flue gas [-]"
+y_fg_CH4 = (m_dot_CH4_fg/MM_CH4)/n_dot_fg  "molar fraction of unburned CH4 in the flue gas [-]"
+MM_fg = m_dot_fg/n_dot_fg          "mean molar mass of the flue gas [kg/kmol]"
+
+"!NB: the source specifies lambda or the thermal input ti. With ti and T_fg given, delete the input lines
+   of m_dot_air and lambda, replace the equation of m_dot_fuel by m_dot_fuel = ti/LHV_fuel, the equation of ti
+   by the value of ti, the line T_fg_K by the value of T_fg (lambda_calc then reports lambda): see README.md,
+   Thermal-input specification."

@@ -1,0 +1,165 @@
+{=============================================================================
+  polynomial_compressor_en12900: refrigeration compressor with EN12900
+            efficiency-map polynomials (eta_is, eta_v) and heat dissipation
+  CoolSolve Library model CSL-0136
+ -----------------------------------------------------------------------------
+  Translation of the TESPy class PolynomialCompressor: the isentropic and the
+  volumetric efficiency of a positive displacement compressor are third-order
+  polynomials (10 coefficients) of the evaporation and the condensation
+  temperature of a compressor catalogue (EN 12900 map, Cecchinato et al. 2010),
+  the map reference state giving the suction superheat, the liquid subcooling,
+  the frequency of the catalogue data and the swept volume per revolution. With
+  a dissipation ratio (heat leaving the machine relative to the power) the
+  discharge state, the mass flow (swept volume x frequency x eta_v) and the
+  electrical power follow; fitting a catalogue is data preparation (README).
+
+  Inputs : fluid$, T_evap, T_cd, DELTAT_sh, f, diss, 4 coefficient sets
+  Outputs: eta_s, eta_v, m_dot, P_el, Q_diss, T_ex of 4 operating points
+  Units  : SI - degC, Pa, J
+  Source : TESPy src/tespy/components/displacementmachinery/polynomial_compressor.py
+           (commit 19425523), Francesco Witte and the TESPy contributors, MIT
+  Status: VERIFIED vs the TESPy doctest, its component test and the Bitzer map
+=============================================================================}
+
+FUNCTION en12900(c_0, c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8, c_9, T_ev, T_cd)
+  "EN12900 third-order polynomial of evaporation and condensation temperature"
+  "c_0..c_9: polynomial coefficients, T_ev/T_cd: reference evaporation and"
+  "condensation temperature of the catalogue [degC], result in the unit of"
+  "the coefficients (efficiency [-] for the eta_s and eta_v polynomials)"
+  en12900 = c_0 + c_1*T_ev + c_2*T_cd + c_3*T_ev^2 + c_4*T_ev*T_cd + c_5*T_cd^2 + c_6*T_ev^3 + c_7*T_ev^2*T_cd + c_8*T_ev*T_cd^2 + c_9*T_cd^3
+END
+
+"!Reference state of the catalogue map (R134a, 214 m3/h at 20 Hz, 20 K suction superheat)"
+fluid$ = 'R134a'                        "refrigerant"
+DELTAT_sh_ref = 20                      "suction superheating of the reference state [K]"
+DELTAT_sc_ref = 0                       "liquid subcooling of the reference state [K]"
+f_poly = 50                             "frequency at which the catalogue polynomials apply [Hz]"
+V_dot_ref = 214/3600                    "displacement at f_ref [m^3/s] (214 m3/h in the catalogue)"
+f_ref = 20                              "reference frequency of the displacement [Hz]"
+V_swept = V_dot_ref/f_ref               "swept volume per revolution [m^3]"
+
+"!Coefficients of the EN12900 polynomials (least-squares fit of the catalogue data)"
+c_eta_s[0] = 0.0034422301018328066      "eta_s(T_evap, T_cond) coefficients c_0..c_9 [-]"
+c_eta_s[1] = -0.037513913941772094
+c_eta_s[2] = 0.04392044600055341
+c_eta_s[3] = -0.000921644823888066
+c_eta_s[4] = 0.0016857618955891875
+c_eta_s[5] = -0.0008975404933834008
+c_eta_s[6] = -7.547811455836994e-06
+c_eta_s[7] = 1.6137700196437342e-05
+c_eta_s[8] = -1.5382004604906933e-05
+c_eta_s[9] = 5.048180827867121e-06
+
+c_eta_v[0] = 0.005811929134622334      "eta_v(T_evap, T_cond) coefficients c_0..c_9 [-]"
+c_eta_v[1] = -0.0007188200451662126
+c_eta_v[2] = 0.07414635871307537
+c_eta_v[3] = 2.844100977916782e-05
+c_eta_v[4] = 6.513724261817205e-05
+c_eta_v[5] = -0.0018987249481304737
+c_eta_v[6] = 7.8420594652345e-07
+c_eta_v[7] = -1.905858665037981e-06
+c_eta_v[8] = 4.5269549377934695e-07
+c_eta_v[9] = 1.5132117483068037e-05
+
+c_pow[0] = 250.25842400384022          "catalogue electrical power polynomial coefficients [W]"
+c_pow[1] = 221.85344461039242
+c_pow[2] = 3193.29272622924
+c_pow[3] = 12.229505521074424
+c_pow[4] = -14.99263618133872
+c_pow[5] = -58.57452937589313
+c_pow[6] = 0.3677584880492598
+c_pow[7] = -0.45596502186130916
+c_pow[8] = 0.2505263157896884
+c_pow[9] = 0.6834280956763621
+
+c_cool[0] = 2264.6098020264617         "catalogue cooling capacity polynomial coefficients [W]"
+c_cool[1] = 14639.21203761526
+c_cool[2] = 28889.195875348385
+c_cool[3] = 244.0450569239165
+c_cool[4] = -35.287764226353495
+c_cool[5] = -811.3409802656142
+c_cool[6] = 1.531223969291112
+c_cool[7] = -1.412991880075083
+c_cool[8] = -0.9494736842067937
+c_cool[9] = 6.589815186422129
+
+"!Operating points 1 to 3: the three cases of the class docstring and of the component test"
+T_evap[1] = -10                        "evaporation temperature of point 1 [degC]"
+T_evap[2] = 10                         "evaporation temperature of point 2 [degC]"
+T_evap[3] = 0                          "evaporation temperature of point 3 [degC]"
+T_cd[1] = 50                           "condensation temperature of point 1 [degC]"
+T_cd[2] = 40                           "condensation temperature of point 2 [degC]"
+T_cd[3] = 50                           "condensation temperature of point 3 [degC]"
+DELTAT_sh[1] = 10                      "suction superheating of point 1 [K]"
+DELTAT_sh[2] = 10                      "suction superheating of point 2 [K]"
+DELTAT_sh[3] = 20                      "suction superheating of point 3 [K]"
+f[1] = 20                              "compressor frequency of point 1 [Hz]"
+f[2] = 20                              "compressor frequency of point 2 [Hz]"
+f[3] = 50                              "compressor frequency of point 3 [Hz]"
+diss[1] = 0.05                         "heat dissipation ratio of point 1 [-]"
+diss[2] = 0.05                         "heat dissipation ratio of point 2 [-]"
+diss[3] = 0                            "heat dissipation ratio of point 3 (adiabatic) [-]"
+
+"!Compressor equations of the three operating points"
+DUPLICATE point = 1, 3
+  T_ev[point] = t_sat(fluid$, p=p_su[point])   "dew point temperature at the suction pressure [degC]"
+  T_cd_ref[point] = t_sat(fluid$, p=p_ex[point])   "bubble point temperature at the discharge pressure [degC]"
+  eta_s[point] = en12900(c_eta_s[0], c_eta_s[1], c_eta_s[2], c_eta_s[3], c_eta_s[4], c_eta_s[5], c_eta_s[6], c_eta_s[7], c_eta_s[8], c_eta_s[9], T_ev[point], T_cd_ref[point])   "isentropic efficiency of the map [-]"
+  eta_v[point] = en12900(c_eta_v[0], c_eta_v[1], c_eta_v[2], c_eta_v[3], c_eta_v[4], c_eta_v[5], c_eta_v[6], c_eta_v[7], c_eta_v[8], c_eta_v[9], T_ev[point], T_cd_ref[point])   "volumetric efficiency of the map [-]"
+  p_su[point] = p_sat(fluid$, T=T_evap[point])   "suction pressure = saturation pressure [Pa]"
+  p_ex[point] = p_sat(fluid$, T=T_cd[point])     "discharge pressure = saturation pressure [Pa]"
+  T_su[point] = T_evap[point] + DELTAT_sh[point]   "suction temperature [degC]"
+  h_su[point] = enthalpy(fluid$, T=T_su[point], p=p_su[point])   "suction enthalpy [J/kg]"
+  v_su[point] = volume(fluid$, T=T_su[point], p=p_su[point])   "suction specific volume [m^3/kg]"
+  s_su[point] = entropy(fluid$, T=T_su[point], p=p_su[point])   "suction entropy [J/(kg K)]"
+  h_exs[point] = enthalpy(fluid$, p=p_ex[point], s=s_su[point])   "isentropic discharge enthalpy [J/kg]"
+  h_2[point] = (h_ex[point] - diss[point]*h_su[point])/(1 - diss[point])   "virtual adiabatic discharge enthalpy [J/kg]"
+  eta_s[point]*(h_2[point] - h_su[point]) = h_exs[point] - h_su[point]   "isentropic efficiency equation, as in the original"
+  m_dot[point] = eta_v[point]*V_swept*f[point]/v_su[point]   "refrigerant mass flow [kg/s]"
+  P_el[point] = m_dot[point]*(h_ex[point] - h_su[point])/(1 - diss[point])   "electrical power consumption [W]"
+  Q_diss[point] = -diss[point]*P_el[point]   "heat leaving the machine [W]"
+  T_ex[point] = temperature(fluid$, p=p_ex[point], h=h_ex[point])   "discharge temperature [degC]"
+  V_dot[point] = m_dot[point]*v_su[point]   "volumetric flow at the suction [m^3/s]"
+END
+
+"!Catalogue power and cooling capacity at the operating points (check of the map)"
+P_cat[1] = en12900(c_pow[0], c_pow[1], c_pow[2], c_pow[3], c_pow[4], c_pow[5], c_pow[6], c_pow[7], c_pow[8], c_pow[9], T_evap[1], T_cd[1])   "catalogue power at point 1 [W]"
+P_cat[2] = en12900(c_pow[0], c_pow[1], c_pow[2], c_pow[3], c_pow[4], c_pow[5], c_pow[6], c_pow[7], c_pow[8], c_pow[9], T_evap[2], T_cd[2])   "catalogue power at point 2 [W]"
+P_cat[3] = en12900(c_pow[0], c_pow[1], c_pow[2], c_pow[3], c_pow[4], c_pow[5], c_pow[6], c_pow[7], c_pow[8], c_pow[9], T_evap[3], T_cd[3])   "catalogue power at point 3 [W]"
+Q_0_cat[1] = en12900(c_cool[0], c_cool[1], c_cool[2], c_cool[3], c_cool[4], c_cool[5], c_cool[6], c_cool[7], c_cool[8], c_cool[9], T_evap[1], T_cd[1])   "catalogue cooling capacity at point 1 [W]"
+Q_0_cat[2] = en12900(c_cool[0], c_cool[1], c_cool[2], c_cool[3], c_cool[4], c_cool[5], c_cool[6], c_cool[7], c_cool[8], c_cool[9], T_evap[2], T_cd[2])   "catalogue cooling capacity at point 2 [W]"
+Q_0_cat[3] = en12900(c_cool[0], c_cool[1], c_cool[2], c_cool[3], c_cool[4], c_cool[5], c_cool[6], c_cool[7], c_cool[8], c_cool[9], T_evap[3], T_cd[3])   "catalogue cooling capacity at point 3 [W]"
+P_dev[3] = (P_el[3] - P_cat[3])/P_cat[3]   "power deviation from the catalogue at point 3 [-]"
+
+"!Operating point 4: imposed volumetric flow, the frequency becomes the unknown"
+V_dot_4 = 400/3600                      "volumetric flow at the suction [m^3/s]"
+DELTAT_sh_4 = 10                        "suction superheating [K]"
+diss_4 = 0.05                           "heat dissipation ratio [-]"
+p_su_4 = p_sat(fluid$, T=10)            "suction pressure = saturation pressure at 10 degC [Pa]"
+p_ex_4 = p_sat(fluid$, T=40)            "discharge pressure = saturation pressure at 40 degC [Pa]"
+T_su_4 = 20                             "suction temperature [degC]"
+h_su_4 = enthalpy(fluid$, T=T_su_4, p=p_su_4)   "suction enthalpy [J/kg]"
+v_su_4 = volume(fluid$, T=T_su_4, p=p_su_4)   "suction specific volume [m^3/kg]"
+s_su_4 = entropy(fluid$, T=T_su_4, p=p_su_4)   "suction entropy [J/(kg K)]"
+T_ev_4 = t_sat(fluid$, p=p_su_4)   "dew point temperature at the suction pressure [degC]"
+T_cd_ref_4 = t_sat(fluid$, p=p_ex_4)   "bubble point temperature at the discharge pressure [degC]"
+eta_s_4 = en12900(c_eta_s[0], c_eta_s[1], c_eta_s[2], c_eta_s[3], c_eta_s[4], c_eta_s[5], c_eta_s[6], c_eta_s[7], c_eta_s[8], c_eta_s[9], T_ev_4, T_cd_ref_4)   "isentropic efficiency of the map [-]"
+eta_v_4 = en12900(c_eta_v[0], c_eta_v[1], c_eta_v[2], c_eta_v[3], c_eta_v[4], c_eta_v[5], c_eta_v[6], c_eta_v[7], c_eta_v[8], c_eta_v[9], T_ev_4, T_cd_ref_4)   "volumetric efficiency of the map [-]"
+h_exs_4 = enthalpy(fluid$, p=p_ex_4, s=s_su_4)   "isentropic discharge enthalpy [J/kg]"
+h_2_4 = (h_ex_4 - diss_4*h_su_4)/(1 - diss_4)   "virtual adiabatic discharge enthalpy [J/kg]"
+eta_s_4*(h_2_4 - h_su_4) = h_exs_4 - h_su_4   "isentropic efficiency equation, as in the original"
+m_dot_4 = V_dot_4/v_su_4   "refrigerant mass flow [kg/s]"
+f_4 = m_dot_4*v_su_4/(eta_v_4*V_swept)   "compressor frequency [Hz]"
+P_el_4 = m_dot_4*(h_ex_4 - h_su_4)/(1 - diss_4)   "electrical power consumption [W]"
+Q_diss_4 = -diss_4*P_el_4   "heat leaving the machine [W]"
+T_ex_4 = temperature(fluid$, p=p_ex_4, h=h_ex_4)   "discharge temperature [degC]"
+
+"!State points of the first operating point for the thermodynamic diagrams"
+P[1] = p_su[1]   "suction pressure [Pa]"
+h[1] = h_su[1]   "suction enthalpy [J/kg]"
+T[1] = T_su[1]   "suction temperature [degC]"
+s[1] = s_su[1]   "suction entropy [J/(kg K)]"
+P[2] = p_ex[1]   "discharge pressure [Pa]"
+h[2] = h_ex[1]   "discharge enthalpy [J/kg]"
+T[2] = T_ex[1]   "discharge temperature [degC]"
+s[2] = entropy(fluid$, p=p_ex[1], h=h_ex[1])   "discharge entropy [J/(kg K)]"

@@ -172,3 +172,10 @@ Source file (EES 7.458, comments in French), collection of S. Quoilin:
   reference reciprocating compressor (six-step semi-empirical model with clearance
   re-expansion and motor slip) — the detailed component counterpart of this simple
   compressor model.
+- `CSL-0133` *heat_pump_propane_pinch*: the propane counterpart of this cycle as
+  a design model — same fluid, but the evaporating and condensing temperatures are
+  replaced by imposed pinch points in both heat exchangers, and the compressor by a
+  constant-isentropic-efficiency law.
+- `CSL-0136` *polynomial_compressor_en12900*: the same compressor concept (volumetric
+  efficiency from the swept volume and the frequency, power with losses) fed by EN 12900
+  catalogue polynomials for the two efficiencies instead of a clearance-volume law.

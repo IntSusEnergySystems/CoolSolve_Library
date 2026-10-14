@@ -1,10 +1,10 @@
 {
  "snapshot": {
-  "content_hash": "sha256:1c820cc0c169a53a",
-  "files": 770,
-  "bytes": 6858466,
-  "models": 148,
-  "functions": 431,
+  "content_hash": "sha256:993537e72923397a",
+  "files": 802,
+  "bytes": 7087267,
+  "models": 154,
+  "functions": 434,
   "taxonomy_version": "0.2"
  },
  "models": [
@@ -325,7 +325,8 @@
     "CSL-0078",
     "CSL-0116",
     "CSL-0156",
-    "CSL-0167"
+    "CSL-0167",
+    "CSL-0136"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -733,12 +734,60 @@
    "related": [
     "CSL-0116",
     "CSL-0007",
-    "CSL-0157"
+    "CSL-0157",
+    "CSL-0136"
    ],
    "coolsolve_version": "0.3.0@d5d6b37",
    "verified_on": "2026-10-10",
    "path": "models/components/compressors/copeland_catalogue_correlation",
    "main_file": "copeland_catalogue_correlation.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0136",
+   "name": "polynomial_compressor_en12900",
+   "title": "Positive-displacement compressor with EN12900 efficiency-map polynomials",
+   "category": "components/compressors",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Translation of the TESPy class PolynomialCompressor: isentropic and volumetric efficiency as 10-coefficient EN12900 polynomials of the evaporation and condensation temperature of a compressor catalogue, heat dissipation ratio, mass flow from swept volume x frequency x eta_v; four operating points (three with a fixed frequency, one with an imposed volumetric flow).",
+   "fluids": [
+    "R134a"
+   ],
+   "tags": [
+    "compressor",
+    "screw compressor",
+    "semi-hermetic",
+    "EN12900",
+    "efficiency map",
+    "polynomial map",
+    "catalogue data",
+    "offdesign",
+    "heat dissipation",
+    "R134a"
+   ],
+   "n_equations": 152,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/src/tespy/components/displacementmachinery/polynomial_compressor.py",
+   "authors": [
+    "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy",
+   "missing_features": [],
+   "related": [
+    "CSL-0001",
+    "CSL-0007",
+    "CSL-0123",
+    "CSL-0135"
+   ],
+   "coolsolve_version": "0.3.0@4c80b25",
+   "verified_on": "2026-10-13",
+   "path": "models/components/compressors/polynomial_compressor_en12900",
+   "main_file": "polynomial_compressor_en12900.eescode",
    "figures": 0
   },
   {
@@ -975,7 +1024,8 @@
     "CSL-0084",
     "CSL-0116",
     "CSL-0117",
-    "CSL-0159"
+    "CSL-0159",
+    "CSL-0135"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -1080,6 +1130,51 @@
    "verified_on": "2026-10-07",
    "path": "models/components/expanders_turbines/double_stage_scroll_expander",
    "main_file": "double_stage_scroll_expander.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0135",
+   "name": "turbine_stodola_offdesign",
+   "title": "Steam turbine with Stodola's cone law and efficiency characteristic",
+   "category": "components/expanders_turbines",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Gas/steam turbine off-design model: a design point (isentropic efficiency given) supplies the reference values of Stodola's cone law, and an off-design point gets its inlet pressure from the cone law and its isentropic efficiency from a characteristic line eta_s/eta_s,design = f(m/m_ref).",
+   "fluids": [
+    "Water"
+   ],
+   "tags": [
+    "turbine",
+    "offdesign",
+    "cone law",
+    "Stodola",
+    "characteristic line",
+    "isentropic efficiency",
+    "steam",
+    "translation"
+   ],
+   "n_equations": 32,
+   "largest_block": 3,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/src/tespy/components/turbomachinery/turbine.py",
+   "authors": [
+    "Francesco Witte (TESPy lead developer)",
+    "the TESPy contributors"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy",
+   "missing_features": [],
+   "related": [
+    "CSL-0037",
+    "CSL-0013",
+    "CSL-0136"
+   ],
+   "coolsolve_version": "0.3.0@4c80b25",
+   "verified_on": "2026-10-13",
+   "path": "models/components/expanders_turbines/turbine_stodola_offdesign",
+   "main_file": "turbine_stodola_offdesign.eescode",
    "figures": 0
   },
   {
@@ -1224,7 +1319,8 @@
     "CSL-0126",
     "CSL-0128",
     "CSL-0127",
-    "CSL-0138"
+    "CSL-0138",
+    "CSL-0137"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -1682,7 +1778,8 @@
     "CSL-0002",
     "CSL-0026",
     "CSL-0027",
-    "CSL-0110"
+    "CSL-0110",
+    "CSL-0137"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
@@ -1881,8 +1978,8 @@
     "CSL-0121",
     "CSL-0153"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-07",
+   "coolsolve_version": "0.3.0@3a5d5ce",
+   "verified_on": "2026-10-13",
    "path": "models/components/heat_exchangers/condenser_3_zones_plate_correlations",
    "main_file": "condenser_3_zones_plate_correlations.eescode",
    "figures": 0
@@ -2031,7 +2128,8 @@
     "CSL-0014",
     "CSL-0090",
     "CSL-0128",
-    "CSL-0127"
+    "CSL-0127",
+    "CSL-0134"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
@@ -2141,6 +2239,59 @@
    "path": "models/components/heat_exchangers/hx_eps_ntu_plate_pipe",
    "main_file": "hx_eps_ntu_plate_pipe.eescode",
    "figures": 0
+  },
+  {
+   "id": "CSL-0137",
+   "name": "hx_lmtd_ua",
+   "title": "Counterflow heat exchanger and condenser rated by UA and a smoothed LMTD (TESPy)",
+   "category": "components/heat_exchangers",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Translation of the TESPy component classes HeatExchanger and its condensing subclass Condenser: a counterflow exchanger with the duty closed by a terminal temperature difference, by a duty or by the heat-transfer coefficient UA through the smoothed LMTD (Quoilin 2011), with pinch and effectiveness results, plus the off-design UA characteristic lines. Each file ships the design and the off-design run of the corresponding TESPy class doctest (air/water exchanger and air-cooled waste-steam condenser).",
+   "fluids": [
+    "Water",
+    "Air"
+   ],
+   "tags": [
+    "heat exchanger",
+    "counterflow",
+    "LMTD",
+    "UA",
+    "terminal temperature difference",
+    "pinch",
+    "effectiveness",
+    "off-design",
+    "characteristic lines",
+    "condenser",
+    "saturation state",
+    "reference model"
+   ],
+   "n_equations": 70,
+   "largest_block": 8,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/src/tespy/components/heat_exchangers/base.py; ~/git/tespy/src/tespy/components/heat_exchangers/condenser.py",
+   "authors": [
+    "Francesco Witte (TESPy lead developer) and the TESPy contributors",
+    "Sylvain Quoilin (smoothed LMTD, PhD thesis, University of Liege, 2011)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy",
+   "missing_features": [],
+   "related": [
+    "CSL-0105",
+    "CSL-0014",
+    "CSL-0013"
+   ],
+   "coolsolve_version": "0.3.0@4c80b25",
+   "verified_on": "2026-10-13",
+   "path": "models/components/heat_exchangers/hx_lmtd_ua",
+   "main_file": "hx_lmtd_ua.eescode",
+   "figures": 0,
+   "variants": [
+    "hx_lmtd_ua_condenser.eescode"
+   ]
   },
   {
    "id": "CSL-0138",
@@ -3260,7 +3411,8 @@
     "CSL-0040",
     "CSL-0036",
     "CSL-0084",
-    "CSL-0153"
+    "CSL-0153",
+    "CSL-0134"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -3417,6 +3569,57 @@
    "figures": 0
   },
   {
+   "id": "CSL-0134",
+   "name": "orc_preheated_recuperated_cyclopentane",
+   "title": "Preheated + recuperated ORC on cyclopentane (Zorlu geothermal site)",
+   "category": "cycles/organic_rankine",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Organic Rankine cycle on cyclopentane for the Zorlu geothermal plant: evaporator and condenser each sized by an imposed pinch point (plus superheating / subcooling), constant-isentropic-efficiency pump and expander, constant-effectiveness recuperator (internal heat exchanger) and water preheater, three water sources. The two saturation pressures are the unknowns closed by the two pinch conditions; no pressure drop anywhere. Translation of the LaboThapPy Zorlu ORC example, whose preheater-source bug is corrected here.",
+   "fluids": [
+    "CycloPentane",
+    "Water"
+   ],
+   "tags": [
+    "organic Rankine cycle",
+    "geothermal",
+    "pinch point",
+    "recuperator",
+    "preheater",
+    "case study",
+    "constant effectiveness",
+    "constant isentropic efficiency",
+    "cyclopentane"
+   ],
+   "n_equations": 135,
+   "largest_block": 61,
+   "origin_type": "research",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/machine/examples/ORC/fpi_orc_example.py",
+   "authors": [
+    "Basile Chaudoir",
+    "Elise Neven",
+    "Titouan Janod"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/PyLaboThap/LaboThapPy",
+   "missing_features": [],
+   "related": [
+    "CSL-0013",
+    "CSL-0014",
+    "CSL-0019",
+    "CSL-0039",
+    "CSL-0126",
+    "CSL-0133"
+   ],
+   "coolsolve_version": "0.3.0@4c80b25",
+   "verified_on": "2026-10-13",
+   "path": "models/cycles/organic_rankine/orc_preheated_recuperated_cyclopentane",
+   "main_file": "orc_preheated_recuperated_cyclopentane.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0153",
    "name": "orc_whr_refprop_cost",
    "title": "Waste-heat-recovery ORC with a scroll expander, REFPROP mixtures and an equipment cost model",
@@ -3468,7 +3671,7 @@
     "CSL-0159"
    ],
    "coolsolve_version": "0.3.0@20b59a6",
-   "verified_on": "2026-10-10",
+   "verified_on": "2026-10-13",
    "path": "models/cycles/organic_rankine/orc_whr_refprop_cost",
    "main_file": "orc_whr_refprop_cost.eescode",
    "figures": 0,
@@ -3574,7 +3777,9 @@
     "CSL-0068",
     "CSL-0077",
     "CSL-0156",
-    "CSL-0167"
+    "CSL-0167",
+    "CSL-0136",
+    "CSL-0133"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-04",
@@ -3616,7 +3821,12 @@
     "CSL-0001",
     "CSL-0015",
     "CSL-0025",
-    "CSL-0054"
+    "CSL-0054",
+    "CSL-0133",
+    "CSL-0134",
+    "CSL-0135",
+    "CSL-0137",
+    "CSL-0139"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -3800,7 +4010,10 @@
    "license": "MIT",
    "url": "",
    "missing_features": [],
-   "related": [],
+   "related": [
+    "CSL-0133",
+    "CSL-0134"
+   ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
    "path": "models/cycles/refrigeration_heat_pumps/high_temp_heat_pump_pcm_storage",
@@ -4121,6 +4334,53 @@
    "figures": 0
   },
   {
+   "id": "CSL-0133",
+   "name": "heat_pump_propane_pinch",
+   "title": "Propane heat pump with pinch-sized evaporator and condenser",
+   "category": "cycles/refrigeration_heat_pumps",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Vapour-compression heat pump on propane whose condenser and evaporator are each sized by an imposed pinch point (superheat / two-phase / subcooling zones), with a constant-efficiency compressor and an isenthalpic valve. The refrigerant flow rate is imposed and the two saturation pressures are the unknowns, closed by the pinch condition of each exchanger. Translation of the LaboThapPy basic_HP example.",
+   "fluids": [
+    "R290",
+    "Water"
+   ],
+   "tags": [
+    "heat pump",
+    "vapour compression",
+    "pinch point",
+    "three zones",
+    "design",
+    "propane"
+   ],
+   "n_equations": 83,
+   "largest_block": 38,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/machine/examples/Heat_Pumps/fpi_HeatPump_example.py",
+   "authors": [
+    "Basile Chaudoir",
+    "Elise Neven",
+    "Titouan Janod"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/PyLaboThap/LaboThapPy",
+   "missing_features": [],
+   "related": [
+    "CSL-0014",
+    "CSL-0013",
+    "CSL-0001",
+    "CSL-0039",
+    "CSL-0134"
+   ],
+   "coolsolve_version": "0.3.0@4c80b25",
+   "verified_on": "2026-10-12",
+   "path": "models/cycles/refrigeration_heat_pumps/heat_pump_propane_pinch",
+   "main_file": "heat_pump_propane_pinch.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0155",
    "name": "inverter_air_water_heat_pump",
    "title": "Inverter air-to-water heat pump (Daikin Altherma type), heating mode",
@@ -4348,7 +4608,8 @@
     "CSL-0149",
     "CSL-0150",
     "CSL-0152",
-    "CSL-0166"
+    "CSL-0166",
+    "CSL-0139"
    ],
    "coolsolve_version": "0.3.0+fix/library-gaps@fbdb6a7",
    "verified_on": "2026-10-05",
@@ -4395,7 +4656,8 @@
    "related": [
     "CSL-0005",
     "CSL-0058",
-    "CSL-0150"
+    "CSL-0150",
+    "CSL-0139"
    ],
    "coolsolve_version": "0.3.0",
    "verified_on": "2026-10-05",
@@ -4446,7 +4708,8 @@
    ],
    "related": [
     "CSL-0046",
-    "CSL-0005"
+    "CSL-0005",
+    "CSL-0139"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -4456,6 +4719,58 @@
    "variants": [
     "diesel_engine_excess_air_exhaust_analysis_coolsolve.eescode"
    ]
+  },
+  {
+   "id": "CSL-0139",
+   "name": "combustion_chamber",
+   "title": "Generic combustion chamber (TESPy CombustionChamber)",
+   "category": "fundamentals/combustion",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Steady-flow combustion chamber translated from TESPy: methane (diluted with CO2, blended with H2) burned with air, mandatory equations = mass balance, pressure equality, one stoichiometry equation per fluid and the lower-heating-value energy balance; returns the fuel flow, the flue-gas composition and the flue-gas temperature for a given air flow and excess-air ratio lambda, with the pressure ratio pr and heat dissipation eta of the diabatic variant.",
+   "fluids": [
+    "CH4",
+    "CO2",
+    "H2O",
+    "O2",
+    "N2",
+    "Ar",
+    "H2"
+   ],
+   "tags": [
+    "combustion",
+    "combustion chamber",
+    "stoichiometry",
+    "excess air",
+    "lambda",
+    "flue gas composition",
+    "thermal input",
+    "ideal gas mixture"
+   ],
+   "n_equations": 81,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/src/tespy/components/combustion/base.py",
+   "authors": [
+    "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy",
+   "missing_features": [],
+   "related": [
+    "CSL-0005",
+    "CSL-0013",
+    "CSL-0046",
+    "CSL-0058",
+    "CSL-0150"
+   ],
+   "coolsolve_version": "0.3.0@4c80b25",
+   "verified_on": "2026-10-13",
+   "path": "models/fundamentals/combustion/combustion_chamber",
+   "main_file": "combustion_chamber.eescode",
+   "figures": 0
   },
   {
    "id": "CSL-0150",
@@ -4511,7 +4826,8 @@
    "related": [
     "CSL-0005",
     "CSL-0046",
-    "CSL-0152"
+    "CSL-0152",
+    "CSL-0139"
    ],
    "coolsolve_version": "0.3.0@f319f0c",
    "verified_on": "2026-10-10",
@@ -6171,7 +6487,7 @@
     "CSL-0153"
    ],
    "coolsolve_version": "0.3.0@20b59a6",
-   "verified_on": "2026-10-10",
+   "verified_on": "2026-10-13",
    "path": "models/heat_transfer/pressure_drop/plate_hx_pressure_drop_identification",
    "main_file": "plate_hx_pressure_drop_identification.eescode",
    "figures": 0
@@ -7862,6 +8178,13 @@
    "path": "models/components/heat_exchangers/hx_eps_ntu_plate_pipe/hx_eps_ntu_plate_pipe.eescode"
   },
   {
+   "function": "en12900",
+   "type": "FUNCTION",
+   "signature": "(c_0, c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8, c_9, T_ev, T_cd)",
+   "model_id": "CSL-0136",
+   "path": "models/components/compressors/polynomial_compressor_en12900/polynomial_compressor_en12900.eescode"
+  },
+  {
    "function": "Enthalpy_Fusion",
    "type": "FUNCTION",
    "signature": "(fluid$)",
@@ -8737,6 +9060,13 @@
    "path": "models/components/heat_exchangers/shell_and_tube_sizing/shell_and_tube_sizing.eescode"
   },
   {
+   "function": "LHV_fuel",
+   "type": "FUNCTION",
+   "signature": "(n_C, n_H, n_O, hf_fuel, hf_CO2, hf_H2O, hf_O2, MM_fuel)",
+   "model_id": "CSL-0139",
+   "path": "models/fundamentals/combustion/combustion_chamber/combustion_chamber.eescode"
+  },
+  {
    "function": "LMTD",
    "type": "PROCEDURE",
    "signature": "(T_hf_su,T_hf_ex,T_cf_su,T_cf_ex:DELTAT_log)",
@@ -8770,6 +9100,13 @@
    "signature": "(DT_a, DT_b)",
    "model_id": "CSL-0138",
    "path": "models/components/heat_exchangers/hx_moving_boundary_bell/hx_moving_boundary_bell.eescode"
+  },
+  {
+   "function": "LMTD_smoothed",
+   "type": "FUNCTION",
+   "signature": "(td_a, td_b)",
+   "model_id": "CSL-0137",
+   "path": "models/components/heat_exchangers/hx_lmtd_ua/hx_lmtd_ua.eescode"
   },
   {
    "function": "lmtd_xi1000",
@@ -10373,7 +10710,7 @@
    "kind": "feature",
    "state": "open",
    "priority": "P1",
-   "text": "Library snapshot embedded at build time, with version identity and run-time override",
+   "text": "Library snapshot embedded at build time, with version identity — **done**; run-time override (`--library-dir`) open",
    "detail": "",
    "fixed_in": "",
    "anchor": "3-features-and-implementation-plan"
@@ -10382,7 +10719,7 @@
    "kind": "feature",
    "state": "open",
    "priority": "P1",
-   "text": "HTML model explorer: taxonomy, search, facets, model pages, *Open* and *Include functions*",
+   "text": "HTML model explorer: taxonomy, search, facets, model pages, *Open* — **done** (Library menu + `/library/` dashboard); *Include functions* waits for `CS-FEAT-IMPORT`",
    "detail": "",
    "fixed_in": "",
    "anchor": "3-features-and-implementation-plan"

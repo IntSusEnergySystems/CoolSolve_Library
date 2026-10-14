@@ -178,6 +178,11 @@ No student names or personal data involved.
 
 ## Related models
 
+
+- `CSL-0137` *hx_lmtd_ua*: the generic counterflow exchanger of TESPy rated by UA and the smoothed LMTD, with ttd and pinch specifications and the off-design UA characteristic lines; this model sizes the same kind of exchanger by an imposed pinch and a subcooling.
+- CSL-0134 *orc_preheated_recuperated_cyclopentane*: the Zorlu ORC cycle that
+  uses this condenser branch and its evaporator twin as the two phase-changing
+  exchangers, closed by the two pinch conditions.
 - `CSL-0008` (*condenser_three_zones*, level 3): air-cooled condenser with
   fitted ε-NTU conductances per zone (off-design model); this model is the
   design-point counterpart (pinch imposed, pressure solved).
@@ -198,3 +203,6 @@ No student names or personal data involved.
   counterflow exchanger (sCO2 recuperators), instead of at the zone
   interfaces of a phase-changing exchanger.
 - CSL-0138 (hx_moving_boundary_bell): moving-boundary (Bell 2015) translation of the same zone-delimited heat-exchanger family (TESPy TSP-014).
+- `CSL-0133` *heat_pump_propane_pinch*: the propane heat-pump cycle built on this
+  exchanger model — the same three zones and the same pinch closure, with the
+  evaporator branch of `HexCstPinch` and a constant-efficiency compressor and valve.
