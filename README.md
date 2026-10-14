@@ -26,9 +26,12 @@ This library gathers them in one place and makes them:
   (e.g. the solution stored in the EES file) and every runnable model has a
   regression baseline;
 - **attributed** — every model states its source, authors, link and license;
-- **built into CoolSolve** — each CoolSolve build embeds the library as it is
-  at compile time and serves it in an HTML model explorer, and any model can
-  import the functions and procedures of a library model with
+- **built into CoolSolve** — each CoolSolve build fetches the latest library
+  (the `main` branch of this repository) and embeds it: the *Library* button of
+  the GUI follows the taxonomy and opens a whole model folder in one click
+  (verified models), and the dashboard served at `/library/` lists every model,
+  blocked ones included, each with an *Open in CoolSolve* link. Any model will
+  be able to import the functions and procedures of a library model with
   `$INCLUDE library:<name>` (planned, see
   [CoolSolve support](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md)).
 
@@ -106,8 +109,10 @@ Each model folder is a self-contained CoolSolve project:
 | `<name>_<variant>.eescode` (+ `.sol`) | Variants; for a `blocked` model, `<name>_coolsolve.eescode` is the verified runnable variant of the native file; each variant with a `.sol` is regression-tested |
 | `figures/` | Thermodynamic diagram or plot made with CoolSolve, shown in the README |
 
-Open `<name>.eescode` in the CoolSolve GUI (companion files are picked up
-automatically) or run `coolsolve ./<name>.eescode`.
+Pick the model in the *Library* menu of the CoolSolve GUI (the whole folder is
+loaded: initial values, tables, configuration), open `<name>.eescode` from a
+checkout (companion files are picked up automatically), or run
+`coolsolve ./<name>.eescode`.
 
 ## The model table
 
@@ -115,7 +120,9 @@ The `model.json` of each model folder is the single source of truth.
 `tools/build_index.py` derives two files from them — never edit them by hand:
 
 - [`library.html`](library.html), the **dashboard** (open it in a browser, it
-  works from disk). Its landing page, *Explore*, follows the taxonomy and the
+  works from disk; CoolSolve serves the same page at `/library/` and then adds
+  an *Open in CoolSolve* button — and one per variant file — to every model, and
+  shows the README in its documentation viewer). Its landing page, *Explore*, follows the taxonomy and the
   `models/` folders: one section per category, one card per subcategory with its
   models, and links to the table. The other views are sortable and filterable
   tables of the models (ID, title, category, kind, level, status, fluids, size,
@@ -128,7 +135,11 @@ The `model.json` of each model folder is the single source of truth.
   CoolSolve register (`../CoolSolve/docs/model_library_support.md`, or
   `--register PATH`);
 - [`library.json`](library.json), the same index for tools and for CoolSolve,
-  which embeds the library at compile time.
+  which embeds the library at compile time. Its files must be regenerated and
+  pushed for CoolSolve to see a change: the allow-list of what CoolSolve embeds
+  is `EMBED_FILES` in `tools/build_index.py` (mirrored in CoolSolve's
+  `cmake/embed_library.cmake`; the CoolSolve build warns when the file counts
+  differ).
 
 ## Sources
 

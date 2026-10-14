@@ -224,6 +224,9 @@ def main(argv=None):
             "coolsolve_version": v.get("coolsolve_version", ""), "verified_on": v.get("date", ""),
             "path": path, "main_file": meta.get("main_file"), "figures": len(figures_of(folder)),
         })
+        variants = sorted(p.name for p in folder.glob("*.eescode") if p.name != meta.get("main_file"))
+        if variants:  # other .eescode files of the folder, e.g. the runnable <name>_coolsolve variant of a blocked model
+            rows[-1]["variants"] = variants
         main_file = folder / meta.get("main_file", "")
         if main_file.is_file():
             for kind, name, sig in functions_in(main_file):
