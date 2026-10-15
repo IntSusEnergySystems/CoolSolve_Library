@@ -315,10 +315,9 @@ of the library.
   *centrifugal_compressor_design_similarity* (air), but for a turbocompressor
   (a different machine); no `related` link was added because the back-link
   would require editing that model.
-- Sibling source file, not yet imported and left `todo` in the inventory:
-  `thermo_models` `TM-0485`, the parameter-identification model of the same fan
-  (identification of the `alpha_i`/`beta_i` factors from catalogue points) —
-  a different level of detail, to be imported as a separate model.
+- `CSL-0165` *centrifugal_fan_paramid*: the parameter-identification model of
+  the same fan (TM-0485). It solves the `alpha_i` and `beta_i` from four
+  catalogue points; the reference model uses those coefficients, rounded.
 - `CSL-0125` *pump_curve_similarity*: pump described by manufacturer curves
   and scaled with the same affinity (similarity) laws, for a liquid and with
   three operating modes (catalogue data instead of dimensionless factors).

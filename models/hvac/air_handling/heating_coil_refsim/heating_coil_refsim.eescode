@@ -1,0 +1,87 @@
+{=============================================================================
+  Heating coil reference model (epsilon-NTU, humid air and hot water)
+  CoolSolve Library model CSL-0164
+ -----------------------------------------------------------------------------
+  Reference simulation of an air heating coil. The coil is a counter-flow
+  exchanger: the duty follows the epsilon-NTU relation, and the overall
+  conductance is the series of the air-side, metal and water-side resistances.
+  The air-side resistance scales as the air flow to the power -0.6 (laminar)
+  and the water-side resistance as the water flow to the power -0.8 (turbulent).
+  The humidity ratio is unchanged (heating only). Humid-air properties are
+  evaluated at the mean air temperature.
+
+  Inputs : V_dot_a_m3h, t_a_su_heatingcoil, RH_su_heatingcoil, P_atm,
+           V_dot_w_heatingcoil_m3h, t_w_su_heatingcoil
+  Outputs: Q_dot_heatingcoil, t_a_ex_heatingcoil, RH_ex_heatingcoil,
+           t_w_ex_heatingcoil, epsilon_heatingcoil, DELTAp_a_heatingcoil,
+           DELTAp_w_heatingcoil
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège model bank, S. Bertagnolio, 2008-03-17 - see README.md
+  Variant: heating_coil_refsim_coolsolve.eescode replaces Density(AirH2O)
+           by 1/Volume(AirH2O) (CS-BUG-HUMIDAIR-PROPS). See README.md.
+=============================================================================}
+
+"Inlet water (Diagram-window inputs, restored from the stored solution)"
+V_dot_w_heatingcoil_m3h = 3.7          "water volume flow rate [m^3/h]"
+t_w_su_heatingcoil = 80                "water supply temperature [°C]"
+
+"Inlet air"
+V_dot_a_m3h = 5000                     "air volume flow rate [m^3/h]"
+t_a_su_heatingcoil = -10               "air supply temperature [°C]"
+RH_su_heatingcoil = 0.9                "air supply relative humidity [-]"
+w_su_heatingcoil = HUMRAT(AirH2O, T=t_a_su_heatingcoil, P=P_atm, R=RH_su_heatingcoil)  "supply humidity ratio [kg/kg]"
+
+"Air-side parameters"
+P_atm = 1E5                            "atmospheric pressure [Pa]"
+DELTAp_a_heatingcoil_n = 100           "nominal air-side pressure drop [Pa]"
+V_dot_a_m3h_n = 5000                   "nominal air volume flow rate [m^3/h]"
+c_p_a_heatingcoil = CP(AirH2O, T=t_a_m_heatingcoil, P=P_atm, w=w_su_heatingcoil)  "humid-air specific heat [J/(kg K)]"
+rho_a_heatingcoil = DENSITY(AirH2O, T=t_a_m_heatingcoil, P=P_atm, w=w_su_heatingcoil)  "humid-air density [kg/m^3]"
+t_a_m_heatingcoil = (t_a_su_heatingcoil + t_a_ex_heatingcoil)/2  "mean air temperature [°C]"
+
+"Water-side parameters"
+DELTAp_w_heatingcoil_n = 30000         "nominal water-side pressure drop [Pa]"
+V_dot_w_heatingcoil_m3h_n = 4          "nominal water volume flow rate [m^3/h]"
+c_p_w_heatingcoil = CP(Water, T=t_w_m_heatingcoil, P=P_atm)  "water specific heat [J/(kg K)]"
+rho_w_heatingcoil = DENSITY(Water, T=t_w_m_heatingcoil, P=P_atm)  "water density [kg/m^3]"
+t_w_m_heatingcoil = (t_w_su_heatingcoil + t_w_ex_heatingcoil)/2  "mean water temperature [°C]"
+
+"Thermal resistances, nominal"
+R_a_heatingcoil_n = 0.0003             "nominal air-side resistance [K/W]"
+R_m_heatingcoil_n = 0.00003            "nominal metal resistance [K/W]"
+R_w_heatingcoil_n = 0.0003             "nominal water-side resistance [K/W]"
+
+"Air side"
+Q_dot_heatingcoil = C_dot_a_heatingcoil*(t_a_ex_heatingcoil - t_a_su_heatingcoil)  "heating duty [W]"
+C_dot_a_heatingcoil = M_dot_a_heatingcoil*c_p_a_heatingcoil  "air capacity rate [W/K]"
+M_dot_a_heatingcoil = V_dot_a_m3h/3600*rho_a_heatingcoil  "dry-air mass flow rate [kg/s]"
+w_ex_heatingcoil = w_su_heatingcoil    "humidity ratio unchanged, heating only [kg/kg]"
+RH_ex_heatingcoil = RELHUM(AirH2O, T=t_a_ex_heatingcoil, P=P_atm, w=w_ex_heatingcoil)  "exhaust relative humidity [-]"
+
+"Water side (the original heading says 'Chilled water side')"
+Q_dot_heatingcoil = C_dot_w_heatingcoil*(t_w_su_heatingcoil - t_w_ex_heatingcoil)
+C_dot_w_heatingcoil = M_dot_w_heatingcoil*c_p_w_heatingcoil  "water capacity rate [W/K]"
+M_dot_w_heatingcoil = V_dot_w_heatingcoil_m3h/3600*rho_w_heatingcoil  "water mass flow rate [kg/s]"
+
+"Effectiveness, counter-flow hypothesis as in the original"
+Q_dot_heatingcoil = epsilon_heatingcoil*C_dot_min_heatingcoil*(t_w_su_heatingcoil - t_a_su_heatingcoil)
+C_dot_min_heatingcoil = MIN(C_dot_a_heatingcoil, C_dot_w_heatingcoil)  "smaller capacity rate [W/K]"
+epsilon_heatingcoil = (1 - exp(-NTU_heatingcoil*(1 - omega_heatingcoil)))/(1 - omega_heatingcoil*exp(-NTU_heatingcoil*(1 - omega_heatingcoil)))  "counter-flow effectiveness [-]"
+NTU_heatingcoil = AU_heatingcoil/C_dot_min_heatingcoil  "number of transfer units [-]"
+omega_heatingcoil = C_dot_min_heatingcoil/C_dot_max_heatingcoil  "capacity-rate ratio [-]"
+C_dot_max_heatingcoil = MAX(C_dot_a_heatingcoil, C_dot_w_heatingcoil)  "larger capacity rate [W/K]"
+
+"Overall heat transfer: three resistances in series (air, metal and water)"
+1/AU_heatingcoil = R_tot_heatingcoil
+R_tot_heatingcoil = R_a_heatingcoil + R_m_heatingcoil + R_w_heatingcoil  "overall resistance [K/W]"
+R_a_heatingcoil = R_a_heatingcoil_n*(M_dot_a_heatingcoil_n/M_dot_a_heatingcoil)^0.6  "laminar air-side scaling [K/W]"
+R_m_heatingcoil = R_m_heatingcoil_n
+R_w_heatingcoil = R_w_heatingcoil_n*(M_dot_w_heatingcoil_n/M_dot_w_heatingcoil)^0.8  "turbulent water-side scaling [K/W]"
+M_dot_a_heatingcoil_n = V_dot_a_m3h_n/3600*rho_a_heatingcoil  "nominal air mass flow rate [kg/s]"
+M_dot_w_heatingcoil_n = V_dot_w_heatingcoil_m3h_n/3600*rho_w_heatingcoil  "nominal water mass flow rate [kg/s]"
+
+"Water pressure drop, turbulent scaling as in the original"
+DELTAp_w_heatingcoil = DELTAp_w_heatingcoil_n*(M_dot_w_heatingcoil/M_dot_w_heatingcoil_n)^2  "water-side pressure drop [Pa]"
+
+"Air pressure drop, laminar scaling as in the original"
+DELTAp_a_heatingcoil = DELTAp_a_heatingcoil_n*(M_dot_a_heatingcoil/M_dot_a_heatingcoil_n)  "air-side pressure drop [Pa]"

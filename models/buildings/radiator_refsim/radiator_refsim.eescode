@@ -1,0 +1,36 @@
+{=============================================================================
+  Radiator reference model
+  CoolSolve Library model CSL-0168
+ -----------------------------------------------------------------------------
+  Reference simulation of a hot-water radiator. The heat output is
+  epsilon_rad times the water capacity rate times (t_w_su_rad - t_a_in).
+  The effectiveness is 1 - exp(-NTU), and the conductance is the nominal
+  value scaled with the supply-to-air temperature difference, as written
+  in the original.
+
+  Inputs : M_dot_w_rad, t_a_in, t_w_su_rad
+  Outputs: Q_dot_rad, t_w_ex_rad
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège model bank, J. Lebrun and S. Bertagnolio, 2008-03-17
+           - see README.md
+=============================================================================}
+
+"!Inputs (Diagram-window values, restored from the stored solution)"
+M_dot_w_rad = 0.04                     "water mass flow rate [kg/s]"
+t_a_in = 20                            "inlet air temperature [°C]"
+t_w_su_rad = 70                        "water supply temperature [°C]"
+
+"!Parameters"
+n_rad = 0.3                            "exponent, as in the original [-]"
+AU_rad_n = 30                          "nominal conductance [W/K], 30 [W/C] in the original"
+t_a_in_n = 20                          "nominal inlet air temperature [°C]"
+t_w_su_rad_n = 80                      "nominal water supply temperature [°C]"
+
+"!Simulation"
+Q_dot_rad = epsilon_rad*C_dot_w_rad*(t_w_su_rad - t_a_in)  "heat output [W]"
+epsilon_rad = 1-exp(-NTU_rad)         "effectiveness, as in the original [-]"
+NTU_rad = AU_rad/C_dot_w_rad           "number of transfer units [-]"
+AU_rad = AU_rad_n*(0.9*(abs((t_w_su_rad-t_a_in)/(t_w_su_rad_n-t_a_in_n)))^n_rad+0.1)  "conductance scaled with the temperature difference, as in the original [W/K]"
+C_dot_w_rad = M_dot_w_rad*c_w          "water capacity rate [W/K]"
+c_w = 4187                             "water specific heat [J/(kg K)], 4187 [J/(kg*C)] in the original"
+t_w_ex_rad = t_w_su_rad-Q_dot_rad/C_dot_w_rad  "water exit temperature [°C]"

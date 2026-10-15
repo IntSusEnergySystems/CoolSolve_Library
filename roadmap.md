@@ -7,20 +7,20 @@ each tested and marked done. *How* each step is executed is described in
 [docs/model_workflow.md](docs/model_workflow.md); the classification rules are
 in [docs/taxonomy.md](docs/taxonomy.md).
 
-*Last update: 2026-10-05.*
+*Last update: 2026-10-15.*
 
 ---
 
 ## 1. Status at a glance
 
-| Library (2026-10-09, 20:00 — work paused; counts updated 2026-10-11 after T-RECHECK `CS-GAP-IF5`, `CS-GAP-IF-DIRECTIVE`/`CS-BUG-STRING-CASE`, the `INTEGRAL` family, the lookup fixes, the CALL-output fixes, the identifier-character fixes, `CS-BUG-COMMON-PROC` and `CS-GAP-CALL-WARNING`) | Count |
+| Library (2026-10-15, 13:25 — work stopped; counts of 2026-10-15; earlier note: counts updated 2026-10-11 after T-RECHECK `CS-GAP-IF5`, `CS-GAP-IF-DIRECTIVE`/`CS-BUG-STRING-CASE`, the `INTEGRAL` family, the lookup fixes, the CALL-output fixes, the identifier-character fixes, `CS-BUG-COMMON-PROC` and `CS-GAP-CALL-WARNING`) | Count |
 |---|---:|
-| Models (`library.json`) | 148 |
-| … verified / runs / blocked / failing | 107 / 8 / 32 / 1 |
-| … blocked with a verified runnable `_coolsolve` variant / not runnable at all | 26 / 6 (+ `CSL-0155` failing) |
-| … steady / function / dynamic / optimization | 105 / 37 / 5 / 1 |
-| Functions and procedures (`library.json`) | 431 |
-| Regression (`test_models.py`) | 151 targets (115 main files + 36 variants; `CSL-0009:coolsolve`, `CSL-0042:coolsolve`, `CSL-0118:coolsolve`, `CSL-0123:coolsolve`, `CSL-0124:coolsolve`, `CSL-0151:coolsolve` and `CSL-0161:coolsolve` no longer exist), 0 failure (outside the 7 known baseline failures of 2026-10-10) |
+| Models (`library.json`) | 164 |
+| … verified / blocked / failing (`runs` merged into `verified`, D15) | 131 / 32 / 1 |
+| … blocked with a runnable `_coolsolve` variant (with `.sol`) / not runnable at all | 26 / 6 (`CSL-0040`, `CSL-0043`, `CSL-0081`, `CSL-0116`, `CSL-0150`, `CSL-0162`; +`CSL-0155` failing) |
+| … steady / function / dynamic / optimization | 121 / 37 / 5 / 1 |
+| Functions and procedures (`library.json`) | 442 |
+| Regression (`test_models.py`) | 166 targets (130 main files + 36 variants), 0 failure on 2026-10-15 12:50 (excluding the slow `CSL-0009:coolsolve`); two models added since (`CSL-0148`, `CSL-0154:coolsolve`) tested by their lanes |
 | CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md) §4–§5) | 96 (51 gaps, 43 bugs, 2 doc issues; register of CoolSolve `fix/library-gaps-2` @47bb416 + the uncommitted `CALL WARNING` change, recounted by row prefix: `CS-GAP-IDEAL-ENTROPY` and `CS-GAP-CALL-WARNING` closed, `CS-GAP-AIR-ENTHALPY-REF` dropped) |
 | … closed (§7) | 37 (18 gaps, 18 bugs, 1 doc issue) |
 | … unverified suggestions (§8 *Unverified by a reviewer*) | 2 |
@@ -54,36 +54,55 @@ Refresh with `python3 tools/build_index.py` (models) and
 
 ### Where to resume (handover, 2026-10-09, 20:00)
 
-- **State:** B-01 … B-10 are closed. **Open batches:**
-  - **B-11** (ULiège wave1/high, cards C-140…C-159): all 16 [hard] cards done; open the 4 [std] cards
-    `C-140`, `C-146`, `C-156`, `C-157`, then the review `C-160`, and the taxonomy review `C-139` (M2, P6.2).
-  - **B-12** (LaboThapPy + TESPy wave1/high, C-170…C-192): done `C-170` … `C-184` (session of 2026-10-12/13, all with
-    `space-bunny-free`, one worker at a time: `CSL-0133` … `CSL-0137`, `CSL-0139`); open `C-185` … `C-192`
-    (`C-189`, `C-192` [hard]; dependencies `C-191` after `C-184` — now met), then the review
-    `C-193`. Worker notes: `b11_extra.txt` / `b12_extra.txt` in `~/llm/scripts/csl/`.
-    **Session of 2026-10-13 stopped at 07:07:** the free quota of `space-bunny-free` ran out during `C-185`
-    ("Free usage exceeded, subscribe to Go"; the lane holds no result, restart `C-185` from scratch; task `t176` is
-    `limited`, the supervisor was stopped with `oc-orch.py down`). CoolSolve was rebuilt on 2026-10-12 with CoolProp
-    pinned to `75af7816` (cmake from a venv: the old Anaconda path no longer exists; build dir `CoolSolve/build`) and
-    again on 2026-10-13 after `git pull` (CoolSolve `main` @`3a5d5ce`, which has `nDay_`, `CS-BUG-PI-FUNCTION`,
-    `CS-GAP-COLEBROOK`, array ranges, `CS-BUG-NO-SOL-DELETE`). Regression with that build: 158 targets, 0 failure after
-    re-baselining `CSL-0113`, `CSL-0124` and `CSL-0153:coolsolve` (their baselines were computed with `g#` = 1 in the
-    Kuo function; README/`model.json` numbers and verification text updated: `CSL-0113` now 0.8 % from EES instead
-    of 5.6 %). `solar_geometry_sun_path.sol` (`CSL-0119`) had been deleted by the old binary's `--no-sol` bug and was
-    restored from git.
+- **State (2026-10-15):** B-01 … B-10 and **B-12 are closed** (review `C-193`
+  done). **Open: B-11** — `C-156` (`CSL-0164`) and `C-157` (`CSL-0165`) are done. Next: the review `C-160` and the taxonomy review `C-139`
+  (M2, P6.2; the library has 170 models). Done this session (2026-10-12 → 15, workers `space-bunny-free` and
+  `glm-5.3-flash`, never more than one free worker at a time): `C-178`…`C-182`, `C-184`…`C-192` (`CSL-0133`…`CSL-0137`,
+  `CSL-0139`…`CSL-0147`), `C-140` (`CSL-0148`), `C-146` (`CSL-0154`; native file blocked by `CS-BUG-DUPLICATE-INDEX-EXPR`,
+  still reproduced with CoolSolve @3a5d5ce, verified `_coolsolve` variant), `C-193`. Worker notes: `b11_extra.txt` /
+  `b12_extra.txt` in `~/llm/scripts/csl/`.
+  - **Environment of 2026-10-12/15 (CoolSolve itself was not modified):** CoolSolve rebuilt with CoolProp pinned to
+    `75af7816` and pulled to `main` @`3a5d5ce` (has `nDay_`, `CS-BUG-PI-FUNCTION`, `CS-GAP-COLEBROOK`, array ranges,
+    `CS-BUG-NO-SOL-DELETE`); cmake comes from a venv (`scratchpad/venv`; the old Anaconda path no longer exists), build
+    dir `CoolSolve/build` (old one in `/tmp/claude-1000/build_old_oct5`). Full regression at 12:50 on 2026-10-15: 166
+    targets (130 main files + 36 variants), 0 failure, excluding the slow `CSL-0009:coolsolve`. Baselines of `CSL-0113`,
+    `CSL-0124` and `CSL-0153:coolsolve` were recomputed (they carried `g#` = 1 in the Kuo function, `CS-BUG-PI-FUNCTION`):
+    `CSL-0113` is now 0.8 % from EES instead of 5.6 %, and the "errors of the original" analysis of `CSL-0124`/`CSL-0153` was
+    re-run and confirmed (their READMEs updated). `solar_geometry_sun_path.sol` had been deleted by the old binary's
+    `--no-sol` bug and was restored from git.
+  - **Status and verification (decision D15, §4):** `runs` was merged into `verified`; every model has
+    `verification.summary` and `verification.checks` (spec: `docs/taxonomy.md`). The summaries of the 156 models existing on
+    2026-10-14 were produced by an evidence-checked pipeline (agents write proposals with verbatim quotes from a dossier of each
+    model's own documentation, a script rejects unsupported numbers/names/tags, a second script applies them; scripts and
+    dossiers are in the session scratchpad, not in the repository). **Lesson: Haiku agents wrote false verification text
+    (e.g. "compared with the EES stored solution" for the `ht` models); Sonnet with the checker was reliable.** The summaries of
+    the models added after that date (`CSL-0140`…`CSL-0148`, `CSL-0154`) were written by the workers and spot-checked, not
+    pipeline-checked. `build_index.py` only warns about a missing summary or an unknown tag: make it an error when no
+    worker is running.
+  - **Orchestrator issues met (also in `~/llm/skill-opencode-orchestrator.md`):** (1) after `opencode upgrade` the free
+    models were rejected by the running `opencode serve` ("free tier can only be used from within OpenCode") although
+    `opencode run` worked: `oc-orch.py down --server` did not stop the old process, `kill <pid>` + `oc-orch.py up` fixed it
+    (the probe `probe.sh` goes through the CLI and cannot see this); (2) the free quota of `space-bunny-free` is a daily allowance of ≈ 40 min to 1 h of work (≈ 40 min on 10-14 from 22:03: five cards;
+    limited again on 10-13 at 07:07; on 10-15 it was back at 12:51 and limited again shortly after `C-146`), and
+    `glm-5.3-flash` has a 5-hour window (`C-191` hit it seven times between ≈ 09:00 and 12:45 on 10-15; quoted reset 19:25,
+    which looks like UTC+8, i.e. ≈ 13:25 local — a probe at 12:52 still answered `LIMITED`); (3) on 2026-10-15 the machine thrashed (swap, I/O pressure 89 %): the opencode server stuck in `D` state, the ledger
+    locked, `oc-orch.py beat` hung; it recovered by itself; (4) a worker interrupted by a server kill goes `failed`
+    ("session idle mid-turn"): `oc-orch.py retry tN`; (5) a worker that hits the glm 5-h limit mid-card may leave a complete
+    model in its lane: the orchestrator merged `C-191` (`CSL-0146`) by hand and set the inventory row itself.
   - After that: plan the next batches from the backlog (`thermo_models` medium, LaboThapPy/TESPy medium) with a
     T-PLAN card as C-137/C-138 did (notes `b11_plan.txt`, `b12_plan.txt`).
-- **Work paused by the maintainer on 2026-10-09 at 20:00.** No task is running, the supervisor and the event watcher
-  are stopped (`python3 ~/llm/scripts/oc-orch.py up` restarts the supervisor; the opencode server may still run:
-  `down --server` stops it). Partial attempts are archived in `~/git/csl-lanes/_results/` (`C-178_bunny_t169`: no
-  model yet — restart the card from scratch). Next free IDs: `CSL-0168`, card `C-194`.
-- **Worker availability when paused:** z.ai `glm-5.3-flash` weekly limit until **2026-10-14 09:25 CEST** (15:25
-  UTC+8; it also has a 5-hour usage window); the opencode free quota (shared by all free models) was exhausted at
-  11:00 on 2026-10-09 after ≈ 1.5 h of work and had not come back by 20:00 — it looks like a daily allowance.
-  Probe before dispatching: `bash ~/llm/scripts/csl/probe.sh <model> 0`.
-- **Queue for the next session (in order):** B-12 `C-178` … `C-182`, `C-184`, `C-185`, `C-186` … `C-188`, `C-189`
-  [hard → glm-5.3-flash if back], `C-190`, `C-191`, `C-192`; B-11 `C-140`, `C-146`, `C-156`, `C-157`; reviews
-  `C-139`, `C-160`, `C-193`. Routing: [hard] → glm-5.3-flash, [std] → the one opencode worker (bunny, else muse).
+- **Work stopped by the maintainer on 2026-10-15 (≈ 13:25).** No task is running, the supervisor and the event watchers
+  are stopped (`python3 ~/llm/scripts/oc-orch.py up` restarts the supervisor; the opencode server may still run, kill it by
+  PID if needed). Partial attempts are archived in `~/git/csl-lanes/_results/`. `C-156` (`CSL-0164`) was
+  imported in the working tree on 2026-10-15 (the aborted bunny lane was not used). Next free IDs: `CSL-0173`, card `C-199` (`CSL-0171`/`C-197` done; `CSL-0170`/`C-196` and `CSL-0172`/`C-198` in flight). CoolSolve checkout is `b3c0d78` (binary rebuilt 2026-10-15 17:14). **Nothing is committed** (≈ 200 changed files since the commit of
+  2026-10-09: the new models, cross-links, the `verification` field of every model, tools, docs, roadmap).
+- **Worker availability:** probe before dispatching with `bash ~/llm/scripts/csl/probe.sh <model> 0` (CLI only: also
+  dispatch for real to see whether the server path works). glm: back at ≈ 13:25 local (reset quoted 19:25 UTC+8); free
+  models: daily allowance, expect them to work again the next morning; bunny was gated until 16:20 when work stopped.
+- **Queue for the next session (in order):** reviews `C-160` (B-11, scripted: build_index, backlog_stats, test_models,
+  inventory cross-check, as `C-193`) and `C-139` (taxonomy at M2: propose splits of crowded categories; maintainer decides).
+  Then plan the next batches (T-PLAN card) from `thermo_models` medium (≈ 154 candidates) and LaboThapPy/TESPy medium.
+  Routing: [hard] → glm-5.3-flash, [std] → the one opencode worker (bunny, else muse) or glm when the free quota is out.
 - **Worker models, in order of priority** (details, benchmark and lessons:
   `~/Nextcloud/llm/opencode-model-comparison.md`):
   1. z.ai `glm-5.3-flash` — main worker, given the hardest cards (maintainer, 2026-10-07: **never the full
@@ -702,12 +721,24 @@ bunny or muse — maintainer, 2026-10-08). Worker notes: `~/llm/scripts/csl/b11_
 [x] C-153 T-IMPORT TM-0319 (DG-0125) → components/heat_exchangers/plate_hx_thermal_resistances — [hard] single-phase plate HX resistance model (Martin), brine side via Brineprop2 (→ CSL-0111/CSL-0079); verification: EES stored solution (38/38) — CSL-0161
 [x] C-154 T-IMPORT TM-0321 (DG-0076) → hvac/air_handling/glycol_runaround_recovery_loop — [hard] air-to-air glycol run-around heat-recovery loop (epsilon-NTU coils, Braun hypothesis, pump); verification: EES stored solution (144/144) — CSL-0162
 [x] C-155 T-IMPORT TM-0470 → hvac/air_handling/cooling_coil_paramid — [hard] cooling-coil parameter identification (PARAMID reference; measured-data table 3335x2; → CSL-0074); verification: EES stored solution (79/92) + parametric Table 2 — CSL-0163
-[ ] C-156 T-IMPORT TM-0474 (DG-0114) → hvac/air_handling/heating_coil_refsim — [std] heating-coil reference simulation model (RefSim; → CSL-0074); verification: EES stored solution (48/48) — CSL-0164
-[ ] C-157 T-IMPORT TM-0485 → components/pumps_fans/centrifugal_fan_paramid — [std] centrifugal-fan parameter identification (ParamID reference; → CSL-0071); verification: EES stored solution (113/114) — CSL-0165
+[x] C-156 T-IMPORT TM-0474 (DG-0114) → hvac/air_handling/heating_coil_refsim — [std] heating-coil reference simulation model (RefSim; → CSL-0074); verification: EES stored solution (48/48) — CSL-0164
+[x] C-157 T-IMPORT TM-0485 → components/pumps_fans/centrifugal_fan_paramid — [std] centrifugal-fan parameter identification (ParamID reference; → CSL-0071); verification: EES stored solution (113/114) — CSL-0165
 [x] C-158 T-IMPORT TM-0491 → components/boilers_burners/boiler_modulating_burner_refsim — [hard] boiler with modulating burner (MODULE flatten D10; cpbar → CSL-0005; 11840x2 table); verification: EES stored solution (116/116) + parametric table1 — CSL-0166
 [x] C-159 T-IMPORT TM-0499 (DG-0117) → components/compressors/reciprocating_polynomial_r22 — [hard] reciprocating compressor reference in R22 cycle: polynomial modelling (bar/kJ → convert; → CSL-0022); verification: EES stored solution (102/102) — CSL-0167
 [ ] C-160 T-REVIEW     B-11                                                                                      — light scripted review (orchestrator)
 [ ] C-139 T-REVIEW     taxonomy at M2 (P6.2)                                                                       — 123 models: propose splits of crowded categories and the taxonomy version bump (maintainer decides)
+```
+
+### B-13 — ULiège collection: medium candidates (started 2026-10-15) ☐
+
+Medium `todo` rows, one model at a time, two workers. Cards are written as they are assigned (no separate plan file yet). `$Export` is omitted and is not a blocker (`CS-GAP-EXPORT`, not planned).
+
+```
+[x] C-194 T-IMPORT TM-0262 → buildings/radiator_refsim — [std] hot-water radiator reference model (epsilon-NTU, conductance scaled by the temperature difference); verification: EES stored solution (14/14) — CSL-0168
+[x] C-195 T-IMPORT TM-0344 → components/compressors/r134a_compressor_minimum_power — [std] Cengel 7-41, isentropic R134a compression, minimum power; verification: EES stored solution (11/11; absolute h and s differ by the reference state) — CSL-0169
+[ ] C-196 T-IMPORT TM-0483 → components/valves_nozzles_piping/return_duct_simplified — [std] return-duct simplified model (curve-fit pressure drop and heat gain); verification: EES stored solution (20/20) — CSL-0170
+[x] C-197 T-IMPORT TM-0339 → cycles/refrigeration_heat_pumps/r134a_condenser_heat_rejection — [std] Cengel 6-54, R134a heat-pump condenser heat rejection and COP; verification: EES stored solution (10/10) — CSL-0171
+[ ] C-198 T-IMPORT TM-0427 → fundamentals/processes/rigid_tank_two_compartments_water — [std] two equal water compartments in a rigid tank, final equilibrium (kPa/kJ → convert); verification: EES stored solution (11/11) — CSL-0172
 ```
 
 ### B-12 — LaboThapPy and TESPy: wave1/high translations (Phases 3D/3E) ☐
@@ -1022,3 +1053,9 @@ and adds the log line in §8.
 | 2026-10-15 | C-193 B-12 review | B-12 closed (2026-10-15): 16 models CSL-0125…0147 all present, build_index 0 errors, inventory cross-check clean (every model has an added/merged row), test_models 166 targets 0 failure; open: none of B-12 (C-178…C-192 done). Lessons: free-model server restart after opencode upgrade; Haiku fabricated verification text -> evidence-checked pipeline (D15) |
 | 2026-10-15 | C-140 `CSL-0148` | scroll_volume_ratio_cycle_r134a (refrigeration_heat_pumps): scroll built-in volume ratio cycle R134a, EES stored solution (3/5 own vars + 17/30 in the duplicate copy, <1e-3); bunny |
 | 2026-10-15 | C-146 `CSL-0154` | investment_npv_payback (economics): NPV/payback of energy-saving investments; native file blocked by CS-BUG-DUPLICATE-INDEX-EXPR (still reproduced with CoolSolve @3a5d5ce), runnable variant verified vs EES stored solution (176/176); bunny |
+| 2026-10-15 | C-156 `CSL-0164` | Added *heating_coil_refsim* (TM-0474, model bank: hot-water heating coil, epsilon-NTU) — native file blocked by CS-BUG-HUMIDAIR-PROPS (Density(AirH2O) = 1E4); verified `_coolsolve` variant (43 common variables, max 4.11e-03 on the humidity ratio, CoolProp vs EES); Diagram-window inputs restored from the stored solution (nominal water flow 4 m³/h, the equation-window string says 3.7) |
+| 2026-10-15 | C-157 `CSL-0165` | Added *centrifugal_fan_paramid* (TM-0485, model bank: four-point identification of a centrifugal fan, companion of CSL-0071) — verified against the EES stored solution (113 common, max 4.84e-02 on DELTAP_stat3, a 2.4 Pa remainder after a 3.16e-04 humid-air volume difference). The original `$Export` lines are omitted: CoolSolve will not implement `$Export` (CS-GAP-EXPORT, not planned, not a blocker) |
+| 2026-10-15 | C-194 `CSL-0168` | Added *radiator_refsim* (TM-0262, model bank: hot-water radiator, epsilon-NTU) — verified against the EES stored solution (14 common, max 2.25e-10); Diagram-window inputs restored from the stored solution |
+| 2026-10-15 | C-195 `CSL-0169` | Added *r134a_compressor_minimum_power* (TM-0344, Cengel 7-41) — verified; power 9705.33 W vs stored 9705.28 W (5.34e-06). The four variables above rtol 0.001 are absolute h and s (R134a reference state; entropy offset 4.58e-01). Diagram state arrays added |
+| 2026-10-15 | C-197 `CSL-0171` | Added *r134a_condenser_heat_rejection* (TM-0339, Cengel 6-54) — verified; heat rejection 3163.02 W vs 3163.52 W and COP 2.63585 vs 2.63626 (both 1.56e-04). The two variables above rtol 0.001 are absolute enthalpies (R134a reference state, max 6.08e-01). Decimal comma converted. CoolSolve 0.3.0@b3c0d78 |
+| 2026-10-15 | C-160 partial | Library regression on CoolSolve 0.3.0@c11a18d: 170 targets (132 main files, 38 variants), 0 failures. `CSL-0162:coolsolve` (*glycol_runaround_recovery_loop*) has no `.sol` and was not tested. Inventory cross-check of B-11 (`CSL-0148`…`0167`) clean. |

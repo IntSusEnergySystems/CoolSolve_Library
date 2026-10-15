@@ -1,0 +1,134 @@
+{=============================================================================
+  Centrifugal fan parameter identification (four catalogue points)
+  CoolSolve Library model CSL-0165
+ -----------------------------------------------------------------------------
+  Identifies the cubic flow and power factors of a centrifugal fan from four
+  manufacturer points (volume flow, total pressure, isentropic effectiveness,
+  outlet velocity), at one supply state and one rotation speed. The same
+  dimensionless relations as the reference model CSL-0071. The identified
+  coefficients are the alphas and betas of phi(psi) and lambda(psi).
+
+  Inputs : D, rpm, T_su, RH_su, P_su and, at each point, V_dot_mh, DELTAP_total,
+           epsilon_s, C_ex
+  Outputs: alpha_0..3, beta_0..3, A_bar_ex
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège model bank, V. Teodorese, A. Rodríguez, J. Lebrun, 2008-03-18
+           - see README.md
+=============================================================================}
+
+"Manufacturer data and fan geometry (Diagram-window inputs, stored solution)"
+D = 0.323    "impeller diameter [m]"
+rpm = 4000    "rotation speed [min^-1]"
+T_su = 20    "supply air temperature [°C]"
+RH_su = 0.5    "supply relative humidity [-]"
+P_su = 101325    "supply air pressure [Pa]"
+V_dot_mh = 4000    "point 0 volume flow [m^3/h]"
+DELTAP_total = 2750    "point 0 total pressure rise [Pa]"
+epsilon_s = 0.65    "point 0 isentropic effectiveness [-]"
+C_ex = 6.95    "point 0 outlet velocity [m/s]"
+V_dot_mh1 = 9100    "point 1 volume flow [m^3/h]"
+DELTAP_total1 = 2100    "point 1 total pressure rise [Pa]"
+epsilon_s1 = 0.75    "point 1 isentropic effectiveness [-]"
+C_ex1 = 15.8    "point 1 outlet velocity [m/s]"
+V_dot_mh2 = 13000    "point 2 volume flow [m^3/h]"
+DELTAP_total2 = 1075    "point 2 total pressure rise [Pa]"
+epsilon_s2 = 0.5    "point 2 isentropic effectiveness [-]"
+C_ex2 = 22.3    "point 2 outlet velocity [m/s]"
+V_dot_mh3 = 14500    "point 3 volume flow [m^3/h]"
+DELTAP_total3 = 375    "point 3 total pressure rise [Pa]"
+epsilon_s3 = 0.22    "point 3 isentropic effectiveness [-]"
+C_ex3 = 25.02    "point 3 outlet velocity [m/s]"
+
+"Fan points (equations of the original; Phi normalised to phi)"
+phi=V_dot/(A*U)    "flow factor"
+A=pi*D^2/4    "reference area"
+U=pi*D*N    "peripheral speed"
+N=rpm/60    "rotation speed"
+psi=(DELTAP_total)/P_dynam_periph    "pressure factor"
+DELTAP_total=DELTAP_stat + P_dynam_ex    "fan total pressure"
+P_dynam_ex=C_ex^2/(2*v)    " fan dynamic pressure"
+A_ex=V_dot/C_ex    "equivalent exhaust area"
+P_dynam_periph=U^2/(2*v)    "peripheral dynamic pressure"
+v=VOLUME(AirH2O,T=T_su,P=P_su,R=RH_su)    "air specific volume at the  fan supply"
+M_dot=V_dot/v    " fan air mass flow rate"
+V_dot_mh=V_dot*3600    "fan flow rate"
+W_dot_s=V_dot*DELTAP_total    "fan isentropic power"
+epsilon_s=W_dot_s/W_dot_shaft    "isentropic effectiveness"
+lambda =(phi*psi)/epsilon_s    "power factor"
+C_dot=M_dot*c_p    "air capacity flow rate"
+c_p=SPECHEAT(AirH2O,T=T_su,P=P_su,R=RH_su)    "air specific heat"
+phi=alpha_0 + alpha_1*psi +alpha_2*psi^2+alpha_3*psi^3
+lambda=beta_0 + beta_1*psi +beta_2*psi^2+beta_3*psi^3
+D1=D
+rpm1=rpm
+T_su1=T_su
+RH_su1=RH_su
+P_su1=P_su
+phi_1=V_dot_1/(A1*U1)    "flow factor"
+A1=pi*D1^2/4    "reference area"
+U1=pi*D1*N1    "peripheral speed"
+N1=rpm1/60    "rotation speed"
+psi_1=(DELTAP_total1)/P_dynam_periph1    "pressure factor"
+DELTAP_total1=DELTAP_stat1 + P_dynam_ex1    "fan total pressure"
+P_dynam_ex1=C_ex1^2/(2*v1)    " fan dynamic pressure"
+A_ex1=V_dot_1/C_ex1    "equivalent area"
+P_dynam_periph1=U1^2/(2*v1)    "peripheral dynamic pressure"
+v1=VOLUME(AirH2O,T=T_su1,P=P_su1,R=RH_su1)    "air specific volume at the  fan supply"
+M_dot_1=V_dot_1/v1    " fan air mass flow rate"
+V_dot_mh1=V_dot_1*3600    "fan flow rate"
+W_dot_s1=V_dot_1*DELTAP_total1    "fan isentropic power"
+epsilon_s1=W_dot_s1/W_dot_shaft1    "isentropic effectiveness"
+lambda_1 =(phi_1*psi_1)/epsilon_s1    "power factor"
+C_dot_1=M_dot_1*c_p1    "air capacity flow rate"
+c_p1=SPECHEAT(AirH2O,T=T_su1,P=P_su1,R=RH_su1)    "air specific heat"
+phi_1=alpha_0 + alpha_1*psi_1+alpha_2*psi_1^2+alpha_3*psi_1^3
+lambda_1=beta_0 + beta_1*psi_1+beta_2*psi_1^2+beta_3*psi_1^3
+D2=D
+rpm2=rpm
+T_su2=T_su
+RH_su2=RH_su
+P_su2=P_su
+phi_2=V_dot_2/(A2*U2)    "flow factor"
+A2=pi*D2^2/4    "reference area"
+U2=pi*D2*N2    "peripheral speed"
+N2=rpm2/60    "rotation speed"
+psi_2=(DELTAP_total2)/P_dynam_periph2    "pressure factor"
+DELTAP_total2=DELTAP_stat2 + P_dynam_ex2    "fan total pressure"
+P_dynam_ex2=C_ex2^2/(2*v2)    " fan dynamic pressure"
+A_ex2=V_dot_2/C_ex2    "equivalent area"
+P_dynam_periph2=U2^2/(2*v2)    " fan dynamic pressure"
+v2=VOLUME(AirH2O,T=T_su2,P=P_su2,R=RH_su2)    "air specific volume at the  fan supply"
+M_dot_2=V_dot_2/v2    " fan air mass flow rate"
+V_dot_mh2=V_dot_2*3600    "fan flow rate"
+W_dot_s2=V_dot_2*DELTAP_total2    "fan isentropic power"
+epsilon_s2=W_dot_s2/W_dot_shaft2    "isentropic effectiveness"
+lambda_2 =(phi_2*psi_2)/epsilon_s2    "power factor"
+C_dot_2=M_dot_2*c_p2    "air capacity flow rate"
+c_p2=SPECHEAT(AirH2O,T=T_su2,P=P_su2,R=RH_su2)    "air specific heat"
+phi_2=alpha_0 + alpha_1*psi_2+alpha_2*psi_2^2+alpha_3*psi_2^3
+lambda_2=beta_0 + beta_1*psi_2+beta_2*psi_2^2+beta_3*psi_2^3
+D3=D
+rpm3=rpm
+T_su3=T_su
+RH_su3=RH_su
+P_su3=P_su
+phi_3=V_dot_3/(A3*U3)    "flow factor"
+A3=pi*D3^2/4    "reference area"
+U3=pi*D3*N3    "peripheral speed"
+N3=rpm3/60    "rotation speed"
+psi_3=(DELTAP_total3)/P_dynam_periph3    "pressure factor"
+DELTAP_total3=DELTAP_stat3 + P_dynam_ex3    "fan total pressure"
+P_dynam_ex3=C_ex3^2/(2*v3)    "peripheral dynamic pressure"
+A_ex3=V_dot_3/C_ex3    "equivalent area"
+P_dynam_periph3=U3^2/(2*v3)    " fan dynamic pressure"
+v3=VOLUME(AirH2O,T=T_su3,P=P_su3,R=RH_su3)    "air specific volume at the  fan supply"
+M_dot_3=V_dot_3/v3    " fan air mass flow rate"
+V_dot_mh3=V_dot_3*3600    "fan flow rate"
+W_dot_s3=V_dot_3*DELTAP_total3    "fan isentropic power"
+epsilon_s3=W_dot_s3/W_dot_shaft3    "isentropic effectiveness"
+lambda_3 =(phi_3*psi_3)/epsilon_s3    "power factor"
+C_dot_3=M_dot_3*c_p3    "air capacity flow rate"
+c_p3=SPECHEAT(AirH2O,T=T_su3,P=P_su3,R=RH_su3)    "air specific heat"
+phi_3=alpha_0 + alpha_1*psi_3+alpha_2*psi_3^2+alpha_3*psi_3^3
+lambda_3=beta_0 + beta_1*psi_3+beta_2*psi_3^2+beta_3*psi_3^3
+A_bar_ex=(A_ex+A_ex1+A_ex2+A_ex3)/4    "Average fictitious exhaust area of the fan"

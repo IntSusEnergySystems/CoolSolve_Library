@@ -1,9 +1,9 @@
 {
  "snapshot": {
-  "content_hash": "sha256:0211adefae7ce8a5",
-  "files": 849,
-  "bytes": 7491715,
-  "models": 164,
+  "content_hash": "sha256:90d2ba8a1da6d9f3",
+  "files": 880,
+  "bytes": 7601074,
+  "models": 170,
   "functions": 442,
   "taxonomy_version": "0.2"
  },
@@ -110,6 +110,46 @@
    ],
    "path": "models/buildings/building_rc_network_3r2c",
    "main_file": "building_rc_network_3r2c.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0168",
+   "name": "radiator_refsim",
+   "title": "Radiator reference model",
+   "category": "buildings",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Reference simulation of a hot-water radiator: the heat output is the effectiveness times the water capacity rate times the supply-to-air temperature difference, with the effectiveness 1 - exp(-NTU) and the conductance scaled from its nominal value by that temperature difference.",
+   "fluids": [],
+   "tags": [
+    "radiator",
+    "terminal unit",
+    "reference model",
+    "epsilon-NTU",
+    "hot water"
+   ],
+   "n_equations": 14,
+   "largest_block": 1,
+   "origin_type": "research",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/Model data bank/Heating_Cooling_Terminal_Units/Radiators/Radiator_RefSim_EES_Model_JLSB080317.EES",
+   "authors": [
+    "Jean Lebrun (ULiège Thermodynamics Laboratory)",
+    "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@c11a18d",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Against the stored solution of Radiator_RefSim_EES_Model_JLSB080317.EES: 14 common variables, 0 differ (rtol=0.001). The maximum relative difference is 2.25e-10 on Q_dot_rad (stored-solution rounding).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/buildings/radiator_refsim",
+   "main_file": "radiator_refsim.eescode",
    "figures": 0
   },
   {
@@ -1066,6 +1106,47 @@
    ],
    "path": "models/components/compressors/reciprocating_polynomial_r22",
    "main_file": "reciprocating_polynomial_r22.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0169",
+   "name": "r134a_compressor_minimum_power",
+   "title": "R134a compressor minimum power, isentropic compression (Cengel 7-41)",
+   "category": "components/compressors",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Saturated R134a vapour at 160 kPa is compressed to 900 kPa at an inlet volume flow of 2 m3/min. The minimum compressor power is the reversible adiabatic (isentropic) compression, from the steady-flow energy balance. Textbook exercise Cengel 7-41.",
+   "fluids": [
+    "R134a"
+   ],
+   "tags": [
+    "compressor",
+    "isentropic",
+    "R134a",
+    "exercise",
+    "minimum power"
+   ],
+   "n_equations": 19,
+   "largest_block": 1,
+   "origin_type": "textbook",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/07-41.EES",
+   "authors": [
+    "S. Quoilin"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@c11a18d",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Against the stored solution of 07-41.EES: 11 common variables, 4 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 8. Maximum relative difference 4.58e-01 on s_1 and s_2. The four are absolute h_1, h_2, s_1 and s_2 (R134a reference state). W_dot is 9705.33 W against 9705.28 W.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/components/compressors/r134a_compressor_minimum_power",
+   "main_file": "r134a_compressor_minimum_power.eescode",
    "figures": 0
   },
   {
@@ -2742,7 +2823,8 @@
    "url": "",
    "missing_features": [],
    "related": [
-    "CSL-0125"
+    "CSL-0125",
+    "CSL-0165"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -2862,6 +2944,52 @@
     "pump_curve_similarity_mode_MN.eescode",
     "pump_curve_similarity_mode_PM.eescode"
    ]
+  },
+  {
+   "id": "CSL-0165",
+   "name": "centrifugal_fan_paramid",
+   "title": "Centrifugal fan parameter identification from four catalogue points",
+   "category": "components/pumps_fans",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Identifies the cubic dimensionless flow and power factors of a centrifugal fan from four manufacturer points (volume flow, total pressure, isentropic effectiveness, outlet velocity) at one supply state and one rotation speed. The identified coefficients are those of the reference model CSL-0071.",
+   "fluids": [
+    "AirH2O"
+   ],
+   "tags": [
+    "centrifugal fan",
+    "parameter identification",
+    "similarity",
+    "catalogue",
+    "humid air",
+    "reference model"
+   ],
+   "n_equations": 113,
+   "largest_block": 4,
+   "origin_type": "research",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/Model data bank/Distribution_Systems/Fans/CENTRIFUGAL_FAN_PARAMID_REFERENCE_MODEL_ARJL080121.zip!/Centrifugal_Fan_ParamID_Reference_EES_Model_ARJL080121.EES",
+   "authors": [
+    "Vlad Teodorese (ULiège Thermodynamics Laboratory)",
+    "Andrés Rodríguez (ULiège Thermodynamics Laboratory)",
+    "Jean Lebrun (ULiège Thermodynamics Laboratory, reviewer)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [
+    "CSL-0071"
+   ],
+   "coolsolve_version": "0.3.0@261f0b9",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Against the EES stored solution: 113 common variables, 1 differs above rtol = 0.001, maximum 4.84e-02 on DELTAP_stat3, the remainder 375 Pa minus the exhaust dynamic pressure after a 3.16e-04 humid-air volume difference. The original $Export lines are omitted (not supported, no effect on the identification).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/components/pumps_fans/centrifugal_fan_paramid",
+   "main_file": "centrifugal_fan_paramid.eescode",
+   "figures": 0
   },
   {
    "id": "CSL-0009",
@@ -3046,6 +3174,47 @@
    ],
    "path": "models/components/valves_nozzles_piping/ball_valve_authority",
    "main_file": "ball_valve_authority.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0170",
+   "name": "return_duct_simplified",
+   "title": "Simplified return duct model",
+   "category": "components/valves_nozzles_piping",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Curve fit of a return duct: the pressure drop and the mass, temperature and humidity effectiveness are power laws of the exit mass flow. With no condensation the humidity effectiveness equals the mass effectiveness.",
+   "fluids": [],
+   "tags": [
+    "return duct",
+    "duct",
+    "pressure drop",
+    "leakage",
+    "curve fit",
+    "simplified model"
+   ],
+   "n_equations": 25,
+   "largest_block": 1,
+   "origin_type": "research",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/Model data bank/Distribution_Systems/Ducts/Return_Duct_Simplified_Model_JL080317.zip!/Return_Duct_Simplified_EES_Model_JL080317.EES",
+   "authors": [
+    "Jean Lebrun (ULiège Thermodynamics Laboratory)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@b3c0d78",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Against the stored solution of Return_Duct_Simplified_EES_Model_JL080317.EES, with five backslash ratio names added from the variable records (ees_extract omits them): 25 common variables, 0 differ (rtol=0.001). Maximum relative difference 1.69e-10 on epsilon\\epsilon_w_duct_n, from stored-solution rounding.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "order-of-magnitude"
+   ],
+   "path": "models/components/valves_nozzles_piping/return_duct_simplified",
+   "main_file": "return_duct_simplified.eescode",
    "figures": 0
   },
   {
@@ -5023,6 +5192,47 @@
    "verification_checks": [],
    "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump",
    "main_file": "inverter_air_water_heat_pump.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0171",
+   "name": "r134a_condenser_heat_rejection",
+   "title": "R134a heat-pump condenser heat rejection and COP (Cengel 6-54)",
+   "category": "cycles/refrigeration_heat_pumps",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "R134a enters a heat-pump condenser at 800 kPa and 35 °C at 0.018 kg/s and leaves at 800 kPa as saturated liquid. The heat rejection and the heat-pump COP follow from the open-system energy balance and a power input of 1.2 kW. Textbook exercise Cengel 6-54.",
+   "fluids": [
+    "R134a"
+   ],
+   "tags": [
+    "heat pump",
+    "condenser",
+    "R134a",
+    "exercise",
+    "COP"
+   ],
+   "n_equations": 18,
+   "largest_block": 1,
+   "origin_type": "textbook",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/06-54.EES",
+   "authors": [
+    "S. Quoilin"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@b3c0d78",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Against the stored solution of 06-54.EES: 10 common variables, 2 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 8. Maximum relative difference 6.08e-01 on h_out. The two are absolute h_in and h_out (R134a reference state). Q_dot_h is 3163.02 W against 3163.52 W; COP is 2.63585 against 2.63626.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/cycles/refrigeration_heat_pumps/r134a_condenser_heat_rejection",
+   "main_file": "r134a_condenser_heat_rejection.eescode",
    "figures": 0
   },
   {
@@ -8069,7 +8279,8 @@
     "CSL-0077",
     "CSL-0079",
     "CSL-0162",
-    "CSL-0163"
+    "CSL-0163",
+    "CSL-0164"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -8201,6 +8412,57 @@
    "figures": 0,
    "variants": [
     "cooling_coil_paramid_coolsolve.eescode"
+   ]
+  },
+  {
+   "id": "CSL-0164",
+   "name": "heating_coil_refsim",
+   "title": "Heating coil RefSim model, epsilon-NTU",
+   "category": "hvac/air_handling",
+   "kind": "steady",
+   "level": 2,
+   "status": "blocked",
+   "summary": "Reference simulation model of a hot-water air heating coil from the ULiège model bank: a counter-flow exchanger whose duty follows the epsilon-NTU relation, with the overall conductance as the series of the air-side, metal and water-side resistances scaled with the flow rates.",
+   "fluids": [
+    "AirH2O",
+    "Water"
+   ],
+   "tags": [
+    "heating coil",
+    "air handling",
+    "epsilon-NTU",
+    "counterflow",
+    "humid air",
+    "hot water",
+    "reference model"
+   ],
+   "n_equations": 43,
+   "largest_block": 24,
+   "origin_type": "research",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/Model data bank/AHU_Components/Heating_Coil/HeatingCoil_REFSIM_MODEL_SB080317.zip!/HEATINGCOIL_REFSIM_EES_MODEL_SB080317.EES",
+   "authors": [
+    "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [
+    "CS-BUG-HUMIDAIR-PROPS"
+   ],
+   "related": [
+    "CSL-0074"
+   ],
+   "coolsolve_version": "0.3.0@261f0b9",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Concerns the runnable variant (native file blocked by CS-BUG-HUMIDAIR-PROPS: Density(AirH2O) returns 1E4). Against the EES stored solution: 43 common variables, 3 differ above rtol = 0.001, maximum 4.11e-03 on the humidity ratio (CoolProp vs EES humid air).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/hvac/air_handling/heating_coil_refsim",
+   "main_file": "heating_coil_refsim.eescode",
+   "figures": 0,
+   "variants": [
+    "heating_coil_refsim_coolsolve.eescode"
    ]
   },
   {
@@ -12070,15 +12332,6 @@
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
-  "CS-GAP-INTERP-EXTRAP": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P1 (silent deviation)",
-   "text": "`INTERPOLATE` **extrapolates linearly** beyond the table ends.",
-   "detail": "Clamps to the end values (flat extrapolation) **without error or warning**: silently different results as soon as a model point lies beyond the last node.",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
   "CS-GAP-UNITSYSTEM": {
    "kind": "gap",
    "state": "open",
@@ -12376,15 +12629,6 @@
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
-  "CS-GAP-SUM-INDEXED": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P2",
-   "text": "The EES **indexed aggregation function `SUM(X[i], i=1, N)`** (EES Manual, *Built-in Functions - Math*; used by the ASHRAE 41.2 nozzle-bank source of library model `CSL-0122`, TM-0558: `M_dot_ah_cd=sum(M_dot_a_nz[i],i=1,4)`).",
-   "detail": "The indexed form is swallowed by the variadic fallback: the element `x[i]` and the index `i` become **symbolic variables** of their own and the range is not expanded, so the model is refused with …",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
   "CS-GAP-CHEM-EQUIL": {
    "kind": "gap",
    "state": "open",
@@ -12430,15 +12674,6 @@
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
-  "CS-GAP-LOOKUP-NONAME": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P3",
-   "text": "The **nameless `LOOKUP(row, col)` form** (no table name), which EES resolves on its default *Lookup Table #1* (the table embedded in the `.EES` file).",
-   "detail": "Evaluation error on the first call: *\"Block 1 (size 1, vars: M_dot_cp_mes[1]) failed: EvaluationError - [Newton] Expression is not a string literal or variable\"* — the first argument must be a …",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
   "CS-GAP-STRINGPOS": {
    "kind": "gap",
    "state": "open",
@@ -12472,6 +12707,15 @@
    "priority": "P3",
    "text": "The **local variables of a `FUNCTION`/`PROCEDURE` body are displayed in EES's Solution window**: *\"Variables that are defined in the Function will display in Solution window\"* and *\"All variables used in the Procedure will display in Solution window\"* (EES …",
    "detail": "The locals of a body appear nowhere: not in the `.sol`, not in the JSON result, the GUI or `coolsolve_residuals.md`.",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-GAP-EXPORT": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "",
+   "text": "The EES **`$Export` directive** (and, in the model-bank files, the path built with `concat$(EESFILEDIR$, 'name.txt')`).",
+   "detail": "**Not planned.** `$Export` is recognised and ignored (*SUCCESS*, no file, no warning).",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
@@ -12655,24 +12899,6 @@
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
-  "CS-BUG-CONVERT-UNIT": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P1 (silent)",
-   "text": "`CONVERT('lbm/hr','kg/s')` (quoted, as `ees_import.md` §6 recommends) returns **1** for units that are not in CoolSolve's conversion table, silently (the quoted form avoids `CS-GAP-CONVERT-UNQUOTED` but unimplemented unit names are accepted as a no-op instead …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-DUPLICATE-INDEX-EXPR": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P1",
-   "text": "Inside a `DUPLICATE` loop, an array index with arithmetic (`T[i+1]`) is expanded to an unevaluated index expression `T[(1.000000 + 1.000000)]` that is not the array element `T[2]`, so the expanded equations do not connect: *Solution Verification Failed* …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
   "CS-BUG-EXTRACT-DECIMAL-RANGE": {
    "kind": "bug",
    "state": "open",
@@ -12687,15 +12913,6 @@
    "state": "open",
    "priority": "P1",
    "text": "A **long cycle of explicit equations whose solution values span many orders of magnitude** fails to converge: the 30-link halving chain `x[i] = x[i+1]/2` closed by `x[30] = 8/x[1]` (solution `x[1]` = 2^-13 ≈ 1.2e-4 up to `x[30]` = 2^16) stalls at …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-VAR-ANNOTATION": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P1 (silent in bodies)",
-   "text": "**A unit annotation after a plain variable is read as an array index**: `y = a [kW]` is the element `a[kW]` (index = the variable `kW`).",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -12741,15 +12958,6 @@
    "state": "open",
    "priority": "P3",
    "text": "**The `CALL`s of a `DUPLICATE` loop that land in the same coupled block are not all evaluated**: the evaluator and the structural analysis recognise the output equations of one `CALL` by their **source line**, and every copy of a statement of a loop has the …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-RECURSION-CRASH": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P1 (crash)",
-   "text": "A **self-recursive or mutually recursive `FUNCTION`/`PROCEDURE` that does not terminate crashes the process** with a segmentation fault (stack overflow, exit code 139, no message; in the GUI server the whole server would go down).",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -12858,6 +13066,15 @@
    "state": "open",
    "priority": "P3",
    "text": "`String$` is evaluated but missing from the parser's list of built-in functions (`knownBuiltinFunctions`, `src/parser.cpp`): every use raises the spurious warning *\"Unknown function 'String$'\"* (cosmetic).",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-CONVERTTEMP-UNIT": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P1 (silent)",
+   "text": "`CONVERTTEMP` returns a number for an unknown temperature unit, silently: `converttemp('C','Foo',100)` gives 373.15 (the value in K) and `converttemp('Foo','K',100)` gives 100.",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -13308,6 +13525,69 @@
    "state": "closed",
    "priority": "",
    "text": "EES form `INTERPOLATE('T','Col1','Col2',Col2=v)` / `INTERPOLATE1` (the named column is the input, the other one is returned; naming the first column is read symmetrically, to confirm in EES) and `INTERPOLATE2`/`INTERPOLATE2DM('T','C1','C2','C3',C1=x,C2=y)`, …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-INTERP-EXTRAP": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "`INTERPOLATE`/`INTERPOLATE1` extrapolate linearly through the two end nodes beyond the table (both call forms, ascending and descending columns, silently as EES; the lower end is assumed symmetric to the upper one, which the EES evidence shows), with the end …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-LOOKUP-NONAME": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "Nameless LOOKUP(row, col) reads the default table: the companion <model>-lookup_1.csv (EES Lookup 1, without regard to case), else the only table of the model, else an error naming the file and listing the tables; a thin alias of LOOKUP('table', row, …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-SUM-INDEXED": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "`SUM(expr, i=a, b)` and `PRODUCT(expr, i=a, b)` (the latter to confirm in the EES help) expanded at parse time into the variadic form over the copies of `expr` (the DUPLICATE substitution): the index is local, the bounds are those of a DUPLICATE (literals, …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-DUPLICATE-INDEX-EXPR": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "A DUPLICATE copy evaluates the arithmetic of an array index (`T[i+1]` is `T[2]`, was the unknown `T[(1 + 1)]`) in equations, function arguments, CALL inputs and outputs, several indices, nested loops (shared with `CS-GAP-SUM-INDEXED`, same substitution); …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-RECURSION-CRASH": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "A call cycle between FUNCTION/PROCEDURE bodies (self-call, A → B → A; through statements, IF branches, loops, call arguments, CALLs and the inline form) is a parse error naming the routines, at the line of the closing call, as EES forbids recursion (a …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-VAR-ANNOTATION": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "`y = a [kW]` (a unit after a plain variable, which has the form of the element `a[kW]`) is a parse error with the line, in the main program and in bodies: *\"'a [kW]': a unit annotation after a variable is not supported ('kW' would be read as an array index, …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-CONVERT-UNIT": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "`CONVERT('from','to')` parses EES unit strings (`-`/`*` products, `/` (all that follows in the denominator: `kJ/kg-K`), `^n`, parentheses, `1/s`) over a table of about 150 units with their dimensions (temperatures inside a unit are differences; …",
    "detail": "",
    "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
    "anchor": "7-closed-gaps-and-bugs"

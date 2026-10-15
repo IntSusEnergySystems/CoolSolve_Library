@@ -1,0 +1,43 @@
+{=============================================================================
+  R134a heat-pump condenser heat rejection (Cengel 6-54)
+  CoolSolve Library model CSL-0171
+ -----------------------------------------------------------------------------
+  R134a enters the condenser of a heat pump at 800 kPa and 35 °C at
+  0.018 kg/s and leaves at 800 kPa as saturated liquid. The condenser is an
+  open system at steady state. The power input is 1.2 kW. The model computes
+  the heat rejection and the heat-pump COP. Textbook exercise Cengel 6-54.
+
+  Inputs : M_dot, p_in, T_in, p_out, x_out, W_dot_in
+  Outputs: Q_dot_h, COP, h_in, h_out
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. Quoilin, KU Leuven, thermo_models - see README.md
+=============================================================================}
+
+"!Condenser as an open system at steady state (as in the original)"
+M_dot = 0.018                                "refrigerant mass flow rate [kg/s]; 0,018 in the source"
+p_in = 800e3                                 "condenser inlet pressure [Pa]"
+T_in = 35                                    "condenser inlet temperature [°C]"
+p_out = 800e3                                "condenser outlet pressure [Pa]"
+x_out = 0                                    "outlet vapour quality [-]"
+
+"!Enthalpies in and out (as in the original)"
+h_out = enthalpy(R134a, p=p_out, x=x_out)    "outlet enthalpy [J/kg]"
+h_in = enthalpy(R134a, p=p_in, T=T_in)       "inlet enthalpy [J/kg]"
+
+"!First law of thermodynamics (as in the original)"
+Q_dot_h = M_dot*(h_in - h_out)               "heat rejection rate from the first law, as written in the original [W]"
+
+"!COP of the heat pump (as in the original)"
+W_dot_in = 1200                              "power input [W]"
+COP = Q_dot_h/W_dot_in                       "heat-pump coefficient of performance [-]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: condenser inlet. 2: condenser outlet, saturated liquid.}
+P[1] = p_in                                  "inlet pressure [Pa]"
+h[1] = h_in                                  "inlet enthalpy [J/kg]"
+T[1] = T_in                                  "inlet temperature [°C]"
+s[1] = entropy(R134a, p=p_in, T=T_in)        "inlet entropy [J/kg-K]"
+P[2] = p_out                                 "outlet pressure [Pa]"
+h[2] = h_out                                 "outlet enthalpy [J/kg]"
+T[2] = temperature(R134a, p=p_out, x=x_out)  "outlet temperature [°C]"
+s[2] = entropy(R134a, p=p_out, x=x_out)      "outlet entropy [J/kg-K]"

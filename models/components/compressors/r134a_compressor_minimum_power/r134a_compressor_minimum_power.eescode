@@ -1,0 +1,44 @@
+{=============================================================================
+  R134a compressor minimum power (Cengel 7-41)
+  CoolSolve Library model CSL-0169
+ -----------------------------------------------------------------------------
+  Saturated R134a vapour at 160 kPa enters a compressor at 2 m^3/min and is
+  compressed to 900 kPa. The minimum power is the reversible adiabatic
+  (isentropic) compression, from the steady-flow energy balance. Textbook
+  exercise Cengel 7-41.
+
+  Inputs : p_1, p_2, V_dot, x_1
+  Outputs: W_dot, M_dot, h_1, h_2
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. Quoilin, KU Leuven, thermo_models - see README.md
+=============================================================================}
+
+"!Inlet state (saturated vapour)"
+p_1 = 160e3                                  "inlet pressure [Pa]"
+x_1 = 1                                      "inlet vapour quality [-]"
+V_dot = 2/60                                 "inlet volume flow [m^3/s]; 2 m^3/min in the exercise"
+h_1 = enthalpy(R134a, x=x_1, p=p_1)          "inlet enthalpy [J/kg]"
+rho_1 = density(R134a, x=x_1, p=p_1)         "inlet density [kg/m^3]"
+s_1 = entropy(R134a, x=x_1, p=p_1)           "inlet entropy [J/kg-K]"
+
+"!Isentropic discharge"
+p_2 = 900e3                                  "discharge pressure [Pa]"
+"The compressor power is a minimum when the compression is reversible (as in the original)."
+"Reversible and adiabatic means isentropic (as in the original)."
+s_2 = s_1                                    "discharge entropy [J/kg-K]"
+h_2 = enthalpy(R134a, s=s_2, p=p_2)          "discharge enthalpy [J/kg]"
+
+"!Compressor power (steady-flow energy balance, as in the original)"
+M_dot = V_dot*rho_1                          "mass flow rate [kg/s]"
+W_dot = M_dot*(h_2 - h_1)                    "minimum compressor power [W]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: compressor inlet, saturated vapour. 2: isentropic discharge.}
+P[1] = p_1                                   "inlet pressure [Pa]"
+h[1] = h_1                                   "inlet enthalpy [J/kg]"
+s[1] = s_1                                   "inlet entropy [J/kg-K]"
+T[1] = temperature(R134a, p=p_1, x=x_1)      "inlet temperature [°C]"
+P[2] = p_2                                   "discharge pressure [Pa]"
+h[2] = h_2                                   "discharge enthalpy [J/kg]"
+s[2] = s_2                                   "discharge entropy [J/kg-K]"
+T[2] = temperature(R134a, p=p_2, h=h_2)      "discharge temperature [°C]"

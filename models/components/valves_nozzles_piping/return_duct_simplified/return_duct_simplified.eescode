@@ -1,0 +1,48 @@
+{=============================================================================
+  Simplified return duct model
+  CoolSolve Library model CSL-0170
+ -----------------------------------------------------------------------------
+  Curve fit of a return duct. The pressure drop and the mass, temperature
+  and humidity effectiveness are power laws of the exit mass flow, as
+  written in the original. The humidity effectiveness equals the mass
+  effectiveness when there is no condensation.
+
+  Inputs : M_dot_ex_duct, p_su_duct, t_su_duct, W_su_duct, t_env_duct,
+           W_env_duct, and the nominal values of the curve fit
+  Outputs: DELTAp_duct, p_ex_duct, M_dot_su_duct, t_ex_duct, W_ex_duct
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège model bank, J. Lebrun, 2008-03-17 - see README.md
+=============================================================================}
+
+"!Inputs (Diagram-window values, restored from the stored solution)"
+M_dot_ex_duct = 0.5                    "exit mass flow rate [kg/s]"
+p_su_duct = 100000                     "supply pressure [Pa]"
+t_su_duct = 20                         "supply temperature [°C]"
+W_su_duct = 0.01                       "supply humidity ratio [kg/kg]"
+t_env_duct = 10                        "environment temperature [°C]"
+W_env_duct = 0.005                     "environment humidity ratio [kg/kg]"
+
+"!Simplified model, as in the original"
+p_ex_duct = p_su_duct - DELTAp_duct    "exit pressure [Pa]"
+M_dot_leakage_duct = M_dot_su_duct - M_dot_ex_duct  "M_dot_su_duct - M_dot_ex_duct, as in the original [kg/s]"
+epsilon_M_duct = abs(M_dot_leakage_duct/M_dot_ex_duct)  "mass effectiveness, as in the original [-]"
+epsilon_t_duct = (t_ex_duct - t_su_duct)/(t_env_duct - t_su_duct)  "temperature effectiveness, as in the original [-]"
+epsilon_W_duct = (W_ex_duct - W_su_duct)/(W_env_duct - W_su_duct)  "humidity effectiveness, as in the original [-]"
+
+"!Output of the parametric study, as in the original"
+M\M_ex_duct_n = M_dot_ex_duct/M_dot_ex_duct_n  "exit mass flow over its nominal value [-]"
+M_dot_ex_duct_n = 1 [kg/s]             "nominal exit mass flow rate [kg/s]"
+DELTAp\DELTAp_duct_n = DELTAp_duct/DELTAp_duct_n  "pressure drop over its nominal value [-]"
+DELTAp_duct_n = 234.2                  "nominal pressure drop [Pa], 234.2 [Pa] in the original"
+epsilon\epsilon_M_duct_n = epsilon_M_duct/epsilon_M_duct_n  "mass effectiveness over its nominal value [-]"
+epsilon_M_duct_n = 0.1908              "nominal mass effectiveness [-], 0.1908 [-] in the original"
+epsilon\epsilon_t_duct_n = epsilon_t_duct/epsilon_t_duct_n  "temperature effectiveness over its nominal value [-]"
+epsilon_t_duct_n = 0.3192              "nominal temperature effectiveness [-], 0.3192 [-] in the original"
+epsilon\epsilon_w_duct_n = epsilon_w_duct/epsilon_w_duct_n  "humidity effectiveness over its nominal value [-]; epsilon_w_duct is epsilon_W_duct"
+epsilon_w_duct_n = epsilon_M_duct_n    "nominal humidity effectiveness set equal to epsilon_M_duct_n, as in the original [-]"
+
+"!Curve fit results, as in the original"
+DELTAp\DELTAp_duct_n = M\M_ex_duct_n^1.89  "pressure-drop curve fit, as in the original [-]"
+epsilon\epsilon_M_duct_n = M\M_ex_duct_n^0.26  "mass-effectiveness curve fit, as in the original [-]"
+epsilon\epsilon_t_duct_n = M\M_ex_duct_n^(-0.44)  "temperature-effectiveness curve fit, as in the original [-]"
+epsilon_W_duct = epsilon_M_duct        "humidity effectiveness equals the mass effectiveness if no condensation, as in the original [-]"

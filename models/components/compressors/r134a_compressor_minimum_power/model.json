@@ -1,0 +1,65 @@
+{
+  "id": "CSL-0169",
+  "name": "r134a_compressor_minimum_power",
+  "title": "R134a compressor minimum power, isentropic compression (Cengel 7-41)",
+  "summary": "Saturated R134a vapour at 160 kPa is compressed to 900 kPa at an inlet volume flow of 2 m3/min. The minimum compressor power is the reversible adiabatic (isentropic) compression, from the steady-flow energy balance. Textbook exercise Cengel 7-41.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "r134a_compressor_minimum_power.eescode",
+  "fluids": [
+    "R134a"
+  ],
+  "tags": [
+    "compressor",
+    "isentropic",
+    "R134a",
+    "exercise",
+    "minimum power"
+  ],
+  "language_features": [
+    "property functions",
+    "array variables"
+  ],
+  "stats": {
+    "n_equations": 19,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "textbook",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/07-41.EES",
+    "candidate_id": "TM-0344",
+    "authors": [
+      "S. Quoilin"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.920",
+    "language": "en",
+    "course": "KU Leuven, textbook exercise Cengel 7-41"
+  },
+  "verification": {
+    "summary": "Against the stored solution of 07-41.EES: 11 common variables, 4 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 8. Maximum relative difference 4.58e-01 on s_1 and s_2. The four are absolute h_1, h_2, s_1 and s_2 (R134a reference state). W_dot is 9705.33 W against 9705.28 W.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution in 07-41.EES (11 variables, EES X9.920)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@c11a18d",
+    "max_rel_diff": 0.458,
+    "notes": "11 common variables, 4 differ above rtol=0.001: h_1 3.81e-01, h_2 3.48e-01, s_1 4.58e-01, s_2 4.58e-01 (compare_solution.py). Maximum over all common variables is 4.58e-01. s_2 = s_1 in both solutions; the entropy offset is +795.670516 J/kg-K. Enthalpy offsets are +148159.401 J/kg (h_1) and +148162.717 J/kg (h_2). Saturated liquid R134a at -40 C in this binary is h = 148144.046 J/kg, s = 795.610 J/kg-K (EES refrigerant reference h = s = 0). The two enthalpy offsets differ by 3.316 J/kg, which is the whole gap on the isentropic enthalpy rise (35955.11 J/kg vs 35951.79 J/kg, relative 9.22e-05, below rtol). --all: W_dot 5.34e-06, rho_1 and M_dot 8.69e-05, p_1 p_2 x_1 0, V_dot 9.99e-11. The 8 CoolSolve-only names are the diagram arrays P[i], h[i], T[i], s[i]. 0 iterations with and without .initials. The diagram block does not change the 11 original variables."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

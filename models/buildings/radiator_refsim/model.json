@@ -1,0 +1,59 @@
+{
+  "id": "CSL-0168",
+  "name": "radiator_refsim",
+  "title": "Radiator reference model",
+  "summary": "Reference simulation of a hot-water radiator: the heat output is the effectiveness times the water capacity rate times the supply-to-air temperature difference, with the effectiveness 1 - exp(-NTU) and the conductance scaled from its nominal value by that temperature difference.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "radiator_refsim.eescode",
+  "fluids": [],
+  "tags": [
+    "radiator",
+    "terminal unit",
+    "reference model",
+    "epsilon-NTU",
+    "hot water"
+  ],
+  "language_features": [],
+  "stats": {
+    "n_equations": 14,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/Heating_Cooling_Terminal_Units/Radiators/Radiator_RefSim_EES_Model_JLSB080317.EES",
+    "candidate_id": "TM-0262",
+    "authors": [
+      "Jean Lebrun (ULiège Thermodynamics Laboratory)",
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.966",
+    "language": "en",
+    "course": "ULiège model bank, radiator reference simulation model, 2008-03-17"
+  },
+  "verification": {
+    "summary": "Against the stored solution of Radiator_RefSim_EES_Model_JLSB080317.EES: 14 common variables, 0 differ (rtol=0.001). The maximum relative difference is 2.25e-10 on Q_dot_rad (stored-solution rounding).",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in Radiator_RefSim_EES_Model_JLSB080317.EES (14 variables)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@c11a18d",
+    "max_rel_diff": 2.25e-10,
+    "notes": "14 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum relative difference 2.25e-10 on Q_dot_rad. At rtol=0 the tool also flags AU_rad at 1.06e-10 and t_w_ex_rad at 7.11e-11; epsilon_rad (7.46e-11) and NTU_rad (3.93e-11) stay inside atol=1e-9. The residuals are the stored solution written with fewer digits (Q_dot_rad stored as 1312.999293, computed as 1312.999292704). The system is fully explicit: 0 iterations from the default guesses and 0 iterations with the shipped .initials. Diagram-window inputs were quoted strings and are restored as equations at the stored values; no equation of the simulation block was replaced."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

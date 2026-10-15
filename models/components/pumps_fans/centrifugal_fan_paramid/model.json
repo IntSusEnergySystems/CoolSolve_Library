@@ -1,0 +1,67 @@
+{
+  "id": "CSL-0165",
+  "name": "centrifugal_fan_paramid",
+  "title": "Centrifugal fan parameter identification from four catalogue points",
+  "summary": "Identifies the cubic dimensionless flow and power factors of a centrifugal fan from four manufacturer points (volume flow, total pressure, isentropic effectiveness, outlet velocity) at one supply state and one rotation speed. The identified coefficients are those of the reference model CSL-0071.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "centrifugal_fan_paramid.eescode",
+  "fluids": [
+    "AirH2O"
+  ],
+  "tags": [
+    "centrifugal fan",
+    "parameter identification",
+    "similarity",
+    "catalogue",
+    "humid air",
+    "reference model"
+  ],
+  "language_features": [
+    "humid-air properties"
+  ],
+  "stats": {
+    "n_equations": 113,
+    "largest_block": 4
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/Distribution_Systems/Fans/CENTRIFUGAL_FAN_PARAMID_REFERENCE_MODEL_ARJL080121.zip!/Centrifugal_Fan_ParamID_Reference_EES_Model_ARJL080121.EES",
+    "candidate_id": "TM-0485",
+    "authors": [
+      "Vlad Teodorese (ULiège Thermodynamics Laboratory)",
+      "Andrés Rodríguez (ULiège Thermodynamics Laboratory)",
+      "Jean Lebrun (ULiège Thermodynamics Laboratory, reviewer)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.966",
+    "language": "en",
+    "course": "ULiège model bank, centrifugal fan parameter-identification model, 2008-03-18"
+  },
+  "verification": {
+    "summary": "Against the EES stored solution: 113 common variables, 1 differs above rtol = 0.001, maximum 4.84e-02 on DELTAP_stat3, the remainder 375 Pa minus the exhaust dynamic pressure after a 3.16e-04 humid-air volume difference. The original $Export lines are omitted (not supported, no effect on the identification).",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in Centrifugal_Fan_ParamID_Reference_EES_Model_ARJL080121.EES (114 decoded names, one empty)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@261f0b9",
+    "max_rel_diff": 0.0484,
+    "notes": "113 common variables, 1 differs above rtol=0.001: DELTAP_stat3, EES 2.43636 Pa, CoolSolve 2.31853 Pa, relative difference 4.84e-02. It is DELTAP_total3 − P_dynam_ex3 with DELTAP_total3 fixed at 375 Pa. P_dynam_ex3 (and the specific volume v, and every pressure factor) differs by 3.16e-04, the EES versus CoolProp humid-air volume at 20 °C, 101325 Pa, RH 0.5; the relative difference of the 2.4 Pa remainder is that absolute difference (0.118 Pa) divided by 2.44 Pa. At rtol=1e-4, 36 variables differ and 35 of them carry this same 3.16e-04. A_bar_ex agrees (areas are V_dot/C_ex and do not use the density). pi is reported by CoolSolve and is not an EES stored name; b is an empty Diagram-window leftover. The model also solves from the default guesses (106 iterations; 24 with the shipped .initials). The original export lines (concat$(EESFILEDIR$, ...) and $Export) are omitted: CoolSolve will not implement $Export, and they do not enter the identification."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0071"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}
