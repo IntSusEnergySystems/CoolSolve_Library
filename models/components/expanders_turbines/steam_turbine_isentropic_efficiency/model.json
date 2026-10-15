@@ -1,0 +1,66 @@
+{
+  "id": "CSL-0174",
+  "name": "steam_turbine_isentropic_efficiency",
+  "title": "Steam turbine with isentropic efficiency (Cengel 7-104)",
+  "summary": "3 kg/s of steam at 8 MPa and 500 °C expands to 30 kPa in a turbine with an isentropic efficiency of 90 %. The source computes the power output. Textbook exercise Cengel 7-104, which also asks for the entropy generation.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "steam_turbine_isentropic_efficiency.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "turbine",
+    "steam",
+    "isentropic efficiency",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "array variables"
+  ],
+  "stats": {
+    "n_equations": 27,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "textbook",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/07-104.EES",
+    "candidate_id": "TM-0340",
+    "authors": [
+      "S. Quoilin"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.920",
+    "language": "en",
+    "course": "KU Leuven, textbook exercise Cengel 7-104"
+  },
+  "verification": {
+    "summary": "Against the stored solution of 07-104.EES: 15 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 12. Maximum relative difference 3.36e-04 on s_1 and s_2s. W_dot_out is 3054187 W against 3053365 W; T_2 is 69.0952 °C against 69.1135 °C.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution in 07-104.EES (15 variables, EES X9.920)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@96e4c95",
+    "max_rel_diff": 0.0003358613,
+    "notes": "15 common variables, none above rtol=0.001 (compare_solution.py). Maximum over all common variables is 3.358613e-04 on s_1 and s_2s (same state, s_2s = s_1); the tool prints 3.36e-04. CoolSolve minus EES: h_1 +960.529 J/kg, h_2 +686.559 J/kg, h_2s +656.118 J/kg, s_1 and s_2s +2.2592 J/kg-K. Not a constant reference-state offset. Saturated liquid Water at 0.01 C in this binary is h = 0.612 J/kg, s ≈ 0 (IAPWS triple point). The enthalpy-residual spread is the whole gap on w_s (304.412 J/kg, relative 2.69e-04). --all: w_s, W_dot_out and w 2.69e-04; T_2 2.66e-04; epsilon_s, M_dot, p_1, p_2, p_2s and T_1 are 0. The 12 CoolSolve-only names are the diagram arrays P[i], h[i], T[i], s[i]. 4 iterations with .initials, 20 without. The diagram block does not change the 15 original variables. Inlet temperature 500 C prints a hint that the value is Celsius rather than kelvin; the value used is 500 C. T_2 = 69.1 C does not print CS-BUG-HINT-FAHRENHEIT. EES stored no entropy generation; M_dot*(s[3]-s_1) = 991.553 W/K is not an equation of the file."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0189"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

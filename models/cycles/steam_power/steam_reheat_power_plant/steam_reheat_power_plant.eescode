@@ -1,0 +1,75 @@
+{=============================================================================
+  Steam power plant with reheat (Cengel exercise 10-34)
+  CoolSolve Library model CSL-0191
+ -----------------------------------------------------------------------------
+  Steady reheat Rankine cycle on water. Saturated liquid is pumped from the
+  condenser pressure, boiled, expanded, reheated once and expanded again.
+  Both turbine stages use the same isentropic efficiency. Net power is
+  imposed; the steam mass flow follows. The original equations do not
+  include kinetic or potential energy, a second reheat, or an exit quality.
+
+  Inputs : W_dot_net, p_3, T_3, p_5, T_5, eta_tur, eta_pump, p_1, x_1
+  Outputs: eta_cycle, M_dot, specific works and heat input, states 1 to 6
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : KU Leuven thermo file 10-34.EES, Cengel exercise 10-34; the file
+           names no author (TBD). See README.md
+  Status : verified against the EES stored solution
+=============================================================================}
+
+"!Data"
+W_dot_net = 80e6          "net power output of the plant [W]"
+p_3 = 10e6                "high-pressure turbine inlet pressure [Pa]"
+T_3 = 500                 "high-pressure turbine inlet temperature [°C]"
+p_5 = 1E6                 "reheat pressure, low-pressure turbine inlet [Pa]"
+T_5 = 500                 "temperature after the single reheat [°C]"
+eta_tur = 0.8             "isentropic efficiency of both turbine stages [-]"
+eta_pump = 0.95           "isentropic efficiency of the pump [-]"
+p_1 = 10e3                "condenser pressure, pump inlet [Pa]"
+
+"!Point 1"
+x_1 = 0                                          "saturated liquid at the pump inlet [-]"
+h_1 = enthalpy(Water,x=x_1,p=p_1)               "pump inlet enthalpy [J/kg]"
+s_1 = entropy(Water,x=x_1,p=p_1)                "pump inlet entropy [J/kg-K]"
+T_1 = temperature(Water,x=x_1,p=p_1)            "pump inlet temperature [°C]"
+
+"!Point 2"
+p_2 = p_3                                        "pump discharge pressure, as in the original [Pa]"
+"h_2s is the isentropic enthalpy at the pump outlet. It is needed to calculate h_2"
+h_2s = enthalpy(Water,p=p_2,s=s_1)              "isentropic pump outlet enthalpy [J/kg]"
+eta_pump = (h_2s - h_1)/(h_2 - h_1)             "pump isentropic efficiency [-]; solves for h_2"
+s_2 = entropy(Water,h=h_2,p=p_2)                "pump outlet entropy [J/kg-K]"
+T_2 = temperature(Water,h=h_2,p=p_2)            "pump outlet temperature [°C]"
+
+"!Point 3"
+"we already have T_3 and p_3"
+h_3 = enthalpy(Water,t=T_3,p=p_3)               "boiler outlet / HP turbine inlet enthalpy [J/kg]"
+s_3 = entropy(Water,t=T_3,p=p_3)                "HP turbine inlet entropy [J/kg-K]"
+
+"!Point 4"
+p_4 = p_5                                        "HP turbine exit pressure, equal to the reheat pressure [Pa]"
+eta_tur = (h_3 - h_4)/(h_3 - h_4s)              "HP turbine isentropic efficiency; this calculates h_4"
+h_4s = enthalpy(Water,p=p_4,s=s_3)              "isentropic HP turbine outlet enthalpy [J/kg]"
+s_4 = entropy(Water,h=h_4,p=p_4)                "HP turbine outlet entropy [J/kg-K]"
+T_4 = temperature(Water,h=h_4,p=p_4)            "HP turbine outlet temperature [°C]"
+
+"!Point 5"
+"we already know T_5 and p_5"
+h_5 = enthalpy(Water,t=T_5,p=p_5)               "reheater outlet / LP turbine inlet enthalpy [J/kg]"
+s_5 = entropy(Water,t=T_5,p=p_5)                "LP turbine inlet entropy [J/kg-K]"
+
+"!Point 6"
+p_6 = p_1                                        "LP turbine exit pressure, equal to the condenser pressure [Pa]"
+eta_tur = (h_5 - h_6)/(h_5 - h_6s)              "LP turbine isentropic efficiency; this calculates h_6"
+h_6s = enthalpy(Water,p=p_6,s=s_5)              "isentropic LP turbine outlet enthalpy [J/kg]"
+T_6 = temperature(Water,p=p_6,h=h_6)            "LP turbine outlet temperature [°C]"
+
+"!Efficiency"
+w_hp = h_3 - h_4                                 "specific work of the high-pressure turbine [J/kg]"
+w_lp = h_5 - h_6                                 "specific work of the low-pressure turbine [J/kg]"
+w_pump = h_2 - h_1                               "specific pump work [J/kg]"
+w_net = w_hp + w_lp - w_pump                     "net specific work [J/kg]"
+q_in = (h_3 - h_2) + (h_5 - h_4)                 "specific heat input, boiler plus the single reheat [J/kg]"
+eta_cycle = w_net/q_in                           "thermal efficiency of the cycle [-]"
+
+"!Flow rate of the steam"
+W_dot_net = M_dot * w_net                        "steam mass flow from the imposed net power [kg/s]"

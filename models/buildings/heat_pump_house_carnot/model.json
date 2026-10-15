@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0184",
+  "name": "heat_pump_house_carnot",
+  "title": "Carnot heat pump for a house in winter and summer",
+  "summary": "A heat pump holds a house at 20 °C in winter and 25 °C in summer. The fabric loss is proportional to the indoor-outdoor temperature difference. The model computes the Carnot heating COP and the electric power, then the highest outdoor temperature that same power can hold in summer.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "heat_pump_house_carnot.eescode",
+  "fluids": [],
+  "tags": ["exercise", "heat pump", "Carnot", "heating", "cooling"],
+  "language_features": [],
+  "stats": {"n_equations": 17, "largest_block": 4},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R4/R04_E6_2022.EES",
+    "candidate_id": "TM-0426",
+    "authors": ["S. Quoilin"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "ULiège MECA0002, 2022-2023"
+  },
+  "verification": {
+    "summary": "compare_solution.py --ees-units on R04_E6_2022.EES: 13 common variables, 5 differ (rtol=0.001); only in EES: 2; only in CoolSolve: 4. Printed maximum 1.00e+00 on T_ext_s_MAX. Winter COP, heat and power match (max rel 2.50e-10). The five summer stored values are the EES guesses. Closed form agrees: COP_b = 14.782, Q_dot_F = 13447 W, T_ext_s_MAX = 45.170 °C.",
+    "checks": ["ees-stored-solution", "analytical"],
+    "reference": "EES stored solution in R04_E6_2022.EES (15 variables, EES X10.836) and the closed form of the equation window",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@96e4c95",
+    "max_rel_diff": 1.0,
+    "notes": "compare_solution.py --ees-units. 13 common variables, 5 differ (rtol=0.001); only in EES: 2 (COP, Pertes); only in CoolSolve: 4 (T_h_w_K, T_h_s_K, T_ext_w_K, T_ext_s_MAX_K). The tool prints 1.00e+00 on T_ext_s_MAX (45.1698 °C against the converted stored value -0.15 °C); the unrounded ratio is 1.00332. Above rtol 0.001, all five are the summer block, whose stored value equals its guess and is not a solution of the equations: COP_b 9.32e-01 (stored 1; solved 14.782), Q_dot_F 9.26e-01 (stored 1 kW; solved 13446.6 W), T_ext_s_MAX 1.00e+00 (stored 273 K, the guess and the lower bound), T_ext_s_MAX_adimentionel 9.97e-01 (stored 1; solved 318.320), T_ext_s_MAX_C 9.78e-01 (stored 1 °C, inconsistent with 273 K). Winter stays under rtol: COP_a, T_h_w, T_h_s and T_ext_w at 0; W_dot 4.92e-11; K_loss 4.99e-11; Q_dot_C and Q_dot_loss 2.50e-10 (stored-solution rounding). Closed form of the same equations: T_ext_s_MAX = 45.169840 °C, COP_b = 14.781971, Q_dot_F = 13446.560 W. The shipped solution matches those digits. From the default guesses the solver stops about 2e-8 relative short (residual about 1.4e-6). 24 iterations without .initials, 2 with. The system is square, so no Diagram-window value was restored. COP = 14.65 and Pertes = -175.102 kW are stored names with no equation."
+  },
+  "missing_features": [],
+  "related": ["CSL-0186"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

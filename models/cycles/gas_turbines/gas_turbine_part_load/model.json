@@ -1,0 +1,57 @@
+{
+  "id": "CSL-0218",
+  "name": "gas_turbine_part_load",
+  "title": "Single-shaft gas turbine at part load",
+  "summary": "Steady exercise of a single-shaft gas turbine burning methane in air. One part-load point at an inlet temperature of 30 °C and 10000 rpm is tied to given nominal reduced flow and reduced speed.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "gas_turbine_part_load.eescode",
+  "fluids": ["Air", "CH4"],
+  "tags": [
+    "exercise",
+    "gas turbine",
+    "Brayton cycle",
+    "part load",
+    "reduced mass flow",
+    "reduced speed",
+    "methane"
+  ],
+  "language_features": [
+    "procedures",
+    "functions",
+    "CALL with several outputs",
+    "IF/THEN/ELSE (in cpbar and gamma)",
+    "property calls"
+  ],
+  "stats": {"n_equations": 58, "largest_block": 19},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 09/MSTh R9 Ex 1 - 2.EES",
+    "candidate_id": "TM-0142",
+    "authors": ["TBD (ULiège MSTh)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh, machines et systèmes thermiques, repetition R9 exercise 1 (continued)"
+  },
+  "verification": {
+    "summary": "Stored solution of MSTh R9 Ex 1 - 2.EES. compare_solution.py: 50 common variables, 14 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 8. Shaft power 896469 W versus 897919 W; eta 0.88512 versus 0.88755; fuel flow 0.102551 versus 0.102568 kg/s. Largest relative difference is s_1 (0.31751), the Air entropy offset.",
+    "checks": ["ees-stored-solution", "order-of-magnitude"],
+    "reference": "EES stored solution of MSTh R9 Ex 1 - 2.EES (50 values, EES X7.458)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 0.31751,
+    "notes": "Maximum relative difference is s_1 (3901.01 versus 5715.89 J/kg-K, offset −1814.9 J/kg-K). h_1 is a separate enthalpy offset of +125867 J/kg at the same 30 °C; the offset is not constant (h_2 is +126175 J/kg). After it cancels, shaft power is 0.161% low and eta (W_dot_sh/W_dot_c, as written) is 0.273% low. cp(CH4) at 30 °C is 2243.2 versus 2259.1 J/kg-K. The eight CoolSolve-only names are unused outputs of the two cpbar CALLs."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

@@ -1,0 +1,62 @@
+{=============================================================================
+  Brayton cycle, 70 MW net power, pressure ratio 12
+  CoolSolve Library model CSL-0204
+ -----------------------------------------------------------------------------
+  Teaching exercise (Cengel 9-76). Cold air-standard Brayton cycle on
+  ideal-gas Air: cp and cv are taken once at state 1 and held
+  constant. Compression and expansion use isentropic efficiencies of 0.85.
+  The heat input is q_comb = cp*(T_3 - T_2). The original unit system is
+  kelvin. Pressures are already in Pa and energies in J.
+
+  Inputs : r_p, p_1, T_1, T_3, W_dot_net, eta_cp, eta_exp
+  Outputs: eta, m_dot, w_net, q_comb, T_2, T_4
+  Units  : SI - temperatures in K, pressures in Pa, energies in J
+           (property calls receive °C)
+  Source : thermo_models 09-76b.EES - see README.md
+=============================================================================}
+
+"!Data"
+"!The original says the temperatures are in kelvin."
+
+r_p = 12                               "pressure ratio [-]"
+p_1 = 1E5                              "pressure at state 1 [Pa]"
+T_1 = 300                              "temperature at state 1 [K]"
+T_3 = 1000                             "temperature at state 3 [K]"
+W_dot_net = 70e6                       "net power [W]"
+
+"!Specific heats at state 1, held constant"
+"!CoolSolve reads the temperature argument in °C; T_1 stays in kelvin."
+
+c_p = cp(Air, T=T_1 - 273.15)          "cp of Air [J/kg-K]"
+c_v = cv(Air, T=T_1 - 273.15)          "cv of Air [J/kg-K]; original writes t=t_1, the same variable as T_1"
+k = c_p / c_v                          "ratio of specific heats [-]"
+
+"!Compression"
+
+p_2 = p_1 * r_p                        "pressure at state 2 [Pa]"
+T_1 / T_2s = (p_1 / p_2)^((k - 1) / k) "isentropic compression, as in the original"
+w_cp_s = c_p * (T_2s - T_1)            "isentropic compression work [J/kg]"
+eta_cp = 0.85                          "isentropic efficiency of the compression [-]"
+eta_cp = w_cp_s / w_cp                 "definition of eta_cp, as in the original [-]"
+w_cp = c_p * (T_2 - T_1)               "actual compression work [J/kg]"
+
+"!Expansion"
+
+p_3 = p_2                              "pressure at state 3 [Pa]"
+p_4 = p_1                              "pressure at state 4 [Pa]"
+T_3 / T_4s = (p_3 / p_4)^((k - 1) / k) "isentropic expansion, as in the original"
+w_exp_s = c_p * (T_3 - T_4s)           "isentropic expansion work [J/kg]"
+eta_exp = 0.85                         "isentropic efficiency of the expansion [-]"
+eta_exp = w_exp / w_exp_s              "definition of eta_exp, as in the original [-]"
+w_exp = c_p * (T_3 - T_4)              "actual expansion work [J/kg]"
+
+"!Combustion"
+"!The original comments that q_comb = h_3 - h_2. The equation uses cp."
+
+q_comb = c_p * (T_3 - T_2)             "heat input [J/kg]"
+
+"!Net work and efficiency"
+
+w_net = w_exp - w_cp                   "specific net work [J/kg]"
+eta = w_net / q_comb                   "thermal efficiency [-]"
+W_dot_net = m_dot * w_net              "mass flow from the given net power [kg/s]"

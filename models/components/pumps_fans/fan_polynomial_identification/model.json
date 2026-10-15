@@ -1,0 +1,63 @@
+{
+  "id": "CSL-0187",
+  "name": "fan_polynomial_identification",
+  "title": "Fan dimensionless coefficients from one catalogue point",
+  "summary": "Evaluates the affinity-law flow, pressure and power coefficients of a fan at one catalogue point (volume flow, pressure rise, motor power, diameter and speed), with a fixed air density. The quadratic fits stated in the Laborelec file are recorded as a result comment.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "fan_polynomial_identification.eescode",
+  "fluids": [],
+  "tags": [
+    "fan",
+    "parameter identification",
+    "affinity laws",
+    "catalogue",
+    "dimensionless"
+  ],
+  "language_features": [],
+  "stats": {
+    "n_equations": 13,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "industry",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/3_Pumps and Fans/3_2_Fans/3_2_1_Fan_polynomial_identif.EES",
+    "candidate_id": "TM-0306",
+    "authors": [
+      "TBD (Laborelec toolkit)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X6.585",
+    "language": "en",
+    "course": "Laborelec toolkit, December 2002"
+  },
+  "verification": {
+    "summary": "compare_solution.py --ees-units: 13 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Largest printed relative difference 2.46e-10 on Lambda_cat_f (CSV rounding). No variable was scaled. Stored W_dot_cat_motor_f is +inf and is skipped. rho_a_su_f is 1.2 on both sides.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution in 3_2_1_Fan_polynomial_identif.EES (13 variables)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@96e4c95",
+    "max_rel_diff": 2.46e-10,
+    "notes": "13 common variables, 0 above rtol=0.001. With --all the largest printed relative difference is 2.46e-10 on Lambda_cat_f: ees_variables.csv stores 0.01488927677, the EES extended value is 0.014889276766330756, and CoolSolve matches the extended value. --ees-units printed no conversion. DELTAP_cat_f is stored as 1800 Pa and W_dot_shaft_cat_f as 7200 W. W_dot_cat_motor_f is stored as the EES +infinity marker, so compare_solution.py skips it; CoolSolve sets it to 7200/0.93 W and both sides have W_dot_shaft_cat_f = 7200 W. rho_a_su_f is the constant 1.2 kg/m3 in the equation and in the stored solution. The name only in the CoolSolve solution is pi. The quadratic coefficients are a comment and are not variables of the stored solution."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0205",
+    "CSL-0183"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

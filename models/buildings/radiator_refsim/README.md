@@ -144,4 +144,4 @@ No CoolSolve gap. The file uses only assignments, `abs` and `exp`.
 
 ## Related models
 
-None. No other model in the library is this radiator.
+`CSL-0175` (Simplified cooling ceiling): cooling ceiling by the same authors and the same date, with the same effectiveness `1 − exp(−NTU)`. This file is the hot-water radiator.

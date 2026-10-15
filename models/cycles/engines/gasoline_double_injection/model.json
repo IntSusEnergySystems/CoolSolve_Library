@@ -1,0 +1,67 @@
+{
+  "id": "CSL-0206",
+  "name": "gasoline_double_injection",
+  "title": "Double gasoline injection (TP5 exercise 3)",
+  "summary": "Teaching exercise: two gasoline injections per cylinder of a four-stroke engine. Start and end of each injection, the fuel-air ratio, the volumetric efficiency and the standard air conditions fix the injected masses and the fuel flows. The fuel is a mass.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "gasoline_double_injection.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "exercise",
+    "gasoline",
+    "injection",
+    "volumetric efficiency",
+    "internal combustion engine",
+    "ideal gas",
+    "fuel-air ratio"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 26,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP5/Ex_3_Deux injections moteur essence_PNG.EES",
+    "candidate_id": "TM-0243",
+    "authors": [
+      "TBD (ULiège MCI)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.589",
+    "language": "fr",
+    "course": "ULiège MCI, TP5, exercise 3 (double gasoline injection)."
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of Ex_3_Deux injections moteur essence_PNG.EES (20 variables decoded by ees_extract.py). compare_solution.py: 20 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 6. Largest relative difference 3.24e-04 on rho_a and M_dot_a (CoolProp vs EES density of Air at 25 °C, 101325 Pa).",
+    "checks": [
+      "ees-stored-solution",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of Ex_3_Deux injections moteur essence_PNG.EES (20 variables decoded by ees_extract.py)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@6730bcf",
+    "max_rel_diff": 3.24e-04,
+    "notes": "No common variable exceeds rtol 0.001. rho_a is DENSITY(Air, T=25 °C, P=101325 Pa); the 3.24e-04 gap is CoolProp versus EES, and M_dot_a carries the same ratio. f = 1/28 differs from the stored decimal by 1.20e-10; DELTAt_1, DELTAt_2 and DELTAt_tot differ by 1.20e-10, 1.90e-10 and 5.00e-11. The six names only in CoolSolve are M_dot_f, m_tot, m_1, m_2, M_dot_1 and M_dot_2; they are not in the stored solution. The same equations applied to the stored M_dot_a give values 3.24e-04 lower. No enthalpy is computed, so the ideal-gas Air enthalpy offset does not appear. Unit system already SI MASS DEG PA C J; p1 is stored in Pa; comparison without --ees-units. With and without initials: 4 iterations, identical solution. All 26 equations satisfied."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

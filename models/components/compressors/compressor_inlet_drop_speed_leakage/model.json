@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0217",
+  "name": "compressor_inlet_drop_speed_leakage",
+  "title": "Compressor with inlet pressure drop and speed-dependent leakage (exercise)",
+  "summary": "Teaching exercise for a positive-displacement air compressor whose inlet pressure drop and internal leakage are equivalent nozzles. Throat areas and swept volume come from the first part of the exercise. Efficiency and the leakage ratio are results and vary with speed. The stored point is 6000 rpm.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "compressor_inlet_drop_speed_leakage.eescode",
+  "fluids": ["Air"],
+  "tags": ["exercise", "compressor", "inlet pressure drop", "internal leakage", "equivalent nozzle", "variable speed"],
+  "language_features": ["property functions", "max() builtin"],
+  "stats": {"n_equations": 51, "largest_block": 27},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 03/R3 - SB - Ex 2 - 2.EES",
+    "candidate_id": "TM-0048",
+    "authors": ["Stéphane Bertagnolio"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège, Machines et systèmes thermiques, repetition 3, exercise 2 (continuation)"
+  },
+  "verification": {
+    "summary": "Compared with the stored solution of R3 - SB - Ex 2 - 2.EES (EES X7.458, 51 variables), without --ees-units. compare_solution.py: 51 common variables, 13 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. The maximum is 3.36e-01 on h_thr (Air enthalpy reference). Shaft power 340193 W against 340017 W; mass flow 1.361191 kg/s against 1.361137 kg/s.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution of R3 - SB - Ex 2 - 2.EES (51 variables, EES X7.458), compared with compare_solution.py without --ees-units",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 0.33617243636,
+    "notes": "max_rel_diff is the relative difference on h_thr (CoolSolve 374477.9468598 J/kg, EES 248588.7831 J/kg). The only name present only in CoolSolve is PI, the built-in constant. Air enthalpy offsets (CoolSolve minus EES) run from +125842 J/kg on h_thr_l to +125990 J/kg on h_ex_2. Entropy offsets run from -1814.77 J/kg-K on s_su_2 to -1814.96 J/kg-K on s_ex_2. Isentropic specific work w_s is 143112.5 J/kg against 143027.7 J/kg (rel 5.93e-04): the reference offset cancels down to 85 J/kg. Shaft power rel 5.19e-04. Mass flow rel 3.97e-05. C_thr 299.756 m/s against 299.818 m/s; C_thr_l 390.822 m/s against 390.441 m/s; rpm and N match. delta_w_1, T_ex_2 and T_thr_l sit just above rtol 0.001 (1.25e-03, 1.15e-03, 1.65e-03). With the stored .initials the CLI reports 23 iterations. Without .initials, Newton is SingularJacobian and TrustRegion stops at 500 iterations."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

@@ -1,0 +1,52 @@
+{=============================================================================
+  Pump dimensionless coefficients from one catalogue point
+  CoolSolve Library model CSL-0183
+ -----------------------------------------------------------------------------
+  Reduces one catalogue point of a centrifugal pump to the affinity-law
+  coefficients phi (flow), psi (head) and lambda (absorbed power), and to
+  the isentropic effectiveness. Water enters only through its suction
+  density. Shaft power is the motor power times a fixed motor efficiency.
+  The cubic psi(phi) and lambda(phi) fits stated in the original are a
+  result comment, not unknowns of this equation set.
+
+  Inputs : D, rpm, V_dot, H, motor power, suction T and P, motor efficiency
+  Outputs: phi, psi, lambda, isentropic effectiveness, pressure rise, shaft power
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J; head in m;
+           speed kept in rev/min (omega is computed in rad/s)
+  Source : Laborelec toolkit, December 2002 - see README.md
+=============================================================================}
+
+"Dimensionless groups (affinity laws, no change of impeller diameter)"
+psi_cat_p = DELTAP_cat/(rho_su_p*omega_cat_p^2*D_cat_p^2)    "head coefficient [-]"
+phi_cat_p = V_dot_cat_p/(D_cat_p^3*omega_cat_p)    "flow coefficient [-]"
+Lambda_cat_p = W_dot_shaft_cat_p/(D_cat_p^5*omega_cat_p^3*rho_su_p)    "absorbed-power coefficient [-]"
+epsilon_s_cat_p = (psi_cat_p*phi_cat_p)/Lambda_cat_p    "isentropic effectiveness [-]"
+
+"Pressure rise from the catalogue head"
+DELTAP_cat = rho_su_p*g*H_cat_p    "pressure rise [Pa]"
+
+"Shaft power from the electrical motor power at a fixed motor efficiency (full load, as in the original)"
+W_dot_shaft_cat_p = W_dot_cat_motor_p*eta_cat_motor_p    "shaft power [W]"
+eta_cat_motor_p = 0.93    "motor efficiency [-]"
+
+"Suction density"
+rho_su_p = DENSITY(Water, T=T_w_su_p, P=P_w_su_p)    "suction density [kg/m^3]"
+
+"Geometry and speed"
+D_cat_p = 0.210    "impeller diameter [m]"
+rpm_cat_p = 2960    "rotational speed [rev/min]; original annotation [rev/m]"
+omega_cat_p = (rpm_cat_p*2*pi)/60    "angular speed [rad/s]"
+
+"Suction state and gravity"
+T_w_su_p = 20    "suction temperature [°C]"
+P_w_su_p = 101300    "suction pressure [Pa]; 101.3 kPa in the original"
+g = 9.81    "gravitational acceleration [m/s^2]"
+
+"Catalogue point. These three values are not assigned in the equation window (the comment says they belong in a parametric table, and this file has none). They are the stored solution, which makes the system square."
+V_dot_cat_p = 0.04992    "catalogue volume flow rate [m^3/s]"
+H_cat_p = 35.61    "catalogue head [m]"
+W_dot_cat_motor_p = 28500    "catalogue motor power [W]"
+
+"Result stated in the original, for the label RZR 800 (decimal commas transcribed). Not equations: the plot window shows the same cubics, rounded, for LP 100-200/210 at 2960 rpm."
+"psi_cat_p = 0.141245568 - 0.43543986*phi_cat_p + 91.1642763*phi_cat_p^2 - 14983.2745*phi_cat_p^3"
+"Lambda_cat_p = 0.000472721306 + 0.179348056*phi_cat_p - 8.35199824*phi_cat_p^2 + 214.071727*phi_cat_p^3"

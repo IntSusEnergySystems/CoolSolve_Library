@@ -257,7 +257,7 @@ CoolSolve repository as a test case.
   efficiencies (flow rate, power) instead of a design by similarity factors.
 - `CSL-0035` *centrifugal_compressor_lookup_map*: same component and same
   repetition, characterised by a measured performance map.
-- `thermo_models` `TM-0059` / `TM-0060` (`MSTH_041012_exercice_7*.EES`):
-  optimal-regime laws applied to another compressor of the same session.
+- `CSL-0177` *turbocompressor_similarity_laws* (TM-0059): optimal-regime
+  laws for another compressor of the same session. TM-0060 is the continuation.
 - CoolSolve example `simple_centrifugal_compressor.eescode` (`CSX-043`):
   same exercise, kept in CoolSolve as a test case.

@@ -1,0 +1,59 @@
+{=============================================================================
+  Aircraft-engine diffuser exercise
+  CoolSolve Library model CSL-0180
+ -----------------------------------------------------------------------------
+  Steady flow of dry air through an aircraft-engine diffuser. The equation
+  window sets the inlet at 10 °C and 80 kPa, 200 m/s, area 0.4 m²; the exit
+  velocity is neglected and the exit pressure is atmospheric. Shaft work and
+  heat transfer are set to zero. Mass flow from the inlet volume flow; exit
+  temperature from the steady-flow energy balance. ULiège MECA0002,
+  repetition R3, exercise 10 (2022-2023). The statement text says 108 °C.
+
+  Inputs : A_in, p_in, p_out, T_in, c_in, c_out, z_in, z_out, g
+  Outputs: q_m_in, T_out
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. Quoilin, ULiège MECA0002, 2022-2023 - see README.md
+=============================================================================}
+
+"!Problem data"
+"Exercise. Air enters an aircraft-engine diffuser in steady state. The statement in the file says 108 °C; the equation and the stored solution use 10 °C. Exit velocity neglected. Find the mass flow and the exit temperature (as in the original)."
+A_in = 0.4                                   "inlet cross-section [m^2]"
+p_in = 80e3                                  "inlet pressure [Pa]; 80 kPa in the original"
+p_out = 101.325e3                            "exit pressure [Pa]; 101.325 kPa in the original, atmospheric pressure as assumed there"
+T_in = 10                                    "inlet temperature [°C]; 10 °C in the equation window (the statement text says 108 °C)"
+c_in = 200                                   "inlet velocity [m/s]"
+c_out = 0                                    "exit velocity [m/s]; neglected, as in the original"
+z_in = 0                                     "inlet elevation [m]; no potential-energy data, variation neglected"
+z_out = 0                                    "exit elevation [m]"
+g = 9.1                                      "gravitational acceleration [m/s^2]; 9.1 as in the original"
+
+"!Mass flow rate"
+V_dot_in = c_in*A_in                         "inlet volume flow rate [m^3/s]"
+v_in = volume(Air_ha, T=T_in, P=p_in)        "inlet specific volume of dry air [m^3/kg]"
+q_m_in = V_dot_in/v_in                       "inlet mass flow rate [kg/s]"
+
+"!Steady-flow energy balance"
+"First law for an open system in steady state, with q_m_out = q_m_in: Q_dot + W_dot = q_m_in*(Deltah + DeltaEC + DeltaEP) (as in the original)."
+Q_dot + W_dot = q_m_in*(Deltah + DeltaEC + DeltaEP)  "energy balance [W]"
+W_dot = 0                                    "shaft power [W]; no work, as in the original"
+Q_dot = 0                                    "heat transfer rate [W]; no data on heat loss, as in the original"
+
+"!Specific enthalpy change"
+Deltah = h_out - h_in                        "specific enthalpy change [J/kg]"
+h_in = enthalpy(Air_ha, T=T_in, P=p_in)      "inlet specific enthalpy of dry air [J/kg]"
+T_out = temperature(Air_ha, h=h_out, P=p_out)  "exit temperature [°C]"
+
+"!Kinetic and potential energy"
+DeltaEC = 0.5*(c_out^2 - c_in^2)             "change in specific kinetic energy [J/kg]; the original multiplied by 0.001 to report kJ/kg"
+DeltaEP = g*(z_out - z_in)                   "change in specific potential energy [J/kg]; the original multiplied by 0.001 to report kJ/kg"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: diffuser inlet. 2: diffuser exit.}
+P[1] = p_in                                  "inlet pressure [Pa]"
+h[1] = h_in                                  "inlet specific enthalpy [J/kg]"
+T[1] = T_in                                  "inlet temperature [°C]"
+s[1] = entropy(Air_ha, T=T_in, P=p_in)       "inlet specific entropy [J/kg-K]"
+P[2] = p_out                                 "exit pressure [Pa]"
+h[2] = h_out                                 "exit specific enthalpy [J/kg]"
+T[2] = T_out                                 "exit temperature [°C]"
+s[2] = entropy(Air_ha, h=h_out, P=p_out)     "exit specific entropy [J/kg-K]"

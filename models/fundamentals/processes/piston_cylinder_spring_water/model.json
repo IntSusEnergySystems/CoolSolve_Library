@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0210",
+  "name": "piston_cylinder_spring_water",
+  "title": "Water heated in a spring-loaded piston-cylinder (exercise 4.21)",
+  "summary": "A frictionless piston-cylinder holds 4 kg of saturated water at 35 °C. The piston rests on stops, lifts at 300 kPa, then compresses a spring while heating continues to 7 MPa. The model computes the final state and the boundary work. Teaching exercise 4.21 of the French edition of Cengel.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "piston_cylinder_spring_water.eescode",
+  "fluids": ["Water"],
+  "tags": ["exercise", "closed system", "piston-cylinder", "spring", "two-phase"],
+  "language_features": ["property functions", "array variables"],
+  "stats": {"n_equations": 39, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R02/R2_E2_borguet.EES",
+    "candidate_id": "TM-0360",
+    "authors": ["TBD (ULiège THD)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.423",
+    "language": "fr",
+    "course": "ULiège THD, 2017-2018"
+  },
+  "verification": {
+    "summary": "compare_solution.py --ees-units on R2_E2_borguet.EES: 39 common variables, 2 differ (rtol=0.001); only in EES: 1; only in CoolSolve: 0. Maximum relative difference 1.00e+00 on x_4 (EES quality 100 outside the dome; CoolSolve 0; unused). k_ressort is 9.99e-01 because kN/m is not scaled. Work is -258050 J on both sides. No enthalpy is computed.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in R2_E2_borguet.EES (40 variables, EES X8.423)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@d1e1203",
+    "max_rel_diff": 1.0,
+    "notes": "39 common variables, 2 differ above rtol=0.001: x_4 1.00e+00 and k_ressort 9.99e-01 (compare_solution.py --ees-units). Maximum over all common variables is 1.00e+00. EES quality returns 100 for this superheated vapour; CoolSolve returns 0. x_4 feeds no equation. k_ressort is stored as kN/m, which --ees-units does not scale; 360000 N/m is 360 kN/m, and W_34 matches at 244550 J. Only in EES: k (stored value 1, blank units, absent from the equation window). The system is square without it. Under rtol: T_4 8.74e-04 (352.359 °C vs 352.668 °C), x_3 8.10e-04, x_2 8.05e-04, x_1 6.01e-04, p_1 4.14e-04 (5629.02 Pa vs 5626.69 Pa), T_2 and T_3 7.10e-05, h_4 1.41e-10; works, volumes and assigned pressures differ by 0. No enthalpy is computed; h_3 and h_4 are piston heights in m. 2 iterations with .initials, 3 without. P_sat warns that t=35 looks like Fahrenheit; T_1 stays 35 °C and p_1 is the saturation pressure at that temperature. The specific-volume warnings refer to the wet-mixture volumes, which match EES."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

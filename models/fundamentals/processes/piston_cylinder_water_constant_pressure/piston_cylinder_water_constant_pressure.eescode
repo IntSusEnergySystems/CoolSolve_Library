@@ -1,0 +1,47 @@
+{=============================================================================
+  Piston-cylinder water heated at constant pressure (Cengel 3-55)
+  CoolSolve Library model CSL-0176
+ -----------------------------------------------------------------------------
+  A piston-cylinder holds 0.1 m^3 of liquid water and 0.9 m^3 of vapour in
+  equilibrium at 800 kPa. Heat is added at constant pressure until 350 °C.
+  The model computes the initial temperature, the total mass and the final
+  volume. Textbook exercise Cengel 3-55.
+
+  Inputs : V_f, V_g, p, T_final
+  Outputs: T_init, m_tot, V_final
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. Quoilin, KU Leuven, thermo_models - see README.md
+=============================================================================}
+
+"!Problem data"
+"A piston-cylinder device contains 0.1 m^3 of liquid water and 0.9 m^3 of water vapour in equilibrium at 800 kPa. Heat is transferred at constant pressure until the temperature reaches 350 °C (as in the original)."
+V_f = 0.1                                    "volume of liquid water [m^3]"
+V_g = 0.9                                    "volume of water vapour [m^3]"
+p = 800e3                                    "pressure [Pa]; 800 kPa in the problem statement, already in pascal in the file"
+T_final = 350                                "temperature after heating [°C]"
+
+"!Initial temperature"
+T_init = T_sat(Water, P=p)                   "saturation temperature at the initial pressure [°C]"
+
+"!Total mass of water"
+rho_f = density(Water, P=p, x=0)             "saturated-liquid density [kg/m^3]"
+rho_g = density(Water, P=p, x=1)             "saturated-vapour density [kg/m^3]"
+m_f = rho_f*V_f                              "mass of liquid [kg]"
+m_g = rho_g*V_g                              "mass of vapour [kg]"
+m_tot = m_f + m_g                            "total mass [kg]"
+
+"!State after constant-pressure heating"
+rho_final = density(Water, T=T_final, P=p)   "density at the final temperature and the same pressure [kg/m^3]"
+rho_final = m_tot/V_final                    "final volume from the total mass [m^3]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: initial two-phase mixture. 2: final state after constant-pressure heating.}
+x_1 = m_g/m_tot                              "initial vapour mass fraction [-]"
+P[1] = p                                     "initial pressure [Pa]"
+T[1] = T_init                                "initial temperature [°C]"
+h[1] = enthalpy(Water, P=p, x=x_1)           "initial mixture enthalpy [J/kg]"
+s[1] = entropy(Water, P=p, x=x_1)            "initial mixture entropy [J/kg-K]"
+P[2] = p                                     "final pressure [Pa]"
+T[2] = T_final                               "final temperature [°C]"
+h[2] = enthalpy(Water, T=T_final, P=p)       "final enthalpy [J/kg]"
+s[2] = entropy(Water, T=T_final, P=p)        "final entropy [J/kg-K]"

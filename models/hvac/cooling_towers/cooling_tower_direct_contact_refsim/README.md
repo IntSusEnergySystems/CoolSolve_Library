@@ -262,6 +262,8 @@ for their own triage.
   coil.
 - `CSL-0030` *two_speed_cooling_tower*: same category; cooling tower with a
   nominal and a half-speed fan regime, two equations blocks with an index.
+- `CSL-0179` *cooling_tower_counterflow_outlet*: MSTh counterflow rating at
+  one operating point (AU = 90 kW/K).
 - `CSL-0065` *cooling_tower_condenser_water*: same category; cooling tower
   sized from a power-plant condenser duty.- `CSL-0077` *aircooled_chiller_refsim*: another model of the same ULiège
   model bank (IEA A43 PR2 A15), the air-cooled condenser air side of a water

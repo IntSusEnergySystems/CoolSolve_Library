@@ -1,0 +1,48 @@
+{=============================================================================
+  1 GW steam plant cooled by a river (exercise 1)
+  CoolSolve Library model CSL-0195
+ -----------------------------------------------------------------------------
+  Teaching exercise, ULiège MECA0002, repetition R4, 2022-2023. A 1 GW steam
+  plant rejects condenser heat to a river. The plant is taken at half the
+  Carnot efficiency between the maximum steam temperature and the saturation
+  temperature at the condenser pressure. The river temperature rise follows
+  from that condenser heat and from the river cross-section and velocity.
+
+  Inputs : W_dot, T_vap, p_cond, A_r, c_r, rho_eau, C_eau
+  Outputs: DELTAT, Q_dot_cond, Q_dot_r, q_v_r, eta, eta_carnot
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : R04_E1_2022.EES. The file names nobody; author S. Quoilin.
+           See README.md
+  Status : verified against the EES stored solution
+=============================================================================}
+
+"!Exercise data"
+W_dot = -1e9                 "plant power [W]; -1e6 kW in the original, negative because the plant produces it"
+T_vap = 550                  "maximum steam temperature [°C]; original kelvin system: 550 [K] + 273.15 [K]"
+p_cond = 10e3                "condenser pressure [Pa]; 10 kPa in the original"
+A_r = 480                    "river cross-section [m^2]"
+c_r = 10/60                  "mean river velocity [m/s]; 10 [m/s]/60 in the original"
+
+"!Heat carried by the river"
+Q_dot_r = q_v_r*rho_eau*C_eau*DELTAT    "heat received by the river [W]"
+q_v_r = A_r*c_r              "river volume flow rate [m^3/s]"
+rho_eau = 1000               "liquid water density [kg/m^3]"
+C_eau = 4184                 "liquid-water specific heat [J/kg-K]; 4.184 kJ/kg-K in the original"
+c_eau_2 = SpecHeat(Water,T=15,P=1e5)    "specific heat at 15 °C and 100 kPa [J/kg-K]; original T=15[K]+273.15[K], P=1e2[kPa]. Not used in the balance"
+
+"!The river heat equals the condenser heat in absolute value"
+Q_dot_r = -Q_dot_cond        "Q_dot_cond is negative (heat leaving the plant) [W]"
+
+"!Carnot bound, then half of that efficiency, as in the equation window"
+eta_carnot = 1.0 - (T_F + 273.15)/(T_C + 273.15)    "original divided the kelvin temperatures T_F/T_C"
+T_F2 = T_sat(Water,P=p_cond) "saturation temperature at p_cond [°C]; original comment: identique"
+T_F = T_F2                   "cold-source temperature [°C]. The equation window uses T_F and does not assign it; T_F2 carries the comment identique"
+T_C = T_vap                  "hot-source temperature, the maximum steam temperature [°C]"
+
+eta = 0.5*eta_carnot         "assumed plant efficiency, half the Carnot value [-]"
+
+"!Efficiency is the electric power divided by the heat supplied to the steam"
+eta = -W_dot/Q_dot_gen       "Q_dot_gen is the heat input in the steam generator [W]"
+
+"!Energy balance of the cycle: power, steam-generator heat and condenser heat"
+W_dot + Q_dot_gen + Q_dot_cond = 0

@@ -1,0 +1,65 @@
+{
+  "id": "CSL-0172",
+  "name": "rigid_tank_two_compartments_water",
+  "title": "Entropy change of water in a two-compartment rigid tank (exercise)",
+  "summary": "A rigid tank is split into two equal compartments. One holds 2.5 kg of compressed liquid water at 400 kPa and 60 °C; the other is under vacuum. After they are connected the pressure is 40 kPa, and the model computes the entropy change of the water. Exercise 7 of repetition R4, ULiège MECA0002, 2022-2023.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "rigid_tank_two_compartments_water.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "exercise",
+    "entropy",
+    "rigid tank",
+    "closed system",
+    "water"
+  ],
+  "language_features": [
+    "property functions",
+    "array variables"
+  ],
+  "stats": {
+    "n_equations": 19,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R4/R04_E7_2022.EES",
+    "candidate_id": "TM-0427",
+    "authors": [
+      "S. Quoilin"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "ULiège MECA0002, 2022-2023"
+  },
+  "verification": {
+    "summary": "Against the stored solution of R04_E7_2022.EES using compare_solution.py --ees-units: 11 common variables, 1 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 8. Maximum relative difference 1.00e+00 on x1 (EES compressed-liquid sentinel -100; CoolSolve returns 0; the value feeds no equation). DELTAS is 491.644 J/K against 491.640 J/K. Water entropies agree; no reference-state offset.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution in R04_E7_2022.EES (11 variables, EES X10.836)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@b3c0d78",
+    "max_rel_diff": 1.0,
+    "notes": "11 common variables, 1 differ above rtol=0.001: x1 1.00e+00 (compare_solution.py --ees-units). Maximum over all common variables is 1.00e+00. EES quality returns -100 for this compressed liquid; CoolSolve returns 0 (CS-GAP-QUALITY-DOME). x1 feeds no equation. Physical results under rtol: p1 and p2 0, T1 0, m 0, v1 4.31e-10, v2 6.05e-11, x2 7.40e-05, s1 6.54e-10, s2 1.54e-06, DELTAS 8.07e-06. s1 differs by 5.4e-7 J/kg-K and s2 by 0.00159 J/kg-K, so there is no water reference-state offset; EES stored no enthalpy. The 8 CoolSolve-only names are the diagram arrays P[i], h[i], T[i], s[i]. 0 iterations with and without .initials. The diagram block does not change the 11 original variables. T1 is 60 C, so the Fahrenheit hint does not apply."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

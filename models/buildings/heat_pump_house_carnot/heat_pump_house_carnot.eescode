@@ -1,0 +1,52 @@
+{=============================================================================
+  Heat pump for a house: winter heating and summer cooling (Carnot)
+  CoolSolve Library model CSL-0184
+ -----------------------------------------------------------------------------
+  Teaching exercise, ULiège MECA0002, repetition R4, exercise 6 (2022-2023).
+  A heat pump holds the house at 20 °C in winter and at 25 °C in summer.
+  The fabric loss is 2400 kJ/h per degree of indoor-outdoor difference.
+  The machine is an ideal Carnot heat pump between indoor air and outdoor air.
+
+  Winter, outdoor air at 0 °C: heating load, Carnot COP and minimum
+  electric power. Summer, same electric power, reversed as a refrigerator:
+  highest outdoor temperature that still holds 25 °C indoors.
+
+  Inputs : T_h_w, T_h_s, T_ext_w, K_loss
+  Outputs: COP_a, W_dot, Q_dot_C, COP_b, Q_dot_F, T_ext_s_MAX
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MECA0002, S. Quoilin, 2022-2023 - see README.md
+=============================================================================}
+
+"Data. Thermodynamic temperatures are in °C. The Carnot ratios use kelvin."
+T_h_w = 20 [C]                          "indoor temperature in winter [°C]"
+T_h_w_K = T_h_w + 273.15                "absolute indoor temperature in winter, for the Carnot ratio [K]"
+T_h_s = 25 [C]                          "indoor temperature in summer [°C]"
+T_h_s_K = T_h_s + 273.15                "absolute indoor temperature in summer, for the Carnot ratio [K]"
+K_loss = 2400*1000/3600 [W/K]           "fabric loss coefficient [W/K]; 2400 kJ/h-K in the original"
+T_ext_w = 0 [C]                         "outdoor temperature in winter [°C]"
+T_ext_w_K = T_ext_w + 273.15            "absolute outdoor temperature in winter, for the Carnot ratio [K]"
+
+"a) Minimum electric power that meets the winter heating load."
+"The heat pump is an ideal Carnot cycle. COP_a is the heat delivered to the"
+"house divided by the electric power."
+COP_a = Q_dot_C/W_dot                   "heating COP, heat to the house over electric power [-]"
+"In steady state the heat delivered replaces the fabric loss, proportional"
+"to the indoor-outdoor temperature difference."
+Q_dot_C = abs(Q_dot_loss)               "heat delivered to the house [W]"
+Q_dot_loss = K_loss*(T_h_w - T_ext_w)   "fabric heat loss [W]"
+"Carnot heating COP from the hot source (the house) and the cold source (outdoors)."
+COP_a = 1.0/(1.0 - T_ext_w_K/T_h_w_K)   "Carnot heating COP [-]"
+
+"b) Highest outdoor temperature at which the reversed machine still holds 25 °C indoors."
+"The machine is now a refrigerator: the cold source is the house, the hot"
+"source is outdoors. The electric power is the winter result."
+"COP_b is the heat extracted from the house divided by that electric power."
+COP_b = Q_dot_F/W_dot                   "cooling COP, heat extracted from the house over electric power [-]"
+"The cooling load is proportional to the outdoor-indoor temperature difference."
+Q_dot_F = abs(K_loss*(T_h_s - T_ext_s_MAX))   "heat extracted from the house [W]"
+T_ext_s_MAX_K = T_ext_s_MAX + 273.15    "absolute outdoor temperature in summer, for the Carnot ratio [K]"
+"Carnot cooling COP from the hot source (outdoors) and the cold source (the house)."
+COP_b = 1.0/(T_ext_s_MAX_K/T_h_s_K - 1.0)     "Carnot cooling COP [-]"
+
+T_ext_s_MAX_adimentionel = T_ext_s_MAX_K    "absolute outdoor temperature as a pure number, unit check as in the original [-]"
+T_ext_s_MAX_C = T_ext_s_MAX_adimentionel - 273.15   "same outdoor temperature in °C [C]"

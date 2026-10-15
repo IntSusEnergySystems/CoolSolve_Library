@@ -1,0 +1,52 @@
+{
+  "id": "CSL-0177",
+  "name": "turbocompressor_similarity_laws",
+  "title": "Turbocompressor optimal-regime similarity laws",
+  "summary": "Teaching exercise: reduced mass flow, reduced rotation speed and the two constants of the optimal-regime similarity laws for a turbocompressor designed for 2000 m3/h of air from 1 bar, 20 C to 3 bar at 10000 rpm.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "turbocompressor_similarity_laws.eescode",
+  "fluids": ["Air"],
+  "tags": [
+    "turbocompressor",
+    "similarity",
+    "reduced mass flow",
+    "optimal regime",
+    "design",
+    "exercise"
+  ],
+  "language_features": ["property functions"],
+  "stats": {"n_equations": 13, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 04/MSTH_041012_exercice_7.EES",
+    "candidate_id": "TM-0059",
+    "authors": ["TBD (ULiège MSTh)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.210",
+    "language": "fr",
+    "course": "ULiège, Machines et systèmes thermiques, repetition 4 (2004-10-12), exercise 5"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of MSTH_041012_exercice_7.EES: 13 common variables, 0 differ (rtol=0.001). Largest relative difference 6.02e-04 on cste_1, from the Air specific volume (CoolProp 0.841172 vs EES 0.841425 m3/kg); M_dot, M_r and cste_2 follow at 3.01e-04.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution of thermo_models TM-0059 (MSTH_041012_exercice_7.EES, EES 7.210, 13/13); tools/compare_solution.py, no unit conversion (already SI Pa, C, J)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@96e4c95",
+    "max_rel_diff": 6.02e-04,
+    "notes": "No common variable exceeds rtol=0.001. Largest relative difference 6.02e-04 on cste_1. v_su, M_dot, M_r and cste_2 differ by 3.01e-04 because CoolProp Air gives v_su = 0.841172 m3/kg against the EES stored 0.841425 m3/kg. cste_1 = r_p/M_r^2 scales with v_su squared, so its relative difference is twice that. N, N_r, r_p and the inputs agree. The factor p_su/1E5 inside M_r is the original reduced-flow definition (pressure in bar), not a unit-system conversion."
+  },
+  "missing_features": [],
+  "related": ["CSL-0069", "CSL-0023"],
+  "related_external": [
+    "thermo_models TM-0060 (MSTH_041012_exercice_7_suite.EES): continuation of the same exercise, cste_1 and cste_2 imposed, optimal speed and flow at 0.9 bar, 50 C and 2.5 bar"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added (roadmap card C-203)", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

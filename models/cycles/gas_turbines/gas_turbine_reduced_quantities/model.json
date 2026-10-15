@@ -1,0 +1,56 @@
+{
+  "id": "CSL-0200",
+  "name": "gas_turbine_reduced_quantities",
+  "title": "Gas turbine regime linked by reduced flow and reduced speed",
+  "summary": "Steady exercise of a single-shaft gas turbine burning methane in air: one regime at 50000 rpm is tied to the nominal reduced mass flow and reduced speed by a proportionality on the compressor and a single expander characteristic.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "gas_turbine_reduced_quantities.eescode",
+  "fluids": ["Air", "CH4"],
+  "tags": [
+    "exercise",
+    "gas turbine",
+    "Brayton cycle",
+    "reduced mass flow",
+    "reduced speed",
+    "methane"
+  ],
+  "language_features": [
+    "procedures",
+    "functions",
+    "CALL with several outputs",
+    "IF/THEN/ELSE (in cpbar and gamma)",
+    "property calls"
+  ],
+  "stats": {"n_equations": 58, "largest_block": 19},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 09/MSTH-SB-R9-EX1.EES",
+    "candidate_id": "TM-0144",
+    "authors": ["TBD (ULiège MSTh)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh, machines et systèmes thermiques, repetition R9 exercise 1"
+  },
+  "verification": {
+    "summary": "Stored solution of MSTH-SB-R9-EX1.EES. compare_solution.py: 50 common variables, 19 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 8. Reduced flow and speed agree. Shaft power 2.652 MW versus 2.728 MW (2.78% low); efficiency 0.2957 versus 0.3014 (1.92% low). h_1 is +125.9 kJ/kg above EES; s_1 is the largest relative difference (0.320).",
+    "checks": ["ees-stored-solution", "order-of-magnitude"],
+    "reference": "EES stored solution of MSTH-SB-R9-EX1.EES (50 values, EES X7.458)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@f5b79cd",
+    "max_rel_diff": 0.32037,
+    "notes": "Maximum relative difference is s_1 (entropy reference of Air: 3849.95 versus 5664.81 J/kg-K). h_1 is a separate enthalpy reference offset of +125873 J/kg at the same 15 °C. Shaft power and efficiency differ because the compressor work and the methane specific heat do not share that constant. MR_c, MR_e and NR agree to 1e-10. The eight CoolSolve-only names are unused outputs of the two cpbar CALLs."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

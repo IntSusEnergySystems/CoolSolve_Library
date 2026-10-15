@@ -1,0 +1,44 @@
+{=============================================================================
+  Fan dimensionless coefficients from one catalogue point
+  CoolSolve Library model CSL-0187
+ -----------------------------------------------------------------------------
+  Reduces one catalogue point of a fan to the affinity-law coefficients
+  phi (flow), psi (pressure) and lambda (absorbed power), and to the
+  isentropic effectiveness. Air enters only as a fixed suction density.
+  Shaft power is the motor power times a fixed motor efficiency.
+  The quadratic psi(phi) and lambda(phi) fits stated in the original stay
+  a result comment.
+
+  Inputs : D, rpm, volume flow, pressure rise, motor power, motor efficiency
+  Outputs: phi, psi, lambda, isentropic effectiveness, shaft power
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J;
+           speed kept as stored (the omega equation divides by 60)
+  Source : Laborelec toolkit, December 2002 - see README.md
+=============================================================================}
+
+"Dimensionless groups (affinity laws, no change of impeller diameter)"
+psi_cat_f = DELTAP_cat_f/(rho_a_su_f*omega_cat_f^2*D_cat_f^2)    "pressure coefficient [-]"
+phi_cat_f = V_dot_cat_f/(D_cat_f^3*omega_cat_f)    "flow coefficient [-]"
+Lambda_cat_f = W_dot_shaft_cat_f/(D_cat_f^5*omega_cat_f^3*rho_a_su_f)    "absorbed-power coefficient [-]"
+epsilon_s_cat_f = (psi_cat_f*phi_cat_f)/Lambda_cat_f    "isentropic effectiveness [-]"
+
+"Shaft power from the electrical motor power at a fixed motor efficiency (full load, as in the original)"
+W_dot_shaft_cat_f = W_dot_cat_motor_f*eta_cat_motor_f    "shaft power [W]"
+eta_cat_motor_f = 0.93    "motor efficiency [-]"
+
+"Suction density, given as a constant (original comment: Air properties)"
+rho_a_su_f = 1.2    "suction density [kg/m^3]"
+
+"Geometry and speed"
+D_cat_f = 0.570    "impeller diameter [m]"
+rpm_cat_f = 1800    "rotational speed as stored; original annotation [rev/s]"
+omega_cat_f = (rpm_cat_f*2*pi)/60    "angular speed [rad/s]"
+
+"Catalogue point. Pressure rise and volume flow are the stored solution (the comment places the catalogue data in a parametric table, and this file has none). Motor power is the stored shaft power 7200 W divided by the motor efficiency; the stored motor-power record is the EES infinity marker."
+DELTAP_cat_f = 1800    "catalogue pressure rise [Pa]; stored with unit Pa"
+V_dot_cat_f = 2.7    "catalogue volume flow rate [m^3/s]"
+W_dot_cat_motor_f = 7200/0.93    "catalogue motor power [W]"
+
+"Result stated in the original for the label RZR 800 (decimal commas transcribed). The plot window shows the same quadratics, rounded, with other RZR labels."
+"psi_cat_f = 0.115891009 + 0.358857555*phi_cat_f - 2.20079945*phi_cat_f^2"
+"Lambda_cat_f = 0.0018700149 + 0.195918348*phi_cat_f - 0.39979922*phi_cat_f^2"

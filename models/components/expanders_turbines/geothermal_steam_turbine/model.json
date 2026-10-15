@@ -1,0 +1,65 @@
+{
+  "id": "CSL-0182",
+  "name": "geothermal_steam_turbine",
+  "title": "Geothermal hot water driving a steam turbine (exercise)",
+  "summary": "Geothermal water at 1.5 MPa and 180 °C is throttled into a flash evaporator at 400 kPa. Saturated vapour expands to 10 kPa and a quality of 0.9. For a turbine power of 1000 kW the model computes the steam flow and the hourly source flow.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "geothermal_steam_turbine.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "turbine",
+    "steam",
+    "geothermal",
+    "flash",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "array variables"
+  ],
+  "stats": {
+    "n_equations": 33,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R3/R3_E8_2022.EES",
+    "candidate_id": "TM-0418",
+    "authors": [
+      "S. Quoilin"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "ULiège MECA0002, 2022-2023"
+  },
+  "verification": {
+    "summary": "Against the stored solution of R3_E8_2022.EES, compare_solution.py --ees-units: 17 common variables, 0 differ (rtol=0.001); only in EES: 1; only in CoolSolve: 16. Maximum relative difference 4.74e-05 on q_m_vap (2.54194 kg/s against 2.54182 kg/s). Power is the given -1e6 W. Hourly source flow 123056 kg/h against 123051 kg/h. h_1 matches; h_2 and h_3 differ by -16.2 and +2.4 J/kg.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution in R3_E8_2022.EES (18 variables, EES X10.836)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@96e4c95",
+    "max_rel_diff": 4.736955e-05,
+    "notes": "17 common variables, none above rtol=0.001 (compare_solution.py --ees-units). Maximum over all common variables is 4.736955e-05 on q_m_vap; the tool prints 4.74e-05. Stored unit strings kPa, kJ/kg and kW were scaled by --ees-units. CoolSolve minus EES: h_1 and h_ev +2.51e-05 J/kg, h_2 -16.2405 J/kg, h_3 +2.395 J/kg. The three enthalpy residuals are unequal, so they are a property difference. EES stored no entropy; s[1]..s[4] are diagram outputs only. q_m_vap is 2.541944361 kg/s against 2.54182395 kg/s. W_dot_turb is -1e6 W on both sides. T_1 is 180 °C on both sides. EES stored no other temperature. Only in EES: P = 1, no unit and no equation. The 16 CoolSolve-only names are the diagram arrays. 4 iterations with .initials, 13 without. The diagram block does not change the 17 original variables (relative difference 0 with the same initials)."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

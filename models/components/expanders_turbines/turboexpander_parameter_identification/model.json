@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0207",
+  "name": "turboexpander_parameter_identification",
+  "title": "Turbo-expander parameter identification from new data (exercise)",
+  "summary": "Steady model of a turbo-expander: an ideal isentropic nozzle followed by a Laval wheel. The equivalent throat area and the wheel diameter are the parameters identified from the additional expander data. The model then computes the shaft power.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "turboexpander_parameter_identification.eescode",
+  "fluids": ["Air"],
+  "tags": ["turbo-expander", "nozzle", "Laval wheel", "parameter identification", "exercise"],
+  "language_features": ["property functions (Air)", "max()", "cos (degrees)"],
+  "stats": {"n_equations": 30, "largest_block": 5},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 04/SB/MSTh-SB-R4-Ex2-2.EES",
+    "candidate_id": "TM-0064",
+    "authors": ["TBD (ULiège MSTh)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh, repetition R4, exercise 2 continued"
+  },
+  "verification": {
+    "summary": "Compared with the stored solution of MSTh-SB-R4-Ex2-2.EES. compare_solution.py: 30 common variables, 8 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Maximum relative difference 2.80e-01 on s_su (Air entropy reference, CoolSolve - EES = -1814 J/kg-K). A_thr and d_laval match. Shaft power 4370935 W versus 4378606 W.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in MSTh-SB-R4-Ex2-2.EES (EES X7.458)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@5a522f7",
+    "max_rel_diff": 0.280,
+    "notes": "30 common variables. The tool prints 2.80e-01 on s_su; the exact ratio is 0.2801749. The extra CoolSolve name is PI, the built-in in U = PI*d_laval*N, not an unknown. The eight variables above rtol 0.001 are s_su, h_ex_n_s, h_thr, h_su, M_dot, W_dot, W_dot_in and v_thr. CoolSolve - EES on enthalpy is +126552.65, +126759.00 and +126341.19 J/kg. On entropy it is -1813.791 J/kg-K. A_thr and d_laval match. P_thr rel 2.41e-04 and eta_laval rel 7.86e-05, both under rtol 0.001. 14 iterations with .initials. Without .initials the size-5 block is SingularJacobian (analysis report: 18 total iterations, one Newton step, residual 899999). Negated velocity guesses return the positive root in 17 iterations. No --ees-units: stored values are already in Pa and J. The W_dot unit string is '-'."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

@@ -1,0 +1,224 @@
+{=============================================================================
+  R22 refrigeration machine with unloaded cylinders (exercise)
+  CoolSolve Library model CSL-0222
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège MSTh). The equation window is headed
+  "MSTH041123 exercice 2" and names no author. One R22 reciprocating
+  compressor is solved at full displacement (4 cylinders) and at half
+  displacement (2 cylinders). Losses reheat the suction gas before an
+  adiabatic compression. The evaporator and the condenser are
+  effectiveness-NTU exchangers on water with a constant specific heat.
+  A weight theta mixes the reduced-displacement water outlet with the
+  idle outlet so that the mixed evaporator exit is 14 °C.
+
+  Inputs : V_dot_s, C, alpha, W_dot_loss, W_dot_pumping, AU_ev, AU_cd,
+           water flow rates and inlet temperatures, DELTAt_oh, DELTAt_sc,
+           t_w_ex_ev_set
+  Outputs: Q_dot_ev, W_dot, COP at both displacements, and theta, W_dot_set
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : TBD (ULiège MSTh) - see README.md
+=============================================================================}
+
+"!Setpoint of the reduced-displacement regime (as in the original)"
+t_w_su_ev = 15                 "evaporator water inlet temperature, full load [°C]"
+t_w_su_ev_r = 15               "evaporator water inlet temperature, reduced displacement [°C]"
+t_w_ex_ev_set = theta*t_w_ex_ev_ON + (1 - theta)*t_w_ex_ev_OFF
+                               "mixed evaporator water outlet [°C]"
+t_w_ex_ev_ON = t_w_ex_ev_r     "running outlet: reduced-displacement regime [°C]"
+t_w_ex_ev_OFF = t_w_su_ev      "idle outlet: water leaves at the supply temperature [°C]"
+t_w_ex_ev_set = 14             "required mixed evaporator water outlet [°C]"
+W_dot_set = theta*W_dot_r      "power weighted by the reduced-displacement fraction [W]"
+COP_r = Q_dot_ev_r/W_dot_r     "COP of the reduced-displacement regime [-]"
+
+"!Reduced displacement (2 cylinders)"
+W_dot_pumping = 1513           "pumping power used by the reduced-displacement regime [W]"
+
+"!Evaporator, reduced displacement (as in the original)"
+Q_dot_ev_r = epsilon_ev*C_dot_w_ev*(t_w_su_ev_r - t_ev_r)
+                               "evaporator heat rate, semi-isothermal effectiveness [W]"
+Q_dot_ev_r = C_dot_w_ev*(t_w_su_ev_r - t_w_ex_ev_r)
+                               "evaporator heat rate on the water side [W]"
+{Comment in the original, not an equation: "t_w_ex_ev_r=t_w_ex_ev"}
+
+"!Condenser, reduced displacement (as in the original)"
+Q_dot_cd_r = epsilon_cd*C_dot_w_cd*(t_cd_r - t_w_su_cd_r)
+                               "condenser heat rate, semi-isothermal effectiveness [W]"
+t_w_su_cd_r = t_w_su_cd        "condenser water inlet, same as full load [°C]"
+
+"!Compressor, reduced displacement (as in the original)"
+M_dot_r = epsilon_vol_1_r*V_dot_s_r/v_su_1_r
+                               "refrigerant mass flow rate [kg/s]"
+V_dot_s_r = V_dot_s/2          "full load on 4 cylinders; reduced displacement on 2 cylinders [m^3/s]"
+epsilon_vol_1_r = 1 - C*(r_v_1_r - 1)
+                               "volumetric efficiency from the clearance factor [-]"
+v_su_r = VOLUME(R22, T=T_su_r, P=P_su_r)
+                               "specific volume at the evaporator outlet [m^3/kg]"
+t_su_r = t_ex_ev_r             "suction temperature before the loss reheat [°C]"
+t_ex_ev_r = t_ev_r + DELTAt_oh "evaporator outlet temperature [°C]"
+p_su_r = p_ev_r                "suction pressure [Pa]"
+p_ev_r = PRESSURE(R22, T=T_ev_r, x=1)
+                               "evaporation pressure, saturated vapour [Pa]"
+w_s_1_r = h_exs_1_r - h_su_1_r "isentropic specific work from the reheated suction [J/kg]"
+h_su_r = ENTHALPY(R22, T=T_su_r, P=P_su_r)
+                               "enthalpy at the evaporator outlet [J/kg]"
+h_exs_1_r = ENTHALPY(R22, p=p_ex_r, s=s_su_1_r)
+                               "enthalpy at the isentropic exhaust [J/kg]"
+{Comment in the original, not an equation: "h_exs_1_r=h_exs_1"}
+p_ex_r = p_cd_r                "compressor exhaust pressure [Pa]"
+p_cd_r = PRESSURE(R22, T=T_cd_r, x=1)
+                               "condensation pressure, saturated vapour [Pa]"
+{Comment in the original, not an equation: "p_cd_r=p_cd"}
+{Comment in the original: "valeur provisoire:"}
+{Comment in the original, not an equation: "s_su_1_r=s_su_1"}
+s_su_r = ENTROPY(R22, T=T_su_r, P=P_su_r)
+                               "entropy at the evaporator outlet [J/kg-K]"
+W_dot_s_r = M_dot_r*w_s_1_r    "isentropic compression power [W]"
+W_dot_r = W_dot_loss + (1 + alpha)*(W_dot_s_r + 0.5*W_dot_pumping)
+                               "electrical power, as written [W]"
+{Hypothesis, as in the original: all losses take place before compression and the compressor is adiabatic.}
+h_su_1_r - h_su_r = (W_dot_r - W_dot_s_r)/M_dot_r
+                               "reheat of the suction gas by the losses [J/kg]"
+p_su_1_r = p_su_r              "pressure at the start of compression [Pa]"
+t_su_1_r = TEMPERATURE(R22, h=h_su_1_r, P=P_su_1_r)
+                               "temperature at the start of compression [°C]"
+s_su_1_r = ENTROPY(R22, T=T_su_1_r, P=P_su_1_r)
+                               "entropy at the start of compression [J/kg-K]"
+v_su_1_r = VOLUME(R22, T=T_su_1_r, P=P_su_1_r)
+                               "specific volume at the start of compression [m^3/kg]"
+{Comment in the original, not an equation: "v_su_1_r=v_su_1"}
+h_ex_1_r = h_exs_1_r           "adiabatic exhaust enthalpy, equal to the isentropic exhaust [J/kg]"
+t_ex_1_r = TEMPERATURE(R22, h=h_ex_1_r, P=P_ex_r)
+                               "compressor exhaust temperature [°C]"
+{Comment in the original, not an equation: "t_ex_1_r=t_ex_1"}
+v_ex_1_r = VOLUME(R22, T=T_ex_1_r, P=P_ex_r)
+                               "specific volume at the compressor exhaust [m^3/kg]"
+r_v_1_r = v_su_1_r/v_ex_1_r    "volume ratio of the compression [-]"
+Q_dot_ev_r = M_dot_r*(h_ex_ev_r - h_su_ev_r)
+                               "cooling capacity [W]"
+Q_dot_cd_r = Q_dot_ev_r + W_dot_r
+                               "condenser heat rejection [W]"
+h_ex_ev_r = h_su_r             "evaporator outlet enthalpy [J/kg]"
+h_su_ev_r = h_ex_cd_r          "isenthalpic expansion, as in the original [J/kg]"
+h_ex_cd_r = ENTHALPY(R22, T=T_ex_cd_r, P=P_cd_r)
+                               "condenser outlet enthalpy [J/kg]"
+t_ex_cd_r = t_cd_r - DELTAt_sc "condenser outlet temperature [°C]"
+
+"!Data common to both regimes (as in the original)"
+W_dot_loss = 1294              "constant electromechanical losses [W]"
+alpha = 0.228                  "loss factor [-]"
+C = 0.125                      "clearance factor [-]"
+V_dot_s = 0.0233               "swept volume flow rate at full load [m^3/s]"
+AU_ev = 7E3                    "evaporator overall conductance [W/K]"
+AU_cd = 15E3                   "condenser overall conductance [W/K]"
+M_dot_w_ev = 2.4               "evaporator water mass flow rate [kg/s]"
+M_dot_w_cd = 2.2               "condenser water mass flow rate [kg/s]"
+{Comment in the original, not an equation: "t_w_ex_ev=10"}
+DELTAt_oh = 5                  "superheat at the evaporator outlet [K]"
+t_w_su_cd = 40                 "condenser water inlet temperature [°C]"
+{Comment in the original: "!changement de donnée!"}
+DELTAt_sc = 3                  "subcooling at the condenser outlet [K]"
+
+"!Full load (4 cylinders) — evaporator (as in the original)"
+Q_dot_ev = epsilon_ev*C_dot_w_ev*(t_w_su_ev - t_ev)
+                               "evaporator heat rate, semi-isothermal effectiveness [W]"
+Q_dot_ev = C_dot_w_ev*(t_w_su_ev - t_w_ex_ev)
+                               "evaporator heat rate on the water side [W]"
+epsilon_ev = 1 - exp(-NTU_ev) "evaporator effectiveness [-]"
+NTU_ev = AU_ev/C_dot_w_ev      "evaporator number of transfer units [-]"
+C_dot_w_ev = M_dot_w_ev*c_w    "evaporator water capacity rate [W/K]"
+c_w = 4187                     "water specific heat, constant [J/kg-K]"
+{Comment in the original: "Donnée provisoire:"}
+{Comment in the original, not an equation: "Q_dot_ev=50E3"}
+
+"!Full load — condenser (as in the original)"
+Q_dot_cd = epsilon_cd*C_dot_w_cd*(t_cd - t_w_su_cd)
+                               "condenser heat rate, semi-isothermal effectiveness [W]"
+epsilon_cd = 1 - exp(-NTU_cd) "condenser effectiveness [-]"
+NTU_cd = AU_cd/C_dot_w_cd      "condenser number of transfer units [-]"
+C_dot_w_cd = M_dot_w_cd*c_w    "condenser water capacity rate [W/K]"
+{Comment in the original: "Donnée provisoire:"}
+{Comment in the original, not an equation: "Q_dot_cd=70E3"}
+
+"!Full load — compressor (as in the original)"
+M_dot = epsilon_vol_1*V_dot_s/v_su_1
+                               "refrigerant mass flow rate [kg/s]"
+epsilon_vol_1 = 1 - C*(r_v_1 - 1)
+                               "volumetric efficiency from the clearance factor [-]"
+{Comment in the original: "valeur provisoire:"}
+{Comment in the original, not an equation: "r_v_1=3"}
+{Comment in the original, not an equation: "v_su_1=v_su"}
+v_su = VOLUME(R22, T=T_su, P=P_su)
+                               "specific volume at the evaporator outlet [m^3/kg]"
+t_su = t_ex_ev                 "suction temperature before the loss reheat [°C]"
+t_ex_ev = t_ev + DELTAt_oh     "evaporator outlet temperature [°C]"
+p_su = p_ev                    "suction pressure [Pa]"
+p_ev = PRESSURE(R22, T=T_ev, x=1)
+                               "evaporation pressure, saturated vapour [Pa]"
+w_s_1 = h_exs_1 - h_su_1       "isentropic specific work from the reheated suction [J/kg]"
+{Comment in the original: "valeur provisoire:"}
+{Comment in the original, not an equation: "h_su_1=h_su"}
+h_su = ENTHALPY(R22, T=T_su, P=P_su)
+                               "enthalpy at the evaporator outlet [J/kg]"
+h_exs_1 = ENTHALPY(R22, p=p_ex, s=s_su_1)
+                               "enthalpy at the isentropic exhaust [J/kg]"
+p_ex = p_cd                    "compressor exhaust pressure [Pa]"
+p_cd = PRESSURE(R22, T=T_cd, x=1)
+                               "condensation pressure, saturated vapour [Pa]"
+{Comment in the original: "valeur provisoire:"}
+{Comment in the original, not an equation: "s_su_1=s_su"}
+s_su = ENTROPY(R22, T=T_su, P=P_su)
+                               "entropy at the evaporator outlet [J/kg-K]"
+W_dot_s = M_dot*w_s_1          "isentropic compression power [W]"
+W_dot = W_dot_loss + (1 + alpha)*W_dot_s
+                               "electrical power [W]"
+{Hypothesis, as in the original: all losses take place before compression and the compressor is adiabatic.}
+h_su_1 - h_su = (W_dot - W_dot_s)/M_dot
+                               "reheat of the suction gas by the losses [J/kg]"
+p_su_1 = p_su                  "pressure at the start of compression [Pa]"
+t_su_1 = TEMPERATURE(R22, h=h_su_1, P=P_su_1)
+                               "temperature at the start of compression [°C]"
+s_su_1 = ENTROPY(R22, T=T_su_1, P=P_su_1)
+                               "entropy at the start of compression [J/kg-K]"
+v_su_1 = VOLUME(R22, T=T_su_1, P=P_su_1)
+                               "specific volume at the start of compression [m^3/kg]"
+h_ex_1 = h_exs_1               "adiabatic exhaust enthalpy, equal to the isentropic exhaust [J/kg]"
+t_ex_1 = TEMPERATURE(R22, h=h_ex_1, P=P_ex)
+                               "compressor exhaust temperature [°C]"
+v_ex_1 = VOLUME(R22, T=T_ex_1, P=P_ex)
+                               "specific volume at the compressor exhaust [m^3/kg]"
+r_v_1 = v_su_1/v_ex_1          "volume ratio of the compression [-]"
+epsilon_vol = M_dot/(V_dot_s/v_su)
+                               "volumetric efficiency referred to the evaporator outlet [-]"
+epsilon_s = w_s/w              "isentropic efficiency from the evaporator-outlet entropy [-]"
+w_s = h_exs - h_su             "isentropic specific work from the evaporator outlet [J/kg]"
+h_exs = ENTHALPY(R22, p=p_ex, s=s_su)
+                               "isentropic exhaust enthalpy from s_su [J/kg]"
+w = W_dot/M_dot                "specific electrical work [J/kg]"
+Q_dot_ev = M_dot*(h_ex_ev - h_su_ev)
+                               "cooling capacity [W]"
+Q_dot_cd = Q_dot_ev + W_dot    "condenser heat rejection [W]"
+h_ex_ev = h_su                 "evaporator outlet enthalpy [J/kg]"
+h_su_ev = h_ex_cd              "isenthalpic expansion, as in the original [J/kg]"
+h_ex_cd = ENTHALPY(R22, T=T_ex_cd, P=P_cd)
+                               "condenser outlet enthalpy [J/kg]"
+t_ex_cd = t_cd - DELTAt_sc     "condenser outlet temperature [°C]"
+COP = Q_dot_ev/W_dot           "COP at full load [-]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{Full-load R22 only: 1 suction (evaporator outlet), 2 compressor exhaust, 3 condenser outlet, 4 evaporator inlet. The exhaust entropy is s_su_1 because h_ex_1 = h_exs_1. No second array set for the reduced-displacement regime.}
+P[1] = p_su
+h[1] = h_su
+T[1] = t_su
+s[1] = s_su
+P[2] = p_ex
+h[2] = h_ex_1
+T[2] = t_ex_1
+s[2] = s_su_1
+P[3] = p_cd
+h[3] = h_ex_cd
+T[3] = t_ex_cd
+s[3] = ENTROPY(R22, T=T[3], P=P[3])
+P[4] = p_ev
+h[4] = h_su_ev
+T[4] = TEMPERATURE(R22, h=h[4], P=P[4])
+s[4] = ENTROPY(R22, h=h[4], P=P[4])

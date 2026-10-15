@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0202",
+  "name": "roots_compressor_10l",
+  "title": "Roots compressor, 10 L (exercise 2 bis)",
+  "summary": "Teaching exercise for a 10 L Roots compressor tested at 1.4 bar discharge, with a volumetric efficiency of 85 % and a mechanical efficiency of 95 %. The equation window is that test point, with an inlet orifice and a leakage nozzle.",
+  "kind": "steady",
+  "level": 2,
+  "status": "failing",
+  "main_file": "roots_compressor_10l.eescode",
+  "fluids": ["Air"],
+  "tags": ["exercise", "roots compressor", "volumetric efficiency", "isentropic efficiency", "leakage"],
+  "language_features": ["property functions", "max()"],
+  "stats": {"n_equations": 50, "largest_block": 7},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 02/SB/R2 - EX 2 - SB - Bis.EES",
+    "candidate_id": "TM-0036",
+    "authors": ["TBD (ULiège MSTh)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh, machines et systèmes thermiques, repetition R2, exercise 2 bis"
+  },
+  "verification": {
+    "summary": "No CoolSolve solution, so compare_solution.py was not run. The square window has no real root: the 5 cm inlet orifice chokes near 0.463 kg/s and the fresh-charge flow is 0.505 kg/s. Shipped initials: Newton stops at iteration 100 (residual 3.438). No initials: line search fails at iteration 0 (residual 1038). Stored P_thr is negative, so the EES point is not a solution.",
+    "checks": [],
+    "reference": "EES stored solution in R2 - EX 2 - SB - Bis.EES (50 values; the decoded name C is empty). Not a converged solution of the active equation window.",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@ae7946e",
+    "max_rel_diff": null,
+    "notes": "CoolSolve 0.3.0 binary mtime 2026-10-15 20:23:51 is commit ae7946e. The same residual 3.438 was first seen on f5b79cd. With the shipped initials, block 16 (6 variables: C_thr, V_dot_thr, v_thr, h_thr, T_thr, P_thr) stops at Newton iteration 100, residual 3.438073. Without initials the line search fails at iteration 0, residual 1038.346181. The raw stored initials (EES enthalpies, P_thr = -74168.5 Pa) also stop at iteration 100, residual 20599.127227. A sonic, CoolProp-consistent start of the same six equations, run through Newton, TrustRegion, LevenbergMarquardt, BisectionND, Homotopy and Partitioned, stalls near residual 0.024. On ideal-gas Air the orifice mass flow peaks near 0.463 kg/s at about 52.8 kPa; the fresh-charge flow fixed by epsilon_v is 0.505 kg/s. At 20 °C and 1e5 Pa, CoolSolve enthalpy is 419404.9217559 J/kg and the stored h_su_0 is 293534.3441 J/kg (CoolSolve - EES = +125870.5776559 J/kg). Entropy is 3867.259359479 versus 5682.126158 J/kg-K. Specific volume is 0.8411720268193 versus 0.8414254791 m^3/kg (relative difference 3.0e-4). The enthalpy offset is separate from the missing root. No .sol. Fluid left as Air."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

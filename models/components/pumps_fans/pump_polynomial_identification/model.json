@@ -1,0 +1,69 @@
+{
+  "id": "CSL-0183",
+  "name": "pump_polynomial_identification",
+  "title": "Pump dimensionless coefficients from one catalogue point",
+  "summary": "Evaluates the affinity-law flow, head and power coefficients of a centrifugal pump at one catalogue point (volume flow, head, motor power, diameter and speed), with water density at the suction state. The cubic fits stated in the Laborelec file are recorded as a result comment.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "pump_polynomial_identification.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "pump",
+    "centrifugal pump",
+    "parameter identification",
+    "affinity laws",
+    "catalogue",
+    "dimensionless"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 17,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "industry",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/3_Pumps and Fans/3_1_Pumps/3_1_1_Pump_polynomial_identif.EES",
+    "candidate_id": "TM-0301",
+    "authors": [
+      "TBD (Laborelec toolkit)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X6.585",
+    "language": "en",
+    "course": "Laborelec toolkit, December 2002"
+  },
+  "verification": {
+    "summary": "compare_solution.py --ees-units: 17 common variables, 3 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Maximum relative difference 1.33e-03 on DELTAP_cat, Lambda_cat_p and epsilon_s_cat_p. Those stored values match density 999.541 kg/m3; stored rho_su_p is 998.233 kg/m3. CoolSolve satisfies the head and power-coefficient equations. rho_su_p differs by 2.54e-05.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution in 3_1_1_Pump_polynomial_identif.EES (17 variables)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@96e4c95",
+    "max_rel_diff": 0.00133,
+    "notes": "17 common variables, 3 differ above rtol=0.001, and the tool prints the same relative difference 1.33e-03 for all three (exact value 1.3346e-03). DELTAP_cat, Lambda_cat_p and epsilon_s_cat_p in the stored solution are the head and power equations evaluated at 999.541 kg/m3. The stored rho_su_p is 998.2325392 kg/m3, and psi_cat_p (independent of density) matches that density. CoolSolve evaluates every equation at its own density. rho_su_p differs by 2.54e-05 (998.207 kg/m3, CoolProp water at 20 °C and 101300 Pa). P_w_su_p was converted from 101.3 kPa; --ees-units scales that reference value by 1000. The name only in the CoolSolve solution is pi. The stated cubic coefficients are a comment in the EES file and are not variables of the stored solution."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0203",
+    "CSL-0125",
+    "CSL-0187"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

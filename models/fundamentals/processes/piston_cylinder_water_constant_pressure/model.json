@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0176",
+  "name": "piston_cylinder_water_constant_pressure",
+  "title": "Piston-cylinder water heated at constant pressure (Cengel 3-55)",
+  "summary": "A piston-cylinder holds 0.1 m3 of liquid water and 0.9 m3 of vapour in equilibrium at 800 kPa. Heat is added at constant pressure until 350 °C. The model computes the initial temperature, the total mass and the final volume. Textbook exercise Cengel 3-55.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "piston_cylinder_water_constant_pressure.eescode",
+  "fluids": ["Water"],
+  "tags": ["exercise", "closed system", "constant pressure", "piston-cylinder", "two-phase"],
+  "language_features": ["property functions", "array variables"],
+  "stats": {"n_equations": 21, "largest_block": 1},
+  "origin": {
+    "type": "textbook",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/03-55.EES",
+    "candidate_id": "TM-0333",
+    "authors": ["S. Quoilin"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.486",
+    "language": "en",
+    "course": "KU Leuven, textbook exercise Cengel 3-55"
+  },
+  "verification": {
+    "summary": "Against the stored solution of 03-55.EES: 12 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 9. Maximum relative difference 2.20e-04 on T_init (170.406 °C vs 170.444 °C). m_tot rel 1.52e-05, V_final rel 8.18e-05. Enthalpy, entropy and work are absent from the stored solution.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in 03-55.EES (12 variables, EES X9.486)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@96e4c95",
+    "max_rel_diff": 2.20e-04,
+    "notes": "12 common variables, 0 differ (rtol=0.001). Maximum over all common variables is 2.20e-04 on T_init (170.406 °C vs 170.444 °C). Also under rtol: rho_g and m_g 1.23e-04, rho_final 9.70e-05, V_final 8.18e-05, rho_f and m_f 2.09e-05, m_tot 1.52e-05, p, V_f, V_g and T_final 0. These residuals are the Water property formulation. The stored solution has no enthalpy or entropy, so no reference-state offset was measured; h[1], h[2], s[1] and s[2] exist only as diagram outputs. The source equation window does not compute the boundary work. The 9 CoolSolve-only names are x_1 and the diagram arrays P[i], h[i], T[i], s[i]. 3 iterations with .initials, 11 without. The diagram block does not change the 12 original variables (relative difference 0). density() warns that t=350 is read as 350 °C; that is T_final. The Fahrenheit hint did not print."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

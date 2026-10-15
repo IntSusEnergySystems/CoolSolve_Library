@@ -1,0 +1,64 @@
+{=============================================================================
+  Air-standard Otto cycle, compression ratio 9.5
+  CoolSolve Library model CSL-0192
+ -----------------------------------------------------------------------------
+  Teaching exercise (Cengel 9-37). Cold air-standard Otto cycle on ideal-gas
+  Air: cp and cv are taken once at the intake temperature and held constant.
+  Compression and expansion are isentropic; heat addition and rejection are
+  at constant volume. The original unit system is kelvin. Pressures are
+  already in Pa and energies in J.
+
+  Inputs : r_c, p_1, T_1, V_1, T_4
+  Outputs: eta_otto, T_3, p_3, w_cp, w_exp, Q_dot_comb
+  Units  : SI - temperatures in K, pressures in Pa, energies in J
+           (property calls receive °C)
+  Source : thermo_models 9-37.EES - see README.md
+=============================================================================}
+
+"!Data"
+
+r_c = 9.5                              "compression ratio [-]"
+p_1 = 1E5                              "pressure at state 1 [Pa]"
+T_1 = 35 + 273.15                      "temperature at state 1 [K]; 35 °C written in the original"
+V_1 = 600e-6                           "volume at state 1 [m^3]"
+T_4 = 800                              "temperature at state 4 [K]"
+
+"!Specific heats at the intake temperature, held constant"
+
+c_p = cp(Air, T=T_1 - 273.15)          "cp of Air [J/kg-K]; CoolSolve takes °C, T_1 is in K"
+c_v = cv(Air, T=T_1 - 273.15)          "cv of Air [J/kg-K]; CoolSolve takes °C, T_1 is in K"
+k = c_p / c_v                          "ratio of specific heats [-]"
+
+"!Compression"
+"!The original notes that a negative pressure guess makes the power undefined. Guesses are in the .initials file."
+
+V_2 = V_1 / r_c                        "volume at state 2 [m^3]"
+R = R# / molarmass(Air)                "gas constant of Air [J/kg-K]"
+p_1 * V_1 = m * R * T_1                "ideal-gas law at state 1"
+p_2 * V_2 = m * R * T_2                "ideal-gas law at state 2"
+T_1 / T_2 = (p_1 / p_2)^((k - 1) / k)  "isentropic relation for a perfect gas"
+
+"!Combustion at constant volume"
+
+V_3 = V_2                              "volume at state 3 [m^3]"
+m * c_v * (T_3 - T_2) = Q_dot_comb     "heat added [J]; name as in the original"
+p_3 * V_3 = m * R * T_3                "ideal-gas law at state 3"
+
+"!Expansion"
+
+V_4 = V_1                              "volume at state 4 [m^3]"
+p_4 * V_4 = m * R * T_4                "ideal-gas law at state 4"
+T_3 / T_4 = (p_3 / p_4)^((k - 1) / k)  "isentropic relation for a perfect gas"
+
+"!Specific compression and expansion work (adiabatic, no heat transfer)"
+
+w_cp = c_v * (T_2 - T_1)               "specific compression work [J/kg]"
+w_exp = c_v * (T_3 - T_4)              "specific expansion work [J/kg]"
+
+"!Cycle efficiency"
+
+eta_otto = m * (w_exp - w_cp) / Q_dot_comb   "thermal efficiency from the energy balance [-]"
+
+"!Check against the course formula (slide 10 of the original)"
+
+eta_th_otto = 1 - 1 / r_c^(k - 1)      "cold air-standard efficiency [-]"

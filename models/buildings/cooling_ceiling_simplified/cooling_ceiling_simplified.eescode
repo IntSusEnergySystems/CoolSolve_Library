@@ -1,0 +1,48 @@
+{=============================================================================
+  Simplified cooling ceiling (sizing and TXV control)
+  CoolSolve Library model CSL-0175
+ -----------------------------------------------------------------------------
+  Simplified model of a cooling ceiling. The nominal water capacity rate
+  and the nominal conductance are sized from the nominal cooling load and
+  the nominal temperatures. At the stored point the factor X_ceiling is
+  linear in the air-temperature offset and multiplies the heat rate, as
+  written in the original. Supply-water-temperature control is not included.
+
+  Inputs : Q_dot_cooling_n, nominal temperatures, t_a_in, t_a_in_set,
+           t_w_su_ceiling, n_ceiling, C_ceiling, F_ceiling_oversizing
+  Outputs: Q_dot_ceiling, AU_ceiling_n, C_dot_w_ceiling_n
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège model bank, J. Lebrun and S. Bertagnolio, 2008-03-17
+           - see README.md
+=============================================================================}
+
+"!Sizing inputs"
+Q_dot_cooling_n = -1000                "nominal cooling heat rate, as in the original [W]"
+t_w_su_ceiling_n = 15                  "nominal water supply temperature [°C]"
+t_w_ex_ceiling_n = 18                  "nominal water exit temperature [°C]"
+t_a_in_n = 24                          "nominal air temperature [°C]"
+F_ceiling_oversizing = 1               "oversizing factor, as in the original [-]"
+
+"!Sizing calculation"
+Q_dot_ceiling_n = F_ceiling_oversizing*Q_dot_cooling_n  "nominal ceiling heat rate [W]"
+C_dot_w_ceiling_n = Q_dot_ceiling_n/(t_w_su_ceiling_n-t_w_ex_ceiling_n)  "nominal water capacity rate [W/K]"
+epsilon_ceiling_n = Q_dot_ceiling_n/(C_dot_w_ceiling_n*(t_w_su_ceiling_n-t_a_in_n))  "nominal effectiveness [-]"
+NTU_ceiling_n = -ln(1-epsilon_ceiling_n)  "nominal number of transfer units [-]"
+AU_ceiling_n = NTU_ceiling_n*C_dot_w_ceiling_n  "nominal conductance [W/K]"
+
+"!Simulation inputs"
+t_a_in = 25                            "air temperature [°C]"
+t_a_in_set = 24                        "set-point air temperature [°C]"
+t_w_su_ceiling = 16                    "water supply temperature [°C]"
+C_dot_w_ceiling = C_dot_w_ceiling_n    "water capacity rate, equal to the nominal value [W/K]"
+
+"!Parameters"
+n_ceiling = 0.01                       "exponent, as in the original [-]"
+C_ceiling = 0.5                        "control gain, as in the original [1/K], 0.5 [C^-1] in the original"
+
+"!Simulation"
+Q_dot_ceiling = X_ceiling*epsilon_ceiling*C_dot_w_ceiling*(t_w_su_ceiling - t_a_in)  "ceiling heat rate [W]"
+X_ceiling = min(1,max(0,C_ceiling*(t_a_in-t_a_in_set)))  "factor linear in the air-temperature offset, clipped to 0 and 1, as in the original [-]"
+epsilon_ceiling = 1-exp(-NTU_ceiling)  "effectiveness, as in the original [-]"
+NTU_ceiling = AU_ceiling/C_dot_w_ceiling  "number of transfer units [-]"
+AU_ceiling = AU_ceiling_n*(0.9*(abs((t_w_su_ceiling-t_a_in)/(t_w_su_ceiling_n-t_a_in_n)))^n_ceiling+0.1)  "conductance scaled with the temperature difference, as in the original [W/K]"

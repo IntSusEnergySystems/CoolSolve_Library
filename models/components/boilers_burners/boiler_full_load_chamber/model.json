@@ -1,0 +1,58 @@
+{
+  "id": "CSL-0219",
+  "name": "boiler_full_load_chamber",
+  "title": "Full-load boiler with a combustion chamber and fictitious exchangers",
+  "summary": "Exercise of a fuel-oil boiler at full load: an adiabatic combustion chamber, a gas-water exchanger and a fictitious water-ambient exchanger, plus a stand-by blend and a third regime at one tenth of the useful heat.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "boiler_full_load_chamber.eescode",
+  "fluids": ["Air", "Water"],
+  "tags": [
+    "exercise",
+    "boiler",
+    "fuel oil",
+    "combustion",
+    "full load",
+    "eps-NTU",
+    "stand-by"
+  ],
+  "language_features": [
+    "procedures",
+    "CALL with several outputs",
+    "IF/THEN/ELSE (in cpbar)",
+    "property calls",
+    "min",
+    "max"
+  ],
+  "stats": {"n_equations": 80, "largest_block": 18},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 07/SB/MSTh-SB-R7-Ex4.EES",
+    "candidate_id": "TM-0114",
+    "authors": ["Stéphane Bertagnolio"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh, machines et systèmes thermiques, repetition R7 exercise 4"
+  },
+  "verification": {
+    "summary": "Stored solution of MSTh-SB-R7-Ex4.EES (EES X7.458). compare_solution.py: 76 common variables, 4 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 4. Useful heat 25753 W versus 25773 W; water outlets 90.229 °C, 89.947 °C and 69.799 °C versus 90.257 °C, 89.975 °C and 69.798 °C. Max relative difference 0.001402 on NTU_wenv_off, from cp(Water). All 80 equations are satisfied.",
+    "checks": ["ees-stored-solution", "energy-balance", "order-of-magnitude"],
+    "reference": "EES stored solution of MSTh-SB-R7-Ex4.EES (76 numeric values, EES X7.458)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 0.001402,
+    "notes": "Maximum relative difference is NTU_wenv_off (0.00403784 versus 0.00404351). The window has no enthalpy() call. cp(Air) is 1006.22 versus 1006.66 J/kg-K and cp(Water) differs by up to 3.3 J/kg-K; cp_p from the copied cpbar is 1278.04 versus 1277.07 J/kg-K. Q_dot_utile is 25753.0 W versus 25772.8 W. The four CoolSolve-only names are Q_4_cb, x_cb, e_min_cb and e_cb, unused outputs of the cpbar CALL."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

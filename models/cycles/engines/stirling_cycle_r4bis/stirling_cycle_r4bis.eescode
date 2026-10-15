@@ -1,0 +1,80 @@
+{=============================================================================
+  Ideal Stirling cycle with a regenerator (exercise)
+  CoolSolve Library model CSL-0201
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège MECA0002, session sheet R4bis). Theoretical
+  Stirling cycle on ideal-gas Air: isothermal compression and expansion,
+  isochoric heat exchange, volumetric compression ratio. An ideal regenerator
+  recovers the isochoric heat. Efficiencies with and without that regenerator
+  are compared with the Carnot efficiency between the cycle temperature limits.
+
+  Inputs : fluid$, R, r_v, p[1], T[1], T[3]
+  Outputs: w_net, q_c, q_couteux, eta_stirling, eta_stirling_regen, eta_carnot
+  Units  : SI - temperatures in K, pressures in Pa, energies in J
+           (property calls receive °C; the original subtracts 273)
+  Source : thermo_models R05_E03_2022.EES (R4bis) - see README.md
+=============================================================================}
+
+"Exercise 5. Theoretical Stirling cycle with an ideal regenerator. Minimum pressure and temperature 100 kPa and 25 °C, volumetric compression ratio 10, maximum temperature 1000 °C. Work and heat of each of the four processes, overall efficiency, comparison with the Carnot efficiency between the minimum and maximum temperatures, and the efficiency without the regenerator."
+
+"!Data"
+
+fluid$ = 'Air'                         "ideal-gas Air, the name in the equation window"
+R = 287                                "gas constant [J/kg-K]; 0.287 kJ/kg-K in the original"
+r_v = 10                               "volumetric compression ratio [-]"
+p[1] = 100e3                           "minimum cycle pressure [Pa]; 100 kPa in the original"
+T[1] = 298                             "minimum cycle temperature [K]; 25 °C written as 298 K"
+T[3] = 1273                            "maximum cycle temperature [K]; 1000 °C written as 1273 K"
+
+"!Solution"
+
+"!Isothermal compression 1-2: T constant; heat is removed from the fluid during the compression"
+v[1] = R*T[1]/p[1]                     "specific volume at 1 from the ideal-gas law [m^3/kg]"
+
+T[2] = T[1]                            "isothermal process [K]"
+v[2] = v[1]/r_v                        "specific volume at 2 from the volumetric ratio [m^3/kg]"
+p[2] = R*T[2]/v[2]                     "pressure at 2 from the ideal-gas law [Pa]"
+
+w_12 = R*T[1]*ln(r_v)                  "work required by the compression: -integral of p dv [J/kg]"
+w_12 + q_12 = cv12*(T[2]-T[1])         "first law, for the heat exchanged: q + w = delta u [J/kg]"
+cv12 = cv(fluid$,T=(T[1]+T[2])/2-273)  "cv of Air at the mean temperature of 1-2 [J/kg-K]; T[] is K, the call takes °C"
+
+"!Isochoric heating 2-3: v constant"
+"!This heat, equal to q_41 in absolute value, can be recovered with a regenerator"
+v[3] = v[2]                            "isochoric process [m^3/kg]"
+w_23 = 0                               "work is zero for an isochoric process: -integral of p dv = 0 [J/kg]"
+w_23 + q_23 = cv23*(T[3]-T[2])         "heat from the first law [J/kg]"
+p[3] = R*T[3]/v[3]                     "pressure at 3 from the ideal-gas law [Pa]"
+cv23 = cv(fluid$,T=(T[2]+T[3])/2-273)  "cv of Air at the mean temperature of 2-3 [J/kg-K]; T[] is K, the call takes °C"
+
+"!Isothermal expansion 3-4: T constant; heat is added to the fluid"
+T[4] = T[3]                            "isothermal process [K]"
+p[4] = R*T[4]/v[4]                     "specific volume at 4 is known below; pressure from the ideal-gas law [Pa]"
+w_34 = R*T[3]*ln(v[3]/v[4])            "work of the isothermal expansion: -integral of p dv [J/kg]"
+w_34 + q_34 = cv34*(T[4]-T[3])         "heat received during the expansion, from the first law [J/kg]"
+cv34 = cv(fluid$,T=(T[3]+T[4])/2-273)  "cv of Air at the mean temperature of 3-4 [J/kg-K]; T[] is K, the call takes °C"
+
+"!Isochoric cooling 4-1: v constant"
+v[4] = v[1]                            "specific volume at 4 [m^3/kg]"
+w_41 = 0                               "work is zero for an isochoric process [J/kg]"
+w_41 + q_41 = cv41*(T[1]-T[4])         "heat from the first law [J/kg]"
+cv41 = cv(fluid$,T=(T[1]+T[4])/2-273)  "cv of Air at the mean temperature of 4-1 [J/kg-K]; T[] is K, the call takes °C"
+
+"!Thermal efficiency"
+
+"!Without a regenerator both heats must be supplied: q_23 during the isochoric heating and q_34 during the isothermal expansion"
+eta_stirling = w_net/q_couteux         "efficiency without regenerator [-]"
+w_net = -(w_34+w_12)                   "net work, the useful effect [J/kg]"
+q_couteux = q_23+q_34                  "heat that must be supplied without a regenerator [J/kg]"
+"!With a regenerator only q_34 is supplied during the isothermal expansion. The isochoric heat q_23 is recovered from the isochoric cooling q_41"
+eta_stirling_regen = w_net/q_c         "efficiency with the ideal regenerator [-]"
+q_c = q_34                             "heat supplied with the regenerator [J/kg]"
+"!Carnot efficiency. The cold source is at T[1] and the hot source at T[3]"
+eta_carnot = 1-T[1]/T[3]               "Carnot efficiency between the cycle temperature limits [-]"
+
+"!With the regenerator the theoretical Stirling efficiency equals the Carnot efficiency. Without the regenerator it is about 55 percent of the Carnot efficiency."
+
+s[1] = entropy('Air',T=T[1]-273,p=p[1])  "specific entropy at 1 [J/kg-K]; T[] is K, p[] is Pa"
+s[2] = entropy('Air',T=T[2]-273,p=p[2])  "specific entropy at 2 [J/kg-K]"
+s[3] = entropy('Air',T=T[3]-273,p=p[3])  "specific entropy at 3 [J/kg-K]"
+s[4] = entropy('Air',T=T[4]-273,p=p[4])  "specific entropy at 4 [J/kg-K]"

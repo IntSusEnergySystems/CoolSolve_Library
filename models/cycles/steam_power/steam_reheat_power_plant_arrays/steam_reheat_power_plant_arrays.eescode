@@ -1,0 +1,118 @@
+{=============================================================================
+  Steam reheat power plant with T-s arrays (Cengel exercise 10-34b)
+  CoolSolve Library model CSL-0208
+ -----------------------------------------------------------------------------
+  Steady reheat Rankine cycle on water, the array form of exercise 10-34.
+  Saturated liquid is pumped, heated, expanded, reheated once and expanded
+  again. Both turbine stages share one isentropic efficiency. Saturation
+  states are included so T[i] and s[i] can trace the cycle. Net power is
+  imposed; efficiency and steam mass flow follow. No kinetic or potential
+  energy terms.
+
+  Inputs : W_dot_net, p_5, T_5, p_7, T_7, eta_tur, eta_pump, p_1
+  Outputs: eta_cycle, M_dot, specific works and heat input, states 1 to 9
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : KU Leuven file 10-34b.EES, Cengel exercise 10-34b; the file
+           itself names nobody. See README.md
+  Status : verified against the EES stored solution
+=============================================================================}
+
+"!Data"
+W_dot_net = 80e6          "net power output of the plant [W]"
+p_5 = 10E6                "high pressure, shared by states 2 to 5 [Pa]"
+T_5 = 500                 "high-pressure turbine inlet temperature [°C]"
+p_7 = 1E6                 "reheat pressure, low-pressure turbine inlet [Pa]"
+T_7 = 500                 "temperature after the single reheat [°C]"
+eta_tur = 0.8             "isentropic efficiency of both turbine stages [-]"
+eta_pump = 0.95           "isentropic efficiency of the pump [-]"
+p_1 = 10e3                "condenser pressure, pump inlet [Pa]"
+
+"!Point 1"
+x_1 = 0                                          "saturated liquid at the pump inlet [-]"
+h_1 = enthalpy(Water,x=x_1,p=p_1)               "pump inlet enthalpy [J/kg]"
+s_1 = entropy(Water,x=x_1,p=p_1)                "pump inlet entropy [J/kg-K]"
+T_1 = temperature(Water,x=x_1,p=p_1)            "pump inlet temperature [°C]"
+
+"!Point 2"
+p_2 = p_5                                        "pump discharge pressure, as in the original [Pa]"
+h_2s = enthalpy(Water,p=p_2,s=s_1)              "isentropic pump outlet enthalpy [J/kg]"
+eta_pump = (h_2s - h_1)/(h_2 - h_1)             "pump isentropic efficiency [-]; solves for h_2"
+s_2 = entropy(Water,h=h_2,p=p_2)                "pump outlet entropy [J/kg-K]"
+T_2 = temperature(Water,h=h_2,p=p_2)            "pump outlet temperature [°C]"
+
+"!Point 3"
+p_3 = p_5                                        "high pressure, as in the original [Pa]"
+x_3 = 0                                          "saturated liquid at the high pressure [-]"
+h_3 = enthalpy(Water,p=p_3,x=x_3)               "saturated-liquid enthalpy at the high pressure [J/kg]"
+s_3 = entropy(Water,p=p_3,x=x_3)                "saturated-liquid entropy at the high pressure [J/kg-K]"
+T_3 = temperature(Water,p=p_3,x=x_3)            "saturation temperature at the high pressure [°C]"
+
+"!Point 4"
+p_4 = p_5                                        "high pressure, as in the original [Pa]"
+x_4 = 1                                          "saturated vapour at the high pressure [-]"
+h_4 = enthalpy(Water,p=p_4,x=x_4)               "saturated-vapour enthalpy at the high pressure [J/kg]"
+s_4 = entropy(Water,p=p_4,x=x_4)                "saturated-vapour entropy at the high pressure [J/kg-K]"
+T_4 = T_3                                        "same saturation temperature as point 3 [°C]"
+
+"!Point 5"
+s_5 = entropy(Water,t=t_5,p=p_5)                "high-pressure turbine inlet entropy [J/kg-K]"
+h_5 = enthalpy(Water,t=t_5,p=p_5)               "high-pressure turbine inlet enthalpy [J/kg]"
+
+"!Point 6"
+p_6 = p_7                                        "high-pressure turbine exit pressure, as in the original [Pa]"
+h_6s = enthalpy(Water,p=p_6,s=s_5)              "isentropic high-pressure turbine exit enthalpy [J/kg]"
+eta_tur = (h_5 - h_6)/(h_5 - h_6s)              "turbine isentropic efficiency [-]; solves for h_6"
+s_6 = entropy(Water,h=h_6,p=p_6)                "high-pressure turbine exit entropy [J/kg-K]"
+T_6 = temperature(Water,h=h_6,p=p_6)            "high-pressure turbine exit temperature [°C]"
+
+"!Point 7"
+s_7 = entropy(Water,t=t_7,p=p_7)                "low-pressure turbine inlet entropy [J/kg-K]"
+h_7 = enthalpy(Water,t=t_7,p=p_7)               "low-pressure turbine inlet enthalpy [J/kg]"
+
+"!Point 8"
+p_8 = p_1                                        "low-pressure turbine exit pressure, as in the original [Pa]"
+h_8s = enthalpy(Water,p=p_8,s=s_7)              "isentropic low-pressure turbine exit enthalpy [J/kg]"
+eta_tur = (h_7 - h_8)/(h_7 - h_8s)              "same turbine efficiency [-]; solves for h_8"
+s_8 = entropy(Water,h=h_8,p=p_8)                "low-pressure turbine exit entropy [J/kg-K]"
+T_8 = temperature(Water,h=h_8,p=p_8)            "low-pressure turbine exit temperature [°C]"
+x_8 = quality(Water,h=h_8,p=p_8)                "exit quality as returned by quality() [-]"
+
+"!Point 9"
+x_9 = 1                                          "saturated vapour at the condenser pressure [-]"
+p_9 = p_1                                        "condenser pressure, as in the original [Pa]"
+s_9 = entropy(Water,x=x_9,p=p_9)                "saturated-vapour entropy at the condenser pressure [J/kg-K]"
+h_9 = enthalpy(Water,x=x_9,p=p_9)               "saturated-vapour enthalpy at the condenser pressure [J/kg]"
+T_9 = temperature(Water,x=x_9,p=p_9)            "saturation temperature at the condenser pressure [°C]"
+
+"!Efficiency"
+w_hp = h_5 - h_6                                "high-pressure turbine specific work [J/kg]"
+w_lp = h_7 - h_8                                "low-pressure turbine specific work [J/kg]"
+w_pump = h_2 - h_1                              "pump specific work [J/kg]"
+w_net = w_hp + w_lp - w_pump                    "net specific work [J/kg]"
+q_in = (h_5 - h_2) + (h_7 - h_6)                "specific heat input [J/kg]"
+eta_cycle = w_net/q_in                          "thermal efficiency [-]"
+
+"!Steam flow rate"
+W_dot_net = M_dot * w_net                       "steam mass flow from the imposed net power [kg/s]"
+
+"!T-s diagram arrays"
+T[1] = T_1
+s[1] = s_1
+T[2] = T_2
+s[2] = s_2
+T[3] = T_3
+s[3] = s_3
+T[4] = T_4
+s[4] = s_4
+T[5] = T_5
+s[5] = s_5
+T[6] = T_6
+s[6] = s_6
+T[7] = T_7
+s[7] = s_7
+T[8] = T_8
+s[8] = s_8
+T[9] = T_9
+s[9] = s_9
+T[10] = T_1                                     "closes the T-s loop on point 1 [°C]"
+s[10] = s_1                                     "closes the T-s loop on point 1 [J/kg-K]"

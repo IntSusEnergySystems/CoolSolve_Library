@@ -1,0 +1,60 @@
+{=============================================================================
+  Steam nozzle exercise
+  CoolSolve Library model CSL-0190
+ -----------------------------------------------------------------------------
+  Steady flow of steam through a nozzle. The equation window sets the inlet
+  at 17 bar and 370 °C, area 0.018 m², mass flow 4.53 kg/s. The steam leaves
+  at 13.8 bar and 274 m/s. The specific heat loss is 1.27 kJ/kg. Shaft work
+  is zero. Inlet velocity from the inlet volume flow; exit temperature from
+  the steady-flow energy balance. ULiège MECA0002, repetition R3, exercise 1
+  (2022-2023).
+
+  Inputs : A_in, q_m_in, q_dot_loss, p_in, p_out, T_in, c_out, z_in, z_out, g
+  Outputs: c_in, T_out
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. Quoilin, ULiège MECA0002, 2022-2023 - see README.md
+=============================================================================}
+
+"!Problem data"
+"Exercise. Steam enters a nozzle in steady state at 17 bar and 370 °C. Find the inlet velocity and the exit temperature (as in the original)."
+A_in = 0.018                                 "inlet cross-section [m^2]; 0,018 in the original"
+q_m_in = 4.53                                "mass flow rate [kg/s]; 4,53 in the original"
+q_dot_loss = -1270                           "specific heat loss [J/kg]; -1,27 kJ/kg in the original, negative because the heat is lost"
+p_in = 17e5                                  "inlet pressure [Pa]; 17e2 kPa (17 bar) in the original"
+p_out = 13.8e5                               "exit pressure [Pa]; 13,8e2 kPa (13.8 bar) in the original"
+T_in = 370                                   "inlet temperature [°C]; the original unit system is kelvin, so the equation window stores 370 [K]+273,15 [K]"
+c_out = 274                                  "exit velocity [m/s]; given, as in the original"
+z_in = 0                                     "inlet elevation [m]; no potential-energy data, variation neglected"
+z_out = 0                                    "exit elevation [m]"
+g = 9.1                                      "gravitational acceleration [m/s^2]; 9,1 as in the original"
+
+"!Inlet velocity"
+v_in = volume(Water, T=T_in, P=p_in)         "inlet specific volume of steam [m^3/kg]"
+V_dot_in = v_in*q_m_in                       "inlet volume flow rate [m^3/s]"
+c_in = V_dot_in/A_in                         "inlet velocity [m/s]"
+
+"!Steady-flow energy balance"
+"First law for an open system in steady state. Mass conservation is a comment in the original: q_m_out = q_m_in. Q_dot + W_dot = q_m_in*(Deltah + DeltaEC + DeltaEP)."
+Q_dot + W_dot = q_m_in*(Deltah + DeltaEC + DeltaEP)  "energy balance [W]"
+W_dot = 0                                    "shaft power [W]; no work, as in the original"
+Q_dot = q_m_in*q_dot_loss                    "heat transfer rate [W]"
+
+"!Specific enthalpy change"
+Deltah = h_out - h_in                        "specific enthalpy change [J/kg]"
+h_in = enthalpy(Water, T=T_in, P=p_in)       "inlet specific enthalpy of steam [J/kg]"
+T_out = temperature(Water, h=h_out, P=p_out) "exit temperature [°C]"
+
+"!Kinetic and potential energy"
+DeltaEC = 0.5*(c_out^2 - c_in^2)             "change in specific kinetic energy [J/kg]; the original multiplied by 0,001 to report kJ/kg"
+DeltaEP = g*(z_out - z_in)                   "change in specific potential energy [J/kg]; the original multiplied by 0,001 to report kJ/kg"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: nozzle inlet. 2: nozzle exit.}
+P[1] = p_in                                  "inlet pressure [Pa]"
+h[1] = h_in                                  "inlet specific enthalpy [J/kg]"
+T[1] = T_in                                  "inlet temperature [°C]"
+s[1] = entropy(Water, T=T_in, P=p_in)        "inlet specific entropy [J/kg-K]"
+P[2] = p_out                                 "exit pressure [Pa]"
+h[2] = h_out                                 "exit specific enthalpy [J/kg]"
+T[2] = T_out                                 "exit temperature [°C]"
+s[2] = entropy(Water, h=h_out, P=p_out)      "exit specific entropy [J/kg-K]"

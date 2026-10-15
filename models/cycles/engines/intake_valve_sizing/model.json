@@ -1,0 +1,69 @@
+{
+  "id": "CSL-0178",
+  "name": "intake_valve_sizing",
+  "title": "Intake valve sizing for a square engine (TP5 exercise 1)",
+  "summary": "Teaching exercise: size the intake valves of a square four-cylinder engine. The bore follows from the displacement, the mean piston speed from the stroke and the engine speed, and the speed of sound is evaluated in the intake air. The total intake area is the lecture rule 1.3*D^2*(C_m/C_i), shared by two valves.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "intake_valve_sizing.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "exercise",
+    "intake valve",
+    "square engine",
+    "internal combustion engine",
+    "ideal gas",
+    "mean piston speed",
+    "speed of sound"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 18,
+    "largest_block": 2
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP5/Ex_1_Dimensionnement de soupapes_PNG.EES",
+    "candidate_id": "TM-0241",
+    "authors": [
+      "TBD (ULiège MCI)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.409",
+    "language": "fr",
+    "course": "ULiège MCI, TP5, exercise 1 (intake valve sizing). The area rule cites course 4, 2015-2016, slide 33."
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of Ex_1_Dimensionnement de soupapes_PNG.EES (15 variables). compare_solution.py: 15 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 4. Largest relative difference 9.78e-04 on gamma (CoolProp vs EES cp/cv of Air at 60 °C); C_i and Ratio follow it. A_eff_in, d_v and h_max were not stored; pi is written in the .sol.",
+    "checks": [
+      "ees-stored-solution",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of Ex_1_Dimensionnement de soupapes_PNG.EES (15 variables decoded by ees_extract.py)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@96e4c95",
+    "max_rel_diff": 9.78e-04,
+    "notes": "No common variable exceeds rtol 0.001. gamma differs because cp/cv of ideal-gas Air at 60 °C is not the same in CoolProp and in EES; C_i = sqrt(gamma*r_a*(T_a+273.15)) and Ratio, proportional to C_m/C_i, carry that difference (4.89e-04 as printed by compare_solution.py). C_i_bis is SOUNDSPEED(Air, T=60 °C, P=101325 Pa) against the stored SOUNDSPEED(Air, T=60 °C); changing that pressure from 101325 Pa to 1e5 Pa moves the CoolProp value by about 5e-6 relative, so the 4.26e-04 gap is the property backend. r_a differs by 3.45e-07 (molar mass of Air). D, L, N, Rpm, V_s, nc, ns, R_u and T_a agree exactly. The four CoolSolve-only names are A_eff_in, d_v, h_max (not in the stored list) and pi."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0185"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

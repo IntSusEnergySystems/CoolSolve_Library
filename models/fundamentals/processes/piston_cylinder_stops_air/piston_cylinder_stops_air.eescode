@@ -1,0 +1,53 @@
+{=============================================================================
+  Air cooled in a vertical piston-cylinder with stops
+  CoolSolve Library model CSL-0214
+ -----------------------------------------------------------------------------
+  A frictionless piston with stops closes a vertical cylinder of air. Cooling
+  at constant pressure brings the piston to the stops; further cooling is at
+  constant volume. The model gives the air temperature at the stops and the
+  pressure after cooling to the final temperature, plus the same two results
+  from the ideal-gas law. Teaching exercise, ULiège MECA0002, thermodynamique
+  appliquée, repetition 2 (2022-2023).
+
+  Inputs : A_p, T_0, p_0, h_0, T_2
+  Outputs: T_1, p_2, T_1_gp, p_2_gp
+  Units  : SI - temperatures in K, pressures in Pa, energies in J
+           (property calls receive °C)
+  Source : ULiège MECA0002, R2_E4_2022.EES; the file names no author - see README.md
+=============================================================================}
+
+"!Problem"
+"A vertical cylinder closed by a frictionless piston fitted with stops contains air. The piston area is 0.2 m^2. The air is initially at 200 kPa and 500 C. It is then cooled by heat transfer to the surroundings, as in the original."
+"a. What is the temperature of the air in the cylinder when the piston reaches the stops, as in the original."
+"b. If cooling continues until the temperature reaches 20 C, what is the pressure inside the cylinder in that final state, as in the original."
+
+"!Data"
+A_p = 0.2 [m^2]                                          "piston area [m^2]"
+T_0 = 500 [K]+273.15 [K]                                 "initial temperature [K]; 500 C written as 500 K + 273.15 K, as stored"
+p_0 = 200e3 [Pa]                                         "initial pressure [Pa], 200 kPa in the original"
+h_0 = 2 [m]                                              "initial piston height [m]"
+T_2 = 20 [K]+273.15 [K]                                  "final temperature [K]; 20 C written as 20 K + 273.15 K, as stored"
+
+"!Temperature when the piston reaches the stops"
+"Constant pressure and fixed mass, as in the original."
+Vol_0 = A_p*h_0                                          "initial volume [m^3]"
+v_air = volume(Air, T=T_0-273.15, P=p_0)                "initial specific volume [m^3/kg]; the call takes °C and T_0 is in K"
+m_air = Vol_0/v_air                                      "mass of air [kg]"
+
+h_1 = h_0/2                                              "piston height at the stops [m], half the initial height, as written"
+Vol_1 = A_p*h_1                                          "volume at the stops [m^3]"
+v_1 = Vol_1/m_air                                        "specific volume at the stops [m^3/kg]"
+T_1 = temperature(Air, P=p_0, V=v_1)+273.15              "temperature at the stops [K]; temperature() returns °C"
+
+"!Further cooling at constant volume"
+"Volume and mass are unchanged, so the specific volume is unchanged, as in the original."
+p_2 = pressure(Air, T=T_2-273.15, V=v_1)                "pressure after cooling to T_2 [Pa]; the call takes °C and T_2 is in K"
+
+"!Ideal-gas check"
+"Isobaric process: the ratio T/V is unchanged. Use kelvin in the ideal-gas law, as in the original."
+iso_p = (T_0)/Vol_0                                      "T/V along the isobar [K/m^3]"
+T_1_gp = iso_p*Vol_1                                     "temperature at the stops from the ideal-gas law [K]"
+
+"Isochoric process: the ratio T/P is unchanged, as in the original."
+iso_v = (T_1_gp)/p_0                                     "T/P along the isochore [K/Pa]; p_0 is in Pa (kPa in the original)"
+p_2_gp = (T_2)/iso_v                                     "pressure after cooling from the ideal-gas law [Pa]"

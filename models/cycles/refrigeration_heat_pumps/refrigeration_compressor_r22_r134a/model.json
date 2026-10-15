@@ -1,0 +1,53 @@
+{
+  "id": "CSL-0216",
+  "name": "refrigeration_compressor_r22_r134a",
+  "title": "Refrigeration compressor with fixed losses, R22 and R134a (exercise)",
+  "summary": "Teaching exercise: one reciprocating compressor (3400 W constant loss, loss factor 0.30, 0.040 m³/s swept flow, 6 % clearance) at 0 °C evaporation and 40 °C condensation, with 8 K superheat and 5 K subcooling. The equation window evaluates R22 and R134a side by side and returns the cooling capacity, the power and the COP.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "refrigeration_compressor_r22_r134a.eescode",
+  "fluids": ["R22", "R134a"],
+  "tags": [
+    "refrigeration",
+    "reciprocating compressor",
+    "volumetric efficiency",
+    "clearance volume",
+    "exercise"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "array variables"
+  ],
+  "stats": {"n_equations": 86, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 01/MSTH_EX1_VL050919/VL050919_1-3-1.EES",
+    "candidate_id": "TM-0012",
+    "authors": ["Vincent Lemort"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.403",
+    "language": "fr",
+    "course": "Machines et systèmes thermiques (ULiège), répétition 1, exercice 3"
+  },
+  "verification": {
+    "summary": "compare_solution.py without --ees-units, against the solution stored in VL050919_1-3-1.EES: 52 common variables, 5 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 34. Maximum relative difference 5.95e-01 on h_su_ev_2 (same on h_ex_cd_2), the R134a enthalpy reference. COP, cooling capacity and power of both fluids are within rtol.",
+    "checks": ["ees-stored-solution"],
+    "reference": "Solution stored in VL050919_1-3-1.EES (52 variables, EES X7.403)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@62d92f0",
+    "max_rel_diff": 0.595,
+    "notes": "The tool prints the maximum as 5.95e-01, on h_su_ev_2 and on h_ex_cd_2 (identical: isenthalpic expansion). The five variables above rtol are h_su_2, h_ex_2_s, h_ex_cd_2, h_su_ev_2 and s_su_2. Saturated liquid R134a at -40 °C in this binary is h = 148144.046 J/kg and s = 795.610 J/kg·K (EES h = s = 0). At the three stored R134a enthalpies the CoolSolve−EES difference is 148127.54 to 148129.24 J/kg; s_su_2 differs by 795.545 J/kg·K. That offset cancels in Q_dot_ev_2, W_dot_2 and COP_2 (relative differences 6.70e-06, 5.43e-06 and 1.28e-06). R22 has no such constant offset: h_su_1, h_ex_1_s and h_ex_cd_1 differ by +17.64, +41.50 and −144.64 J/kg, and s_su_1 by +0.067 J/kg·K. The residuals that remain on Q_dot_ev_1 (5.62e-04), W_dot_1 (3.67e-04) and COP_1 (1.96e-04) are property differences. Largest relative difference that is not an R134a absolute enthalpy or entropy: w_s_1 at 8.16e-04, under rtol. The 34 CoolSolve-only names are the diagram arrays and the string variables fluid$ and fluid2$. Stored EES units are already SI (Pa, °C, J, W, m^3/s); nothing was rescaled. Solver: SUCCESS (0 iterations) with the .initials file and without it. CoolSolve prints a Fahrenheit hint for T = 35; T_ex_cd stays 35 °C."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

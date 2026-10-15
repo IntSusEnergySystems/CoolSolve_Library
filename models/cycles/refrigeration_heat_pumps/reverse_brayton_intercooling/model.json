@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0212",
+  "name": "reverse_brayton_intercooling",
+  "title": "Reverse Brayton air refrigeration cycle with intercooling (exercise 3)",
+  "summary": "Teaching exercise of an open reverse Brayton air cycle that cools air from 25 °C to 15 °C. Two compression stages, each followed by cooling back to the inlet temperature; the expander drives the second compressor. The result is the COP.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "reverse_brayton_intercooling.eescode",
+  "fluids": ["Air"],
+  "tags": ["exercise", "reverse Brayton", "air refrigeration", "intercooling", "ideal gas"],
+  "language_features": ["arrays", "property functions", "string variables"],
+  "stats": {"n_equations": 46, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R8/old/THD10_R9_E3.EES",
+    "candidate_id": "TM-0447",
+    "authors": ["S. Quoilin"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.423",
+    "language": "fr",
+    "course": "ULiège, thermodynamique appliquée, MECA0002, THD10 repetition 9, exercise 3 (2010/2017)"
+  },
+  "verification": {
+    "summary": "Against the stored solution of THD10_R9_E3.EES with compare_solution.py --ees-units: 45 common variables, 21 differ (rtol=0.001); only in EES: 4; only in CoolSolve: 1. COP is 1.46677 versus 1.47004. Differences above rtol are the ideal-gas Air enthalpy and entropy reference offsets and the cp(T) residual on q_ut, the works and the COP.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in THD10_R9_E3.EES (49 variables, EES X8.423), compared with compare_solution.py --ees-units",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@62d92f0",
+    "max_rel_diff": 3.21e-01,
+    "notes": "The maximum relative difference printed by compare_solution.py --ees-units is 3.21e-01 on s[5] (unrounded 0.320885). CoolSolve - EES enthalpy is +125843 to +125889 J/kg (about +126 kJ/kg). CoolSolve - EES entropy is -1814.89 to -1815.07 J/kg-K. q_ut, w_c2 and w_t differ by +17.597 J/kg (rel 1.75e-03) and w_c1 by +24.529 J/kg (rel 3.97e-03) because that offset changes with temperature; COP is 1.46677 versus 1.47004 (rel 2.23e-03). Pressures agree within rtol (p[4] rel 3.06e-04). Only in EES: P, p_2, h_1, h_2, absent from the equation window. Only in CoolSolve: fluid$, written as 0 in the .sol. 10 iterations with .initials, 16 without; same root. Blank or '-' unit strings (COP, efficiencies, gamma, pressure ratios) were not scaled."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

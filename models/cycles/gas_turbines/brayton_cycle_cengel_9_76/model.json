@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0204",
+  "name": "brayton_cycle_cengel_9_76",
+  "title": "Brayton cycle with 70 MW net power, pressure ratio 12 (Cengel exercise 9-76)",
+  "summary": "Cold air-standard Brayton cycle on ideal-gas Air (Cengel exercise 9-76). Specific heats are evaluated once at state 1. The model returns the isentropic and actual compression and expansion, the heat input, the efficiency and the mass flow for 70 MW net power.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "brayton_cycle_cengel_9_76.eescode",
+  "fluids": ["Air"],
+  "tags": ["exercise", "Brayton cycle", "gas turbine", "air standard", "ideal gas", "constant specific heat"],
+  "language_features": ["property functions"],
+  "stats": {"n_equations": 25, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/09-76b.EES",
+    "candidate_id": "TM-0347",
+    "authors": ["S. Quoilin"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.920",
+    "language": "en",
+    "course": "KU Leuven"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of 09-76b.EES (25 values; no --ees-units; Pa, J and K kept). compare_solution.py: 25 common variables, 14 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum relative difference 8.28e-03 on w_net and m_dot, from CoolProp cp(Air) at 26.85 °C (1006.37 vs EES 1004.71 J/kg-K). Enthalpy is not called, so no Air enthalpy offset.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution of thermo_kuleuven/exercices/09-76b.EES (25 values, EES X9.920)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@6730bcf",
+    "max_rel_diff": 8.28e-3,
+    "notes": "compare_solution.py without --ees-units. 25 common variables, 14 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Printed maximum 8.28e-03 on w_net and on m_dot. Above rtol 0.001, all from CoolProp cp(Air) at 26.85 °C (1006.374 vs EES 1004.706, 1.66e-03); c_v is 4.11e-04: k 1.25e-03, T_2s and T_4s 2.21e-03, T_2 2.39e-03, T_4 1.63e-03, q_comb 3.10e-03, w_exp and w_exp_s 3.79e-03, eta 5.20e-03, w_cp and w_cp_s 5.99e-03, w_net and m_dot 8.28e-03. W_dot_net is the input 70e6 W (0.00e+00). Solved temperatures stay in K (T_1 = 300, T_3 = 1000, T_2 = 666.457, T_4 = 567.015). No enthalpy call, so no Air enthalpy offset. 18 iterations with the stored-solution initials; 81 without them, same solution. Square system, so no Diagram-window value was restored."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

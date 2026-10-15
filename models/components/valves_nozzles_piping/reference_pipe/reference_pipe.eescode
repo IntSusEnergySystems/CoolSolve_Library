@@ -1,0 +1,81 @@
+{=============================================================================
+  Reference pipe model
+  CoolSolve Library model CSL-0196
+ -----------------------------------------------------------------------------
+  A water pipe assembled from two elementary models, as in the original:
+  an adiabatic pressure drop (01) and an isobaric heat gain (02). The
+  friction factor is the Colebrook equation. The heat gain is an
+  epsilon-NTU balance with fixed internal and external coefficients.
+
+  Inputs : M_dot_pipe, p_su_pipe, t_su_pipe, t_env_pipe, L_pipe,
+           D_in_pipe, epsilon_pipe, e_pipe, e_insulation_pipe,
+           k_insulation_pipe
+  Outputs: p_ex_pipe, t_ex_pipe, Q_dot_pipe
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Laboratory reference model JL080103 - see README.md
+=============================================================================}
+
+"!Inputs (control-panel values, restored from the stored solution)"
+M_dot_pipe = 1                         "mass flow rate [kg/s]"
+p_su_pipe = 200000                     "supply pressure [Pa]"
+t_su_pipe = 6                          "supply temperature [°C]"
+t_env_pipe = 30                        "environment temperature [°C]"
+
+"!Parameters (control-panel values, restored from the stored solution)"
+L_pipe = 50                            "pipe length [m]"
+D_in_pipe = 0.035                      "internal diameter [m]"
+epsilon_pipe = 0.0001                  "absolute roughness [m]"
+e_pipe = 0.005                         "pipe wall thickness [m]"
+e_insulation_pipe = 0.02               "insulation thickness [m]"
+k_insulation_pipe = 0.035              "insulation thermal conductivity [W/(m*K)]"
+
+"!Outputs, as in the original"
+p_ex_pipe = p_ex_pipe_01               "exit pressure, from the pressure-drop model [Pa]"
+t_ex_pipe = t_ex_pipe_02               "exit temperature, from the heat-gain model [°C]"
+Q_dot_pipe = Q_dot_pipe_02             "heat gain, from the heat-gain model [W]"
+
+"!01. Continuous pressure drop along an adiabatic pipe"
+M_dot_pipe_01 = M_dot_pipe             "mass flow rate [kg/s]"
+p_su_pipe_01 = p_su_pipe               "supply pressure [Pa]"
+t_su_pipe_01 = t_su_pipe               "supply temperature [°C]"
+L_pipe_01 = L_pipe                     "pipe length [m]"
+A_pipe_01 = pi*D_in_pipe^2/4           "internal cross-section [m^2]"
+D_hydr_pipe_01 = D_in_pipe             "hydraulic diameter [m]"
+epsilon_pipe_01 = epsilon_pipe         "absolute roughness [m]"
+DELTAp_pipe_01 = lambda_pipe_01*(L_pipe_01/D_hydr_pipe_01)*C_pipe_01^2/(2*v_pipe_01)  "pressure drop, as in the original [Pa]"
+1/sqrt(lambda_pipe_01) = -2*log10((epsilon_pipe_01/D_hydr_pipe_01)/3.71+2.51/(Re_pipe_01*sqrt(lambda_pipe_01)))  "friction factor, as in the original [-]"
+Re_pipe_01 = abs(C_pipe_01)*D_hydr_pipe_01/nu_pipe_01  "Reynolds number, as in the original [-]"
+DELTAp_pipe_01 = p_su_pipe_01-p_ex_pipe_01  "pressure drop [Pa]"
+nu_pipe_01 = mu_pipe_01*v_pipe_01      "kinematic viscosity [m^2/s]"
+mu_pipe_01 = Viscosity(Water,T=T_su_pipe_01,P=P_su_pipe_01)  "dynamic viscosity at the inlet [Pa*s]"
+v_pipe_01 = Volume(Water,T=T_su_pipe_01,P=P_su_pipe_01)  "specific volume at the inlet [m^3/kg]"
+C_pipe_01 = V_dot_pipe_01/A_pipe_01    "mean velocity [m/s]"
+V_dot_pipe_01 = M_dot_pipe_01*v_pipe_01  "volume flow rate [m^3/s]"
+h_ex_pipe_01 = h_su_pipe_01            "adiabatic pipe, as in the original [J/kg]"
+h_su_pipe_01 = Enthalpy(Water,T=T_su_pipe_01,P=P_su_pipe_01)  "inlet specific enthalpy [J/kg]"
+t_ex_pipe_01 = Temperature(Water,h=h_ex_pipe_01,P=P_ex_pipe_01)  "exit temperature of the adiabatic pipe [°C]"
+
+"!02. Heat gain along an isobaric pipe"
+M_dot_pipe_02 = M_dot_pipe_01          "mass flow rate [kg/s]"
+p_pipe_02 = p_ex_pipe_01               "pressure, taken from the pressure-drop exit [Pa]"
+t_su_pipe_02 = t_ex_pipe_01            "inlet temperature, taken from the pressure-drop exit [°C]"
+t_env_pipe_02 = t_env_pipe             "environment temperature [°C]"
+L_pipe_02 = L_pipe_01                  "pipe length [m]"
+D_in_pipe_02 = D_in_pipe               "internal diameter [m]"
+e_pipe_02 = e_pipe                     "pipe wall thickness [m]"
+e_insulation_pipe_02 = e_insulation_pipe  "insulation thickness [m]"
+k_insulation_pipe_02 = k_insulation_pipe  "insulation thermal conductivity [W/(m*K)]"
+Q_dot_pipe_02 = epsilon_pipe_02*C_dot_pipe_02*(t_env_pipe_02-t_su_pipe_02)  "heat gain from the effectiveness, as in the original [W]"
+epsilon_pipe_02 = 1-exp(-NTU_pipe_02)  "effectiveness [-]"
+NTU_pipe_02 = AU_pipe_02/C_dot_pipe_02 "number of transfer units [-]"
+1/AU_pipe_02 = 1/(A_in_pipe_02*h_in_pipe_02)+e_insulation_pipe_02/(A_insulation_pipe_02*k_insulation_pipe_02)+1/(A_insulation_pipe_02*h_out_pipe_02)  "overall resistance, as in the original [K/W]"
+A_in_pipe_02 = Perimeter_in_pipe_02*L_pipe_02  "internal surface area [m^2]"
+Perimeter_in_pipe_02 = pi*D_in_pipe_02 "internal perimeter [m]"
+h_in_pipe_02 = 1000                    "internal convection coefficient [W/(m^2*K)]; the original says it might be calculated from the water speed"
+A_insulation_pipe_02 = Perimeter_insulation_pipe_02*L_pipe_02  "outer surface area of the insulation [m^2]"
+Perimeter_insulation_pipe_02 = pi*D_insulation_pipe_02  "outer perimeter of the insulation [m]"
+D_insulation_pipe_02 = D_in_pipe_02+2*(e_pipe_02+e_insulation_pipe_02)  "outer diameter of the insulation [m]"
+h_out_pipe_02 = 10                     "external coefficient [W/(m^2*K)]; the original says it might also be calculated, combining convection and radiation"
+C_dot_pipe_02 = M_dot_pipe_02*c_p_pipe_02  "capacity rate [W/K]"
+c_p_pipe_02 = Cp(Water,T=T_su_pipe_02,P=P_pipe_02)  "specific heat at the heat-gain inlet [J/(kg*K)]"
+Q_dot_pipe_02 = C_dot_pipe_02*(t_ex_pipe_02-t_su_pipe_02)  "heat gain from the temperature rise, as in the original [W]"

@@ -1,0 +1,55 @@
+{=============================================================================
+  Mixing chamber: reversible power and exergy destruction
+  CoolSolve Library model CSL-0193
+ -----------------------------------------------------------------------------
+  Liquid water and steam mix at constant pressure. Steady mass and energy
+  balances give the steam flow; an exergy balance gives the reversible power
+  an ideal engine would deliver in bringing the inlet streams to the outlet
+  state, and the exergy destruction of mixing them directly. Kinetic and
+  potential energy changes are neglected. The dead state is Air_ha at the
+  ambient temperature and 100 kPa, as in the original.
+
+  Inputs : m_dot_1, p, T_1, T_2, T_3, T_0, Q_dot_loss
+  Outputs: m_dot_2, m_dot_3, W_dot_rev_out, X_destroyed_real
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiege MECA0002 R10 exercise 4 (2022-2023); the file names no author - see README.md
+=============================================================================}
+
+"!Problem data"
+"Water at 138 kPa and 10 C enters a mixing chamber at 2.27 kg/s and is mixed with steam at 138 kPa and 115 C. The mixture leaves at 138 kPa and 55 C. Heat losses to the surroundings at 21 C are 3.16 kW. Neglecting kinetic and potential energy, find the reversible power of an ideal engine that would bring the inlet streams to the outlet state, and the exergy destruction rate of the mixing."
+m_dot_1 = 2.27 [kg/s]  "liquid-water inlet mass flow [kg/s]"
+Q_dot_loss = 3.16E3 [W]  "heat loss to the surroundings [W] (3.16 kW in the original)"
+p = 138E3 [Pa]  "pressure of each stream [Pa] (138 kPa in the original)"
+T_1 = 10 [C]  "liquid-water inlet temperature [C]; the original, in kelvin, wrote 10[K]+273.15[K]"
+T_2 = 115 [C]  "steam inlet temperature [C]; the original wrote 115[K]+273.15[K]"
+T_3 = 55 [C]  "mixture outlet temperature [C]; the original wrote 55[K]+273.15[K]"
+T_0 = 21 [C]  "ambient temperature [C]; the original wrote 21[K]+273.15[K]"
+
+"!Mass balance"
+m_dot_1 + m_dot_2 = m_dot_3  "steady mixing chamber [kg/s]"
+
+"!Energy balance"
+m_dot_1*h_1 + m_dot_2*h_2 = m_dot_3*h_3 + Q_dot_loss  "steady flow; kinetic and potential energy neglected [W]"
+h_1 = enthalpy(Water,P=p,T=T_1)  "liquid-water inlet enthalpy [J/kg]"
+s_1 = entropy(Water,P=p,T=T_1)  "liquid-water inlet entropy [J/kg-K]"
+h_2 = enthalpy(Water,P=p,T=T_2)  "steam inlet enthalpy [J/kg]"
+s_2 = entropy(Water,P=p,T=T_2)  "steam inlet entropy [J/kg-K]"
+h_2bis = enthalpy(Steam,P=p,T=T_2)  "same steam state with fluid Steam; the original says Steam is water vapour [J/kg]"
+h_3 = enthalpy(Water,P=p,T=T_3)  "outlet enthalpy [J/kg]"
+s_3 = entropy(Water,P=p,T=T_3)  "outlet entropy [J/kg-K]"
+h_3_bis = enthalpy(Water,P=p,T=T_3)  "second outlet enthalpy, as in the original, with the same Steam remark although this call uses Water [J/kg]"
+
+"!Exergy balance, rate form"
+"As in the original comments: X_dot_in - X_dot_out - X_destroyed = dX_system/dt. A reversible machine has X_destroyed = 0 and steady state has dX_system/dt = 0, so X_dot_in = X_dot_out."
+m_dot_1*psi_1 + m_dot_2*psi_2 = m_dot_3*psi_3 + W_dot_rev_out + X_dot_heat_loss  "exergy balance [W]"
+T_0_K = T_0 + 273.15 [K]  "absolute ambient temperature used in the exergy terms [K]; T_0 was already in kelvin in the original"
+psi_1 = (h_1 - h_0) - T_0_K*(s_1 - s_0)  "specific flow exergy of the liquid inlet [J/kg]"
+psi_2 = (h_2 - h_0) - T_0_K*(s_2 - s_0)  "specific flow exergy of the steam inlet [J/kg]"
+psi_3 = (h_3 - h_0) - T_0_K*(s_3 - s_0)  "specific flow exergy of the outlet [J/kg]"
+h_0 = enthalpy(Air_ha,T=T_0,P=100E3)  "dead-state enthalpy at T_0 and 1 bar, about atmospheric, fluid Air_ha as in the original [J/kg] (100 kPa)"
+s_0 = entropy(Air_ha,T=T_0,P=100E3)  "dead-state entropy [J/kg-K]"
+"The original notes that h_0 and s_0 cancel in the balance because mass is conserved, so the same power follows from phi = h - T*s. Those phi lines are comments in the source and are not equations here."
+X_dot_heat_loss = 0 [W]  "the heat loss is at the ambient temperature T_0, so it carries no exergy [W]"
+"W_dot_rev_out is the maximum power an engine would deliver if the inlet streams were brought to the outlet state, rather than mixed directly. That potential is destroyed, so W_dot_rev_out equals X_destroyed_real."
+W_dot_rev_out = X_destroyed_real  "reversible power equals the exergy destruction of the real mixing [W]"
+X_destroyed_real = T_0_K*S_dot_gen  "as in the original; the original comment calls S_dot_gen the exergy destruction rate of the process [W]"

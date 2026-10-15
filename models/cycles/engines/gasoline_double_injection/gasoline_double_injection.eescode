@@ -1,0 +1,51 @@
+{=============================================================================
+  Double gasoline injection
+  CoolSolve Library model CSL-0206
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège MCI, TP5, exercise 3). Two injections of gasoline
+  per cylinder and per cycle of a four-stroke engine. The start and end of
+  each injection fix the durations. The intake air flow follows from the
+  volumetric efficiency at the stated standard conditions, and the fuel flow
+  follows from the fuel-air ratio. The first injection is one quarter of the
+  fuel mass per cylinder; the second is the rest. The fuel is a mass.
+
+  Inputs : V_tot, n_c, i, N, f, SOI_1, EOI_1, SOI_2, EOI_2, epsilon_v, T1, p1
+  Outputs: rho_a, M_dot_a, M_dot_f, DELTAt_1, DELTAt_2, m_1, m_2, M_dot_1, M_dot_2
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MCI TP5 exercise 3 - see README.md
+=============================================================================}
+
+"!Data"
+
+V_tot = 4.8E-3                   "total displacement, as in the original [m^3]"
+n_c = 8                          "number of cylinders, as in the original [-]"
+i = 0.5                          "intermittency factor for a four-stroke engine, as in the original [-]"
+N = 4200                         "rotational speed, as in the original [rpm]"
+f = 1/28                         "fuel-air ratio, as in the original [-]"
+SOI_1 = -10+180                  "start of injection 1, as in the original [°]"
+EOI_1 = 80+180                   "end of injection 1, as in the original [°]"
+SOI_2 = -70                      "start of injection 2 [°]"
+EOI_2 = -30                      "end of injection 2 [°]"
+epsilon_v = 0.98                 "volumetric efficiency, as in the original [-]"
+T1 = 25                          "temperature at standard conditions, as in the original [°C]"
+p1 = 101325                      "pressure at standard conditions, as in the original [Pa]"
+
+"!Calculations"
+
+rho_a = DENSITY(Air,T=T1,P=P1)  "density of the intake air, as in the original [kg/m^3]"
+V_s = V_tot/n_c                  "volume swept per cylinder [m^3]"
+epsilon_v = M_dot_a/(rho_a*V_s*(N/60)*n_c*i)  "intake air flow M_dot_a, as in the original (direct injection) [kg/s]"
+M_dot_f = f*M_dot_a              "fuel flow, as in the original [kg/s]"
+
+DOI_1 = EOI_1-SOI_1              "duration of injection 1, as in the original [°]"
+DELTAt_1 = DOI_1/(360*N/60)      "duration of injection 1, as in the original [s]"
+
+m_1 = m_tot/4                    "fuel mass of injection 1, one quarter of the mass per cylinder [kg]"
+m_tot = (M_dot_f/n_c)*DELTAt_tot "total fuel mass injected per cylinder, as in the original [kg]"
+DELTAt_tot = 1/(N/60)/i          "duration of one cycle, as in the original [s]"
+M_dot_1 = m_1/DELTAt_1           "fuel flow during injection 1 [kg/s]"
+
+DOI_2 = EOI_2-SOI_2              "duration of injection 2, as in the original [°]"
+DELTAt_2 = DOI_2/(360*N/60)      "duration of injection 2, as in the original [s]"
+m_tot = m_1+m_2                  "injection 2 is the rest of the fuel mass per cylinder [kg]"
+M_dot_2 = m_2/DELTAt_2           "fuel flow during injection 2 [kg/s]"

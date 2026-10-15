@@ -1,0 +1,49 @@
+{=============================================================================
+  Humid air with steam injection (Cengel 14-75)
+  CoolSolve Library model CSL-0194
+ -----------------------------------------------------------------------------
+  Teaching exercise. Humid air at 10 °C and 70 % relative humidity is heated
+  at constant humidity ratio, then receives saturated steam at 100 °C. The
+  air leaves at 20 °C and 60 % relative humidity. The model finds the
+  humidity ratios, the enthalpies and the state after the heater, per kg of
+  dry air and for the stated volume flow. Already in SI.
+
+  Inputs : T_1, RH_1, V_dot_1, p, T_3, RH_3
+  Outputs: omega_1, h_1, omega_3, h_3, T_2, M_dot_w, Q_dot_heater
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : thermo_models 14-75.EES, S. Quoilin - see README.md
+=============================================================================}
+
+"!Data"
+T_1 = 10                               "inlet temperature [°C]"
+RH_1 = 0.7                             "inlet relative humidity [-]"
+V_dot_1 = 35/60                        "inlet volume flow rate [m^3/s]; 35/60 as in the original"
+p = 1.013e5                            "pressure [Pa]"
+
+"!Point 1, calculation by kg of dry air"
+h_1 = enthalpy(airh2o,t=t_1,r=RH_1,p=p)       "enthalpy of the inlet air [J/kg dry air]"
+rho_1 = density(airh2o,t=t_1,r=RH_1,p=p)      "density of the inlet air [kg/m^3]"
+omega_1 = humrat(airh2o,t=t_1,r=RH_1,p=p)     "inlet humidity ratio [kg/kg dry air]"
+V_dot_1 = M_dot_a/rho_1                       "dry-air mass flow rate [kg/s]"
+
+"!Outlet conditions"
+RH_3 = 0.6                             "outlet relative humidity [-]"
+T_3 = 20                               "outlet temperature [°C]"
+omega_3 = humrat(airh2o,r=RH_3,t=t_3,p=p)     "outlet humidity ratio [kg/kg dry air]"
+h_3 = enthalpy(airh2o,r=RH_3,t=t_3,p=p)       "enthalpy of the outlet air [J/kg dry air]"
+
+"!Vapor injection"
+M_dot_w = M_dot_a * (omega_3 - omega_1)       "injected steam mass flow rate [kg/s]"
+h_w_2 = enthalpy(water,x=1,T=100)             "enthalpy of saturated steam at 100 °C [J/kg]"
+
+"!Conditions at point 2"
+omega_2 = omega_1                             "humidity ratio at point 2, equal to point 1 [kg/kg dry air]"
+M_dot_a * h_3 = M_dot_a * h_2 + M_dot_w * h_w_2  "energy balance of the steam injection, as in the original [W]"
+T_2 = temperature(airh2o,h=h_2,w=omega_2,p=p) "temperature at point 2 [°C]"
+RH_2 = relhum(airh2o,h=h_2,w=omega_2,p=p)     "relative humidity at point 2 [-]"
+
+Q_dot_heater = M_dot_a * (h_2 - h_1)          "heater power [W]"
+
+"!Values from the book for 0.95 bar (for comparison)"
+Q_dot_heater_book = 391E3/ 60          "book heater power [W]; 391E3/60 as in the original"
+M_dot_w_book = 0.147/60                "book steam mass flow rate [kg/s]; 0.147/60 as in the original"

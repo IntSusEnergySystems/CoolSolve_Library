@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0208",
+  "name": "steam_reheat_power_plant_arrays",
+  "title": "Steam reheat power plant with T-s arrays (Cengel exercise 10-34b)",
+  "summary": "Steady reheat Rankine cycle on water, the array form of the 80 MW exercise. Saturated liquid is pumped from 10 kPa to 10 MPa, heated to 500 °C, expanded to 1 MPa, reheated once to 500 °C and expanded to 10 kPa. Saturation states and the T[i], s[i] arrays trace the cycle. The model returns the thermal efficiency and the steam mass flow.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "steam_reheat_power_plant_arrays.eescode",
+  "fluids": ["Water"],
+  "tags": ["rankine", "reheat", "steam cycle", "power plant", "turbine", "pump", "exercise"],
+  "language_features": ["property functions", "arrays"],
+  "stats": {"n_equations": 74, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/10-34b.EES",
+    "candidate_id": "TM-0349",
+    "authors": ["S. Quoilin"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.920",
+    "language": "en",
+    "course": "KU Leuven thermodynamics; textbook exercise Cengel 10-34b"
+  },
+  "verification": {
+    "summary": "compare_solution.py against the stored solution of 10-34b.EES, no --ees-units: 74 common variables, 1 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. The one difference is x_8 (EES 100, CoolSolve 0), the EES superheated quality sentinel; it feeds no equation. All other variables are within 5.60e-04. Net power 80 MW, efficiency 0.3405, steam flow 62.65 kg/s.",
+    "checks": ["ees-stored-solution", "energy-balance", "order-of-magnitude"],
+    "reference": "EES stored solution of 10-34b.EES (compare_solution.py, units already SI)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@5a522f7",
+    "max_rel_diff": 1.0,
+    "notes": "Summary line: 74 common variables, 1 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. The printed maximum over all 74 common variables is 1.00e+00 on x_8. EES quality() stores 100 on superheated vapour (CS-GAP-QUALITY-DOME); CoolSolve returns 0. x_8 is an output of quality() and feeds no other equation. The next largest relative difference is h_3 at 5.60e-04. Water enthalpy residuals are property differences, not a constant shift: about −28 J/kg on the compressed liquid (h_1, h_2) and +101 to +1129 J/kg on vapour and saturation enthalpies (largest absolute residual h_5, +1129 J/kg). The ees_variables.csv units column is blank and the stored enthalpies are already in J, so --ees-units was not used. Equation residuals of the energy balances are below 1e-5 W and 4e-7 J/kg. The linked binary mtime is 2026-10-15 20:47, commit 5a522f7; an uncommitted parser.cpp change about REPEAT in the main program was linked with it. This file has no REPEAT."
+  },
+  "missing_features": [],
+  "related": ["CSL-0191"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

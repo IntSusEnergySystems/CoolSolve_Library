@@ -1,0 +1,120 @@
+{=============================================================================
+  Roots compressor, 10 L (exercise)
+  CoolSolve Library model CSL-0202
+ -----------------------------------------------------------------------------
+  Teaching exercise, ULiège MSTh repetition R2, exercise 2 bis. A 10 L Roots
+  compressor is tested at 1 bar and 20 °C suction, 1.4 bar discharge, with a
+  volumetric efficiency of 85 % and a mechanical efficiency of 95 %. The
+  equation window is that test point (inlet orifice, leakage nozzle, mixture).
+  It does not contain the two sweeps asked in the statement. The file names
+  no author.
+
+  Inputs : V_s, P_su_0, T_su, P_ex, epsilon_v, eta_m, N, A_thr, gamma
+  Outputs: M_dot, W_dot, W_dot_in, epsilon_s, A_thr_l
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MSTh, thermo_models, candidate TM-0036 - see README.md
+  Status : failing - the inlet orifice cannot pass the fresh-charge flow
+=============================================================================}
+
+"!Statement"
+"A Roots compressor of 10 litres displacement is tested as follows:"
+"fluid: dry pure air; suction 1 bar and 20 °C; discharge 1.4 bar."
+"The volumetric efficiency is 85 % and the mechanical efficiency is 95 %."
+"Show how the volumetric and isentropic efficiencies could vary"
+"with discharge pressure at constant speed, and with speed at constant"
+"discharge pressure, and how the discharge temperature could vary in both cases."
+"The equation window below is the test point only, as in the original."
+
+"!Data"
+V_s = 10E-3                                  "displacement [m^3]"
+P_su_0 = 1E5                                 "suction pressure [Pa], 1 bar in the statement"
+T_su = 20                                    "suction temperature [°C]"
+P_ex = 1.4E5                                 "discharge pressure [Pa], 1.4 bar in the statement"
+epsilon_v = 0.85                             "volumetric efficiency [-]"
+eta_m = 0.95                                 "mechanical efficiency [-]"
+
+"!Inlet orifice"
+"Further hypothesis when the suction pressure drop is included, as in the original."
+"The original also comments M_dot_l = 0.1577*M_dot and M_dot_l = 0.1*M_dot; those lines are not equations."
+A_thr = 0.05^2/4*PI                          "inlet orifice area [m^2], diameter 5 cm as in the original"
+
+"!Volume flow rates"
+M_dot_in = M_dot + M_dot_l                   "mass balance [kg/s]"
+
+"volumetric efficiency"
+epsilon_v = V_dot_su/V_dot_s
+V_dot_su = M_dot*v_su                        "actual fresh-charge volume flow [m^3/s]"
+V_dot_s = M_dot_th*v_su                      "theoretical suction volume flow at the fresh-charge inlet state [m^3/s]"
+V_dot_s = N*V_s
+v_su = VOLUME(Air, T=T_su, P=P_su_0)         "specific volume of the fresh charge [m^3/kg]"
+
+"hypothesis, as in the original"
+N = 3000/60                                  "rotational speed [1/s]"
+
+M_dot_in = V_dot_s/v_su_1                    "actual inlet volume flow after mixing [m^3/s]"
+v_su_1 = VOLUME(Air, T=T_su_1, P=P_su_1)     "specific volume after mixing [m^3/kg]"
+"The original comments the provisional closure v_su_1 = v_su. It is not an equation."
+
+"!Power"
+eta_m = W_dot_in/W_dot
+W_dot_in = V_dot_s*(P_ex - P_su)             "Roots compressor characteristic [W]"
+
+"!Overall isentropic efficiency"
+epsilon_s = w_s/w                            "overall isentropic efficiency [-]"
+w_s = h_ex_s - h_su_0                        "isentropic specific work [J/kg]"
+h_ex_s = ENTHALPY(Air, s=s_su_0, P=P_ex)     "isentropic discharge enthalpy [J/kg]"
+h_su_0 = ENTHALPY(Air, T=T_su)               "fresh-charge enthalpy [J/kg]"
+s_su_0 = ENTROPY(Air, T=T_su, P=P_su_0)      "fresh-charge entropy [J/kg-K]"
+
+W_dot = M_dot*w                              "shaft power from the fresh-charge flow [W]"
+
+"!Suction pressure drop"
+h_su_0 = h_thr + C_thr^2/2                   "steady-flow energy balance at the inlet throat [J/kg]"
+
+h_thr = ENTHALPY(Air, s=s_su_0, P=P_thr)     "isentropic throat enthalpy [J/kg]"
+P_thr = max(P_su, P_crit)                    "throat pressure, sonic cap as in the original [Pa]"
+P_crit = (2/(gamma + 1))^(gamma/(gamma - 1))*p_su_0    "critical pressure [Pa]"
+"The original comments the isentropic relation (T_thr+273)/(T_su+273) = (P_thr/P_su_0)^((gamma-1)/gamma)."
+"provisional value, as in the original"
+gamma = 1.4                                  "ratio of specific heats [-]"
+T_thr = TEMPERATURE(Air, h=h_thr)            "throat temperature [°C]"
+
+A_thr*C_thr = V_dot_thr
+V_dot_thr = M_dot*v_thr                      "throat volume flow of the fresh charge [m^3/s]"
+v_thr = VOLUME(Air, T=T_thr, P=P_thr)        "throat specific volume [m^3/kg]"
+
+"The original comments the trials P_su = P_su_0 - 1E4 and P_su = P_su_0 (no suction pressure drop). They are not equations."
+h_su = h_su_0                                "fresh-charge enthalpy used in the mixture [J/kg]"
+
+"!Inlet state of the mixture"
+"fictitious leakage nozzle, as in the original"
+h_ex_1 = h_thr_l + C_thr_l^2/2               "energy balance in the leakage nozzle [J/kg]"
+
+h_ex_1 = ENTHALPY(Air, s=s_su_1, P=P_ex)     "enthalpy at the leakage-nozzle inlet [J/kg]"
+s_su_1 = ENTROPY(Air, h=h_su_1, P=P_su_1)    "entropy of the mixture [J/kg-K]"
+"The original comments the provisional closure s_su_1 = s_su_0. It is not an equation."
+T_su_1 = TEMPERATURE(Air, h=h_su_1)          "mixture temperature [°C]"
+P_su_1 = P_su                                "pressure at the compressor inlet [Pa]"
+
+M_dot*h_su + M_dot_l*h_ex_1 = M_dot_in*h_su_1    "mixture enthalpy at the compressor inlet [J/kg]"
+
+h_thr_l = ENTHALPY(Air, s=s_ex_1, P=P_thr_l)     "isentropic expansion from the nozzle inlet to the throat [J/kg]"
+s_ex_1 = ENTROPY(Air, h=h_ex_1, P=P_ex)          "entropy at the leakage-nozzle inlet [J/kg-K]"
+
+"possible sonic regime, as in the original"
+P_thr_l = max(P_crit_l, P_su)                "leakage-throat pressure [Pa]"
+P_crit_l = (2/(gamma_l + 1))^(gamma_l/(gamma_l - 1))*p_ex    "critical leakage pressure [Pa]"
+(T_thr_l + 273)/(T_ex_1 + 273) = (P_thr_l/P_ex)^((gamma_l - 1)/gamma_l)    "gamma from the isentropic relation, as in the original; +273 as written"
+"The original comments the provisional value gamma_l = 1.4. It is not an equation."
+T_ex_1 = TEMPERATURE(Air, h=h_ex_1)          "temperature at the leakage-nozzle inlet [°C]"
+T_thr_l = TEMPERATURE(Air, h=h_thr_l)        "leakage-throat temperature [°C]"
+
+"fictitious leakage opening, as in the original"
+A_thr_l*C_thr_l = V_dot_thr_l
+V_dot_thr_l = M_dot_l*v_thr_l                "leakage volume flow at the throat [m^3/s]"
+v_thr_l = VOLUME(Air, T=T_thr_l, P=P_thr_l)  "leakage-throat specific volume [m^3/kg]"
+
+"The original says the provisional approximations were left in so that parametric tables would run,"
+"and that the 5 cm orifice gives a problem in the definition of h_thr."
+"Commented trials (not equations) impose A_thr and A_thr_l, or set M_dot_l proportional to M_dot."
+"Their recorded numbers are in the README. No parametric table is stored in the file."

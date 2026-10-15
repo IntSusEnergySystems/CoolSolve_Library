@@ -1,0 +1,45 @@
+{=============================================================================
+  Intake valve sizing for a square engine
+  CoolSolve Library model CSL-0178
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège MCI, TP5, exercise 1). Square engine: the stroke
+  equals the bore. The bore follows from the total displacement, the mean
+  piston speed from the stroke and the rotational speed, and the speed of
+  sound is evaluated at the intake-air temperature. The total intake area is
+  the lecture rule of the original; the valves share that area.
+
+  Inputs : V_s, nc, Rpm, T_a, ns, L/D
+  Outputs: D, L, C_m, C_i, A_eff_in, d_v, h_max, Ratio
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MCI TP5 exercise 1 - see README.md
+=============================================================================}
+
+"!Exercise data"
+
+L/D = 1                          "square engine, as in the original [-]"
+V_s = 2.8e-3                     "total displacement [m^3]"
+nc = 4                           "number of cylinders [-]"
+Rpm = 7500                       "rotational speed [1/min]"
+T_a = 60                         "intake air temperature [°C]"
+
+"!Intake area, bore and mean piston speed"
+
+A_eff_in = 1.3*D^2*(C_m/C_i)     "total intake area, lecture rule as in the original (course 4, 2015-2016, slide 33) [m^2]"
+V_s = pi*(D^2/4)*L*nc            "bore D from the displacement, as in the original [m^3]"
+C_m = 2*L*N                      "mean piston speed [m/s]"
+N = rpm/60                       "rotational speed [1/s]"
+
+"!Speed of sound in the intake air"
+
+C_i = sqrt(gamma*r_a*(T_a+273.15))   "speed of sound [m/s]"
+C_i_bis = SOUNDSPEED(Air,T=T_a,P=101325)   "speed of sound of Air [m/s]; P=101325 Pa added, CoolSolve requires a pressure for soundspeed"
+r_a = R_u/MOLARMASS(Air)         "R_u over the molar mass of Air, as in the original [J/(kg-K)]"
+R_u = 8314                       "universal gas constant, as in the original [J/(kmol-K)]"
+gamma = CP(Air,T=T_a)/CV(Air,T=T_a)   "ratio of specific heats of Air at T_a [-]"
+Ratio = A_eff_in/(pi*D^2/4)      "intake area over one piston area [-]; the original recalls that the objective is ratios up to 0.5"
+
+"!Valve diameter and maximum lift"
+
+A_eff_in = ns*pi*(d_v^2/4)       "same intake area written as ns valve heads [m^2]"
+ns = 2                           "number of valves, as in the original [-]"
+pi*d_v*h_max = pi*(d_v^2/4)      "maximum lift: curtain area equal to the valve-head area; the original neglects the valve-stem blockage [m]"

@@ -1,0 +1,52 @@
+{=============================================================================
+  Entropy change of water in a two-compartment rigid tank
+  CoolSolve Library model CSL-0172
+ -----------------------------------------------------------------------------
+  A rigid tank is split into two equal hermetic compartments. One holds
+  2.5 kg of compressed liquid water at 400 kPa and 60 °C; the other is
+  under vacuum. After the partition is removed the pressure is 40 kPa.
+  The model computes the entropy change of the water. Exercise 7 of
+  repetition R4, ULiège MECA0002, 2022-2023.
+
+  Inputs : p1, T1, m, p2
+  Outputs: DELTAS, s1, s2, x1, x2, v1, v2
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. Quoilin, ULiège MECA0002, 2022-2023 - see README.md
+=============================================================================}
+
+"!Exercise 7 (English paraphrase of the original French statement)"
+"A rigid tank is divided into two hermetic parts of equal volume. One part is filled with 2.5 kg of compressed
+ liquid water at 400 kPa and 60 C; the other is under vacuum. The two parts are then connected and the pressure
+ falls to 40 kPa. Calculate the entropy change of this process."
+
+"!Inputs"
+p1 = 400e3 [Pa]   "initial pressure of the water [Pa]; 400 kPa in the original"
+p2 = 40e3 [Pa]    "pressure after the compartments are connected [Pa]; 40 kPa in the original"
+T1 = 60 [C]       "initial temperature of the water [°C]"
+m = 2.5 [kg]      "mass of water [kg]; 2,5 in the original"
+
+"!Initial state: compressed liquid in one compartment"
+v1 = volume(Water, P=p1, T=T1)    "specific volume of the water [m^3/kg]"
+s1 = entropy(Water, P=p1, T=T1)   "specific entropy of the water [J/kg-K]"
+x1 = quality(Water, P=p1, T=T1)   "quality, to check that the water is liquid [-]"
+
+"!Final specific volume: the two compartment volumes are equal"
+v2 = 2*v1                         "final specific volume [m^3/kg]; the empty compartment has the same volume"
+
+"!Final state at the given pressure and the final specific volume"
+s2 = entropy(Water, P=p2, v=v2)   "final specific entropy [J/kg-K]"
+x2 = quality(Water, P=p2, v=v2)   "final quality [-]"
+
+"!Entropy change of the water"
+DELTAS = m*(s2 - s1)              "entropy change of the process [J/K]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: water before the partition is removed. 2: water after the compartments are connected.}
+P[1] = p1                                      "initial pressure [Pa]"
+h[1] = enthalpy(Water, P=p1, T=T1)             "initial enthalpy [J/kg]"
+T[1] = T1                                      "initial temperature [°C]"
+s[1] = s1                                      "initial entropy [J/kg-K]"
+P[2] = p2                                      "final pressure [Pa]"
+h[2] = enthalpy(Water, P=p2, v=v2)             "final enthalpy [J/kg]"
+T[2] = temperature(Water, P=p2, v=v2)          "final temperature [°C]"
+s[2] = s2                                      "final entropy [J/kg-K]"

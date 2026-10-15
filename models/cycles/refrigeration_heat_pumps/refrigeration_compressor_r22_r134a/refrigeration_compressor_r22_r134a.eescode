@@ -1,0 +1,120 @@
+{=============================================================================
+  Refrigeration compressor with fixed losses, R22 and R134a (exercise)
+  CoolSolve Library model CSL-0216
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège, Machines et systèmes thermiques, répétition 1,
+  exercice 3, file VL050919). One reciprocating compressor is evaluated at
+  one operating point for two refrigerants, fluid$ = R22 and fluid2$ = R134a.
+  Constant electromechanical losses 3400 W, loss factor 0.30, swept volume
+  flow 0.040 m³/s, clearance factor 0.06. Evaporation 0 °C, condensation
+  40 °C, 8 K superheat, 5 K subcooling. The statement also names propane;
+  the equation window does not, and propane is not added here.
+
+  Inputs : W_dot_loss_0, alpha, V_dot_s, C, fluid$, fluid2$,
+           T_ev_1, T_cd_1, DELTAT_oh, DELTAT_sc
+  Outputs: Q_dot_ev, W_dot and COP for each refrigerant
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Vincent Lemort - see README.md
+=============================================================================}
+
+"!Compressor data (as in the original)"
+W_dot_loss_0 = 3400          "constant electromechanical losses [W]"
+alpha = 0.3                  "loss factor [-]"
+V_dot_s = 0.04               "swept volume flow rate [m^3/s]"
+C = 0.06                     "clearance factor [-]"
+
+fluid$ = 'R22'               "refrigerant of the first point, as in the original"
+fluid2$ = 'R134a'            "refrigerant of the second point, as in the original"
+
+"!Operating point (as in the original; both refrigerants share these temperatures)"
+T_cd_1 = 40                  "condensation temperature [°C]"
+T_ev_1 = 0                   "evaporation temperature [°C]"
+{Q_dot_ev_1 = 64E3 and W_dot_1 = 16E3 are braced in the source; they are not equations.}
+T_cd_2 = T_cd_1              "second point, same condensation temperature [°C]"
+T_ev_2 = T_ev_1              "second point, same evaporation temperature [°C]"
+{Q_dot_ev_2 = 70E3 and W_dot_2 = 20E3 are braced in the source; they are not equations.}
+DELTAT_sc = 5                "subcooling at the condenser outlet [K]"
+DELTAT_oh = 8                "superheat at the evaporator outlet [K]"
+
+"!First point (fluid$)"
+T_su_1 = T_ev_1 + DELTAT_oh                              "compressor supply temperature [°C]"
+P_su_1 = P_ev_1                                          "supply pressure [Pa]"
+P_ev_1 = pressure(fluid$, x=0.5, T=T_ev_1)               "evaporation pressure [Pa]"
+P_ex_1 = P_cd_1                                          "exhaust pressure [Pa]"
+P_cd_1 = pressure(fluid$, x=0.5, T=T_cd_1)               "condensation pressure [Pa]"
+epsilon_v_1 = 1 - C*(rv_1 - 1)                           "volumetric efficiency [-]"
+rv_1 = v_su_1/v_ex_1                                     "volume ratio of the isentropic compression [-]"
+v_su_1 = volume(fluid$, T=T_su_1, P=P_su_1)              "supply specific volume [m^3/kg]"
+s_su_1 = entropy(fluid$, T=T_su_1, P=P_su_1)             "supply entropy [J/kg-K]"
+v_ex_1 = volume(fluid$, s=s_su_1, P=P_ex_1)              "specific volume at the isentropic exhaust [m^3/kg]"
+M_dot_1 = V_dot_s*epsilon_v_1/v_su_1                     "refrigerant mass flow rate [kg/s]"
+h_su_1 = enthalpy(fluid$, T=T_su_1, P=P_su_1)            "supply enthalpy [J/kg]"
+h_ex_1_s = enthalpy(fluid$, s=s_su_1, P=P_ex_1)          "enthalpy at the isentropic exhaust [J/kg]"
+w_s_1 = h_ex_1_s - h_su_1                                "isentropic specific work [J/kg]"
+W_dot_s_1 = M_dot_1*w_s_1                                "isentropic compression power [W]"
+W_dot_1 = W_dot_loss_0 + (1 + alpha)*W_dot_s_1           "electrical power [W]"
+Q_dot_ev_1 = M_dot_1*(h_su_1 - h_su_ev_1)                "cooling capacity [W]"
+h_su_ev_1 = h_ex_cd_1                                    "isenthalpic expansion, as in the original"
+h_ex_cd_1 = enthalpy(fluid$, T=T_ex_cd_1, P=P_cd_1)      "condenser-outlet enthalpy [J/kg]"
+T_ex_cd_1 = T_cd_1 - DELTAT_sc                           "condenser-outlet temperature [°C]"
+COP_1 = Q_dot_ev_1/W_dot_1                               "coefficient of performance [-]"
+
+"!Second point (fluid2$)"
+T_su_2 = T_ev_2 + DELTAT_oh                              "compressor supply temperature [°C]"
+P_su_2 = P_ev_2                                          "supply pressure [Pa]"
+P_ev_2 = pressure(fluid2$, x=0.5, T=T_ev_2)              "evaporation pressure [Pa]"
+P_ex_2 = P_cd_2                                          "exhaust pressure [Pa]"
+P_cd_2 = pressure(fluid2$, x=0.5, T=T_cd_2)              "condensation pressure [Pa]"
+epsilon_v_2 = 1 - C*(rv_2 - 1)                           "volumetric efficiency [-]"
+rv_2 = v_su_2/v_ex_2                                     "volume ratio of the isentropic compression [-]"
+v_su_2 = volume(fluid2$, T=T_su_2, P=P_su_2)             "supply specific volume [m^3/kg]"
+s_su_2 = entropy(fluid2$, T=T_su_2, P=P_su_2)            "supply entropy [J/kg-K]"
+v_ex_2 = volume(fluid2$, s=s_su_2, P=P_ex_2)             "specific volume at the isentropic exhaust [m^3/kg]"
+M_dot_2 = V_dot_s*epsilon_v_2/v_su_2                     "refrigerant mass flow rate [kg/s]"
+h_su_2 = enthalpy(fluid2$, T=T_su_2, P=P_su_2)           "supply enthalpy [J/kg]"
+h_ex_2_s = enthalpy(fluid2$, s=s_su_2, P=P_ex_2)         "enthalpy at the isentropic exhaust [J/kg]"
+w_s_2 = h_ex_2_s - h_su_2                                "isentropic specific work [J/kg]"
+W_dot_s_2 = M_dot_2*w_s_2                                "isentropic compression power [W]"
+W_dot_2 = W_dot_loss_0 + (1 + alpha)*W_dot_s_2           "electrical power [W]"
+Q_dot_ev_2 = M_dot_2*(h_su_2 - h_su_ev_2)                "cooling capacity [W]"
+h_su_ev_2 = h_ex_cd_2                                    "isenthalpic expansion, as in the original"
+h_ex_cd_2 = enthalpy(fluid2$, T=T_ex_cd_2, P=P_cd_2)     "condenser-outlet enthalpy [J/kg]"
+T_ex_cd_2 = T_cd_2 - DELTAT_sc                           "condenser-outlet temperature [°C]"
+COP_2 = Q_dot_ev_2/W_dot_2                               "coefficient of performance [-]"
+
+"!State points for the thermodynamic diagrams (post-processing)"
+{R22: 1 evaporator outlet, 2 isentropic compressor exhaust, 3 condenser outlet, 4 evaporator inlet.}
+P[1] = P_ev_1
+h[1] = h_su_1
+T[1] = T_su_1
+s[1] = s_su_1
+P[2] = P_cd_1
+h[2] = h_ex_1_s
+T[2] = temperature(fluid$, h=h[2], P=P[2])
+s[2] = s_su_1
+P[3] = P_cd_1
+h[3] = h_ex_cd_1
+T[3] = T_ex_cd_1
+s[3] = entropy(fluid$, T=T[3], P=P[3])
+P[4] = P_ev_1
+h[4] = h_su_ev_1
+T[4] = temperature(fluid$, h=h[4], P=P[4])
+s[4] = entropy(fluid$, h=h[4], P=P[4])
+
+{R134a, same four states, arrays P2, h2, T2, s2.}
+P2[1] = P_ev_2
+h2[1] = h_su_2
+T2[1] = T_su_2
+s2[1] = s_su_2
+P2[2] = P_cd_2
+h2[2] = h_ex_2_s
+T2[2] = temperature(fluid2$, h=h2[2], P=P2[2])
+s2[2] = s_su_2
+P2[3] = P_cd_2
+h2[3] = h_ex_cd_2
+T2[3] = T_ex_cd_2
+s2[3] = entropy(fluid2$, T=T2[3], P=P2[3])
+P2[4] = P_ev_2
+h2[4] = h_su_ev_2
+T2[4] = temperature(fluid2$, h=h2[4], P=P2[4])
+s2[4] = entropy(fluid2$, h=h2[4], P=P2[4])

@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0214",
+  "name": "piston_cylinder_stops_air",
+  "title": "Air cooled in a vertical piston-cylinder with stops (exercise)",
+  "summary": "Teaching exercise for air cooled in a vertical frictionless piston-cylinder with stops. The model computes the temperature when the piston reaches the stops and the pressure after further cooling at constant volume, with the same two results from the ideal-gas law.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "piston_cylinder_stops_air.eescode",
+  "fluids": ["Air"],
+  "tags": ["exercise", "closed system", "piston-cylinder", "ideal gas"],
+  "language_features": ["property functions"],
+  "stats": {"n_equations": 17, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R2/R2_E4_2022.EES",
+    "candidate_id": "TM-0400",
+    "authors": ["S. Quoilin"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "ULiège, thermodynamique appliquée, MECA0002, repetition 2, 2022-2023"
+  },
+  "verification": {
+    "summary": "Against the stored solution of R2_E4_2022.EES, compare_solution.py --ees-units reports: 17 common variables, 6 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. The maximum it prints is 9.99e-01 on iso_v (K/Pa; stored unit K/kPA is not scaled). Temperatures stay in kelvin; the tool rewrites K to °C. p_2 prints 1.27e-03 (CoolProp Air, Z=0.9987).",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in R2_E4_2022.EES (17 variables, EES X10.836), compared with compare_solution.py --ees-units",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@62d92f0",
+    "max_rel_diff": 9.99e-01,
+    "notes": "Largest relative difference printed by compare_solution.py --ees-units is 9.99e-01 on iso_v (unrounded 0.999). The model value is 0.001932875 K/Pa because p_0 is 200e3 Pa; EES stores 1.932875 with unit K/kPA. The tool scales a kPa numerator only, and the stored spelling is kPA, so the reference stays 1.932875. T_2 prints 9.32e-01, T_1 7.07e-01, T_1_gp 7.07e-01 and T_0 3.53e-01: the equation window stores kelvin and the model keeps kelvin; the tool subtracts 273.15. In kelvin, T_0, T_2 and T_1_gp match the stored values and T_1 is 386.734 K against 386.575 K (relative 4.11e-04). p_2 prints 1.27e-03: EES Air is ideal and equals p_2_gp (151665.265 Pa); CoolSolve pressure(Air) returns 151472.941 Pa, Z=0.99873. v_air, v_1 and m_air print 7.13e-04, inside rtol 0.001. p_2_gp matches (1.82e-10). No enthalpy, heat or work variable, so no Air enthalpy offset. 0 iterations with .initials and 0 without. The AirH2O hint was not followed. The warning that 500 is read as °C is the intended argument T_0-273.15."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

@@ -1,0 +1,44 @@
+{=============================================================================
+  CO2 emissions from fuel consumption
+  CoolSolve Library model CSL-0188
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège MCI, TP7, exercise 3). The CO2 mass emitted per
+  kilometre follows from complete combustion of a hydrocarbon CmHn and from
+  a volumetric fuel consumption. The fuel is a formula, a density and a
+  volume consumption. The default branch is diesel (C12H26, 850 kg/m^3);
+  gasoline (C8H18, 720 kg/m^3) is the other $IF branch.
+
+  Inputs : Fuel$, m, n, rho_f, Conso
+  Outputs: MM_f, MM_CO2, Conso_kmol, CO2
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MCI TP7 exercise 3 - see README.md
+  Status : BLOCKED in CoolSolve (valid EES): CS-GAP-MOLARMASS-ELEMENT.
+           Runnable variant: fuel_co2_per_km_coolsolve.eescode.
+=============================================================================}
+
+"!Fuel and consumption"
+
+Fuel$ = 'diesel'                 "diesel or gasoline; the original comments Fuel$ = 'essence' as the other choice"
+
+$IF Fuel$ = 'diesel'
+m = 12                           "carbon atoms in CmHn, as in the original [-]"
+n = 26                           "hydrogen atoms in CmHn, as in the original [-]"
+"The original comments an alternative m = 16, n = 34 (hexadecane). The active formula is the one above."
+rho_f = 850                      "diesel density, as in the original [kg/m^3]"
+$ENDIF
+
+$IF Fuel$ = 'essence'
+m = 8                            "carbon atoms in CmHn, as in the original [-]"
+n = 18                           "hydrogen atoms in CmHn, as in the original [-]"
+rho_f = 720                      "gasoline density, as in the original [kg/m^3]"
+$ENDIF
+
+Conso = 5                        "fuel consumption, as in the original [L/100 km]"
+
+"!Complete combustion"
+
+"For complete combustion, 1 kmol of CmHn produces m kmol of CO2, as in the original."
+MM_f = m*MolarMass(C) + n*MolarMass(H)  "molar mass of the fuel [kg/kmol]"
+MM_CO2 = MolarMass(CO2)          "molar mass of CO2 [kg/kmol]"
+Conso_kmol = (Conso*1e-3/100)*rho_f/MM_f  "fuel consumption [kmol/km]"
+CO2 = m*Conso_kmol*MolarMass(CO2)*1e3  "CO2 emissions, as in the original [g/km]"

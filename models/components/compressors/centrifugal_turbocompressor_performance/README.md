@@ -178,6 +178,8 @@ the CoolSolve repository as a test case.
 - `CSL-0035` (centrifugal compressor with a lookup-table performance map):
   same course and repetition (MSTh TP 04), map-based off-design counterpart
   of this design model.
+- `CSL-0177` (turbocompressor optimal-regime similarity laws): same session,
+  reduced flow and speed of a different compressor.
 - CoolSolve example `turbocompressor.eescode` (CSX-044): same exercise,
   kept in CoolSolve as a test case (imposed-`r_p_i` transcription — see
   *Conversion log*).

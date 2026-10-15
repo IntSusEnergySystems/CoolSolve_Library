@@ -1,0 +1,53 @@
+{=============================================================================
+  Variable-speed fan from dimensionless polynomials
+  CoolSolve Library model CSL-0205
+ -----------------------------------------------------------------------------
+  Predicts the pressure rise, shaft power and electrical power of a fan
+  running below catalogue speed. Pressure and absorbed-power coefficients
+  are quadratics of the flow coefficient, taken from a catalogue curve.
+  Motor and VFD efficiencies depend on the fraction of catalogue speed.
+  Air density is the constant 1.2 kg/m³.
+
+  Inputs : volume flow, diameter, running and catalogue speeds,
+           nominal motor power
+  Outputs: pressure rise, shaft power, electrical power, efficiencies
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J;
+           speed kept as stored (the omega equation divides by 60)
+  Source : Laborelec toolkit, 2002 - see README.md
+=============================================================================}
+
+"!Dimensionless polynomials (catalogue curve, as in the original)"
+psi_f = 0.115 + 0.358*phi_f - 2.200*phi_f^2    "pressure coefficient [-]"
+Lambda_f = 0.00187 + 0.1959*phi_f - 0.399*phi_f^2    "absorbed-power coefficient [-]"
+
+"!Affinity laws at the running point"
+psi_f = DELTAP_f/(rho_a_su_f*omega_f^2*D_f^2)    "pressure coefficient from the pressure rise [-]"
+phi_f = V_dot_f/(D_f^3*omega_f)    "flow coefficient [-]"
+Lambda_f = W_dot_shaft_f/(D_f^5*omega_f^3*rho_a_su_f)    "absorbed-power coefficient [-]"
+epsilon_s_f = (psi_f*phi_f)/Lambda_f    "effectiveness psi*phi/lambda [-]"
+
+"!Electrical power of the fan and variable-frequency drive"
+W_dot_elec_ = W_dot_shaft_f/(eta_vfd_f*eta_motor_f)    "electrical power at the drive inlet [W]"
+eta_motor_f = eta_motor_nom_f*(1 - exp(-0.0904*X))    "motor efficiency at the running speed [-]"
+eta_vfd_f*100 = 50.87 + 1.283*X - 0.0142*X^2 + 5.834*10^(-5)*X^3    "drive efficiency; the right-hand side is a percent, as in the original"
+
+"!Nameplate motor efficiency, 6-pole correlation fitted with power in kW"
+W_dot_motor_nom_kW_f = W_dot_motor_nom_f/1000    "nominal motor power fed to the correlation [kW]"
+eta_motor_nom_f = 1 - a*W_dot_motor_nom_kW_f^b    "nameplate motor efficiency [-]"
+a = 0.167    "6-pole correlation coefficient, as in the original (6 poles, 1200 rpm)"
+b = -0.239    "6-pole correlation exponent [-]"
+
+"Unused alternatives in the original brace comment (decimal commas): 2 poles a=0.184, b=-0.236; 4 poles a=0.169, b=-0.25; 8 poles a=0.192, b=-0.246."
+
+rpm_f = rpm_cat_f*(X*0.01)    "running speed [rev/min]; original annotation [rev/m]. X is the percent of nominal speed, as in the original"
+
+"!Air density, given as a constant (original comment: Air properties)"
+rho_a_su_f = 1.2    "suction density [kg/m^3]"
+
+"!Inputs"
+W_dot_motor_nom_f = 15000    "nominal motor power [W]; 15 kW in the original"
+V_dot_f = 7    "volume flow rate [m^3/s]"
+rpm_cat_f = 1200    "catalogue speed [rev/min]"
+rpm_f = 900    "running speed as stored; original annotation [rev/s], stored unit rev/s"
+omega_f = (rpm_f*2*pi)/60    "angular speed [rad/s]"
+D_f = 0.808    "impeller diameter [m]"

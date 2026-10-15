@@ -1,0 +1,74 @@
+{=============================================================================
+  R134a turbine of 5 kW driving a compressor (exercise)
+  CoolSolve Library model CSL-0189
+ -----------------------------------------------------------------------------
+  An R134a turbine with an isentropic efficiency of 78 % delivers 5 kW.
+  After the alternator, 57 % of the electricity drives a generator and then
+  an R134a compressor. Both machines use the same mass flow. Teaching
+  exercise, ULiège MECA0002, repetition R4, exercise 3 (2022-2023).
+
+  Inputs : eta_is_turb, W_dot_turb, p_in_turb, p_out_turb, eta_is_cp, x_in_cp
+  Outputs: m_dot_turb, p_out_cp, W_dot_cp
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. Quoilin, ULiège MECA0002, 2022-2023 - see README.md
+=============================================================================}
+
+"!Inputs, as in the original"
+eta_is_turb = 0.78                            "isentropic efficiency of the turbine [-]"
+eta_is_cp = 0.82                              "isentropic efficiency of the compressor [-]"
+W_dot_turb = -5000                            "turbine power [W] (-5 kW in the original); negative because produced by the system"
+m_dot_turb = m_dot_cp                         "the two machines have the same mass flow [kg/s]"
+x_in_cp = 1                                   "compressor inlet quality [-]; saturated vapour, as in the original"
+eta_alt = 0.92                                "alternator efficiency, used again for the generator, as in the original [-]"
+eta_meca = 0.95                               "mechanical-link efficiency, used for both links, as in the original [-]"
+eta_turb_to_cp = 0.57                         "fraction of the electrical production sent to the generator [-]"
+p_in_turb = 3e6                               "turbine inlet pressure [Pa] (3000 kPa in the original)"
+p_out_turb = 1e6                              "turbine outlet pressure [Pa] (1000 kPa in the original)"
+p_in_cp = p_out_turb                          "compressor inlet pressure, equal to the turbine outlet pressure [Pa]"
+
+"!Turbine"
+T_in_turb = t_sat(R134a, P=p_in_turb) + 40    "turbine inlet temperature from 40 °C of superheat [°C]"
+h_in_turb = enthalpy(R134a, P=p_in_turb, T=T_in_turb)    "turbine inlet enthalpy [J/kg]"
+s_in_turb = entropy(R134a, P=p_in_turb, T=T_in_turb)     "turbine inlet entropy [J/kg-K]"
+h_out_turb_is = enthalpy(R134a, P=p_out_turb, s=s_in_turb)   "enthalpy if the expansion were isentropic [J/kg]"
+eta_is_turb = (h_out_turb - h_in_turb)/(h_out_turb_is - h_in_turb)   "turbine isentropic efficiency, as in the original [-]"
+W_dot_turb = m_dot_turb*(h_out_turb - h_in_turb)   "first law; the turbine is taken as adiabatic because the process is fast [W]"
+
+"!Transmission from the turbine to the compressor"
+W_dot_turb_elec = -W_dot_turb*eta_turb_to_cp*eta_alt*eta_meca   "electrical power sent to the generator [W]; positive because supplied to the system. The efficiencies reduce the electrical production of the turbine, as in the original"
+W_dot_cp = W_dot_turb_elec*eta_alt*eta_meca   "compressor power [W]; the efficiencies reduce the energy transmitted to the fluid"
+
+"!Compressor"
+W_dot_cp = m_dot_cp*(h_out_cp - h_in_cp)      "first law; the compressor is taken as adiabatic because the process is fast [W]"
+h_in_cp = enthalpy(R134a, P=p_in_cp, x=x_in_cp)   "compressor inlet enthalpy; saturated vapour [J/kg]"
+s_in_cp = entropy(R134a, P=p_in_cp, x=x_in_cp)    "compressor inlet entropy [J/kg-K]"
+eta_is_cp = (h_out_cp_is - h_in_cp)/(h_out_cp - h_in_cp)   "compressor isentropic efficiency, as in the original [-]"
+p_out_cp = pressure(R134a, h=h_out_cp_is, s=s_in_cp)   "compressor outlet pressure [Pa]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: turbine inlet. 2: isentropic turbine exit. 3: real turbine exit.}
+{4: compressor inlet. 5: isentropic compressor exit. 6: real compressor exit.}
+P[1] = p_in_turb                             "turbine inlet pressure [Pa]"
+h[1] = h_in_turb                             "turbine inlet enthalpy [J/kg]"
+T[1] = T_in_turb                             "turbine inlet temperature [°C]"
+s[1] = s_in_turb                             "turbine inlet entropy [J/kg-K]"
+P[2] = p_out_turb                            "isentropic turbine-exit pressure [Pa]"
+h[2] = h_out_turb_is                         "isentropic turbine-exit enthalpy [J/kg]"
+T[2] = temperature(R134a, P=p_out_turb, h=h_out_turb_is)   "isentropic turbine-exit temperature [°C]"
+s[2] = s_in_turb                             "isentropic turbine-exit entropy [J/kg-K]"
+P[3] = p_out_turb                            "real turbine-exit pressure [Pa]"
+h[3] = h_out_turb                            "real turbine-exit enthalpy [J/kg]"
+T[3] = temperature(R134a, P=p_out_turb, h=h_out_turb)   "real turbine-exit temperature [°C]"
+s[3] = entropy(R134a, P=p_out_turb, h=h_out_turb)   "real turbine-exit entropy [J/kg-K]"
+P[4] = p_in_cp                               "compressor inlet pressure [Pa]"
+h[4] = h_in_cp                               "compressor inlet enthalpy [J/kg]"
+T[4] = temperature(R134a, P=p_in_cp, x=x_in_cp)   "compressor inlet temperature [°C]"
+s[4] = s_in_cp                               "compressor inlet entropy [J/kg-K]"
+P[5] = p_out_cp                              "isentropic compressor-exit pressure [Pa]"
+h[5] = h_out_cp_is                           "isentropic compressor-exit enthalpy [J/kg]"
+T[5] = temperature(R134a, P=p_out_cp, h=h_out_cp_is)   "isentropic compressor-exit temperature [°C]"
+s[5] = s_in_cp                               "isentropic compressor-exit entropy [J/kg-K]"
+P[6] = p_out_cp                              "real compressor-exit pressure [Pa]"
+h[6] = h_out_cp                              "real compressor-exit enthalpy [J/kg]"
+T[6] = temperature(R134a, P=p_out_cp, h=h_out_cp)   "real compressor-exit temperature [°C]"
+s[6] = entropy(R134a, P=p_out_cp, h=h_out_cp)   "real compressor-exit entropy [J/kg-K]"

@@ -1,0 +1,61 @@
+{=============================================================================
+  Geothermal hot water driving a steam turbine
+  CoolSolve Library model CSL-0182
+ -----------------------------------------------------------------------------
+  Geothermal water at 1.5 MPa and 180 °C is throttled into a flash
+  evaporator at 400 kPa. Saturated vapour from that vessel expands in an
+  adiabatic turbine to 10 kPa and a quality of 0.9. The turbine power is
+  1000 kW; the model computes the steam flow and the source flow.
+  Teaching exercise, ULiège MECA0002, 2022-2023, repetition R3 exercise 8.
+
+  Inputs : p_1, T_1, p_ev, p_2, p_3, x_3, W_dot_turb
+  Outputs: q_m_vap, q_m_tot, q_m_source, q_v_source
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. Quoilin, ULiège MECA0002, 2022-2023 - see README.md
+=============================================================================}
+
+"!Inputs"
+p_1 = 1.5e6                                  "inlet pressure of the geothermal water [Pa] (1500 kPa in the original)"
+T_1 = 180                                    "inlet temperature [°C]"
+p_ev = 4e5                                   "pressure in the flash evaporator [Pa] (400 kPa in the original)"
+p_2 = 4e5                                    "turbine inlet pressure [Pa] (400 kPa in the original)"
+p_3 = 1e4                                    "turbine exit pressure [Pa] (10 kPa in the original)"
+x_3 = 0.9                                    "vapour quality at the turbine exit [-]"
+W_dot_turb = -1e6                            "turbine power [W] (-1000 kW in the original); the water supplies this power"
+
+"!Turbine"
+"Adiabatic turbine; changes of kinetic and potential energy neglected, as in the original."
+W_dot_turb = q_m_vap*(h_3 - h_2)             "first law for the turbine [W]"
+h_3 = enthalpy(Water, p=p_3, x=x_3)          "exit enthalpy; two-phase, arguments P and x [J/kg]"
+h_2 = enthalpy(Water, x=1, p=p_2)            "inlet enthalpy; saturated vapour, arguments P and x=1 [J/kg]"
+
+"!Flash evaporator and throttle"
+"The throttle exchanges no work. It is taken as adiabatic, and changes of kinetic and potential energy are neglected, so the enthalpy is unchanged."
+h_ev = h_1                                   "enthalpy of the liquid-vapour mixture after the throttle [J/kg]"
+h_1 = enthalpy(Water, p=p_1, T=T_1)          "enthalpy of the geothermal water [J/kg]"
+x_ev = quality(Water, p=p_ev, h=h_ev)        "quality from the flash pressure and the enthalpy just obtained [-]"
+x_ev = q_m_vap/q_m_tot                       "quality as the vapour mass-flow fraction [-]"
+
+"!Hourly source flow"
+q_m_source = 3600*q_m_tot                    "hourly mass flow of the source [kg/h]; 3600 s/h, as in the original"
+v_1 = volume(Water, p=p_1, T=T_1)            "specific volume of the geothermal water [m^3/kg]"
+q_v_source = q_m_source*v_1                  "hourly volume flow of the source [m^3/h]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: geothermal inlet. 2: mixture after the throttle. 3: saturated vapour at the turbine inlet. 4: turbine exit.}
+P[1] = p_1                                   "geothermal-inlet pressure [Pa]"
+h[1] = h_1                                   "geothermal-inlet enthalpy [J/kg]"
+T[1] = T_1                                   "geothermal-inlet temperature [°C]"
+s[1] = entropy(Water, p=p_1, T=T_1)          "geothermal-inlet entropy [J/kg-K]"
+P[2] = p_ev                                  "flash-mixture pressure [Pa]"
+h[2] = h_ev                                  "flash-mixture enthalpy [J/kg]"
+T[2] = temperature(Water, p=p_ev, h=h_ev)    "flash-mixture temperature [°C]"
+s[2] = entropy(Water, p=p_ev, h=h_ev)        "flash-mixture entropy [J/kg-K]"
+P[3] = p_2                                   "turbine-inlet pressure [Pa]"
+h[3] = h_2                                   "turbine-inlet enthalpy [J/kg]"
+T[3] = temperature(Water, p=p_2, x=1)        "turbine-inlet temperature [°C]"
+s[3] = entropy(Water, x=1, p=p_2)            "turbine-inlet entropy [J/kg-K]"
+P[4] = p_3                                   "turbine-exit pressure [Pa]"
+h[4] = h_3                                   "turbine-exit enthalpy [J/kg]"
+T[4] = temperature(Water, p=p_3, x=x_3)      "turbine-exit temperature [°C]"
+s[4] = entropy(Water, p=p_3, x=x_3)          "turbine-exit entropy [J/kg-K]"

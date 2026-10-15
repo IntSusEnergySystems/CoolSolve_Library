@@ -1,0 +1,63 @@
+{=============================================================================
+  Supercharged engine air flow and compressor
+  CoolSolve Library model CSL-0221
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège MCI, sixth exercise session, statement 1).
+  The air mass flow follows from the volumetric efficiency, which the
+  original defines on the ambient density. The given value is 1.58: the
+  cylinder is supercharged, so that efficiency is greater than one. A second
+  value, epsilon_v_bis, refers the same flow to the density at the cylinder
+  inlet, as an order-of-magnitude check. The turbocharger compressor uses
+  the given isentropic efficiency. Pressure losses in the intercooler and
+  the intake manifolds are neglected.
+
+  Inputs : V_tot, n_c, i, N, epsilon_v, epsilon_s_cp, T_amb, p_amb,
+           T_su_cyl, p_su_cyl
+  Outputs: M_dot_a, rho_a, epsilon_v_bis, T_ex_cp, T_ex_cp_s, w_cp,
+           W_dot_cp, Q_dot_ic
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : P. Ngendakumana, ULiège MCI TP6 - see README.md
+=============================================================================}
+
+"!Data"
+
+V_tot = 4.8E-3                   "total displacement, as in the original [m^3]"
+n_c = 6                          "number of cylinders [-]"
+i = 0.5                          "intermittency factor for a 4-stroke engine, as in the original [-]"
+N = 3500                         "rotational speed; the original says rpm [1/min]"
+epsilon_v = 1.58                 "volumetric efficiency of the engine, defined on the ambient conditions [-]"
+epsilon_s_cp = 0.92              "isentropic efficiency of the compressor [-]"
+
+T_amb = 23                       "ambient temperature [°C]"
+p_amb = 98e3                     "ambient pressure [Pa]"
+T_su_cyl = 65                    "temperature at the cylinder inlet [°C]"
+p_su_cyl = 180e3                 "pressure at the cylinder inlet [Pa]"
+
+"!Air flow through the engine"
+
+V_s = V_tot/n_c                  "volume swept by one cylinder [m^3]"
+M_dot_a = epsilon_v*rho_a*V_s*(N/60)*n_c*i  "air mass flow; epsilon_v defined on the ambient conditions [kg/s]"
+rho_a = Density(Air,T=T_amb,P=P_amb)  "ambient density [kg/m^3]"
+"Order-of-magnitude check, as in the original"
+epsilon_v_bis = M_dot_a/(rho_a_bis*V_s*(N/60)*n_c*i)  "epsilon_v_bis defined on the cylinder-inlet conditions [-]"
+rho_a_bis = Density(Air,T=T_su_cyl,P=P_su_cyl)  "density at the cylinder inlet [kg/m^3]"
+
+"!Turbocharger compressor"
+
+T_su_cp = T_amb                  "compressor inlet temperature [°C]"
+p_su_cp = p_amb                  "compressor inlet pressure [Pa]"
+p_ex_cp = p_su_cyl               "pressure losses in the intercooler and the intake manifolds neglected [Pa]"
+h_su_cp = enthalpy(AIR,T=T_su_cp)  "compressor inlet enthalpy [J/kg]"
+s_su_cp = entropy(AIR,T=T_su_cp,P=p_su_cp)  "compressor inlet entropy [J/(kg·K)]"
+s_ex_cp_s = s_su_cp              "isentropic compression [J/(kg·K)]"
+h_ex_cp_s = enthalpy(AIR,s=s_ex_cp_s,P=p_ex_cp)  "calculation of h_ex_cp_s [J/kg]"
+T_ex_cp_s = temperature(AIR,s=s_ex_cp_s,P=p_ex_cp)  "isentropic compressor outlet temperature [°C]"
+epsilon_s_cp = (h_ex_cp_s-h_su_cp)/(h_ex_cp-h_su_cp)  "calculation of h_ex_cp [J/kg]"
+T_ex_cp = temperature(AIR,h=h_ex_cp)  "T_ex_cp, for an order of magnitude [°C]"
+w_cp = h_ex_cp-h_su_cp           "specific work [J/kg]"
+W_dot_cp = M_dot_a*w_cp          "power consumed by the compressor [W]"
+
+"!Intercooler"
+
+h_su_cyl = enthalpy(AIR,T=T_su_cyl)  "enthalpy at the cylinder inlet [J/kg]"
+Q_dot_ic = M_dot_a*(h_su_cyl-h_ex_cp)  "cooling power in the intercooler [W]"

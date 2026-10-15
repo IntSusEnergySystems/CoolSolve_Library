@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0203",
+  "name": "variable_speed_pump_simulation",
+  "title": "Variable-speed pump from dimensionless polynomials",
+  "summary": "Predicts the head, speed, shaft power and electrical power of a centrifugal pump on a quadratic system curve, using catalogue cubics of the dimensionless head and power coefficients and part-load motor and VFD efficiencies. Water enters only through the suction density.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "variable_speed_pump_simulation.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "pump",
+    "centrifugal pump",
+    "affinity laws",
+    "variable speed",
+    "part load",
+    "catalogue"
+  ],
+  "language_features": [
+    "property functions",
+    "exp"
+  ],
+  "stats": {
+    "n_equations": 27,
+    "largest_block": 3
+  },
+  "origin": {
+    "type": "industry",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/3_Pumps and Fans/3_1_Pumps/3_1_2_Variable_speed_pump_simulation.EES",
+    "candidate_id": "TM-0302",
+    "authors": [
+      "TBD (Laborelec toolkit)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X6.585",
+    "language": "en",
+    "course": "Laborelec toolkit, 2002"
+  },
+  "verification": {
+    "summary": "compare_solution.py --ees-units: 26 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 2. Maximum relative difference 2.55e-05 on W_dot_elec_p. rho_su_p, DELTAP_p and W_dot_shaft_p differ by 2.54e-05 because CoolProp water at 20 °C and 101300 Pa is 998.207 kg/m3 against the stored 998.233 kg/m3. Head and speed agree.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution in 3_1_2_Variable_speed_pump_simulation.EES (26 variables)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@ae7946e",
+    "max_rel_diff": 2.55e-05,
+    "notes": "26 common variables, none above rtol=0.001. The largest relative difference the tool prints is 2.55e-05 on W_dot_elec_p (exact ratio 2.546e-05). rho_su_p, DELTAP_p and W_dot_shaft_p are 2.54e-05. CoolProp density of Water at 20 °C and 101300 Pa is 998.207139 kg/m3; the stored rho_su_p is 998.2325392 kg/m3. Head is K*V_dot^2 and the speed loop uses psi = g*H/(omega^2*D^2), so H_p, psi_p, phi_p and omega_p match. Shaft and electrical power scale with density. --ees-units prints: Converted EES reference values: P_w_su_p (kPa x1000), W_dot_motor_nom_p (kW x1000). DELTAP_p, W_dot_shaft_p and W_dot_elec_p have empty stored unit strings and are already in Pa and W (about 245572 Pa, 4790 W and 5831 W); they are not scaled. No stored unit is kj or KJ. Names only in the CoolSolve solution: pi and W_dot_motor_nom_kW_p."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0183"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

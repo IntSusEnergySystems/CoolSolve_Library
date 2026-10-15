@@ -1,0 +1,62 @@
+{=============================================================================
+  Turbo-expander: isentropic nozzle and Laval wheel (exercise)
+  CoolSolve Library model CSL-0199
+ -----------------------------------------------------------------------------
+  Steady model of a turbo-expander made of an ideal isentropic nozzle and a
+  Laval wheel, as in the original. The throat uses the choked-flow pressure
+  when that pressure is above the exit pressure. The wheel speed is the
+  Diagram-window input (the equation window left it unset).
+
+  Inputs : P_su, T_su, P_ex, d_laval, alpha, A_thr, gamma, rpm
+  Outputs: W_dot_in, P_thr, C_thr, C_ex_n, epsilon_s_in
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MSTh repetition R4 exercise 1, MSTh-SB-R4-Ex1.EES - see README.md
+=============================================================================}
+
+"!Inlet and exit conditions"
+P_su = 10E5                                  "inlet pressure [Pa]"
+T_su = 1000                                  "inlet temperature [°C]"
+P_ex = 1E5                                   "exit pressure [Pa]"
+
+"!Turbo-expander model: ideal isentropic nozzle plus a Laval wheel"
+d_laval = 1                                  "Laval-wheel diameter [m]"
+alpha = 15                                   "nozzle angle [°]"
+
+"!Nozzle model"
+"C_thr and C_ex_n_s enter as squares. The .initials file holds the stored positive roots."
+h_su = h_thr + C_thr^2/2                     "as in the original [J/kg]"
+h_su = enthalpy(Air, T=T_su)                 "inlet specific enthalpy [J/kg]"
+h_thr = enthalpy(Air, s=s_su, P=P_thr)       "as in the original [J/kg]"
+s_su = entropy(Air, T=T_su, P=P_su)          "inlet specific entropy [J/kg-K]"
+P_thr = max(P_thrmin, P_ex)                  "throat pressure: choked critical pressure, or the exit pressure if not choked [Pa]"
+P_thrmin = ((2/(gamma+1))^(gamma/(gamma-1)))*P_su    "as in the original [Pa]"
+"Provisional value, as in the original."
+gamma = 1.4                                  "ratio of specific heats [-]"
+
+"!Equivalent section"
+M_dot = V_dot_thr/v_thr                      "mass flow rate [kg/s]"
+v_thr = volume(Air, h=h_thr, P=P_thr)        "as in the original [m^3/kg]"
+V_dot_thr = A_thr*C_thr                      "as in the original [m^3/s]"
+"Hypothesis, as in the original. The alternative M_dot = 1 (relative values) is a comment in the source and is not used."
+A_thr = 0.001                                "equivalent throat area [m^2]"
+
+"Choked flow is possible at the throat. The nozzle exit is an isentropic expansion, as in the original."
+h_su = h_ex_n_s + C_ex_n_s^2/2               "as in the original [J/kg]"
+h_ex_n_s = enthalpy(Air, s=s_su, P=P_ex)     "as in the original [J/kg]"
+"If the flow is not choked, P_thr = P_ex, so h_thr = h_ex_n_s and C_thr = C_ex_n_s, as in the original."
+
+"!Laval wheel"
+eta_laval = 4*U/C_ex_n*(cos(alpha) - U/C_ex_n)    "as in the original [-]"
+epsilon_n_s = C_ex_n^2/C_ex_n_s^2            "as in the original [-]"
+epsilon_n_s = 1                              "nozzle assumed fully isentropic [-]"
+U = pi*d_laval*N                             "as in the original [m/s]"
+N = rpm/60                                   "as in the original [1/s]"
+"The equation window only comments a provisional rpm = 3000. The stored Diagram-window value is used."
+rpm = 20000                                  "rotational speed [1/min]"
+
+"!Turbo-expander power"
+W_dot_in = M_dot*eta_laval*eta_m*C_ex_n^2/2  "turbo-expander power [W]"
+eta_m = 1                                    "as in the original [-]"
+
+"!Internal isentropic efficiency of the expander"
+epsilon_s_in = epsilon_n_s*eta_laval*eta_m  "internal isentropic efficiency of the expander [-]"

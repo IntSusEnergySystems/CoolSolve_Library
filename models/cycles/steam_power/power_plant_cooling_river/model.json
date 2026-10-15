@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0195",
+  "name": "power_plant_cooling_river",
+  "title": "1 GW steam plant cooled by a river (exercise 1)",
+  "summary": "Teaching exercise: a 1 GW steam plant is taken at half the Carnot efficiency between 550 °C and the saturation temperature at 10 kPa. The condenser heat is rejected to a river, and the model returns the river temperature rise.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "power_plant_cooling_river.eescode",
+  "fluids": ["Water"],
+  "tags": ["carnot", "steam cycle", "power plant", "condenser", "exercise"],
+  "language_features": ["property functions"],
+  "stats": {"n_equations": 18, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R4/R04_E1_2022.EES",
+    "candidate_id": "TM-0421",
+    "authors": ["S. Quoilin"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "ULiège MECA0002, repetition R4, exercise 1 (2022-2023)"
+  },
+  "verification": {
+    "summary": "Compared with the solution stored in R04_E1_2022.EES (compare_solution.py --ees-units): 18 common variables, 0 differ (rtol=0.001); only in EES: 8; only in CoolSolve: 0. Maximum relative difference 1.64e-05 on T_F, from T_sat. Net power 1 GW, condenser heat 2.265 GW, river flow 80 m3/s, temperature rise 6.767 K.",
+    "checks": ["ees-stored-solution", "energy-balance"],
+    "reference": "EES stored solution of R04_E1_2022.EES (compare_solution.py --ees-units)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@f5b79cd",
+    "max_rel_diff": 1.64e-05,
+    "notes": "Summary line: 18 common variables, 0 differ (rtol=0.001); only in EES: 8; only in CoolSolve: 0. The eight EES-only names are P and p[1]..p[7]; the equation window does not use them. T_F and T_F2 are 45.8063 °C against 45.8056 °C (relative 1.64e-05). eta, the three heat rates and DELTAT stay within 2.15e-06. The equation window computes no enthalpy and no entropy. SpecHeat (c_eau_2) differs by 5.90e-11 and is not used in the river balance."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

@@ -1,0 +1,53 @@
+{=============================================================================
+  Rigid tank filled by a compressor: reversible work
+  CoolSolve Library model CSL-0197
+ -----------------------------------------------------------------------------
+  A rigid 200 m³ tank of air starts at 100 kPa and 300 K and is charged by a
+  compressor to 1 MPa at the same temperature. The system is the tank and the
+  compressor together. An exergy balance with no destruction gives the
+  reversible work input. The fluid is Air_ha, as in the original.
+
+  Inputs : Vol, T_0, p_0, p_1
+  Outputs: W_rev_in, m_0, m_1
+  Units  : SI - temperatures in K, pressures in Pa, energies in J
+           (property calls receive °C)
+  Source : ULiege MECA0002 R10 exercise 5 (2022-2023); the file names no author - see README.md
+=============================================================================}
+
+"!Problem data"
+"A rigid tank of 200 m3 initially contains atmospheric air at 100 kPa and 300 K. It is used as a storage tank by compressing air up to 1 MPa and 300 K. The air charged into the tank is compressed from the ambient state (100 kPa and 300 K). The original asks for the minimum work of this process. The system is the tank and the compressor together."
+T_0 = 300 [K]                          "initial temperature [K], as stored; kept in kelvin"
+T_1 = T_0                              "final temperature in the tank [K]"
+p_0 = 100E3 [Pa]                       "initial pressure [Pa] (100 kPa in the original)"
+p_1 = 1000E3 [Pa]                      "final pressure [Pa] (1000 kPa, 1 MPa, in the original)"
+
+h_0 = enthalpy(Air_ha, P=p_0, T=T_0-273.15)   "initial enthalpy [J/kg]; the call takes °C and T_0 is in K"
+s_0 = entropy(Air_ha, P=p_0, T=T_0-273.15)    "initial entropy [J/kg-K]"
+h_1 = enthalpy(Air_ha, P=p_1, T=T_1-273.15)   "final enthalpy [J/kg]"
+s_1 = entropy(Air_ha, P=p_1, T=T_1-273.15)    "final entropy [J/kg-K]"
+
+Vol = 200 [m^3]                        "tank volume [m^3]"
+
+v_0 = volume(Air_ha, P=p_0, T=T_0-273.15)     "initial specific volume [m^3/kg]"
+v_1 = volume(Air_ha, P=p_1, T=T_1-273.15)     "final specific volume [m^3/kg]"
+
+m_0 = Vol/v_0                          "initial mass [kg]"
+m_1 = Vol/v_1                          "final mass [kg]"
+
+"!Exergy balance"
+"As in the original: X_in - X_out - X_destroyed = X_1 - X_0. The comment asks for a maximum work in the reversible case and sets X_destroyed = 0. The statement asks for the minimum work. The equation kept here is that reversible balance."
+X_in - X_out = X_1 - X_0               "reversible exergy balance of the tank and the compressor [J]"
+
+"The original writes X_in = W_rev_in + m_in*psi_in, then notes that psi_in is zero because state 0 is already the dead state, so X_in = W_rev_in. psi_in is not an equation in the original."
+X_in = W_rev_in                        "work entering the compressor [J]"
+
+X_out = 0 [J]                          "nothing leaves: no mass, no heat and no work [J]"
+
+X_1 = m_1*phi_1                        "exergy of the air finally in the tank [J]"
+X_0 = m_0*phi_0                        "exergy of the air initially in the tank [J]; the original says this is 0"
+
+phi_0 = (h_0 - h_amb) - T_amb*(s_0 - s_amb)   "specific exergy phi of the initial air [J/kg]; the original says it is 0 at the dead state"
+phi_1 = (h_1 - h_amb) - T_amb*(s_1 - s_amb)   "specific exergy phi of the final air [J/kg]"
+h_amb = enthalpy(Air_ha, P=p_0, T=T_0-273.15) "dead-state enthalpy, ambient air [J/kg]"
+s_amb = entropy(Air_ha, P=p_0, T=T_0-273.15)  "dead-state entropy [J/kg-K]"
+T_amb = T_0                            "ambient temperature [K]"

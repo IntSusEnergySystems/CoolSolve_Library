@@ -1,0 +1,62 @@
+{=============================================================================
+  Variable-speed pump from dimensionless polynomials
+  CoolSolve Library model CSL-0203
+ -----------------------------------------------------------------------------
+  Predicts head, speed, shaft power and electrical power of a centrifugal
+  pump on a quadratic system curve. Head and absorbed-power coefficients
+  are cubics of the flow coefficient, identified from catalogue data.
+  Motor and VFD efficiencies depend on the fraction of catalogue speed.
+  Water enters only through the suction density.
+
+  Inputs : system curve, volume flow, catalogue diameter and speed,
+           nominal motor power, suction temperature and pressure
+  Outputs: head, speed, shaft power, electrical power, efficiencies
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J;
+           head in m; speed kept in rev/min (omega in rad/s)
+  Source : Laborelec toolkit, 2002 - see README.md
+=============================================================================}
+
+"!Dimensionless polynomials (Grundfos LP 100-200/210, as in the original)"
+psi_p = 0.14125 - 0.44025*phi_p + 91.887*phi_p^2 - 15013.09*phi_p^3    "head coefficient [-]"
+Lambda_p = 0.0004725 + 0.179*phi_p - 8.369*phi_p^2 + 214.7057*phi_p^3    "absorbed-power coefficient [-]"
+epsilon_s_p = (psi_p*phi_p)/Lambda_p    "effectiveness psi*phi/lambda [-]"
+
+"!Affinity laws at the running point"
+psi_p = DELTAP_p/(rho_su_p*omega_p^2*D_p^2)    "head coefficient from the pressure rise [-]"
+phi_p = V_dot_p/(D_p^3*omega_p)    "flow coefficient [-]"
+Lambda_p = W_dot_shaft_p/(D_p^5*omega_p^3*rho_su_p)    "absorbed-power coefficient [-]"
+
+"!System curve"
+H_p = K_p*V_dot_p^2    "manometric head [m]; original calls this an example of a simple system equation"
+K_p = 130000    "system-curve coefficient [s^2/m^5]"
+V_dot_p = 50/3600    "volume flow rate [m^3/s]"
+
+omega_p = (rpm_p*2*pi)/60    "angular speed [rad/s]"
+
+"!Electrical power of the pump and variable-frequency drive"
+W_dot_elec_p = W_dot_shaft_p/(eta_vfd_p*eta_motor_p)    "electrical power at the drive inlet [W]"
+eta_motor_p = eta_motor_nom_p*(1 - exp(-0.0904*X))    "motor efficiency at the running speed [-]"
+eta_vfd_p*100 = 50.87 + 1.283*X - 0.0142*X^2 + 5.834*10^(-5)*X^3    "drive efficiency; the right-hand side is a percent, as in the original"
+
+"!Nameplate motor efficiency, 2-pole correlation fitted with power in kW"
+W_dot_motor_nom_kW_p = W_dot_motor_nom_p/1000    "nominal motor power fed to the correlation [kW]"
+eta_motor_nom_p = 1 - a*W_dot_motor_nom_kW_p^b    "nameplate motor efficiency [-]"
+a = 0.184    "2-pole correlation coefficient, as in the original (2 pole, 3600 rpm)"
+b = -0.236    "2-pole correlation exponent [-]"
+
+"Unused alternatives in the original brace comment (decimal commas): 4 poles a=0.169, b=-0.25; 6 poles a=0.167, b=-0.239; 8 poles a=0.192, b=-0.246."
+
+rpm_p = rpm_cat_p*(X*0.01)    "running speed [rev/min]; X is the percent of catalogue speed"
+
+"!Suction state"
+rho_su_p = DENSITY(Water, T=T_w_su_p, P=P_w_su_p)    "suction density [kg/m^3]"
+
+"!Catalogue data and inputs"
+D_cat_p = 0.210    "catalogue impeller diameter [m]"
+rpm_cat_p = 2960    "catalogue speed [rev/min]; original annotation [rev/m]"
+W_dot_motor_nom_p = 23000    "nominal motor power [W]; 23 kW in the original"
+D_p = D_cat_p    "impeller diameter [m]"
+T_w_su_p = 20    "suction temperature [°C]"
+P_w_su_p = 101300    "suction pressure [Pa]; 101.3 kPa in the original"
+g = 9.81    "gravitational acceleration [m/s^2]"
+DELTAP_p = rho_su_p*g*H_p    "pressure rise [Pa]"

@@ -45,7 +45,7 @@
     "notes": "compare_solution.py against the Python/CoolProp reference with --rtol 1e-9: '42 common variables, 0 differ (rtol=1e-09); only in EES: 0; only in CoolSolve: 4' (the 4 are fluid$, its string copy in the .sol (CS-BUG-SOL-STRING), R# and the unused input r); largest deviation 2.11e-11 (v[2], v[3]). Against the EES stored values (--ees-units): the 18 lines marked ok (inputs, the zeros and v[1..4], m, r_bis) agree within 1.51e-05 (v[1..4], m, r_bis: EES molar mass of dry air 28.966 vs CoolProp 28.96546 kg/kmol), the inputs are identical, and s[1] = 5672.12 vs 3856.91 J/kg-K is a constant entropy reference-state offset (EES ideal-gas Air table vs CoolProp Air). The 25 remaining stored values are the placeholder 1 (T[2], T[3], T[4], p[2..4], gamma01, gamma34, cv12..cv41, w_12, w_34, q_41, eta_otto, W_net, W_dot_net, w_net_cycle, w_net_cycle_bis, p_max, T_max, s[2..4] with a K unit): the file was saved before a full solution, so they carry no information and compare_solution.py flags them all as DIFF."
   },
   "missing_features": [],
-  "related": ["CSL-0024", "CSL-0034", "CSL-0050", "CSL-0059"],
+  "related": ["CSL-0024", "CSL-0034", "CSL-0050", "CSL-0059", "CSL-0192"],
   "related_external": [
     "thermo_models TM-0430 / TM-0433 (thermodynamique appliquee session R5, exercise 2: air-standard Diesel cycle, same session and same solution method, other cycle)"
   ],

@@ -1,0 +1,59 @@
+{
+  "id": "CSL-0175",
+  "name": "cooling_ceiling_simplified",
+  "title": "Simplified cooling ceiling (sizing and TXV control)",
+  "summary": "Simplified cooling-ceiling model: the nominal water capacity rate and conductance are sized from the nominal cooling load, and the heat rate is the effectiveness times the capacity rate times the supply-to-air temperature difference, multiplied by a valve factor linear in the air-temperature offset.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "cooling_ceiling_simplified.eescode",
+  "fluids": [],
+  "tags": [
+    "cooling ceiling",
+    "terminal unit",
+    "control",
+    "epsilon-NTU",
+    "sizing"
+  ],
+  "language_features": [],
+  "stats": {
+    "n_equations": 21,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/Heating_Cooling_Terminal_Units/CoolingCeilings/CoolingCeilingWithControl_Simplified_EES_ModeJLSB080317.EES",
+    "candidate_id": "TM-0261",
+    "authors": [
+      "Jean Lebrun (ULiège Thermodynamics Laboratory)",
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en",
+    "course": "ULiège model bank, simplified cooling ceiling with sizing and TXV control, 2008-03-17"
+  },
+  "verification": {
+    "summary": "Against the stored solution of CoolingCeilingWithControl_Simplified_EES_ModeJLSB080317.EES: 21 common variables, 0 differ (rtol=0.001). The maximum relative difference is 2.67e-10 on AU_ceiling and AU_ceiling_n (stored-solution rounding).",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in CoolingCeilingWithControl_Simplified_EES_ModeJLSB080317.EES (21 variables)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@b3c0d78",
+    "max_rel_diff": 2.67e-10,
+    "notes": "21 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum relative difference 2.67e-10 on AU_ceiling and AU_ceiling_n. At rtol=0 the tool also flags C_dot_w_ceiling and C_dot_w_ceiling_n at 9.99e-11; epsilon_ceiling and epsilon_ceiling_n (9.99e-11) and NTU_ceiling and NTU_ceiling_n (2.02e-11) stay inside atol=1e-9. The residuals are the stored solution written with fewer digits (C_dot_w_ceiling_n is 1000/3, stored as 333.3333333; AU_ceiling_n is -ln(2/3)*1000/3, stored as 135.155036). The system is fully explicit: 0 iterations from the default guesses and 0 iterations with the shipped .initials. Inputs are already equations, so no Diagram-window value was substituted."
+  },
+  "missing_features": [],
+  "related": ["CSL-0168"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

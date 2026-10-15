@@ -1,0 +1,53 @@
+{
+  "id": "CSL-0201",
+  "name": "stirling_cycle_r4bis",
+  "title": "Ideal Stirling cycle with a regenerator (exercise)",
+  "summary": "Teaching exercise: theoretical Stirling cycle on ideal-gas Air with an ideal regenerator (isothermal compression and expansion, isochoric heat exchange, volumetric compression ratio). It returns the work and heat of the four processes, the net work, and the efficiencies with and without the regenerator, compared with the Carnot efficiency.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "stirling_cycle_r4bis.eescode",
+  "fluids": ["Air"],
+  "tags": [
+    "exercise",
+    "Stirling cycle",
+    "regenerator",
+    "ideal gas",
+    "air standard",
+    "isothermal compression",
+    "isothermal expansion",
+    "isochoric heating",
+    "Carnot efficiency"
+  ],
+  "language_features": ["arrays", "property functions", "string variables"],
+  "stats": {"n_equations": 37, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R4bis/R05_E03_2022.EES",
+    "candidate_id": "TM-0428",
+    "authors": ["S. Quoilin"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.423",
+    "language": "fr",
+    "course": "ULiège MECA0002 Thermodynamique appliquée, session R4bis, exercise 5"
+  },
+  "verification": {
+    "summary": "compare_solution.py --ees-units on the stored solution of R05_E03_2022.EES (R4bis): 36 common variables, 12 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Printed maximum 9.99e-01 is cv12 (blank units, value already in J/kg-K). Net work, heat and both efficiencies agree within 5.89e-05. No enthalpy call, so the Air enthalpy offset does not appear.",
+    "checks": ["ees-stored-solution", "analytical"],
+    "reference": "EES stored solution of thermodynamique appliquee/2022-2023/R4bis/R05_E03_2022.EES (36 values, EES X8.423), compare_solution.py --ees-units",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@f5b79cd",
+    "max_rel_diff": 9.99e-01,
+    "notes": "compare_solution.py --ees-units: '36 common variables, 12 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1'. Printed maximum 9.99e-01 on cv12 (exact 9.990004e-01); cv23, cv34 and cv41 print 9.99e-01 as well. Their stored unit strings are blank, so --ees-units does not multiply by 1000; CoolSolve already returns J/kg-K. After dividing by 1000 the relative differences are 4.16e-04 (cv12), 1.22e-04 (cv23 and cv41) and 9.34e-05 (cv34). That cv gap is what moves q_23 and q_41 (1.22e-04) and, through q_couteux, eta_stirling (5.89e-05), all under rtol 0.001. w_net, w_12, w_34, q_12, q_34 and q_c agree to 2e-10 or better. eta_stirling_regen and eta_carnot are both 0.7659073056 (rel 2.95e-11) and equal each other, which is the closed form w_net/q_c = 1 - T[1]/T[3]. T[1] and T[2] print 9.17e-01 and T[3] and T[4] print 2.15e-01 because --ees-units rewrites a stored unit K on a name starting with T into °C (298 K → 24.85 °C, 1273 K → 999.85 °C). The equation window stores those temperatures in kelvin (ideal-gas law and Carnot ratio) and the solved values are the stored kelvin numbers. s[1] to s[4] print 3.18e-01, 3.61e-01, 2.94e-01 and 2.65e-01: EES minus CoolSolve is 1814.89, 1820.99, 1814.12 and 1813.50 J/kg-K. The isothermal step s[2]-s[1] is -660.909 J/kg-K in EES and -667.013 J/kg-K in CoolSolve. Entropy is post-processing; the work, the heat and the efficiencies do not use it. Enthalpy is not called, so the usual ideal-gas Air enthalpy offset of about +126 kJ/kg does not appear. The extra CoolSolve name is fluid$ (numeric 0 beside fluid$ = 'Air', CS-BUG-SOL-STRING). Square system, 37 equations, largest block 1. 8 iterations with the stored-solution initials, 55 without them."
+  },
+  "missing_features": [],
+  "related": ["CSL-0059"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

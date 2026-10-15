@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0191",
+  "name": "steam_reheat_power_plant",
+  "title": "Steam power plant with reheat (Cengel exercise 10-34)",
+  "summary": "Steady reheat Rankine cycle on water: saturated liquid is pumped from 10 kPa to 10 MPa, boiled to 500 °C, expanded to 1 MPa, reheated once to 500 °C and expanded to 10 kPa. For an imposed net power of 80 MW the model returns the thermal efficiency and the steam mass flow.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "steam_reheat_power_plant.eescode",
+  "fluids": ["Water"],
+  "tags": ["rankine", "reheat", "steam cycle", "power plant", "turbine", "pump", "exercise"],
+  "language_features": ["property functions"],
+  "stats": {"n_equations": 37, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/10-34.EES",
+    "candidate_id": "TM-0348",
+    "authors": ["TBD (KU Leuven thermo)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.940",
+    "language": "en",
+    "course": "KU Leuven thermodynamics; textbook exercise Cengel 10-34"
+  },
+  "verification": {
+    "summary": "Compared with the solution stored in 10-34.EES (compare_solution.py, no unit scaling): 37 common variables, one above rtol 0.001. Largest relative difference 1.26e-03 is T_6 (88.084 °C vs 87.973 °C), from CoolProp versus EES steam properties plus a 687 J/kg enthalpy difference. Enthalpies and entropies stay within 4.62e-04. Net power 80 MW, efficiency 0.3405, steam flow 62.65 kg/s.",
+    "checks": ["ees-stored-solution", "energy-balance"],
+    "reference": "EES stored solution of 10-34.EES (compare_solution.py, units already SI)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@3e9c1b6",
+    "max_rel_diff": 1.26e-3,
+    "notes": "Summary line: 37 common variables, 1 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. T_6 is the only variable above rtol 0.001. At the stored h_6, CoolSolve returns 87.724 °C against the stored 87.973 °C; the solved h_6 is 687 J/kg higher and raises T by about 0.36 °C, leaving +0.111 °C. Liquid enthalpies differ by about 87 J/kg and vapour enthalpies by 550 to 1130 J/kg; entropies by 0.30 J/kg-K (liquid) to about 2.5 J/kg-K (vapour). Not a reference-state offset. Equation residuals are at most 6.41e-10. The ees_variables.csv units column is empty and the stored enthalpies are already in J, so --ees-units was not used."
+  },
+  "missing_features": [],
+  "related": ["CSL-0208"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

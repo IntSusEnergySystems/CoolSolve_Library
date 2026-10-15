@@ -1,0 +1,84 @@
+{=============================================================================
+  Reverse Brayton air refrigeration cycle with intercooling (exercise 3)
+  CoolSolve Library model CSL-0212
+ -----------------------------------------------------------------------------
+  Open air refrigeration cycle that cools air from 25 °C to 15 °C. Compression
+  is in two stages, each followed by cooling back to the inlet temperature.
+  The expander drives the second compressor. Ideal-gas Air, as in the original.
+  Teaching exercise THD10 R9 E3 (2010/2017), ULiège MECA0002.
+
+  Inputs : T_air_su, T_air_ex, p_amb, eta_is, eta_mec
+  Outputs: COP, q_ut, w_c1, w_c2, w_t, r_p, r_p1, r_p2
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MECA0002, thermo_models THD10_R9_E3.EES - see README.md
+=============================================================================}
+
+"!Data"
+fluid$ = 'Air'
+eta_mec = 0.9                                  "mechanical efficiency of the first stage [-]"
+T_air_su = 25 [°C]                             "air temperature at the cycle inlet [°C]"
+T_air_ex = 15 [°C]                             "air temperature to be reached at the turbine exit [°C]"
+eta_is = 0.8                                   "isentropic efficiency of compression and expansion [-]"
+p_amb = 100e3 [Pa]                             "ambient pressure [Pa], 100 kPa (1 bar) in the original"
+
+"!Station 1: inlet of the first compressor"
+p[1] = p_amb                                   "pressure [Pa]"
+T[1] = T_air_su                                "temperature [°C]"
+h[1] = enthalpy(fluid$, T=T[1])                "specific enthalpy [J/kg]"
+s[1] = entropy(fluid$, T=T[1], P=p[1])         "specific entropy [J/kg-K]"
+
+"!Station 2: outlet of the first compressor"
+eta_is * (h[2] - h[1]) = h_2_is - h[1]         "isentropic efficiency; written so the unknown h[2] is not a denominator, as in the original"
+h_2_is = enthalpy(fluid$, P=p[2], s=s[1])      "isentropic outlet enthalpy [J/kg]; p[2] comes from walking the cycle backwards, as in the original"
+s[2] = entropy(fluid$, P=p[2], T=T[2])         "specific entropy [J/kg-K]"
+T[2] = temperature(fluid$, h=h[2])             "temperature [°C]"
+w_c1 = h[2] - h[1]                             "specific work of the first compressor [J/kg]"
+
+"!Station 3: outlet of the first heat exchanger"
+T[3] = T[1]                                    "cooled back to the inlet temperature, as in the original [°C]"
+h[3] = enthalpy(fluid$, T=T[3])                "specific enthalpy [J/kg]"
+p[3] = pressure(fluid$, T=T[3], s=s[3])        "pressure [Pa]; the original comment says it follows from the known enthalpy and from s[3], which comes from the second compressor"
+p[2] = p[3]                                    "the heat exchanger is taken as isobaric [Pa]"
+
+"!Station 4: outlet of the second compressor"
+T[4] = temperature(fluid$, h=h[4])             "temperature from h[4]; h[4] comes from the high-pressure compressor and turbine shaft balance [°C]"
+eta_is = (h_4_is - h[3]) / (h[4] - h[3])       "isentropic efficiency of the second compressor [-]"
+"The isentropic efficiency gives h_4_is and, through it, s[3] at the second-compressor inlet. The original notes the equivalent call h_4_is = enthalpy(fluid$, P=p[4], s=s[3]); the entropy form below is the equation that is solved."
+s[3] = entropy(fluid$, P=p[4], h=h_4_is)       "specific entropy at station 3 [J/kg-K]"
+
+"!Station 5: outlet of the second heat exchanger"
+T[5] = T[1]                                    "cooled back to the inlet temperature, as in the original [°C]"
+h[5] = enthalpy(fluid$, T=T[5])                "specific enthalpy [J/kg]"
+p[5] = pressure(fluid$, h=h[5], s=s[5])        "pressure from the known enthalpy and from s[5], which comes from the turbine [Pa]"
+p[4] = p[5]                                    "the heat exchanger is taken as isobaric [Pa]"
+s[4] = entropy(fluid$, P=p[4], T=T[4])         "specific entropy [J/kg-K]"
+
+"!Station 6: turbine outlet"
+p[6] = p_amb                                   "cold air is discharged at ambient pressure [Pa]"
+T[6] = T_air_ex                                "delivery temperature specified in the statement [°C]"
+h[6] = enthalpy(fluid$, T=T[6])                "specific enthalpy [J/kg]"
+s[6] = entropy(fluid$, T=T[6], P=p[6])         "specific entropy [J/kg-K]"
+eta_is * (h_6_is - h[5]) = (h[6] - h[5])       "isentropic efficiency of the turbine [-]"
+"The isentropic efficiency gives h_6_is and, through it, s[5] at the turbine inlet. The original notes the equivalent call h_6_is = enthalpy(fluid$, P=p[6], s=s[5]); the entropy form below is the equation that is solved."
+s[5] = entropy(fluid$, P=p[6], h=h_6_is)       "specific entropy at station 5 [J/kg-K]"
+
+"!Shaft balance of the high-pressure compressor and the turbine"
+w_c2 + w_t = 0                                 "the expander supplies the work of the second compression stage [J/kg]"
+w_c2 = h[4] - h[3]                             "specific work of the second compressor [J/kg]"
+w_t = h[6] - h[5]                              "specific work of the turbine [J/kg]"
+
+"!Useful effect and COP"
+q_ut = h[1] - h[6]                             "useful specific cooling: enthalpy drop from the inlet state to the delivery state [J/kg]"
+COP = q_ut / (w_c1 / eta_mec)                  "COP [-]; the mechanical efficiency applies to the first compression stage only, as in the original"
+
+"!Overall and stage pressure ratios"
+r_p_min = ((T[1] + 273) / (T[6] + 273)) ^ (gamma / (gamma - 1))  "minimum pressure ratio of the constant-gamma estimate, as in the original [-]"
+gamma = 1.4                                    "ratio of specific heats used only in r_p_min [-]"
+r_p = p[4] / p[1]                              "overall pressure ratio [-]"
+r_p1 = p[2] / p[1]                             "pressure ratio of the first compressor [-]"
+r_p2 = p[4] / p[3]                             "pressure ratio of the second compressor [-]"
+
+"!Extra point closing the cycle on a T-s diagram"
+T[7] = T[1]                                    "temperature [°C]"
+p[7] = p[1]                                    "pressure [Pa]"
+s[7] = s[1]                                    "specific entropy [J/kg-K]"

@@ -1,0 +1,55 @@
+{
+  "id": "CSL-0222",
+  "name": "r22_unloaded_cylinders",
+  "title": "R22 refrigeration machine with unloaded cylinders (exercise)",
+  "summary": "Teaching exercise: an R22 reciprocating compressor at full displacement (4 cylinders) and at half displacement (2 cylinders), with losses applied before an adiabatic compression. The evaporator and the condenser are effectiveness-NTU exchangers on water. A weight theta mixes the reduced-displacement water outlet with the idle outlet to hold 14 °C.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "r22_unloaded_cylinders.eescode",
+  "fluids": ["R22", "Water"],
+  "tags": [
+    "refrigeration",
+    "reciprocating compressor",
+    "unloaded cylinders",
+    "volumetric efficiency",
+    "clearance volume",
+    "part-load",
+    "effectiveness-NTU",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "array variables"
+  ],
+  "stats": {"n_equations": 117, "largest_block": 30},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 10/MSTH_041123_exercice_2.EES",
+    "candidate_id": "TM-0158",
+    "authors": ["TBD (ULiège MSTh)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.210",
+    "language": "fr",
+    "course": "Machines et systèmes thermiques (ULiège), répétition TP 10, exercice 2"
+  },
+  "verification": {
+    "summary": "compare_solution.py without --ees-units, against the solution stored in MSTH_041123_exercice_2.EES: 101 common variables, 3 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 16. Maximum relative difference 1.66e-03 on t_ev (R22 properties). The 16 CoolSolve-only names are the diagram arrays. Cooling capacity, power and COP of both regimes stay within rtol.",
+    "checks": ["ees-stored-solution"],
+    "reference": "Solution stored in MSTH_041123_exercice_2.EES (101 variables, EES X7.210)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 0.00166,
+    "notes": "Maximum relative difference over the 101 common variables is 1.66e-03 on t_ev (3.81262 °C EES, 3.80629 °C CoolSolve); the other two above rtol=0.001 are t_su_1 (1.51e-03) and v_ex_1 (1.04e-03). R22 has no constant reference offset of the R134a kind: CoolSolve minus EES is about +8 to +50 J/kg on the vapour enthalpies and about -159 J/kg at the condenser outlet, and about +0.04 to +0.10 J/kg-K on the stored entropies. The vapour residuals largely cancel in the compressor power (relative difference 1.0e-04 at full load, 1.1e-05 at half displacement). They do not cancel in the cooling capacity, which subtracts the liquid enthalpy (5.7e-04 and 5.2e-04). COP follows the capacity residual (4.6e-04 and 5.1e-04). The 30-equation block fails without the shipped .initials (LineSearchFailed at iteration 10) and converges in 12 iterations with them."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "id": "CSL-0196",
+  "name": "reference_pipe",
+  "title": "Reference pipe model",
+  "summary": "A water pipe assembled from an adiabatic pressure-drop model and an isobaric heat-gain model. The friction factor is the Colebrook equation; the heat gain is an epsilon-NTU balance with fixed convection coefficients.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "reference_pipe.eescode",
+  "fluids": ["Water"],
+  "tags": [
+    "pipe",
+    "pressure drop",
+    "heat gain",
+    "water",
+    "reference model",
+    "Colebrook"
+  ],
+  "language_features": [
+    "property functions",
+    "abs",
+    "LOG10",
+    "EXP",
+    "implicit friction factor",
+    "control-panel values restored"
+  ],
+  "stats": {"n_equations": 55, "largest_block": 1},
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/Pipe/Reference pipe model JL080103.EES",
+    "candidate_id": "TM-0318",
+    "authors": ["Jean Lebrun"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.966",
+    "language": "en",
+    "course": "Laboratory reference pipe model JL080103, 2008-01-03"
+  },
+  "verification": {
+    "summary": "Against the stored solution of Reference pipe model JL080103.EES: 54 common variables, 4 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 2. Maximum relative difference 1.538e-03 on c_p_pipe_02 (EES 4195.960667, CoolSolve 4202.424522 J/(kg·K)). C_dot_pipe_02, NTU_pipe_02 and epsilon_pipe_02 follow from that cp. Pressure drop, heat gain and outlet temperature stay within rtol 0.001.",
+    "checks": ["ees-stored-solution", "order-of-magnitude"],
+    "reference": "EES stored solution in Reference pipe model JL080103.EES (54 variables)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@f5b79cd",
+    "max_rel_diff": 0.001538125166,
+    "notes": "The four variables above rtol 0.001 are one CoolProp/EES specific-heat difference at the heat-gain inlet. AU_pipe_02 matches the stored 19.81394555 W/K, so NTU = AU/C_dot and epsilon = 1-exp(-NTU) follow the cp ratio. Q_dot_pipe is 474.3061201 W against 474.3041201 W (rel 4.22e-06). t_ex_pipe is 6.118393565 °C against 6.118581062 °C (rel 3.06e-05). DELTAp_pipe_01 is 23439.81082 Pa against 23440.45337 Pa (rel 2.74e-05); the viscosity difference is 4.75e-04. Stored enthalpy is already in J/kg (blank unit, 25417.30434; CoolSolve 25421.65865 J/kg, rel 1.71e-04); --ees-units was not used. Only in CoolSolve: pi, and t_ex_pipe_01, which is absent from the extracted variable list and equals t_su_pipe_02. The .sol labels v_pipe_01 as kg/m^3; the value is the specific volume in m^3/kg. With .initials the solve takes 8 iterations; without them, 122 iterations, the same root. abs(C_pipe_01) does not open a second root because the velocity follows from the positive mass flow."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

@@ -1,0 +1,93 @@
+{=============================================================================
+  Water heated in a spring-loaded piston-cylinder
+  CoolSolve Library model CSL-0210
+ -----------------------------------------------------------------------------
+  A frictionless piston rests on stops, then meets a linear spring.
+  The cylinder holds 4 kg of saturated water at 35 °C. Heat is added
+  until the pressure is 7 MPa. The model finds the final state and the
+  boundary work on the piston. Exercise 4.21, French edition of Cengel.
+  The equation window does not compute the heat transfer.
+
+  Inputs : A_p, k_ressort, m_eau, Vol_1, T_1, p_2, Vol_3, p_4
+  Outputs: W, Vol_4, T_4, v_4, x_4
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège THD teaching file; the file itself names nobody - see README.md
+=============================================================================}
+
+"Exercise 4.21. A frictionless piston of area 0.06 m^2 rests on stops; the enclosed volume is then 30 L.
+ The piston mass is such that 300 kPa is required to lift it at ambient pressure. When the volume reaches
+ 75 L the piston meets a spring that needs 360 kN to compress by 1 m. The cylinder initially holds 4 kg
+ of saturated water (liquid and vapour) at 35 °C. The system is heated until the pressure is 7 MPa.
+ Determine the final state of the water and the work of the process."
+
+"As in the original: heating lifts the piston, which delivers work. That work is negative for the fluid.
+ Each stage is computed as a positive integral of P dV, and the total is signed at the end."
+
+"Data"
+A_p = 0.06 [m^2]            "piston area [m^2]"
+k_ressort = 360e3 [N/m]    "spring stiffness [N/m]; 360 kN/m in the original"
+m_eau = 4 [kg]              "mass of water [kg]"
+
+Vol_1 = 30e-3 [m^3]         "volume while the piston rests on the stops [m^3]; 30 L"
+T_1 = 35 [C]                "initial temperature of the saturated water [°C]"
+p_2 = 300e3 [Pa]            "pressure that just lifts the piston [Pa]; 300 kPa in the original"
+Vol_3 = 75e-3 [m^3]         "volume when the piston meets the spring [m^3]; 75 L"
+p_4 = 7000e3 [Pa]           "final pressure [Pa]; 7000 kPa (7 MPa) in the original"
+
+"State 1: the piston rests on the stops. Saturated mixture, so the pressure is the saturation pressure at T_1."
+p_1 = P_sat(Water,T=T_1)    "saturation pressure at 35 °C [Pa]"
+v_1 = Vol_1/m_eau           "initial specific volume of the saturated water [m^3/kg]"
+x_1 = quality(water,v=v_1,T=T_1)  "initial quality [-]"
+
+"The initial pressure is below 300 kPa, so the first stage is at constant volume until the piston lifts."
+W_12 = 0.0                  "boundary work of the constant-volume stage [J]"
+
+"State 2: pressure has reached 300 kPa and the piston is about to leave the stops."
+Vol_2 = Vol_1               "volume at lift-off, still the stop volume [m^3]"
+v_2 = Vol_2/m_eau           "specific volume at the end of the constant-volume stage [m^3/kg]"
+T_2 = temperature(water,p=p_2,v=v_2)  "temperature at lift-off [°C]"
+x_2 = quality(water,p=p_2,v=v_2)      "quality at lift-off [-]"
+
+"Second stage: constant pressure at 300 kPa until the volume is 75 L, where the piston meets the spring."
+DELTAV_23 = Vol_3 - Vol_2   "volume change of the constant-pressure stage [m^3]"
+W_23 = p_2*DELTAV_23        "absolute boundary work of the constant-pressure stage [J], as in the original"
+
+"State 3: the piston has just reached the spring. h_3 is the piston height, not an enthalpy."
+h_3 = Vol_3 / A_p           "piston height when the spring is first touched [m]"
+p_3 = p_2                   "pressure at spring contact [Pa]"
+v_3 = Vol_3/m_eau           "specific volume at spring contact [m^3/kg]"
+T_3 = temperature(water,p=p_3,v=v_3)  "temperature at spring contact [°C]"
+x_3 = quality(water,p=p_3,v=v_3)      "quality at spring contact [-]"
+
+"Third stage: the external force is known. The spring force sets the pressure-volume law.
+ P = F/A = p_2 + k_ressort * DELTA_h / A_p = p_2 + k_ressort * DELTA_V / A_p^2,
+ with DELTA_h = h - h_3 and DELTA_V = V - Vol_3."
+
+"Final cylinder volume at 7 MPa. The pressure rise above 300 kPa is balanced by the spring force F = k_ressort * DELTA_h."
+DELTAp_34 = p_4-p_3                          "pressure rise while the spring is compressed [Pa]"
+DELTAp_34 = k_ressort/A_p*(h_4-h_3)          "same rise from the spring; solves the final piston height h_4 [m]"
+Vol_4 = A_p*h_4                              "final volume [m^3]"
+
+"Boundary work: integral of P dV from Vol_3 to Vol_4, again as a positive value.
+ P dV = (p_2 + k_ressort/A_p^2 * (V - Vol_3)) dV
+ antiderivative: p_2*V + k_ressort/A_p^2 * 0.5 * (V - Vol_3)^2"
+W_34 = p_2*(Vol_4-Vol_3) + k_ressort/A_p^2 *0.5* ( (Vol_4-Vol_3)^2 - 0.0 )  "absolute boundary work of the spring stage [J]"
+
+"Final state of the water. Pressure, mass and volume are known."
+v_4 = Vol_4/m_eau                     "final specific volume [m^3/kg]"
+T_4 = temperature(water,p=p_4,v=v_4)  "final temperature [°C]"
+x_4 = quality(water,p=p_4,v=v_4)      "final quality [-]; the original reads this as superheated vapour"
+"The final state is superheated vapour. In EES, quality returns 100 outside the dome."
+
+"Total work delivered during the process, negative for the fluid, as in the original."
+W = - (W_12 + W_23 + W_34)            "total boundary work [J]"
+
+"The four states, for a Clapeyron diagram, as in the original equation window."
+p[1]  = p_1
+v[1]  = v_1
+p[2]  = p_2
+v[2]  = v_2
+p[3]  = p_3
+v[3]  = v_3
+p[4]  = p_4
+v[4]  = v_4

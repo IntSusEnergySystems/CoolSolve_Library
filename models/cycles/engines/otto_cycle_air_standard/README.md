@@ -335,6 +335,9 @@ reference of the *Verification* section).
   temperature-dependent `cv` at a mean temperature, with an ideal regenerator
   and the work of the two isotherms also computed with an EES definite
   integral of `p dv`.
+- `CSL-0192` (*otto_cycle_cengel*): Cengel 9-37, cold air-standard Otto
+  cycle with specific heats fixed at the intake temperature. This model
+  evaluates `cv` at the mean temperature of each isentropic process.
 - The exercise session also contains the **Diesel** counterpart
   (`R05_E02_2022.EES`, inventory `TM-0430`/`TM-0433`, cut-off ratio 2,
   1.9 L engine), solved by the same method; it is a different exercise and is

@@ -1,0 +1,64 @@
+{
+  "id": "CSL-0205",
+  "name": "vav_fan_simulation",
+  "title": "Variable-speed fan from dimensionless polynomials",
+  "summary": "Predicts the pressure rise, shaft power and electrical power of a fan below catalogue speed, using catalogue quadratics of the dimensionless pressure and power coefficients and part-load motor and VFD efficiencies. Air enters only as the constant density 1.2 kg/m³.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "vav_fan_simulation.eescode",
+  "fluids": [],
+  "tags": [
+    "fan",
+    "affinity laws",
+    "variable speed",
+    "part load",
+    "catalogue"
+  ],
+  "language_features": [
+    "exp"
+  ],
+  "stats": {
+    "n_equations": 21,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "industry",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/3_Pumps and Fans/3_2_Fans/3_2_2_VAV_Fan_simulation.EES",
+    "candidate_id": "TM-0307",
+    "authors": [
+      "TBD (Laborelec toolkit)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X6.585",
+    "language": "en",
+    "course": "Laborelec toolkit, 2002"
+  },
+  "verification": {
+    "summary": "compare_solution.py --ees-units: 20 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 2. Largest printed relative difference 4.03e-10 on psi_f (CSV rounding). Converted: W_dot_motor_nom_f (kW x1000). DELTAP_f is stored in Pa; shaft and electrical power are stored in W.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution in 3_2_2_VAV_Fan_simulation.EES (20 variables)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@6730bcf",
+    "max_rel_diff": 4.03e-10,
+    "notes": "20 common variables, none above rtol=0.001. The largest relative difference the tool prints is 4.03e-10 on psi_f (exact ratio 4.031e-10): ees_variables.csv stores 0.1217930249 and CoolSolve has 0.121793024949. The same stored-digit rounding accounts for Lambda_f (1.71e-10), phi_f (1.10e-10), W_dot_elec_ (9.20e-11), eta_motor_nom_f (3.98e-11), eta_motor_f (3.48e-11), omega_f (2.45e-11) and epsilon_s_f (1.11e-11). DELTAP_f and W_dot_shaft_f print 0. --ees-units prints: Converted EES reference values: W_dot_motor_nom_f (kW x1000). DELTAP_f is stored as Pa (847.5564622). W_dot_shaft_f and W_dot_elec_ are stored as W. No stored unit is kj or KJ. Blank unit strings are not scaled. Names only in the CoolSolve solution: pi and W_dot_motor_nom_kW_f."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0187"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0181",
+  "name": "centrifugal_air_compressor_power",
+  "title": "Centrifugal air compressor power (example 5.14)",
+  "summary": "Teaching example of the power of a gas-turbine centrifugal air compressor, from the steady-flow energy balance with outlet kinetic energy. Inlet kinetic energy and potential energy are neglected.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "centrifugal_air_compressor_power.eescode",
+  "fluids": ["Air"],
+  "tags": ["exercise", "centrifugal compressor", "gas turbine", "steady-flow", "kinetic energy"],
+  "language_features": ["property functions"],
+  "stats": {"n_equations": 9, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R02/R2_E6_borguet.EES",
+    "candidate_id": "TM-0364",
+    "authors": ["TBD (ULiège THD)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.423",
+    "language": "fr",
+    "course": "ULiège, thermodynamique appliquée, THD10 repetition 2, 2017-2018, example 5.14"
+  },
+  "verification": {
+    "summary": "Against the stored solution of R2_E6_borguet.EES with compare_solution.py --ees-units: 9 common variables, 2 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. h_in and h_out carry the ideal-gas Air reference offset (CoolSolve - EES = 125.868 kJ/kg and 126.047 kJ/kg). Power is 2.81306e6 W versus 2.81036e6 W (rel 9.58e-04).",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in R2_E6_borguet.EES (9 variables, EES X8.423), compared with compare_solution.py --ees-units",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@96e4c95",
+    "max_rel_diff": 2.95e-01,
+    "notes": "Largest relative difference printed by compare_solution.py --ees-units is 2.95e-01 on h_in (426298 J/kg vs 300430 J/kg); h_out is 2.07e-01. Unrounded values: h_in 0.295258, h_out 0.207031. CoolSolve - EES is +125867.8 J/kg at 26.85 °C and +126047.5 J/kg at 206.85 °C (the documented ideal-gas Air offset is about -126 kJ/kg for EES - CoolSolve). The 179.7 J/kg change of that offset is the cp difference; it raises the power by 2696 W (rel 9.58e-04), inside rtol 0.001. Temperatures, pressures, c_out and q_m match exactly. 0 iterations with .initials and 0 without; every block is explicit. Enthalpy guesses are the EES values in J and are not the CoolSolve enthalpies. The AirH2O hint was not followed. The warning that 206.85 is read as °C is the intended unit (480 K)."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

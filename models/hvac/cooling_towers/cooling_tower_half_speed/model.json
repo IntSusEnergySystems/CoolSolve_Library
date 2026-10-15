@@ -1,0 +1,69 @@
+{
+  "id": "CSL-0215",
+  "name": "cooling_tower_half_speed",
+  "title": "Exercise: cooling tower at nominal and half fan speed",
+  "summary": "Teaching exercise: a direct-contact cooling tower rated as a fictitious dry counterflow exchanger on wet-bulb temperatures, at the nominal fan speed and at half speed, with the two regimes mixed at a stored outlet setpoint.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "cooling_tower_half_speed.eescode",
+  "fluids": [
+    "AirH2O"
+  ],
+  "tags": [
+    "cooling tower",
+    "counterflow",
+    "evaporative",
+    "wet bulb",
+    "fictitious fluid",
+    "epsilon-NTU",
+    "part load",
+    "fan",
+    "exercise"
+  ],
+  "language_features": [
+    "humid-air properties",
+    "min/max"
+  ],
+  "stats": {
+    "n_equations": 59,
+    "largest_block": 13
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 06/MSTH R6 EX 2 2.EES",
+    "candidate_id": "TM-0090",
+    "authors": [
+      "TBD (ULiège MSTh)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh (J. Lebrun, V. Lemort, S. Bertagnolio), repetition R6, exercise 2 (2024-10-05)"
+  },
+  "verification": {
+    "summary": "Against the stored solution of MSTH R6 EX 2 2.EES, compare_solution.py reports: 59 common variables, 1 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Outlet water 25.555 °C and 29.400 °C, heat 1.977 MW and 1.172 MW, fan power 1875 W. T_w_ex_set is 29.400 °C against stored 35 °C: that 35 does not solve the mix at theta = 0. Max 1.60e-01.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "Solution stored in MSTH R6 EX 2 2.EES (EES X7.458, candidate TM-0090)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@62d92f0",
+    "max_rel_diff": 0.159992924904,
+    "notes": "59 common variables, 1 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. The tool prints the largest relative difference as 1.60e-01, on T_w_ex_set (exact 0.159992924904: CoolSolve 29.4002476284 °C, EES 35 °C). The equation window does not assign theta. The stored solution holds theta ≈ 0 and W_dot_mean = W_dot_r = 1875 W. The shipped equation is theta = 0. The mix then returns T_w_ex_set = T_w_ex_r. The stored 35 °C equals T_w_su and does not satisfy T_w_ex_set = theta*T_w_ex + (1-theta)*T_w_ex_r. theta and W_dot_mean agree. Every other common variable is within rtol 0.001. The next largest relative difference is 6.515e-04 on cp_a_f, from humid-air properties, EES 7.458 vs CoolProp AirH2O. T_w_ex is 25.555026 °C against 25.554937 °C; T_w_ex_r is 29.400248 °C against 29.400619 °C; Q_dot is 1.977305 MW against 1.977324 MW; Q_dot_r is 1.172308 MW against 1.172230 MW; M_dot_a is 60 kg/s and M_dot_a_r is 30 kg/s; W_dot_r and W_dot_mean are 1875 W. Inlet v_a = 0.863279 m³/kg (EES 0.863574). density(AirH2O) at the inlet is 1.15837 kg/m³ and equals 1/v_a. Units were already SI. 20 iterations with the stored-solution guesses. The Fahrenheit hint on humrat near 30 °C was not followed."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{=============================================================================
+  Centrifugal air compressor of a gas turbine (example 5.14)
+  CoolSolve Library model CSL-0181
+ -----------------------------------------------------------------------------
+  Steady-flow energy balance on an adiabatic centrifugal air compressor.
+  The change in potential energy and the inlet kinetic energy are neglected,
+  as in the original. The power includes the outlet kinetic energy.
+  Teaching example 5.14, ULiège thermodynamique appliquée, THD10 repetition 2
+  (2017-2018).
+
+  Inputs : p_in, T_in, p_out, T_out, c_out, q_m
+  Outputs: W_dot, h_in, h_out
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège THD, thermo_models R2_E6_borguet.EES - see README.md
+=============================================================================}
+
+"!Data"
+p_in = 100e3 [Pa]                              "inlet pressure [Pa], 100 kPa in the original"
+T_in = 300 - 273.15                            "inlet temperature [°C], 300 K in the original"
+p_out = 400e3 [Pa]                             "outlet pressure [Pa], 400 kPa in the original"
+T_out = 480 - 273.15                           "outlet temperature [°C], 480 K in the original"
+c_out = 100 [m/s]                              "outlet velocity [m/s]"
+q_m = 15 [kg/s]                                "inlet mass flow rate [kg/s]"
+
+"!Steady-flow energy balance"
+"Adiabatic open system in steady state, so the heat transfer is zero and the mass flow is constant. The potential-energy change is neglected. The inlet kinetic energy is neglected because the control volume is large enough that the air speed across the inlet surface is very small, as in the original."
+W_dot = q_m*(h_out - h_in + c_out^2/2)        "compressor power [W]; the original divided c_out^2/2 by 1000"
+h_out = enthalpy(Air, T=T_out)                "outlet specific enthalpy [J/kg]"
+h_in = enthalpy(Air, T=T_in)                  "inlet specific enthalpy [J/kg]"

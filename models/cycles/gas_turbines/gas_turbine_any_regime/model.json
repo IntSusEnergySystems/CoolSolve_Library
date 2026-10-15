@@ -1,0 +1,57 @@
+{
+  "id": "CSL-0220",
+  "name": "gas_turbine_any_regime",
+  "title": "Single-shaft gas turbine at any regime",
+  "summary": "Steady exercise of a single-shaft gas turbine burning methane in air. The compressor reduced flow and isentropic efficiency are interpolated from a three-row map against the pressure ratio; the expander reduced flow and isentropic efficiency are constant.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "gas_turbine_any_regime.eescode",
+  "fluids": ["Air", "CH4"],
+  "tags": [
+    "exercise",
+    "gas turbine",
+    "Brayton cycle",
+    "compressor map",
+    "lookup table",
+    "reduced mass flow",
+    "methane"
+  ],
+  "language_features": [
+    "INTERPOLATE (native EES keyword form)",
+    "procedures",
+    "functions",
+    "CALL with several outputs",
+    "property calls"
+  ],
+  "stats": {"n_equations": 50, "largest_block": 21},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 09/MSTH-SB-R9-EX2.EES",
+    "candidate_id": "TM-0145",
+    "authors": ["Stéphane Bertagnolio"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh, machines et systèmes thermiques, repetition R9 exercise 2"
+  },
+  "verification": {
+    "summary": "Stored solution of MSTH-SB-R9-EX2.EES (EES X7.458). compare_solution.py: 42 common variables, 12 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 8. Shaft power 328144 W versus 328445 W; eta 0.21372 versus 0.21366; air flow 1.97151 versus 1.97150 kg/s. Largest relative difference is q_2 (9.412e-3), the same ratio as cp(CH4). The window has no enthalpy or entropy.",
+    "checks": ["ees-stored-solution", "order-of-magnitude"],
+    "reference": "EES stored solution of MSTH-SB-R9-EX2.EES (42 numeric values of 45 names, EES X7.458)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 0.009411681,
+    "notes": "Maximum relative difference is shared by q_2 and cp_g (22205.98 versus 22416.96 J/kg, and 2220.60 versus 2241.70 J/kg-K). q_2 = cp_g*(T_ref-T_1) with both temperatures fixed, so the ratio is the cp(CH4) gap. cp(Air) is about 0.23% high (cp_a_1, cp_a_c). The equation window and the stored solution have no enthalpy and no entropy. gamma, N and N_R are in the EES variable list with no stored value (the N_R line is a comment). The eight CoolSolve-only names are unused outputs of the two cpbar CALLs (Q_4_23, x_23, e_min_23, e_23, Q_4_34, x_34, e_min_34, e_34). All 50 equations are satisfied (max |residual| 1.05e-9)."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

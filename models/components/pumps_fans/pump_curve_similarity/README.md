@@ -300,3 +300,5 @@ No student names or personal data involved.
   (RefSim), component-level; no catalogue curves.
 - `CSL-0071` (*centrifugal_fan_reference_model*): centrifugal fan with
   dimensionless factors, i.e. the affinity laws applied to a fan.
+- `CSL-0183` (*pump_polynomial_identification*): Laborelec catalogue
+  polynomials for one pump point, also in dimensionless form.

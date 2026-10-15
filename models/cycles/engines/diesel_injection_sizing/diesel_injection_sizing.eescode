@@ -1,0 +1,42 @@
+{=============================================================================
+  Diesel injection sizing
+  CoolSolve Library model CSL-0185
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège MCI, TP5, exercise 4). Start and end of injection
+  fix the duration. The air mass in one cylinder follows from the volumetric
+  efficiency at the stated air conditions, and the injected fuel mass follows
+  from the mixture richness. The fuel is a mass. The intermittency factor is
+  given and no equation uses it.
+
+  Inputs : n_c, V_s_tot, Rpm, SI, EI, epsilon_v, T_a, p_a, phi, Afr_st, i
+  Outputs: DI, DELTAt_inj, rho_a, M_a, f, M_f, M_dot_f_inj
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MCI TP5 exercise 4 - see README.md
+=============================================================================}
+
+"!Data"
+
+i = 0.5                          "intermittency factor for a 4-stroke engine, as in the original [-]"
+n_c = 5                          "number of cylinders [-]"
+V_s_tot = 3.2e-3                 "total displacement [m^3]"
+Rpm = 2400                       "rotational speed [1/min]"
+SI = -20                         "start of injection [°]"
+EI = 5                           "end of injection [°]"
+epsilon_v = 0.95                 "volumetric efficiency [-]"
+T_a = 25                         "temperature at standard conditions, as in the original [°C]"
+p_a = 101325                     "pressure at standard conditions, as in the original [Pa]"
+phi = 0.8                        "mixture richness, as in the original [-]"
+Afr_st = 14.5                    "stoichiometric air-fuel ratio, as in the original [-]"
+
+"!Calculations"
+
+N = Rpm/60                       "rotational speed [1/s]"
+f_st = 1/Afr_st                  "stoichiometric fuel-air ratio, as in the original [-]"
+DI = EI-SI                       "injection duration [°]; the original labels it ° V"
+DELTAt_inj = DI/(360*N)          "injection duration [s]"
+V_s = V_s_tot/n_c                "volume swept per cylinder, as in the original [m^3]"
+epsilon_v = M_a/(rho_a*V_s)      "air mass M_a in the cylinder [kg], from the definition of the volumetric efficiency, as in the original"
+rho_a = DENSITY(Air,T=T_a,P=P_a) "density of the intake air, as in the original [kg/m^3]"
+phi = f/f_st                     "f from the definition of phi, as in the original [-]"
+M_f = f*M_a                      "injected fuel mass, as in the original [kg]"
+M_dot_f_inj = M_f/DELTAt_inj     "fuel flow rate of the injector, as in the original [kg/s]"

@@ -1,0 +1,68 @@
+{=============================================================================
+  R134a refrigerator with a water-cooled condenser (Cengel 11-11)
+  CoolSolve Library model CSL-0209
+ -----------------------------------------------------------------------------
+  Vapour-compression cycle on R134a with a water-cooled condenser, as in
+  the equation window of the source. Point 1 is 60 kPa and -34 °C, point 2
+  is 1.2 MPa and 65 °C, and point 3 is 42 °C. Cooling water goes from 18 °C
+  to 26 °C. The model computes the condenser heat, the refrigerant flow,
+  the compressor power and the refrigerator COP. Textbook exercise
+  Cengel 11-11.
+
+  Inputs : T_1, p_1, T_2, p_2, T_3, T_w_in, T_w_out, M_dot_w, Q_dot_in
+  Outputs: Q_dot_h, M_dot, W_dot_in, COP, Q_dot_L, x_4
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. Quoilin, KU Leuven, thermo_models - see README.md
+=============================================================================}
+
+"!Data in the cycle itself (as in the original)"
+T_1 = -34                                    "temperature at point 1 [°C]"
+p_1 = 60e3                                   "pressure at point 1 [Pa]"
+T_2 = 65                                     "temperature at point 2 [°C]"
+p_2 = 1.2E6                                  "pressure at point 2 [Pa]"
+T_3 = 42                                     "temperature at point 3 [°C]"
+
+"!Data for the water circuit (as in the original)"
+T_w_in = 18                                  "cooling-water inlet temperature [°C]"
+T_w_out = 26                                 "cooling-water outlet temperature [°C]"
+M_dot_w = 0.25                               "cooling-water mass flow rate [kg/s]"
+
+"!Data for the compressor (as in the original)"
+Q_dot_in = 450                               "compressor heat rate Q_dot_in, as in the original [W]"
+
+"!Calculation of point 1 (as in the original)"
+h_1 = enthalpy(R134a,T=T_1,P=p_1)            "enthalpy at point 1 [J/kg]"
+s_1 = entropy(R134a,T=T_1,P=p_1)             "entropy at point 1 [J/kg-K]"
+DELTAT_sh_1 = T_1 - T_sat(R134a,P=p_1)       "superheat at point 1 [°C]"
+
+"!Calculation of point 2 (as in the original)"
+h_2 = enthalpy(R134a,T=T_2,P=p_2)            "enthalpy at point 2 [J/kg]"
+s_2 = entropy(R134a,T=T_2,P=p_2)             "entropy at point 2 [J/kg-K]"
+
+"!Calculation of point 3 (as in the original)"
+p_3 = p_2                                    "pressure at point 3, equal to p_2 [Pa]"
+h_3 = enthalpy(R134a,T=T_3,P=p_3)            "enthalpy at point 3 [J/kg]"
+s_3 = entropy(R134a,T=T_3,P=p_3)             "entropy at point 3 [J/kg-K]"
+DELTAT_sc_3 = T_sat(R134a,P=p_3) - T_3       "subcooling at point 3 [°C]"
+
+"!Calculation of point 4 (as in the original)"
+p_4 = p_1                                    "pressure at point 4, equal to p_1 [Pa]"
+h_4 = h_3                                    "enthalpy at point 4, equal to h_3 [J/kg]"
+s_4 = entropy(R134a,P=p_4,H=h_4)             "entropy at point 4 [J/kg-K]"
+x_4 = quality(R134a,P=p_4,H=h_4)             "vapour quality at point 4 [-]"
+
+"!Heat balance over the condenser (as in the original)"
+"!Water side"
+Q_dot_h = M_dot_w * (h_w_out - h_w_in)      "condenser heat rate from the water stream [W]"
+h_w_out = enthalpy(Water,T=T_w_out,P=1E5)   "water outlet enthalpy; water taken at 1 bar, as in the original [J/kg]"
+h_w_in = enthalpy(Water,T=T_w_in,P=1E5)     "water inlet enthalpy; water taken at 1 bar, as in the original [J/kg]"
+
+"!Refrigerant side"
+Q_dot_h = M_dot * (h_2 - h_3)                "same condenser heat rate on the refrigerant [W]"
+
+"!Power consumption of the compressor (first law for an open system, as in the original)"
+Q_dot_in + W_dot_in = M_dot * (h_2 - h_1)   "open-system energy balance on the compressor [W]"
+
+"!COP in refrigerator mode (as in the original)"
+COP = Q_dot_L/W_dot_in                       "refrigerator coefficient of performance [-]"
+Q_dot_L = M_dot * (h_1 - h_4)                "refrigeration rate [W]"

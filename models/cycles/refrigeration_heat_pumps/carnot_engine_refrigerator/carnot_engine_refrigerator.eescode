@@ -1,0 +1,41 @@
+{=============================================================================
+  Carnot engine driving a Carnot refrigerator
+  CoolSolve Library model CSL-0186
+ -----------------------------------------------------------------------------
+  Teaching exercise, ULiège MECA0002, repetition R4, exercise 5 (2022-2023).
+  A reservoir at 200 °C and the ambient at 30 °C drive a Carnot heat engine.
+  The work drives a Carnot refrigerator that holds a cold space at -30 °C.
+  Every process is reversible. The model computes the engine efficiency, the
+  refrigerator COP, and the ratio of the heat given up by the hot reservoir
+  to the heat given up by the cold space.
+
+  Inputs : T_ref, T_hot, T_amb
+  Outputs: eta, COP, Rapport_Q
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MECA0002, S. Quoilin, 2022-2023 - see README.md
+=============================================================================}
+
+"Data. The original adds 273.15 and stores the temperatures in kelvin."
+"They are kept here in °C. The Carnot ratios add 273.15 again."
+T_ref = -30 [C]                         "cold space [°C]; -30[K] + 273.15 [K] in the original"
+T_hot = 200 [C]                         "hot reservoir [°C]; 200[K] + 273.15 [K] in the original"
+T_amb = 30 [C]                          "ambient [°C]; 30[K] + 273.15 [K] in the original"
+
+"Engine. Ideal Carnot cycle between the hot reservoir and the ambient."
+"The efficiency is the work delivered divided by the heat exchanged with"
+"the hot source, and it is fixed by the two source temperatures."
+T_F_eng = T_amb                         "cold source of the engine, the ambient [°C]"
+T_C_eng = T_hot                         "hot source of the engine [°C]"
+eta = 1.0 - (T_F_eng + 273.15)/(T_C_eng + 273.15)   "Carnot engine efficiency [-]"
+
+"Refrigerator. Ideal Carnot cycle between the ambient and the cold space."
+"The COP is the heat extracted from the cold source divided by the work"
+"received. The work received equals the work delivered by the engine."
+T_F_ref = T_ref                         "cold source of the refrigerator [°C]"
+T_C_ref = T_amb                         "hot source of the refrigerator, the ambient [°C]"
+COP = 1.0/((T_C_ref + 273.15)/(T_F_ref + 273.15) - 1.0)   "Carnot refrigerator COP [-]"
+
+"Ratio of the heat given up by the hot reservoir to the heat given up by"
+"the cold space. With Q_C_eng = W_eng/eta, Q_F_ref = W_ref*COP and"
+"W_eng = W_ref, the ratio is 1/(eta*COP), as in the original."
+Rapport_Q = 1/(eta*COP)                 "heat from the hot reservoir over heat from the cold space [-]"

@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0221",
+  "name": "supercharged_engine_air_flow",
+  "title": "Supercharged engine air flow and compressor (TP6 exercise 1)",
+  "summary": "Teaching exercise: air mass flow of a supercharged six-cylinder four-stroke engine, with the volumetric efficiency defined on the ambient density, and the turbocharger compressor and intercooler that follow.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "supercharged_engine_air_flow.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "exercise",
+    "supercharged engine",
+    "volumetric efficiency",
+    "turbocharger",
+    "compressor",
+    "intercooler",
+    "ideal gas",
+    "internal combustion engine"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 29,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP6/EX1_PNG_2019.EES",
+    "candidate_id": "TM-0245",
+    "authors": [
+      "P. Ngendakumana"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.589",
+    "language": "fr",
+    "course": "ULiège MCI, TP6, sixth exercise session, statement 1 (supercharged engine air flow and compressor)"
+  },
+  "verification": {
+    "summary": "Stored solution of EX1_PNG_2019.EES (29 of 31 variables; L and D are guesses only). compare_solution.py: 29 common variables, 8 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. M_dot_a 0.255088 versus 0.255003 kg/s; T_ex_cp 83.880 versus 83.910 °C. Max relative difference 0.31853 on s_su_cp (tied with s_ex_cp_s), the Air entropy offset. Enthalpy offset about +126 kJ/kg, not constant.",
+    "checks": [
+      "ees-stored-solution",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of EX1_PNG_2019.EES (29 values; EES X10.589)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 0.31853,
+    "notes": "Maximum relative difference over all 29 common variables is 0.3185349 on s_su_cp and on s_ex_cp_s (the compare_solution.py table prints 3.19e-01). CoolSolve entropy is 3883.32 J/(kg·K) versus 5698.48 J/(kg·K), offset −1815.17 J/(kg·K). Absolute enthalpies are a separate offset and it is not constant: h_su_cp +125847 J/kg, h_ex_cp_s +125893 J/kg, h_ex_cp +125897 J/kg, h_su_cyl +125906 J/kg (about +126 kJ/kg). M_dot_a follows rho_a = Density(Air) at 23 °C and 98000 Pa (rel 3.31e-04). T_ex_cp is 83.8799 °C versus 83.9104 °C (rel 3.63e-04, −0.030 K). T_ex_cp_s is 79.1415 °C versus 79.0475 °C (rel 1.19e-03, +0.094 K) and W_dot_cp is 15650.1 W versus 15632.2 W (rel 1.15e-03); both exceed rtol 0.001. w_cp stays inside it (rel 8.15e-04). All 29 equations are satisfied (max relative residual 2.55e-08). L and D are the two decoded names with a guess and no stored value; they are not equation variables."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

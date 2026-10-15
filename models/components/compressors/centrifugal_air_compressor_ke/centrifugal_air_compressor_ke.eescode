@@ -1,0 +1,35 @@
+{=============================================================================
+  Centrifugal air compressor of a gas turbine (exercise 5.14)
+  CoolSolve Library model CSL-0213
+ -----------------------------------------------------------------------------
+  Steady-flow energy balance on an adiabatic centrifugal air compressor.
+  The change in potential energy and the inlet kinetic energy are neglected,
+  as in the original. The power includes the outlet kinetic energy. rapW is
+  the share of that power that goes into the enthalpy rise.
+  Teaching exercise 5.14, ULiège MECA0002, thermodynamique appliquée,
+  repetition 3 (2022-2023).
+
+  Inputs : p_in, T_in, p_out, T_out, c_out, q_m
+  Outputs: W_dot, h_in, h_out, rapW
+  Units  : SI - temperatures in K, pressures in Pa, energies in J
+           (property calls receive °C)
+  Source : ULiège MECA0002, R3_E5_2022.EES; the file names no author - see README.md
+=============================================================================}
+
+"!Data"
+"Exercise 5, as in the original: the centrifugal air compressor of a gas turbine receives air from the ambient atmosphere, where the pressure is 1 bar and the temperature is 300 K. At the compressor outlet the pressure is 4 bar, the temperature is 480 K and the velocity is 100 m/s. The mass flow rate at the compressor inlet is 15 kg/s. Calculate the power required to drive the compressor."
+p_in = 100e3 [Pa]                              "inlet pressure [Pa], 100 kPa in the original"
+T_in = 300 [K]                                 "inlet temperature [K], as stored; kept in kelvin"
+p_out = 400e3 [Pa]                             "outlet pressure [Pa], 400 kPa in the original"
+T_out = 480 [K]                                "outlet temperature [K], as stored; kept in kelvin"
+c_out = 100 [m/s]                              "outlet velocity [m/s]"
+q_m = 15 [kg/s]                                "inlet mass flow rate [kg/s]"
+
+"!Steady-flow energy balance"
+"First law for an open system in steady state, as in the original: Q_dot + W_dot = q_m_out*(h_out + c_out^2/2 + g*z_out) - q_m_in*(h_in + c_in^2/2 + g*z_in). Mass conservation gives q_m_out = q_m_in. Q_dot = 0 (the compressor is assumed adiabatic). The potential-energy change is neglected. The inlet kinetic energy is neglected because the control volume is large enough that the air speed across the inlet surface is very small."
+W_dot = q_m*(h_out - h_in + c_out^2/2)        "compressor power [W]; work received by the system is positive, as in the original"
+h_out = enthalpy(Air, T=T_out-273.15)         "outlet specific enthalpy [J/kg]; the call takes °C and T_out is in K"
+h_in = enthalpy(Air, T=T_in-273.15)           "inlet specific enthalpy [J/kg]; the call takes °C and T_in is in K"
+
+rapW = 100[%]*q_m*(h_out - h_in)/W_dot        "share of the compressor power that goes into the enthalpy rise [%]"
+"About 97.4% of the power supplied by the compressor goes into the enthalpy transfer. Only 2.6% of the power is converted into kinetic energy, as in the original."

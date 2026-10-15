@@ -1,0 +1,70 @@
+{=============================================================================
+  Turbo-expander parameter identification from new data (exercise)
+  CoolSolve Library model CSL-0207
+ -----------------------------------------------------------------------------
+  Steady model of one turbo-expander: an ideal isentropic nozzle followed by
+  a Laval wheel, as in the original. The equivalent throat area and the wheel
+  diameter are the parameters identified from the additional expander data.
+  gamma is solved from the isentropic temperature-pressure relation. The
+  source comments a provisional value 1.4.
+
+  Inputs : P_su, T_su, P_ex, A_thr, d_laval, alpha, rpm, eta_m, epsilon_n_s
+  Outputs: W_dot, epsilon_s_global, gamma, M_dot
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MSTh repetition R4 exercise 2 continued,
+           MSTh-SB-R4-Ex2-2.EES - see README.md
+=============================================================================}
+
+"!Identified parameters, as in the original"
+A_thr = 0.008831                             "identified equivalent throat area [m^2]"
+d_laval = 0.7182                             "identified Laval-wheel diameter [m]"
+
+"!Inlet and exit conditions"
+"The equation window writes the display text 10E5 immediately before the value 9E5. The value is 9E5 Pa."
+P_su = 9E5                                   "inlet pressure [Pa]"
+T_su = 850                                   "inlet temperature [°C]"
+P_ex = 1E5                                   "exit pressure [Pa]"
+
+"!Turbo-expander model: ideal isentropic nozzle plus a Laval wheel"
+alpha = 15                                   "nozzle angle [°]"
+rpm = 10000                                  "rotational speed [1/min]"
+"The source comments a target epsilon_s_global = 0.85. The active equation is the product below."
+epsilon_s_global = epsilon_s_in*eta_m        "as in the original [-]"
+eta_m = 0.98                                 "mechanical efficiency [-]"
+"The source comments a target W_dot = 5E6. The active equations below compute the power."
+
+"!Nozzle model"
+"C_thr, C_ex_n_s and C_ex_n enter as squares. The .initials file holds the stored positive roots."
+h_su = h_thr + C_thr^2/2                     "as in the original [J/kg]"
+h_su = enthalpy(Air, T=T_su)                 "inlet specific enthalpy [J/kg]"
+h_thr = enthalpy(Air, s=s_su, P=P_thr)       "as in the original [J/kg]"
+s_su = entropy(Air, T=T_su, P=P_su)          "inlet specific entropy [J/kg-K]"
+P_thr = max(P_thrmin, P_ex)                  "throat pressure: choked critical pressure, or the exit pressure if not choked [Pa]"
+P_thrmin = ((2/(gamma+1))^(gamma/(gamma-1)))*P_su    "as in the original [Pa]"
+"Provisional value, as in the original. gamma = 1.4 is a comment; gamma is an unknown."
+(T_thr+273)/(T_su+273) = (P_thr/P_su)^((gamma-1)/gamma)    "as in the original [-]"
+T_thr = temperature(Air, h=h_thr)            "throat temperature [°C]"
+
+"!Equivalent section"
+M_dot = V_dot_thr/v_thr                      "mass flow rate [kg/s]"
+v_thr = volume(Air, h=h_thr, P=P_thr)        "as in the original [m^3/kg]"
+V_dot_thr = A_thr*C_thr                      "as in the original [m^3/s]"
+
+"Choked flow is possible at the throat. The nozzle exit is an isentropic expansion, as in the original."
+h_su = h_ex_n_s + C_ex_n_s^2/2               "as in the original [J/kg]"
+h_ex_n_s = enthalpy(Air, s=s_su, P=P_ex)     "as in the original [J/kg]"
+"If the flow is not choked, P_thr = P_ex, so h_thr = h_ex_n_s and C_thr = C_ex_n_s, as in the original."
+
+"!Laval wheel"
+eta_laval = 4*U/C_ex_n*(cos(alpha) - U/C_ex_n)    "as in the original [-]"
+epsilon_n_s = C_ex_n^2/C_ex_n_s^2            "as in the original [-]"
+epsilon_n_s = 1                              "nozzle assumed fully isentropic [-]"
+U = PI*d_laval*N                             "as in the original [m/s]"
+N = rpm/60                                   "as in the original [1/s]"
+
+"!Turbo-expander power"
+W_dot_in = M_dot*epsilon_s_in*C_ex_n_s^2/2   "internal power [W]"
+W_dot = eta_m*W_dot_in                       "shaft power [W]"
+
+"!Internal isentropic efficiency of the expander"
+epsilon_s_in = epsilon_n_s*eta_laval         "internal isentropic efficiency of the expander [-]"

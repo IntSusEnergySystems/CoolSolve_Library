@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0193",
+  "name": "mixing_chamber_exergy",
+  "title": "Exercise: mixing chamber of water and steam, exergy destruction",
+  "summary": "Liquid water at 138 kPa and 10 °C mixes with steam at the same pressure and 115 °C. The outlet is at 55 °C and the chamber loses 3.16 kW to air at 21 °C. The model closes the steady mass and energy balances and reports the reversible power and the exergy destruction.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "mixing_chamber_exergy.eescode",
+  "fluids": ["Water", "Steam", "Air_ha"],
+  "tags": ["exercise", "exergy", "mixing chamber", "second law", "water"],
+  "language_features": ["property functions"],
+  "stats": {"n_equations": 27, "largest_block": 2},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R10/R10_E04_2022.EES",
+    "candidate_id": "TM-0391",
+    "authors": ["S. Quoilin"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège, MECA0002), repetition session 10, exercise 4 (2022-2023)"
+  },
+  "verification": {
+    "summary": "compare_solution.py --ees-units on R10_E04_2022.EES: 26 common variables, 13 differ (rtol=0.001); only in EES: 5; only in CoolSolve: 1. Largest printed relative difference is 9.99e-01 on h_0: lowercase kj was not scaled. After x1000, Water h and s agree (max 5.3e-09). Air_ha h_0 is +126061 J/kg above EES; the psi shift cancels. m_dot_2, T_3 and X_destroyed_real agree (2.75e-10, 0, 1.60e-10).",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution of R10_E04_2022.EES (31 variables), compare_solution.py --ees-units",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@91d2b56",
+    "max_rel_diff": 9.99e-01,
+    "notes": "The tool summary is: 26 common variables, 13 differ (rtol=0.001); only in EES: 5; only in CoolSolve: 1. max_rel_diff is 9.99e-01 on h_0, the largest relative difference the tool prints. EES stored h and s with lowercase unit kj, which --ees-units does not scale (it matches the token kJ). psi uses kJ and is scaled. After multiplying the unscaled kj values by 1000, Water enthalpies and entropies agree within 5.3e-09. Air_ha at the dead state is +126061.5 J/kg on h_0 and -2978.187 J/kg-K on s_0 (CoolSolve minus EES). Each psi is then 1002095.18 J/kg below EES, the same shift on all three streams, and it cancels in the exergy balance. Only in EES: phi_1, phi_2, phi_3, X_dot_in, X_dot_out (commented symbols, stored values of phi equal psi; X_dot_in and X_dot_out stay at the default 1). Only in CoolSolve: T_0_K. 8 iterations with the converted .initials, 27 without. Same solution."
+  },
+  "missing_features": [],
+  "related": ["CSL-0197"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

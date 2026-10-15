@@ -1,0 +1,14 @@
+D_cat_f = 5.700000000000e-01
+DELTAP_cat_f = 1.800000000000e+03
+epsilon_s_cat_f = 6.750000000000e-01
+eta_cat_motor_f = 9.300000000000e-01
+Lambda_cat_f = 1.488927676633e-02
+omega_cat_f = 1.884955592154e+02
+phi_cat_f = 7.734603833984e-02
+pi = 3.141592653590e+00
+psi_cat_f = 1.299389345983e-01
+rho_a_su_f = 1.200000000000e+00
+rpm_cat_f = 1.800000000000e+03
+V_dot_cat_f = 2.700000000000e+00
+W_dot_cat_motor_f = 7.741935483871e+03
+W_dot_shaft_cat_f = 7.200000000000e+03

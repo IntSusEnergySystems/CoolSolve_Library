@@ -387,6 +387,9 @@ exercises. No source file is copied into the library.
 
 ## Related models
 
+- `CSL-0201` *stirling_cycle_r4bis*: the same ideal Stirling exercise from the
+  R4bis session (inventory TM-0428). It uses the closed-form isothermal work
+  rather than a definite integral.
 - `CSL-0049` *otto_cycle_air_standard*: the other air-standard cycle of the
   same repetition (exercise 1), solved with the same method — perfect gas with
   a temperature-dependent `cv` evaluated at a mean temperature, state arrays

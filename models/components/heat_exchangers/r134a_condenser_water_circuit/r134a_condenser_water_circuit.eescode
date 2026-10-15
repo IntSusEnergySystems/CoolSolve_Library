@@ -1,0 +1,57 @@
+{=============================================================================
+  R134a condenser rejecting heat into a water circuit (exercise)
+  CoolSolve Library model CSL-0173
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège MECA0002, thermodynamique appliquée, 2022-2023,
+  repetition R3 exercise 11). An exchanger rejects heat from R134a into a
+  water circuit. The refrigerant flow is 0.5 kg/s and the heat to reject is
+  15 kW. The inlet state is the saturation temperature at 350 kPa plus 80 °C,
+  as written in the source. The exchanger loses 1.2 kW to the ambient.
+  Cooling water enters at 20 °C. The refrigerant pressure drop is 0.1 bar.
+  The model finds the minimum water flow for a rise of at most 3 °C and the
+  R134a outlet temperature. Water uses a constant specific heat.
+
+  Inputs : Q_dot_R134a, Q_dot_loss, p_in_R134a, DELTA_p_R134a, T_in_eau,
+           m_dot_R134a, DELTAT_max, cp_eau, p_eau
+  Outputs: m_dot_eau_min, T_out_R134a, Q_dot_eau_ref
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. Quoilin, ULiège MECA0002, 2022-2023 - see README.md
+=============================================================================}
+
+"!Heat rates (as in the original)"
+Q_dot_R134a = -15e3                          "negative because lost by the refrigerant [W]; -15 kW in the original"
+Q_dot_loss = -1.2e3                          "negative because lost by the refrigerant [W]; -1.2 kW in the original"
+Q_dot_eau_ref = Q_dot_R134a - Q_dot_loss     "negative because lost by the refrigerant: heat lost to the ambient is not to be rejected into the cooling water [W]"
+
+"!Pressures and cooling-water inlet temperature (as in the original)"
+p_in_R134a = 350e3                           "R134a inlet pressure [Pa]; 350 kPa in the original"
+DELTA_p_R134a = 10e3                         "R134a pressure drop [Pa]; 0.1e2 kPa (0.1 bar) in the original"
+p_out_R134a = p_in_R134a - DELTA_p_R134a     "R134a outlet pressure [Pa]"
+T_in_eau = 20                                "cooling-water inlet temperature [°C]"
+
+"!R134a inlet state (as in the original)"
+T_sat_R134a = t_sat(R134a, P=p_in_R134a)     "saturation temperature at the inlet pressure [°C]"
+T_in_R134a = T_sat_R134a + 80                "inlet temperature: saturation temperature plus 80 °C, as written in the original [°C]"
+m_dot_R134a = 0.5                            "refrigerant mass flow rate [kg/s]"
+
+"!R134a side"
+h_in_R134a = enthalpy(R134a, T=T_in_R134a, P=p_in_R134a)   "inlet enthalpy [J/kg]"
+Q_dot_R134a = m_dot_R134a*(h_out_R134a - h_in_R134a)       "first law, no work, potential and kinetic energy changes neglected [W]"
+T_out_R134a = temperature(R134a, h=h_out_R134a, P=p_out_R134a)   "R134a outlet temperature [°C]"
+
+"!Water side"
+DELTAT_max = 3                               "maximum cooling-water temperature rise [°C]"
+cp_eau = 4.184e3                             "constant specific heat of water [J/(kg-K)]; 4.184 kJ/(kg-°C) in the original"
+-Q_dot_eau_ref = m_dot_eau_min*cp_eau*DELTAT_max   "first law, no work, potential and kinetic energy changes neglected: m*cp*DeltaT rather than m*dh, because the original assumes no latent exchange (water from 20 °C to at most 23 °C) and a constant cp [W]"
+p_eau = 100e3                                "water pressure [Pa]; 1e2 kPa (1 bar) in the original. Not used in the balances; close to atmospheric pressure, it supports the usual constant cp of water"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: R134a inlet. 2: R134a outlet.}
+P[1] = p_in_R134a                            "inlet pressure [Pa]"
+h[1] = h_in_R134a                            "inlet enthalpy [J/kg]"
+T[1] = T_in_R134a                            "inlet temperature [°C]"
+s[1] = entropy(R134a, T=T[1], P=P[1])        "inlet entropy [J/kg-K]"
+P[2] = p_out_R134a                           "outlet pressure [Pa]"
+h[2] = h_out_R134a                           "outlet enthalpy [J/kg]"
+T[2] = T_out_R134a                           "outlet temperature [°C]"
+s[2] = entropy(R134a, h=h[2], P=P[2])        "outlet entropy [J/kg-K]"
