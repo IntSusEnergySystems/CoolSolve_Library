@@ -300,3 +300,12 @@ inventory candidate `TSP-003`).
 - `CSL-0136` (*polynomial_compressor_en12900*): the off-design compressor of
   the same TESPy snapshot (EN 12900 efficiency-map polynomials instead of a
   characteristic line), the counterpart of this cone-law turbine.
+
+- `CSL-0140` *rankine_cycle_part_load*: a Rankine cycle of the same TESPy
+  snapshot that uses this cone law for its part-load point (turbine inlet
+  pressure of the off-design point, at constant isentropic efficiency).
+- `CSL-0141` *gas_turbine_open_cycle*: the gas-turbine tutorial of the
+  same TESPy snapshot, which uses the `eta_s` design relation of this
+  turbine (without the off-design cone law).
+- `CSL-0147` *segs_solar_power_plant*: 7-stage steam turbine train at the design point (fixed
+  stage efficiencies), the plant this off-design turbine model could close in part load.

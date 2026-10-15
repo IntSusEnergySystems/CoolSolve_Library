@@ -5,7 +5,7 @@
   "summary": "Seven EES PROCEDUREs that rate a heat exchanger zone by zone: a regularised log-mean temperature difference (lmtd_xi1000), a three-zone condenser built on it (hx_cd_three_zones), a three-zone evaporator that decides the phase zones itself (hx_ev_three_zones), the effectiveness-NTU zone procedures of an automotive condenser (single_phase_HX_eps_ntu, EV_eps_ntu, CD_eps_ntu) and an epsilon-NTU evaporator with a vapour and a two-phase zone (evaporator2_eps_ntu).",
   "kind": "function",
   "level": 3,
-  "status": "runs",
+  "status": "verified",
   "main_file": "three_zone_hx_procedures.eescode",
   "fluids": [
     "R245fa",
@@ -53,6 +53,8 @@
     "notes": "Five EES files of the Laboratoire de Thermodynamique, Universite de Liege collection, all in the SI MASS DEG PA C J unit system (no manual unit conversion needed). TM-0564 condenseur 3 zones.EES (X8.652) and TM-0579 LMTD.EES (X8.652) carry only the lab licence tag (author TBD); TM-0569 evaporator 1 2 & 3 zones SQ110729.EES (X9.249), TM-0566 epsilon NTU single phase - EV - CD SQ081222.EES (X8.198) and TM-0571 Evaporator epsilon-NTU SQ080311.EES (X7.991) are signed SQ. Procedures renamed for library-wide uniqueness: lmtd -> lmtd_xi1000, hx_cd -> hx_cd_three_zones, hx_ev -> hx_ev_three_zones, single_phase_HX -> single_phase_HX_eps_ntu, EV -> EV_eps_ntu, CD -> CD_eps_ntu, evaporator2 -> evaporator2_eps_ntu. The LMTD procedure is byte-identical in TM-0579, TM-0564 and TM-0569 and is transcribed once."
   },
   "verification": {
+    "summary": "Compared with the EES stored solutions of four source files: 14 common variables, 12 differ at rtol=0.001, largest deviation 8.4e-02 on `AU_ev_v2` (explained by property-backend differences). The energy balance of the procedures closes exactly and lmtd_xi1000 was recomputed independently in Python (agrees to 10 significant digits).",
+    "checks": ["ees-stored-solution", "energy-balance", "analytical"],
     "reference": "stored EES solutions of the four source files that carry one: procedures EES/LMTD.EES (TM-0579, 2 values), condenseur 3 zones.EES (TM-0564, 3 values), evaporator 1 2 & 3 zones SQ110729.EES (TM-0569, 3 values compared, 6 stale values excluded) and Evaporator epsilon-NTU SQ080311.EES (TM-0571, 6 values); plus an independent Python recomputation of the five lmtd_xi1000 branches and the exact energy balance of each procedure",
     "date": "2026-10-07",
     "coolsolve_version": "0.3.0@7addbbc",
@@ -81,6 +83,11 @@
       "date": "2026-10-07",
       "action": "added (T-FUNC card C-123; candidates TM-0564, TM-0569, TM-0579, TM-0566, TM-0571)",
       "by": "opencode worker (space-bunny) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-14",
+      "action": "status runs → verified (verification field)",
+      "by": "claude-haiku"
     }
   ]
 }

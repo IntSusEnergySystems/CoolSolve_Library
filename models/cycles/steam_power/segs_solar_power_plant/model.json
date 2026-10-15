@@ -1,0 +1,80 @@
+{
+  "id": "CSL-0147",
+  "name": "segs_solar_power_plant",
+  "title": "SEGS solar thermal power plant (TESPy validation model)",
+  "summary": "Steady-state design-point model of the SEGS VI parabolic-trough solar power plant: Therminol VP-1 solar field and HTF loop, regenerative Rankine cycle with 7 turbine stages, 5 feedwater preheaters with subcoolers and deaerator, condenser with wet cooling tower, generator/motor power chain. Validates against the Ebsilon benchmark of the TESPy test suite.",
+  "kind": "steady",
+  "level": 4,
+  "status": "verified",
+  "main_file": "segs_solar_power_plant.eescode",
+  "fluids": [
+    "Water",
+    "Therminol VP-1 (CSL-0121 correlations)",
+    "Air"
+  ],
+  "tags": [
+    "solar-thermal",
+    "parabolic trough",
+    "regenerative Rankine",
+    "feedwater heaters",
+    "reheat",
+    "cooling tower",
+    "Ebsilon benchmark",
+    "validation model",
+    "TESPy"
+  ],
+  "language_features": [
+    "functions",
+    "property functions",
+    "string variables"
+  ],
+  "stats": {
+    "n_equations": 397,
+    "largest_block": 59
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/tests/test_models/test_solar_energy_generating_system.py",
+    "candidate_id": "TSP-051",
+    "authors": [
+      "Francesco Witte",
+      "Ilka Tuschy",
+      "TESPy contributors"
+    ],
+    "url": "https://github.com/oemof/tespy/blob/main/tests/test_models/test_solar_energy_generating_system.py",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "original model: github.com/fwitte/SEGS_exergy; reference: Witte et al., Energies (2022)"
+  },
+  "verification": {
+    "summary": "Compared with a re-run of the source TESPy test network (commit 19425523, TESPy 0.11.3.dev0 in a virtual environment): 79 fluid states and 25 power flows; water/steam and air agree to solver precision (same CoolProp backend), max deviations all from the Therminol VP-1 property correlations (HTF mass flow -0.67%, T at field inlet +0.16 K). Net power 31.782 MW vs the Ebsilon benchmark value 31.769 MW quoted in the test (+4.2e-4).",
+    "checks": [
+      "source-rerun",
+      "other-tool",
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "Re-run of tests/test_models/test_solar_energy_generating_system.py (TESPy, commit 19425523) and the Ebsilon reference values asserted in it (net power 31.769 MW, T(c79) 296.254 degC)",
+    "date": "2026-10-14",
+    "coolsolve_version": "0.3.0@e635c85",
+    "max_rel_diff": 0.0067,
+    "notes": "Water/steam and air states agree to <2e-5 (identical CoolProp backend). All remaining deviations come from the Therminol VP-1 property data: this model uses the CSL-0121 HEDH correlations where the source uses CoolProp INCOMP::TVP1 (HTF mass flow -0.67%, T(c79) +0.156 K, HTF pump power -0.8%, net power +4.2e-4). Cooling-water loop: TESPy INCOMP::Water vs HEOS Water, m_cw -0.19%. Details in README Verification."
+  },
+  "missing_features": [],
+  "related": ["CSL-0121", "CSL-0029", "CSL-0135"],
+  "related_external": [
+    "TESPy tests/test_models/test_solar_energy_generating_system.py (source, MIT, commit 19425523)",
+    "github.com/fwitte/SEGS_exergy (original model, Witte et al., Energies 2022)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-14",
+      "action": "added (translation of the TESPy SEGS validation model, card C-192)",
+      "by": "Claude (GLM) for S. Quoilin"
+    }
+  ]
+}

@@ -53,6 +53,8 @@
     "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), files ht/conv_plate.py and ht/boiling_plate.py, MIT license, Copyright (C) 2016 Caleb Bell. Nu_plate_Martin calls the two friction-factor correlations friction_plate_Martin_1999 and friction_plate_Martin_VDI of the companion library fluids (1.3.1, same author, MIT), which are translated here as fd_Martin_1999 and fd_Martin_VDI; the two Lockhart-Martinelli, Bond, Prandtl and thermal-diffusivity helpers of fluids used by the boiling correlations are written out as their defining equations inside the functions. The scientific basis of each correlation is the original paper or book cited in its function comment block. Translation published under the CoolSolve_Library MIT license (decision D3)."
   },
   "verification": {
+    "summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 24 common variables, 0 differ (rtol=0.001), largest relative deviation 3.6e-12.",
+    "checks": ["source-rerun"],
     "reference": "doctest values of ht 1.2.0 ht/conv_plate.py and ht/boiling_plate.py (case A) and additional values computed with the same ht functions in a throw-away virtualenv (case B); 24 output values in total",
     "date": "2026-10-06",
     "coolsolve_version": "0.3.0@536d427",

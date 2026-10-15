@@ -1,10 +1,10 @@
 {
  "snapshot": {
-  "content_hash": "sha256:993537e72923397a",
-  "files": 802,
-  "bytes": 7087267,
-  "models": 154,
-  "functions": 434,
+  "content_hash": "sha256:0211adefae7ce8a5",
+  "files": 849,
+  "bytes": 7491715,
+  "models": 164,
+  "functions": 442,
   "taxonomy_version": "0.2"
  },
  "models": [
@@ -53,6 +53,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Native file blocked by CS-GAP-LOOKUPROW and CS-BUG-LOOKUP-STRING. Runnable variant compared with EES stored solution: 46 of 57 variables within 0.1%, 51/57 within 0.5%.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/buildings/thermal_comfort_pmv_ppd",
    "main_file": "thermal_comfort_pmv_ppd.eescode",
    "figures": 0,
@@ -99,6 +103,11 @@
    ],
    "coolsolve_version": "0.3.0@d5d6b37",
    "verified_on": "2026-10-10",
+   "verification_summary": "Independent RK4 integration compared with EES simulation: 56 variables and 1001-row trajectory, max deviation 0.3 K.",
+   "verification_checks": [
+    "source-rerun",
+    "energy-balance"
+   ],
    "path": "models/buildings/building_rc_network_3r2c",
    "main_file": "building_rc_network_3r2c.eescode",
    "figures": 0
@@ -151,6 +160,11 @@
    ],
    "coolsolve_version": "0.3.0+fix/library-gaps@fbdb6a7",
    "verified_on": "2026-10-05",
+   "verification_summary": "With the inputs of the stored EES run of reference model TM-0492, all 42 common variables agree within 0.08 %. An independent Python/CoolProp computation gives `T_p_ad` 1974.46 vs 1974.48 C, and the on/off variant reproduces the stored solution of CSX-005 (48/48 variables).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "other-tool"
+   ],
    "path": "models/components/boilers_burners/boiler_mean_specific_heat",
    "main_file": "boiler_mean_specific_heat.eescode",
    "figures": 0,
@@ -220,6 +234,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Concerns the runnable variant at the operating point of the stored EES solution: 225 common variables, 81 differ (rtol=0.001), mostly from a stale stored solution and moist-air properties. Useful power, efficiencies and water temperature agree to better than 2e-05.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/boilers_burners/condensing_boiler_refsim",
    "main_file": "condensing_boiler_refsim.eescode",
    "figures": 0,
@@ -277,6 +295,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
+   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-IF-NO-CONSTANT): compared with the EES stored solution, 43 common variables, 0 differ at rtol=0.001, max 2.25e-4 on Q_dot_u_FL (CoolProp vs EES mean specific heats). Stale stored module values were skipped and hand-checked.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/boilers_burners/boiler_modulating_burner_refsim",
    "main_file": "boiler_modulating_burner_refsim.eescode",
    "figures": 0,
@@ -330,6 +352,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "The main model was compared with the EES stored solution of the source file (120 common variables): all key outputs agree within 0.1 %, worst case 1.5 % on a small derived quantity (EES 7.9 vs CoolProp R22). The simplified variant agrees within 0.1 % with the stored solution of `scroll_compressor.EES` (95 common variables).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/compressors/scroll_compressor_semi_empirical",
    "main_file": "scroll_compressor_semi_empirical.eescode",
    "figures": 0,
@@ -380,6 +406,10 @@
    ],
    "coolsolve_version": "0.3.0@4cd0ca5",
    "verified_on": "2026-10-10",
+   "verification_summary": "The native file was compared with the EES stored solution of the source file: 34/34 common variables agree, maximum relative deviation 4.47·10⁻⁶ on `W_dot_isoT`. A sweep of the intermediate pressure confirms the equal-ratio optimum of 250 kPa within 1 kPa.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/compressors/two_stage_steam_compressor_intercooling",
    "main_file": "two_stage_steam_compressor_intercooling.eescode",
    "figures": 0
@@ -425,6 +455,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the EES stored solution of TM-0039 (16 of 19 variables agree, the 3 others differ by a constant reference-state offset) and with the full stored solution of the SB variant TM-0032: all 16 comparable derived results are within 0.15 %.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/compressors/dry_air_screw_compressor_leakage",
    "main_file": "dry_air_screw_compressor_leakage.eescode",
    "figures": 0
@@ -469,6 +503,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the EES stored solution of TM-0015 (62 variables): 34 agree within 0.1 %, the other 28 deviations are explained by the fluid model (EES ideal-gas Air vs CoolProp real Air); identified parameters within 1.0 % and predictions within 0.27 %.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/compressors/piston_compressor_identification",
    "main_file": "piston_compressor_identification.eescode",
    "figures": 0
@@ -515,6 +553,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the EES stored solution of TM-0016 (86 stored variables): 77 agree within 0.1 %, the other 9 trace to the R22 property formulation (EES 7.4 vs CoolProp); identified parameters are within 0.85 % and predictions within 0.08 %.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/compressors/refrigeration_compressor_identification",
    "main_file": "refrigeration_compressor_identification.eescode",
    "figures": 0
@@ -557,6 +599,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the EES stored solution of TM-0055 (same equations as the imported corrigé TM-0056): 24 of 32 comparable variables agree within 0.1 %; the 8 others are absolute enthalpies and entropies shifted by the EES 7 vs CoolProp Air reference state, and all energy differences agree.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/compressors/centrifugal_turbocompressor_performance",
    "main_file": "centrifugal_turbocompressor_performance.eescode",
    "figures": 0
@@ -603,6 +649,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Not the native file (blocked by `CS-GAP-INTERP-EES` and `CS-GAP-INTERP-EXTRAP`): the runnable variant was compared with the EES stored solution of TM-0061. `w_s` differs by 9.55e-04; the map-extrapolation group differs because EES extrapolates where CoolSolve clamps, and extrapolating by hand reproduces the stored values.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/compressors/centrifugal_compressor_lookup_map",
    "main_file": "centrifugal_compressor_lookup_map.eescode",
    "figures": 0,
@@ -617,7 +667,7 @@
    "category": "components/compressors",
    "kind": "steady",
    "level": 2,
-   "status": "runs",
+   "status": "verified",
    "summary": "Two-litre piston air compressor tested at 1500 rpm between 1 bar / 15 C suction and 5 bar discharge with identified overall efficiencies (0.75 / 0.55), dead-volume factor and proportional loss factor: the suction pressure drop and the internal leakage are modelled by equivalent isentropic nozzles whose areas are solved, the leak mixes back into the suction flow and the internal isentropic compression is closed by the clearance-volume volumetric efficiency; meant to be swept over speed.",
    "fluids": [
     "Air"
@@ -648,6 +698,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the EES stored solution of the original file (EES 7.458, 55 variables): 55 common variables, 38 differ (rtol=0.001); explained by a stale stored value, another root of the leakage loop under CoolProp Air and reference-state offsets. Admission-branch quantities agree within 2.8e-03.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/compressors/piston_compressor_suction_drop_leakage",
    "main_file": "piston_compressor_suction_drop_leakage.eescode",
    "figures": 0
@@ -692,6 +746,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Main file compared with the solution stored by EES in the source file: 15 common variables, 3 differ (rtol=0.001); the 12 comparable variables agree, largest relative deviation 3.04e-04, the 3 others being reference-state offsets. Methane variant against its own stored solution: largest deviation 2.58e-05.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/compressors/centrifugal_compressor_design_similarity",
    "main_file": "centrifugal_compressor_design_similarity.eescode",
    "figures": 0,
@@ -706,7 +764,7 @@
    "category": "components/compressors",
    "kind": "function",
    "level": 1,
-   "status": "runs",
+   "status": "verified",
    "summary": "FUNCTION copeland_ari(table$, coef$, T_ev, T_cd): ARI 10-coefficient third-order polynomial of a Copeland ZH scroll compressor catalogue (power W, mass flow M, swept volume Vs), with the five catalogue tables recovered from the source file; the compressor correlation of the Vitocal 300-G heat pump model CSL-0116.",
    "fluids": [
     "R134a"
@@ -739,6 +797,11 @@
    ],
    "coolsolve_version": "0.3.0@d5d6b37",
    "verified_on": "2026-10-10",
+   "verification_summary": "Compared with the EES stored solution: 12 common variables, 7 differ at rtol=0.001. The property states agree (v_su_cp 0.011 %), but the catalogue-dependent outputs differ by a factor 3-4 because the stored run used a table version absent from the collection; the M polynomial recomputed in Python agrees to the last digit.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
    "path": "models/components/compressors/copeland_catalogue_correlation",
    "main_file": "copeland_catalogue_correlation.eescode",
    "figures": 0
@@ -786,6 +849,11 @@
    ],
    "coolsolve_version": "0.3.0@4c80b25",
    "verified_on": "2026-10-13",
+   "verification_summary": "Compared with a TESPy 0.11.3.dev0 re-run (doctests, 19 passing tests, Bitzer map notebook): 63 common variables, 0 differ at rtol=1e-06, max 8.7e-09 at rtol=1e-09. Bitzer eta_s and eta_v reproduced to three digits; the catalogue fit reproduces 18 points to 6.4e-04 and 2.3e-04.",
+   "verification_checks": [
+    "source-rerun",
+    "publication"
+   ],
    "path": "models/components/compressors/polynomial_compressor_en12900",
    "main_file": "polynomial_compressor_en12900.eescode",
    "figures": 0
@@ -841,6 +909,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
+   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-SUM-INDEXED, CS-GAP-MOLARMASS-ELEMENT and CS-GAP-INCOMPRESSIBLE): compared with the EES stored solution, 82 common variables, 52 pass at rtol = 0.001, maximum 4.5e-3 on Q_dot_2; deviations explained by backend offsets and 8 stale stored values.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/compressors/turbocharger_combustion_products",
    "main_file": "turbocharger_combustion_products.eescode",
    "figures": 0,
@@ -887,6 +959,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
+   "verification_summary": "Compared with the EES stored solution (part load): 121 common variables, 71 differ at rtol=0.001, 31 of them absolute h/s reference offsets; max 1.34e-2 (t_su1) on the other 90, from the R22 saturation-pressure difference. Full load agrees with the solution pasted in the original file: COP_c 4.496/4.506, Q_dot_ev 683.7/684.7 kW.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/compressors/refrigeration_screw_compressor_r22",
    "main_file": "refrigeration_screw_compressor_r22.eescode",
    "figures": 0
@@ -932,6 +1008,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
+   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-BUG-DUPLICATE-VAR-BOUND and CS-GAP-LOOKUP-NONAME): compared with the EES stored solution, 381 common variables, 51 differ at rtol=0.001, all absolute h/s reference-state offsets; all 330 derived results pass (worst 9.96e-4).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/compressors/reciprocating_catalogue_r717",
    "main_file": "reciprocating_catalogue_r717.eescode",
    "figures": 0,
@@ -980,6 +1060,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
+   "verification_summary": "Compared with the EES stored solution: 97 common variables; 13 absolute h/s differ by the R22 reference-state offset and C_sd_cp by a unit conversion; the remaining 83 agree within 1.81e-02 (older EES R22 formulation). M_dot, W_dot and W_dot_loss were hand-checked against the listing in the file header (1.5e-03, 5.2e-04, 3.4e-04).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/compressors/reciprocating_polynomial_r22",
    "main_file": "reciprocating_polynomial_r22.eescode",
    "figures": 0
@@ -1029,6 +1113,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the EES solution report shipped with the original file (21 main-program variables): the 17 fixed inputs agree exactly and the computed outputs differ by up to 1.91 % (exhaust temperature), attributed to R123 property differences between EES 9.920 and CoolProp.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/expanders_turbines/scroll_expander_semi_empirical",
    "main_file": "scroll_expander_semi_empirical.eescode",
    "figures": 0
@@ -1083,6 +1171,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Independent Python/CoolProp re-evaluation of the eleven polynomials and the ORC demo: 62 common variables, 0 differ (rtol=0.001), maximum relative difference 9.74e-11. Energy-balance closure checked (5.5e-12 W); no published reference values exist.",
+   "verification_checks": [
+    "energy-balance"
+   ],
    "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps",
    "main_file": "orc_expander_pump_empirical_maps.eescode",
    "figures": 0
@@ -1128,6 +1220,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
+   "verification_summary": "Compared with the EES stored solution of the source file: 54 common variables, 30 above rtol = 0.001, maximum relative difference 3.12e-02 on `der_rp_epsilon_2_mod`. Deviations are traced to R245fa property differences between EES and CoolProp.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/expanders_turbines/double_stage_scroll_expander",
    "main_file": "double_stage_scroll_expander.eescode",
    "figures": 0
@@ -1169,10 +1265,17 @@
    "related": [
     "CSL-0037",
     "CSL-0013",
-    "CSL-0136"
+    "CSL-0136",
+    "CSL-0140",
+    "CSL-0141",
+    "CSL-0147"
    ],
    "coolsolve_version": "0.3.0@4c80b25",
    "verified_on": "2026-10-13",
+   "verification_summary": "Compared with a re-run of the TESPy class docstring example: 16 common variables, 0 differ at rtol=0.001, max relative deviation 3.71e-05 (v_in, from the CoolProp version); the design point agrees to 1.1e-10.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/components/expanders_turbines/turbine_stodola_offdesign",
    "main_file": "turbine_stodola_offdesign.eescode",
    "figures": 0
@@ -1219,6 +1322,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-04",
+   "verification_summary": "Results were compared with the solution stored in the original EES file `exchangers1.EES`: all 20 variables agree within 0.03 %, the largest deviation being 0.025 % on the water specific heat (EES 9.920 vs CoolProp).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/heat_exchangers/counterflow_hx_oil_water",
    "main_file": "counterflow_hx_oil_water.eescode",
    "figures": 0
@@ -1271,6 +1378,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Each of the three configurations was compared with the solution stored by EES in its original file: zone duties within 0.23 %, 0.13 % and 0.09 %, AU and NTU within 0.41 %, 0.48 % and 0.1 %, air pressure drop 0.87 % to 0.9 %. Deviations are explained by enthalpy reference states and viscosities.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/heat_exchangers/condenser_three_zones",
    "main_file": "condenser_three_zones.eescode",
    "figures": 0,
@@ -1320,10 +1431,16 @@
     "CSL-0128",
     "CSL-0127",
     "CSL-0138",
-    "CSL-0137"
+    "CSL-0137",
+    "CSL-0144",
+    "CSL-0145"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with a re-run of the LaboThapPy `COND_CO2` example (and a clean re-run): `P_sat` within 0.33 %, state enthalpies within 0.3 % except the subcooled outlet (1.7 %), total Q_dot 2.8 % off, attributed to the original's tabular backend.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/components/heat_exchangers/hx_constant_pinch",
    "main_file": "hx_constant_pinch.eescode",
    "figures": 0
@@ -1369,6 +1486,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file `exchangers2.EES`: 28 of 29 variables agree within 0.1 %; the largest, `T_wall`, is 1.04e-03 relative (subtraction-amplified), all traced to the water cp of EES 9.920 vs CoolProp (0.063 %).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/heat_exchangers/crossflow_hx_hot_gas_water",
    "main_file": "crossflow_hx_hot_gas_water.eescode",
    "figures": 0
@@ -1418,6 +1539,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file `exchangers3.EES`: 24 of 35 variables agree within 0.1 %; the 11 deviations trace to the liquid-water thermal conductivity (EES 9.920 vs CoolProp, 1.9 %) and propagate to the sizing (A, L_tube 0.76 %).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/heat_exchangers/shell_and_tube_steam_condenser",
    "main_file": "shell_and_tube_steam_condenser.eescode",
    "figures": 0
@@ -1469,6 +1594,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file `MSTh-SB-R5-Ex2.EES`: the 20 comparable variables agree within 9.9e-4, the two absolute R134a enthalpies differ by a constant reference offset, and the 11 cleared variables agree within 0.18 % with the design values quoted in the original.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/heat_exchangers/refrigeration_evaporator_wet_coil",
    "main_file": "refrigeration_evaporator_wet_coil.eescode",
    "figures": 0
@@ -1512,6 +1641,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file `MSTh-SB-R5-Ex3.EES`: 15 common variables, 0 differ at rtol=0.001, maximum relative difference 7.4·10⁻⁴ on `w_ex` (CoolProp humid air vs EES psychrometrics). The results EES had cleared match its last-solution guesses to 5·10⁻⁴.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/heat_exchangers/wet_air_cooled_condenser",
    "main_file": "wet_air_cooled_condenser.eescode",
    "figures": 0
@@ -1560,6 +1693,8 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Not verified: native file blocked by CS-GAP-INTEGRALVALUE and CS-GAP-GOTO, no runnable variant. The stored EES values were only recomputed by hand from the file's own equations, agreeing to 10 significant digits.",
+   "verification_checks": [],
    "path": "models/components/heat_exchangers/vertical_ghes_refsim",
    "main_file": "vertical_ghes_refsim.eescode",
    "figures": 0
@@ -1622,6 +1757,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 50 common variables, 0 differ (rtol=0.001), largest relative deviation 8.3e-8, explained by the quadrature of the exact crossflow integral.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/components/heat_exchangers/hx_effectiveness_ntu",
    "main_file": "hx_effectiveness_ntu.eescode",
    "figures": 0
@@ -1679,6 +1818,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 24 common variables, 0 differ (rtol=0.001), largest relative deviation 3.6e-12.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/components/heat_exchangers/plate_hx_heat_transfer",
    "main_file": "plate_hx_heat_transfer.eescode",
    "figures": 0
@@ -1732,6 +1875,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 81 common variables, 0 differ (rtol=0.001), largest relative deviation 8.3e-8, explained by the quadrature of the exact crossflow integral.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/components/heat_exchangers/hx_temperature_effectiveness_pntu",
    "main_file": "hx_temperature_effectiveness_pntu.eescode",
    "figures": 0
@@ -1783,6 +1930,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 16 common variables, 0 differ (rtol=0.001), largest relative deviation 5.4e-14.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/components/heat_exchangers/lmtd_and_f_correction",
    "main_file": "lmtd_and_f_correction.eescode",
    "figures": 0
@@ -1832,6 +1983,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
+   "verification_summary": "The 43 output values were compared with the doctest values of `ht` 1.2.0 and with values from the same ht functions: 43 common variables, 0 differ at rtol=0.001, largest relative deviation 2.4e-13; table values and tube counts exact.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/components/heat_exchangers/shell_and_tube_sizing",
    "main_file": "shell_and_tube_sizing.eescode",
    "figures": 0
@@ -1877,6 +2032,11 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
+   "verification_summary": "Compared with the EES stored solution of TM-0585: 38 common variables, maximum relative deviation 5.83e-2 on `mu` (R410A viscosity backend), all correlation outputs within 2.66e-2. Martin matches `ht` 1.2.0 to 4.6e-13 and Kumar to 9.0e-4; Muley differs because of a typo in the original file.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "source-rerun"
+   ],
    "path": "models/components/heat_exchangers/plate_hx_correlations",
    "main_file": "plate_hx_correlations.eescode",
    "figures": 0
@@ -1888,7 +2048,7 @@
    "category": "components/heat_exchangers",
    "kind": "function",
    "level": 3,
-   "status": "runs",
+   "status": "verified",
    "summary": "Seven EES PROCEDUREs that rate a heat exchanger zone by zone: a regularised log-mean temperature difference (lmtd_xi1000), a three-zone condenser built on it (hx_cd_three_zones), a three-zone evaporator that decides the phase zones itself (hx_ev_three_zones), the effectiveness-NTU zone procedures of an automotive condenser (single_phase_HX_eps_ntu, EV_eps_ntu, CD_eps_ntu) and an epsilon-NTU evaporator with a vapour and a two-phase zone (evaporator2_eps_ntu).",
    "fluids": [
     "R245fa",
@@ -1931,6 +2091,12 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
+   "verification_summary": "Compared with the EES stored solutions of four source files: 14 common variables, 12 differ at rtol=0.001, largest deviation 8.4e-02 on `AU_ev_v2` (explained by property-backend differences). The energy balance of the procedures closes exactly and lmtd_xi1000 was recomputed independently in Python (agrees to 10 significant digits).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance",
+    "analytical"
+   ],
    "path": "models/components/heat_exchangers/three_zone_hx_procedures",
    "main_file": "three_zone_hx_procedures.eescode",
    "figures": 0
@@ -1980,6 +2146,11 @@
    ],
    "coolsolve_version": "0.3.0@3a5d5ce",
    "verified_on": "2026-10-13",
+   "verification_summary": "Compared with the EES stored solution of the source file: 17 common variables, 5 differ at rtol=0.001, max 7.74e-03 on DELTAp_sf_cd, all inputs exact; the rest is attributed to the R123 property library. CoolProp saturation values also check against published R123 tables.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "publication"
+   ],
    "path": "models/components/heat_exchangers/condenser_3_zones_plate_correlations",
    "main_file": "condenser_3_zones_plate_correlations.eescode",
    "figures": 0
@@ -1991,7 +2162,7 @@
    "category": "components/heat_exchangers",
    "kind": "steady",
    "level": 2,
-   "status": "runs",
+   "status": "verified",
    "summary": "Plate evaporator for R245fa heated by thermal oil (or glycol): three refrigerant zones (subcooled liquid, boiling two-phase, superheated vapour) sized with LMTD and plate-heat-exchanger correlations (Thonon single phase, Hsieh & Lin boiling); computes area, pressure drops and writes the zone boundary data into the 'ev' lookup table. Ships the auto-size source file of the same family as a variant (R123/water demo case).",
    "fluids": [
     "R245fa",
@@ -2031,6 +2202,11 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
+   "verification_summary": "Compared with the EES stored solutions of both source files; main file: 19 common variables, 4 differ at rtol=0.001, max 7.69e-03 on p_ev (R245fa saturation pressure, EES vs CoolProp). The stored hx_ev outputs are stale, so they were checked by an energy balance (30.79 kW on both fluid sides).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance"
+   ],
    "path": "models/components/heat_exchangers/evaporator_3_zones_plate_correlations",
    "main_file": "evaporator_3_zones_plate_correlations.eescode",
    "figures": 0,
@@ -2084,6 +2260,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
+   "verification_summary": "Not verified for the native file (blocked by CS-GAP-REPEAT-UNTIL-BARE and CS-BUG-LOOKUP-WRITE). The runnable variant was compared with the EES stored solution: 21 common variables, 3 differ at rtol=0.001, max 2.20e-03 on the R245fa enthalpies and Q_dot (property backend).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/heat_exchangers/hx_fem_evaporator_discretised",
    "main_file": "hx_fem_evaporator_discretised.eescode",
    "figures": 0,
@@ -2133,6 +2313,12 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
+   "verification_summary": "The LaboThapPy example hex_csteff_example.py was re-run and 29 common variables compared: max relative deviation 2.253e-07 (cold-supply entropy, property backend). The eta = 1 self-check gives T_ex_H = T_su_C = 60 C exactly and the balances Q_dot_bal_H and Q_dot_bal_C equal Q_dot in all cases.",
+   "verification_checks": [
+    "source-rerun",
+    "analytical",
+    "energy-balance"
+   ],
    "path": "models/components/heat_exchangers/hx_constant_effectiveness",
    "main_file": "hx_constant_effectiveness.eescode",
    "figures": 0
@@ -2184,6 +2370,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
+   "verification_summary": "Both case studies of the LaboThapPy example were re-run: Q_dot +0.11 % (RecupHT) and +1.02 % (GasCooler), max 1.33 % on h_ex_H, explained by the original's bisection tolerance and 1 % steps. Against a tightened exact-root reference Q_dot agrees to +0.012 % and +0.015 %.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/components/heat_exchangers/hx_constant_effectiveness_discretised",
    "main_file": "hx_constant_effectiveness_discretised.eescode",
    "figures": 0,
@@ -2236,6 +2426,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
+   "verification_summary": "Compared with a re-run of LaboThapPy HexeNTU: 9 common variables, 0 differ at rtol=1e-3, max relative difference 1.8e-06 on h_ex_C. The TESPy test test_labothappy_reference, re-run, also agrees: Q 3961.469 W vs 3961.899 W (rel 1.1e-04).",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/components/heat_exchangers/hx_eps_ntu_plate_pipe",
    "main_file": "hx_eps_ntu_plate_pipe.eescode",
    "figures": 0
@@ -2282,10 +2476,16 @@
    "related": [
     "CSL-0105",
     "CSL-0014",
-    "CSL-0013"
+    "CSL-0013",
+    "CSL-0140",
+    "CSL-0142"
    ],
    "coolsolve_version": "0.3.0@4c80b25",
    "verified_on": "2026-10-13",
+   "verification_summary": "Compared with the TESPy HeatExchanger and Condenser class doctests re-run (design and off-design): main file 22 common variables, 0 differ at rtol=0.001, max 3.30e-07; condenser 21 common variables, 0 differ, max 4.28e-05 (M_dot_c_2), due to the air density.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/components/heat_exchangers/hx_lmtd_ua",
    "main_file": "hx_lmtd_ua.eescode",
    "figures": 0,
@@ -2339,6 +2539,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
+   "verification_summary": "Compared with the five Bell 2015 oracle cases of TESPy, re-generated with the local TESPy clone (7 tests passed): max |dQ| = 0.0144 % (test tolerance 0.1 %), max |dT| = 0.0327 K (test tolerance 0.5 K); case 5 deviates most.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/components/heat_exchangers/hx_moving_boundary_bell",
    "main_file": "hx_moving_boundary_bell.eescode",
    "figures": 0
@@ -2385,6 +2589,10 @@
    ],
    "coolsolve_version": "0.3.0@6f10211",
    "verified_on": "2026-10-10",
+   "verification_summary": "Compared with the EES stored solution (water run): 34 common variables, 4 differ at rtol=0.001 (k_f, Pr_f, h_f, R_f), max 2.03e-02 on Pr_f from the water conductivity (EES 0.59477 vs CoolProp 0.60652 W/m-K); geometric and algebraic outputs match to 4.2e-05.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/heat_exchangers/plate_hx_thermal_resistances",
    "main_file": "plate_hx_thermal_resistances.eescode",
    "figures": 0
@@ -2431,6 +2639,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Concerns the runnable variant (native file blocked). The stored EES solution is stale; only the solved bore diameter is consistent: 0.01702816341 stored vs 0.01702515, 1.8e-4 apart (7 common variables, 0 differ, rtol=0.001). A hand check of the humid-air state agrees within 0.1 % on density.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
    "path": "models/components/instrumentation/iso5167_orifice_plate_flow_rate",
    "main_file": "iso5167_orifice_plate_flow_rate.eescode",
    "figures": 0,
@@ -2481,6 +2694,11 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
+   "verification_summary": "Compared with the EES stored solution of TM-0558: 7 common variables, 3 differ at rtol=0.001 (w 4.27e-03, viscosity 2.42e-03, humid-air backend). The ISO 5167 demo point was recomputed to 2e-5 and the admission results equal the ideal-gas isentropic nozzle equations exactly.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
    "path": "models/components/instrumentation/nozzle_discharge_coefficients",
    "main_file": "nozzle_discharge_coefficients.eescode",
    "figures": 0
@@ -2528,6 +2746,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file: 34 common variables, 6 differ (rtol=0.001), maximum relative deviation 1.19e-02 on c_p and C_dot, caused by the different EES and CoolProp humid-air properties. All fan factors and the shaft power agree within 1.4e-04.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/pumps_fans/centrifugal_fan_reference_model",
    "main_file": "centrifugal_fan_reference_model.eescode",
    "figures": 0
@@ -2577,6 +2799,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Concerns the runnable variant (native file blocked by CS-GAP-ELSEIF-CHAIN and CS-GAP-UPPERCASE). Compared with the solution stored in the original EES file: 32 common variables, 0 differ (rtol=0.001), maximum relative deviation 6.4e-08 (rounding of decoded table coefficients).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/pumps_fans/centrifugal_brine_pump_refsim",
    "main_file": "centrifugal_brine_pump_refsim.eescode",
    "figures": 0,
@@ -2624,6 +2850,11 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
+   "verification_summary": "The LaboThapPy component PumpCurveSimilarity was re-run in all three modes: all common variables agree within 1.13e-09 with a same-backend reference, and within 7.2e-03 (W_dot_shaft) of the default bicubic run. The affinity laws are exact (to 4e-10).",
+   "verification_checks": [
+    "source-rerun",
+    "analytical"
+   ],
    "path": "models/components/pumps_fans/pump_curve_similarity",
    "main_file": "pump_curve_similarity.eescode",
    "figures": 0,
@@ -2670,6 +2901,11 @@
    ],
    "coolsolve_version": "0.3.0@4cd0ca5",
    "verified_on": "2026-10-10",
+   "verification_summary": "The tank trajectory was compared point by point with the integral table stored in the source EES file over all 18 001 points: maximum relative deviation 6.1·10⁻⁵, with 3.1·10⁻⁵ on `T_tank`. Water properties match the EES stored solution to 10 digits.",
+   "verification_checks": [
+    "ees-parametric-table",
+    "ees-stored-solution"
+   ],
    "path": "models/components/storage/dhw_tank_dynamic",
    "main_file": "dhw_tank_dynamic.eescode",
    "figures": 0
@@ -2716,6 +2952,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Not the native file (blocked by `CS-BUG-WATER-NEAR-FREEZING`): the runnable variant re-run with the inputs of sibling exercise TM-0095 agrees with its EES stored solution (19 common variables, 18 within 6.4·10⁻⁸). For the shipped inputs the trajectory matches the closed-form solution of the two phases.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
    "path": "models/components/storage/ice_storage_tank_discharge_phase_change",
    "main_file": "ice_storage_tank_discharge_phase_change.eescode",
    "figures": 0,
@@ -2761,6 +3002,10 @@
    ],
    "coolsolve_version": "0.3.0@47bb416",
    "verified_on": "2026-10-11",
+   "verification_summary": "The native file was compared with the EES stored solution: 65 common variables, 27 differ at rtol=0.001, max 3.44e-03 on p_dyn_mix_ex_diff; main outputs agree to 1.0e-04 (p_0_su_ej), 6.3e-05 (p_mix_ex_diff) and 3.1e-04 (M_dot_tot). Differences explained by stale stored cells, enthalpy reference and property backend.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/valves_nozzles_piping/air_nozzle_ejector",
    "main_file": "air_nozzle_ejector.eescode",
    "figures": 0
@@ -2795,6 +3040,10 @@
    "related": [],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the EES stored solution: the default-case result d_eq = 0.0199693 m matches the EES value 19.9693 mm after unit conversion. The other stored values, such as K_bille (1.8118 vs 1.64268), come from another procedure call or differ in units and are not a valid comparison.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/valves_nozzles_piping/ball_valve_authority",
    "main_file": "ball_valve_authority.eescode",
    "figures": 0
@@ -2836,6 +3085,8 @@
    "related": [],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Not verified: the model is blocked by `CS-GAP-FLUIDS-ABS` (no LiBr solution properties) and does not run in CoolSolve; the EES stored solution is only the reference for a future re-check.",
+   "verification_checks": [],
    "path": "models/cycles/absorption_sorption/libr_water_absorption_chiller",
    "main_file": "libr_water_absorption_chiller.eescode",
    "figures": 0
@@ -2847,7 +3098,7 @@
    "category": "cycles/engines",
    "kind": "dynamic",
    "level": 3,
-   "status": "runs",
+   "status": "verified",
    "summary": "Crank-angle-resolved model of one cylinder of a four-stroke spark-ignition engine: the cylinder pressure, gas mass, combustion heat release (Weibe function in a PROCEDURE), wall heat losses and piston work are integrated with INTEGRAL over the intake stroke (-360 to -180 deg), with a choked intake flow through the intake valve and the charge modelled as a single ideal gas with constant gamma.",
    "fluids": [],
    "tags": [
@@ -2881,6 +3132,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "No independent reference exists. The model reproduces the CoolSolve example solution on all 75 scalar variables (bit-identical); the volume matches the closed-form slider-crank volume at 37 trajectory rows (largest deviation 2·10⁻⁵ m³) and the intake flow equals the choked flow 0.10193 kg/s.",
+   "verification_checks": [
+    "analytical"
+   ],
    "path": "models/cycles/engines/single_cylinder_engine_weibe",
    "main_file": "single_cylinder_engine_weibe.eescode",
    "figures": 0
@@ -2936,6 +3191,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the stored EES solution of the original (69 variables): 66 agree within rtol = 0.001; the three others are `c_f` (0.94 %, ideal-gas CH4 vs CoolProp), `Q_dot_2` which follows it, and an entropy reference-state offset. The charge mass balance closes and the combustor energy balance is satisfied.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance"
+   ],
    "path": "models/cycles/engines/gas_engine_full_power_cpbar",
    "main_file": "gas_engine_full_power_cpbar.eescode",
    "figures": 0
@@ -2982,6 +3242,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Agrees with an independent Python/CoolProp re-implementation of the exercise to 2.11·10⁻¹¹ relative (42 variables) and with the meaningful part of the EES stored solution to 1.51·10⁻⁵; 25 of the 43 values stored in the EES file are an unused placeholder 1.",
+   "verification_checks": [
+    "other-tool",
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/engines/otto_cycle_air_standard",
    "main_file": "otto_cycle_air_standard.eescode",
    "figures": 0
@@ -3034,6 +3299,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Concerns the runnable variant (native file blocked). Against the EES stored solution: 66 common variables, 13 differ (rtol=0.001), explained by reference-state offsets and EES's coarse quadrature; the other 53 agree, largest deviation 1.51e-05. A Python/CoolProp re-implementation agrees except the integrals (max 5.04e-05).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "source-rerun"
+   ],
    "path": "models/cycles/engines/stirling_cycle_ideal_regenerator",
    "main_file": "stirling_cycle_ideal_regenerator.eescode",
    "figures": 0,
@@ -3087,6 +3357,11 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
+   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-INTERP-EES): compared with the EES stored solution, 97 common variables, 6 differ at rtol=0.001, max 9.4e-3 on cp_f (ideal-gas vs real-fluid heat capacity), all deviations explained. The charge mass balance and chamber energy balance are closed.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance"
+   ],
    "path": "models/cycles/engines/gas_engine_complete_model",
    "main_file": "gas_engine_complete_model.eescode",
    "figures": 0,
@@ -3129,6 +3404,11 @@
    "related": [],
    "coolsolve_version": "0.3.0@6f10211",
    "verified_on": "2026-10-10",
+   "verification_summary": "Compared with the EES stored solution (exercise 1): 14 common variables, 0 differ at rtol=0.001, max relative difference 3.5e-5 (p_w_s_x, steam saturation pressure); K 3.4e-6 and alpha 3.9e-6. Exercise 2 has no stored reference and was only hand-checked.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
    "path": "models/cycles/engines/engine_derating_iso3046",
    "main_file": "engine_derating_iso3046.eescode",
    "figures": 0
@@ -3185,6 +3465,10 @@
    ],
    "coolsolve_version": "0.3.0+fix/library-gaps@fbdb6a7",
    "verified_on": "2026-10-05",
+   "verification_summary": "Not the main file (blocked by `CS-GAP-INTERP-EES` and `CS-GAP-INCLUDE`): its runnable variants reproduce the EES stored solutions of the three revision files (TM-0150, TM-0151, TM-0149) with a max relative deviation of 1.6·10⁻³ and derived results within 1.1·10⁻³ (EES vs CoolProp air).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/gas_turbines/two_shaft_gas_turbine_compressor_map",
    "main_file": "two_shaft_gas_turbine_compressor_map.eescode",
    "figures": 0,
@@ -3234,10 +3518,15 @@
     "CSL-0049",
     "CSL-0052",
     "CSL-0059",
-    "CSL-0060"
+    "CSL-0060",
+    "CSL-0141"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the EES stored solution (92 common variables): the 60 variables that are not an absolute enthalpy or entropy of air agree within 5.3e-03 (largest on `eta_tg`), enthalpy differences within 2.8e-03 and entropy differences within 2.3e-03, attributed to EES Air vs CoolProp Air.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/gas_turbines/gas_turbine_two_shaft_intercooled_regenerative",
    "main_file": "gas_turbine_two_shaft_intercooled_regenerative.eescode",
    "figures": 0
@@ -3278,6 +3567,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file (40 variables): the 12 differing variables are absolute enthalpies and entropies with constant reference-state offsets; all other variables agree, with a largest relative deviation of 2.6·10⁻⁵ (`T[2]`).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/gas_turbines/turbojet_ideal_260ms",
    "main_file": "turbojet_ideal_260ms.eescode",
    "figures": 0
@@ -3324,6 +3617,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored by EES in the source file (36 common variables): 27 agree within 7.4e-06 relative; the 9 absolute enthalpies and entropies of air differ by a reference-state offset and agree through their differences to 4.9e-06.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/gas_turbines/combined_gas_steam_cycle",
    "main_file": "combined_gas_steam_cycle.eescode",
    "figures": 0
@@ -3367,8 +3664,117 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the EES stored solution of the source file (98 variables): derived results (temperature rises, powers, fuel flows, efficiency) agree within 9.8e-03, explained by different air property backends. Absolute h and s differ by reference-state offsets (max 3.40e-01 on s[3]).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/gas_turbines/gas_turbine_reheat",
    "main_file": "gas_turbine_reheat.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0141",
+   "name": "gas_turbine_open_cycle",
+   "title": "Open-cycle gas turbine with combustion chamber and generator (TESPy tutorial)",
+   "category": "cycles/gas_turbines",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Open Brayton cycle of the TESPy basic tutorial: air compressor, diabatic combustion chamber burning a CH4/H2/CO2 fuel (species balances, excess-air ratio and lower-heating-value energy balance, ideal-gas mixture), turbine driving the compressor and a generator; the air flow follows from the imposed turbine inlet temperature, with the tutorial's efficiency/power studies over the turbine inlet temperature and the compressor pressure ratio.",
+   "fluids": [
+    "Ar",
+    "N2",
+    "O2",
+    "CO2",
+    "H2O",
+    "CH4",
+    "H2"
+   ],
+   "tags": [
+    "gas turbine",
+    "Brayton cycle",
+    "open cycle",
+    "combustion chamber",
+    "generator",
+    "species balance",
+    "ideal gas mixture",
+    "parametric study",
+    "tutorial"
+   ],
+   "n_equations": 79,
+   "largest_block": 13,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/tutorial/basics/gas_turbine.py",
+   "authors": [
+    "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy",
+   "missing_features": [],
+   "related": [
+    "CSL-0013",
+    "CSL-0050",
+    "CSL-0135",
+    "CSL-0139"
+   ],
+   "coolsolve_version": "0.3.0@e635c85",
+   "verified_on": "2026-10-14",
+   "verification_summary": "Compared with a run of the TESPy tutorial gas_turbine.py: 37 common variables, max relative deviation 2.1e-03 on W_dot_cp, every other physical result <= 1.3e-03; enthalpy differences agree to 8e-04. The deviation is the gas model (real vs ideal gas).",
+   "verification_checks": [
+    "source-rerun"
+   ],
+   "path": "models/cycles/gas_turbines/gas_turbine_open_cycle",
+   "main_file": "gas_turbine_open_cycle.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0144",
+   "name": "sco2_recompression_brayton",
+   "title": "Supercritical CO2 recompression Brayton cycle (100 MW net)",
+   "category": "cycles/gas_turbines",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Design-point sCO2 recompression Brayton cycle with two 10-section recuperators after the TESPy model-library example, validated against the published state and exergy table of Penkuhn & Tsatsaronis (2018): turbomachinery at isentropic efficiency, recuperators at 5 K lower terminal temperature difference, net power imposed at 100 MW, recompressed fraction fixed by equal merge temperatures.",
+   "fluids": [
+    "R744"
+   ],
+   "tags": [
+    "cycle",
+    "supercritical",
+    "recompression",
+    "recuperator",
+    "sectioned-hx",
+    "Brayton",
+    "exergy",
+    "published-reference"
+   ],
+   "n_equations": 486,
+   "largest_block": 8,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/docs/model_library/sco2.ipynb",
+   "authors": [
+    "Francesco Witte (TESPy model and sCO2_exergy original)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy",
+   "missing_features": [],
+   "related": [
+    "CSL-0013",
+    "CSL-0014",
+    "CSL-0038"
+   ],
+   "coolsolve_version": "0.3.0@e635c85",
+   "verified_on": "2026-10-14",
+   "verification_summary": "Compared with a TESPy run of sco2.ipynb: 69 common variables, 0 differ at rtol=0.001, max 4.3e-4 on UA_rec1 (smoothed vs standard LMTD). Against the published Penkuhn & Tsatsaronis (2018) state table: 48 values, 0 differ, max 7.5e-4 on e_T[5] (rounded published values).",
+   "verification_checks": [
+    "source-rerun",
+    "publication"
+   ],
+   "path": "models/cycles/gas_turbines/sco2_recompression_brayton",
+   "main_file": "sco2_recompression_brayton.eescode",
    "figures": 0
   },
   {
@@ -3416,6 +3822,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file `EES_ok/orc_r245fa.EES` (177 common variables): 88 agree within 0.1 %, the rest deviate by 0.1–2.1 % and up to 5.2 %, traced to R245fa property formulations (EES vs CoolProp).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/organic_rankine/orc_simple_r245fa",
    "main_file": "orc_simple_r245fa.eescode",
    "figures": 0
@@ -3463,6 +3873,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file `EES_ok/orc_extraction.EES` (132 variables): apart from constant reference-state offsets and quality sentinel conventions, the largest difference is 2.62e-03 (`M_dot_f_ext`), and 60 physical variables agree within 1·10⁻³; the differences come from the R134a equation of state.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/organic_rankine/orc_extraction_r134a",
    "main_file": "orc_extraction_r134a.eescode",
    "figures": 0
@@ -3474,7 +3888,7 @@
    "category": "cycles/organic_rankine",
    "kind": "steady",
    "level": 3,
-   "status": "runs",
+   "status": "verified",
    "summary": "Closed supercritical CO2 (R744) vapour power cycle (cooler, compressor, recuperator, solar air-CO2 heater, turbine, three lossy pipes) in which the compressor and the turbine are described by polynomial fits of their performance maps and run at an imposed speed of 75000 rpm; the maps close the cycle (mass flow rate and turbine exhaust pressure are unknowns): 2.27 kg/s of CO2, 94 kW net, 22.1 % cycle efficiency.",
    "fluids": [
     "R744",
@@ -3506,10 +3920,16 @@
     "CSL-0036",
     "CSL-0040",
     "CSL-0084",
-    "CSL-0104"
+    "CSL-0104",
+    "CSL-0144"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "No independent reference exists. The solution reproduces the converged solution stored with the CoolSolve example (140 common variables, 0 differ at rtol=0.001, largest deviation 1.48·10⁻⁷), the cycle energy balance closes to −5.4·10⁻¹⁰ W, and all pressures lie above the CO2 critical pressure.",
+   "verification_checks": [
+    "energy-balance",
+    "order-of-magnitude"
+   ],
    "path": "models/cycles/organic_rankine/orc_co2_polynomial_maps",
    "main_file": "orc_co2_polynomial_maps.eescode",
    "figures": 0
@@ -3564,6 +3984,8 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Not verified: the model is blocked by `CS-GAP-IF-NO-CONSTANT` and does not solve, so no comparison was made; the EES solution report is only the target a runnable variant would be compared with.",
+   "verification_checks": [],
    "path": "models/cycles/organic_rankine/orc_biomass_chp",
    "main_file": "orc_biomass_chp.eescode",
    "figures": 0
@@ -3615,6 +4037,11 @@
    ],
    "coolsolve_version": "0.3.0@4c80b25",
    "verified_on": "2026-10-13",
+   "verification_summary": "Compared with a re-run of the LaboThapPy Zorlu ORC example (preheater-source bug corrected): 38 common variables, 17 differ at rtol=0.001, max 1.93e-01 on Q_dot_sh_ev; pressures, pump power and condenser duties agree to <= 7.1e-04. The deviations follow from one stale state of the Python circuit. Balance residuals are <= 1e-7 W.",
+   "verification_checks": [
+    "source-rerun",
+    "energy-balance"
+   ],
    "path": "models/cycles/organic_rankine/orc_preheated_recuperated_cyclopentane",
    "main_file": "orc_preheated_recuperated_cyclopentane.eescode",
    "figures": 0
@@ -3668,10 +4095,15 @@
     "CSL-0114",
     "CSL-0121",
     "CSL-0124",
-    "CSL-0159"
+    "CSL-0159",
+    "CSL-0154"
    ],
    "coolsolve_version": "0.3.0@20b59a6",
    "verified_on": "2026-10-13",
+   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-END-PROCEDURE): compared with the EES stored solution, 356 common variables; about 90 are affected by corrections of two errors of the original (A_cd 10.96 vs 5.459 m²), the rest differ by a few % (property backend). A scratch run restoring the two errors gives eta_cycle 6.942 % (EES 6.964 %).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/organic_rankine/orc_whr_refprop_cost",
    "main_file": "orc_whr_refprop_cost.eescode",
    "figures": 0,
@@ -3725,6 +4157,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
+   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-BUG-HUMIDAIR-PROPS): compared with the EES stored solution, cycle results within 2.4e-03, max 1.21e-02 on Q_dot_ex_exp (small denominator); absolute h/s carry a constant reference offset, differences within 6e-04.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/organic_rankine/orc_void_fraction_charge",
    "main_file": "orc_void_fraction_charge.eescode",
    "figures": 0,
@@ -3779,10 +4215,15 @@
     "CSL-0156",
     "CSL-0167",
     "CSL-0136",
-    "CSL-0133"
+    "CSL-0133",
+    "CSL-0148"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-04",
+   "verification_summary": "The faithful import was compared with the parametric table stored in the original EES file for R22, R134a and propane; maximum deviations are 1.4 %, 0.06 % and 0.3 % (R22 most likely EES 7.4 vs CoolProp properties). The corrected model agrees with the CoolSolve example `compressor_refrigeration_simple` within < 0.02 %.",
+   "verification_checks": [
+    "ees-parametric-table"
+   ],
    "path": "models/cycles/refrigeration_heat_pumps/refrigeration_cycle_simple_compressor",
    "main_file": "refrigeration_cycle_simple_compressor.eescode",
    "figures": 0
@@ -3826,10 +4267,20 @@
     "CSL-0134",
     "CSL-0135",
     "CSL-0137",
-    "CSL-0139"
+    "CSL-0139",
+    "CSL-0140",
+    "CSL-0141",
+    "CSL-0144",
+    "CSL-0142",
+    "CSL-0143",
+    "CSL-0145"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "The TESPy tutorial was re-run in a throw-away virtual env and the CoolSolve results agree with its outputs to ≤ 6e-9 relative: base case within 2e-13 (`COP` = 3.37838 on both sides), three specification variants and sweep end points.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_basic_tespy",
    "main_file": "heat_pump_basic_tespy.eescode",
    "figures": 0
@@ -3876,6 +4327,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file `EES_ok/refrigeration1.EES` (39 variables): 29 agree within 0.07 %, the 9 absolute enthalpies and the inlet entropy differ by constant reference-state offsets, and all derived results agree (COP 4.81773 vs 4.81730).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/refrigeration_heat_pumps/refrigeration_cycle_basic_r134a",
    "main_file": "refrigeration_cycle_basic_r134a.eescode",
    "figures": 0
@@ -3921,6 +4376,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file `EES_ok/refrigeration2.EES`: all live model variables agree within 0.27 % (largest on the evaporator-inlet quality; COP 4.47214 vs 4.47448), differences due to EES 7.210 vs CoolProp R22 properties.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_cycle_r22_30kw",
    "main_file": "heat_pump_cycle_r22_30kw.eescode",
    "figures": 0
@@ -3970,6 +4429,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the EES original `MSTH-SB-R10-EX1.EES` (55 variables): 19 differ above rtol = 0.001, largest 6.6e-03 on `T_ev`, all traced to R22 and water properties of EES 7.458 vs CoolProp; compressor power agrees to 2·10⁻⁵.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_r22_semihermetic_compressor",
    "main_file": "heat_pump_r22_semihermetic_compressor.eescode",
    "figures": 0
@@ -3981,7 +4444,7 @@
    "category": "cycles/refrigeration_heat_pumps",
    "kind": "steady",
    "level": 3,
-   "status": "runs",
+   "status": "verified",
    "summary": "High-temperature vapour-compression heat pump on cyclopentane studied for the Zorlu geothermal plant: geothermal brine evaporator with production pump, internal heat exchanger, water condenser delivering 7 MW at 141 °C to a phase-change-material storage; the evaporating and condensing pressures follow from pinch constraints evaluated zone by zone (superheat / two-phase / subcooling) in two PROCEDUREs, and a PCM sizing block gives the storage volume and discharge power.",
    "fluids": [
     "CycloPentane",
@@ -4016,6 +4479,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "No independent reference exists. The solution reproduces the converged solution distributed with the CoolSolve example (114 common variables, 0 differ at rtol=0.001; largest deviation 1.85e-10 at --rtol 1e-12), and the cycle energy balance is 0 W to machine precision on 7.010 MW.",
+   "verification_checks": [
+    "energy-balance"
+   ],
    "path": "models/cycles/refrigeration_heat_pumps/high_temp_heat_pump_pcm_storage",
    "main_file": "high_temp_heat_pump_pcm_storage.eescode",
    "figures": 0
@@ -4059,6 +4526,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the EES stored solution: 40 common variables, 3 differ at rtol=0.001 (T[4] at 1.71e-03 near zero, and two quality values by convention). The companion CoolProp Python solution of the exercise agrees with the main results within 4e-6 relative.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "other-tool"
+   ],
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_r410a_air_evaporator",
    "main_file": "heat_pump_r410a_air_evaporator.eescode",
    "figures": 0
@@ -4104,6 +4576,12 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the source EES file: 55 common variables, 17 differ (rtol=0.001), all explained (reference-state offsets, L/s units); maximum deviation over the others 7.5e-4. The course Python/CoolProp solution prints the same results; the cycle energy balance closes.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "source-rerun",
+    "energy-balance"
+   ],
    "path": "models/cycles/refrigeration_heat_pumps/refrigerator_freezer_r134a",
    "main_file": "refrigerator_freezer_r134a.eescode",
    "figures": 0
@@ -4147,10 +4625,15 @@
     "CSL-0015",
     "CSL-0025",
     "CSL-0061",
-    "CSL-0078"
+    "CSL-0078",
+    "CSL-0148"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file (read from its solution report): 30 common variables, 1 differ (rtol=0.001), P_4 at 3.6e-3 (different property inversion inside the saturation dome); the 29 others agree within 9.7e-4.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_scroll_compressor_data_check",
    "main_file": "heat_pump_scroll_compressor_data_check.eescode",
    "figures": 0
@@ -4203,6 +4686,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution printed by EES in the source file (its stored variable records are cleared): 116 common variables, 11 differ above rtol = 0.001, maximum relative difference 6.16e-03 (C_dot_su_cp), from the R22 specific heat at suction. Cycle results agree to better than 1e-3; the condenser balance closes.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance"
+   ],
    "path": "models/cycles/refrigeration_heat_pumps/aircooled_chiller_refsim",
    "main_file": "aircooled_chiller_refsim.eescode",
    "figures": 0
@@ -4263,6 +4751,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Concerns the runnable variant (native file blocked). Against the EES stored solution: 142 common variables, 73 differ above rtol = 0.001, maximum 5.54e-01 (reference-state offset on absolute enthalpies). Derived results agree to 0.4–3.3 %, above the expected tolerance (R407C properties) and not investigated further.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/refrigeration_heat_pumps/brine_to_water_heat_pump_refsim",
    "main_file": "brine_to_water_heat_pump_refsim.eescode",
    "figures": 0,
@@ -4329,6 +4821,8 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
+   "verification_summary": "Not verified: the native file does not run (gaps CS-GAP-CONVERT-UNQUOTED, CS-GAP-LKT, CS-GAP-INCLUDE, CS-GAP-INCOMPRESSIBLE, CS-GAP-GE-ARROW, CS-GAP-REPEAT-UNTIL-BARE) and no runnable variant exists; the EES stored solution is only documented as a future reference.",
+   "verification_checks": [],
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_vitocal_300g",
    "main_file": "heat_pump_vitocal_300g.eescode",
    "figures": 0
@@ -4376,8 +4870,112 @@
    ],
    "coolsolve_version": "0.3.0@4c80b25",
    "verified_on": "2026-10-12",
+   "verification_summary": "Compared with a re-run of the LaboThapPy example fpi_HeatPump_example.py: 54 common variables, 0 differ at rtol = 1e-3, max relative difference 2.97e-05 on T_1 (convergence tolerance of the original solver). The imposed pinch is met exactly and the energy balances close.",
+   "verification_checks": [
+    "source-rerun",
+    "energy-balance"
+   ],
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_propane_pinch",
    "main_file": "heat_pump_propane_pinch.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0145",
+   "name": "refrigeration_co2_transcritical_booster",
+   "title": "CO2 transcritical booster refrigeration system (supermarket)",
+   "category": "cycles/refrigeration_heat_pumps",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "CO2 (R744) booster supermarket cycle: LT (13 bar, 25 kW) and MT (26 bar, 75 kW) evaporators, receiver with flash gas by-pass at 32 bar, two constant-efficiency compressors, heat-recovery heat exchanger (5 K pinch, water 30 to 55 C) and gas cooler at 57.3 bar; subcritical and transcritical operating cases.",
+   "fluids": [
+    "R744",
+    "Water"
+   ],
+   "tags": [
+    "refrigeration",
+    "booster",
+    "supermarket",
+    "transcritical",
+    "flash gas",
+    "receiver",
+    "heat recovery",
+    "tutorial"
+   ],
+   "n_equations": 157,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/docs/model_library/co2_cycle.ipynb",
+   "authors": [
+    "Francesco Witte (TESPy lead developer)",
+    "Francesco D'Ettorre and Christian Heerup (book chapter with the cycle layout and boundary conditions)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy",
+   "missing_features": [],
+   "related": [
+    "CSL-0013",
+    "CSL-0014"
+   ],
+   "coolsolve_version": "0.3.0@e635c85",
+   "verified_on": "2026-10-15",
+   "verification_summary": "The TESPy notebook co2_cycle.ipynb was re-run in a throw-away venv (local clone, commit 19425523): all Case Study 1 KPIs (COP 4.9428, P 25.1679 kW, Q_hrhx -24.3996 kW, flash gas 0.18966, T discharge 68.5544 C, Q_gas cooler -100.7682 kW) agree to <= 6e-11 relative; the 100 bar transcritical case to <= 2.3e-9; printed state points to 3e-4 (5-digit source print).",
+   "verification_checks": [
+    "source-rerun",
+    "energy-balance"
+   ],
+   "path": "models/cycles/refrigeration_heat_pumps/refrigeration_co2_transcritical_booster",
+   "main_file": "refrigeration_co2_transcritical_booster.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0148",
+   "name": "scroll_volume_ratio_cycle_r134a",
+   "title": "Scroll refrigeration cycle (R134a): built-in volume ratio vs isentropic efficiency and COP",
+   "category": "cycles/refrigeration_heat_pumps",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Discussion model of a scroll compressor driving a R134a refrigeration machine: the built-in volume ratio of the machine is the input, the compression is isentropic down to the built-in volume and isochoric up to the discharge pressure; the model returns the pressure ratio the machine develops, its isentropic efficiency and the COP of the cycle.",
+   "fluids": [
+    "R134a"
+   ],
+   "tags": [
+    "refrigeration",
+    "scroll compressor",
+    "built-in volume ratio",
+    "volume ratio",
+    "isentropic efficiency",
+    "COP",
+    "off-design",
+    "parametric study",
+    "exercise"
+   ],
+   "n_equations": 47,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 02/VL050926_2-3-1 questionsVL051023.EES",
+   "authors": [
+    "Vincent Lemort (ULiège Thermodynamics Laboratory)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [
+    "CSL-0001",
+    "CSL-0068"
+   ],
+   "coolsolve_version": "0.3.0@2d15382",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Compared with the EES stored solutions: 3 of the 5 non-cleared variables of TM-0042 agree within 5.8e-4, and at its operating point 17 of the 30 variables stored in duplicate-group copy TM-0043 agree within 9.1e-4 (COP 6.7e-4); 11 are excluded (reference-state offset, EES/CoolProp vapour density). Cycle energy balance closed to 1.7e-13.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance"
+   ],
+   "path": "models/cycles/refrigeration_heat_pumps/scroll_volume_ratio_cycle_r134a",
+   "main_file": "scroll_volume_ratio_cycle_r134a.eescode",
    "figures": 0
   },
   {
@@ -4421,6 +5019,8 @@
    ],
    "coolsolve_version": "0.3.0@59b2862",
    "verified_on": "2026-10-10",
+   "verification_summary": "Not verified: the native file does not converge (151-variable block 106, 180 of 181 blocks solve; register C-147) and no solution is shipped. The stored EES solution is partly self-inconsistent, so it is not usable as a converged reference.",
+   "verification_checks": [],
    "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump",
    "main_file": "inverter_air_water_heat_pump.eescode",
    "figures": 0
@@ -4463,10 +5063,15 @@
     "CSL-0036",
     "CSL-0045",
     "CSL-0053",
-    "CSL-0052"
+    "CSL-0052",
+    "CSL-0140"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-04",
+   "verification_summary": "Results were compared with the EES stored solution of the source file: all 40 common variables agree within 2·10⁻⁵ relative. A cross-check with the CoolSolve example `rankine1` (0.1 bar condenser) reproduces its results within 0.06 %.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/steam_power/rankine_cycle_60mw",
    "main_file": "rankine_cycle_60mw.eescode",
    "figures": 0
@@ -4505,10 +5110,16 @@
    "missing_features": [],
    "related": [
     "CSL-0004",
-    "CSL-0052"
+    "CSL-0052",
+    "CSL-0147",
+    "CSL-0143"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the source EES file: all 44 common variables agree within rtol=0.001, the largest deviation being 5.5·10⁻⁴ on `M_dot_steam_s` (EES 7.2 vs CoolProp water properties).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/steam_power/rankine_cycle_regenerative_extraction",
    "main_file": "rankine_cycle_regenerative_extraction.eescode",
    "figures": 0
@@ -4550,13 +5161,329 @@
    "url": "",
    "missing_features": [],
    "related": [
-    "CSL-0004"
+    "CSL-0004",
+    "CSL-0140"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the source EES file: all 74 common variables agree at rtol = 0.001, largest relative deviation 7.87e-06 (on `rho_6`; enthalpies within 6e-07).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/steam_power/steam_power_plant_elementary",
    "main_file": "steam_power_plant_elementary.eescode",
    "figures": 0
+  },
+  {
+   "id": "CSL-0140",
+   "name": "rankine_cycle_part_load",
+   "title": "Rankine cycle with cooling-water condenser, generator/motor and part load",
+   "category": "cycles/steam_power",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Superheated-steam Rankine cycle after the TESPy basic tutorial: steam turbine, feed pump, steam generator with pressure drop and main condenser cooled by a cooling-water stream, with generator and pump-motor efficiencies; a second, simultaneous block solves one part-load point where Stodola's cone law sets the turbine inlet pressure and the condenser UA and the cooling-water volumetric flow keep their design values.",
+   "fluids": [
+    "Water"
+   ],
+   "tags": [
+    "Rankine cycle",
+    "steam power",
+    "cooling water",
+    "condenser",
+    "generator",
+    "motor",
+    "off-design",
+    "part load",
+    "cone law",
+    "tutorial"
+   ],
+   "n_equations": 105,
+   "largest_block": 17,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/tutorial/basics/rankine.py",
+   "authors": [
+    "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy",
+   "missing_features": [],
+   "related": [
+    "CSL-0004",
+    "CSL-0013",
+    "CSL-0053",
+    "CSL-0135",
+    "CSL-0137"
+   ],
+   "coolsolve_version": "0.3.0@e635c85",
+   "verified_on": "2026-10-14",
+   "verification_summary": "Compared with a re-run of the TESPy tutorial rankine.py: design point 22 variables, max 2.9e-12; part-load point at 15 kg/s 13 variables, max 2.8e-11; the part-load sweep agrees to <= 1e-8 and the specification variants to round-off.",
+   "verification_checks": [
+    "source-rerun"
+   ],
+   "path": "models/cycles/steam_power/rankine_cycle_part_load",
+   "main_file": "rankine_cycle_part_load.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0143",
+   "name": "rankine_cycle_two_extractions",
+   "title": "Regenerative Rankine cycle with two extractions and closed feedwater heaters (TESPy)",
+   "category": "cycles/steam_power",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "HP/MP/LP steam plant of the TESPy optimisation tutorial: 200 kg/s live steam at 100 bar / 650 °C, two extractions (20 / 3 bar) feeding two closed feedwater heaters with drain pumps and a desuperheater, condenser with 5 K terminal temperature difference; design point with a documented 2-D sweep replacing the pymoo optimisation.",
+   "fluids": [
+    "Water"
+   ],
+   "tags": [
+    "rankine",
+    "regenerative",
+    "closed feedwater heaters",
+    "drain pumps",
+    "desuperheater",
+    "two extractions",
+    "TESPy",
+    "sweep"
+   ],
+   "n_equations": 154,
+   "largest_block": 16,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/tutorial/advanced/optimization_example.py",
+   "authors": [
+    "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy",
+   "missing_features": [],
+   "related": [
+    "CSL-0029",
+    "CSL-0013"
+   ],
+   "coolsolve_version": "0.3.0@e635c85",
+   "verified_on": "2026-10-14",
+   "verification_summary": "The unmodified TESPy SamplePlant (base model of tutorial/advanced/optimization_example.py) was re-run in a throw-away venv at the design extraction pressures; 38 common variables agree to <= 1.3e-9 relative except the cooling-water flow (2.0e-3, INCOMP::Water vs Water liquid enthalpy). A sweep end point (10/2 bar) matches to 3e-11. Energy balances close to <= 7e-7.",
+   "verification_checks": [
+    "source-rerun",
+    "energy-balance",
+    "order-of-magnitude"
+   ],
+   "path": "models/cycles/steam_power/rankine_cycle_two_extractions",
+   "main_file": "rankine_cycle_two_extractions.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0147",
+   "name": "segs_solar_power_plant",
+   "title": "SEGS solar thermal power plant (TESPy validation model)",
+   "category": "cycles/steam_power",
+   "kind": "steady",
+   "level": 4,
+   "status": "verified",
+   "summary": "Steady-state design-point model of the SEGS VI parabolic-trough solar power plant: Therminol VP-1 solar field and HTF loop, regenerative Rankine cycle with 7 turbine stages, 5 feedwater preheaters with subcoolers and deaerator, condenser with wet cooling tower, generator/motor power chain. Validates against the Ebsilon benchmark of the TESPy test suite.",
+   "fluids": [
+    "Water",
+    "Therminol VP-1 (CSL-0121 correlations)",
+    "Air"
+   ],
+   "tags": [
+    "solar-thermal",
+    "parabolic trough",
+    "regenerative Rankine",
+    "feedwater heaters",
+    "reheat",
+    "cooling tower",
+    "Ebsilon benchmark",
+    "validation model",
+    "TESPy"
+   ],
+   "n_equations": 397,
+   "largest_block": 59,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/tests/test_models/test_solar_energy_generating_system.py",
+   "authors": [
+    "Francesco Witte",
+    "Ilka Tuschy",
+    "TESPy contributors"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy/blob/main/tests/test_models/test_solar_energy_generating_system.py",
+   "missing_features": [],
+   "related": [
+    "CSL-0121",
+    "CSL-0029",
+    "CSL-0135"
+   ],
+   "coolsolve_version": "0.3.0@e635c85",
+   "verified_on": "2026-10-14",
+   "verification_summary": "Compared with a re-run of the source TESPy test network (commit 19425523, TESPy 0.11.3.dev0 in a virtual environment): 79 fluid states and 25 power flows; water/steam and air agree to solver precision (same CoolProp backend), max deviations all from the Therminol VP-1 property correlations (HTF mass flow -0.67%, T at field inlet +0.16 K). Net power 31.782 MW vs the Ebsilon benchmark value 31.769 MW quoted in the test (+4.2e-4).",
+   "verification_checks": [
+    "source-rerun",
+    "other-tool",
+    "energy-balance",
+    "order-of-magnitude"
+   ],
+   "path": "models/cycles/steam_power/segs_solar_power_plant",
+   "main_file": "segs_solar_power_plant.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0146",
+   "name": "cgam_cogeneration",
+   "title": "CGAM cogeneration benchmark (gas turbine + HRSG)",
+   "category": "energy_systems/cogeneration",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Design-point CGAM problem (Valero et al. 1994) as built in the TESPy test suite: gas turbine with air preheater and HRSG (economiser, drum, evaporator) delivering 14 kg/s of saturated steam at 20 bar and 30 MW net power; the fuel flow follows from the TIT, the air flow from the net power; ideal-gas mixture air/flue gas, Water on the steam side.",
+   "fluids": [
+    "N2",
+    "O2",
+    "CO2",
+    "H2O",
+    "CH4",
+    "Water"
+   ],
+   "tags": [
+    "cogeneration",
+    "gas turbine",
+    "CGAM",
+    "published benchmark",
+    "reference model",
+    "HRSG",
+    "drum",
+    "combustion",
+    "design"
+   ],
+   "n_equations": 119,
+   "largest_block": 28,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/tests/test_models/test_CGAM_model.py",
+   "authors": [
+    "Francesco Witte and the TESPy contributors"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy",
+   "missing_features": [],
+   "related": [
+    "CSL-0139"
+   ],
+   "coolsolve_version": "0.3.0@e635c85",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Re-ran the source test (test_CGAM_model.py, TESPy 0.11.3.dev0/CoolProp 8.0.0, throw-away venv) and compared all states, powers and compositions: max rel diff 2.0e-03 (h, s as same-composition differences, as the source test does). Against the Ebsilon table (cgam-ebsilon-results.csv): compressor 29.740 vs 29.6597 MW (2.7e-03), turbine 59.740 vs 59.6597 MW (1.4e-03), max 4.7e-03, card tolerance 5e-03.",
+   "verification_checks": [
+    "source-rerun",
+    "other-tool"
+   ],
+   "path": "models/energy_systems/cogeneration/cgam_cogeneration",
+   "main_file": "cgam_cogeneration.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0142",
+   "name": "district_heating_loop",
+   "title": "District heating loop (consumer, feed pump, pipes with pressure drop and heat loss)",
+   "category": "energy_systems/district_heating",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Small district-heating loop (TESPy basic tutorial): heating plant, feed pump with isentropic efficiency, consumer with 2 % pressure drop, isenthalpic control valve and two pipes with Darcy-Weisbach pressure drop (Colebrook-White) and UA*LMTD heat loss to the ambient; returns the mass flow, the pump power, the heat duties and the loop efficiency, and reproduces the tutorial's part-load studies.",
+   "fluids": [
+    "Water"
+   ],
+   "tags": [
+    "district heating",
+    "heating network",
+    "feed pump",
+    "consumer",
+    "control valve",
+    "Darcy-Weisbach",
+    "Colebrook-White",
+    "pipe heat loss",
+    "UA-LMTD",
+    "part load",
+    "tutorial"
+   ],
+   "n_equations": 71,
+   "largest_block": 10,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/tutorial/basics/district_heating.py",
+   "authors": [
+    "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy",
+   "missing_features": [],
+   "related": [
+    "CSL-0013",
+    "CSL-0018",
+    "CSL-0130",
+    "CSL-0137"
+   ],
+   "coolsolve_version": "0.3.0@e635c85",
+   "verified_on": "2026-10-14",
+   "verification_summary": "Compared with a re-run of the TESPy tutorial district_heating.py: 20 common variables, max relative deviation 3.65e-03 on m_dot (INCOMP::Water vs Water properties); in the sweeps efficiency agrees to 3.6e-07 and pipe heat loss to 2.8e-06. The loop energy balance closes (-3.4e-9 W).",
+   "verification_checks": [
+    "source-rerun",
+    "energy-balance"
+   ],
+   "path": "models/energy_systems/district_heating/district_heating_loop",
+   "main_file": "district_heating_loop.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0154",
+   "name": "investment_npv_payback",
+   "title": "Economic evaluation of an energy-saving investment: net present value and simple payback time",
+   "category": "energy_systems/economics",
+   "kind": "steady",
+   "level": 1,
+   "status": "blocked",
+   "summary": "Year-by-year cash flow of an energy-saving measure over its lifetime: discounted cash flow method (net present value NPV_1 of the escalated benefit and cost, discounted at the rate k) and simple payback method (undiscounted accumulation NPV_2, payback time PBT_2). No thermodynamics: meant to be fed with the cost and saving figures of an energy model.",
+   "fluids": [],
+   "tags": [
+    "economics",
+    "NPV",
+    "payback time",
+    "discounted cash flow",
+    "energy-saving measure",
+    "exercise"
+   ],
+   "n_equations": 176,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/modeles/Economical_evaluation_of_investment/INVESTISSEMENT_RENTABILITE_SB080108.EES",
+   "authors": [
+    "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [
+    "CS-BUG-DUPLICATE-INDEX-EXPR"
+   ],
+   "related": [
+    "CSL-0153"
+   ],
+   "coolsolve_version": "0.3.0@2d15382",
+   "verified_on": "2026-10-15",
+   "verification_summary": "The runnable variant investment_npv_payback_coolsolve.eescode was compared with the EES stored solution: 176 common variables, 0 differ at rtol=0.001 (largest residual 3.6e-10, rounding of the stored values). Cash flows recomputed independently in Python (PBT_2 = 10 years). Native file blocked by CS-BUG-DUPLICATE-INDEX-EXPR.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
+   "path": "models/energy_systems/economics/investment_npv_payback",
+   "main_file": "investment_npv_payback.eescode",
+   "figures": 0,
+   "variants": [
+    "investment_npv_payback_coolsolve.eescode"
+   ]
   },
   {
    "id": "CSL-0005",
@@ -4613,6 +5540,11 @@
    ],
    "coolsolve_version": "0.3.0+fix/library-gaps@fbdb6a7",
    "verified_on": "2026-10-05",
+   "verification_summary": "The 7 values of the companion EES test file's stored solution agree within 0.22 %; other regimes agree within 0.12 % with an independent Python/CoolProp ideal-gas re-computation. Requires the CoolSolve fixes of branch `fix/library-gaps`.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "other-tool"
+   ],
    "path": "models/fundamentals/combustion/cpbar_combustion_products",
    "main_file": "cpbar_combustion_products.eescode",
    "figures": 0
@@ -4661,6 +5593,10 @@
    ],
    "coolsolve_version": "0.3.0",
    "verified_on": "2026-10-05",
+   "verification_summary": "Not the native file (blocked by `CS-GAP-FLUIDS-C8H18`): the runnable `_coolsolve` variant was compared with the solution stored in the original EES file; the 3 flagged variables are unit-annotation artifacts and the maximum relative deviation is 2.2e-4 on `TAF` (688.56 vs 688.71 °C).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/fundamentals/combustion/octane_combustion_400pct_air",
    "main_file": "octane_combustion_400pct_air.eescode",
    "figures": 0,
@@ -4713,6 +5649,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Not the native file but its runnable variant was compared with the EES stored solution: 58 common variables, 9 differ (rtol=0.001), only enthalpy reference states; e, lambda, far and Q_dot_utile agree within 5e-06 to 8e-05. The Python/CoolProp solution prints e = 89.4 %, lambda = 189.4 %.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "source-rerun"
+   ],
    "path": "models/fundamentals/combustion/diesel_engine_excess_air_exhaust_analysis",
    "main_file": "diesel_engine_excess_air_exhaust_analysis.eescode",
    "figures": 0,
@@ -4764,10 +5705,17 @@
     "CSL-0013",
     "CSL-0046",
     "CSL-0058",
-    "CSL-0150"
+    "CSL-0150",
+    "CSL-0141",
+    "CSL-0146"
    ],
    "coolsolve_version": "0.3.0@4c80b25",
    "verified_on": "2026-10-13",
+   "verification_summary": "Compared with TESPy runs of five cases: base case 15 common variables, 0 differ at rtol=0.001, max 9.74e-06 on T_fg_K; max over the 5 cases 2e-04 (CGAM, different ideal-gas enthalpy data). Against the Ebsilon table of the CGAM benchmark the deviation is 1.4e-03 (TESPy's own run 1.3e-03).",
+   "verification_checks": [
+    "source-rerun",
+    "other-tool"
+   ],
    "path": "models/fundamentals/combustion/combustion_chamber",
    "main_file": "combustion_chamber.eescode",
    "figures": 0
@@ -4831,6 +5779,8 @@
    ],
    "coolsolve_version": "0.3.0@f319f0c",
    "verified_on": "2026-10-10",
+   "verification_summary": "Not verified: the native file is blocked (CS-GAP-CHEM-EQUIL, CS-GAP-FLUIDS-NASA-SPECIES, CS-GAP-SUM-INDEXED, CS-BUG-DUPLICATE-VAR-BOUND) and no runnable variant is shipped. Only a scratch copy of the no-dissociation case was checked against a hand balance (1788.7 vs 1787.85 degC).",
+   "verification_checks": [],
    "path": "models/fundamentals/combustion/adiabatic_flame_dissociation",
    "main_file": "adiabatic_flame_dissociation.eescode",
    "figures": 0
@@ -4875,6 +5825,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored by EES in the source file: 20 common variables, 0 differ at rtol=0.001, largest relative deviation 4.12·10⁻¹⁰ (`W_dot_t`), i.e. agreement to round-off.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/fundamentals/processes/steam_turbine_exergy_balance",
    "main_file": "steam_turbine_exergy_balance.eescode",
    "figures": 0
@@ -4921,6 +5875,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored by EES in the source file: 27 common variables, 12 differ at rtol=0.001, largest 1.97·10⁻², all due to the R12 saturated vapour volume (CoolProp vs EES); with the EES values substituted the stored solution is reproduced to 2.09·10⁻¹⁰. A hand reproduction of the course's Python method gives the CoolSolve results.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
    "path": "models/fundamentals/processes/two_tanks_connected_valve_r12",
    "main_file": "two_tanks_connected_valve_r12.eescode",
    "figures": 0
@@ -4960,6 +5919,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the source EES file: 17 common variables, 0 differ (rtol=0.001), largest relative deviation 4.15e-10 (T_f). The course Python solution of the same exercise prints 31.7 °C and 219.02 kJ, in agreement.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "source-rerun"
+   ],
    "path": "models/fundamentals/processes/iron_block_quench_water_tank",
    "main_file": "iron_block_quench_water_tank.eescode",
    "figures": 0
@@ -4971,7 +5935,7 @@
    "category": "fundamentals/processes",
    "kind": "steady",
    "level": 1,
-   "status": "runs",
+   "status": "verified",
    "summary": "Two rigid vessels of 30 kg of air at 900 K and 300 K are coupled by a heat engine; the reversible (maximum work) end state is computed from the entropy balance of the extended system: both vessels end at the geometric mean temperature 519.6 K and the engine delivers 3.60 MJ.",
    "fluids": [
     "Air"
@@ -5005,6 +5969,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the closed-form solution of the same entropy balance (the stored EES solution is unusable): 11 common variables, 0 differ (rtol=0.001), largest deviation 1.04e-15. The efficiency also equals the Carnot ratio of the log-mean temperatures.",
+   "verification_checks": [
+    "analytical"
+   ],
    "path": "models/fundamentals/processes/two_tanks_max_work_air",
    "main_file": "two_tanks_max_work_air.eescode",
    "figures": 0
@@ -5048,6 +6016,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-04",
+   "verification_summary": "Results were compared with the solution stored by EES in the source file: all 12 variables of the original model agree, with a largest relative deviation of 2.6·10⁻⁵ on the vapour specific volume.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/fundamentals/properties/methane_tank_evaporation",
    "main_file": "methane_tank_evaporation.eescode",
    "figures": 0
@@ -5090,6 +6062,10 @@
    ],
    "coolsolve_version": "0.3.0",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file: 12 common variables, 0 differ at rtol=0.001 (the file also stores a stale variable `V`, ignored).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/fundamentals/properties/rigid_tank_water_mixture",
    "main_file": "rigid_tank_water_mixture.eescode",
    "figures": 0
@@ -5131,6 +6107,11 @@
    ],
    "coolsolve_version": "0.3.0@4cd0ca5",
    "verified_on": "2026-10-10",
+   "verification_summary": "Compared with the solution stored in the original EES file: 12 common variables, 0 differ at rtol=0.001, maximum deviation 9.02e-08 on `W_b_EES`, explained by EES's own quadrature. CoolSolve's RK4 integral equals the closed form `W_b_hand` (1.05e-10 from EES).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
    "path": "models/fundamentals/properties/nonideal_gas_isothermal_work",
    "main_file": "nonideal_gas_isothermal_work.eescode",
    "figures": 0
@@ -5200,6 +6181,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Concerns the runnable variant (native file blocked). Compared with the stored solution of the glycol run-around loop model of the same library: 3 common variables, 0 differ (rtol=0.001), maximum relative difference 4.77e-10. The decoded tables also agree with those of CSL-0072.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "cross-model"
+   ],
    "path": "models/fundamentals/properties/brineprop_secondary_refrigerants",
    "main_file": "brineprop_secondary_refrigerants.eescode",
    "figures": 0,
@@ -5255,10 +6241,15 @@
     "CSL-0114",
     "CSL-0153",
     "CSL-0131",
-    "CSL-0132"
+    "CSL-0132",
+    "CSL-0147"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
+   "verification_summary": "Compared with the EES stored solution of the source file (therminol66 at T = 180 °C): 6 common variables, 0 differ at rtol=0.001, max relative difference 1.9e-10 on cp (rounding of the stored value). The check against the HEDH data sheet of the VP-1 branch is pending.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/fundamentals/properties/heat_transfer_fluid_properties",
    "main_file": "heat_transfer_fluid_properties.eescode",
    "figures": 0
@@ -5307,6 +6298,11 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
+   "verification_summary": "Compared with a re-run of the original LaboThapPy function: 8 common variables, 0 differ at rtol=0.001 (bit-identical). The published-coefficient function matches Table 2 of Perkins & Huber at 300 K (0.091346 vs 0.091399, -0.06 %); at 445 K it is -8.22 % off, the missing critical enhancement.",
+   "verification_checks": [
+    "source-rerun",
+    "publication"
+   ],
    "path": "models/fundamentals/properties/r1233zd_thermal_conductivity",
    "main_file": "r1233zd_thermal_conductivity.eescode",
    "figures": 0
@@ -5354,6 +6350,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 50 common variables, 0 differ (rtol=0.001), largest relative deviation 8e-11.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/conduction/conduction_resistances_and_shapes",
    "main_file": "conduction_resistances_and_shapes.eescode",
    "figures": 0
@@ -5403,6 +6403,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Independent Python re-evaluation of the correlations from the source files, with the same CoolProp air properties: 66 common variables, 0 differ (rtol=0.001), largest relative deviation 7.13e-12. The heat-transfer coefficients lie in the order of magnitude reported for in-cylinder convection.",
+   "verification_checks": [
+    "order-of-magnitude"
+   ],
    "path": "models/heat_transfer/convection/in_cylinder_htc_correlations",
    "main_file": "in_cylinder_htc_correlations.eescode",
    "figures": 0
@@ -5476,6 +6480,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 52 common variables, 0 differ (rtol=0.001), largest relative deviation 3.2e-13.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/internal_turbulent_nusselt",
    "main_file": "internal_turbulent_nusselt.eescode",
    "figures": 0
@@ -5530,6 +6538,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 32 common variables, 0 differ (rtol=0.001), largest relative deviation 4.1e-11.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/nucleate_boiling_and_chf",
    "main_file": "nucleate_boiling_and_chf.eescode",
    "figures": 0
@@ -5586,6 +6598,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 18 common variables, 0 differ (rtol=0.001), largest relative deviation 2.0e-12.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/condensation_film",
    "main_file": "condensation_film.eescode",
    "figures": 0
@@ -5652,6 +6668,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 21 common variables, 0 differ (rtol=0.001), largest relative deviation 3.2e-13.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/internal_laminar_and_curved_nu",
    "main_file": "internal_laminar_and_curved_nu.eescode",
    "figures": 0
@@ -5711,6 +6731,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 42 common variables, 0 differ (rtol=0.001), largest relative deviation 2.8e-13.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/free_conv_cylinders",
    "main_file": "free_conv_cylinders.eescode",
    "figures": 0
@@ -5761,6 +6785,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 26 common variables, 0 differ (rtol=0.001), largest relative deviation 3.4e-13.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/free_conv_plates_and_sphere",
    "main_file": "free_conv_plates_and_sphere.eescode",
    "figures": 0
@@ -5816,6 +6844,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published by ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 36 common variables, 0 differ (rtol=0.001), largest relative deviation 1.9e-13. Two reference-only entries are duplicated inputs.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/external_crossflow_cylinder",
    "main_file": "external_crossflow_cylinder.eescode",
    "figures": 0
@@ -5866,6 +6898,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 20 common variables, 0 differ (rtol=0.001), largest relative deviation 2.8e-12.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/tube_bank_nusselt",
    "main_file": "tube_bank_nusselt.eescode",
    "figures": 0
@@ -5923,6 +6959,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 37 common variables, 0 differ (rtol=0.001), largest relative deviation 4.0e-12.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/two_phase_nonboiling_in_tube",
    "main_file": "two_phase_nonboiling_in_tube.eescode",
    "figures": 0
@@ -5982,6 +7022,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (eight correlations) and with an independent Python transcription of the Modelica equations of the other two: 37 common variables, 0 differ (rtol=0.001), largest relative deviation 4.2e-12.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/flow_boiling_in_tubes",
    "main_file": "flow_boiling_in_tubes.eescode",
    "figures": 0
@@ -6037,6 +7081,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 32 common variables, 0 differ (rtol=0.001), largest relative deviation 3.8e-10. The modified Bessel functions were compared with SciPy.",
+   "verification_checks": [
+    "source-rerun",
+    "other-tool"
+   ],
    "path": "models/heat_transfer/convection/air_cooler_air_side",
    "main_file": "air_cooler_air_side.eescode",
    "figures": 0
@@ -6094,6 +7143,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 33 common variables, 0 differ (rtol=0.001), largest relative deviation 8.8e-13.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets",
    "main_file": "free_conv_enclosed_and_jackets.eescode",
    "figures": 0
@@ -6144,6 +7197,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 13 common variables, 0 differ (rtol=0.001), largest relative deviation 2.5e-13.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/external_forced_conv_plates",
    "main_file": "external_forced_conv_plates.eescode",
    "figures": 0
@@ -6195,6 +7252,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 71 common variables, 0 differ (rtol=0.001), largest relative deviation 4.4e-13.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/supercritical_internal_nu",
    "main_file": "supercritical_internal_nu.eescode",
    "figures": 0
@@ -6237,6 +7298,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
+   "verification_summary": "The 10 output values were compared with the doctest values of `ht` 1.2.0 and with values from the same ht functions: 10 common variables, 0 differ at rtol=0.001, largest relative deviation 1.4e-12 (round-off only).",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/packed_bed_nusselt",
    "main_file": "packed_bed_nusselt.eescode",
    "figures": 0
@@ -6278,6 +7343,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
+   "verification_summary": "The 26 output values were compared with the doctest values of `ht` 1.2.0 and with values from the same ht functions: 26 common variables, 0 differ at rtol=0.001, largest relative deviation 4.0e-12 (print precision of the baseline).",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/fin_efficiency_and_wall_factors",
    "main_file": "fin_efficiency_and_wall_factors.eescode",
    "figures": 0
@@ -6343,6 +7412,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
+   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-BUG-IMPLICIT-PROC): 130 values compared with a re-run of LaboThapPy void_fraction_example.py, 0 differ at rtol=1e-3, largest relative deviation 2.203e-05 (surface tension taken at saturation). In the native file 10 alpha_Hughmark values differ, up to 4.748e-02.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/convection/void_fraction_correlations",
    "main_file": "void_fraction_correlations.eescode",
    "figures": 0,
@@ -6387,10 +7460,15 @@
     "CSL-0100",
     "CSL-0103",
     "CSL-0158",
-    "CSL-0130"
+    "CSL-0130",
+    "CSL-0142"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file `EES_ok/pressuredrop.EES` (25 common variables): 11 within 0.1 %, DELTAP within 0.50 %, f within 0.56 %, Re up to 5.7 %, the deviations coming from EES vs CoolProp fluid properties.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_colebrook",
    "main_file": "pipe_pressure_drop_colebrook.eescode",
    "figures": 0
@@ -6440,6 +7518,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 23 common variables, 0 differ (rtol=0.001), largest relative deviation 3.8e-13.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware",
    "main_file": "tube_bank_dp_bell_delaware.eescode",
    "figures": 0
@@ -6488,6 +7570,10 @@
    ],
    "coolsolve_version": "0.3.0@20b59a6",
    "verified_on": "2026-10-13",
+   "verification_summary": "Compared with the EES stored solution (34 variables): 29 of 34 common variables agree at rtol = 0.001. Three outputs differ by 14–64 % because of two errors of the original, which an emulation in a scratch copy reproduces within 1.5 %; h and DELTAp_ev differ by 0.5 % and 1.9 % (property backend).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/heat_transfer/pressure_drop/plate_hx_pressure_drop_identification",
    "main_file": "plate_hx_pressure_drop_identification.eescode",
    "figures": 0
@@ -6548,10 +7634,15 @@
     "CSL-0103",
     "CSL-0158",
     "CSL-0131",
-    "CSL-0132"
+    "CSL-0132",
+    "CSL-0142"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
+   "verification_summary": "The 34 output values were compared with the LaboThapPy correlations (commit f03f7f47) recomputed in Python: 34 common variables, 0 differ at rtol=0.001, largest relative deviation 1.0e-12 (round-off). The five friction factors also reproduce the values printed by the library example.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations",
    "main_file": "pipe_pressure_drop_correlations.eescode",
    "figures": 0
@@ -6604,6 +7695,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
+   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-COLEBROOK, CS-GAP-STRINGPOS, CS-GAP-ARRAY-ARG, CS-BUG-PI-FUNCTION and CS-BUG-IMPLICIT-PROC): compared with the EES stored solution, 48 common variables, 44 within 6.2e-4; the rest are an enthalpy reference offset (7.97e-2) and stale stored records.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/heat_transfer/pressure_drop/gas_pipe_insulated_pressure_drop",
    "main_file": "gas_pipe_insulated_pressure_drop.eescode",
    "figures": 0,
@@ -6650,6 +7745,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
+   "verification_summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 8 common variables, 0 differ (rtol=0.001), largest relative deviation 7.2e-14.",
+   "verification_checks": [
+    "source-rerun"
+   ],
    "path": "models/heat_transfer/radiation/radiation_heat_flux",
    "main_file": "radiation_heat_flux.eescode",
    "figures": 0
@@ -6698,6 +7797,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file `MSTh-SB-R5-Ex1.EES` (60/60 variables): 50 agree within 0.1 % and the other 10 within 0.6 % (water and humid-air formulation differences); all derived design results are within 0.07 %.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/hvac/air_handling/chilled_water_cooling_coil",
    "main_file": "chilled_water_cooling_coil.eescode",
    "figures": 0
@@ -6749,6 +7852,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Not the native file (blocked by `CS-GAP-PSYCHRO-SAT`): the runnable `_coolsolve` variant was compared with the solution stored in the original EES file `humidair2.EES`. Per-mass-of-dry-air quantities agree within 0.5 %; the specific volume is 0.96 % high and propagates to flow-proportional duties (Q_dot_pc 1.11 %).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/hvac/air_handling/air_handling_unit_moist_air",
    "main_file": "air_handling_unit_moist_air.eescode",
    "figures": 0,
@@ -6804,6 +7911,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file (54/54 variables): 54 common variables, 12 differ (rtol=0.001), all humid-air quantities (EES vs CoolProp properties, dry-air reference-state offset); all 21 recuperator variables agree, T10 to 2e-7.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/hvac/air_handling/cooling_coil_condensate_ratio",
    "main_file": "cooling_coil_condensate_ratio.eescode",
    "figures": 0
@@ -6848,6 +7959,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the EES stored solution of the source file: 25 common variables, 5 differ above rtol = 0.001, maximum relative difference 4.42e-03 on humid-air property values (EES vs CoolProp formulations). Temperatures, pressures, flow rates, effectiveness and NTU agree to 9.4e-04 or better.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/hvac/air_handling/adiabatic_humidifier_simplified",
    "main_file": "adiabatic_humidifier_simplified.eescode",
    "figures": 0
@@ -6895,6 +8010,10 @@
    ],
    "coolsolve_version": "0.3.0@59b2862",
    "verified_on": "2026-10-10",
+   "verification_summary": "Compared with the 34 variables stored in the source EES file: 14 differ above rtol = 0.001, maximum relative difference 2.71e-02 on the latent power (a difference of two large numbers), all from EES vs CoolProp humid-air formulations. Purely algebraic results agree to 3e-05 or better.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/hvac/air_handling/cooling_coil_with_control_simplified",
    "main_file": "cooling_coil_with_control_simplified.eescode",
    "figures": 0
@@ -6954,6 +8073,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Concerns the runnable variant (native file blocked by CS-GAP-INCLUDE and CS-GAP-IFSTR). Against the 87 variables decoded from the EES file: 74 common variables, 21 differ above rtol = 0.001, maximum 7.81e-01 from one stale stored value; the other 19 deviations (1.2e-03 to 4.8e-03) are humid-air property differences.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/hvac/air_handling/cooling_coil_refsim",
    "main_file": "cooling_coil_refsim.eescode",
    "figures": 0,
@@ -7011,6 +8134,8 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
+   "verification_summary": "Not verified: the native file is blocked (CS-GAP-INCLUDE) and the runnable variant does not converge (CS-BUG-NEWTON-CYCLE). Only a pointwise check at the EES stored point was made (largest residual 57 J/kg).",
+   "verification_checks": [],
    "path": "models/hvac/air_handling/glycol_runaround_recovery_loop",
    "main_file": "glycol_runaround_recovery_loop.eescode",
    "figures": 0,
@@ -7067,6 +8192,10 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
+   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-INCLUDE): compared with the EES stored solution, 79 common variables, 23 differ above rtol=0.001, maximum 1.05e-02 on M_dot_w_coil, all from EES vs CoolProp humid-air formulations; AU_coil agrees to 3.2e-05.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/hvac/air_handling/cooling_coil_paramid",
    "main_file": "cooling_coil_paramid.eescode",
    "figures": 0,
@@ -7116,6 +8245,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file `MSTH051024EXERCICE2.EES`: 54 common variables, 0 differ at rtol=0.001; largest relative deviation 7.1·10⁻⁴ from the humid-air property backend (EES 7.458 vs CoolProp).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/hvac/cooling_towers/two_speed_cooling_tower",
    "main_file": "two_speed_cooling_tower.eescode",
    "figures": 0
@@ -7158,6 +8291,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the source EES file: 23 common variables, 8 differ (rtol=0.001), largest deviation 5.98e-03 on w_ex (humid-air backend). The four unsolved stored values were recomputed by hand from the stored EES properties; CoolSolve agrees within 0.40 %.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
    "path": "models/hvac/cooling_towers/cooling_tower_condenser_water",
    "main_file": "cooling_tower_condenser_water.eescode",
    "figures": 0
@@ -7207,6 +8345,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored by EES in the source file: 54 common variables, 13 differ above rtol = 0.001, maximum relative difference 4.51e-03 (W_su_ct), all humid-air property differences (EES vs CoolProp). The 41 algebraic results agree to better than 1e-3, 23 of them exactly.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/hvac/cooling_towers/cooling_tower_direct_contact_refsim",
    "main_file": "cooling_tower_direct_contact_refsim.eescode",
    "figures": 0
@@ -7257,6 +8399,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file `humidair1.EES` (25/25 variables): derived energy results within 0.43 %, humidity ratios 0.46–0.51 % high because of the humid-air formulation (CoolProp vs EES psychrometrics).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/hvac/psychrometrics/moist_air_cooling_coil_contact_factor",
    "main_file": "moist_air_cooling_coil_contact_factor.eescode",
    "figures": 0
@@ -7303,6 +8449,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the source EES file: 27 common variables, 7 differ at rtol = 0.001, largest relative deviation 4.76e-03 (m_v), explained by humid-air formulations and a unit-spelling tool bug. Also agrees with the course Python/CoolProp solution to 4e-10 or better.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "source-rerun"
+   ],
    "path": "models/hvac/psychrometrics/moist_air_room_psychrometrics",
    "main_file": "moist_air_room_psychrometrics.eescode",
    "figures": 0
@@ -7346,6 +8497,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the EES stored solution of the source file: 26 common variables, 11 differ, maximum relative difference 4.57e-03 (humid-air formulations, temperatures agree to 1.5e-05). Identical to 1e-05 with the course Python/CoolProp solution.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "source-rerun"
+   ],
    "path": "models/hvac/psychrometrics/moist_air_adiabatic_mixing",
    "main_file": "moist_air_adiabatic_mixing.eescode",
    "figures": 0
@@ -7394,6 +8550,12 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the original EES file (11 unsolved outlet variables excluded): maximum relative deviation 4.38e-03 on the 21 others, from the EES vs CoolProp humid-air properties. An independent recomputation of the balances gives T_3 = 11.5468 degC and m_dot_cond = 0.2226 g/s. Energy balance closed to 1e-12.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical",
+    "energy-balance"
+   ],
    "path": "models/hvac/psychrometrics/psychrometric_mixer_condensation",
    "main_file": "psychrometric_mixer_condensation.eescode",
    "figures": 0
@@ -7440,6 +8602,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
+   "verification_summary": "Compared with the solution stored in the source EES file: 26 common variables, 2 differ (rtol=0.001), largest relative deviation 5.24e-03 (EES vs CoolProp humid-air formulations). The ASHRAE wet-bulb relation gives 0.00652176 kg/kg against 0.00652554 of the model (5.8e-04).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
    "path": "models/hvac/psychrometrics/adiabatic_saturation_wet_bulb",
    "main_file": "adiabatic_saturation_wet_bulb.eescode",
    "figures": 0
@@ -7482,6 +8649,11 @@
    "related": [],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
+   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-END-PROCEDURE, CS-GAP-CONVERT-UNQUOTED, CS-GAP-LOOKUPROW and CS-BUG-LOOKUP-STRING): vs the EES stored solution 333 common variables, 1 differ at rtol=0.001 (P[1], floating noise), max 1.37e-06 otherwise; the stored I-V parametric table matches exactly (300/300 within 1e-9).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "ees-parametric-table"
+   ],
    "path": "models/renewables/photovoltaics/pv_module_single_diode",
    "main_file": "pv_module_single_diode.eescode",
    "figures": 0,
@@ -7530,6 +8702,11 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "An independent Python re-evaluation of the same equations agrees: 27 common variables, 0 differ (rtol=0.001), maximum 2.35e-09. Against the NREL PTR70 heat-loss test the glass temperature is reproduced within 1 K but the heat loss is over-predicted by a factor 1.9 to 5.8. Energy balance residual is 0.68 % of the absorbed power.",
+   "verification_checks": [
+    "publication",
+    "energy-balance"
+   ],
    "path": "models/renewables/solar_thermal/parabolic_trough_receiver_forristal",
    "main_file": "parabolic_trough_receiver_forristal.eescode",
    "figures": 0
@@ -7573,6 +8750,10 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
+   "verification_summary": "An independent Python re-evaluation of the same equations agrees (34 common variables, 0 differ, rtol = 1e-3, maximum 4.6e-10). The PTR70 correlation reproduces the NREL Table 3 measured heat losses with deviations -13.5 to +3.8 W/m, and the Soltigua K_L is within 0.003 of the datasheet table.",
+   "verification_checks": [
+    "publication"
+   ],
    "path": "models/renewables/solar_thermal/parabolic_trough_loss_correlations",
    "main_file": "parabolic_trough_loss_correlations.eescode",
    "figures": 0
@@ -7612,6 +8793,11 @@
    ],
    "coolsolve_version": "0.3.0+fix/library-gaps-3@36cdbcf",
    "verified_on": "2026-10-12",
+   "verification_summary": "The native file run at t = 24 was compared with the EES stored solution of solar/angles.EES: 22 common variables, 0 differ at rtol=0.001, max relative difference 1.6e-6 on theta_z (trigonometric round-off). Spot checks against closed-form re-evaluation also agree.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
    "path": "models/renewables/solar_thermal/solar_geometry_sun_path",
    "main_file": "solar_geometry_sun_path.eescode",
    "figures": 0
@@ -7660,6 +8846,11 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
+   "verification_summary": "Compared with a re-run of the LaboThapPy example (case study_disc): 64 common variables, 0 differ at rtol=0.001, max relative difference 3.4e-05 on eta_coll[20] (bilinear vs bicubic map interpolation); Q_dot differs by 6.1e-06 and T_ex by 7.8e-07. The energy balance of the march closes.",
+   "verification_checks": [
+    "source-rerun",
+    "energy-balance"
+   ],
    "path": "models/renewables/solar_thermal/parabolic_trough_collector_discretised",
    "main_file": "parabolic_trough_collector_discretised.eescode",
    "figures": 0
@@ -8591,6 +9782,13 @@
    "path": "models/heat_transfer/convection/air_cooler_air_side/air_cooler_air_side.eescode"
   },
   {
+   "function": "h_gas",
+   "type": "FUNCTION",
+   "signature": "(T, x_Ar, x_N2, x_CO2, x_O2, x_H2O, x_CH4, x_H2)",
+   "model_id": "CSL-0141",
+   "path": "models/cycles/gas_turbines/gas_turbine_open_cycle/gas_turbine_open_cycle.eescode"
+  },
+  {
    "function": "h_Gorenflo",
    "type": "FUNCTION",
    "signature": "(P, Pc, h0, Ra, Te, is_water)",
@@ -8624,6 +9822,13 @@
    "signature": "(P, Pc, Te)",
    "model_id": "CSL-0088",
    "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
+  },
+  {
+   "function": "h_htf",
+   "type": "FUNCTION",
+   "signature": "(T)",
+   "model_id": "CSL-0147",
+   "path": "models/cycles/steam_power/segs_solar_power_plant/segs_solar_power_plant.eescode"
   },
   {
    "function": "h_Huang_Sheer",
@@ -9063,6 +10268,13 @@
    "function": "LHV_fuel",
    "type": "FUNCTION",
    "signature": "(n_C, n_H, n_O, hf_fuel, hf_CO2, hf_H2O, hf_O2, MM_fuel)",
+   "model_id": "CSL-0141",
+   "path": "models/cycles/gas_turbines/gas_turbine_open_cycle/gas_turbine_open_cycle.eescode"
+  },
+  {
+   "function": "LHV_fuel",
+   "type": "FUNCTION",
+   "signature": "(n_C, n_H, n_O, hf_fuel, hf_CO2, hf_H2O, hf_O2, MM_fuel)",
    "model_id": "CSL-0139",
    "path": "models/fundamentals/combustion/combustion_chamber/combustion_chamber.eescode"
   },
@@ -9088,11 +10300,25 @@
    "path": "models/components/heat_exchangers/lmtd_and_f_correction/lmtd_and_f_correction.eescode"
   },
   {
+   "function": "Lmtd",
+   "type": "FUNCTION",
+   "signature": "(dT_a, dT_b)",
+   "model_id": "CSL-0144",
+   "path": "models/cycles/gas_turbines/sco2_recompression_brayton/sco2_recompression_brayton.eescode"
+  },
+  {
    "function": "LMTD",
    "type": "PROCEDURE",
    "signature": "(T_hf_su,T_hf_ex,T_cf_su,T_cf_ex:DELTAT_log)",
    "model_id": "CSL-0116",
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_vitocal_300g/heat_pump_vitocal_300g.eescode"
+  },
+  {
+   "function": "lmtd_ambient",
+   "type": "FUNCTION",
+   "signature": "(T_a, T_b, T_amb)",
+   "model_id": "CSL-0142",
+   "path": "models/energy_systems/district_heating/district_heating_loop/district_heating_loop.eescode"
   },
   {
    "function": "LMTD_sm",
@@ -9107,6 +10333,13 @@
    "signature": "(td_a, td_b)",
    "model_id": "CSL-0137",
    "path": "models/components/heat_exchangers/hx_lmtd_ua/hx_lmtd_ua.eescode"
+  },
+  {
+   "function": "LMTD_smoothed",
+   "type": "FUNCTION",
+   "signature": "(td_a, td_b)",
+   "model_id": "CSL-0140",
+   "path": "models/cycles/steam_power/rankine_cycle_part_load/rankine_cycle_part_load.eescode"
   },
   {
    "function": "lmtd_xi1000",
@@ -10250,11 +11483,25 @@
    "path": "models/components/heat_exchangers/plate_hx_thermal_resistances/plate_hx_thermal_resistances.eescode"
   },
   {
+   "function": "rho_htf",
+   "type": "FUNCTION",
+   "signature": "(T)",
+   "model_id": "CSL-0147",
+   "path": "models/cycles/steam_power/segs_solar_power_plant/segs_solar_power_plant.eescode"
+  },
+  {
    "function": "rho_two_phase_homogeneous",
    "type": "FUNCTION",
    "signature": "(x, rho_l, rho_v)",
    "model_id": "CSL-0130",
    "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "s_gas",
+   "type": "FUNCTION",
+   "signature": "(T, P, x_Ar, x_N2, x_CO2, x_O2, x_H2O, x_CH4, x_H2)",
+   "model_id": "CSL-0141",
+   "path": "models/cycles/gas_turbines/gas_turbine_open_cycle/gas_turbine_open_cycle.eescode"
   },
   {
    "function": "S_isothermal_pipe_eccentric_to_isothermal_pipe",
@@ -10814,15 +12061,6 @@
    "fixed_in": "",
    "anchor": "3-features-and-implementation-plan"
   },
-  "CS-GAP-INTERP-EES": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P1",
-   "text": "`INTERPOLATE('T','Col1','Col2',Col2=v)` (and `INTERPOLATE1`, named argument selecting the input column, returns `Col1`)",
-   "detail": "Parsed as a property call: *\"Unknown fluid: 'T'\"*.",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
   "CS-GAP-INTERP-CUBIC": {
    "kind": "gap",
    "state": "open",
@@ -11063,24 +12301,6 @@
    "priority": "",
    "text": "Property calls with the input pair **(s, v)**, the way EES writes the state of an isentropic compression when the volume ratio of the machine is known: `h_in_cp = enthalpy(fluid$,s=s_in_cp,v=v_in_cp)` and `p_in_cp = pressure(fluid$,s=s_in_cp,v=v_in_cp)`.",
    "detail": "Evaluation error *\"CoolProp returned invalid result (NaN or Inf) for H(R407C) with inputs: S=1076.41 J/(kg·K), D=16.6228 kg/m³\"* (the same for `pressure()`), and the solve fails.",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-GAP-ELSEIF-CHAIN": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P2",
-   "text": "`ELSE IF` chains in FUNCTION/PROCEDURE bodies closed by one `ENDIF` per `IF` written on a single semicolon-separated line (`… ELSE⏎IF (c2) THEN b⏎ENDIF;ENDIF`), the standard EES ladder idiom.",
-   "detail": "Parse error: *\"IF ... THEN without a matching ENDIF\"* / *\"ENDIF without a matching IF ...",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-GAP-UPPERCASE": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P3",
-   "text": "The intrinsic string functions `Uppercase$(S)` / `Lowercase$(S)` (EES string functions; used by the distributed ULiège `Brineprop.lib`, TM-0479: `Pr$=Uppercase$(Pr$)` before comparing the property name)",
-   "detail": "Parse warning *\"Unknown function 'Uppercase$'\"*, then evaluation error *\"String-valued function not supported: Uppercase$\"* when the line runs.",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
@@ -11624,6 +12844,24 @@
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
+  "CS-BUG-LOOKUP-STRING-ARG": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3",
+   "text": "**A string function as the table or column argument of a lookup function fails**, although the Language Reference §11.8 documents it for `LOOKUP$` (*\"as the table or column argument of another lookup function\"*): `evaluateFunctionCall` (`src/evaluator.cpp`) …",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-STRING-FUNC-WARNING": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3",
+   "text": "`String$` is evaluated but missing from the parser's list of built-in functions (`knownBuiltinFunctions`, `src/parser.cpp`): every use raises the spurious warning *\"Unknown function 'String$'\"* (cosmetic).",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
   "CS-BUG-IF-IGNORED": {
    "kind": "bug",
    "state": "closed",
@@ -12045,6 +13283,33 @@
    "text": "`$CONSTANT N# = value` (numeric, EES help syntax) implemented, visible in the main program and every body (it was an unknown directive and `N#` an ordinary variable); found with `CS-BUG-DUPLICATE-VAR-BOUND` (example `orc_solar_complex`, `$CONSTANT imax#=20`)",
    "detail": "",
    "fixed_in": "post-v0.3.0, `fix/library-gaps-3`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-ELSEIF-CHAIN": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "EES `IF` ladders in FUNCTION/PROCEDURE bodies: `ENDIF`s joined by `;` (`ENDIF;ENDIF`, then `ELSE`, statements or `END` after the `;`), a single-line `IF … THEN a ELSE` ending with `ELSE` takes its ELSE part from the following lines up to its `ENDIF`; an …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-UPPERCASE": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "Uppercase$(s$) / Lowercase$(s$) (one string argument; ASCII and Latin-1 letters), wherever a string is expected: bodies (Pr$=Uppercase$(Pr$) of Brineprop.lib), IF comparisons, the fluid of a property call, CALL and FUNCTION string arguments, CALL …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-INTERP-EES": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "EES form `INTERPOLATE('T','Col1','Col2',Col2=v)` / `INTERPOLATE1` (the named column is the input, the other one is returned; naming the first column is read symmetrically, to confirm in EES) and `INTERPOLATE2`/`INTERPOLATE2DM('T','C1','C2','C3',C1=x,C2=y)`, …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
    "anchor": "7-closed-gaps-and-bugs"
   }
  }

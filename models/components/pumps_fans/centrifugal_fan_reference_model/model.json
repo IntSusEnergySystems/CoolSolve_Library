@@ -48,6 +48,8 @@
     "course": "ULiège Thermodynamics Laboratory, model data bank, Distribution Systems / Fans (reference and parameter-identification models of the Laborelec toolkit lineage)"
   },
   "verification": {
+    "summary": "Compared with the solution stored in the original EES file: 34 common variables, 6 differ (rtol=0.001), maximum relative deviation 1.19e-02 on c_p and C_dot, caused by the different EES and CoolProp humid-air properties. All fan factors and the shaft power agree within 1.4e-04.",
+    "checks": ["ees-stored-solution"],
     "reference": "EES stored solution of thermo_models TM-0251 (Centrifugal_Fan_RefSim_EES_Model_ARJL080121.EES, EES 7.966, 34 of 35 variable records carry a value, run of the file's default operating point); tools/compare_solution.py, no unit conversion needed (SI-C-Pa-J)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",

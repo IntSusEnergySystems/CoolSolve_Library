@@ -47,6 +47,8 @@
     "course": "components: hex_cstpinch.py (HexCstPinch), hex_csteff.py (HexCstEff), pump_csteff.py (PumpCstEff), expander_csteff.py (ExpanderCstEff), same commit f03f7f47; example case study_case = \"Zorlu\""
   },
   "verification": {
+    "summary": "Compared with a re-run of the LaboThapPy Zorlu ORC example (preheater-source bug corrected): 38 common variables, 17 differ at rtol=0.001, max 1.93e-01 on Q_dot_sh_ev; pressures, pump power and condenser duties agree to <= 7.1e-04. The deviations follow from one stale state of the Python circuit. Balance residuals are <= 1e-7 W.",
+    "checks": ["source-rerun", "energy-balance"],
     "reference": "Re-run of the source example labothappy/machine/examples/ORC/fpi_orc_example.py (case Zorlu, function preheated_rec_orc) in a throw-away virtual environment (pip install of the local clone, commit f03f7f47; CoolProp 8.0.0, SciPy 1.18.1): converges in 6 Wegstein iterations, PPTD_cond = 5.000000, PPTD_evap = 5.000003. Both the as-shipped main block (preheater source built from the cold-source values, the bug) and the corrected one (T_PRE, p_PRE, m_dot_PRE) were run and compared with the model.",
     "date": "2026-10-13",
     "coolsolve_version": "0.3.0@4c80b25",

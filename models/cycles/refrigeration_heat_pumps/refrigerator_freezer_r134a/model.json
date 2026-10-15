@@ -41,6 +41,8 @@
     "course": "ULiège, Thermodynamique appliquée (MECA0002), repetition session 8, exercise 3"
   },
   "verification": {
+    "summary": "Compared with the solution stored in the source EES file: 55 common variables, 17 differ (rtol=0.001), all explained (reference-state offsets, L/s units); maximum deviation over the others 7.5e-4. The course Python/CoolProp solution prints the same results; the cycle energy balance closes.",
+    "checks": ["ees-stored-solution", "source-rerun", "energy-balance"],
     "reference": "Solution stored in the source EES file (converted from its kPa/kJ unit system); independently cross-checked with the Python/CoolProp solution of the same exercise of the 2020 session (~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R8/old/ThAp20_R08E03.py)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",

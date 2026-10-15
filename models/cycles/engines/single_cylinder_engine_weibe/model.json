@@ -5,7 +5,7 @@
   "summary": "Crank-angle-resolved model of one cylinder of a four-stroke spark-ignition engine: the cylinder pressure, gas mass, combustion heat release (Weibe function in a PROCEDURE), wall heat losses and piston work are integrated with INTEGRAL over the intake stroke (-360 to -180 deg), with a choked intake flow through the intake valve and the charge modelled as a single ideal gas with constant gamma.",
   "kind": "dynamic",
   "level": 3,
-  "status": "runs",
+  "status": "verified",
   "main_file": "single_cylinder_engine_weibe.eescode",
   "fluids": [],
   "tags": [
@@ -44,6 +44,8 @@
     "course": "ULiège, engine thermodynamics, Weibe combustion model, repetition 4 (2008-2009)"
   },
   "verification": {
+    "summary": "No independent reference exists. The model reproduces the CoolSolve example solution on all 75 scalar variables (bit-identical); the volume matches the closed-form slider-crank volume at 37 trajectory rows (largest deviation 2·10⁻⁵ m³) and the intake flow equals the choked flow 0.10193 kg/s.",
+    "checks": ["analytical"],
     "reference": "None available (no .sol file and no original EES file, searched in ~/Nextcloud/thermo_models and in CoolSolve misc/EES_ok.zip): reproduction of the CoolSolve example solution (75/75 scalar variables bit-identical) and of the value committed in the CoolSolve regression test for that example (tests/test_examples.cpp, p = 89221.7 Pa), plus CoolSolve solution check (0 residual) and geometric / choked-flow sanity checks",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
@@ -62,6 +64,11 @@
   "previous_paths": [],
   "history": [
     {"date": "2026-10-05", "action": "added (roadmap card C-24, batch B-02)", "by": "opencode worker (space-bunny-free) for S. Quoilin"},
-    {"date": "2026-10-12", "action": "corrected: PROCEDURE weibe takes a_weibe and n_weibe as inputs (it read main-program values; an error since the CoolSolve body check of fix/library-gaps-3 @3130543); solution unchanged", "by": "Claude (Opus) for S. Quoilin"}
+    {"date": "2026-10-12", "action": "corrected: PROCEDURE weibe takes a_weibe and n_weibe as inputs (it read main-program values; an error since the CoolSolve body check of fix/library-gaps-3 @3130543); solution unchanged", "by": "Claude (Opus) for S. Quoilin"},
+    {
+      "date": "2026-10-14",
+      "action": "status runs → verified (verification field)",
+      "by": "claude-haiku"
+    }
   ]
 }

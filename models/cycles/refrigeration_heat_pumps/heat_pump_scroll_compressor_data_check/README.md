@@ -317,3 +317,6 @@ statement with the values of the manufacturer and the equations that check them.
 - `CSL-0078` *brine_to_water_heat_pump_refsim*: scroll-compressor heat pump of
   the ULiège model bank on R407C, whose scroll model is described in the same
   five steps and with the same internal-leakage relations.
+- `CSL-0148` *scroll_volume_ratio_cycle_r134a*: same compressor question on
+  R134a — which built-in volume ratio to choose for given evaporation and
+  condensation temperatures (same definition of the isentropic efficiency).

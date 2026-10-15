@@ -86,8 +86,8 @@ Every model README starts with three badges:
 
 | Complexity level | Kind | Status in CoolSolve |
 |---|---|---|
-| 🟢 **Level 1 · Introductory** — first courses, textbook exercises | ⚙️ **Steady-state** — algebraic, one operating point | ✅ **Verified** — runs and matches an independent reference |
-| 🔵 **Level 2 · Intermediate** — complete cycles, components with correlations | ⏱️ **Dynamic** — time integration (`INTEGRAL`) | ☑️ **Runs** — runs, no independent reference |
+| 🟢 **Level 1 · Introductory** — first courses, textbook exercises | ⚙️ **Steady-state** — algebraic, one operating point | ✅ **Verified** — runs in CoolSolve and its results were checked; the `verification` field of each model says how (agreement with an EES file, a re-run of the source code, a publication, balance and plausibility checks…) |
+| 🔵 **Level 2 · Intermediate** — complete cycles, components with correlations | ⏱️ **Dynamic** — time integration (`INTEGRAL`) |
 | 🟠 **Level 3 · Advanced** — semi-empirical, multi-zone, off-design | 🎯 **Optimisation** — needs Min/Max (not yet in CoolSolve) | ⚠️ **Runs (modified)** — runs after documented simplifications |
 | 🔴 **Level 4 · Research** — calibrated, large research models | 🧩 **Function library** — reusable functions/procedures | ⛔ **Blocked** — needs a missing CoolSolve feature · ❌ **Failing** · 📄 **Documented only** |
 
@@ -102,7 +102,7 @@ Each model folder is a self-contained CoolSolve project:
 | File | Content |
 |---|---|
 | `README.md` | Description, problem statement, model equations, how to run, results (tables and a diagram or plot), verification, source and attribution, conversion log, limitations |
-| `model.json` | Metadata: ID, title, kind, level, status, fluids, tags, origin (source, authors, link, license), verification, CoolSolve gaps |
+| `model.json` | Metadata: ID, title, kind, level, status, fluids, tags, origin (source, authors, link, license), verification (how the results were checked), CoolSolve gaps |
 | `<name>.eescode` | The model in EES language, starting with a commented introduction and with English comments on the equations |
 | `<name>.initials`, `coolsolve.conf`, `<name>-<table>.csv` | Guess values, solver settings, lookup tables (when needed) |
 | `<name>.sol` | CoolSolve solution, also used as regression baseline |

@@ -52,6 +52,8 @@
     "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), files ht/air_cooler.py (the 8 correlations), ht/core.py (fin_efficiency_Kern_Kraus and the SciPy modified Bessel functions) and ht/conv_tube_bank.py (ESDU_tube_row_correction, written inline in h_ESDU_low_fin), MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each correlation is the original paper or book cited in its function comment block. Translation published under the CoolSolve_Library MIT license with full credit (decision D3)."
   },
   "verification": {
+    "summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 32 common variables, 0 differ (rtol=0.001), largest relative deviation 3.8e-10. The modified Bessel functions were compared with SciPy.",
+    "checks": ["source-rerun", "other-tool"],
     "reference": "doctest values of ht 1.2.0 ht/air_cooler.py (case A) and additional values computed with the same ht functions in a throw-away virtualenv (case B); the modified Bessel functions compared with scipy.special.iv/kv and the fin efficiency with the ht doctest of fin_efficiency_Kern_Kraus; 32 output values in total",
     "date": "2026-10-06",
     "coolsolve_version": "0.3.0@536d427",

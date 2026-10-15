@@ -46,6 +46,8 @@
     "course": "TESPy component CombustionChamber and DiabaticCombustionChamber (commit 19425523); verification against tests/test_components/test_combustion.py and tests/test_models/test_CGAM_model.py (cgam-ebsilon-results.csv)"
   },
   "verification": {
+    "summary": "Compared with TESPy runs of five cases: base case 15 common variables, 0 differ at rtol=0.001, max 9.74e-06 on T_fg_K; max over the 5 cases 2e-04 (CGAM, different ideal-gas enthalpy data). Against the Ebsilon table of the CGAM benchmark the deviation is 1.4e-03 (TESPy's own run 1.3e-03).",
+    "checks": ["source-rerun", "other-tool"],
     "reference": "TESPy runs of the source (local snapshot ~/git/tespy commit 19425523, throw-away venv with CoolProp 8.0.0, TESPy 0.11.3.dev0): 5 cases - test_CombustionChamberHighTemperature, both steps of test_CombustionChamber, the CombustionChamber docstring example and the combustion chamber of the CGAM model compared with tests/test_models/cgam-ebsilon-results.csv; work scripts run_tespy.py, run_cgam.py and verify.py (README, Verification)",
     "date": "2026-10-13",
     "coolsolve_version": "0.3.0@4c80b25",
@@ -58,7 +60,9 @@
     "CSL-0013",
     "CSL-0046",
     "CSL-0058",
-    "CSL-0150"
+    "CSL-0150",
+    "CSL-0141",
+    "CSL-0146"
   ],
   "related_external": [],
   "supersedes": [],

@@ -1,0 +1,65 @@
+{
+  "id": "CSL-0144",
+  "name": "sco2_recompression_brayton",
+  "title": "Supercritical CO2 recompression Brayton cycle (100 MW net)",
+  "summary": "Design-point sCO2 recompression Brayton cycle with two 10-section recuperators after the TESPy model-library example, validated against the published state and exergy table of Penkuhn & Tsatsaronis (2018): turbomachinery at isentropic efficiency, recuperators at 5 K lower terminal temperature difference, net power imposed at 100 MW, recompressed fraction fixed by equal merge temperatures.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "sco2_recompression_brayton.eescode",
+  "fluids": [
+    "R744"
+  ],
+  "tags": [
+    "cycle",
+    "supercritical",
+    "recompression",
+    "recuperator",
+    "sectioned-hx",
+    "Brayton",
+    "exergy",
+    "published-reference"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "FUNCTION",
+    "DUPLICATE"
+  ],
+  "stats": {"n_equations": 486, "largest_block": 8},
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/docs/model_library/sco2.ipynb",
+    "candidate_id": "TSP-042",
+    "authors": [
+      "Francesco Witte (TESPy model and sCO2_exergy original)"
+    ],
+    "url": "https://github.com/oemof/tespy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "TESPy model library sCO2 example (commit 19425523); original model github.com/fwitte/sCO2_exergy (Witte et al. 2022); validation data Penkuhn & Tsatsaronis (2018)"
+  },
+  "verification": {
+    "summary": "Compared with a TESPy run of sco2.ipynb: 69 common variables, 0 differ at rtol=0.001, max 4.3e-4 on UA_rec1 (smoothed vs standard LMTD). Against the published Penkuhn & Tsatsaronis (2018) state table: 48 values, 0 differ, max 7.5e-4 on e_T[5] (rounded published values).",
+    "checks": ["source-rerun", "publication"],
+    "reference": "TESPy run of docs/model_library/sco2.ipynb (commit 19425523, venv, TESPy 0.11.3.dev0/CoolProp): 69 common variables 0 differ (rtol=0.001); published Penkuhn & Tsatsaronis (2018) state table (T, p, thermal and mechanical exergy of the 12 states): 48 values, 0 differ (rtol=0.001)",
+    "date": "2026-10-14",
+    "coolsolve_version": "0.3.0@e635c85",
+    "max_rel_diff": 0.0007463123077642722,
+    "notes": "Max rel. diff. 4.3e-4 vs the TESPy run (UA_rec1, TESPy smoothed LMTD vs standard LMTD) and 7.5e-4 vs the published table (e_T[5], published values rounded to 2 decimals). T and p of all 12 states within 0.19 K / 1e-4 rel. of the publication, the same deviations as the TESPy run itself (CoolProp version)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0013",
+    "CSL-0014",
+    "CSL-0038"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-14", "action": "added (T-TRANSLATE of the TESPy sCO2 recompression Brayton example)", "by": "opencode worker for S. Quoilin"}
+  ]
+}

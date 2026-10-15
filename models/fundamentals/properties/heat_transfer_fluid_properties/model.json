@@ -56,6 +56,10 @@
     "notes": "The file carries only the J. Lebrun laboratory licence tag; the S. Quoilin attribution follows the C-121 triage note (sources/thermo_models/README.md §8). Already in SI-°C-Pa-J: no unit conversion. Procedure renamed prop_htf -> prop_heat_transfer_fluid: the name prop_htf is already used by the copied blocks of CSL-0113 and CSL-0114 and function names must be unique across the library. The $bookmark directive (EES GUI tag) was removed. No equation was changed."
   },
   "verification": {
+    "summary": "Compared with the EES stored solution of the source file (therminol66 at T = 180 °C): 6 common variables, 0 differ at rtol=0.001, max relative difference 1.9e-10 on cp (rounding of the stored value). The check against the HEDH data sheet of the VP-1 branch is pending.",
+    "checks": [
+      "ees-stored-solution"
+    ],
     "reference": "EES stored solution of the source file (therminol66 at T = 180 °C, 6 variables)",
     "date": "2026-10-07",
     "coolsolve_version": "0.3.0@7addbbc",
@@ -69,7 +73,8 @@
     "CSL-0114",
     "CSL-0153",
     "CSL-0131",
-    "CSL-0132"
+    "CSL-0132",
+    "CSL-0147"
   ],
   "related_external": [
     "HEDH heat-transfer-fluid data sheet Therminol VP-1: http://twt.mpei.ac.ru/TTHB/HEDH/HTF-VP1.PDF (cited in the source file)"

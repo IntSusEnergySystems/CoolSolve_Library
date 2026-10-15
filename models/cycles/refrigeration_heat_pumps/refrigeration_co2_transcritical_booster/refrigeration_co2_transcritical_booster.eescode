@@ -1,0 +1,150 @@
+{=============================================================================
+  CO2 transcritical booster refrigeration system (supermarket)
+  CoolSolve Library model CSL-0145
+ -----------------------------------------------------------------------------
+  CO2 (R744) booster cycle of the kind used in supermarkets: an LT evaporator
+  (13 bar, 25 kW) and an MT evaporator (26 bar, 75 kW) in parallel, a receiver
+  with flash gas by-pass at 32 bar, an MT compressor and a gas cooler
+  (57.3 bar, 15 C, subcritical case), with a heat-recovery heat exchanger
+  (5 K pinch, water 30 -> 55 C) between the MT compressor discharge and the
+  gas cooler. Compressors have constant isentropic efficiencies (0.85 LT,
+  0.80 MT); valves are isenthalpic. Translated from the TESPy notebook
+  docs/model_library/co2_cycle.ipynb (solver plumbing replaced by
+  simultaneous equations); boundary conditions of Case Study 1 of the book
+  chapter by D'Ettorre & Heerup (2026).
+  Source: TESPy docs/model_library/co2_cycle.ipynb, commit 19425523,
+  by Francesco Witte - see README.md. Licence: MIT. Status: verified.
+ =============================================================================}
+
+"!Boundary conditions (Case Study 1 of D'Ettorre & Heerup, 2026)"
+fluid$ = 'R744'                "refrigerant: CO2 (real fluid)"
+fluid_sf$ = 'Water'            "secondary fluid of the heat-recovery HX"
+Q_dot_lt = 25E3                "LT evaporator cooling load [W]"
+Q_dot_mt = 75E3                "MT evaporator cooling load [W]"
+p_c6 = 13E5                    "LT evaporation pressure (c6) [Pa]"
+p_c13 = 26E5                   "MT evaporation pressure (c13) [Pa]"
+p_c3 = 32E5                    "receiver pressure (c3) [Pa]"
+p_c10 = 57.3E5                 "gas cooler pressure (c10) [Pa]"
+T_c1 = 15                      "gas cooler outlet temperature (c1) [C]"
+eta_s_lt = 0.85                "LT compressor isentropic efficiency [-]"
+eta_s_mt = 0.80                "MT compressor isentropic efficiency [-]"
+DELTAT_sh = 10                 "evaporator outlet superheating (TESPy td_dew) [K]"
+DELTAT_pinch = 5               "heat-recovery HX pinch (TESPy td_pinch) [K]"
+T_w1 = 30                      "water inlet temperature (w1) [C]"
+T_w2 = 55                      "water outlet temperature (w2) [C]"
+p_w = 3E5                      "water pressure [Pa]"
+
+"!Gas cooler, cycle closer and high-pressure valve"
+p_c11 = p_c10                  "heat-recovery HX hot-side pressure drop dp1 = 0 [Pa]"
+p_c1 = p_c11                   "gas cooler pressure drop dp = 0 [Pa]"
+h_c1 = ENTHALPY(fluid$, T=T_c1, P=p_c1)      "gas cooler outlet (subcooled liquid) [J/kg]"
+s_c1 = ENTROPY(fluid$, T=T_c1, P=p_c1)       "[J/kg-K]"
+h_c2 = h_c1                    "CycleCloser: same state as c1"
+p_c2 = p_c1
+h_c3 = h_c2                    "high-pressure valve: isenthalpic"
+T_c3 = TEMPERATURE(fluid$, P=p_c3, x=0)      "c3 is two-phase: saturation at the receiver pressure [C]"
+h_liq_r = ENTHALPY(fluid$, P=p_c3, x=0)      "saturated liquid at the receiver pressure [J/kg]"
+h_vap_r = ENTHALPY(fluid$, P=p_c3, x=1)      "saturated vapour at the receiver pressure [J/kg]"
+x_flash = (h_c3 - h_liq_r)/(h_vap_r - h_liq_r)   "receiver inlet vapour fraction [-]"
+
+"!Receiver (TESPy DropletSeparator) and flash gas by-pass valve"
+T_c4 = T_c3                    "receiver liquid outlet: saturated liquid [C]"
+h_c4 = h_liq_r
+T_c16 = T_c3                   "receiver vapour outlet: saturated vapour [C]"
+h_c16 = h_vap_r
+m_c4 = (1 - x_flash)*m_c3      "receiver mass split [kg/s]"
+m_c16 = x_flash*m_c3           "flash gas by-pass mass flow [kg/s]"
+h_c17 = h_c16                  "by-pass valve: isenthalpic"
+p_c17 = p_c13                  "by-pass valve discharges into the MT evaporator outlet merge"
+m_c17 = m_c16                  "by-pass line: series connections [kg/s]"
+T_c17 = T_c16                  "by-pass line: series connections [C]"
+
+"!Receiver liquid outlet split (TESPy Splitter)"
+m_c4 = m_c5 + m_c12            "[kg/s]"
+T_c5 = T_c4; h_c5 = h_c4; p_c5 = p_c3
+T_c12 = T_c4; h_c12 = h_c4; p_c12 = p_c3
+
+"!LT expansion valve and LT evaporator (pr = 1, TESPy SimpleHeatExchanger Q)"
+h_c6 = h_c5                    "LT valve: isenthalpic"
+T_c6 = TEMPERATURE(fluid$, P=p_c6, x=0)      "c6 is two-phase: saturation at the LT pressure [C]"
+p_c7 = p_c6                    "LT evaporator pr = 1 [Pa]"
+T_c7 = TEMPERATURE(fluid$, P=p_c7, x=1) + DELTAT_sh    "LT evaporator outlet, td_dew superheating [C]"
+h_c7 = ENTHALPY(fluid$, T=T_c7, P=p_c7)      "[J/kg]"
+s_c7 = ENTROPY(fluid$, T=T_c7, P=p_c7)       "[J/kg-K]"
+m_c7 = m_c5                    "LT line: series connections [kg/s]"
+Q_dot_lt = m_c7*(h_c7 - h_c6)  "LT evaporator load [W]"
+
+"!LT compressor (TESPy Compressor eta_s, discharge into the MT suction merge)"
+p_c8 = p_c13                   "merge2 fixes the LT discharge pressure = MT evaporation pressure [Pa]"
+h_c8s = ENTHALPY(fluid$, s=s_c7, P=p_c8)     "isentropic LT discharge [J/kg]"
+(h_c8 - h_c7)*eta_s_lt = h_c8s - h_c7        "isentropic efficiency [J/kg]"
+m_c8 = m_c7                    "LT compressor: series connections [kg/s]"
+T_c8 = TEMPERATURE(fluid$, h=h_c8, P=p_c8)   "[C]"
+s_c8 = ENTROPY(fluid$, h=h_c8, P=p_c8)       "[J/kg-K]"
+P_dot_lt = m_c7*(h_c8 - h_c7)  "LT compressor power [W]"
+
+"!MT expansion valve and MT evaporator (pr = 1)"
+h_c13 = h_c12                  "MT valve: isenthalpic"
+T_c13 = TEMPERATURE(fluid$, P=p_c13, x=0)    "c13 is two-phase: saturation at the MT pressure [C]"
+p_c14 = p_c13                  "MT evaporator pr = 1 [Pa]"
+T_c14 = TEMPERATURE(fluid$, P=p_c14, x=1) + DELTAT_sh  "MT evaporator outlet, td_dew superheating [C]"
+h_c14 = ENTHALPY(fluid$, T=T_c14, P=p_c14)   "[J/kg]"
+s_c14 = ENTROPY(fluid$, T=T_c14, P=p_c14)    "[J/kg-K]"
+m_c14 = m_c12                  "MT line: series connections [kg/s]"
+Q_dot_mt = m_c14*(h_c14 - h_c13)             "MT evaporator load [W]"
+
+"!Merge of the MT evaporator outlet and the flash gas (TESPy Merge mt-evaporator-outlet)"
+m_c15 = m_c14 + m_c17          "[kg/s]"
+m_c15*h_c15 = m_c14*h_c14 + m_c17*h_c17      "adiabatic merge [W]"
+p_c15 = p_c13                  "merge: equal pressures [Pa]"
+T_c15 = TEMPERATURE(fluid$, h=h_c15, P=p_c15)      "[C]"
+s_c15 = ENTROPY(fluid$, h=h_c15, P=p_c15)          "[J/kg-K]"
+
+"!Merge of the LT discharge and the MT stream (TESPy Merge mt-compressor-suction)"
+m_c9 = m_c8 + m_c15            "[kg/s]"
+m_c9*h_c9 = m_c8*h_c8 + m_c15*h_c15          "adiabatic merge [W]"
+p_c9 = p_c13                   "merge: equal pressures [Pa]"
+T_c9 = TEMPERATURE(fluid$, h=h_c9, P=p_c9)         "[C]"
+s_c9 = ENTROPY(fluid$, h=h_c9, P=p_c9)             "[J/kg-K]"
+
+"!MT compressor (TESPy Compressor eta_s)"
+h_c10s = ENTHALPY(fluid$, s=s_c9, P=p_c10)   "isentropic MT discharge [J/kg]"
+(h_c10 - h_c9)*eta_s_mt = h_c10s - h_c9      "isentropic efficiency [J/kg]"
+T_c10 = TEMPERATURE(fluid$, h=h_c10, P=p_c10)     "MT compressor discharge temperature [C]"
+s_c10 = ENTROPY(fluid$, h=h_c10, P=p_c10)         "[J/kg-K]"
+P_dot_mt = m_c9*(h_c10 - h_c9)               "MT compressor power [W]"
+
+"!Heat-recovery heat exchanger (TESPy SectionedHeatExchanger, counter flow)"
+T_c11 = T_w1 + DELTAT_pinch   "pinch at the CO2 outlet end: verified against the discretised TESPy profile, see README [C]"
+h_c11 = ENTHALPY(fluid$, T=T_c11, P=p_c11)        "CO2 outlet [J/kg]"
+s_c11 = ENTROPY(fluid$, T=T_c11, P=p_c11)         "[J/kg-K]"
+Q_dot_hrhx = m_c9*(h_c11 - h_c10)             "CO2-side duty, negative by the TESPy sign convention [W]"
+h_w1 = ENTHALPY(fluid_sf$, T=T_w1, P=p_w)         "water inlet [J/kg]"
+h_w2 = ENTHALPY(fluid_sf$, T=T_w2, P=p_w)         "water outlet [J/kg]"
+Q_dot_hrhx + m_w*(h_w2 - h_w1) = 0            "energy balance: CO2 duty = water duty [W]"
+Q_dot_gc = m_c3*(h_c1 - h_c11) "gas cooler duty [W]"
+
+"!Performance indicators (as in the original: the recovered heat counts as useful)"
+P_dot_tot = P_dot_lt + P_dot_mt              "total compressor power [W]"
+COP = (Q_dot_lt + Q_dot_mt - Q_dot_hrhx)/P_dot_tot     "coefficient of performance [-]"
+flash_gas_fraction = m_c16/m_c3               "share of vapour by-passed from the receiver [-]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{Process order (TESPy connection labels in brackets). Use the arrays h[i]/P[i]
+ or s[i]/T[i] with the "Overlay array path" option of the CoolSolve Diagram tab.}
+T[1] = T_c11;  P[1] = p_c11;  h[1] = h_c11;  s[1] = s_c11   "HRHX CO2 outlet [1]"
+T[2] = T_c1;   P[2] = p_c1;   h[2] = h_c1;   s[2] = s_c1    "gas cooler outlet [2]"
+T[3] = T_c3;   P[3] = p_c3;   h[3] = h_c3;   s[3] = ENTROPY(fluid$, h=h_c3, P=p_c3)   "receiver inlet [3]"
+T[4] = T_c4;   P[4] = p_c3;   h[4] = h_c4;   s[4] = ENTROPY(fluid$, P=p_c3, x=0)      "receiver liquid [4]"
+T[5] = T_c16;  P[5] = p_c3;   h[5] = h_c16;  s[5] = ENTROPY(fluid$, P=p_c3, x=1)      "receiver vapour = flash gas [5]"
+T[6] = T_c17;  P[6] = p_c17;  h[6] = h_c17;  s[6] = s[5]     "by-pass valve outlet [6]"
+T[7] = T_c15;  P[7] = p_c15;  h[7] = h_c15;  s[7] = s_c15   "MT evaporator outlet merge [7]"
+T[8] = T_c9;   P[8] = p_c9;   h[8] = h_c9;   s[8] = s_c9    "MT compressor suction [8]"
+T[9] = T_c10;  P[9] = p_c10;  h[9] = h_c10;  s[9] = s_c10   "MT compressor discharge [9]"
+T[10] = T_c5;  P[10] = p_c5;  h[10] = h_c5;  s[10] = ENTROPY(fluid$, P=p_c3, x=0)  "LT branch liquid [10]"
+T[11] = T_c6;  P[11] = p_c6;  h[11] = h_c6;  s[11] = ENTROPY(fluid$, h=h_c6, P=p_c6)  "LT valve outlet [11]"
+T[12] = T_c7;  P[12] = p_c7;  h[12] = h_c7;  s[12] = s_c7   "LT evaporator outlet = LT suction [12]"
+T[13] = T_c8;  P[13] = p_c8;  h[13] = h_c8;  s[13] = s_c8   "LT compressor discharge [13]"
+T[14] = T_c12; P[14] = p_c12; h[14] = h_c12; s[14] = s[10]  "MT branch liquid [14]"
+T[15] = T_c13; P[15] = p_c13; h[15] = h_c13; s[15] = ENTROPY(fluid$, h=h_c13, P=p_c13)  "MT valve outlet [15]"
+T[16] = T_c14; P[16] = p_c14; h[16] = h_c14; s[16] = s_c14  "MT evaporator outlet [16]"

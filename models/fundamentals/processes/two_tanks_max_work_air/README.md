@@ -1,6 +1,6 @@
 # Maximum work from two air tanks at 900 K and 300 K
 
-🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ☑️ **Runs** &nbsp;|&nbsp; `CSL-0057`
+🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0057`
 
 Two rigid vessels, each holding 30 kg of air at 900 K and at 300 K, are coupled
 by a heat engine that takes heat from the hot vessel, delivers it to the cold one
@@ -19,7 +19,7 @@ $\sqrt{T_a T_b}$.
 | **Source** | ULiège — course *Thermodynamique appliquée* (MECA0002), repetition session 10 (exergy), exercise 3 (EES file `R10_E03_2022.EES`, session 2022-2023) |
 | **Authors** | TBD (ULiège, course *Thermodynamique appliquée*; the session statement names the repetition assistants N. Paulus, A. Zeoli and V. Lemort) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — runs (see *Verification*: no independent numerical reference exists for this exercise) |
+| **CoolSolve** | verified (see *Verification*) |
 
 ## Problem statement
 
@@ -131,8 +131,8 @@ never solved after being saved: all 13 decoded variable records hold their EES
 variable records at save). The course folder holds no Python/CoolProp solution
 of exercise 3 (only of exercises 1 and 2, `old/ThAp21_R10E01.py`,
 `old/ThAp21_R10E02.py`), and the session's PowerPoint (`R10_2021v1.pptx`) only
-covers exercises 1 and 2. **The model is therefore shipped as `runs`, not
-`verified`.**
+covers exercises 1 and 2. **No numerical reference from EES exists for this model** (it was shipped as
+`runs` before that status was merged into `verified` on 2026-10-14).
 
 **Check used instead: the closed-form solution of the same entropy balance**,
 derived by hand and written as a reference CSV in the same format as an EES
@@ -201,6 +201,7 @@ original ("la machine motrice importe **peu**" against "… importe **peut**",
 
 ## Conversion log
 
+- **2026-10-14 — status `runs` merged into `verified`**: verification field added (no equation changed).
 - **2026-10-05 — import** (`tools/ees_extract.py`, CoolSolve repository): EES
   X10.836, 13 variable records (the *unsolved* initial values described in
   *Verification*), no lookup or parametric table, no external function (only the

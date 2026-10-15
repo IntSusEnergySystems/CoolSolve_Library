@@ -47,6 +47,8 @@
     "course": "ULiège laboratory correlation model (30 September 2010), based on the Lemort/Quoilin/Pire hermetic scroll expander measurements"
   },
   "verification": {
+    "summary": "Compared with the EES stored solution of the source file: 54 common variables, 30 above rtol = 0.001, maximum relative difference 3.12e-02 on `der_rp_epsilon_2_mod`. Deviations are traced to R245fa property differences between EES and CoolProp.",
+    "checks": ["ees-stored-solution"],
     "reference": "EES stored solution of the source file (module variables compared under their flattened '_mod' names; 54 common variables). Variables cleared in the EES store are compared with the guess values EES kept from its last solve; epsilon_overall, V_s_1_mod and V_s_2_mod were cleared without guess and are compared with values recomputed from the stored enthalpies, filling factors and densities",
     "date": "2026-10-07",
     "coolsolve_version": "0.3.0@7addbbc",

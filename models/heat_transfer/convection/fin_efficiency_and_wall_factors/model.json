@@ -45,6 +45,8 @@
     "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/core.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each function is the original book cited in its comment block (Kern & Kraus 1972; Kays & Crawford 1993). Translation published under the CoolSolve_Library MIT license (decision D3). The Bessel functions of the fin formula are evaluated by their 13-term power series (Abramowitz & Stegun), the approach of CSL-0090 and CSL-0099."
   },
   "verification": {
+    "summary": "The 26 output values were compared with the doctest values of `ht` 1.2.0 and with values from the same ht functions: 26 common variables, 0 differ at rtol=0.001, largest relative deviation 4.0e-12 (print precision of the baseline).",
+    "checks": ["source-rerun"],
     "reference": "doctest values of ht 1.2.0 ht/core.py (case A) and additional values computed with the same ht functions (case B, installed from the local clone, core.py identical to commit 85e0ee6); 26 output values in total",
     "date": "2026-10-08",
     "coolsolve_version": "0.3.0@7addbbc",

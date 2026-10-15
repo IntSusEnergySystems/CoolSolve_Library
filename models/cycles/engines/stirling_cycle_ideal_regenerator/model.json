@@ -45,6 +45,8 @@
     "course": "ULiège MECA0002 Thermodynamique appliquée, session R5 (chapter 9 part 1, internal combustion engines), exercise 3"
   },
   "verification": {
+    "summary": "Concerns the runnable variant (native file blocked). Against the EES stored solution: 66 common variables, 13 differ (rtol=0.001), explained by reference-state offsets and EES's coarse quadrature; the other 53 agree, largest deviation 1.51e-05. A Python/CoolProp re-implementation agrees except the integrals (max 5.04e-05).",
+    "checks": ["ees-stored-solution", "source-rerun"],
     "reference": "EES stored solution of the source file (complete: all 68 variables hold a real value), compare_solution.py --ees-units, hand conversion from K/kPa/kJ to C/Pa/J; plus an independent re-implementation of the same exercise in Python/CoolProp (Simpson quadrature of the two integrals), not shipped; plus the Python/CoolProp solution of the same exercise shipped by the course for the previous year, which prints the same three efficiencies",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",

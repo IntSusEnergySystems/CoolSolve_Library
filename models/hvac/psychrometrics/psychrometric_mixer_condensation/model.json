@@ -46,6 +46,8 @@
     "course": "ULiège Thermodynamique appliquée (MECA0002), exercise session R9 (2022-2023), exercise 3"
   },
   "verification": {
+    "summary": "Compared with the solution stored in the original EES file (11 unsolved outlet variables excluded): maximum relative deviation 4.38e-03 on the 21 others, from the EES vs CoolProp humid-air properties. An independent recomputation of the balances gives T_3 = 11.5468 degC and m_dot_cond = 0.2226 g/s. Energy balance closed to 1e-12.",
+    "checks": ["ees-stored-solution", "analytical", "energy-balance"],
     "reference": "Solution stored in the original EES file R09_E03_2022.EES (EES 10.836), restricted to the variables it had actually solved, and an independent recomputation of the two balances with the psychrometric relations of the course (Python/CoolProp script, not shipped)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",

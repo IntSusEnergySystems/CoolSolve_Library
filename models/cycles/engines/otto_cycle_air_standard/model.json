@@ -36,6 +36,8 @@
     "course": "ULiège MECA0002 Thermodynamique appliquée, session R5 (chapter 9 part 1, internal combustion engines), exercise 1"
   },
   "verification": {
+    "summary": "Agrees with an independent Python/CoolProp re-implementation of the exercise to 2.11·10⁻¹¹ relative (42 variables) and with the meaningful part of the EES stored solution to 1.51·10⁻⁵; 25 of the 43 values stored in the EES file are an unused placeholder 1.",
+    "checks": ["other-tool", "ees-stored-solution"],
     "reference": "Independent re-implementation of the same exercise in Python with CoolProp (fixed-point solution of the recursive equations, cp/cv/entropy of Air), not shipped; plus the meaningful part of the EES stored solution (the source file was saved without a complete solution: 25 of its 43 stored values are the placeholder 1, so only the inputs and the quantities EES computed by hand agree)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",

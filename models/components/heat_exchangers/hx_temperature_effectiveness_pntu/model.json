@@ -52,6 +52,8 @@
     "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/hx.py, functions P_NTU_Pp, P_NTU_Pc, temperature_effectiveness_air_cooler, temperature_effectiveness_basic, temperature_effectiveness_TEMA_E, temperature_effectiveness_TEMA_G, temperature_effectiveness_TEMA_H, temperature_effectiveness_TEMA_J, temperature_effectiveness_plate, NTU_from_P_basic, NTU_from_P_E, NTU_from_P_G, NTU_from_P_H, NTU_from_P_J and NTU_from_P_plate, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each relation is the original paper or book cited in its function comment block. Translation published under the CoolSolve_Library MIT license (decision D3)."
   },
   "verification": {
+    "summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 81 common variables, 0 differ (rtol=0.001), largest relative deviation 8.3e-8, explained by the quadrature of the exact crossflow integral.",
+    "checks": ["source-rerun"],
     "reference": "doctest values of ht 1.2.0 ht/hx.py (case A: R1 = 1/3, NTU1 = 1 for the TEMA and plate relations, R1 = 0.1 and NTU1 = 4 for the basic counterflow relation, R1 = 0.5, NTU1 = 2 with 2 rows and 2 passes for the air cooler, x = 5 with y = 0.4 and y = 0.7 for the two helper terms) plus values computed with the same ht functions (case B: the steam/oil crossflow rating of the ht docstring, stream 1 = the process stream, R1 = 0.14242, NTU1 = 2.16007; one call per remaining branch); 81 output values in total",
     "date": "2026-10-06",
     "coolsolve_version": "0.3.0@536d427",

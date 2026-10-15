@@ -268,3 +268,7 @@ could not be re-run here.
 - `CSL-0059` *stirling_cycle_ideal_regenerator*: the same course family and the
   same perfect-gas station-by-station method, for an ideal Stirling cycle whose
   regenerator is perfect (this model's is a real gas-turbine one).
+- `CSL-0141` *gas_turbine_open_cycle*: the open single-shaft Brayton cycle
+  with combustion chamber and generator of the TESPy gas-turbine tutorial,
+  where the combustion chemistry and the flue-gas mixture properties are kept
+  instead of being neglected as here.

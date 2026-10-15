@@ -1,0 +1,215 @@
+{=============================================================================
+  Regenerative Rankine cycle with two extractions and closed feedwater heaters
+  CoolSolve Library model CSL-0143
+ -----------------------------------------------------------------------------
+  200 kg/s of live steam (100 bar, 650 °C) expand through HP, MP and LP
+  turbines (isentropic efficiency 0.9). Two extractions (20 bar and 3 bar)
+  preheat the feedwater in two closed feedwater heaters (upper terminal
+  temperature difference 5 K), each followed by a drain pump returning the
+  condensate to the feedwater line; the first extraction is desuperheated
+  before the second heater. The condenser is cooled by water from 20 °C to
+  28 °C with a 5 K upper terminal temperature difference. The model returns
+  the extraction and condensate flows, the component powers and the plant
+  thermal efficiency; the extraction pressures can be swept in the GUI.
+
+  Inputs : m_1, T_1, p_1, p_2, p_4, eta_s_t, eta_s_p, pr_sg, ttd_u, cooling water
+  Outputs: m_21, m_31, m_cw, W_hpt, W_mpt, W_lpt, Q_sg, Q_con, eta_th
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : TESPy tutorial/advanced/optimization_example.py (F. Witte and the
+           TESPy contributors, MIT, commit 19425523) - see README.md
+  Status : verified (design point p_2 = 20 bar, p_4 = 3 bar)
+=============================================================================}
+
+"!Given data"
+m_1 = 200                   "live steam mass flow [kg/s]"
+T_1 = 650                   "live steam temperature [°C]"
+p_1 = 100E5                 "live steam pressure [Pa] (100 bar in the original)"
+p_2 = 20E5                  "HP turbine exhaust = extraction 1 pressure [Pa] (20 bar)"
+p_4 = 3E5                   "MP turbine exhaust = extraction 2 pressure [Pa] (3 bar)"
+eta_s_t = 0.9               "turbines isentropic efficiency [-]"
+eta_s_p = 0.8               "pumps isentropic efficiency [-]"
+pr_sg = 0.92                "steam generator pressure ratio p_0/p_13 [-]"
+ttd_u = 5                   "upper terminal temperature difference of condenser and feedwater heaters [K]"
+p_cw_in = 3E5               "cooling water inlet pressure [Pa]"
+T_cw_in = 20                "cooling water inlet temperature [°C]"
+T_cw_out = 28               "cooling water outlet temperature [°C]"
+pr_cw = 0.99                "cooling water pressure ratio in the condenser [-]"
+
+"!Steam generator and live steam (points 13, 0, 1; state 0 = state 1, cycle closer)"
+p_13 = p_1/pr_sg            "steam generator inlet pressure [Pa] (pr_sg = p_0/p_13)"
+h_1 = enthalpy(Water, T=T_1, P=p_1)       "live steam [J/kg]"
+s_1 = entropy(Water, T=T_1, P=p_1)        "live steam [J/kg-K]"
+Q_sg = m_1*(h_1 - h_13)     "steam generator heat input [W]"
+
+"!High pressure turbine (points 1 - 2)"
+h_2s = enthalpy(Water, s=s_1, P=p_2)      "isentropic HP exhaust [J/kg]"
+h_1 - h_2 = eta_s_t*(h_1 - h_2s)          "HP turbine isentropic efficiency [-]"
+W_hpt = m_1*(h_1 - h_2)     "HP turbine power output [W]"
+T_2 = temperature(Water, P=p_2, h=h_2)    "HP exhaust temperature [°C]"
+
+"!Splitter 1: extraction 1 (21) to the desuperheater, main flow (3) to the MP turbine"
+m_21 + m_3 = m_1            "mass balance [-]"
+m_2 = m_1                   "connection 2 [kg/s]"
+h_21 = h_2                  "isenthalpic splitter (as in the original) [J/kg]"
+h_3 = h_2                   "isenthalpic splitter (as in the original) [J/kg]"
+p_21 = p_2                  "no pressure drop in the splitter [Pa]"
+p_3 = p_2                   "no pressure drop in the splitter [Pa]"
+s_3 = entropy(Water, P=p_3, h=h_3)        "MP turbine inlet [J/kg-K]"
+
+"!Mid pressure turbine (points 3 - 4)"
+h_4s = enthalpy(Water, s=s_3, P=p_4)      "isentropic MP exhaust [J/kg]"
+h_3 - h_4 = eta_s_t*(h_3 - h_4s)          "MP turbine isentropic efficiency [-]"
+W_mpt = m_3*(h_3 - h_4)     "MP turbine power output [W]"
+T_4 = temperature(Water, P=p_4, h=h_4)    "MP exhaust temperature [°C]"
+
+"!Splitter 2: extraction 2 (31) to feedwater heater 1, main flow (5) to the LP turbine"
+m_31 + m_5 = m_3            "mass balance [-]"
+m_4 = m_3                   "connection 4 [kg/s]"
+h_31 = h_4                  "isenthalpic splitter (as in the original) [J/kg]"
+h_5 = h_4                   "isenthalpic splitter (as in the original) [J/kg]"
+p_31 = p_4                  "no pressure drop in the splitter [Pa]"
+p_5 = p_4                   "no pressure drop in the splitter [Pa]"
+s_5 = entropy(Water, P=p_5, h=h_5)        "LP turbine inlet [J/kg-K]"
+
+"!Low pressure turbine (points 5 - 6)"
+h_6s = enthalpy(Water, s=s_5, P=p_6)      "isentropic LP exhaust [J/kg]"
+h_5 - h_6 = eta_s_t*(h_5 - h_6s)          "LP turbine isentropic efficiency [-]"
+W_lpt = m_5*(h_5 - h_6)     "LP turbine power output [W]"
+T_6 = temperature(Water, P=p_6, h=h_6)    "LP exhaust temperature [°C]"
+
+"!Condenser (points 6 - 7, cooling water 41 - 42): condensation pressure from ttd_u"
+p_6 = pressure(Water, T=T_cw_out + ttd_u, x=0)    "condensation pressure from ttd_u = T_sat(p_6) - T_cw_out [Pa]"
+p_7 = p_6                   "condenser pressure drop on the steam side [-] (pr1 = 1)"
+h_7 = enthalpy(Water, P=p_7, x=0)         "condenser outlet: saturated liquid [J/kg]"
+s_7 = entropy(Water, P=p_7, x=0)          "condenser outlet [J/kg-K]"
+m_6 = m_5                   "connection 6 [kg/s]"
+m_7 = m_6                   "connection 7 [kg/s]"
+Q_con = m_6*(h_6 - h_7)     "condenser heat rejection [W]"
+p_cw_out = pr_cw*p_cw_in    "cooling water outlet pressure [Pa]"
+h_cw_in = enthalpy(Water, T=T_cw_in, P=p_cw_in)    "cooling water inlet [J/kg]"
+h_cw_out = enthalpy(Water, T=T_cw_out, P=p_cw_out) "cooling water outlet [J/kg]"
+Q_con = m_cw*(h_cw_out - h_cw_in)         "cooling water energy balance [W]"
+
+"!Feed water pump (point 7 - 8)"
+p_9 = 0.99*p_8              "feedwater heater 1 cold-side pressure ratio pr2 = 0.99 [Pa]"
+h_8s = enthalpy(Water, s=s_7, P=p_8)      "isentropic pump outlet [J/kg]"
+eta_s_p*(h_8 - h_7) = h_8s - h_7         "pump isentropic efficiency (as in the original) [-]"
+m_8 = m_7                   "connection 8 [kg/s]"
+W_pu1 = m_8*(h_8 - h_7)     "feed water pump power input [W]"
+
+"!Feed water heater 1 (closed; extraction 31 condenses, drain 32 is pumped by pu3)"
+p_32 = p_31                 "hot-side pressure ratio pr1 = 1 [Pa]"
+h_32 = enthalpy(Water, P=p_32, x=0)       "drain: saturated liquid at p_31 (as in the original) [J/kg]"
+s_32 = entropy(Water, P=p_32, x=0)        "drain [J/kg-K]"
+T_9 = temperature(Water, P=p_31, x=0) - ttd_u   "feedwater outlet: ttd_u referred to T_sat(p_31) [°C]"
+h_9 = enthalpy(Water, T=T_9, P=p_9)       "feedwater heater 1 feedwater outlet [J/kg]"
+m_9 = m_8                   "connection 9 [kg/s]"
+m_22 = m_21                 "connection 22 [kg/s]"
+m_23 = m_22                 "connection 23 [kg/s]"
+Q_fwh1 = m_31*(h_31 - h_32)               "feedwater heater 1 heat rate [W]"
+Q_fwh1 = m_9*(h_9 - h_8)                  "feedwater heater 1 energy balance [W]"
+
+"!Drain pump 3 (points 32 - 33)"
+h_33s = enthalpy(Water, s=s_32, P=p_33)   "isentropic drain pump outlet [J/kg]"
+eta_s_p*(h_33 - h_32) = h_33s - h_32      "drain pump isentropic efficiency (as in the original) [-]"
+m_32 = m_31                 "connection 32 [kg/s]"
+m_33 = m_32                 "connection 33 [kg/s]"
+W_pu3 = m_33*(h_33 - h_32)  "drain pump 3 power input [W]"
+
+"!Merge of the drain with the feedwater line (points 9 + 33 -> 10)"
+m_10 = m_9 + m_33           "merge mass balance [-]"
+m_9*h_9 + m_33*h_33 = m_10*h_10           "merge energy balance (adiabatic mixing) [W]"
+p_10 = p_9                  "merge pressure [Pa]"
+p_10 = p_33                 "merge pressure [Pa]"
+
+"!Feed water heater 2 (closed; desuperheated extraction 22 condenses, drain 23 pumped by pu2)"
+p_22 = 0.99*p_21            "desuperheater hot-side pressure ratio pr1 = 0.99 [Pa]"
+h_22 = enthalpy(Water, P=p_22, x=1)       "desuperheater hot outlet: saturated vapour (as in the original) [J/kg]"
+p_23 = p_22                 "hot-side pressure ratio pr1 = 1 [Pa]"
+p_11 = 0.99*p_10            "feedwater heater 2 cold-side pressure ratio pr2 = 0.99 [Pa]"
+h_23 = enthalpy(Water, P=p_23, x=0)       "drain: saturated liquid at p_22 (as in the original) [J/kg]"
+s_23 = entropy(Water, P=p_23, x=0)        "drain [J/kg-K]"
+T_11 = temperature(Water, P=p_22, x=0) - ttd_u   "feedwater outlet: ttd_u referred to T_sat(p_22) [°C]"
+h_11 = enthalpy(Water, T=T_11, P=p_11)    "feedwater heater 2 feedwater outlet [J/kg]"
+m_11 = m_10                 "connection 11 [kg/s]"
+Q_fwh2 = m_22*(h_22 - h_23)               "feedwater heater 2 heat rate [W]"
+Q_fwh2 = m_11*(h_11 - h_10)               "feedwater heater 2 energy balance [W]"
+
+"!Drain pump 2 (points 23 - 24)"
+h_24s = enthalpy(Water, s=s_23, P=p_24)   "isentropic drain pump outlet [J/kg]"
+eta_s_p*(h_24 - h_23) = h_24s - h_23      "drain pump isentropic efficiency (as in the original) [-]"
+m_24 = m_23                 "connection 24 [kg/s]"
+W_pu2 = m_24*(h_24 - h_23)  "drain pump 2 power input [W]"
+
+"!Desuperheater (hot 21 - 22, cold 11 - 12)"
+p_12 = 0.99*p_11            "desuperheater cold-side pressure ratio pr2 = 0.99 [Pa]"
+m_12 = m_11                 "connection 12 [kg/s]"
+m_21*(h_21 - h_22) = m_12*(h_12 - h_11)   "desuperheater energy balance [W]"
+
+"!Merge 2 of the drain with the feedwater line (points 12 + 24 -> 13)"
+m_13 = m_12 + m_24          "merge mass balance [-]"
+m_12*h_12 + m_24*h_24 = m_13*h_13         "merge energy balance (adiabatic mixing) [W]"
+p_13 = p_12                 "merge pressure [Pa]"
+p_13 = p_24                 "merge pressure [Pa]"
+
+"!Electricity bus and plant efficiency"
+P_grid = W_hpt + W_mpt + W_lpt - W_pu1 - W_pu2 - W_pu3   "net power output [W]"
+eta_th = P_grid/Q_sg        "plant thermal efficiency [-]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: live steam, 2: HP exhaust/splitter, 3: MP inlet, 4: MP exhaust/splitter,
+ 5: LP inlet, 6: LP exhaust, 7: condenser outlet, 8: feed pump outlet,
+ 9: FWH1 outlet, 10: after drain merge, 11: FWH2 outlet, 12: desuperheater
+ outlet, 13: after drain merge 2 = steam generator inlet.}
+P[1] = p_1
+h[1] = h_1
+T[1] = T_1
+s[1] = s_1
+P[2] = p_2
+h[2] = h_2
+T[2] = T_2
+s[2] = entropy(Water, P=p_2, h=h_2)
+P[3] = p_3
+h[3] = h_3
+T[3] = T_2
+s[3] = s_3
+P[4] = p_4
+h[4] = h_4
+T[4] = T_4
+s[4] = entropy(Water, P=p_4, h=h_4)
+P[5] = p_5
+h[5] = h_5
+T[5] = T_4
+s[5] = s_5
+P[6] = p_6
+h[6] = h_6
+T[6] = T_6
+s[6] = entropy(Water, P=p_6, h=h_6)
+P[7] = p_7
+h[7] = h_7
+T[7] = T_6
+s[7] = s_7
+P[8] = p_8
+h[8] = h_8
+T[8] = temperature(Water, P=p_8, h=h_8)
+s[8] = entropy(Water, P=p_8, h=h_8)
+P[9] = p_9
+h[9] = h_9
+T[9] = T_9
+s[9] = entropy(Water, P=p_9, h=h_9)
+P[10] = p_10
+h[10] = h_10
+T[10] = temperature(Water, P=p_10, h=h_10)
+s[10] = entropy(Water, P=p_10, h=h_10)
+P[11] = p_11
+h[11] = h_11
+T[11] = T_11
+s[11] = entropy(Water, P=p_11, h=h_11)
+P[12] = p_12
+h[12] = h_12
+T[12] = temperature(Water, P=p_12, h=h_12)
+s[12] = entropy(Water, P=p_12, h=h_12)
+P[13] = p_13
+h[13] = h_13
+T[13] = temperature(Water, P=p_13, h=h_13)
+s[13] = entropy(Water, P=p_13, h=h_13)

@@ -5,7 +5,7 @@
 <!-- Badges (copy exactly, see docs/taxonomy.md):
   🟢 **Level 1 · Introductory** | 🔵 **Level 2 · Intermediate** | 🟠 **Level 3 · Advanced** | 🔴 **Level 4 · Research**
   ⚙️ **Steady-state** | ⏱️ **Dynamic** | 🎯 **Optimisation** | 🧩 **Function library**
-  ✅ **Verified** | ☑️ **Runs** | ⚠️ **Runs (modified)** | ⛔ **Blocked** | ❌ **Failing** | 📄 **Documented only**
+  ✅ **Verified** | ⚠️ **Runs (modified)** | ⛔ **Blocked** | ❌ **Failing** | 📄 **Documented only**
 -->
 
 <One paragraph: what the model represents and what it is useful for.>
@@ -18,7 +18,7 @@
 | **Source** | <source, with link when public> |
 | **Authors** | <authors of the original model, or TBD> |
 | **License** | MIT |
-| **CoolSolve** | <version> — <runs / verified against … / blocked by CS-GAP-…> |
+| **CoolSolve** | <version> — <verified (see verification field) / blocked by CS-GAP-…> |
 
 ## Problem statement
 <For exercises: the statement, translated. For research/component models: purpose and context.>

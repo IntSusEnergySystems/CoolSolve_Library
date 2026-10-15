@@ -44,6 +44,8 @@
     "course": "SopoNova MicroCSP collector data of Sopogy; semi-empirical heat-loss correlation of R. Dickes, V. Lemort and S. Quoilin, https://hdl.handle.net/2268/182680 (defined but unused by the original solve())"
   },
   "verification": {
+    "summary": "Compared with a re-run of the LaboThapPy example (case study_disc): 64 common variables, 0 differ at rtol=0.001, max relative difference 3.4e-05 on eta_coll[20] (bilinear vs bicubic map interpolation); Q_dot differs by 6.1e-06 and T_ex by 7.8e-07. The energy balance of the march closes.",
+    "checks": ["source-rerun", "energy-balance"],
     "reference": "the example of the source, labothappy/component/examples/solar/parabolic_trough_collector_example.py (case study study_disc, convergence study over 1 to 50 discretisation elements, 10 collectors in series), re-run in a throw-away virtual environment (Python 3.12, LaboThapPy from the local clone, CoolProp 8.0.0) and compared with tools/compare_solution.py; the same comparison repeated for 1, 2, 5, 10 and 50 cells",
     "date": "2026-10-08",
     "coolsolve_version": "0.3.0@7addbbc",

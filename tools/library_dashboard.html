@@ -83,7 +83,6 @@ td.id, .mono { font-family: var(--mono); font-size: 12.5px; white-space: nowrap;
 .badge { display: inline-block; border-radius: 4px; padding: 1px 7px; font-size: 12px; font-weight: 600;
          white-space: nowrap; }
 .s-verified { background: var(--ok-soft); color: var(--ok); }
-.s-runs { background: var(--run-soft); color: var(--run); }
 .s-modified { background: var(--warn-soft); color: var(--warn); }
 .s-blocked, .s-failing { background: var(--bad-soft); color: var(--bad); }
 .s-stub { background: var(--grey-soft); color: var(--muted); }
@@ -178,6 +177,7 @@ section.cat { margin: 0 0 30px; scroll-margin-top: 12px; }
       <select id="f-fluid" aria-label="Fluid"></select>
       <select id="f-origin" aria-label="Origin"></select>
       <select id="f-gap" aria-label="CoolSolve gap"></select>
+      <select id="f-check" aria-label="Verification check"></select>
       <button class="reset" id="reset">Reset</button>
       <span class="count" id="m-count"></span>
     </div>
@@ -233,8 +233,8 @@ const SERVED = (() => {
 const openUrl = (m, file) => SERVED.base + "?library=" + encodeURIComponent(m.id) + (file ? "&file=" + encodeURIComponent(file) : "");
 const servedReadmeUrl = (m) => SERVED.base + "docs/#" + encodeURIComponent("library/" + m.path + "/README.md");
 const registerUrl = (g) => D.register_url + (g && g.anchor ? "#" + g.anchor : "");
-const STATUS_ORDER = ["verified", "runs", "modified", "blocked", "failing", "stub"];
-const FILTER_KEYS = ["q", "category", "status", "kind", "level", "fluid", "origin", "gap"];
+const STATUS_ORDER = ["verified", "modified", "blocked", "failing", "stub"];
+const FILTER_KEYS = ["q", "category", "status", "kind", "level", "fluid", "origin", "gap", "check"];
 const inCategory = (m, c) => !c || m.category === c || m.category.startsWith(c + "/");
 const icon = (label) => String(label).split(" ")[0];
 
@@ -247,7 +247,7 @@ function modelsHref(filters) {
 }
 
 // ---------------------------------------------------------------- state and routing
-const state = {view: "explore", q: "", category: "", status: "", kind: "", level: "", fluid: "", origin: "", gap: "",
+const state = {view: "explore", q: "", category: "", status: "", kind: "", level: "", fluid: "", origin: "", gap: "", check: "",
                open: null, sort: {key: "id", dir: 1}, fq: "", fsort: {key: "function", dir: 1},
                gq: "", gstate: "used", gsort: {key: "n", dir: -1}};
 
@@ -389,7 +389,7 @@ function renderExplore() {
     `<nav class="toc" aria-label="Categories">` + tops.map((t) =>
       `<a href="#cat-${esc(t.key)}" data-scroll="cat-${esc(t.key)}">${esc(t.title)} ` +
       `<span>${D.models.filter((m) => inCategory(m, t.key)).length}</span></a>`).join("") + `</nav>` +
-    `<div class="legend"><span><span class="dot s-verified"></span>verified</span><span><span class="dot s-runs"></span>runs</span>` +
+    `<div class="legend"><span><span class="dot s-verified"></span>verified</span>` +
     `<span><span class="dot s-blocked"></span>blocked or failing in CoolSolve</span>` +
     `<span>${Object.values(D.labels.kinds).map((k) => esc(k)).join(" · ")}</span></div><br>`;
   for (const top of tops) {
@@ -440,6 +440,8 @@ function initFilters() {
   options("f-origin", "All origins", origins.map((o) => [o, o.replace("_", " ")]));
   const gaps = [...new Set(D.models.flatMap((m) => m.missing_features))].sort();
   options("f-gap", "Any CoolSolve gap", gaps.map((g) => [g, g]));
+  const checks = [...new Set(D.models.flatMap((m) => m.verification_checks || []))].sort();
+  options("f-check", "Any verification check", checks.map((c) => [c, c]));
 }
 const MODEL_COLS = [
   {key: "id", label: "ID"}, {key: "title", label: "Model"}, {key: "category", label: "Category"},
@@ -467,6 +469,7 @@ function filteredModels() {
     (!state.status || m.status === state.status) && (!state.kind || m.kind === state.kind) &&
     (!state.level || String(m.level) === state.level) && (!state.fluid || m.fluids.includes(state.fluid)) &&
     (!state.origin || m.origin_type === state.origin) && (!state.gap || m.missing_features.includes(state.gap)) &&
+    (!state.check || (m.verification_checks || []).includes(state.check)) &&
     words.every((w) => modelIndex[m.id].includes(w)));
 }
 function headerRow(cols, sort, attr) {
@@ -559,6 +562,8 @@ function modelDetail(m) {
       </dl>
       <h3>Verification</h3><dl>
         <dt>Status</dt><dd><span class="badge s-${m.status}">${esc(statusLabel(m.status))}</span></dd>
+        ${m.verification_summary ? `<dt>Summary</dt><dd>${esc(m.verification_summary)}</dd>` : ""}
+        ${m.verification_checks && m.verification_checks.length ? `<dt>Checks</dt><dd>${m.verification_checks.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</dd>` : ""}
         <dt>CoolSolve</dt><dd class="mono">${esc(m.coolsolve_version || "—")}</dd>
         <dt>Date</dt><dd class="mono">${esc(m.verified_on || "—")}</dd>
       </dl>

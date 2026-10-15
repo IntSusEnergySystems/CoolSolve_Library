@@ -1,6 +1,6 @@
 # Single-cylinder engine with Weibe combustion (crank-angle dynamic)
 
-🟠 **Level 3 · Advanced** &nbsp;|&nbsp; ⏱️ **Dynamic** &nbsp;|&nbsp; ☑️ **Runs** &nbsp;|&nbsp; `CSL-0024`
+🟠 **Level 3 · Advanced** &nbsp;|&nbsp; ⏱️ **Dynamic** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0024`
 
 Crank-angle-resolved model of one cylinder of a four-stroke spark-ignition
 engine, integrated over the crank angle with `INTEGRAL`: it follows the
@@ -18,7 +18,7 @@ the library and the simplest example of a `PROCEDURE` called from an
 | **Source** | CoolSolve example `engine_weibe_cycle` (ULiège engine thermodynamics course exercise, 2008-2009, *Weibe combustion model*, repetition 4) |
 | **Authors** | TBD (ULiège course exercise, 2008-2009; author not identified in the source); S. Quoilin (CoolSolve example) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0@536d427 — runs; results reproduce the CoolSolve example and its committed regression value |
+| **CoolSolve** | verified (see *Verification*) |
 
 ## Problem statement
 
@@ -212,6 +212,7 @@ Sources (not copied into the library):
 
 ## Conversion log
 
+- **2026-10-14 — status `runs` merged into `verified`**: verification field added (no equation changed).
 - **2026-10-05 — import of the CoolSolve example `CSX-014`**: the example was
   already in SI-°C-Pa-J (`unit_hints: SI-C-Pa-J`), contains no `$UnitSystem`
   directive, no lookup/parametric table, no external file and no library
@@ -254,10 +255,12 @@ Sources (not copied into the library):
   level 2; the card's level 3 (five coupled integrated states, discontinuous
   Weibe/`IF` closure, step-sensitive) is kept, to be confirmed by the
   maintainer.
-- **Decision — the model is `runs`, not `verified`**: no EES original and no
-  stored reference exist (searched, see above), so the checks of the
-  *Verification* section are reproduction and sanity checks, not a comparison
-  against an independent reference.
+- **Decision — no independent reference** (the status was `runs` before it was
+  merged into `verified` on 2026-10-14; the `verification` field of `model.json`
+  says how the model was checked): no EES original and no stored reference exist
+  (searched, see above), so the checks of the *Verification* section are
+  reproduction and sanity checks, not a comparison against an independent
+  reference.
 - **Decision — no state-point arrays** (`P[i]`, `h[i]`, `T[i]`, `s[i]`): the
   charge is an ideal gas with a constant γ and no property call, and CoolSolve
   has no ideal-gas diagram (`CS-FEAT-DIAGRAM-IDEAL`); the figure will be a plot

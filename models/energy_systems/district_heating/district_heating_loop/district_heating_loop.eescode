@@ -1,0 +1,121 @@
+{=============================================================================
+  District heating loop: consumer, feed pump and pipes with pressure drop
+  and heat loss (translation of the TESPy basic tutorial "District Heating
+  Network")
+  CoolSolve Library model CSL-0142
+-----------------------------------------------------------------------------
+  Heating plant (heat source, no pressure drop), feed pump (isentropic
+  efficiency), consumer (given heat demand and 2 % pressure drop), control
+  valve (isenthalpic, it takes the residual pressure drop) and two pipes
+  (feed and return) with a friction pressure drop from the Darcy-Weisbach
+  equation and a heat loss UA*deltaT_log to the ambient.
+
+  Inputs : T_1, p_1, p_2, eta_s, Q_cons, pr_cons, T_4, L_feed, L_return,
+           ks, D_feed, D_return, UA_feed, UA_return, T_amb
+  Outputs: m_dot, p[1..6], T[1..6], Q_hs, W_pump, Q_feed, Q_return, eta
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : TESPy tutorial/basics/district_heating.py, commit 19425523
+           (authors and licence in README.md)
+  Status: verified vs the TESPy tutorial re-run; TESPy uses INCOMP::Water,
+           the real fluid Water here (deviations in README.md)
+=============================================================================}
+
+FUNCTION lmtd_ambient(T_a, T_b, T_amb)
+{LMTD_AMBIENT - logarithmic mean temperature difference of a pipe against the
+ ambient, as in the original (TESPy SimpleHeatExchanger._calculate_lmtd,
+ tespy/components/heat_exchangers/simple.py, commit 19425523): the mean carries
+ the sign of the temperature differences towards the ambient, so a pipe losing
+ heat has deltaT_log > 0.
+  deltaT_log = (T_a - T_b)/ln((T_a - T_amb)/(T_b - T_amb))
+  T_a [degC] or [K] and T_b: fluid temperatures at the pipe ends, T_amb:
+  ambient temperature -> deltaT_log [K].}
+  lmtd_ambient = (T_a - T_b)/ln((T_a - T_amb)/(T_b - T_amb))
+END
+
+"!Inputs (base case = TESPy tutorial sec_5)"
+fluid$ = 'Water'              "liquid water (TESPy: INCOMP::Water, see README.md)"
+T[1] = 90                     "feed temperature, heat source outlet (TESPy c1) [degC]"
+p[1] = 10E5                   "pressure, heat source outlet (10 bar in the original) [Pa]"
+p[2] = 13E5                   "pressure, feed pump outlet (13 bar in the original) [Pa]"
+eta_s = 0.75                  "feed pump isentropic efficiency [-]"
+Q_cons = -10E3                "consumer heat demand, negative = heat delivered (-10 kW) [W]"
+pr_cons = 0.98                "consumer pressure ratio p_out/p_in [-]"
+T[4] = 65                     "return temperature, consumer outlet (TESPy c4) [degC]"
+L_feed = 100                  "feed pipe length [m]"
+L_return = 100                "return pipe length [m]"
+ks = 0.0005                   "pipe wall roughness [m]"
+D_feed = 0.017748832          "feed pipe diameter, designed in the tutorial sec_3 [m]"
+D_return = 0.018551204        "return pipe diameter, designed in the tutorial sec_3 [m]"
+UA_feed = 2.785826            "feed pipe heat transfer coefficient, tutorial sec_4 [W/K]"
+UA_return = 3.0862889         "return pipe heat transfer coefficient, tutorial sec_4 [W/K]"
+T_amb = 0                     "ambient temperature around the pipes [degC]"
+
+"!Fluid properties of the six states of the loop (TESPy connections 1 to 6)"
+{Connection 6 is the outlet of the return pipe, identified by the cycle
+ closer with the inlet of the heat source (TESPy connection 0).}
+DUPLICATE i=1,6
+  h[i] = ENTHALPY(fluid$, T=T[i], P=p[i])    "state enthalpies [J/kg]"
+  v[i] = VOLUME(fluid$, T=T[i], P=p[i])      "specific volumes [m3/kg]"
+  mu[i] = VISCOSITY(fluid$, T=T[i], P=p[i])  "dynamic viscosities [Pa-s]"
+END
+
+"!Heat source: no pressure drop (TESPy SimpleHeatExchanger pr = 1)"
+p[6] = p[1]                      "heat source inlet pressure = outlet pressure [Pa]"
+
+"!Feed pump: isentropic efficiency (TESPy Pump)"
+eta_s*(h[2] - h[1]) = ENTHALPY(fluid$, P=p[2], S=ENTROPY(fluid$, T=T[1], P=p[1])) - h[1]
+
+"!Feed pipe: heat loss to the ambient (TESPy Pipe UA_group) and friction
+ pressure drop (TESPy Pipe darcy_group, Darcy friction factor from the
+ Colebrook-White equation, EES built-in procedure Colebrook)"
+m_dot*(h[3] - h[2]) = -UA_feed*lmtd_ambient(T[2], T[3], T_amb)   "feed pipe heat loss [W]"
+Re_feed = 4*m_dot/(pi*D_feed*(mu[2] + mu[3])/2)                 "Reynolds number [-]"
+CALL Colebrook(Re_feed, ks/D_feed, lambda_feed)                 "Darcy friction factor [-]"
+p[2] - p[3] = 8*m_dot^2*(v[2] + v[3])/2*L_feed*lambda_feed/(pi^2*D_feed^5)  "feed pipe pressure drop [Pa]"
+
+"!Consumer: given heat demand and pressure ratio (TESPy SimpleHeatExchanger)"
+Q_cons = m_dot*(h[4] - h[3])         "consumer heat demand [W]"
+p[4] = pr_cons*p[3]                   "consumer outlet pressure [Pa]"
+
+"!Control valve: isenthalpic, it takes the residual pressure drop (TESPy Valve)"
+h[5] = h[4]                           "valve outlet enthalpy = inlet enthalpy [J/kg]"
+
+"!Return pipe: heat loss and friction pressure drop (TESPy Pipe)"
+m_dot*(h[6] - h[5]) = -UA_return*lmtd_ambient(T[5], T[6], T_amb)   "return pipe heat loss [W]"
+Re_return = 4*m_dot/(pi*D_return*(mu[5] + mu[6])/2)                 "Reynolds number [-]"
+CALL Colebrook(Re_return, ks/D_return, lambda_return)               "Darcy friction factor [-]"
+p[5] - p[6] = 8*m_dot^2*(v[5] + v[6])/2*L_return*lambda_return/(pi^2*D_return^5)  "return pipe pressure drop [Pa]"
+
+"!Results"
+Q_hs = m_dot*(h[1] - h[6])       "heat source duty [W]"
+W_pump = m_dot*(h[2] - h[1])     "feed pump power consumption [W]"
+Q_feed = m_dot*(h[3] - h[2])     "heat loss of the feed pipe [W]"
+Q_return = m_dot*(h[6] - h[5])   "heat loss of the return pipe [W]"
+dp_valve = p[4] - p[5]           "pressure drop across the control valve [Pa]"
+eta = abs(Q_cons)/(Q_hs + W_pump) "loop efficiency, heat delivered per unit of energy input [-]"
+Q_pipes = Q_feed + Q_return      "total heat loss of the two pipes [W]"
+
+"!Residual of the energy balance of the loop (0 when the loop is closed)"
+Q_bal = Q_hs + W_pump + Q_cons + Q_feed + Q_return   "energy balance residual [W]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: heat source outlet = pump inlet, 2: consumer inlet (feed pipe outlet),
+ 3: consumer outlet, 4: heat source inlet = return pipe outlet (TESPy c0/c6).
+ Use the arrays h_dia[i]/P_dia[i] or s_dia[i]/T_dia[i] with the "Overlay
+ array path" option of the CoolSolve Diagram tab.}
+h_dia[1] = h[1]
+P_dia[1] = p[1]
+T_dia[1] = T[1]
+s_dia[1] = ENTROPY(fluid$, T=T[1], P=p[1])
+h_dia[2] = h[3]
+P_dia[2] = p[3]
+T_dia[2] = T[3]
+s_dia[2] = ENTROPY(fluid$, T=T[3], P=p[3])
+h_dia[3] = h[4]
+P_dia[3] = p[4]
+T_dia[3] = T[4]
+s_dia[3] = ENTROPY(fluid$, T=T[4], P=p[4])
+h_dia[4] = h[6]
+P_dia[4] = p[6]
+T_dia[4] = T[6]
+s_dia[4] = ENTROPY(fluid$, T=T[6], P=p[6])

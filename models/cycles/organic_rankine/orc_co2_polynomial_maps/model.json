@@ -5,7 +5,7 @@
   "summary": "Closed supercritical CO2 (R744) vapour power cycle (cooler, compressor, recuperator, solar air-CO2 heater, turbine, three lossy pipes) in which the compressor and the turbine are described by polynomial fits of their performance maps and run at an imposed speed of 75000 rpm; the maps close the cycle (mass flow rate and turbine exhaust pressure are unknowns): 2.27 kg/s of CO2, 94 kW net, 22.1 % cycle efficiency.",
   "kind": "steady",
   "level": 3,
-  "status": "runs",
+  "status": "verified",
   "main_file": "orc_co2_polynomial_maps.eescode",
   "fluids": [
     "R744",
@@ -42,6 +42,8 @@
     "course": "no EES original is known: the example is not in CoolSolve misc/EES_ok.zip and the ULiège collection has no transcritical CO2 exercise"
   },
   "verification": {
+    "summary": "No independent reference exists. The solution reproduces the converged solution stored with the CoolSolve example (140 common variables, 0 differ at rtol=0.001, largest deviation 1.48·10⁻⁷), the cycle energy balance closes to −5.4·10⁻¹⁰ W, and all pressures lie above the CO2 critical pressure.",
+    "checks": ["energy-balance", "order-of-magnitude"],
     "reference": "No independent reference exists (no EES original). Reproduction of the converged solution stored in ~/git/CoolSolve/examples/orc_co2.initials, plus the energy balance of the cycle and physical-range checks (see README)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
@@ -49,7 +51,7 @@
     "notes": "compare_solution.py vs examples/orc_co2.initials: \"140 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 5\" (the 5 extra variables are the post-processing outputs added by the library model). With --rtol 1e-12 the largest relative deviation is 1.48e-07 on NTU (12-digit round-off of the stored values). Cycle energy balance variable balance = -5.4e-10 W on 426 kW. eta_s 0.624, eta_t 0.882, cooler effectiveness 0.626; all pressures above the CO2 critical pressure (7.377 MPa). The shipped .initials is required: without it the 28-variable block is singular (SingularJacobian, block 77)."
   },
   "missing_features": [],
-  "related": ["CSL-0019", "CSL-0036", "CSL-0040", "CSL-0084", "CSL-0104"],
+  "related": ["CSL-0019", "CSL-0036", "CSL-0040", "CSL-0084", "CSL-0104", "CSL-0144"],
   "related_external": [
     "CoolSolve examples/orc_co2.eescode (the example this model was imported from, kept in CoolSolve as a test case, with its orc_co2.initials)",
     "CoolSolve examples/orc_co2.initials_ok_but_linsearchfail, examples/orc_co2.residuals_ok_but_singular_jacobian (solver experiments kept in CoolSolve, not imported)"
@@ -59,6 +61,11 @@
   ],
   "previous_paths": [],
   "history": [
-    {"date": "2026-10-05", "action": "added (roadmap card C-40, batch B-02); import from the CoolSolve example, no EES original; status runs", "by": "opencode worker (muse-spark) for S. Quoilin"}
+    {"date": "2026-10-05", "action": "added (roadmap card C-40, batch B-02); import from the CoolSolve example, no EES original; status runs", "by": "opencode worker (muse-spark) for S. Quoilin"},
+    {
+      "date": "2026-10-14",
+      "action": "status runs → verified (verification field)",
+      "by": "claude-haiku"
+    }
   ]
 }

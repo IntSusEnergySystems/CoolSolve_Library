@@ -51,6 +51,8 @@
     "notes": "ThermoCycle commit b4f16c0b (2019-03-20), MIT (Copyright (c) 2018 Thermodynamics Laboratory, University of Liege). The reciprocating-machine package carries a DTU copyright (2011-2013, J. Wronski) and a Modelica License 2 notice while the repository license is MIT: credit J. Wronski as for any translated model and confirm with him (sources/thermocycle/README.md section 1, open question in the model README). Translation published under the CoolSolve_Library MIT license (decision D3)."
   },
   "verification": {
+    "summary": "Independent Python re-evaluation of the correlations from the source files, with the same CoolProp air properties: 66 common variables, 0 differ (rtol=0.001), largest relative deviation 7.13e-12. The heat-transfer coefficients lie in the order of magnitude reported for in-cylinder convection.",
+    "checks": ["order-of-magnitude"],
     "reference": "independent Python re-evaluation of the fourteen functions directly from the .mo sources, with the same CoolProp 8.0.0 air property inputs; 66 output values",
     "date": "2026-10-06",
     "coolsolve_version": "0.3.0@536d427",

@@ -404,3 +404,8 @@ Kedzierski & Domanski (2001, 1999), Wallis (1969), Collier & Thome (1994).
   calculations.
 - `sources/labothappy` LTP-034 (in-tube heat-transfer correlations): the
   friction factor is an input of Gnielinski and Dittus-Boelter.
+
+- `CSL-0142` *district_heating_loop*: a district-heating loop whose two
+  pipes use the Darcy-Weisbach pressure drop with the built-in `Colebrook`
+  friction factor (the alternative to the `dP_pipe_single_phase` function
+  of this file).

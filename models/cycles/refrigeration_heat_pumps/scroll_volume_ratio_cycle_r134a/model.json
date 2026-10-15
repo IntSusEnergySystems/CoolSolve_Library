@@ -1,0 +1,75 @@
+{
+  "id": "CSL-0148",
+  "name": "scroll_volume_ratio_cycle_r134a",
+  "title": "Scroll refrigeration cycle (R134a): built-in volume ratio vs isentropic efficiency and COP",
+  "summary": "Discussion model of a scroll compressor driving a R134a refrigeration machine: the built-in volume ratio of the machine is the input, the compression is isentropic down to the built-in volume and isochoric up to the discharge pressure; the model returns the pressure ratio the machine develops, its isentropic efficiency and the COP of the cycle.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "scroll_volume_ratio_cycle_r134a.eescode",
+  "fluids": [
+    "R134a"
+  ],
+  "tags": [
+    "refrigeration",
+    "scroll compressor",
+    "built-in volume ratio",
+    "volume ratio",
+    "isentropic efficiency",
+    "COP",
+    "off-design",
+    "parametric study",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "string variables",
+    "arrays",
+    "(s,v) property input pair"
+  ],
+  "stats": {
+    "n_equations": 47,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 02/VL050926_2-3-1 questionsVL051023.EES",
+    "candidate_id": "TM-0042",
+    "authors": [
+      "Vincent Lemort (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "Machines et systèmes thermiques (ULiège), repetition session 2, exercise 3 (header VL050926, 2005-09-26)"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solutions: 3 of the 5 non-cleared variables of TM-0042 agree within 5.8e-4, and at its operating point 17 of the 30 variables stored in duplicate-group copy TM-0043 agree within 9.1e-4 (COP 6.7e-4); 11 are excluded (reference-state offset, EES/CoolProp vapour density). Cycle energy balance closed to 1.7e-13.",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance"
+    ],
+    "reference": "Solution stored in the source file TM-0042 (5 non-cleared variables) and in the duplicate-group copy TM-0043 (VL050926_2-3-1.EES, EES X7.403, 30 variables, T_ev = 0 °C, T_cd = 30 °C, r_v_in = 5), re-run at that operating point",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@2d15382",
+    "max_rel_diff": 0.00091,
+    "notes": "TM-0042: compare_solution.py prints \"5 common variables, 2 differ (rtol=0.001)\"; T_cd and r_v_in identical, P_cd 5.8e-4 (EES X7.458 vs CoolProp saturation pressure), h_ex_cd/h_su_ev excluded (constant 148 139 J/kg reference-state offset, EES h = 0 for saturated liquid at -40 °C). TM-0043: \"30 common variables, 11 differ (rtol=0.001)\"; the 17 others agree within 9.1e-4 (worst P_in, r_p_in), COP 6.7e-4, epsilon_s 4.0e-4; excluded: 8 absolute enthalpies and s_su_cp (offset +148114...148169 J/kg and +795.50 J/kg.K, 3.8e-4 after removing the mean offset), v_su_cp and v_in (1.06e-3, saturated-vapour specific volume at 0 °C: 0.0693087 m^3/kg in CoolProp, 0.0693824 in EES X7.403), T_ev and T_su_cp (both zero). No unit conversion (SI-C-Pa-J). At the default point r_p_in = 5.404 > r_p = 4.698, so the isochoric step is a decompression (w_in_v = -2.79 kJ/kg)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0001",
+    "CSL-0068"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added (roadmap card C-140, batch B-11), status verified against the EES stored solutions",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

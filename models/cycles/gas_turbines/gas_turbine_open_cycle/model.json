@@ -1,0 +1,74 @@
+{
+  "id": "CSL-0141",
+  "name": "gas_turbine_open_cycle",
+  "title": "Open-cycle gas turbine with combustion chamber and generator (TESPy tutorial)",
+  "summary": "Open Brayton cycle of the TESPy basic tutorial: air compressor, diabatic combustion chamber burning a CH4/H2/CO2 fuel (species balances, excess-air ratio and lower-heating-value energy balance, ideal-gas mixture), turbine driving the compressor and a generator; the air flow follows from the imposed turbine inlet temperature, with the tutorial's efficiency/power studies over the turbine inlet temperature and the compressor pressure ratio.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "gas_turbine_open_cycle.eescode",
+  "fluids": [
+    "Ar",
+    "N2",
+    "O2",
+    "CO2",
+    "H2O",
+    "CH4",
+    "H2"
+  ],
+  "tags": [
+    "gas turbine",
+    "Brayton cycle",
+    "open cycle",
+    "combustion chamber",
+    "generator",
+    "species balance",
+    "ideal gas mixture",
+    "parametric study",
+    "tutorial"
+  ],
+  "language_features": [
+    "property functions (ideal-gas species)",
+    "user FUNCTIONs (mixture enthalpy/entropy, lower heating value)",
+    "isoperimetric isentropic relations through property calls"
+  ],
+  "stats": {"n_equations": 79, "largest_block": 13},
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/tutorial/basics/gas_turbine.py",
+    "candidate_id": "TSP-036",
+    "authors": [
+      "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+    ],
+    "url": "https://github.com/oemof/tespy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "TESPy basic tutorial Gas Turbine (commit 19425523)"
+  },
+  "verification": {
+    "summary": "Compared with a run of the TESPy tutorial gas_turbine.py: 37 common variables, max relative deviation 2.1e-03 on W_dot_cp, every other physical result <= 1.3e-03; enthalpy differences agree to 8e-04. The deviation is the gas model (real vs ideal gas).",
+    "checks": ["source-rerun"],
+    "reference": "TESPy tutorial gas_turbine.py run from the local snapshot (commit 19425523) in a throw-away venv (Python 3.12, TESPy 0.11.3.dev0, CoolProp 8.0.0): base case (sec_1 to sec_11) and the two sec_11 parametric sweeps, compared with tools/compare_solution.py",
+    "date": "2026-10-14",
+    "coolsolve_version": "0.3.0@e635c85",
+    "max_rel_diff": 0.0021,
+    "notes": "37 common variables: maximum relative deviation 2.1e-03 on W_dot_cp, every other physical result <= 1.3e-03 (m_1, eta, P_dot_grid, lambda, flue-gas mass fractions, T_2 8.9e-04, T_4 2.4e-04, ti exact); the 3 swept points of each sec_11 study agree to <= 1.3e-03 (efficiency) and 2.4e-03 (power). The absolute mixture enthalpies h_1..h_5 are excluded: TESPy uses the CoolProp HEOS species and their reference states, this model the CoolSolve ideal-gas (NASA) species (constant offset 1.52 MJ/kg on the flue gas); the enthalpy differences agree to 8e-04 (h_2-h_1 403683 vs 403999 J/kg, h_3-h_4 772244 vs 771621 J/kg). The 0.08 % difference is the gas model itself (real gas vs ideal gas), not a transcription error."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0013",
+    "CSL-0050",
+    "CSL-0135",
+    "CSL-0139"
+  ],
+  "related_external": [
+    "TESPy docs/basic_tutorials/gas_turbine.rst (companion documentation of the translated tutorial)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-14", "action": "added (T-TRANSLATE of the TESPy gas-turbine tutorial, roadmap card C-186, batch B-12)", "by": "opencode worker (space-bunny-free) for S. Quoilin"}
+  ]
+}

@@ -52,6 +52,8 @@
     "course": "ULiège model bank, air-to-air glycol recovery loop, 2008-01-10 (references Braun et al. 1989 and Ding et al. 1990)"
   },
   "verification": {
+    "summary": "Not verified: the native file is blocked (CS-GAP-INCLUDE) and the runnable variant does not converge (CS-BUG-NEWTON-CYCLE). Only a pointwise check at the EES stored point was made (largest residual 57 J/kg).",
+    "checks": [],
     "reference": "EES stored solution in the source file (144 decoded variables) against the runnable variant glycol_runaround_recovery_loop_coolsolve.eescode - pointwise only: at the stored point all equations of the model are satisfied (largest residual 57 J/kg on the humid-air enthalpy h_cooling_c_wet, 0.22 %, EES vs CoolProp humid-air formulation; all others <= 0.04), but the variant does not converge in CoolSolve (CS-BUG-NEWTON-CYCLE), so no .sol and no compare_solution.py run yet",
     "date": "2026-10-08",
     "coolsolve_version": "0.3.0@7addbbc",

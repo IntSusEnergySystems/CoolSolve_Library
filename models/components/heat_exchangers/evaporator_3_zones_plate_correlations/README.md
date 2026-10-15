@@ -1,6 +1,6 @@
 # Three-zone plate evaporator with heat-transfer correlations (Thonon/Hsieh)
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ☑️ **Runs** &nbsp;|&nbsp; `CSL-0114`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0114`
 
 Plate heat exchanger evaporating R245fa, heated by thermal oil (a glycol
 polynomial `prop_htf` procedure is also provided, as in the original). The
@@ -24,7 +24,7 @@ from the sibling source file of the same family.
 | **Source** | ULiège Thermodynamics Laboratory — `procedures EES/evaporator 3zones with correlations for PHX.EES` (variant: `procedures EES/PHE auto size SQ101020.EES`) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory); auto-size variant S. Quoilin |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — runs; compared with the EES stored solutions of both source files (see *Verification*) |
+| **CoolSolve** | verified (see *Verification*) |
 
 ## Problem statement
 
@@ -177,6 +177,7 @@ Source files (EES 8.940 / 8.652), collection of S. Quoilin:
 
 ## Conversion log
 
+- **2026-10-14 — status `runs` merged into `verified`**: verification field added (no equation changed).
 - **2026-10-07 — import** (`tools/ees_extract.py`): unit system already
   SI-°C-Pa-J in both files (no manual conversion); the EES licence tag was
   removed; comments translated to English where needed (the oil block of

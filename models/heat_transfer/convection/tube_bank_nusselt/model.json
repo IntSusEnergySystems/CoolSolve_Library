@@ -49,6 +49,8 @@
     "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/conv_tube_bank.py, MIT license, Copyright (C) 2016 Caleb Bell. The scientific basis of each correlation is the original paper, data sheet or book cited in its function comment block (Zukauskas 1972, Bejan 2013, ESDU 73031/86022 as given in Hewitt, Shires & Bott 1994, Schlunder 1987 / Baehr & Stephan 2013). Translation published under the CoolSolve_Library MIT license (decision D3). Nu_Grimison_tube_bank, the seventh function of the ht family, is not translated: ht evaluates the tabulated coefficients through a bivariate least-squares spline fitted to the digitised Grimison tables, which cannot be read inside a FUNCTION body (CS-GAP-LOOKUP-PROC)."
   },
   "verification": {
+    "summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (case A) plus values computed with the same ht functions (case B): 20 common variables, 0 differ (rtol=0.001), largest relative deviation 2.8e-12.",
+    "checks": ["source-rerun"],
     "reference": "doctest values of ht 1.2.0 ht/conv_tube_bank.py (case A) and additional values computed with the same ht functions in a throw-away virtualenv (case B); 20 output values in total",
     "date": "2026-10-06",
     "coolsolve_version": "0.3.0@536d427",

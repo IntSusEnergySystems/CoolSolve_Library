@@ -58,6 +58,8 @@
     "course": "ULiège model bank 2008-02-12, Heat and Cool Production Systems (reference simulation model)"
   },
   "verification": {
+    "summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-IF-NO-CONSTANT): compared with the EES stored solution, 43 common variables, 0 differ at rtol=0.001, max 2.25e-4 on Q_dot_u_FL (CoolProp vs EES mean specific heats). Stale stored module values were skipped and hand-checked.",
+    "checks": ["ees-stored-solution"],
     "reference": "EES stored solution of the source file (last run: ON/OFF regime at t_w_ex_set = 71 °C); it is the runnable variant boiler_modulating_burner_refsim_coolsolve that is verified",
     "date": "2026-10-09",
     "coolsolve_version": "0.3.0@7addbbc",

@@ -48,6 +48,8 @@
     "course": "Machines et systèmes thermiques (ULiège), repetition TP 08, exercises 1-5"
   },
   "verification": {
+    "summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-INTERP-EES): compared with the EES stored solution, 97 common variables, 6 differ at rtol=0.001, max 9.4e-3 on cp_f (ideal-gas vs real-fluid heat capacity), all deviations explained. The charge mass balance and chamber energy balance are closed.",
+    "checks": ["ees-stored-solution", "energy-balance"],
     "reference": "EES stored solution of the original (97 common variables; the 98th, m, is a phantom variable of the original with an empty stored value), compared for the runnable _coolsolve variant with tools/compare_solution.py",
     "date": "2026-10-08",
     "coolsolve_version": "0.3.0@7addbbc",

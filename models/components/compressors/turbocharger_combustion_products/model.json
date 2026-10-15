@@ -55,6 +55,8 @@
     "course": "MCI (ULiège), TP4 exercise 1: supercharging (formulation simplifiée, PNG 24/03/2019)"
   },
   "verification": {
+    "summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-SUM-INDEXED, CS-GAP-MOLARMASS-ELEMENT and CS-GAP-INCOMPRESSIBLE): compared with the EES stored solution, 82 common variables, 52 pass at rtol = 0.001, maximum 4.5e-3 on Q_dot_2; deviations explained by backend offsets and 8 stale stored values.",
+    "checks": ["ees-stored-solution"],
     "reference": "EES stored solution of the source file (last consistent run of 109 stored values), compared with the runnable _coolsolve variant: 52 variables agree within 4.5e-3 relative (max, Q_dot_2; most within 1e-3). 10 absolute-enthalpy/entropy variables carry backend reference offsets (`Air` h and s, `s_p_ref`: water liquid at 25 C in CoolSolve; differences agree); the entropies of the combustion products agree since CoolSolve gives the ideal gases absolute entropies; 8 stored values are stale (h_p_* constant offset -82.87 MJ/kg, s_p_ex_e_s/s_p_su_e off-scale, p_su_e/r_p_e inconsistent with the stored w_e_s) - documented in the README.",
     "date": "2026-10-08",
     "coolsolve_version": "0.3.0@7addbbc",

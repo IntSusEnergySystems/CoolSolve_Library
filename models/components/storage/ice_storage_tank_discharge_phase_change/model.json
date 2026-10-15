@@ -46,6 +46,8 @@
     "course": "Machines et systèmes thermiques (ULiège), repetition 6, exercise 4"
   },
   "verification": {
+    "summary": "Not the native file (blocked by `CS-BUG-WATER-NEAR-FREEZING`): the runnable variant re-run with the inputs of sibling exercise TM-0095 agrees with its EES stored solution (19 common variables, 18 within 6.4·10⁻⁸). For the shipped inputs the trajectory matches the closed-form solution of the two phases.",
+    "checks": ["ees-stored-solution", "analytical"],
     "reference": "EES stored solution of the sibling copy of the same exercise (thermo_models TM-0095, MSTH051024exercice4.EES: same physics, AU = 1 MW/K, P = 1 bar, complete 27-value stored solution); the runnable variant was re-run with those inputs and compared; closed-form check of the two discharge phases for the shipped inputs (the stored solution of TM-0104 itself is cleared: 16/40 values, inputs and constants only)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",

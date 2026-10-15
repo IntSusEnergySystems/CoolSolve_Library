@@ -52,6 +52,8 @@
     "course": "ThermoCycle Modelica library, ULiège Thermodynamics Laboratory; fits of the ULiège ORC test rigs"
   },
   "verification": {
+    "summary": "Independent Python/CoolProp re-evaluation of the eleven polynomials and the ORC demo: 62 common variables, 0 differ (rtol=0.001), maximum relative difference 9.74e-11. Energy-balance closure checked (5.5e-12 W); no published reference values exist.",
+    "checks": ["energy-balance"],
     "reference": "independent Python re-evaluation of the eleven polynomials written from the .mo sources (log = natural logarithm in Modelica) with CoolProp 8.0.0 states for the ORC demo, script kept in the throw-away work folder and deleted; energy-balance closure",
     "date": "2026-10-06",
     "coolsolve_version": "0.3.0@536d427",

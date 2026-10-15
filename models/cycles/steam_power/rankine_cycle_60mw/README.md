@@ -180,3 +180,7 @@ collection of S. Quoilin:
 
 - `CSL-0052` *combined_gas_steam_cycle*: the Rankine cycle of the same
   repetition used as the bottoming cycle of a combined gas-steam cycle.
+
+- `CSL-0140` *rankine_cycle_part_load*: Rankine cycle with a cooling-water
+  condenser, a generator/motor power chain and a part-load point
+  (Stodola cone law, constant UA), translated from the TESPy tutorial.

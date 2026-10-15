@@ -43,6 +43,8 @@
     "course": ""
   },
   "verification": {
+    "summary": "The LaboThapPy component PumpCurveSimilarity was re-run in all three modes: all common variables agree within 1.13e-09 with a same-backend reference, and within 7.2e-03 (W_dot_shaft) of the default bicubic run. The affinity laws are exact (to 4e-10).",
+    "checks": ["source-rerun", "analytical"],
     "reference": "LaboThapPy component PumpCurveSimilarity (commit f03f7f47) re-run in a throw-away venv (pip install of the local clone, Python 3.12, CoolProp 8.0.0, SciPy 1.18) on the CO2 case of pump_curve_similarity_example.py: mode P_N with the example inputs, modes P_M and M_N at the operating point found by P_N; plus an affinity-law self-check at N_rot_rated/2 and 2*N_rot_rated",
     "date": "2026-10-08",
     "coolsolve_version": "0.3.0@7addbbc",

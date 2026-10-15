@@ -5,7 +5,7 @@
   "summary": "Two rigid vessels of 30 kg of air at 900 K and 300 K are coupled by a heat engine; the reversible (maximum work) end state is computed from the entropy balance of the extended system: both vessels end at the geometric mean temperature 519.6 K and the engine delivers 3.60 MJ.",
   "kind": "steady",
   "level": 1,
-  "status": "runs",
+  "status": "verified",
   "main_file": "two_tanks_max_work_air.eescode",
   "fluids": [
     "Air"
@@ -43,6 +43,8 @@
     "course": "Thermodynamique appliquée (ULiège, MECA0002), repetition session 10 (exergy), exercise 3 (2022-2023)"
   },
   "verification": {
+    "summary": "Compared with the closed-form solution of the same entropy balance (the stored EES solution is unusable): 11 common variables, 0 differ (rtol=0.001), largest deviation 1.04e-15. The efficiency also equals the Carnot ratio of the log-mean temperatures.",
+    "checks": ["analytical"],
     "reference": "Closed-form solution of the same entropy balance, computed by hand and compared with compare_solution.py (reference/analytic_reference.csv of the work folder): T_2 = sqrt(T_1a*T_1b) and W = m_air*cv_air*(sqrt(T_1a)-sqrt(T_1b))^2; the ratio eta_max also reproduces the Carnot ratio of the log-mean temperatures 1 - T_c,lm/T_h,lm. The solution stored by EES in the source file cannot be used as a reference (the file was never solved: every variable record holds its EES initial value 1), and the course folder holds no Python/CoolProp solution of this exercise (see README, Verification).",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
@@ -64,6 +66,11 @@
       "date": "2026-10-05",
       "action": "added (card C-61, roadmap batch B-06; representative TM-0390 of the 2-file duplicate group DG-0094)",
       "by": "Claude worker agent for S. Quoilin"
+    },
+    {
+      "date": "2026-10-14",
+      "action": "status runs → verified (verification field)",
+      "by": "claude-haiku"
     }
   ]
 }

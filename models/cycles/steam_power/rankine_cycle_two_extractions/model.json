@@ -1,0 +1,73 @@
+{
+  "id": "CSL-0143",
+  "name": "rankine_cycle_two_extractions",
+  "title": "Regenerative Rankine cycle with two extractions and closed feedwater heaters (TESPy)",
+  "summary": "HP/MP/LP steam plant of the TESPy optimisation tutorial: 200 kg/s live steam at 100 bar / 650 °C, two extractions (20 / 3 bar) feeding two closed feedwater heaters with drain pumps and a desuperheater, condenser with 5 K terminal temperature difference; design point with a documented 2-D sweep replacing the pymoo optimisation.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "rankine_cycle_two_extractions.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "rankine",
+    "regenerative",
+    "closed feedwater heaters",
+    "drain pumps",
+    "desuperheater",
+    "two extractions",
+    "TESPy",
+    "sweep"
+  ],
+  "language_features": [
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 154,
+    "largest_block": 16
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/tutorial/advanced/optimization_example.py",
+    "candidate_id": "TSP-040",
+    "authors": [
+      "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+    ],
+    "url": "https://github.com/oemof/tespy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "TESPy advanced tutorial 'optimization_example' (SamplePlant, commit 19425523)"
+  },
+  "verification": {
+    "summary": "The unmodified TESPy SamplePlant (base model of tutorial/advanced/optimization_example.py) was re-run in a throw-away venv at the design extraction pressures; 38 common variables agree to <= 1.3e-9 relative except the cooling-water flow (2.0e-3, INCOMP::Water vs Water liquid enthalpy). A sweep end point (10/2 bar) matches to 3e-11. Energy balances close to <= 7e-7.",
+    "checks": [
+      "source-rerun",
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "TESPy SamplePlant design solve (local snapshot ~/git/tespy, commit 19425523, CoolProp 8.0.0), print_results + full-precision results dump",
+    "date": "2026-10-14",
+    "coolsolve_version": "0.3.0@e635c85",
+    "max_rel_diff": 0.002,
+    "notes": "max_rel_diff 2.0e-3 is the cooling-water flow (INCOMP::Water vs Water, explained in README); all steam-cycle variables <= 1.3e-9. Sweep end point p2=10/p4=2 bar: eta_th agrees to 3e-11."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0029",
+    "CSL-0013"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-14",
+      "action": "added (T-TRANSLATE of the TESPy optimization_example base plant, card C-188)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

@@ -52,6 +52,8 @@
     "course": "ULiège model bank (Laborelec toolkit lineage), cooling coil reference simulation model, 2008-01-16; published as Lemort, Cuevas, Lebrun, Teodorese, ASHRAE Transactions 114(1), 2008"
   },
   "verification": {
+    "summary": "Concerns the runnable variant (native file blocked by CS-GAP-INCLUDE and CS-GAP-IFSTR). Against the 87 variables decoded from the EES file: 74 common variables, 21 differ above rtol = 0.001, maximum 7.81e-01 from one stale stored value; the other 19 deviations (1.2e-03 to 4.8e-03) are humid-air property differences.",
+    "checks": ["ees-stored-solution"],
     "reference": "EES stored solution in the source file (87 decoded variables) against the runnable variant cooling_coil_refsim_coolsolve.eescode; the native file cannot be solved (CS-GAP-NAME-PIPE, CS-GAP-INCLUDE, CS-GAP-IF5, CS-GAP-IFSTR)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",

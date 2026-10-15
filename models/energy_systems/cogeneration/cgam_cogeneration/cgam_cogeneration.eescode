@@ -1,0 +1,168 @@
+{=============================================================================
+  CGAM cogeneration benchmark: gas turbine with air preheater and HRSG
+  CoolSolve Library model CSL-0146
+-----------------------------------------------------------------------------
+  Translation of the CGAM problem (Valero et al. 1994) as built in TESPy
+  (tests/test_models/test_CGAM_model.py, commit 19425523): a gas turbine
+  (compressor pr=10, eta_s=0.86; diabatic combustion chamber eta=0.98,
+  pr=0.95, CH4; turbine eta_s=0.86, TIT 1520 K) with an air preheater
+  (air to 850 K) and an HRSG (economiser, drum, evaporator) delivering
+  14 kg/s of saturated steam at 20 bar; net power 30 MW. Air and flue gas
+  are ideal-gas mixtures (Dalton, formation enthalpies included), the
+  water/steam side uses the Water real fluid. The fuel flow follows from
+  the turbine-inlet temperature, the air flow from the net power.
+  Verified against the TESPy run and the Ebsilon table of the source test
+  (< 0.5 %) - see README.md. Units: SI, temperatures in degC, pressures
+  in Pa, energies in J.
+  Source: TESPy (F. Witte et al., MIT); original benchmark: A. Valero et al.,
+  Energy 19(3) 1994 - see README.md
+=============================================================================}
+
+"!Inputs: gas turbine (values of the source test, SI)"
+p1 = 1.013E5            "compressor inlet pressure (state 1) [Pa] (1.013 bar)"
+T1 = 25                 "compressor inlet temperature (state 1) [C] (298.15 K)"
+pr_cmp = 10             "compressor pressure ratio (TESPy pr) [-]"
+eta_s_cmp = 0.86        "compressor isentropic efficiency [-]"
+T3 = 576.85             "air preheater outlet temperature (state 3) [C] (850 K in the source)"
+pr_aph_air = 0.95       "air-side pressure ratio of the air preheater (2 to 3) [-]"
+pr_aph_gas = 0.97       "gas-side pressure ratio of the air preheater (5 to 6) [-]"
+pr_cc = 0.95            "combustion chamber pressure ratio (TESPy pr) [-]"
+eta_cc = 0.98           "combustion chamber heat-dissipation ratio relative to the thermal input (TESPy eta) [-]"
+T4 = 1246.85            "turbine inlet temperature (state 4, TIT) [C] (1520 K in the source)"
+eta_s_tur = 0.86        "turbine isentropic efficiency [-]"
+p10 = 12E5              "fuel supply pressure (state 10) [Pa] (12 bar)"
+T10 = 25                "fuel supply temperature (state 10) [C] (298.15 K)"
+p7 = 1.013E5            "chimney pressure (state 7) [Pa] (1.013 bar)"
+pr_eva_gas = 0.95^0.5   "gas-side pressure ratio of the evaporator (6 to 6p) [-]"
+pr_eco_gas = 0.95^0.5   "gas-side pressure ratio of the economiser (6p to 7) [-]"
+W_net = 30E6            "net power output (TESPy power connection e3) [W]"
+
+"!Inputs: HRSG water/steam side"
+m8 = 14                 "feedwater mass flow (state 8) [kg/s]"
+p_steam = 20E5          "steam pressure (states 8, 8p, 9, 11, 11p) [Pa] (20 bar)"
+T8 = 25                 "feedwater temperature (state 8) [C] (298.15 K)"
+td_bubble = 15          "economiser outlet subcooling below saturation (TESPy td_bubble) [K]"
+x11p = 0.5              "evaporator outlet quality, state 11p [-]"
+
+"!Air composition (molar fractions of the source test; CH4 = 0)"
+y_air_N2 = 0.7748       "molar fraction of N2 in the air [-]"
+y_air_O2 = 0.2059       "molar fraction of O2 in the air [-]"
+y_air_CO2 = 0.0003      "molar fraction of CO2 in the air [-]"
+y_air_H2O = 0.019       "molar fraction of H2O in the air [-]"
+
+"!Molar masses and air mass fractions"
+MM_N2 = MolarMass(N2)   "molar mass of N2 [kg/kmol]"
+MM_O2 = MolarMass(O2)   "molar mass of O2 [kg/kmol]"
+MM_CO2 = MolarMass(CO2) "molar mass of CO2 [kg/kmol]"
+MM_H2O = MolarMass(H2O) "molar mass of H2O [kg/kmol]"
+MM_CH4 = MolarMass(CH4) "molar mass of CH4 [kg/kmol]"
+MM_air = y_air_N2*MM_N2 + y_air_O2*MM_O2 + y_air_CO2*MM_CO2 + y_air_H2O*MM_H2O  "mean molar mass of the air [kg/kmol]"
+w_air_N2 = y_air_N2*MM_N2/MM_air       "mass fraction of N2 in the air [-]"
+w_air_O2 = y_air_O2*MM_O2/MM_air       "mass fraction of O2 in the air [-]"
+w_air_CO2 = y_air_CO2*MM_CO2/MM_air    "mass fraction of CO2 in the air [-]"
+w_air_H2O = y_air_H2O*MM_H2O/MM_air    "mass fraction of H2O in the air [-]"
+
+"!State 1 (compressor inlet) and compressor 1 -> 2"
+h1 = w_air_N2*enthalpy(N2,T=T1) + w_air_O2*enthalpy(O2,T=T1) + w_air_CO2*enthalpy(CO2,T=T1) + w_air_H2O*enthalpy(H2O,T=T1)  "mixture enthalpy of the air [J/kg]"
+s1 = w_air_N2*entropy(N2,T=T1,P=p1*y_air_N2) + w_air_O2*entropy(O2,T=T1,P=p1*y_air_O2) + w_air_CO2*entropy(CO2,T=T1,P=p1*y_air_CO2) + w_air_H2O*entropy(H2O,T=T1,P=p1*y_air_H2O)  "mixture entropy, species at their partial pressures (Dalton, as TESPy) [J/kg-K]"
+p2 = pr_cmp*p1          "compressor outlet pressure (state 2) [Pa]"
+w_air_N2*entropy(N2,T=T2s,P=p2*y_air_N2) + w_air_O2*entropy(O2,T=T2s,P=p2*y_air_O2) + w_air_CO2*entropy(CO2,T=T2s,P=p2*y_air_CO2) + w_air_H2O*entropy(H2O,T=T2s,P=p2*y_air_H2O) = s1  "isentropic outlet state 2s: s = s1"
+h2s = w_air_N2*enthalpy(N2,T=T2s) + w_air_O2*enthalpy(O2,T=T2s) + w_air_CO2*enthalpy(CO2,T=T2s) + w_air_H2O*enthalpy(H2O,T=T2s)  "isentropic outlet enthalpy [J/kg]"
+h2 = h1 + (h2s - h1)/eta_s_cmp  "compressor outlet enthalpy (TESPy Compressor eta_s) [J/kg]"
+h2 = w_air_N2*enthalpy(N2,T=T2) + w_air_O2*enthalpy(O2,T=T2) + w_air_CO2*enthalpy(CO2,T=T2) + w_air_H2O*enthalpy(H2O,T=T2)  "defines T2 [C]"
+W_comp = m_air*(h2 - h1)  "compressor power input [W]"
+
+"!Air preheater, air side 2 -> 3"
+p3 = pr_aph_air*p2      "preheated air pressure (state 3) [Pa]"
+h3 = w_air_N2*enthalpy(N2,T=T3) + w_air_O2*enthalpy(O2,T=T3) + w_air_CO2*enthalpy(CO2,T=T3) + w_air_H2O*enthalpy(H2O,T=T3)  "mixture enthalpy at 850 K [J/kg]"
+
+"!Combustion chamber 3 (+ 10) -> 4: species balances and energy balance
+   (TESPy DiabaticCombustionChamber: complete combustion, lambda > 1)"
+m_fg = m_air + m_fuel   "flue-gas mass flow (state 4) [kg/s]"
+n_fuel = m_fuel/MM_CH4  "molar flow of CH4 [kmol/s]"
+n_N2_4 = m_air*w_air_N2/MM_N2                       "N2 passes through [kmol/s]"
+n_O2_4 = m_air*w_air_O2/MM_O2 - 2*n_fuel            "O2 consumed by CH4 + 2 O2 -> CO2 + 2 H2O [kmol/s]"
+n_CO2_4 = m_air*w_air_CO2/MM_CO2 + n_fuel           "CO2 formed from the fuel C [kmol/s]"
+n_H2O_4 = m_air*w_air_H2O/MM_H2O + 2*n_fuel         "H2O formed from the fuel H [kmol/s]"
+n_4 = n_N2_4 + n_O2_4 + n_CO2_4 + n_H2O_4           "total molar flow of the flue gas [kmol/s]"
+m_N2_fg = n_N2_4*MM_N2    "N2 mass flow in the flue gas [kg/s]"
+m_O2_fg = n_O2_4*MM_O2    "O2 mass flow in the flue gas (excess air) [kg/s]"
+m_CO2_fg = n_CO2_4*MM_CO2 "CO2 mass flow in the flue gas [kg/s]"
+m_H2O_fg = n_H2O_4*MM_H2O "H2O mass flow in the flue gas [kg/s]"
+w4_N2 = m_N2_fg/m_fg    "mass fraction of N2 in the flue gas [-]"
+w4_O2 = m_O2_fg/m_fg    "mass fraction of O2 in the flue gas [-]"
+w4_CO2 = m_CO2_fg/m_fg  "mass fraction of CO2 in the flue gas [-]"
+w4_H2O = m_H2O_fg/m_fg  "mass fraction of H2O in the flue gas [-]"
+y4_N2 = n_N2_4/n_4      "molar fraction of N2 in the flue gas [-]"
+y4_O2 = n_O2_4/n_4      "molar fraction of O2 in the flue gas [-]"
+y4_CO2 = n_CO2_4/n_4    "molar fraction of CO2 in the flue gas [-]"
+y4_H2O = n_H2O_4/n_4    "molar fraction of H2O in the flue gas [-]"
+p4 = pr_cc*p3           "combustion chamber outlet pressure (state 4) [Pa]"
+h4 = w4_N2*enthalpy(N2,T=T4) + w4_O2*enthalpy(O2,T=T4) + w4_CO2*enthalpy(CO2,T=T4) + w4_H2O*enthalpy(H2O,T=T4)  "mixture enthalpy at the TIT [J/kg]"
+h10 = enthalpy(CH4,T=T10)  "fuel enthalpy (CH4 ideal gas, formation enthalpy included) [J/kg]"
+T_ref = 25              "reference temperature of the heating value [C] (298.15 K in the source)"
+LHV_CH4 = (MM_CH4*enthalpy(CH4,T=T_ref) + 2*MM_O2*enthalpy(O2,T=T_ref) - MM_CO2*enthalpy(CO2,T=T_ref) - 2*MM_H2O*enthalpy(H2O,T=T_ref))/MM_CH4  "lower heating value of CH4 from the formation enthalpies, as in TESPy CombustionChamber.calc_lhv (molar masses convert the species enthalpies to a molar basis) [J/kg]"
+m_air*h3 + m_fuel*h10 = m_fg*h4 + (1 - eta_cc)*m_fuel*LHV_CH4  "energy balance: heat loss = (1 - eta)*thermal input [W]"
+
+"!Gas turbine 4 -> 5 (eta_s; outlet pressure follows from the exhaust chain)"
+p5 = p7/(pr_aph_gas*pr_eva_gas*pr_eco_gas)  "turbine outlet pressure (state 5) [Pa]"
+s4 = w4_N2*entropy(N2,T=T4,P=p4*y4_N2) + w4_O2*entropy(O2,T=T4,P=p4*y4_O2) + w4_CO2*entropy(CO2,T=T4,P=p4*y4_CO2) + w4_H2O*entropy(H2O,T=T4,P=p4*y4_H2O)  "mixture entropy at state 4 [J/kg-K]"
+w4_N2*entropy(N2,T=T5s,P=p5*y4_N2) + w4_O2*entropy(O2,T=T5s,P=p5*y4_O2) + w4_CO2*entropy(CO2,T=T5s,P=p5*y4_CO2) + w4_H2O*entropy(H2O,T=T5s,P=p5*y4_H2O) = s4  "isentropic outlet state 5s: s = s4"
+h5s = w4_N2*enthalpy(N2,T=T5s) + w4_O2*enthalpy(O2,T=T5s) + w4_CO2*enthalpy(CO2,T=T5s) + w4_H2O*enthalpy(H2O,T=T5s)  "isentropic outlet enthalpy [J/kg]"
+h5 = h4 - eta_s_tur*(h4 - h5s)  "turbine outlet enthalpy (TESPy Turbine eta_s) [J/kg]"
+h5 = w4_N2*enthalpy(N2,T=T5) + w4_O2*enthalpy(O2,T=T5) + w4_CO2*enthalpy(CO2,T=T5) + w4_H2O*enthalpy(H2O,T=T5)  "defines T5 [C]"
+W_turb = m_fg*(h4 - h5)  "turbine power output [W]"
+W_turb - W_comp = W_net  "net power (shaft bus to grid, TESPy e3) [W]"
+
+"!Air preheater, gas side 5 -> 6"
+p6 = pr_aph_gas*p5      "gas pressure after the preheater (state 6) [Pa]"
+m_air*(h3 - h2) = m_fg*(h5 - h6)  "air preheater energy balance (TESPy HeatExchanger) [W]"
+h6 = w4_N2*enthalpy(N2,T=T6) + w4_O2*enthalpy(O2,T=T6) + w4_CO2*enthalpy(CO2,T=T6) + w4_H2O*enthalpy(H2O,T=T6)  "defines T6 [C]"
+
+"!HRSG: drum and evaporator (gas 6 -> 6p, water 11 -> 11p, drum out 9)
+   (the chimney pressure p7 is the input; the exhaust pressure chain above
+   already fixes p5, and p6, p6p follow from the component pressure ratios)"
+p6p = pr_eva_gas*p6     "gas pressure after the evaporator (state 6p) [Pa]"
+Ts = T_SAT(Water,P=p_steam)   "saturation temperature at 20 bar [C]"
+h11 = enthalpy(Water,P=p_steam,x=0)    "drum liquid outlet, saturated (state 11) [J/kg]"
+h11p = enthalpy(Water,P=p_steam,x=x11p)  "evaporator outlet, wet steam (state 11p) [J/kg]"
+h9 = enthalpy(Water,P=p_steam,x=1)     "live steam, saturated vapour (state 9) [J/kg]"
+m9 = m8                 "drum mass balance: live-steam flow = feedwater flow [kg/s]"
+m11*(h11p - h11) = m8*(h9 - h8p)  "drum energy balance = evaporator duty [W]"
+m_fg*(h6 - h6p) = m8*(h9 - h8p)   "evaporator energy balance [W]"
+h6p = w4_N2*enthalpy(N2,T=T6p) + w4_O2*enthalpy(O2,T=T6p) + w4_CO2*enthalpy(CO2,T=T6p) + w4_H2O*enthalpy(H2O,T=T6p)  "defines T6p [C]"
+
+"!HRSG: economiser (gas 6p -> 7, water 8 -> 8p)
+   (p7 = pr_eco_gas*p6p closes the exhaust pressure chain; with p7 given it is
+   already implied by the p5 equation above and is not repeated)"
+T8p = Ts - td_bubble    "economiser outlet temperature (state 8p) [C]"
+h8 = enthalpy(Water,T=T8,P=p_steam)    "feedwater enthalpy (state 8) [J/kg]"
+h8p = enthalpy(Water,T=T8p,P=p_steam)  "economiser outlet enthalpy (state 8p) [J/kg]"
+m_fg*(h6p - h7) = m8*(h8p - h8)   "economiser energy balance [W]"
+h7 = w4_N2*enthalpy(N2,T=T7) + w4_O2*enthalpy(O2,T=T7) + w4_CO2*enthalpy(CO2,T=T7) + w4_H2O*enthalpy(H2O,T=T7)  "defines T7 [C]"
+
+"!State-point conversion for the comparison with the source results (post-processing)
+   (mixture entropies of the remaining states, for the entropy comparison only)"
+s2 = w_air_N2*entropy(N2,T=T2,P=p2*y_air_N2) + w_air_O2*entropy(O2,T=T2,P=p2*y_air_O2) + w_air_CO2*entropy(CO2,T=T2,P=p2*y_air_CO2) + w_air_H2O*entropy(H2O,T=T2,P=p2*y_air_H2O)  "mixture entropy at state 2 [J/kg-K]"
+s3 = w_air_N2*entropy(N2,T=T3,P=p3*y_air_N2) + w_air_O2*entropy(O2,T=T3,P=p3*y_air_O2) + w_air_CO2*entropy(CO2,T=T3,P=p3*y_air_CO2) + w_air_H2O*entropy(H2O,T=T3,P=p3*y_air_H2O)  "mixture entropy at state 3 [J/kg-K]"
+s5 = w4_N2*entropy(N2,T=T5,P=p5*y4_N2) + w4_O2*entropy(O2,T=T5,P=p5*y4_O2) + w4_CO2*entropy(CO2,T=T5,P=p5*y4_CO2) + w4_H2O*entropy(H2O,T=T5,P=p5*y4_H2O)  "mixture entropy at state 5 [J/kg-K]"
+s6 = w4_N2*entropy(N2,T=T6,P=p6*y4_N2) + w4_O2*entropy(O2,T=T6,P=p6*y4_O2) + w4_CO2*entropy(CO2,T=T6,P=p6*y4_CO2) + w4_H2O*entropy(H2O,T=T6,P=p6*y4_H2O)  "mixture entropy at state 6 [J/kg-K]"
+s6p = w4_N2*entropy(N2,T=T6p,P=p6p*y4_N2) + w4_O2*entropy(O2,T=T6p,P=p6p*y4_O2) + w4_CO2*entropy(CO2,T=T6p,P=p6p*y4_CO2) + w4_H2O*entropy(H2O,T=T6p,P=p6p*y4_H2O)  "mixture entropy at state 6p [J/kg-K]"
+s7 = w4_N2*entropy(N2,T=T7,P=p7*y4_N2) + w4_O2*entropy(O2,T=T7,P=p7*y4_O2) + w4_CO2*entropy(CO2,T=T7,P=p7*y4_CO2) + w4_H2O*entropy(H2O,T=T7,P=p7*y4_H2O)  "mixture entropy at state 7 [J/kg-K]"
+m8p = m8                "economiser mass balance (state 8p) [kg/s]"
+MM_fg = m_fg/n_4         "mean molar mass of the flue gas [kg/kmol]"
+T1_K = T1 + 273.15      "state 1 temperature [K] (298.15 K)"
+T2_K = T2 + 273.15      "state 2 temperature [K]"
+T3_K = T3 + 273.15      "state 3 temperature [K] (850 K)"
+T4_K = T4 + 273.15      "state 4 temperature [K] (1520 K)"
+T5_K = T5 + 273.15      "state 5 temperature [K]"
+T6_K = T6 + 273.15      "state 6 temperature [K]"
+T6p_K = T6p + 273.15    "state 6p temperature [K]"
+T7_K = T7 + 273.15      "state 7 temperature [K]"
+T8p_K = T8p + 273.15    "state 8p temperature [K]"
+T9_K = Ts + 273.15      "state 9 temperature [K]"
+T10_K = T10 + 273.15    "state 10 temperature [K] (298.15 K)"
+y1_N2 = y_air_N2        "molar fraction of N2 at state 1 [-]"
+y1_O2 = y_air_O2        "molar fraction of O2 at state 1 [-]"
+y1_CO2 = y_air_CO2      "molar fraction of CO2 at state 1 [-]"
+y1_H2O = y_air_H2O      "molar fraction of H2O at state 1 [-]"

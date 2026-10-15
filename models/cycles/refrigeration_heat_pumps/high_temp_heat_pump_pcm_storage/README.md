@@ -1,6 +1,6 @@
 # High-temperature heat pump with PCM storage (Zorlu geothermal plant case study)
 
-🟠 **Level 3 · Advanced** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ☑️ **Runs** &nbsp;|&nbsp; `CSL-0039`
+🟠 **Level 3 · Advanced** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0039`
 
 High-temperature vapour-compression heat pump (cyclopentane) in a case study for
 the Zorlu geothermal plant: a geothermal brine (water, 113 °C supply, pumped
@@ -20,7 +20,7 @@ subcooling zones selected by nested IF-THEN-ELSE in two PROCEDUREs.
 | **Source** | CoolSolve example `zorlu_heat_pump.eescode` (CSX-047), after an untranslated EES model of the Zorlu plant; no EES original is available |
 | **Authors** | TBD (author of the original EES model, not identified); S. Quoilin (CoolSolve translation) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — runs (with the shipped `.initials`); no independent reference available, see *Verification* |
+| **CoolSolve** | verified (see *Verification*) |
 
 ## Problem statement
 
@@ -112,7 +112,8 @@ Sanity checks: cycle energy balance `balance` = 0 W (to machine precision) on
 `DT_min_ev` = 3 K); `Q_dot_sc_ev` ≈ 0 (the evaporator has no subcooling zone,
 as expected for a valve inlet in the two-phase region).
 
-Status is `runs` (no independent reference), not `verified`.
+There is no independent reference (the status was `runs` before it was merged into
+`verified` on 2026-10-14); the `verification` field of `model.json` records the checks above.
 
 ## Source and attribution
 
@@ -130,6 +131,7 @@ the same exercise, so no cross-source triage was needed.
 
 ## Conversion log
 
+- **2026-10-14 — status `runs` merged into `verified`**: verification field added (no equation changed).
 - **2026-10-05 — import** (from the CoolSolve example): the example was
   already in SI-°C-Pa-J; the equations were kept unchanged. The example's
   "translated from EES" banner and its solver note were replaced by the

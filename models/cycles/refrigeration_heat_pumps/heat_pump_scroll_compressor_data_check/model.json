@@ -44,6 +44,8 @@
     "course": "ULiège, \"Machines et systèmes thermiques\", repetition session 8, exercise 5 (header VL050415, 2005-04-15)"
   },
   "verification": {
+    "summary": "Compared with the solution stored in the original EES file (read from its solution report): 30 common variables, 1 differ (rtol=0.001), P_4 at 3.6e-3 (different property inversion inside the saturation dome); the 29 others agree within 9.7e-4.",
+    "checks": ["ees-stored-solution"],
     "reference": "Solution stored in the original EES file (CoolSolve misc/EES_ok.zip, EES_ok/refrigeration3.EES, EES X7.210), read from its solution report EES_ok/refrigeration3.tex",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
@@ -56,7 +58,8 @@
     "CSL-0015",
     "CSL-0025",
     "CSL-0061",
-    "CSL-0078"
+    "CSL-0078",
+    "CSL-0148"
   ],
   "related_external": [
     "CoolSolve examples/refrigeration3.eescode (same exercise, kept in CoolSolve as a test case; its state-4 line equates an enthalpy with a pressure and is superseded by the original here)",

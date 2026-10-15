@@ -1,6 +1,6 @@
 # Heat exchangers: three-zone and epsilon-NTU zone procedures
 
-🟠 **Level 3 · Advanced** &nbsp;|&nbsp; 🧩 **Function library** &nbsp;|&nbsp; ☑️ **Runs** &nbsp;|&nbsp; `CSL-0112`
+🟠 **Level 3 · Advanced** &nbsp;|&nbsp; 🧩 **Function library** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0112`
 
 Seven EES `PROCEDURE`s of the J. Lebrun laboratory (ULiège) files of the
 `thermo_models` collection that rate a heat exchanger **zone by zone**: the

@@ -178,3 +178,7 @@ stored solution is the verification reference).
   friction factors (Churchill, Swamee-Jain, Konakov, Petukhov, Haaland, Cheng)
   and the two-phase pressure drops of a straight pipe, next to the implicit
   Colebrook-White factor of this file.
+
+- `CSL-0142` *district_heating_loop*: a district-heating loop whose two
+  pipes drop pressure with the Darcy-Weisbach equation and the same built-in
+  `Colebrook` procedure (liquid water).

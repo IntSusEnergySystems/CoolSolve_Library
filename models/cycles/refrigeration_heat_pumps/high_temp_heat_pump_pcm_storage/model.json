@@ -5,7 +5,7 @@
   "summary": "High-temperature vapour-compression heat pump on cyclopentane studied for the Zorlu geothermal plant: geothermal brine evaporator with production pump, internal heat exchanger, water condenser delivering 7 MW at 141 °C to a phase-change-material storage; the evaporating and condensing pressures follow from pinch constraints evaluated zone by zone (superheat / two-phase / subcooling) in two PROCEDUREs, and a PCM sizing block gives the storage volume and discharge power.",
   "kind": "steady",
   "level": 3,
-  "status": "runs",
+  "status": "verified",
   "main_file": "high_temp_heat_pump_pcm_storage.eescode",
   "fluids": [
     "CycloPentane",
@@ -47,6 +47,8 @@
     "course": "no EES original is known: the example is not in CoolSolve misc/EES_ok.zip and the ULiège collection has no Zorlu/PCM exercise (searched 'zorlu', 'PCM', 'cyclopentane')"
   },
   "verification": {
+    "summary": "No independent reference exists. The solution reproduces the converged solution distributed with the CoolSolve example (114 common variables, 0 differ at rtol=0.001; largest deviation 1.85e-10 at --rtol 1e-12), and the cycle energy balance is 0 W to machine precision on 7.010 MW.",
+    "checks": ["energy-balance"],
     "reference": "No independent reference exists (no EES original, searched CoolSolve misc/EES_ok.zip and ~/Nextcloud/thermo_models). Reproduction of the converged solution stored in ~/git/CoolSolve/examples/zorlu_heat_pump.initials, plus the cycle energy balance and pinch-point checks (see README)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
@@ -63,6 +65,11 @@
   ],
   "previous_paths": [],
   "history": [
-    {"date": "2026-10-05", "action": "added (roadmap card C-41, batch B-04); import from the CoolSolve example, no EES original; status runs", "by": "opencode worker (glm) for S. Quoilin"}
+    {"date": "2026-10-05", "action": "added (roadmap card C-41, batch B-04); import from the CoolSolve example, no EES original; status runs", "by": "opencode worker (glm) for S. Quoilin"},
+    {
+      "date": "2026-10-14",
+      "action": "status runs → verified (verification field)",
+      "by": "claude-haiku"
+    }
   ]
 }

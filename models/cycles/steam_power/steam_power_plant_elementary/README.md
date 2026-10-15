@@ -170,3 +170,7 @@ collection of S. Quoilin:
 - `CSL-0004` *rankine_cycle_60mw*: steam plant of the same course with
   isentropic/boiler/alternator efficiencies instead of tabulated state
   points (idealised, no pressure drops).
+
+- `CSL-0140` *rankine_cycle_part_load*: steam Rankine cycle with a
+  cooling-water condenser, generator/motor and a Stodola-cone-law part-load
+  point (translated from the TESPy tutorial).

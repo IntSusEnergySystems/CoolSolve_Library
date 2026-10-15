@@ -21,7 +21,10 @@
     "string variables",
     "property functions"
   ],
-  "stats": {"n_equations": 41, "largest_block": 1},
+  "stats": {
+    "n_equations": 41,
+    "largest_block": 1
+  },
   "origin": {
     "type": "software_library",
     "source": "tespy",
@@ -37,6 +40,10 @@
     "course": "TESPy basic tutorial Heat Pump (commit 19425523)"
   },
   "verification": {
+    "summary": "The TESPy tutorial was re-run in a throw-away virtual env and the CoolSolve results agree with its outputs to ≤ 6e-9 relative: base case within 2e-13 (`COP` = 3.37838 on both sides), three specification variants and sweep end points.",
+    "checks": [
+      "source-rerun"
+    ],
     "reference": "TESPy tutorial heat_pump.py run from the local snapshot (commit 19425523) in a throw-away venv (Python 3.11, CoolProp 8.0.0): base case, 3 specification variants (fixed mass flow, fixed pressure ratio, fixed discharge temperature) and 3 sweep spot-checks",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
@@ -53,7 +60,13 @@
     "CSL-0134",
     "CSL-0135",
     "CSL-0137",
-    "CSL-0139"
+    "CSL-0139",
+    "CSL-0140",
+    "CSL-0141",
+    "CSL-0144",
+    "CSL-0142",
+    "CSL-0143",
+    "CSL-0145"
   ],
   "related_external": [
     "CoolSolve examples/refrigeration1.eescode (R134a basic refrigeration cycle, G-refrig group)",
@@ -62,6 +75,10 @@
   "supersedes": [],
   "previous_paths": [],
   "history": [
-    {"date": "2026-10-05", "action": "added (T-TRANSLATE of the TESPy heat-pump tutorial)", "by": "opencode worker (Muse Spark) for S. Quoilin"}
+    {
+      "date": "2026-10-05",
+      "action": "added (T-TRANSLATE of the TESPy heat-pump tutorial)",
+      "by": "opencode worker (Muse Spark) for S. Quoilin"
+    }
   ]
 }

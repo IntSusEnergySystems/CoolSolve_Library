@@ -62,6 +62,8 @@
     "course": "MCI (ULiège), TP1 exercises 3-4 (2016)"
   },
   "verification": {
+    "summary": "Not verified: the native file is blocked (CS-GAP-CHEM-EQUIL, CS-GAP-FLUIDS-NASA-SPECIES, CS-GAP-SUM-INDEXED, CS-BUG-DUPLICATE-VAR-BOUND) and no runnable variant is shipped. Only a scratch copy of the no-dissociation case was checked against a hand balance (1788.7 vs 1787.85 degC).",
+    "checks": [],
     "reference": "EES stored solution of the source file (last run: CH4, DISSOCIATION$ = 'YES', e = 0.2, 30 bar, reactants at 288 K): T_adiab = 2417.129 K, H_react = H_prod = -78333.02 kJ/kmol fuel. The native file is blocked in CoolSolve (missing_features); no CoolSolve comparison of the full model yet - to be re-verified when the gaps close (T-RECHECK). No-dissociation case (CH4, e = 0.2, 288 K) run in a scratch copy of the native file (species names read from the lookup table Species4 with LOOKUP$) with the indexed sum written out and the DUPLICATE bound replaced by its value (CS-BUG-DUPLICATE-VAR-BOUND): T_adiab = 1788.7 degC, H_react = -78351 kJ/kmol fuel, against an independent hand balance with the NASA-Glenn data (thermo.inp) of 1787.85 degC and -78344 kJ/kmol.",
     "date": "2026-10-10",
     "coolsolve_version": "0.3.0@f319f0c",

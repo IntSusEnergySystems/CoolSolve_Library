@@ -1,0 +1,95 @@
+{=============================================================================
+  Scroll refrigeration cycle (R134a): built-in volume ratio vs isentropic
+  efficiency and COP
+  CoolSolve Library model CSL-0148
+ -----------------------------------------------------------------------------
+  Which internal (built-in) compression ratio should a scroll compressor of a
+  refrigeration machine be built for? As in the original exercise, the
+  refrigerant is saturated at the evaporator outlet and at the condenser outlet,
+  and the scroll is a volumetric machine: its geometry imposes the built-in
+  volume ratio r_v_in = v_su_cp/v_in, not an external pressure ratio. The gas is
+  compressed isentropically from the suction state down to the built-in volume
+  v_in, then at constant volume until the discharge pressure is reached. The
+  model returns the adapted pressure ratio r_p_in = P_in/P_su_cp, the isentropic
+  efficiency and the COP for any T_ev, T_cd and r_v_in (the original file sweeps
+  T_ev -15..0 °C, T_cd 30..55 °C and r_v_in through a parametric table).
+  Inputs : fluid$, T_ev, T_cd, r_v_in
+  Outputs: epsilon_s, COP, r_p_in, w_in, q_ev, q_cd
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course "Machines et systèmes thermiques", repetition session 2,
+           exercise 3 (EES file VL050926_2-3-1 questionsVL051023.EES, VL 2005-09-26)
+           - see README.md
+=============================================================================}
+
+"Operating point"
+fluid$ = 'R134a'            "refrigerant; R134a in the original exercise"
+T_ev = -15                  "evaporation temperature [°C], 1st row of the original parametric table"
+T_cd = 30                   "condensation temperature [°C]"
+r_v_in = 5                  "built-in volume ratio v_su_cp/v_in [-], hypothesis of the original file"
+
+"Pressures of the cycle"
+P_su_cp = P_ev
+P_ev = PRESSURE(fluid$, x=0.5, T=T_ev)      "evaporation pressure [Pa]"
+P_ex_cp = P_cd
+P_cd = PRESSURE(fluid$, x=0.5, T=T_cd)      "condensation (discharge) pressure [Pa]"
+r_p = P_ex_cp/P_su_cp                       "external pressure ratio [-]"
+
+"!Suction state"
+T_su_cp = T_ev                              "simplification of the original: no superheat"
+v_su_cp = VOLUME(fluid$, P=P_su_cp, {T=T_su_cp}x=1)
+s_su_cp = ENTROPY(fluid$, P=P_su_cp, x=1{T=T_su_cp})
+
+"!Isentropic compression down to the built-in volume"
+v_su_cp = r_v_in*v_in                       "built-in volume ratio"
+h_in = ENTHALPY(fluid$, s=s_su_cp, v=v_in)  "isentropic state at the built-in volume"
+w_in_s = h_in - h_su_cp                     "isentropic compression work [J/kg]"
+h_su_cp = ENTHALPY(fluid$, P=P_su_cp, x=1{T=T_su_cp})
+
+"!Compression at constant volume up to the discharge pressure"
+w_in_v = v_in*(P_ex_cp - P_in)              "isochoric compression work [J/kg]"
+P_in = PRESSURE(fluid$, v=v_in, s=s_su_cp)  "pressure reached at the built-in volume, as in the original"
+
+"!Total compression work"
+w_in = w_in_s + w_in_v                      "compression work of the machine [J/kg]"
+
+"!Isentropic efficiency of the machine"
+epsilon_s = w_s/w_in
+w_s = h_ex_cp_s - h_su_cp                   "isentropic compression work between the cycle pressures [J/kg]"
+h_ex_cp_s = ENTHALPY(fluid$, P=P_ex_cp, s=s_su_cp)
+
+"!Condenser"
+h_ex_cp = h_su_cp + w_in                    "compressor discharge"
+h_su_cd = h_ex_cp                           "condenser inlet, no pressure drop"
+h_ex_cd = ENTHALPY(fluid$, P=P_cd, x=0)     "saturated liquid at the condenser outlet"
+q_cd = h_su_cd - h_ex_cd                    "heat rejected in the condenser [J/kg]"
+
+"!Evaporator"
+h_ex_ev = h_su_cp                           "evaporator outlet, no pressure drop"
+h_su_ev = h_ex_cd                           "as in the original: no expansion device (the file labels this line 'détente isenthalpique')"
+q_ev = h_ex_ev - h_su_ev                    "cooling capacity per unit mass [J/kg]"
+
+"!Cycle"
+COP = q_ev/w_in                             "coefficient of performance [-]"
+r_p_in = P_in/P_su_cp                       "pressure ratio of the built-in compression [-]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: compressor suction, 2: compressor discharge, 3: condenser outlet,
+ 4: evaporator inlet. Use the arrays P[i]/h[i] or s[i]/T[i] with the "Array overlay"
+ option of the Diagram tab. States 3 and 4 share the same enthalpy: the original
+ model has no throttling device.}
+P[1] = P_su_cp
+h[1] = h_su_cp
+T[1] = T_su_cp
+s[1] = s_su_cp
+P[2] = P_ex_cp
+h[2] = h_ex_cp
+T[2] = TEMPERATURE(fluid$, P=P[2], h=h[2])
+s[2] = ENTROPY(fluid$, P=P[2], h=h[2])
+P[3] = P_cd
+h[3] = h_ex_cd
+T[3] = T_cd
+s[3] = ENTROPY(fluid$, T=T[3], x=0)
+P[4] = P_ev
+h[4] = h_su_ev
+T[4] = TEMPERATURE(fluid$, P=P[4], h=h[4])
+s[4] = ENTROPY(fluid$, P=P[4], h=h[4])

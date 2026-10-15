@@ -1,0 +1,74 @@
+{
+  "id": "CSL-0145",
+  "name": "refrigeration_co2_transcritical_booster",
+  "title": "CO2 transcritical booster refrigeration system (supermarket)",
+  "summary": "CO2 (R744) booster supermarket cycle: LT (13 bar, 25 kW) and MT (26 bar, 75 kW) evaporators, receiver with flash gas by-pass at 32 bar, two constant-efficiency compressors, heat-recovery heat exchanger (5 K pinch, water 30 to 55 C) and gas cooler at 57.3 bar; subcritical and transcritical operating cases.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "refrigeration_co2_transcritical_booster.eescode",
+  "fluids": [
+    "R744",
+    "Water"
+  ],
+  "tags": [
+    "refrigeration",
+    "booster",
+    "supermarket",
+    "transcritical",
+    "flash gas",
+    "receiver",
+    "heat recovery",
+    "tutorial"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 157,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/docs/model_library/co2_cycle.ipynb",
+    "candidate_id": "TSP-044",
+    "authors": [
+      "Francesco Witte (TESPy lead developer)",
+      "Francesco D'Ettorre and Christian Heerup (book chapter with the cycle layout and boundary conditions)"
+    ],
+    "url": "https://github.com/oemof/tespy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "TESPy model library co2_cycle.ipynb (commit 19425523); D'Ettorre & Heerup, 'Modelling of a commercial refrigeration system in Python' (2026), Case Study 1"
+  },
+  "verification": {
+    "summary": "The TESPy notebook co2_cycle.ipynb was re-run in a throw-away venv (local clone, commit 19425523): all Case Study 1 KPIs (COP 4.9428, P 25.1679 kW, Q_hrhx -24.3996 kW, flash gas 0.18966, T discharge 68.5544 C, Q_gas cooler -100.7682 kW) agree to <= 6e-11 relative; the 100 bar transcritical case to <= 2.3e-9; printed state points to 3e-4 (5-digit source print).",
+    "checks": [
+      "source-rerun",
+      "energy-balance"
+    ],
+    "reference": "TESPy docs/model_library/co2_cycle.ipynb re-run from the local snapshot (commit 19425523, tespy 0.11.3.dev0, CoolProp 8.0.0) in work/c190/venv; work/c190/compare_with_tespy.py against the .sol",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@e635c85",
+    "max_rel_diff": 6e-11,
+    "notes": "Full-precision KPIs: max 6e-11 (subcritical) and 2.3e-9 (transcritical, Q_gas cooler = 0 on both sides, abs diff 3.2e-7 W). Differences against the printed connection table (up to 3.2e-4) come from its 5 significant digits. Energy balance closed to 1e-10 relative."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0013",
+    "CSL-0014"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added (T-TRANSLATE of the TESPy CO2 booster notebook)",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    }
+  ]
+}

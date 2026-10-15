@@ -152,3 +152,5 @@ procedure itself.
 - `CSL-0132` *r1233zd_thermal_conductivity*: the thermal conductivity of the refrigerant
   R1233zd(E), also from the LaboThapPy triage — a correlation for a refrigerant where this
   file covers the secondary and heat-transfer fluids from their data sheets.
+- `CSL-0147` *segs_solar_power_plant*: the Therminol VP-1 branch of this library supplies the
+  HTF property functions (`h_htf`, `rho_htf`) of the SEGS solar power plant translation.

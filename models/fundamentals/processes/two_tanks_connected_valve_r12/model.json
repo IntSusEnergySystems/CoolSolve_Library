@@ -43,6 +43,8 @@
     "course": "Thermodynamique appliquée (ULiège, MECA0002), repetition session 1, exercise 4 (2022-2023)"
   },
   "verification": {
+    "summary": "Compared with the solution stored by EES in the source file: 27 common variables, 12 differ at rtol=0.001, largest 1.97·10⁻², all due to the R12 saturated vapour volume (CoolProp vs EES); with the EES values substituted the stored solution is reproduced to 2.09·10⁻¹⁰. A hand reproduction of the course's Python method gives the CoolSolve results.",
+    "checks": ["ees-stored-solution", "analytical"],
     "reference": "EES stored solution of the source file (27 variables, all in common with the model), converted with --ees-units; additionally the companion Python/CoolProp solution of the same exercise (course folder Python/ThAp21_R01E04.py), reproduced by hand",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",

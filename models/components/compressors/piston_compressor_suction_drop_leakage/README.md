@@ -1,6 +1,6 @@
 # Piston compressor with inlet pressure drop and internal leakage
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ☑️ **Runs** &nbsp;|&nbsp; `CSL-0067`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0067`
 
 A 2-litre piston compressor tested on dry air at 1500 rpm (suction 1 bar /
 15 °C, discharge 5 bar). The measured overall volumetric and isentropic
@@ -21,7 +21,7 @@ flow and the consumed power vary.
 | **Source** | ULiège — course *Machines et systèmes thermiques*, repetition 2, TP 02 extra exercise (file signed "JD"); CoolSolve example `internal_combustion_engine.eescode` (misnamed) |
 | **Authors** | TBD (ULiège MSTh course, exercise signed "JD") |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0@536d427 — runs; compared with the EES stored solution, deviations explained (see *Verification*) |
+| **CoolSolve** | v0.3.0@536d427 — verified (see *Verification*) |
 
 ## Problem statement
 
@@ -141,9 +141,12 @@ On the admission branch, which is weakly coupled to the leakage loop, the two
 solutions agree: `P_su_1`/`P_thr_1`/`P_su_2` within 2.8e-03, `C_thr_1` 1.9e-03,
 `V_dot_thr_1` 1.9e-03, `v_thr_1` 1.6e-03, `T_thr_1` 6.2e-03, and the
 input-side quantities `W_dot`, `W_dot_s`, `M_dot`, `epsilon_v` within 1.2e-03.
-Status **runs**: the model is square (80 equations / 80 variables), converges
-to solver tolerance (1e-9) and passes the balance checks above, but the
-leakage branch does not reproduce the EES 7.458 stored values.
+Status **verified** (since the merge of `runs` into `verified` on 2026-10-14; the
+`verification` field of `model.json` says how): the model is square (80 equations /
+80 variables), converges to solver tolerance (1e-9) and passes the balance checks
+above, but the leakage branch does not reproduce the EES 7.458 stored values (38 of
+the 55 common variables differ; causes listed above: stale stored value, other root
+of the leakage loop with CoolProp Air, reference-state offset).
 
 ## Source and attribution
 
@@ -206,6 +209,7 @@ EES original.
   → 1; total 5 → level 3, **moved to level 2** (±1 allowed): classroom
   exercise, same course and same model family (equivalent-nozzle leakage,
   identified parameter imposed, speed sweep) as the level-2 `CSL-0020`.
+- **2026-10-14 — status `runs` merged into `verified`**: verification field added (no equation changed).
 
 ## Limitations and CoolSolve gaps
 

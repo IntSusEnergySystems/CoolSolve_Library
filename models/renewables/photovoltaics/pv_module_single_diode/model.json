@@ -43,6 +43,8 @@
     "course": "ULiège Thermodynamics Laboratory course file (photovoltaique), derived from the UW F-Chart PV module model"
   },
   "verification": {
+    "summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-END-PROCEDURE, CS-GAP-CONVERT-UNQUOTED, CS-GAP-LOOKUPROW and CS-BUG-LOOKUP-STRING): vs the EES stored solution 333 common variables, 1 differ at rtol=0.001 (P[1], floating noise), max 1.37e-06 otherwise; the stored I-V parametric table matches exactly (300/300 within 1e-9).",
+    "checks": ["ees-stored-solution", "ees-parametric-table"],
     "reference": "EES stored solution (333 common variables) and the 100x3 I-V parametric table stored in the source file (hand-decoded from the binary); both concern the runnable variant pv_module_single_diode_coolsolve",
     "date": "2026-10-08",
     "coolsolve_version": "0.3.0@7addbbc",

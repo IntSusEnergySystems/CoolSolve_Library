@@ -32,6 +32,8 @@
     "course": "Thermodynamique appliquée (ULiège MECA0002), repetition 2, exercise 3"
   },
   "verification": {
+    "summary": "Compared with the solution stored in the original EES file: 12 common variables, 0 differ at rtol=0.001, maximum deviation 9.02e-08 on `W_b_EES`, explained by EES's own quadrature. CoolSolve's RK4 integral equals the closed form `W_b_hand` (1.05e-10 from EES).",
+    "checks": ["ees-stored-solution", "analytical"],
     "reference": "EES stored solution of the source file (compare_solution.py --ees-units, hand conversion of the model from kPa/kJ/K to Pa/J/°C); the native file nonideal_gas_isothermal_work.eescode is the verified file",
     "date": "2026-10-10",
     "coolsolve_version": "0.3.0@4cd0ca5",

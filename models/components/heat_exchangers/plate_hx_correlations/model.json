@@ -50,6 +50,8 @@
     "notes": "Procedure library of the ULiège plate-HX models, representative of duplicate group DG-0129 (TM-0583/TM-0584/TM-0585, C-121 triage); the near-identical martin procedure and its variant come from TM-0496 (~/Nextcloud/thermo_models/procedures EES/single phase hx  martin - SQ080229.EES, TM-0561 duplicate). Unit system already SI-°C-Pa-J. The Han procedure is transcribed but its call stays commented out as in the original (absurd pressure drops, see README)."
   },
   "verification": {
+    "summary": "Compared with the EES stored solution of TM-0585: 38 common variables, maximum relative deviation 5.83e-2 on `mu` (R410A viscosity backend), all correlation outputs within 2.66e-2. Martin matches `ht` 1.2.0 to 4.6e-13 and Kumar to 9.0e-4; Muley differs because of a typo in the original file.",
+    "checks": ["ees-stored-solution", "source-rerun"],
     "reference": "EES stored solution of TM-0585 (38 common variables, compare_solution.py) plus ht 1.2.0 Python values of the HT-010 family (Martin VDI 4.6e-13, Kumar 9.0e-4 at the complementary chevron angle, Muley explained by the original file's phi^3 typo)",
     "date": "2026-10-07",
     "coolsolve_version": "0.3.0@7addbbc",

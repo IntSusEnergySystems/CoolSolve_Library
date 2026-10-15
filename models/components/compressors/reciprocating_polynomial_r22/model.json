@@ -43,6 +43,8 @@
     "course": "Reference model series of the ULiège Thermodynamics Laboratory (reciprocating JL080205)"
   },
   "verification": {
+    "summary": "Compared with the EES stored solution: 97 common variables; 13 absolute h/s differ by the R22 reference-state offset and C_sd_cp by a unit conversion; the remaining 83 agree within 1.81e-02 (older EES R22 formulation). M_dot, W_dot and W_dot_loss were hand-checked against the listing in the file header (1.5e-03, 5.2e-04, 3.4e-04).",
+    "checks": ["ees-stored-solution"],
     "reference": "EES stored solution of the source file (ees_variables.csv, reference values converted bar/kJ -> Pa/J by hand); M_dot, W_dot and W_dot_loss hand-checked against the solution listing stored in the file header",
     "date": "2026-10-09",
     "coolsolve_version": "0.3.0@7addbbc",

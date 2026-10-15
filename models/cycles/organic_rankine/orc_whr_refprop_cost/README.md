@@ -292,3 +292,6 @@ itself.
 - `CSL-0124` *plate_hx_pressure_drop_identification*: same REFPROP-based
   plate-HX correlations (Thonon, Kuo, Hsieh) and the same blocked/variant
   pattern.
+- `CSL-0154` *investment_npv_payback*: economic evaluation of the investment
+  (NPV, discounted and simple payback time) computed from the equipment cost of
+  this model.

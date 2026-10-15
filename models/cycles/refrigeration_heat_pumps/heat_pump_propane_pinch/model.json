@@ -46,6 +46,8 @@
     "course": "LaboThapPy example basic_HP (Example case), components HexCstPinch, CompressorCstEff, ValveIsenthalpic (commit f03f7f47)"
   },
   "verification": {
+    "summary": "Compared with a re-run of the LaboThapPy example fpi_HeatPump_example.py: 54 common variables, 0 differ at rtol = 1e-3, max relative difference 2.97e-05 on T_1 (convergence tolerance of the original solver). The imposed pinch is met exactly and the energy balances close.",
+    "checks": ["source-rerun", "energy-balance"],
     "reference": "LaboThapPy fpi_HeatPump_example.py (basic_HP, Example case) re-run from the local snapshot ~/git/LaboThapPy commit f03f7f47 in a throw-away venv (CoolProp 8.0.0, SciPy 1.18.1, Python 3.12): converged in 2 Wegstein iterations, P_HP = 2390774.39 Pa, P_LP = 711746.78 Pa; 54 component state/duty/pinch variables dumped as a name,value,units CSV and compared with tools/compare_solution.py --ees-units",
     "date": "2026-10-12",
     "coolsolve_version": "0.3.0@4c80b25",

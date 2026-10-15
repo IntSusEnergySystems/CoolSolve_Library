@@ -8,7 +8,7 @@ facets** stored in its `model.json`:
 | **Category** | folder tree below `models/` (declared in [`taxonomy.json`](../taxonomy.json)) | folder location | breadcrumb in README, `category` column |
 | **Kind** | `steady`, `dynamic`, `optimization`, `function` | `kind` | ⚙️ ⏱️ 🎯 🧩 badge |
 | **Level** (complexity) | 1 to 4 | `level` | 🟢 🔵 🟠 🔴 badge |
-| **Status** (CoolSolve) | `verified`, `runs`, `modified`, `blocked`, `failing`, `stub` | `status` | ✅ ☑️ ⚠️ ⛔ ❌ 📄 badge |
+| **Status** (CoolSolve) | `verified`, `modified`, `blocked`, `failing`, `stub` | `status` | ✅ ⚠️ ⛔ ❌ 📄 badge |
 | **Origin type** | `teaching`, `research`, `textbook`, `software_library`, `industry`, `coolsolve` | `origin.type` | README table |
 
 Free-form `tags` and `fluids` complete the description. The facets are
@@ -148,16 +148,54 @@ zones, needs good guesses) scores 1+2+1+1+0+1 = 6 → level 3.
 
 | Status | Badge | Meaning | Required content |
 |---|---|---|---|
-| `verified` | ✅ **Verified** | Runs in CoolSolve and agrees with an independent reference (EES stored solution, parametric table, publication, other tool) within the tolerances of CoolSolve `docs/ees_import.md` §11 | Comparison in README, `.sol` baseline |
-| `runs` | ☑️ **Runs** | Runs; no independent reference available (sanity checks only: balances, physical ranges) | `.sol` baseline |
+| `verified` | ✅ **Verified** | Runs in CoolSolve and its results were checked; how is described in the `verification` field of model.json (see below). Informative, not a quality ranking. | `.sol` baseline + `verification.summary` and `verification.checks` |
 | `modified` | ⚠️ **Runs (modified)** | Runs only after simplifications or changes of the original physics (documented); results not comparable 1:1 with the original | Changes and their impact in the conversion log |
 | `blocked` | ⛔ **Blocked** | Cannot run because of missing CoolSolve features (`missing_features` lists **every** `CS-GAP-…`/`CS-BUG-…` ID that blocks the native file); the native file is kept in valid EES syntax; a faithful runnable variant may ship beside it (workflow §6) | Gap IDs, reproducer in valid EES in the CoolSolve gap register; runnable variant `<name>_coolsolve.eescode` + `.sol` when a faithful one exists |
 | `failing` | ❌ **Failing** | Should be supported but does not converge / errors; diagnosis in progress | Diagnosis notes (debug output, what was tried) |
 | `stub` | 📄 **Documented only** | Folder and documentation only (source referenced in `model.json`); conversion not attempted yet (e.g. parked optimisation models) | README, `model.json` |
 
-Typical transitions: `stub → runs/verified`, `failing → verified` after
+Typical transitions: `stub → verified`, `failing → verified` after
 debugging, `blocked → verified` when a CoolSolve gap is closed (roadmap task
 *re-check blocked models*).
+
+### The `verification` field
+
+**Decision** (2026-10-14, maintainer): The statuses `verified` and `runs` were merged into `verified`. The status now means "runs in CoolSolve and its results were checked". HOW the model was checked is recorded in the `verification` field of the model's `model.json`. The field is informative only and is never used to classify models.
+
+**JSON schema** (keys in `model.json` → `verification`):
+
+```json
+"verification": {
+  "summary": "Concrete description of how the results were checked, max 400 characters",
+  "checks": ["tag1", "tag2"],
+  "reference": "source document or tool name",
+  "date": "YYYY-MM-DD",
+  "coolsolve_version": "x.y.z",
+  "max_rel_diff": 0.001,
+  "notes": "additional details"
+}
+```
+
+The new keys `summary` and `checks` go first. Existing keys (`reference`, `date`, `coolsolve_version`, `max_rel_diff`, `notes`) are unchanged.
+
+**Vocabulary of `checks` tags** (use only these, only when evidence exists in the model's documentation):
+
+| Tag | Meaning |
+|---|---|
+| `ees-stored-solution` | Compared with the solution stored in the original EES file |
+| `ees-parametric-table` | Compared with a parametric/lookup table stored in the EES file |
+| `source-rerun` | The original code (Python, Modelica, EES run, other) was re-run and its results compared |
+| `publication` | Compared with values of a paper, a standard, a manufacturer catalogue or a textbook example |
+| `other-tool` | Compared with another software (Ebsilon, TESPy, REFPROP-based tool, ...) results |
+| `cross-model` | Agrees with another model of the library (give its ID in the summary) |
+| `analytical` | Compared with a closed-form result, a limiting case or a hand calculation |
+| `energy-balance` | Mass and/or energy balances of the solution were checked |
+| `order-of-magnitude` | All results were checked to be physically plausible (ranges, signs, orders of magnitude) |
+| `regression-only` | Nothing but the committed `.sol` baseline (the model runs and is protected against regression) |
+
+**Rules for `summary`**: Plain English, one to three sentences, max 400 characters. Say concretely HOW the results were checked and what the agreement was. Name the reference (file name, paper, tool, other library model ID) and give key numbers when they exist. Use only facts found in the model's documentation; never invent. If the evidence is thin, say so.
+
+**Rules for `checks`**: `regression-only` is exclusive (never combined with another tag). When a README speaks of "checked" but not how, use `order-of-magnitude` only if it says plausibility/ranges were checked. Blocked models without runnable results: `checks` = [].
 
 ## 5. Identifiers, names and files
 

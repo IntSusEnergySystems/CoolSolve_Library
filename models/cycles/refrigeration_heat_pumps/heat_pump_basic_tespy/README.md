@@ -201,6 +201,7 @@ Source file (Python, comments in English), local snapshot of S. Quoilin:
   library (component class `CombustionChamber`), a building block of its
   gas-turbine models.
 - `CSL-0137` *hx_lmtd_ua*: the TESPy `HeatExchanger` and `Condenser` component classes of the same source library, translated as rating models (UA/smoothed LMTD, ttd and pinch specifications, off-design characteristic lines); this model uses the `SimpleHeatExchanger` of the tutorial.
+- `CSL-0145` *refrigeration_co2_transcritical_booster*: TESPy translation of the supermarket CO2 booster notebook (`docs/model_library/co2_cycle.ipynb`), same source library.
 - `CSL-0134` (*orc_preheated_recuperated_cyclopentane*, level 3): the ORC of
   the same Zorlu site on the same LaboThapPy components (`HexCstPinch`,
   `HexCstEff`), with a recuperator and a preheater; its preheater source is the
@@ -224,3 +225,14 @@ Source file (Python, comments in English), local snapshot of S. Quoilin:
 - `CSL-0135` *turbine_stodola_offdesign*: the turbine of the same TESPy
   snapshot (class `Turbine`, `eta_s` relation and off-design cone law);
   this model uses the compressor of its own tutorial.
+
+- `CSL-0140` *rankine_cycle_part_load*: the Rankine-cycle tutorial of the
+  same TESPy snapshot (steam cycle, cooling water, off-design).
+- `CSL-0141` *gas_turbine_open_cycle*: the gas-turbine tutorial of the
+  same TESPy snapshot (compressor, diabatic combustion chamber, turbine and
+  generator, ideal-gas species balances).
+- CSL-0144 (`sco2_recompression_brayton`): sCO2 recompression Brayton cycle, another TESPy model-library translation.
+
+- `CSL-0142` *district_heating_loop*: the district-heating tutorial of the
+  same source library (`SimpleHeatExchanger`, `Pump`, `Valve`, `Pipe`), a
+  network rather than a cycle.

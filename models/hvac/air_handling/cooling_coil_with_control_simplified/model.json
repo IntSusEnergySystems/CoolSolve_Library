@@ -45,6 +45,8 @@
     "course": "ULiège model bank (Laborelec toolkit lineage), simplified model with control, 2008-01-16; published as Lemort, Cuevas, Lebrun, Teodorese, ASHRAE Transactions 114(1), 2008"
   },
   "verification": {
+    "summary": "Compared with the 34 variables stored in the source EES file: 14 differ above rtol = 0.001, maximum relative difference 2.71e-02 on the latent power (a difference of two large numbers), all from EES vs CoolProp humid-air formulations. Purely algebraic results agree to 3e-05 or better.",
+    "checks": ["ees-stored-solution"],
     "reference": "EES stored solution in the source file (34 variables) against the native file cooling_coil_with_control_simplified.eescode (the native file is the verified file)",
     "date": "2026-10-10",
     "coolsolve_version": "0.3.0@59b2862",

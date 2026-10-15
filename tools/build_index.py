@@ -54,8 +54,12 @@ KINDS = {"steady": "⚙️ Steady-state", "dynamic": "⏱️ Dynamic",
          "optimization": "🎯 Optimisation", "function": "🧩 Function library"}
 LEVELS = {1: "🟢 Level 1 · Introductory", 2: "🔵 Level 2 · Intermediate",
           3: "🟠 Level 3 · Advanced", 4: "🔴 Level 4 · Research"}
-STATUSES = {"verified": "✅ Verified", "runs": "☑️ Runs", "modified": "⚠️ Runs (modified)",
+STATUSES = {"verified": "✅ Verified", "modified": "⚠️ Runs (modified)",
             "blocked": "⛔ Blocked", "failing": "❌ Failing", "stub": "📄 Documented only"}
+VERIFICATION_CHECKS_VOCAB = {
+    "ees-stored-solution", "ees-parametric-table", "source-rerun", "publication",
+    "other-tool", "cross-model", "analytical", "energy-balance", "order-of-magnitude", "regression-only"
+}
 ORIGIN_TYPES = {"teaching", "research", "textbook", "software_library", "industry", "coolsolve"}
 REQUIRED = ["id", "name", "title", "summary", "kind", "level", "status", "main_file", "origin"]
 ID_RE = re.compile(r"^CSL-\d{4}$")
@@ -157,6 +161,8 @@ def validate(folder, meta, tax_paths, errors):
         errors.append("%s: level %r not in 1..4" % (where, meta["level"]))
     if meta["status"] not in STATUSES:
         errors.append("%s: status %r not in %s" % (where, meta["status"], sorted(STATUSES)))
+    if meta["status"] == "runs":
+        errors.append("%s: status 'runs' was merged into 'verified' on 2026-10-14: set status to verified and fill verification.summary/checks (docs/taxonomy.md)" % where)
     if not (folder / meta["main_file"]).is_file():
         errors.append("%s: main file %s not found" % (where, meta["main_file"]))
     if not (folder / "README.md").is_file():
@@ -222,6 +228,7 @@ def main(argv=None):
             "url": o.get("url", ""), "missing_features": meta.get("missing_features", []),
             "related": meta.get("related", []),
             "coolsolve_version": v.get("coolsolve_version", ""), "verified_on": v.get("date", ""),
+            "verification_summary": v.get("summary", ""), "verification_checks": v.get("checks", []),
             "path": path, "main_file": meta.get("main_file"), "figures": len(figures_of(folder)),
         })
         variants = sorted(p.name for p in folder.glob("*.eescode") if p.name != meta.get("main_file"))
@@ -257,6 +264,31 @@ def main(argv=None):
         if len(set(ids)) > 1:
             print("warning: function '%s' is defined in several models (%s): $INCLUDE resolution "
                   "needs unique names" % (name, ", ".join(sorted(set(ids)))))
+    # Check verification field completeness and validity
+    missing_summary = [r["id"] for r in rows if r["status"] in ("verified", "modified") and not r["verification_summary"]]
+    if missing_summary:
+        print("warning: verification.summary missing (docs/taxonomy.md): " + ", ".join(missing_summary))
+
+    unknown_checks = []
+    for r in rows:
+        for tag in r["verification_checks"]:
+            if tag not in VERIFICATION_CHECKS_VOCAB:
+                unknown_checks.append("%s:%s" % (r["id"], tag))
+    if unknown_checks:
+        print("warning: unknown verification.checks tag(s): " + ", ".join(unknown_checks))
+
+    regression_only_combined = []
+    for r in rows:
+        checks = r["verification_checks"]
+        if "regression-only" in checks and len(checks) > 1:
+            regression_only_combined.append(r["id"])
+    if regression_only_combined:
+        print("warning: regression-only combined with other tags: " + ", ".join(regression_only_combined))
+
+    summary_too_long = [r["id"] for r in rows if len(r["verification_summary"]) > 400]
+    if summary_too_long:
+        print("warning: verification.summary longer than 400 characters: " + ", ".join(summary_too_long))
+
     for r in rows:
         for fig in (ROOT / r["path"] / "figures").glob("*"):
             if fig.stat().st_size > FIGURE_MAX_BYTES:
@@ -266,7 +298,7 @@ def main(argv=None):
     print("snapshot: %d files, %.1f MB, %s" % (n_files, n_bytes / 1e6, content_hash))
     check_links_and_versions(rows)
     todo_authors = [r["id"] for r in rows if any("TBD" in a for a in r["authors"])]
-    todo_figures = [r["id"] for r in rows if not r["figures"] and r["status"] in ("verified", "runs", "modified")]
+    todo_figures = [r["id"] for r in rows if not r["figures"] and r["status"] in ("verified", "modified")]
     if todo_authors:
         print("maintainer: authors to complete (TBD): " + ", ".join(todo_authors))
     if todo_figures:

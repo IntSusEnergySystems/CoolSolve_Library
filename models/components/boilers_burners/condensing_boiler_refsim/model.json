@@ -73,6 +73,8 @@
     "course": "ULiège model bank (Laborelec toolkit lineage), heat production by combustion, condensing boiler reference simulation model, 9 January 2008"
   },
   "verification": {
+    "summary": "Concerns the runnable variant at the operating point of the stored EES solution: 225 common variables, 81 differ (rtol=0.001), mostly from a stale stored solution and moist-air properties. Useful power, efficiencies and water temperature agree to better than 2e-05.",
+    "checks": ["ees-stored-solution"],
     "reference": "EES stored solution of the source file (243 of its 258 variable records hold a value); the comparison concerns the runnable variant condensing_boiler_refsim_coolsolve.eescode run at the operating point of that stored solution (x_load 0.37, T_w_su_boil 30 C, V_dot_w_boil_ls 5.6 l/s, T_amb 20 C), the native file being blocked",
     "date": "2026-10-06",
     "coolsolve_version": "0.3.0@536d427",

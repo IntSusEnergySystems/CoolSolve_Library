@@ -44,6 +44,10 @@
     "language": "en"
   },
   "verification": {
+    "summary": "Compared with a re-run of the LaboThapPy `COND_CO2` example (and a clean re-run): `P_sat` within 0.33 %, state enthalpies within 0.3 % except the subcooled outlet (1.7 %), total Q_dot 2.8 % off, attributed to the original's tabular backend.",
+    "checks": [
+      "source-rerun"
+    ],
     "reference": "LaboThapPy COND_CO2 example run in a throw-away venv (CoolProp 8.0.0, solved: True, pinch residual 5e-10 K) plus a clean re-run driving the original system_cond with an independent brentq (agrees to 1e-7)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
@@ -57,9 +61,11 @@
     "CSL-0126",
     "CSL-0128",
     "CSL-0127",
-  
     "CSL-0138",
-    "CSL-0137"],
+    "CSL-0137",
+    "CSL-0144",
+    "CSL-0145"
+  ],
   "related_external": [],
   "supersedes": [],
   "previous_paths": [],

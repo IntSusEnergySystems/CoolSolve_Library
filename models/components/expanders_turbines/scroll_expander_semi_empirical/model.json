@@ -44,6 +44,8 @@
     "course": "ULiège laboratory component model (2008), reused in ORC cycle models"
   },
   "verification": {
+    "summary": "Compared with the EES solution report shipped with the original file (21 main-program variables): the 17 fixed inputs agree exactly and the computed outputs differ by up to 1.91 % (exhaust temperature), attributed to R123 property differences between EES 9.920 and CoolProp.",
+    "checks": ["ees-stored-solution"],
     "reference": "EES solution report shipped with the original file (CoolSolve misc/EES_ok.zip, EES_ok/expander_module.tex, main-program variables). The variable records decoded from the binary .EES are stale (mixed older runs) and were not used; see gap CS-BUG-EXTRACT-STALE",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",

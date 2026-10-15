@@ -54,6 +54,8 @@
     "notes": "TESPy commit 19425523; also src/tespy/data/char_lines.json (DEFAULT UA characteristic lines, shipped as the lookup tables). The condenser variant is the _condenser variant of the same card (TSP-009). Translation published under the CoolSolve_Library MIT licence (decision D3)."
   },
   "verification": {
+    "summary": "Compared with the TESPy HeatExchanger and Condenser class doctests re-run (design and off-design): main file 22 common variables, 0 differ at rtol=0.001, max 3.30e-07; condenser 21 common variables, 0 differ, max 4.28e-05 (M_dot_c_2), due to the air density.",
+    "checks": ["source-rerun"],
     "reference": "the HeatExchanger and Condenser class doctests of TESPy re-run from the local clone (commit 19425523) in a throw-away virtual environment (pip install -e ~/git/tespy, CoolProp 8.1.0dev): design and off-design run of each, 22 + 21 compared quantities via tools/compare_solution.py",
     "date": "2026-10-13",
     "coolsolve_version": "0.3.0@4c80b25",
@@ -64,7 +66,9 @@
   "related": [
     "CSL-0105",
     "CSL-0014",
-    "CSL-0013"
+    "CSL-0013",
+    "CSL-0140",
+    "CSL-0142"
   ],
   "related_external": [
     "TESPy HeatExchanger and Condenser component classes (github.com/oemof/tespy, commit 19425523)"

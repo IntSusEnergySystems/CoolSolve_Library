@@ -180,6 +180,7 @@ No student names or personal data involved.
 
 
 - `CSL-0137` *hx_lmtd_ua*: the generic counterflow exchanger of TESPy rated by UA and the smoothed LMTD, with ttd and pinch specifications and the off-design UA characteristic lines; this model sizes the same kind of exchanger by an imposed pinch and a subcooling.
+- CSL-0145 *refrigeration_co2_transcritical_booster*: CO2 booster supermarket cycle whose heat-recovery exchanger imposes the same end-pinch condition (5 K at the CO2 outlet end).
 - CSL-0134 *orc_preheated_recuperated_cyclopentane*: the Zorlu ORC cycle that
   uses this condenser branch and its evaporator twin as the two phase-changing
   exchangers, closed by the two pinch conditions.
@@ -206,3 +207,4 @@ No student names or personal data involved.
 - `CSL-0133` *heat_pump_propane_pinch*: the propane heat-pump cycle built on this
   exchanger model — the same three zones and the same pinch closure, with the
   evaporator branch of `HexCstPinch` and a constant-efficiency compressor and valve.
+- CSL-0144 (`sco2_recompression_brayton`): sCO2 cycle whose recuperators are specified by a terminal temperature difference, like this model.

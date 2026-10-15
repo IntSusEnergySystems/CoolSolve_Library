@@ -311,3 +311,8 @@ result table `tests/test_models/cgam-ebsilon-results.csv` (CGAM benchmark).
   fuel/air stoichiometry read backwards, from an exhaust-gas analysis.
 - `CSL-0013` *heat_pump_basic_tespy*: the other translated TESPy model (the
   pilot of this kind of card).
+- `CSL-0141` *gas_turbine_open_cycle*: the open Brayton cycle of the
+  TESPy gas-turbine tutorial, which embeds this chamber (and reuses its
+  `LHV_fuel` function) between an air compressor and a turbine.
+- `CSL-0146` *cgam_cogeneration*: the CGAM benchmark, i.e. this chamber
+  (diabatic, TIT given, fuel flow free) inside the full cogeneration cycle.

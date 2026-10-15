@@ -1,0 +1,62 @@
+{
+  "id": "CSL-0154",
+  "name": "investment_npv_payback",
+  "title": "Economic evaluation of an energy-saving investment: net present value and simple payback time",
+  "summary": "Year-by-year cash flow of an energy-saving measure over its lifetime: discounted cash flow method (net present value NPV_1 of the escalated benefit and cost, discounted at the rate k) and simple payback method (undiscounted accumulation NPV_2, payback time PBT_2). No thermodynamics: meant to be fed with the cost and saving figures of an energy model.",
+  "kind": "steady",
+  "level": 1,
+  "status": "blocked",
+  "main_file": "investment_npv_payback.eescode",
+  "fluids": [],
+  "tags": [
+    "economics",
+    "NPV",
+    "payback time",
+    "discounted cash flow",
+    "energy-saving measure",
+    "exercise"
+  ],
+  "language_features": [
+    "DUPLICATE",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 176,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/Economical_evaluation_of_investment/INVESTISSEMENT_RENTABILITE_SB080108.EES",
+    "candidate_id": "TM-0270",
+    "authors": [
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en",
+    "course": "Machines et systèmes thermiques (ULiège), economic evaluation of energy-saving measures"
+  },
+  "verification": {
+    "summary": "The runnable variant investment_npv_payback_coolsolve.eescode was compared with the EES stored solution: 176 common variables, 0 differ at rtol=0.001 (largest residual 3.6e-10, rounding of the stored values). Cash flows recomputed independently in Python (PBT_2 = 10 years). Native file blocked by CS-BUG-DUPLICATE-INDEX-EXPR.",
+    "checks": ["ees-stored-solution", "analytical"],
+    "reference": "EES stored solution of the source file (the last EES calculation): all 176 variables of the equations agree; the 121 other stored values (D, TIR, a[], DPV, NPV, PBT without subscripts) are leftovers of an earlier version of the file. The parametric table1 (23x2) of the card holds only the placeholder columns Z and ZZ with a row of zeros: no run result, not usable as a reference.",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@2d15382",
+    "max_rel_diff": 3.6e-10,
+    "notes": "The native file is the faithful import (176 equations, 178 unknowns: DPV_1[expr] and DPV_2[expr] are created by the array index arithmetic DPV_1[i-1]/DPV_2[i-1] inside the DUPLICATE loops). The variant writes those two recurrences out with explicit indices 1..20 (valid EES, no CoolSolve-only syntax) and solves in 176 explicit blocks, 0 iterations. Unit system of the source: SI MASS DEG PA C J (no conversion)."
+  },
+  "missing_features": ["CS-BUG-DUPLICATE-INDEX-EXPR"],
+  "related": ["CSL-0153"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added (native file blocked by CS-BUG-DUPLICATE-INDEX-EXPR, runnable variant investment_npv_payback_coolsolve.eescode verified against the EES stored solution)",
+      "by": "opencode (space-bunny-free) for S. Quoilin"
+    }
+  ]
+}

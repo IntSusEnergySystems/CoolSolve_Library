@@ -1,0 +1,242 @@
+{=============================================================================
+ Supercritical CO2 recompression Brayton cycle (100 MW net)
+ CoolSolve Library model CSL-0144
+-----------------------------------------------------------------------------
+ Design-point sCO2 recompression Brayton cycle with two sectioned recuperators,
+ translated from the TESPy model-library example docs/model_library/sco2.ipynb
+ (F. Witte, TESPy commit 19425523), validated there against the published state
+ table of Penkuhn & Tsatsaronis (2018) from the sCO2_exergy model. Main
+ compressor and recompressor (eta_s), turbine (eta_s), two 10-section
+ recuperators (lower terminal temperature difference 5 K each), water cooler,
+ heater; motor/generator efficiencies; the recompressed fraction is fixed by
+ equal merge temperatures (states 11 and 12), as in the original.
+ Inputs : T_1, P_1, P_2, P_3, T_4, P_4, P_5, P_6, P_11, P_14, eta_s_t,
+          eta_s_c1, eta_s_c2, eta_motor, eta_gen, W_net, dT_ttd, n_sec
+ Outputs: states 1-6 and 10-15 (T, p, h, s, m), split ratio, W of each machine,
+          Q_heater, eta_th, sectioned UA of both recuperators, thermal exergy
+ Units  : SI - temperatures in °C, pressures in Pa, energies in J
+ Source : TESPy docs/model_library/sco2.ipynb commit 19425523 (MIT) - README.md
+=============================================================================}
+
+FUNCTION Lmtd(dT_a, dT_b)
+  Lmtd = (dT_a - dT_b)/ln(dT_a/dT_b)   "logarithmic mean temperature difference [K]"
+END
+
+"!Inputs (TESPy connection parameters of the reference design)"
+fluid$ = 'R744'                        "working fluid CO2 (CoolProp 'CO2' in the source)"
+T_1 = 35                               "compressor 1 inlet temperature [C]"
+P_1 = 75E5                             "compressor 1 inlet pressure [Pa] (75 bar)"
+P_2 = 258.4E5                          "compressor 1 outlet pressure [Pa] (258.4 bar)"
+P_3 = 257E5                            "recuperator 2 cold outlet pressure [Pa] (257 bar)"
+T_4 = 600                              "turbine inlet temperature [C]"
+P_4 = 250E5                            "turbine inlet pressure [Pa] (250 bar)"
+P_5 = 77.95E5                          "turbine outlet pressure [Pa] (77.95 bar)"
+P_6 = 75.15E5                          "cooler inlet pressure [Pa] (75.15 bar)"
+P_11 = 257.51E5                        "recompressor outlet / merge pressure [Pa] (257.51 bar, states 11, 12, 13)"
+P_14 = 76.94E5                         "recuperator 2 hot outlet pressure [Pa] (76.94 bar)"
+eta_s_t = 0.9                          "turbine isentropic efficiency [-]"
+eta_s_c1 = 0.85                        "compressor 1 isentropic efficiency [-]"
+eta_s_c2 = 0.85                        "recompressor isentropic efficiency [-]"
+eta_motor = 0.97*0.98                  "motor electrical x mechanical efficiency of both compressor drives [-]"
+eta_gen = 0.99*0.99                    "generator mechanical x electrical efficiency [-]"
+W_net = 100E6                          "net power output [W]"
+dT_ttd = 5                             "lower terminal temperature difference of both recuperators [K]"
+n_sec = 10                             "number of sections of each recuperator [-]"
+T_amb = 15                             "ambient temperature for the exergy [C]"
+P_amb = 1.01325E5                      "ambient pressure for the exergy [Pa]"
+
+"!State 1 (compressor 1 suction) and compressor 1 (state 2)"
+h_1 = enthalpy(fluid$,T=T_1,P=P_1)     "state 1 enthalpy [J/kg]"
+s_1 = entropy(fluid$,T=T_1,P=P_1)      "state 1 entropy [J/kg-K]"
+h_2s = enthalpy(fluid$,P=P_2,s=s_1)    "isentropic discharge enthalpy [J/kg]"
+eta_s_c1*(h_2 - h_1) = h_2s - h_1      "isentropic efficiency of compressor 1 [J/kg]"
+T_2 = temperature(fluid$,h=h_2,P=P_2)  "state 2 temperature [C]"
+s_2 = entropy(fluid$,h=h_2,P=P_2)      "state 2 entropy [J/kg-K]"
+
+"!Turbine (states 4 and 5); state 0 = state 4 (CycleCloser)"
+h_4 = enthalpy(fluid$,T=T_4,P=P_4)     "state 4 enthalpy [J/kg]"
+s_4 = entropy(fluid$,T=T_4,P=P_4)      "state 4 entropy [J/kg-K]"
+h_5s = enthalpy(fluid$,P=P_5,s=s_4)    "isentropic exhaust enthalpy [J/kg]"
+eta_s_t*(h_4 - h_5s) = h_4 - h_5       "isentropic efficiency of the turbine [J/kg]"
+T_5 = temperature(fluid$,h=h_5,P=P_5)  "state 5 temperature [C]"
+s_5 = entropy(fluid$,h=h_5,P=P_5)      "state 5 entropy [J/kg-K]"
+T_0 = T_4
+P_0 = P_4
+h_0 = h_4
+s_0 = s_4
+
+"!Mass flows and recompression split (TESPy Splitter/Merge)"
+m_10 = y_split*m_15                    "recompressed mass flow [kg/s]"
+m_6 = m_15 - m_10                      "cooler branch mass flow [kg/s]"
+m_1 = m_6
+m_2 = m_6
+m_12 = m_2
+m_11 = m_10
+m_13 = m_11 + m_12                     "merge mass balance [kg/s]"
+m_0 = m_15
+m_3 = m_13
+m_4 = m_15
+m_5 = m_15
+m_14 = m_15
+
+"!Splitter (states 6 and 10 = state 15)"
+P_15 = P_6
+P_10 = P_6
+h_6 = h_15
+h_10 = h_15
+T_6 = T_15
+T_10 = T_15
+s_6 = s_15
+s_10 = s_15
+
+"!Recuperator 1 (hot side 14 -> 15, cold side 2 -> 12)"
+m_15*(h_14 - h_15) = m_2*(h_12 - h_2)  "energy balance [W]"
+T_15 - T_2 = dT_ttd                    "lower terminal temperature difference [K]"
+T_11 = T_12                            "merge temperature equality (TESPy Ref(c12, 1, 0)) [C]"
+h_11 = enthalpy(fluid$,T=T_11,P=P_11)  "state 11 enthalpy [J/kg]"
+h_12 = enthalpy(fluid$,T=T_12,P=P_11)  "state 12 enthalpy [J/kg]"
+s_11 = entropy(fluid$,h=h_11,P=P_11)   "state 11 entropy [J/kg-K]"
+s_12 = s_11
+
+"!Recompressor (state 10 -> 11)"
+h_11s = enthalpy(fluid$,P=P_11,s=s_10) "isentropic discharge enthalpy [J/kg]"
+eta_s_c2*(h_11 - h_10) = h_11s - h_10  "isentropic efficiency of the recompressor [J/kg]"
+
+"!Merge (state 13)"
+h_13*m_13 = h_11*m_11 + h_12*m_12      "merge energy balance [W]"
+T_13 = T_11
+s_13 = s_11
+
+"!Recuperator 2 (hot side 5 -> 14, cold side 13 -> 3)"
+m_15*(h_5 - h_14) = m_13*(h_3 - h_13)  "energy balance [W]"
+T_14 - T_13 = dT_ttd                   "lower terminal temperature difference [K]"
+
+"!Remaining state properties"
+T_3 = temperature(fluid$,h=h_3,P=P_3)  "state 3 temperature [C]"
+s_3 = entropy(fluid$,h=h_3,P=P_3)      "state 3 entropy [J/kg-K]"
+T_14 = temperature(fluid$,h=h_14,P=P_14) "state 14 temperature [C]"
+s_14 = entropy(fluid$,h=h_14,P=P_14)   "state 14 entropy [J/kg-K]"
+T_15 = temperature(fluid$,h=h_15,P=P_15) "state 15 temperature [C]"
+s_15 = entropy(fluid$,h=h_15,P=P_15)   "state 15 entropy [J/kg-K]"
+
+"!Powers, heat rates and thermal efficiency"
+W_turb = m_15*(h_4 - h_5)              "turbine power [W]"
+W_cp1 = m_2*(h_2 - h_1)                "compressor 1 power [W]"
+W_cp2 = m_11*(h_11 - h_10)             "recompressor power [W]"
+W_net = eta_gen*W_turb - (W_cp1 + W_cp2)/eta_motor   "net power output [W]"
+Q_heater = m_15*(h_4 - h_3)            "heat input [W]"
+Q_cooler = m_6*(h_6 - h_1)             "heat rejected in the water cooler [W]"
+eta_th = W_net/Q_heater                "thermal efficiency [-]"
+
+"!Sectioned recuperators (TESPy SectionedHeatExchanger, n_sec sections of equal heat;"
+" enthalpies and pressures linearly interpolated between the ends, LMTD per section;"
+" section i spans the step fractions (i-1)/n_sec to i/n_sec, counting from the hot"
+" outlet / cold inlet end, as in the original)"
+Q_rec1 = m_15*(h_14 - h_15)            "recuperator 1 heat rate [W]"
+Q_rec2 = m_15*(h_5 - h_14)             "recuperator 2 heat rate [W]"
+DUPLICATE i = 1, n_sec
+  Fa1[i] = (i - 1)/n_sec               "fraction at the lower-temperature end of section i [-]"
+  Fb1[i] = i/n_sec                     "fraction at the higher-temperature end of section i [-]"
+  hha1[i] = h_15 + Fa1[i]*(h_14 - h_15)  "hot-side enthalpy, section i inlet [J/kg]"
+  hca1[i] = h_2 + Fa1[i]*(h_12 - h_2)  "cold-side enthalpy, section i inlet [J/kg]"
+  hhb1[i] = h_15 + Fb1[i]*(h_14 - h_15)  "hot-side enthalpy, section i outlet [J/kg]"
+  hcb1[i] = h_2 + Fb1[i]*(h_12 - h_2)  "cold-side enthalpy, section i outlet [J/kg]"
+  Pha1[i] = P_15 + Fa1[i]*(P_14 - P_15)  "hot-side pressure, section i inlet [Pa]"
+  Pca1[i] = P_11 + Fa1[i]*(P_2 - P_11) "cold-side pressure, section i inlet [Pa]"
+  Phb1[i] = P_15 + Fb1[i]*(P_14 - P_15)  "hot-side pressure, section i outlet [Pa]"
+  Pcb1[i] = P_11 + Fb1[i]*(P_2 - P_11) "cold-side pressure, section i outlet [Pa]"
+  Tha1[i] = temperature(fluid$,h=hha1[i],P=Pha1[i])  "hot-side temperature, section i inlet [C]"
+  Tca1[i] = temperature(fluid$,h=hca1[i],P=Pca1[i])  "cold-side temperature, section i inlet [C]"
+  Thb1[i] = temperature(fluid$,h=hhb1[i],P=Phb1[i])  "hot-side temperature, section i outlet [C]"
+  Tcb1[i] = temperature(fluid$,h=hcb1[i],P=Pcb1[i])  "cold-side temperature, section i outlet [C]"
+  UA1[i] = (Q_rec1/n_sec)/Lmtd(Tha1[i] - Tca1[i], Thb1[i] - Tcb1[i])  "section conductance [W/K]"
+END
+DUPLICATE i = 1, n_sec
+  Fa2[i] = (i - 1)/n_sec
+  Fb2[i] = i/n_sec
+  hha2[i] = h_14 + Fa2[i]*(h_5 - h_14)   "hot side from outlet (14) to inlet (5)"
+  hca2[i] = h_13 + Fa2[i]*(h_3 - h_13)   "cold side from inlet (13) to outlet (3)"
+  hhb2[i] = h_14 + Fb2[i]*(h_5 - h_14)
+  hcb2[i] = h_13 + Fb2[i]*(h_3 - h_13)
+  Pha2[i] = P_14 + Fa2[i]*(P_5 - P_14)
+  Pca2[i] = P_11 + Fa2[i]*(P_3 - P_11)
+  Phb2[i] = P_14 + Fb2[i]*(P_5 - P_14)
+  Pcb2[i] = P_11 + Fb2[i]*(P_3 - P_11)
+  Tha2[i] = temperature(fluid$,h=hha2[i],P=Pha2[i])
+  Tca2[i] = temperature(fluid$,h=hca2[i],P=Pca2[i])
+  Thb2[i] = temperature(fluid$,h=hhb2[i],P=Phb2[i])
+  Tcb2[i] = temperature(fluid$,h=hcb2[i],P=Pcb2[i])
+  UA2[i] = (Q_rec2/n_sec)/Lmtd(Tha2[i] - Tca2[i], Thb2[i] - Tcb2[i])  "section conductance [W/K]"
+END
+UA_rec1 = UA1[1]+UA1[2]+UA1[3]+UA1[4]+UA1[5]+UA1[6]+UA1[7]+UA1[8]+UA1[9]+UA1[10]  "recuperator 1 UA [W/K]"
+UA_rec2 = UA2[1]+UA2[2]+UA2[3]+UA2[4]+UA2[5]+UA2[6]+UA2[7]+UA2[8]+UA2[9]+UA2[10]  "recuperator 2 UA [W/K]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results;"
+" use the arrays T[i]/s[i] or h[i]/P[i] with the CoolSolve Diagram tab overlay)"
+P[1] = P_1
+h[1] = h_1
+T[1] = T_1
+s[1] = s_1
+P[2] = P_2
+h[2] = h_2
+T[2] = T_2
+s[2] = s_2
+P[3] = P_3
+h[3] = h_3
+T[3] = T_3
+s[3] = s_3
+P[4] = P_4
+h[4] = h_4
+T[4] = T_4
+s[4] = s_4
+P[5] = P_5
+h[5] = h_5
+T[5] = T_5
+s[5] = s_5
+P[6] = P_6
+h[6] = h_6
+T[6] = T_6
+s[6] = s_6
+P[10] = P_10
+h[10] = h_10
+T[10] = T_10
+s[10] = s_10
+P[11] = P_11
+h[11] = h_11
+T[11] = T_11
+s[11] = s_11
+P[12] = P_11
+h[12] = h_12
+T[12] = T_12
+s[12] = s_12
+P[13] = P_11
+h[13] = h_13
+T[13] = T_13
+s[13] = s_13
+P[14] = P_14
+h[14] = h_14
+T[14] = T_14
+s[14] = s_14
+P[15] = P_15
+h[15] = h_15
+T[15] = T_15
+s[15] = s_15
+
+"!Thermal and mechanical exergy of the 12 states (thermomechanical split of the exergy"
+" analysis of Penkuhn & Tsatsaronis 2018, as in the original: e = e_T + e_M, the thermal"
+" part evaluated at constant pressure between the state and T_amb, the mechanical part"
+" between p and P_amb at T_amb)"
+h_amb = enthalpy(fluid$,T=T_amb,P=P_amb)
+s_amb = entropy(fluid$,T=T_amb,P=P_amb)
+DUPLICATE i = 1, 6
+  h_Tamb[i] = enthalpy(fluid$,T=T_amb,P=P[i])  "state enthalpy at ambient temperature [J/kg]"
+  s_Tamb[i] = entropy(fluid$,T=T_amb,P=P[i])   "state entropy at ambient temperature [J/kg-K]"
+  e_T[i] = (h[i] - h_Tamb[i]) - (T_amb + 273.15)*(s[i] - s_Tamb[i])  "thermal exergy [J/kg]"
+  e_M[i] = (h_Tamb[i] - h_amb) - (T_amb + 273.15)*(s_Tamb[i] - s_amb)  "mechanical exergy [J/kg]"
+END
+DUPLICATE i = 10, 15
+  h_Tamb[i] = enthalpy(fluid$,T=T_amb,P=P[i])
+  s_Tamb[i] = entropy(fluid$,T=T_amb,P=P[i])
+  e_T[i] = (h[i] - h_Tamb[i]) - (T_amb + 273.15)*(s[i] - s_Tamb[i])  "thermal exergy [J/kg]"
+  e_M[i] = (h_Tamb[i] - h_amb) - (T_amb + 273.15)*(s_Tamb[i] - s_amb)  "mechanical exergy [J/kg]"
+END

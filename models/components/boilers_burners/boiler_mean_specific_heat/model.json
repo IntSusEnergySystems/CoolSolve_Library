@@ -54,6 +54,8 @@
     "course": "ULiege model bank, Heat Production by Combustion (reference model of 2008-01-10)"
   },
   "verification": {
+    "summary": "With the inputs of the stored EES run of reference model TM-0492, all 42 common variables agree within 0.08 %. An independent Python/CoolProp computation gives `T_p_ad` 1974.46 vs 1974.48 C, and the on/off variant reproduces the stored solution of CSX-005 (48/48 variables).",
+    "checks": ["ees-stored-solution", "other-tool"],
     "reference": "EES stored solution (62 variables, 42 with a counterpart) of the reference model TM-0492 (inputs of the stored run applied to this model); independent Python/CoolProp computation at the shipped inputs; stored solution of the CoolSolve example for the constant-cp variant (48/48)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0+fix/library-gaps@fbdb6a7",

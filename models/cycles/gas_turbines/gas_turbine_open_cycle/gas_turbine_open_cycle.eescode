@@ -1,0 +1,153 @@
+{=============================================================================
+  Open-cycle gas turbine with combustion chamber and generator (TESPy tutorial)
+  CoolSolve Library model CSL-0141
+-----------------------------------------------------------------------------
+  Translation of the TESPy basic tutorial "Gas Turbine" (tutorial/basics/
+  gas_turbine.py, commit 19425523): open Brayton cycle - air compressor,
+  diabatic combustion chamber (3 % pressure loss, 2 % heat loss of the thermal
+  input) burning a CH4/H2/CO2 fuel, flue gas expanding in a turbine that drives
+  the compressor and a generator. All gases are ideal and the flue-gas
+  composition results from a species balance (TESPy stoichiometry_func), so the
+  air mass flow follows from the imposed turbine inlet temperature.
+
+  Inputs : p_1, T_1, pr_cp, eta_s_cp, T_3, pr_cc, eta_cc, m_5, T_5, f_p_fuel,
+           eta_s_tu, eta_gen, air and fuel mass fractions
+  Outputs: m_1, T_2, T_4, flue-gas composition, lambda, ti, W_dot_tu,
+           W_dot_cp, P_dot_grid, eta
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : TESPy tutorial/basics/gas_turbine.py - Francesco Witte and the
+           TESPy contributors, MIT - see README.md
+  Status : VERIFIED against TESPy (base case of the tutorial, sec_9 to sec_11)
+=============================================================================}
+
+{--- Function: lower heating value of a C/H/O fuel, copied from CSL-0139 (which
+     took it from TESPy CombustionChamber.calc_lhv): LHV = -(sum_i hf_i -
+     sum_j hf_j)/MM_fuel, with the molar formation enthalpies of the combustion
+     products (CODATA 1989 in the source: CO2 -393.51, H2O(g) -241.826, O2 0
+     kJ/mol, and 0 for the elements H2 and O2). -}
+FUNCTION LHV_fuel(n_C, n_H, n_O, hf_fuel, hf_CO2, hf_H2O, hf_O2, MM_fuel)
+  LHV_fuel = -(n_H/2*hf_H2O + n_C*hf_CO2 - ((n_C + n_H/4 - n_O/2)*hf_O2 + hf_fuel))/MM_fuel
+End
+
+{--- Functions: enthalpy and entropy of an ideal-gas mixture (TESPy mixing rule
+     "forced-gas": mass-weighted sum of the ideal-gas species properties, the
+     formation enthalpies included; the water is gaseous, as in the source). The
+     mixture entropy misses the constant mixing term, which cancels in the
+     isentropic relations of the compressor and of the turbine (their
+     composition does not change): see README.md. -}
+FUNCTION h_gas(T, x_Ar, x_N2, x_CO2, x_O2, x_H2O, x_CH4, x_H2)
+  h_gas = x_Ar*enthalpy(Ar,T=T) + x_N2*enthalpy(N2,T=T) + x_CO2*enthalpy(CO2,T=T) + x_O2*enthalpy(O2,T=T) + x_H2O*enthalpy(H2O,T=T) + x_CH4*enthalpy(CH4,T=T) + x_H2*enthalpy(H2,T=T)
+End
+
+FUNCTION s_gas(T, P, x_Ar, x_N2, x_CO2, x_O2, x_H2O, x_CH4, x_H2)
+  s_gas = x_Ar*entropy(Ar,T=T,P=P) + x_N2*entropy(N2,T=T,P=P) + x_CO2*entropy(CO2,T=T,P=P) + x_O2*entropy(O2,T=T,P=P) + x_H2O*entropy(H2O,T=T,P=P) + x_CH4*entropy(CH4,T=T,P=P) + x_H2*entropy(H2,T=T,P=P)
+End
+
+"!Inputs (base case = TESPy tutorial sec_9 to sec_11)"
+p_1 = 100000            "ambient pressure at the compressor inlet (TESPy c1) [Pa]"
+T_1 = 20                "ambient temperature at the compressor inlet (TESPy c1) [C]"
+pr_cp = 15              "compressor pressure ratio (TESPy Compressor pr) [-]"
+eta_s_cp = 0.85         "compressor isentropic efficiency (TESPy Compressor eta_s) [-]"
+T_3 = 1200              "turbine inlet temperature (TESPy c3.T) [C]"
+pr_cc = 0.97            "combustion chamber pressure ratio (TESPy cc pr) [-]"
+eta_cc = 0.98           "combustion chamber efficiency, 1 - heat loss/thermal input (TESPy cc eta) [-]"
+m_5 = 1                 "fuel mass flow (TESPy c5.m) [kg/s]"
+T_5 = 20                "fuel temperature (TESPy c5.T) [C]"
+f_p_fuel = 1.05         "fuel pressure = f_p_fuel*p_2 (TESPy c5.p = Ref(c2, 1.05, 0)) [-]"
+eta_s_tu = 0.90         "turbine isentropic efficiency (TESPy Turbine eta_s) [-]"
+eta_gen = 0.98          "generator efficiency (TESPy Generator eta) [-]"
+
+"!Composition of the air and of the fuel (TESPy fluid dicts of c1 and c5), mass fractions"
+x_Ar_1 = 0.0129         "Ar mass fraction of the air [-]"
+x_N2_1 = 0.7553         "N2 mass fraction of the air [-]"
+x_CO2_1 = 0.0004        "CO2 mass fraction of the air [-]"
+x_O2_1 = 0.2314         "O2 mass fraction of the air [-]"
+x_CO2_5 = 0.03          "CO2 mass fraction of the fuel (diluent) [-]"
+x_CH4_5 = 0.92          "CH4 mass fraction of the fuel [-]"
+x_H2_5 = 0.05           "H2 mass fraction of the fuel [-]"
+
+"!Molar masses and molar formation enthalpies of the species (TESPy COMBUSTION_FLUIDS)"
+MM_Ar = molarmass(Ar)   "molar mass of Ar [kg/kmol]"
+MM_N2 = molarmass(N2)   "molar mass of N2 [kg/kmol]"
+MM_CO2 = molarmass(CO2) "molar mass of CO2 [kg/kmol]"
+MM_O2 = molarmass(O2)   "molar mass of O2 [kg/kmol]"
+MM_H2O = molarmass(H2O) "molar mass of H2O [kg/kmol]"
+MM_CH4 = molarmass(CH4) "molar mass of CH4 [kg/kmol]"
+MM_H2 = molarmass(H2)   "molar mass of H2 [kg/kmol]"
+hf_CO2 = -393.51E6      "formation enthalpy of CO2 (CODATA 1989, as in the source) [J/kmol]"
+hf_H2O = -241.826E6     "formation enthalpy of water vapour (CODATA 1989, as in the source) [J/kmol]"
+hf_O2 = 0               "formation enthalpy of O2 (element, as in the source) [J/kmol]"
+hf_CH4 = -74.6E6        "formation enthalpy of methane (TESPy COMBUSTION_FLUIDS) [J/kmol]"
+hf_H2 = 0               "formation enthalpy of H2 (element, as in the source) [J/kmol]"
+T_ref = 25              "reference temperature of the energy balance (298.15 K in the source) [C]"
+LHV_CH4 = LHV_fuel(1, 4, 0, hf_CH4, hf_CO2, hf_H2O, hf_O2, MM_CH4)  "lower heating value of CH4 [J/kg]"
+LHV_H2 = LHV_fuel(0, 2, 0, hf_H2, hf_CO2, hf_H2O, hf_O2, MM_H2)    "lower heating value of H2 [J/kg]"
+
+"!State 1 = compressor inlet = ambient air (TESPy c1). The air mass flow m_1 [kg/s] is unknown"
+m_2 = m_1               "compressor mass flow (TESPy c2) [kg/s]"
+m_3 = m_1 + m_5         "flue gas mass flow (TESPy c3 and c4) [kg/s]"
+m_4 = m_3               "turbine mass flow (TESPy c4) [kg/s]"
+h_1 = h_gas(T_1, x_Ar_1, x_N2_1, x_CO2_1, x_O2_1, 0, 0, 0)   "air mixture enthalpy [J/kg]"
+s_1 = s_gas(T_1, p_1, x_Ar_1, x_N2_1, x_CO2_1, x_O2_1, 0, 0, 0)   "air mixture entropy [J/kg-K]"
+
+"!Compressor (TESPy Compressor eta_s): p_2 = pr_cp*p_1 and h_2s on the isentrope s_1"
+p_2 = pr_cp*p_1         "compressor outlet pressure (TESPy c2.p) [Pa]"
+s_gas(T_2s, p_2, x_Ar_1, x_N2_1, x_CO2_1, x_O2_1, 0, 0, 0) = s_1  "isentropic compressor outlet temperature T_2s [C], constant composition"
+(h_gas(T_2, x_Ar_1, x_N2_1, x_CO2_1, x_O2_1, 0, 0, 0) - h_1)*eta_s_cp = h_gas(T_2s, x_Ar_1, x_N2_1, x_CO2_1, x_O2_1, 0, 0, 0) - h_1   "compressor outlet temperature T_2 [C] from the isentropic efficiency"
+h_2 = h_gas(T_2, x_Ar_1, x_N2_1, x_CO2_1, x_O2_1, 0, 0, 0)   "compressed air enthalpy [J/kg]"
+s_2 = s_gas(T_2, p_2, x_Ar_1, x_N2_1, x_CO2_1, x_O2_1, 0, 0, 0)   "compressed air entropy [J/kg-K]"
+
+"!Fuel inlet 2 of the chamber (TESPy c5); its pressure is detached from the
+   other pressures in the source and given here as 1.05*p_2"
+p_5 = f_p_fuel*p_2     "fuel pressure (TESPy c5.p) [Pa]"
+h_5 = h_gas(T_5, 0, 0, x_CO2_5, 0, 0, x_CH4_5, x_H2_5)   "fuel mixture enthalpy [J/kg]"
+
+"!Combustion chamber (TESPy DiabaticCombustionChamber): pressure ratio and
+   molar flows of the fuel species and of the available oxygen"
+p_3 = pr_cc*p_2         "flue gas pressure (TESPy c3.p) [Pa]"
+n_dot_CH4 = m_5*x_CH4_5/MM_CH4            "molar flow of CH4 in the fuel [kmol/s]"
+n_dot_H2 = m_5*x_H2_5/MM_H2              "molar flow of H2 in the fuel [kmol/s]"
+n_dot_C = n_dot_CH4                      "molar flow of C atoms of the fuel [kmol/s]"
+n_dot_H = 4*n_dot_CH4 + 2*n_dot_H2       "molar flow of H atoms of the fuel [kmol/s]"
+n_dot_O2_air = m_1*x_O2_1/MM_O2          "molar flow of O2 in the air [kmol/s]"
+n_dot_O2_stoich = n_dot_H/4 + n_dot_C    "stoichiometric molar flow of O2 of the fuel [kmol/s]"
+lambda = n_dot_O2_air/n_dot_O2_stoich   "available oxygen / stoichiometric oxygen (TESPy lamb) [-]"
+
+"!Flue-gas species balances (TESPy stoichiometry_func, lambda > 1: the whole
+   fuel is burnt, the inerts and the CO2 diluent pass through)"
+m_3*x_Ar_3 = m_1*x_Ar_1                          "Ar mass fraction of the flue gas, from the Ar balance [kg/s]"
+m_3*x_N2_3 = m_1*x_N2_1                          "N2 mass fraction of the flue gas, from the N2 balance [kg/s]"
+m_3*x_CO2_3 = m_1*x_CO2_1 + m_5*x_CO2_5 + n_dot_C*MM_CO2    "CO2 mass fraction of the flue gas: air, diluent and burnt carbon [kg/s]"
+m_3*x_O2_3 = m_1*x_O2_1 - n_dot_O2_air*MM_O2/lambda         "O2 mass fraction of the flue gas: available oxygen less the burnt share [kg/s]"
+m_3*x_H2O_3 = n_dot_H/2*MM_H2O                  "H2O mass fraction of the flue gas: the H atoms of the fuel [kg/s]"
+m_3*x_CH4_3 = m_5*x_CH4_5 - n_dot_CH4*MM_CH4     "unburned CH4 mass fraction of the flue gas (complete combustion) [kg/s]"
+m_3*x_H2_3 = m_5*x_H2_5 - n_dot_H2*MM_H2        "unburned H2 mass fraction of the flue gas (complete combustion) [kg/s]"
+
+"!Thermal input (TESPy _calc_ti sums the lower heating value over the fuel
+   species) and heat dissipation of the diabatic variant (TESPy Qloss)"
+ti = m_5*(x_CH4_5*LHV_CH4 + x_H2_5*LHV_H2)       "thermal input of the fuel [W]"
+Q_loss = -(1 - eta_cc)*ti                       "heat dissipation to the ambient [W]"
+
+"!Energy balance of the chamber (TESPy energy_balance_func of the diabatic
+   variant), lower heating value basis: the mixture enthalpies are referred to
+   T_ref, and only eta_cc*ti of the thermal input reaches the gas"
+h_ref_1 = h_gas(T_ref, x_Ar_1, x_N2_1, x_CO2_1, x_O2_1, 0, 0, 0)   "air mixture enthalpy at T_ref [J/kg]"
+h_ref_5 = h_gas(T_ref, 0, 0, x_CO2_5, 0, 0, x_CH4_5, x_H2_5)       "fuel mixture enthalpy at T_ref [J/kg]"
+h_ref_3 = h_gas(T_ref, x_Ar_3, x_N2_3, x_CO2_3, x_O2_3, x_H2O_3, x_CH4_3, x_H2_3)   "flue gas mixture enthalpy at T_ref [J/kg]"
+h_3 = h_gas(T_3, x_Ar_3, x_N2_3, x_CO2_3, x_O2_3, x_H2O_3, x_CH4_3, x_H2_3)   "flue gas mixture enthalpy [J/kg]"
+s_3 = s_gas(T_3, p_3, x_Ar_3, x_N2_3, x_CO2_3, x_O2_3, x_H2O_3, x_CH4_3, x_H2_3)   "flue gas mixture entropy [J/kg-K]"
+m_1*(h_2 - h_ref_1) + m_5*(h_5 - h_ref_5) + eta_cc*ti = m_3*(h_3 - h_ref_3)   "energy balance of the combustion chamber [W]"
+
+"!Turbine (TESPy Turbine eta_s): p_4 = p_1 and h_4s on the isentrope s_3"
+p_4 = p_1               "turbine outlet pressure (TESPy c4.p) [Pa]"
+s_gas(T_4s, p_4, x_Ar_3, x_N2_3, x_CO2_3, x_O2_3, x_H2O_3, x_CH4_3, x_H2_3) = s_3   "isentropic turbine outlet temperature T_4s [C], constant composition"
+h_3 - h_4 = eta_s_tu*(h_3 - h_gas(T_4s, x_Ar_3, x_N2_3, x_CO2_3, x_O2_3, x_H2O_3, x_CH4_3, x_H2_3))   "turbine outlet temperature T_4 [C] from the isentropic efficiency"
+h_4 = h_gas(T_4, x_Ar_3, x_N2_3, x_CO2_3, x_O2_3, x_H2O_3, x_CH4_3, x_H2_3)   "flue gas enthalpy at the turbine outlet [J/kg]"
+s_4 = s_gas(T_4, p_4, x_Ar_3, x_N2_3, x_CO2_3, x_O2_3, x_H2O_3, x_CH4_3, x_H2_3)   "flue gas entropy at the turbine outlet [J/kg-K]"
+
+"!Shaft and generator (TESPy PowerBus, Generator and PowerSink)"
+W_dot_tu = m_3*(h_3 - h_4)      "turbine power (TESPy e1) [W]"
+W_dot_cp = m_1*(h_2 - h_1)      "compressor power (TESPy e2) [W]"
+W_dot_gen = W_dot_tu - W_dot_cp  "power delivered to the generator by the shaft (TESPy e3) [W]"
+P_dot_grid = eta_gen*W_dot_gen  "net power delivered to the grid (TESPy e4) [W]"
+eta = P_dot_grid/ti              "thermal efficiency of the cycle [-]"

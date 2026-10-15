@@ -45,6 +45,8 @@
     "course": "Thermodynamique appliquée (ULiège MECA0002), repetition 11 (combustion), exercise 3"
   },
   "verification": {
+    "summary": "Not the native file but its runnable variant was compared with the EES stored solution: 58 common variables, 9 differ (rtol=0.001), only enthalpy reference states; e, lambda, far and Q_dot_utile agree within 5e-06 to 8e-05. The Python/CoolProp solution prints e = 89.4 %, lambda = 189.4 %.",
+    "checks": ["ees-stored-solution", "source-rerun"],
     "reference": "EES stored solution of the source file (58 variables, --ees-units) and the Python/CoolProp solution of the same exercise in the collection (2018-2019 repetition folder); the comparison concerns the runnable variant diesel_engine_excess_air_exhaust_analysis_coolsolve.eescode, the native file being blocked",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",

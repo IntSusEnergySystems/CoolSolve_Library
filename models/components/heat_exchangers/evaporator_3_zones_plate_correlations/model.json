@@ -5,7 +5,7 @@
   "summary": "Plate evaporator for R245fa heated by thermal oil (or glycol): three refrigerant zones (subcooled liquid, boiling two-phase, superheated vapour) sized with LMTD and plate-heat-exchanger correlations (Thonon single phase, Hsieh & Lin boiling); computes area, pressure drops and writes the zone boundary data into the 'ev' lookup table. Ships the auto-size source file of the same family as a variant (R123/water demo case).",
   "kind": "steady",
   "level": 2,
-  "status": "runs",
+  "status": "verified",
   "main_file": "evaporator_3_zones_plate_correlations.eescode",
   "fluids": [
     "R245fa",
@@ -50,6 +50,8 @@
     "course": ""
   },
   "verification": {
+    "summary": "Compared with the EES stored solutions of both source files; main file: 19 common variables, 4 differ at rtol=0.001, max 7.69e-03 on p_ev (R245fa saturation pressure, EES vs CoolProp). The stored hx_ev outputs are stale, so they were checked by an energy balance (30.79 kW on both fluid sides).",
+    "checks": ["ees-stored-solution", "energy-balance"],
     "reference": "EES stored solutions of both source files (TM-0570: 21 variables; TM-0582 autosize variant: 30 variables). The stored values of the hx_ev outputs are stale in both files (call outputs stored as the EES guess 1; TM-0582 record internally inconsistent: A_ev = -0.948 vs A_l+A_tp+A_v = 9.610), so the reference covers the inputs and the simple computed quantities only.",
     "date": "2026-10-07",
     "coolsolve_version": "0.3.0@7addbbc",
@@ -73,6 +75,11 @@
       "date": "2026-10-07",
       "action": "added",
       "by": "opencode worker (GLM) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-14",
+      "action": "status runs → verified (verification field)",
+      "by": "claude-haiku"
     }
   ]
 }

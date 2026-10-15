@@ -171,3 +171,6 @@ is the CoolSolve example derived from it).
 
 - `CSL-0052` *combined_gas_steam_cycle*: the same steam cycle of the
   repetition used as the bottoming cycle of a combined gas-steam cycle.
+- `CSL-0147` *segs_solar_power_plant*: large validated counterpart of this cycle (7 turbine
+  stages, 5 preheaters with subcoolers, deaerator, cooling tower), translated from the TESPy
+  Ebsilon benchmark.

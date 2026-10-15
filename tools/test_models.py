@@ -6,7 +6,7 @@ Two kinds of targets are tested; each is copied to a temporary folder, solved
 with the CoolSolve CLI, and its fresh solution is compared with the `.sol`
 committed next to it (the regression baseline):
 
-  * the main file of every model whose status is verified / runs / modified,
+  * the main file of every model whose status is verified / modified,
     reported as `CSL-xxxx` (blocked / failing / stub native files are skipped);
   * every other `*.eescode` file of a model folder that has a sibling `.sol` of
     the same stem -- a runnable variant such as `<name>_coolsolve.eescode`,
@@ -41,7 +41,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-RUNNABLE = {"verified", "runs", "modified"}
+RUNNABLE = {"verified", "modified"}
 
 # CoolProp git commit (full SHA or an unambiguous prefix) that produced the `.sol` baselines of the
 # library. CoolSolve pins its CoolProp commit (COOLSOLVE_COOLPROP_PINNED_TAG in its CMakeLists.txt):

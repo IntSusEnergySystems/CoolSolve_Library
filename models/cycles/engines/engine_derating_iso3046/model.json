@@ -44,6 +44,8 @@
     "course": "MCI TP2 exercises 1-2 (ULiège, P. Ngendakumana)"
   },
   "verification": {
+    "summary": "Compared with the EES stored solution (exercise 1): 14 common variables, 0 differ at rtol=0.001, max relative difference 3.5e-5 (p_w_s_x, steam saturation pressure); K 3.4e-6 and alpha 3.9e-6. Exercise 2 has no stored reference and was only hand-checked.",
+    "checks": ["ees-stored-solution", "analytical"],
     "reference": "EES stored solution of the source file (exercise 1 is the stored run): the native file agrees on all 14 common variables, max rel. diff 3.5e-5 (p_w_s_x, steam saturation pressure CoolProp vs EES); alpha 3.9e-6; the 3 other stored values (altitude_x, q, Test_x) are stale leftovers of exercise 2 and of the commented Test block, absent from the stored run",
     "date": "2026-10-10",
     "coolsolve_version": "0.3.0@6f10211",

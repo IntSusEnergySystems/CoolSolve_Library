@@ -5,7 +5,7 @@
   "summary": "Two-litre piston air compressor tested at 1500 rpm between 1 bar / 15 C suction and 5 bar discharge with identified overall efficiencies (0.75 / 0.55), dead-volume factor and proportional loss factor: the suction pressure drop and the internal leakage are modelled by equivalent isentropic nozzles whose areas are solved, the leak mixes back into the suction flow and the internal isentropic compression is closed by the clearance-volume volumetric efficiency; meant to be swept over speed.",
   "kind": "steady",
   "level": 2,
-  "status": "runs",
+  "status": "verified",
   "main_file": "piston_compressor_suction_drop_leakage.eescode",
   "fluids": [
     "Air"
@@ -42,6 +42,8 @@
     "course": "ULiège, Machines et systèmes thermiques, repetition 2, TP 02 (extra exercise)"
   },
   "verification": {
+    "summary": "Compared with the EES stored solution of the original file (EES 7.458, 55 variables): 55 common variables, 38 differ (rtol=0.001); explained by a stale stored value, another root of the leakage loop under CoolProp Air and reference-state offsets. Admission-branch quantities agree within 2.8e-03.",
+    "checks": ["ees-stored-solution"],
     "reference": "EES stored solution of TM-0019 (EES 7.458, 55 variables)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
@@ -65,6 +67,11 @@
       "date": "2026-10-05",
       "action": "added (task C-71: import of the CoolSolve example CSX-025 with its EES original TM-0019; the model follows the EES original, closure A_thr_admission added)",
       "by": "opencode worker (t63) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-14",
+      "action": "status runs → verified (verification field)",
+      "by": "claude-haiku"
     }
   ]
 }

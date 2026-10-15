@@ -1,0 +1,69 @@
+{
+  "id": "CSL-0142",
+  "name": "district_heating_loop",
+  "title": "District heating loop (consumer, feed pump, pipes with pressure drop and heat loss)",
+  "summary": "Small district-heating loop (TESPy basic tutorial): heating plant, feed pump with isentropic efficiency, consumer with 2 % pressure drop, isenthalpic control valve and two pipes with Darcy-Weisbach pressure drop (Colebrook-White) and UA*LMTD heat loss to the ambient; returns the mass flow, the pump power, the heat duties and the loop efficiency, and reproduces the tutorial's part-load studies.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "district_heating_loop.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "district heating",
+    "heating network",
+    "feed pump",
+    "consumer",
+    "control valve",
+    "Darcy-Weisbach",
+    "Colebrook-White",
+    "pipe heat loss",
+    "UA-LMTD",
+    "part load",
+    "tutorial"
+  ],
+  "language_features": [
+    "functions",
+    "property functions",
+    "built-in procedure Colebrook",
+    "DUPLICATE"
+  ],
+  "stats": {"n_equations": 71, "largest_block": 10},
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/tutorial/basics/district_heating.py",
+    "candidate_id": "TSP-037",
+    "authors": [
+      "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+    ],
+    "url": "https://github.com/oemof/tespy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "TESPy basic tutorial District Heating Network (commit 19425523)"
+  },
+  "verification": {
+    "summary": "Compared with a re-run of the TESPy tutorial district_heating.py: 20 common variables, max relative deviation 3.65e-03 on m_dot (INCOMP::Water vs Water properties); in the sweeps efficiency agrees to 3.6e-07 and pipe heat loss to 2.8e-06. The loop energy balance closes (-3.4e-9 W).",
+    "checks": ["source-rerun", "energy-balance"],
+    "reference": "TESPy tutorial district_heating.py re-run from the local snapshot (commit 19425523) in a throw-away venv (Python 3.12, TESPy 0.11.3.dev0, CoolProp 8.0.0): base case (sec_4/sec_5) and two points of each of the three part-load sweeps (sec_5); the loop energy balance of the script is compared as well",
+    "date": "2026-10-14",
+    "coolsolve_version": "0.3.0@e635c85",
+    "max_rel_diff": 0.0037,
+    "notes": "Base case: 20 common variables, max relative deviation 3.65e-03 (m_dot); W_pump 1.0e-03, dp_valve 7.8e-04, pressures <= 8.3e-05, temperatures <= 1.3e-05, eta 7.0e-08. Caused by the fluid properties: TESPy uses CoolProp's incompressible back end INCOMP::Water (rho 968.3 kg/m3, cp 4189 J/kg-K at 90 degC), the model the real EES fluid Water (rho 965.7 kg/m3, cp 4203 J/kg-K). Absolute enthalpies h[i] are not compared (reference-state offset: TESPy h=0 at 0 K, CoolProp Water IIR h=200 kJ/kg at 0 degC); the enthalpy differences enter through the compared duties. Sweep points: eta agrees to 3.6e-07, pipe heat loss to 2.8e-06, m_dot to 3.65e-03. Energy balance Q_hs + W_pump + Q_cons + Q_feed + Q_return = -3.4e-9 W."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0013",
+    "CSL-0018",
+    "CSL-0130",
+    "CSL-0137"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-14", "action": "added (T-TRANSLATE of the TESPy district heating tutorial, roadmap C-187)", "by": "opencode worker for S. Quoilin"}
+  ]
+}

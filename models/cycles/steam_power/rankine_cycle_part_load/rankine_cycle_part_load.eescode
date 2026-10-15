@@ -1,0 +1,205 @@
+{=============================================================================
+  Rankine cycle with cooling-water condenser, generator/motor and part load
+  CoolSolve Library model CSL-0140
+-----------------------------------------------------------------------------
+  Translation of the TESPy basic tutorial "Rankine Cycle"
+  (tutorial/basics/rankine.py, commit 19425523). Two operating points of the
+  same steam power plant are solved simultaneously: the design point (TESPy
+  sec_3/sec_6: live steam mass flow and turbine outlet pressure given, main
+  condenser cooled by a cooling-water flow of 20 -> 30 degC, turbine
+  eta_s = 0.9, pump eta_s = 0.75, steam generator pr = 0.9) with its generator
+  and motor efficiencies, and a part-load point (TESPy sec_9-sec_11) whose
+  turbine inlet pressure follows Stodola's cone law, whose condenser UA and
+  whose cooling-water volumetric flow keep their design values.
+  Inputs : fluid$, m_1, T_1, p_1, p_2, T_11, T_12, p_11, eta_s_tu, eta_s_fp,
+           eta_gen, eta_mot, pr_sg, pr_mc1, pr_mc2, m_1_pl
+  Outputs: duties, powers, efficiencies, state points of both points
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : TESPy, tutorial/basics/rankine.py, Witte & Tuschy, MIT - see README.md
+           LMTD function and UA/ttd_u rating: CSL-0137 (TESPy Condenser class)
+  Status : verified against a re-run of the tutorial script (README.md)
+=============================================================================}
+
+"!--- Library functions copied from CSL-0137 ---"
+FUNCTION LMTD_smoothed(td_a, td_b)
+{----------------------------------------------------------------------------
+  Smoothed logarithmic mean temperature difference of a counterflow exchanger,
+  as in tespy.components.heat_exchangers.base.smoothed_lmtd (commit 19425523),
+  itself from S. Quoilin, "Study of cooling and heat pump systems", PhD thesis,
+  University of Liege, 2011 (threshold 1 K and slope 1e4 there; TESPy lowers
+  both for lower pinches and lower stiffness).
+    dT_a, dT_b > eps : dT_log = (td_a - td_b)/LN(td_a/td_b), and (td_a+td_b)/2
+                       when the two differences are equal to round-off
+    td_a > eps      : linear extrapolation with the slope xi around eps
+    otherwise       : the two-sided limit eps/((1-xi*(td_a-eps))*(1-xi*(td_b-eps)))
+  Arguments td_a, td_b: terminal temperature differences [K]
+  Returns          : smoothed logarithmic mean temperature difference [K]
+----------------------------------------------------------------------------}
+  eps = 0.001        "threshold of the smoothing [K] (_LMTD_SMOOTHING_EPS)"
+  xi = 5             "slope of the extrapolation [1/K] (_LMTD_SMOOTHING_XI)"
+  IF (td_a > eps AND td_b > eps) THEN
+    IF (ABS(td_a - td_b) <= 1E-6) THEN
+      LMTD_smoothed = (td_a + td_b)/2
+    ELSE
+      LMTD_smoothed = (td_a - td_b)/LN(td_a/td_b)
+    ENDIF
+  ELSE
+    IF (td_a > eps) THEN
+      LMTD_smoothed = (td_a - eps)/(LN(td_a/eps)*(1 - xi*(td_b - eps)))
+    ELSE
+      IF (td_b > eps) THEN
+        LMTD_smoothed = (td_b - eps)/(LN(td_b/eps)*(1 - xi*(td_a - eps)))
+      ELSE
+        LMTD_smoothed = eps/((1 - xi*(td_a - eps))*(1 - xi*(td_b - eps)))
+      ENDIF
+    ENDIF
+  ENDIF
+END
+
+"!Inputs, design point (base case of TESPy sec_3/sec_6)"
+fluid$ = 'Water'      "steam, TESPy c1 fluid {'water': 1}"
+cw$ = 'Water'         "cooling water, TESPy c11 fluid {'water': 1}"
+m_1 = 10              "live steam mass flow, TESPy c1 m [kg/s]"
+T_1 = 600             "live steam temperature, TESPy c1 T [C]"
+p_1 = 150E5           "live steam pressure, 150 bar in the original (TESPy c1 p) [Pa]"
+p_2 = 0.1E5           "turbine outlet pressure, 0.1 bar in the original (TESPy c2 p) [Pa]"
+pr_sg = 0.9           "steam generator pressure ratio p_out/p_in, TESPy sg pr [-]"
+eta_s_tu = 0.9        "steam turbine isentropic efficiency, TESPy tu eta_s [-]"
+eta_s_fp = 0.75       "feed pump isentropic efficiency, TESPy fp eta_s [-]"
+pr_mc1 = 1            "condenser steam-side pressure ratio p_out/p_in, TESPy mc pr1 [-]"
+pr_mc2 = 0.98         "condenser cooling-water pressure ratio p_out/p_in, TESPy mc pr2 [-]"
+T_11 = 20             "cooling water inlet temperature, TESPy c11 T [C]"
+p_11 = 1.2E5          "cooling water inlet pressure, 1.2 bar in the original (TESPy c11 p) [Pa]"
+T_12 = 30             "cooling water outlet temperature, TESPy c12 T [C]"
+eta_gen = 0.97        "generator efficiency, TESPy generator eta (sec_6) [-]"
+eta_mot = 0.97        "motor efficiency, TESPy motor eta (sec_6) [-]"
+m_1_pl = 15           "live steam mass flow of the part-load point, TESPy c1 m (sec_11) [kg/s]"
+
+"!Design point: live steam at the turbine inlet (TESPy connection c1)"
+h_1 = ENTHALPY(fluid$,T=T_1,P=p_1)      "live steam enthalpy [J/kg]"
+s_1 = ENTROPY(fluid$,T=T_1,P=p_1)        "live steam entropy [J/(kg-K)]"
+
+"!Steam generator (TESPy SimpleHeatExchanger pr) and cycle closer (TESPy CycleCloser)"
+h_0 = h_1                               "live steam enthalpy = generator outlet enthalpy [J/kg]"
+p_0 = p_1                               "live steam pressure = generator outlet pressure [Pa]"
+p_4 = p_0/pr_sg                         "feed water pressure at the pump outlet [Pa]"
+
+"!Main condenser, steam side (TESPy Condenser pr1, outlet on the bubble line)"
+p_3 = pr_mc1*p_2                        "condensate pressure [Pa]"
+h_3 = ENTHALPY(fluid$,P=p_3,x=0)       "condensate enthalpy [J/kg]"
+T_3 = TEMPERATURE(fluid$,P=p_3,x=0)    "condensation temperature [C]"
+s_3 = ENTROPY(fluid$,P=p_3,x=0)        "condensate entropy [J/(kg-K)]"
+T_dew = TEMPERATURE(fluid$,P=p_2,x=1)  "dew temperature at the turbine outlet pressure [C]"
+
+"!Feed pump (TESPy Pump eta_s)"
+h_4s = ENTHALPY(fluid$,s=s_3,P=p_4)    "isentropic feed water enthalpy [J/kg]"
+h_4 = h_3 + (h_4s - h_3)/eta_s_fp       "feed water enthalpy at the pump outlet [J/kg]"
+T_4 = TEMPERATURE(fluid$,h=h_4,P=p_4)  "feed water temperature [C]"
+
+"!Steam turbine (TESPy Turbine eta_s)"
+h_2s = ENTHALPY(fluid$,s=s_1,P=p_2)    "isentropic turbine outlet enthalpy [J/kg]"
+h_2 = h_1 - eta_s_tu*(h_1 - h_2s)      "turbine outlet enthalpy [J/kg]"
+T_2 = TEMPERATURE(fluid$,h=h_2,P=p_2)  "turbine outlet temperature [C]"
+x_2 = QUALITY(fluid$,h=h_2,P=p_2)      "turbine outlet vapour quality [-]"
+
+"!Duties and shaft powers (TESPy sg.Q, mc.Q, tu.P, fp.P)"
+Q_sg = m_1*(h_0 - h_4)                 "steam generator duty [W]"
+Q_mc = m_1*(h_2 - h_3)                 "condenser duty [W]"
+P_tu = m_1*(h_1 - h_2)                 "steam turbine power [W]"
+P_fp = m_1*(h_4 - h_3)                 "feed pump power [W]"
+eta_tu = P_tu/Q_sg                     "steam turbine efficiency (TESPy tu.efficiency) [-]"
+eta_cycle = (P_tu - P_fp)/Q_sg         "cycle efficiency, as printed by TESPy [-]"
+
+"!Cooling water (TESPy Source c11, Sink c12)"
+h_11 = ENTHALPY(cw$,T=T_11,P=p_11)     "cooling water enthalpy at the condenser inlet [J/kg]"
+v_11 = VOLUME(cw$,T=T_11,P=p_11)       "cooling water specific volume at the condenser inlet [m3/kg]"
+p_12 = pr_mc2*p_11                     "cooling water pressure at the condenser outlet [Pa]"
+h_12 = ENTHALPY(cw$,T=T_12,P=p_12)     "cooling water enthalpy at the condenser outlet [J/kg]"
+m_11 = Q_mc/(h_12 - h_11)              "cooling water mass flow (TESPy condenser energy balance) [kg/s]"
+V_dot_cw = m_11*v_11                  "cooling water volumetric flow at the condenser inlet [m3/s]"
+
+"!Condenser rating of the design point (TESPy Condenser ttd_u and UA_func)"
+ttd_u = T_dew - T_12                   "upper terminal temperature difference to the dew line [K]"
+ttd_l = T_3 - T_11                     "lower terminal temperature difference [K]"
+lmtd = LMTD_smoothed(ttd_u, ttd_l)     "effective logarithmic mean temperature difference [K]"
+UA = Q_mc/lmtd                         "design heat transfer coefficient, held at part load [W/K]"
+
+"!Generator and motor (TESPy sec_6: eta = 0.97 on both machines)"
+P_gen = eta_gen*P_tu                   "electrical power produced by the generator [W]"
+P_mot = P_fp/eta_mot                   "electrical power drawn by the feed pump motor [W]"
+P_grid = P_gen - P_mot                 "net electrical power delivered to the grid (TESPy e5.E) [W]"
+eta_el = P_grid/Q_sg                   "plant electrical efficiency (TESPy sec_8/sec_11) [-]"
+
+"!Part-load point (TESPy sec_9-sec_11, offdesign run with the design state above)"
+T_1_pl = T_1                           "live steam temperature, not a design specification (TESPy c1) [C]"
+h_1_pl = ENTHALPY(fluid$,T=T_1_pl,P=p_1_pl)  "live steam enthalpy [J/kg]"
+s_1_pl = ENTROPY(fluid$,T=T_1_pl,P=p_1_pl)    "live steam entropy [J/(kg-K)]"
+v_1 = VOLUME(fluid$,T=T_1,P=p_1)       "design specific volume at the turbine inlet (cone law reference) [m3/kg]"
+v_1_pl = VOLUME(fluid$,h=h_1_pl,P=p_1_pl)      "part-load specific volume at the turbine inlet [m3/kg]"
+h_0_pl = h_1_pl                        "live steam enthalpy = generator outlet enthalpy [J/kg]"
+p_0_pl = p_1_pl                        "live steam pressure = generator outlet pressure [Pa]"
+p_4_pl = p_0_pl/pr_sg                  "feed water pressure at the pump outlet [Pa]"
+
+"!Main condenser of the part-load point: condensing pressure unknown, UA constant"
+p_3_pl = pr_mc1*p_2_pl                 "condensate pressure [Pa]"
+h_3_pl = ENTHALPY(fluid$,P=p_3_pl,x=0) "condensate enthalpy [J/kg]"
+T_3_pl = TEMPERATURE(fluid$,P=p_3_pl,x=0)  "condensation temperature [C]"
+s_3_pl = ENTROPY(fluid$,P=p_3_pl,x=0)  "condensate entropy [J/(kg-K)]"
+T_dew_pl = TEMPERATURE(fluid$,P=p_2_pl,x=1) "dew temperature at the turbine outlet pressure [C]"
+
+"!Feed pump of the part-load point (TESPy Pump eta_s, unchanged)"
+h_4s_pl = ENTHALPY(fluid$,s=s_3_pl,P=p_4_pl)   "isentropic feed water enthalpy [J/kg]"
+h_4_pl = h_3_pl + (h_4s_pl - h_3_pl)/eta_s_fp   "feed water enthalpy at the pump outlet [J/kg]"
+
+"!Steam turbine of the part-load point (TESPy Turbine eta_s, cone law offdesign)"
+h_2s_pl = ENTHALPY(fluid$,s=s_1_pl,P=p_2_pl)   "isentropic turbine outlet enthalpy [J/kg]"
+h_2_pl = h_1_pl - eta_s_tu*(h_1_pl - h_2s_pl)   "turbine outlet enthalpy [J/kg]"
+x_2_pl = QUALITY(fluid$,h=h_2_pl,P=p_2_pl)     "turbine outlet vapour quality [-]"
+
+"!Duties and shaft powers of the part-load point"
+Q_sg_pl = m_1_pl*(h_0_pl - h_4_pl)     "steam generator duty [W]"
+Q_mc_pl = m_1_pl*(h_2_pl - h_3_pl)     "condenser duty [W]"
+P_tu_pl = m_1_pl*(h_1_pl - h_2_pl)     "steam turbine power [W]"
+P_fp_pl = m_1_pl*(h_4_pl - h_3_pl)     "feed pump power [W]"
+
+"!Cooling water of the part-load point: constant volumetric flow (TESPy c11 offdesign 'v'),"
+"! return temperature free (TESPy c12 design 'T')"
+v_11_pl = VOLUME(cw$,T=T_11,P=p_11)   "cooling water specific volume at the condenser inlet [m3/kg]"
+m_11_pl = V_dot_cw/v_11_pl                "cooling water mass flow [kg/s]"
+h_12_pl = ENTHALPY(cw$,T=T_12_pl,P=p_12)  "cooling water enthalpy at the condenser outlet [J/kg]"
+ttd_u_pl = T_dew_pl - T_12_pl         "upper terminal temperature difference to the dew line [K]"
+ttd_l_pl = T_3_pl - T_11               "lower terminal temperature difference [K]"
+lmtd_pl = LMTD_smoothed(ttd_u_pl, ttd_l_pl)  "effective logarithmic mean temperature difference [K]"
+Q_mc_pl = UA*lmtd_pl                   "condenser duty closed by UA = UA_design (TESPy mc offdesign 'UA') [W]"
+Q_mc_pl = m_11_pl*(h_12_pl - h_11)     "condenser duty of the cooling-water energy balance [W]"
+
+"!Stodola's cone law (TESPy Turbine cone_func, n = 1), logarithmic form"
+LOG(m_1_pl/m_1) = LOG(p_1_pl/p_1) + 0.5*LOG(p_1*v_1/(p_1_pl*v_1_pl)) + 0.5*LOG(ABS((1-(p_2_pl/p_1_pl)^2)/(1-(p_2/p_1)^2)))  "cone law of the part-load turbine [K]"
+
+"!Generator, motor and efficiencies of the part-load point"
+P_gen_pl = eta_gen*P_tu_pl             "electrical power produced by the generator [W]"
+P_mot_pl = P_fp_pl/eta_mot             "electrical power drawn by the feed pump motor [W]"
+P_grid_pl = P_gen_pl - P_mot_pl        "net electrical power delivered to the grid (TESPy e5.E) [W]"
+eta_el_pl = P_grid_pl/Q_sg_pl          "plant electrical efficiency (TESPy sec_11) [-]"
+
+"!State points of the design point for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: live steam at the turbine inlet (TESPy c1), 2: turbine outlet (TESPy c2),
+ 3: condensate (TESPy c3), 4: feed water at the pump outlet (TESPy c4).
+ Use the arrays h[i]/P[i] or s[i]/T[i] with the "Overlay array path" option of
+ the CoolSolve Diagram tab.}
+P[1] = p_1
+h[1] = h_1
+T[1] = T_1
+s[1] = s_1
+P[2] = p_2
+h[2] = h_2
+T[2] = T_2
+s[2] = ENTROPY(fluid$,h=h_2,P=p_2)
+P[3] = p_3
+h[3] = h_3
+T[3] = T_3
+s[3] = s_3
+P[4] = p_4
+h[4] = h_4
+T[4] = T_4
+s[4] = ENTROPY(fluid$,h=h_4,P=p_4)

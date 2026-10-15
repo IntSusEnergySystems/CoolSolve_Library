@@ -1,0 +1,57 @@
+{
+  "id": "CSL-0146",
+  "name": "cgam_cogeneration",
+  "title": "CGAM cogeneration benchmark (gas turbine + HRSG)",
+  "summary": "Design-point CGAM problem (Valero et al. 1994) as built in the TESPy test suite: gas turbine with air preheater and HRSG (economiser, drum, evaporator) delivering 14 kg/s of saturated steam at 20 bar and 30 MW net power; the fuel flow follows from the TIT, the air flow from the net power; ideal-gas mixture air/flue gas, Water on the steam side.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "cgam_cogeneration.eescode",
+  "fluids": ["N2", "O2", "CO2", "H2O", "CH4", "Water"],
+  "tags": [
+    "cogeneration",
+    "gas turbine",
+    "CGAM",
+    "published benchmark",
+    "reference model",
+    "HRSG",
+    "drum",
+    "combustion",
+    "design"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {"n_equations": 119, "largest_block": 28},
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/tests/test_models/test_CGAM_model.py",
+    "candidate_id": "TSP-050",
+    "authors": [
+      "Francesco Witte and the TESPy contributors"
+    ],
+    "url": "https://github.com/oemof/tespy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "CGAM problem (Valero et al., Energy 19(3) 1994) as built in TESPy test_CGAM_model.py (commit 19425523); reference data tests/test_models/cgam-ebsilon-results.csv"
+  },
+  "verification": {
+    "summary": "Re-ran the source test (test_CGAM_model.py, TESPy 0.11.3.dev0/CoolProp 8.0.0, throw-away venv) and compared all states, powers and compositions: max rel diff 2.0e-03 (h, s as same-composition differences, as the source test does). Against the Ebsilon table (cgam-ebsilon-results.csv): compressor 29.740 vs 29.6597 MW (2.7e-03), turbine 59.740 vs 59.6597 MW (1.4e-03), max 4.7e-03, card tolerance 5e-03.",
+    "checks": ["source-rerun", "other-tool"],
+    "reference": "TESPy re-run of the source (local snapshot ~/git/tespy commit 19425523, run_cgam.py) and the Ebsilon results table tests/test_models/cgam-ebsilon-results.csv; comparison with work/cgam_cogeneration/compare_refs.py",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@e635c85",
+    "max_rel_diff": 0.0047,
+    "notes": "vs TESPy re-run: max 2.034e-03 on ds[7]-ds[4]. vs Ebsilon: max 4.741e-03 on ds[6]-ds[4] (TESPy's own deviation from Ebsilon is bounded at 5e-03 by the source test); W_comp 2.715e-03, W_turb 1.347e-03. CoolSolve H2O entropy is the third-law NASA value (~3.5 kJ/kg-K above CoolProp HEOS), a constant offset that cancels in all same-composition entropy differences of the model."
+  },
+  "missing_features": [],
+  "related": ["CSL-0139"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added (T-TRANSLATE of the TESPy CGAM test model, card C-191, inventory row TSP-050); verified against a TESPy re-run and the Ebsilon table of the source test", "by": "opencode worker (glm-5.3-flash) for S. Quoilin"}
+  ]
+}

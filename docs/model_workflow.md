@@ -305,8 +305,8 @@ For LaboThapPy, TESPy and other Python/Modelica/paper models (see
 - Keep the variable naming of the source where possible, and cite equations
   (paper, documentation page).
 - Verify against the source's own results (tests, documentation examples,
-  notebooks): reproduce their inputs, compare outputs (`verified`), otherwise
-  `runs`.
+  notebooks): reproduce their inputs, compare outputs and fill the
+  `verification` field (taxonomy.md §4) describing how the model was checked.
 - **Credits are mandatory**: the authors of the original model, the library
   (name, URL, version or commit hash) and the scientific reference (paper,
   thesis) in `model.json` `origin` and in the README *Source and attribution*
@@ -534,10 +534,11 @@ contains the state-point arrays (§3, step 5). This procedure was tested on
       found in the file or `TBD`
 - [ ] Header, English comments, no `$UnitSystem` directive, units converted
       by hand when needed
-- [ ] Status set and justified: verification table (`verified`), sanity checks
-      (`runs`), list of changes (`modified`), gap IDs (`blocked`: **all** the
-      gaps blocking the native file in `missing_features`), diagnosis
-      (`failing`); tolerances quoted as `compare_solution.py` prints them
+- [ ] Status set and justified: `verified` models have `verification.summary`
+      and `verification.checks` filled per taxonomy.md §4; list of changes (`modified`),
+      gap IDs (`blocked`: **all** the gaps blocking the native file in
+      `missing_features`), diagnosis (`failing`); tolerances quoted as
+      `compare_solution.py` prints them
 - [ ] `.sol` baseline produced for runnable models **and for every runnable
       variant** (`*_coolsolve.eescode`, …); `tools/test_models.py <ID>` passes
       (variants included, reported as `<ID>:variant`)

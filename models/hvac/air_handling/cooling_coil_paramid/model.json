@@ -52,6 +52,8 @@
     "course": "ULiège model bank (Laborelec toolkit lineage), cooling coil parameters identification model, 2008-01-16; theory published as Lemort, Cuevas, Lebrun, Teodorese, ASHRAE Transactions 114(1), 2008"
   },
   "verification": {
+    "summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-INCLUDE): compared with the EES stored solution, 79 common variables, 23 differ above rtol=0.001, maximum 1.05e-02 on M_dot_w_coil, all from EES vs CoolProp humid-air formulations; AU_coil agrees to 3.2e-05.",
+    "checks": ["ees-stored-solution"],
     "reference": "EES stored solution in the source file (93 records, 80 with a value; 92 decoded by the tool, one hand-decoded from the binary) against the runnable variant cooling_coil_paramid_coolsolve.eescode; the native file cannot be solved (CS-GAP-NAME-PIPE, CS-GAP-INCLUDE, CS-GAP-CALL-EXPR-OUT)",
     "date": "2026-10-09",
     "coolsolve_version": "0.3.0@7addbbc",

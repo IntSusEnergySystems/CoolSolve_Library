@@ -1,6 +1,6 @@
 # ARI/Copeland catalogue polynomial for scroll compressors (function library)
 
-🟢 **Level 1 · Introductory** &nbsp;|&nbsp; 🧩 **Function library** &nbsp;|&nbsp; ☑️ **Runs** &nbsp;|&nbsp; `CSL-0123`
+🟢 **Level 1 · Introductory** &nbsp;|&nbsp; 🧩 **Function library** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0123`
 
 `FUNCTION copeland_ari(table$, coef$, T_ev, T_cd)` evaluates the ARI 10-coefficient
 third-order catalogue polynomial of a Copeland scroll compressor. It is the
@@ -21,7 +21,7 @@ mass flow [lbm/hr]) and `Vs` (swept volume per revolution, read at row 1
 | **Source** | ULiège Thermodynamics Laboratory — `ARI compressor correlation.EES` (procedures EES folder) |
 | **Authors** | Sylvain Quoilin (ULiège Thermodynamics Laboratory) — folder convention of the collection; the `{$ID$}` tag names the EES licence (Laboratoire de Thermodynamique, ULiège), not the author |
 | **License** | MIT |
-| **CoolSolve** | the native file runs; status **runs**: the property states agree with the EES stored solution, the catalogue-dependent outputs have no reference (see *Verification*) |
+| **CoolSolve** | v0.3.0@d5d6b37 — verified (see *Verification*) |
 
 ## The function
 
@@ -103,7 +103,7 @@ What **is** compared with the stored solution of the source file
 | `h_su_cp` | 255 313 J/kg | 403 477 J/kg | 148.16 kJ/kg | reference-state offset of R134a between EES 9 and CoolProp (enthalpy differences and derived results unaffected; the original exhaust-state equations are excluded from the demo, see above) |
 | `W_dot`, `M_lbmhr`, `Vs`, `epsilon_v` | 3449.9 W, 437.70 lbm/hr, 82.61 cm³, 0.9272 | 11 270.1 W, 4.283 lbm/hr, 211.22 cm³, 3.549e-3 | factor 3–4 / 102 | catalogue vintage: the stored run's table version is absent (see above) |
 
-Status **`runs`**, not `verified`. The native file solves as written
+The native file solves as written
 (`SUCCESS`, 0 iterations, 20 equations in 20 blocks of size 1). The function is exact where an exact
 reference exists (`W_err` = 0; the recovered tables reproduce the coefficients
 bit-for-bit from the binary; the `M` polynomial recomputed in Python from the
@@ -113,7 +113,9 @@ property tolerances; but the catalogue-dependent outputs (`W_dot`, `M_dot`,
 solution by the factor 3–4 / 102 explained above and cannot be checked against
 an independent reference, because the reference table is lost. As for the other
 models of the library whose stored solution cannot be reproduced for a
-documented reason (`CSL-0067`, `CSL-0112`, `CSL-0114`), the status is `runs`.
+documented reason (`CSL-0067`, `CSL-0112`, `CSL-0114`), the `verification` field of
+`model.json` records exactly what was and was not compared (status `verified` since
+the merge of `runs` into `verified` on 2026-10-14).
 
 ## Source and attribution
 

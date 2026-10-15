@@ -7,7 +7,11 @@
   "level": 2,
   "status": "verified",
   "main_file": "pipe_pressure_drop_correlations.eescode",
-  "fluids": ["R134a", "Water", "R744"],
+  "fluids": [
+    "R134a",
+    "Water",
+    "R744"
+  ],
   "tags": [
     "pressure drop",
     "friction factor",
@@ -60,6 +64,11 @@
     "notes": "LaboThapPy commit f03f7f47, file labothappy/correlations/pressure_drop/pipe_DP.py, with the helpers of labothappy/correlations/properties/dimensionless.py (compute_reynolds, compute_froude, compute_weber), labothappy/correlations/void_fraction/void_fraction.py (void_fraction_homogeneous, void_fraction_zivi), labothappy/correlations/properties/two_phase.py (compute_two_phase_density) and labothappy/correlations/properties/supercritical.py (pseudo_boiling_bounds, pseudo_critical_temperature_CO2). The demonstration cases come from the library example labothappy/component/examples/heat_exchanger/hex_pipe_DP_correlations_comparison_example.py. Translation published under the CoolSolve_Library MIT license (decision D3); the scientific basis of each correlation is the original paper named in its function comment block."
   },
   "verification": {
+    "summary": "The 34 output values were compared with the LaboThapPy correlations (commit f03f7f47) recomputed in Python: 34 common variables, 0 differ at rtol=0.001, largest relative deviation 1.0e-12 (round-off). The five friction factors also reproduce the values printed by the library example.",
+    "checks": ["source-rerun"],
+    "checks": [
+      "source-rerun"
+    ],
     "reference": "the LaboThapPy correlations of commit f03f7f47, recomputed in a throw-away virtual environment under work/ (work/pipe_dp/ref_pipe_dp.py, installed with pip install -e ~/git/LaboThapPy); the five friction factors also reproduce the values printed by the library example itself at the Reynolds number of its logspace grid; 34 output values in total",
     "date": "2026-10-09",
     "coolsolve_version": "0.3.0@7addbbc",
@@ -73,7 +82,8 @@
     "CSL-0103",
     "CSL-0158",
     "CSL-0131",
-    "CSL-0132"
+    "CSL-0132",
+    "CSL-0142"
   ],
   "related_external": [
     "sources/labothappy LTP-034 (in-tube heat-transfer correlations; needs a friction factor such as those of this file)"

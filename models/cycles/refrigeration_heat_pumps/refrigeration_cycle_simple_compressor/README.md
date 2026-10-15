@@ -179,3 +179,6 @@ Source file (EES 7.458, comments in French), collection of S. Quoilin:
 - `CSL-0136` *polynomial_compressor_en12900*: the same compressor concept (volumetric
   efficiency from the swept volume and the frequency, power with losses) fed by EN 12900
   catalogue polynomials for the two efficiencies instead of a clearance-volume law.
+- `CSL-0148` *scroll_volume_ratio_cycle_r134a*: same ULiège series on R134a with
+  a scroll compressor, where the built-in volume ratio of the machine is the
+  geometric input and the pressure ratio it develops is an output.

@@ -66,6 +66,8 @@
     "notes": "LaboThapPy commit f03f7f47, file labothappy/correlations/void_fraction/void_fraction.py (926 lines, 13 correlation functions plus the compute_void_fraction dispatcher), with the helpers labothappy/correlations/properties/dimensionless.py (compute_reynolds, compute_weber) and labothappy/correlations/properties/two_phase.py (get_saturated_phase_properties). The demonstration cases come from the library example labothappy/correlations/void_fraction/void_fraction_example.py. The module names R. Dickes (PhD thesis, ULiege) and Thome & Cioncolini, 'Void Fraction' (2015, DOI 10.1142/9789814623216_0021) as its presentation sources for the first group of correlations."
   },
   "verification": {
+    "summary": "Concerns the runnable variant (the native file is blocked by CS-BUG-IMPLICIT-PROC): 130 values compared with a re-run of LaboThapPy void_fraction_example.py, 0 differ at rtol=1e-3, largest relative deviation 2.203e-05 (surface tension taken at saturation). In the native file 10 alpha_Hughmark values differ, up to 4.748e-02.",
+    "checks": ["source-rerun"],
     "reference": "the LaboThapPy void_fraction_example.py of commit f03f7f47 re-run in a throw-away virtual environment under work/ (work/void_fraction/ref_void_fraction.py, pip install of the local clone, CoolProp 8.0.0); 130 void fractions on the 10-quality grid plus the saturated properties",
     "date": "2026-10-09",
     "coolsolve_version": "0.3.0@7addbbc",

@@ -55,6 +55,8 @@
     "notes": "ht 1.2.0, commit 85e0ee6 (2025-12-07), file ht/boiling_flow.py, MIT license, Copyright (C) 2016 Caleb Bell; Shah 1982 and Gungor-Winterton 1987 from ThermoCycle (Modelica, MIT, https://github.com/JeSoftware/Thermocycle-library), files TwoPhaseCorrelations/Shah1982.mo and GungorWinterton1987.mo, with Functions/transition_factor.mo and SinglePhaseCorrelations/DittusBoelter1930.mo; the coolProp R134a saturation properties of demonstration case B come from CoolProp 8.0.0. The scientific basis of each correlation is the original paper cited in its function comment block, as reviewed by Fang, Zhou & Li (Int. J. Refrigeration 36, 2013) and Bertsch, Groll & Garimella (Nanoscale Microscale Thermophys. Eng. 12, 2008). Translations published under the CoolSolve_Library MIT license (decision D3)."
   },
   "verification": {
+    "summary": "Compared with the doctest values published in the docstrings of ht 1.2.0 (eight correlations) and with an independent Python transcription of the Modelica equations of the other two: 37 common variables, 0 differ (rtol=0.001), largest relative deviation 4.2e-12.",
+    "checks": ["source-rerun"],
     "reference": "doctest values of ht 1.2.0 ht/boiling_flow.py and the regression values of ht/tests/test_boiling_flow.py (case A), values computed with the same ht functions on the R134a input set (case B), and an independent Python transcription of the ThermoCycle Modelica equations of Shah 1982 and Gungor-Winterton 1987 (cases A, B, C); 37 output values in total",
     "date": "2026-10-06",
     "coolsolve_version": "0.3.0@536d427",

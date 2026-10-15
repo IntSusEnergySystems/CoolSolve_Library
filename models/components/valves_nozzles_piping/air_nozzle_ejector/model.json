@@ -44,6 +44,8 @@
     "course": ""
   },
   "verification": {
+    "summary": "The native file was compared with the EES stored solution: 65 common variables, 27 differ at rtol=0.001, max 3.44e-03 on p_dyn_mix_ex_diff; main outputs agree to 1.0e-04 (p_0_su_ej), 6.3e-05 (p_mix_ex_diff) and 3.1e-04 (M_dot_tot). Differences explained by stale stored cells, enthalpy reference and property backend.",
+    "checks": ["ees-stored-solution"],
     "reference": "EES stored solution of the source file (the native file). Provenance audit (README): the stored set is one consistent solved run at FF = 0.1, FAD_tot = 260, T = 30/30 °C, p_1_su_ej = 800000, D_in_ex_noz = 0.02; the stored FF = 0.4 cell and the file's commented FF = 0.4254 block both contradict the mass-flow and epsilon_diff equations (post-solve edits). The import uses the stored-solution input set",
     "date": "2026-10-11",
     "coolsolve_version": "0.3.0@47bb416",

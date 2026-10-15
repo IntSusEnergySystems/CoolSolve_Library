@@ -48,6 +48,8 @@
     "course": "TESPy class PolynomialCompressor and its tests/test_components/test_polynomial_compressor.py; Bitzer SP-111-1 map of docs/model_library/heat_pump_partload.ipynb (commit 19425523)"
   },
   "verification": {
+    "summary": "Compared with a TESPy 0.11.3.dev0 re-run (doctests, 19 passing tests, Bitzer map notebook): 63 common variables, 0 differ at rtol=1e-06, max 8.7e-09 at rtol=1e-09. Bitzer eta_s and eta_v reproduced to three digits; the catalogue fit reproduces 18 points to 6.4e-04 and 2.3e-04.",
+    "checks": ["source-rerun", "publication"],
     "reference": "TESPy 0.11.3.dev0 (commit 19425523, CoolProp 8.0.0) run from the local snapshot in a throw-away venv: the class docstring (doctest) cases 1 to 3, tests/test_components/test_polynomial_compressor.py (19 tests pass; catalogue power/cooling tables of the fixtures) and the compressor-map cell of docs/model_library/heat_pump_partload.ipynb (Bitzer SP-111-1 map at 30/50/90 Hz)",
     "date": "2026-10-13",
     "coolsolve_version": "0.3.0@4c80b25",

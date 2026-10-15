@@ -50,6 +50,8 @@
     "course": "ULiège model bank (Laborelec toolkit lineage), air-cooled water chiller reference simulation model, 4 January 2008; IEA A43 PR2 A15 reference model (printed documentation of the same model: 'IEA A43 PR2 A15 Reference air-water chiller EES model VTJL PhAJL080108.pdf' in the same folder)"
   },
   "verification": {
+    "summary": "Compared with the solution printed by EES in the source file (its stored variable records are cleared): 116 common variables, 11 differ above rtol = 0.001, maximum relative difference 6.16e-03 (C_dot_su_cp), from the R22 specific heat at suction. Cycle results agree to better than 1e-3; the condenser balance closes.",
+    "checks": ["ees-stored-solution", "energy-balance"],
     "reference": "Solution printed by EES in the equations window of the source file ('Example of solution: Variables in Main', 117 variables); the Variable Information records of the file are cleared (-9999: the model was last prepared, not run), so no stored solution is available",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",

@@ -261,3 +261,11 @@ D3), with credit to the authors of the original model.
 coolsolve ./hx_lmtd_ua.eescode              # main file
 coolsolve ./hx_lmtd_ua_condenser.eescode   # condensing variant
 ```
+
+- `CSL-0140` *rankine_cycle_part_load*: a Rankine cycle of the same TESPy
+  snapshot whose main condenser uses the `LMTD_smoothed` function copied
+  from this model and the UA/ttd_u rating.
+
+* `CSL-0142` *district_heating_loop*: the district-heating loop of the
+  same TESPy snapshot, whose two pipes lose heat with the same UA rating
+  (the `lmtd_ambient` function of that model).

@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0140",
+  "name": "rankine_cycle_part_load",
+  "title": "Rankine cycle with cooling-water condenser, generator/motor and part load",
+  "summary": "Superheated-steam Rankine cycle after the TESPy basic tutorial: steam turbine, feed pump, steam generator with pressure drop and main condenser cooled by a cooling-water stream, with generator and pump-motor efficiencies; a second, simultaneous block solves one part-load point where Stodola's cone law sets the turbine inlet pressure and the condenser UA and the cooling-water volumetric flow keep their design values.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "rankine_cycle_part_load.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "Rankine cycle",
+    "steam power",
+    "cooling water",
+    "condenser",
+    "generator",
+    "motor",
+    "off-design",
+    "part load",
+    "cone law",
+    "tutorial"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "FUNCTION"
+  ],
+  "stats": {"n_equations": 105, "largest_block": 17},
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/tutorial/basics/rankine.py",
+    "candidate_id": "TSP-034",
+    "authors": [
+      "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+    ],
+    "url": "https://github.com/oemof/tespy",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "TESPy basic tutorial Rankine Cycle (commit 19425523)"
+  },
+  "verification": {
+    "summary": "Compared with a re-run of the TESPy tutorial rankine.py: design point 22 variables, max 2.9e-12; part-load point at 15 kg/s 13 variables, max 2.8e-11; the part-load sweep agrees to <= 1e-8 and the specification variants to round-off.",
+    "checks": ["source-rerun"],
+    "reference": "TESPy tutorial rankine.py re-run from the local snapshot (commit 19425523) in a throw-away venv (Python 3.12, CoolProp 8.1.0), with the plotting blocks removed and c2.set_attr(design=['p']) added to the sec_9 block; compared with tools/compare_solution.py: design point (22 variables, max 2.9e-12), part-load point at 15 kg/s (13 variables, max 2.8e-11), part-load sweep 20-10 kg/s (<= 1e-8), ttd_u = 4 K and net-power 10 MW variants (round-off)",
+    "date": "2026-10-14",
+    "coolsolve_version": "0.3.0@e635c85",
+    "max_rel_diff": 2.9e-12,
+    "notes": "TESPy stores no numbers for this tutorial, so the script itself was re-run (plotting libraries are not installed in the venv; the physics is untouched). Same CoolProp equation of state on both sides. The part-load design point is the base case of the model (m = 10 kg/s, p_2 = 0.1 bar) rather than the 20 kg/s / ttd_u state of sec_10; the TESPy re-run was adapted to the same reference point. The inventory note of TSP-034 quotes x_out = 0.866 from an independent CoolProp 7.2 check; TESPy (CoolProp 8.1.0) and CoolSolve give 0.86546."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0004",
+    "CSL-0013",
+    "CSL-0053",
+    "CSL-0135",
+    "CSL-0137"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-14", "action": "added (T-TRANSLATE of the TESPy rankine tutorial, card C-185)", "by": "opencode worker (space-bunny-free) for S. Quoilin"}
+  ]
+}

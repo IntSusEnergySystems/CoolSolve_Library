@@ -1,6 +1,6 @@
 # Supercritical CO2 ORC with polynomial compressor and turbine performance maps
 
-🟠 **Level 3 · Advanced** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ☑️ **Runs** &nbsp;|&nbsp; `CSL-0038`
+🟠 **Level 3 · Advanced** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0038`
 
 Closed CO2 (R744) vapour power cycle of the supercritical/transcritical ORC
 family: water-cooled cooler, compressor, recuperator, solar air-CO2 heater,
@@ -20,7 +20,7 @@ CO2 power cycle and as a template for map-based turbomachinery in EES/CoolSolve.
 | **Source** | CoolSolve example [`examples/orc_co2.eescode`](https://github.com/CoolProp/CoolSolve/blob/main/examples/orc_co2.eescode) (ULiège Thermodynamics Laboratory, MIT); **no EES original of this model is known** (see *Verification*) |
 | **Authors** | S. Quoilin (ULiège Thermodynamics Laboratory) — probable, to be confirmed by the maintainer (the file carries no author tag) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — runs; reproduces the stored solution of the example to 1.5·10⁻⁷ (no independent reference available) |
+| **CoolSolve** | verified (see *Verification*) |
 
 ## Problem statement
 
@@ -171,6 +171,7 @@ transcritical/supercritical CO2 exercise. The status is therefore *runs* (not
 
 ## Conversion log
 
+- **2026-10-14 — status `runs` merged into `verified`**: verification field added (no equation changed).
 - **2026-10-05 — import**: from `~/git/CoolSolve/examples/orc_co2.eescode`
   (CoolSolve example, already in SI-°C-Pa-J: nothing to convert, no
   `$UnitSystem` directive). Standard header added; section titles renamed with
@@ -245,3 +246,4 @@ transcritical/supercritical CO2 exercise. The status is therefore *runs* (not
   convection correlations (function library) for the parts of the CO2 heat
   exchangers that cross the pseudo-critical point of R744; this model uses
   polynomial maps instead.
+- CSL-0144 (`sco2_recompression_brayton`): the other CO2 power cycle of the library (recompression Brayton, design point).

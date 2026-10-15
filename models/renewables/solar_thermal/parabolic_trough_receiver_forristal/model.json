@@ -41,6 +41,8 @@
     "course": "scientific model of R. Forristall, NREL/TP-550-34169 (October 2003)"
   },
   "verification": {
+    "summary": "An independent Python re-evaluation of the same equations agrees: 27 common variables, 0 differ (rtol=0.001), maximum 2.35e-09. Against the NREL PTR70 heat-loss test the glass temperature is reproduced within 1 K but the heat loss is over-predicted by a factor 1.9 to 5.8. Energy balance residual is 0.68 % of the absorbed power.",
+    "checks": ["publication", "energy-balance"],
     "reference": "independent Python re-evaluation of the same equations (scipy fsolve, written from the Modelica source, script and CSV kept in the conversion work folder and deleted afterwards); physics cross-check against the measured heat losses and glass temperatures of the NREL PTR70 heat-loss test (F. Burkholder and C. Kutscher, NREL/TP-550-45633, May 2009, Table 3 and Table 4); energy-balance closure",
     "date": "2026-10-06",
     "coolsolve_version": "0.3.0@536d427",

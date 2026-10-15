@@ -1,0 +1,76 @@
+{=============================================================================
+  Economic evaluation of an energy-saving investment: net present value and
+  simple payback time - CoolSolve Library model CSL-0154
+ -----------------------------------------------------------------------------
+  Cash flow of an energy-saving measure over its lifetime, year by year: the
+  discounted cash flow method, where each year's net cash flow is discounted at
+  the rate k and accumulated in the net present value NPV_1[i] (it becomes
+  positive in the discounted payback year), and the simple payback method, where
+  the undiscounted cash flow is accumulated in NPV_2[i] (the year it crosses
+  zero is the simple payback time, also given in closed form by PBT_2). As in
+  the original, the benefit grows with the energy-cost escalation j_fuel and
+  the running cost with j_el.
+
+  Inputs : INV (initial investment), inflow_1 (1st-year benefit), outflow_1
+           (1st-year cost), T_lifetime [year], j_fuel, j_el, k
+  Outputs: NPV_1[i], DPV_1[i] (discounted), NPV_2[i], DPV_2[i]
+           (undiscounted cumulative), PBT_2 [year]
+  Units  : currencies in euro (€), times in year, rates dimensionless
+  Source : S. Bertagnolio, ULiège Thermodynamics Laboratory, 2008-01-08,
+           EES 7.888 - see README.md
+  Status : blocked by CS-BUG-DUPLICATE-INDEX-EXPR (array index arithmetic in a
+           DUPLICATE loop); runnable variant _coolsolve.eescode
+=============================================================================}
+
+"!1. INPUTS"
+"Investment, first-year benefit and first-year cost"
+INV = 20000 [€]
+inflow_1 = 4000 [€]
+outflow_1 = 2000 [€]
+
+"!2. PARAMETERS"
+"Economical rentability period of the measure"
+T_lifetime = 20 [year]
+"Mean values; as in the original, j_fuel is usually between 3 and 6 %/year
+ for fossil fuel and between 5 and 10 %/year for biomass fuel, j_el between
+ 1 and 3 %/year"
+j_fuel = 0.045 [-]
+j_el = 0.03 [-]
+"Capital cost / discount rate"
+k = 0.08 [-]
+
+"!3. EQUATIONS"
+
+"!3.1 Discounted cash flow method"
+"Initial values, year 0"
+year[0] = 0
+B[0] = 0
+C[0] = 0
+CF[0] = B[0] - C[0]
+DPV_1[0] = CF[0]
+NPV_1[0] = -INV + DPV_1[0]
+"1st year"
+year[1] = 1
+C[1] = outflow_1
+B[1] = inflow_1
+CF[1] = B[1] - C[1]
+DPV_1[1] = DPV_1[0] + (CF[1])*1/(1+k)
+NPV_1[1] = -INV + DPV_1[1]
+"Years 2 to T_lifetime: benefit and cost escalation, discounted accumulation"
+duplicate i = 2, T_lifetime
+  year[i] = i
+  B[i] = B[1]*(1+j_fuel)^(i-1)
+  C[i] = C[1]*(1+j_el)^(i-1)
+  CF[i] = B[i] - C[i]
+  DPV_1[i] = DPV_1[i-1] + (CF[i])*1/(1+k)^i
+  NPV_1[i] = -INV + DPV_1[i]
+end
+
+"!3.2 Pay-back time method (undiscounted accumulation)"
+PBT_2 = INV/(B[1] - C[1])
+DPV_2[0] = 0
+NPV_2[0] = -INV + DPV_2[0]
+duplicate i = 1, T_lifetime
+  DPV_2[i] = DPV_2[i-1] + (B[1] - C[1])
+  NPV_2[i] = -INV + DPV_2[i]
+end

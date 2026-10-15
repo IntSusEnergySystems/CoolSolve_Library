@@ -46,6 +46,8 @@
     "course": "Thermodynamique appliquée (ULiège MECA0002), exercise session R3 2022-2023, exercise 6 (2017 version refers to textbook exercise 5.51)"
   },
   "verification": {
+    "summary": "Compared with the solution stored in the source EES file: all 74 common variables agree at rtol = 0.001, largest relative deviation 7.87e-06 (on `rho_6`; enthalpies within 6e-07).",
+    "checks": ["ees-stored-solution"],
     "reference": "EES stored solution of the source file (compare_solution.py --ees-units)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
@@ -53,7 +55,9 @@
     "notes": "All 74 common variables agree, 0 differ at rtol=0.001; largest rel. diff 7.87e-06 on rho_6. EES-only leftovers P, q_m hold no equation; CoolSolve-only variables are the added T[i]/s[i] diagram arrays."
   },
   "missing_features": [],
-  "related": ["CSL-0004"],
+  "related": ["CSL-0004",
+    "CSL-0140"
+  ],
   "related_external": [],
   "supersedes": [],
   "previous_paths": [],
