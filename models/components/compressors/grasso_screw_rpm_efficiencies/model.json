@@ -1,0 +1,49 @@
+{
+  "id": "CSL-0245",
+  "name": "grasso_screw_rpm_efficiencies",
+  "title": "Example: Grasso screw isentropic efficiencies at two speeds",
+  "summary": "Example from the Laborelec 2002 toolkit. Polynomial isentropic efficiencies of four Grasso screw compressors (C-52, H-5, N-5 and S-51) are evaluated at one pressure ratio and scaled from 2940 rpm to 1500 rpm.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "grasso_screw_rpm_efficiencies.eescode",
+  "fluids": [],
+  "tags": [
+    "screw compressor",
+    "isentropic efficiency",
+    "Grasso",
+    "rotation speed",
+    "polynomial"
+  ],
+  "language_features": [],
+  "stats": {"n_equations": 12, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/1_Compressors/1_2_Screw Compressors/Example-Grasso Screw RPM General Simulation.EES",
+    "candidate_id": "TM-0287",
+    "authors": ["Felipe Trebilcock"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X6.596",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of Example-Grasso Screw RPM General Simulation.EES by compare_solution.py without --ees-units: 12 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Largest relative difference 7.29e-11 on epsilon_s_C_52_1500rpm. All 12 equations are satisfied.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution of thermo_models TM-0287 (Example-Grasso Screw RPM General Simulation.EES, EES X6.596, 12/12); tools/compare_solution.py, no unit conversion (stored unit strings are blank; the window has no pressure and no energy)",
+    "date": "2026-10-16",
+    "coolsolve_version": "0.3.0@6c1755b",
+    "max_rel_diff": 7.29e-11,
+    "notes": "compare_solution.py --all prints 7.29e-11 on epsilon_s_C_52_1500rpm. Unrounded, that relative difference is 7.285524e-11, the maximum over the 12 common variables. The EES value is stored as 0.6533508484 and CoolSolve gives 0.6533508484476. The other three 1500 rpm efficiencies print 4.21e-11 (H-5), 3.16e-11 (N-5) and 2.93e-11 (S-51). A run with --ees-units converted no reference value. R_P = 5.4 was added so the window is square; the braced guess {R_P=1} was not used as the value. No input was multiplied by 1000."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-16", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

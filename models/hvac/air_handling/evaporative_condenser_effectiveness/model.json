@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0227",
+  "name": "evaporative_condenser_effectiveness",
+  "title": "Evaporative condenser as a semi-isothermal exchanger (exercise)",
+  "summary": "Nominal point of an evaporative condenser treated as a semi-isothermal exchanger: the air-side heat rate sets a capacity rate from the inlet and outlet wet-bulb temperatures, and the effectiveness, NTU and overall exchange coefficient follow.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "evaporative_condenser_effectiveness.eescode",
+  "fluids": ["AirH2O"],
+  "tags": ["exercise", "evaporative condenser", "effectiveness", "NTU", "semi-isothermal", "humid air"],
+  "language_features": ["humid-air properties"],
+  "stats": {"n_equations": 13, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 05/SB/R5 - SB - Ex 3.EES",
+    "candidate_id": "TM-0086",
+    "authors": ["Stéphane Bertagnolio"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh, repetition 5, exercise 3 (continued)"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of R5 - SB - Ex 3.EES using compare_solution.py without unit scaling. The tool reports: 13 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum relative difference 2.74e-04 on C_dot_a_f, from the inlet wet-bulb residual. All 13 equations are satisfied.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in R5 - SB - Ex 3.EES (13 variables)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 0.0002742806,
+    "notes": "Maximum relative difference 2.742806e-04 on C_dot_a_f (the tool prints 2.74e-04). epsilon_cd 1.61e-04, NTU_f 2.13e-04, T_wb_su 1.48e-04, AU_f 6.15e-05. T_wb_ex, the heat rate, both dry-bulb temperatures, both relative humidities, P_a and T_cd match. --ees-units printed no converted names. Solver: 9 iterations with the stored guesses, 20 without; max |residual| 7.2760e-12 with the guesses."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

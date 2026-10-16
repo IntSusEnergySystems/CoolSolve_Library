@@ -1,0 +1,37 @@
+{=============================================================================
+  Example: Grasso screw isentropic efficiencies at two speeds
+  CoolSolve Library model CSL-0245
+ -----------------------------------------------------------------------------
+  Example from the Laborelec 2002 toolkit (Felipe Trebilcock). Four Grasso
+  screw compressors, C-52, H-5, N-5 and S-51, are given by polynomial
+  isentropic efficiencies. The variable names carry 2940 rpm. Each efficiency
+  is scaled to 1500 rpm by (rpm1/rpm2)^m, as written.
+
+  The braced line {R_P=1} is the original guess, not an equation. The window
+  is one assignment short. R_P = 5.4 is the stored solution and closes it.
+  The window has no pressure and no energy, so no number was rescaled.
+
+  Inputs : R_P, rpm1, rpm2, m
+  Outputs: eight isentropic efficiencies (four machines, two speeds)
+  Units  : SI. Efficiencies and the pressure ratio are dimensionless.
+           Speeds stay in rev/min, as in the original.
+  Source : Laborelec toolkit 2002, Felipe Trebilcock - see README.md
+=============================================================================}
+
+"!Isentropic efficiencies at 1500 rpm (polynomial expressions)"
+epsilon_s_C_52_2940rpm=0.77+0.006*(R_P-7)^2-0.204/(R_P-1.139)   "Grasso C-52 polynomial, as written [-]"
+epsilon_s_H_5_2940rpm= 0.82+0.00634*(R_P-7)^2-0.192/(R_P-1.216)  "Grasso H-5 polynomial, as written [-]"
+epsilon_s_N_5_2940rpm=0.83+0.00486*(R_P-7)^2-0.17/(R_P-1.265)    "Grasso N-5 polynomial, as written [-]"
+epsilon_s_S_51_2940rpm=0.83+0.00485*(R_P-7)^2-0.17/(R_P-1.122)   "Grasso S-51 polynomial, as written [-]"
+
+"!Simulated efficiencies (rpm analysis)"
+epsilon_s_C_52_1500rpm=epsilon_s_C_52_2940rpm*(rpm1/rpm2)^m   "C-52 scaled from 2940 rpm to 1500 rpm, as written [-]"
+epsilon_s_H_5_1500rpm=epsilon_s_H_5_2940rpm*(rpm1/rpm2)^m     "H-5 scaled from 2940 rpm to 1500 rpm, as written [-]"
+epsilon_s_N_5_1500rpm=epsilon_s_N_5_2940rpm*(rpm1/rpm2)^m     "N-5 scaled from 2940 rpm to 1500 rpm, as written [-]"
+epsilon_s_S_51_1500rpm=epsilon_s_S_51_2940rpm*(rpm1/rpm2)^m   "S-51 scaled from 2940 rpm to 1500 rpm, as written [-]"
+
+{R_P=1}   "original comment: the guess is 1, not an equation"
+R_P=5.4   "pressure ratio taken from the stored solution; the window left it unassigned [-]"
+rpm1=2940 "rotation speed in the scaling, as in the original [rev/min]"
+rpm2=1500 "rotation speed in the scaling, as in the original [rev/min]"
+m=-0.18   "exponent of the speed ratio, as in the original [-]"

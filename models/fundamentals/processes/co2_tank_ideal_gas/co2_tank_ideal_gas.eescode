@@ -1,0 +1,52 @@
+{=============================================================================
+  CO2 in a 200 L tank: real-gas mass and ideal-gas error
+  CoolSolve Library model CSL-0225
+ -----------------------------------------------------------------------------
+  A 200 L tank holds carbon dioxide at 35 C and 2 MPa. The mass follows from
+  the real-gas specific volume. The percentage error compares that mass with
+  the ideal-gas mass. A second ideal-gas volume uses the gas constant, and
+  the vapour quality checks that the state is superheated. Teaching exercise
+  of ULiège MECA0002, thermodynamique appliquée, repetition 1 (2022-2023),
+  not an exam. One tank state: no diagram-state arrays.
+
+  Inputs : Vol, T, p, R
+  Outputs: m, m_gp, erreur, v_gp2, x_CO2
+  Units  : SI - temperatures in K, pressures in Pa, energies in J
+           (property calls receive °C)
+  Source : ULiège MECA0002, R1_E2_2022.EES; the equation window names no
+           author - see README.md
+  Licence: MIT. Status: verified against the EES stored solution.
+=============================================================================}
+
+"!Problem"
+"A 200 L tank contains carbon dioxide at 35 C and 2 MPa, as in the original."
+"a. Calculate the mass of gas in the tank, as in the original."
+"b. Evaluate the percentage error made in a. if the ideal-gas model is used, as in the original."
+
+"!Data"
+Vol = 200e-3 [m^3]                                        "tank volume [m^3], 200 L as written"
+T = 35 [K]+273.15 [K]                                     "temperature [K]; 35 C written as 35 K + 273.15 K, as stored"
+p = 2e6 [Pa]                                              "pressure [Pa], 2e3 kPa in the original"
+
+"!Real-gas mass in the tank"
+"Using the tables (real gas) -> fluid = CARBONDIOXIDE, as in the original."
+v = volume(CarbonDioxide, T=T-273.15, P=p)               "real-gas specific volume [m^3/kg]; the call takes °C and T is in K"
+m = Vol/v                                                 "mass of gas [kg]"
+
+"!Ideal-gas error"
+"The fluid CO2 treats carbon dioxide as an ideal gas, as in the original."
+v_gp = volume(CO2, T=T-273.15, P=p)                      "ideal-gas specific volume [m^3/kg]; the call takes °C and T is in K"
+m_gp = Vol/v_gp                                           "ideal-gas mass [kg]"
+
+x_CO2 = quality(CarbonDioxide, T=T-273.15, P=p)          "vapour quality [-], as in the original: a check that the state is gaseous and not two-phase"
+
+"!Second ideal-gas method"
+R = 8.3144621 [J/(mol*K)]                                 "ideal-gas constant [J/(mol·K)], as written; the original also mentions R#"
+MCO2 = MolarMass(CarbonDioxide)                           "molar mass of carbon dioxide [kg/kmol]"
+r_CO2 = R/MCO2                                            "specific gas constant [J/(g·K)], as in the original"
+
+v_gp2 = r_CO2*T/(p/1000)                                  "ideal-gas specific volume [m^3/kg]; r_CO2 is J/(g·K) and T is in K, so p [Pa] is used as kPa"
+
+erreur = (m_gp-m)/m*100 [%]                               "percentage error of the ideal-gas mass [%], as in the original"
+
+"The relative error is close to 10 percent, which is not negligible because CO2 is not an ideal gas in these conditions, as in the original."

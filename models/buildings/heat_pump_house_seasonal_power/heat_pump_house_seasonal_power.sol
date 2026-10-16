@@ -1,0 +1,11 @@
+AU_pertes = 6.666666666667e+02
+COP_frigo = 1.478197149402e+01
+COP_pac_hiver = 1.465750000000e+01
+Q_dot_ete = 1.344656000366e+04
+Q_dot_hiver = 1.333333333333e+04
+t_in_ete = 2.500000000000e+01
+t_in_hiver = 2.000000000000e+01
+t_out_ete = 4.516984000548e+01
+t_out_hiver = 0.000000000000e+00
+W_dot_frigo = 9.096594462448e+02
+W_dot_pac_hiver = 9.096594462448e+02

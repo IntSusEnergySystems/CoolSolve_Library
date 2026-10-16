@@ -1,0 +1,38 @@
+{=============================================================================
+  Hydroelectric plant: power from flow rate, head and turbine efficiency
+  CoolSolve Library model CSL-0242
+ -----------------------------------------------------------------------------
+  Energy balance of a hydroelectric turbine. The volume flow rate, the head,
+  the turbine efficiency and the density are given. The specific inlet energy
+  is the built-in g# times the head. The turbine power is that energy flow
+  times the efficiency, and the loss follows from the energy balance.
+  Teaching exercise Cengel 2-123 from the KU Leuven collection. The equation
+  window names nobody. DELTAh stays a head in metres. No fluid call and no
+  cycle: no diagram-state arrays.
+
+  Inputs : V_dot, DELTAh, eta_t, rho
+  Outputs: W_dot_t, Q_dot_losses, M_dot
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Cengel 2-123, file 02-123.EES; authors S. Quoilin (inventory)
+           - see README.md
+  Licence: MIT. Status: verified against the EES stored solution.
+=============================================================================}
+
+"!Data"
+V_dot = 100                                              "volume flow rate [m^3/s], as written"
+DELTAh = 120                                             "head [m], as written; not an enthalpy"
+eta_t = 0.8                                              "turbine efficiency [-], as written"
+rho = 1000                                               "density [kg/m^3], as written"
+
+"!Mass flow and specific energy"
+M_dot = V_dot * rho                                      "mass flow rate [kg/s], as written"
+E_dot_in = M_dot * e_in                                  "inlet energy flow rate [W], as written"
+e_in = g# * DELTAh                                       "specific inlet energy [J/kg]; g# is the built-in and DELTAh is the head [m]"
+
+"!Outlet"
+e_out = 0                                                "specific outlet energy [J/kg], as written"
+E_dot_out = 0                                            "outlet energy flow rate [W], as written"
+
+"!Turbine power and losses"
+W_dot_t = (E_dot_in - E_dot_out) * eta_t                 "turbine power [W], as written"
+W_dot_t + Q_dot_losses = E_dot_in - E_dot_out            "energy balance; loss rate Q_dot_losses [W], as written"

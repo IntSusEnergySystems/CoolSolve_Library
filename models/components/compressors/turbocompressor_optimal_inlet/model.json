@@ -1,0 +1,49 @@
+{
+  "id": "CSL-0231",
+  "name": "turbocompressor_optimal_inlet",
+  "title": "Teaching exercise: turbocompressor optimal speed and flow at a new inlet",
+  "summary": "Teaching exercise on the optimal regime of a turbocompressor. With the two similarity constants given, the model computes the optimal rotation speed and suction volume flow for air at 0.9 bar and 50 °C discharging at 2.5 bar.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "turbocompressor_optimal_inlet.eescode",
+  "fluids": ["Air"],
+  "tags": [
+    "turbocompressor",
+    "similarity",
+    "reduced mass flow",
+    "optimal regime",
+    "exercise"
+  ],
+  "language_features": ["property functions"],
+  "stats": {"n_equations": 13, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 04/MSTH_041012_exercice_7_suite.EES",
+    "candidate_id": "TM-0060",
+    "authors": ["TBD (ULiège MSTh)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.210",
+    "language": "fr",
+    "course": "ULiège, Machines et systèmes thermiques, repetition 4 (2004-10-12), exercise 5 continued"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of MSTH_041012_exercice_7_suite.EES: 13 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Largest relative difference 5.06e-05 on V_dot_su; v_su prints the same 5.06e-05 (CoolProp Air specific volume 1.030541 m3/kg against the EES stored 1.030594 m3/kg). rpm and M_dot agree to about 1e-10. All 13 equations are satisfied.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution of thermo_models TM-0060 (MSTH_041012_exercice_7_suite.EES, EES 7.210, 13/13); tools/compare_solution.py, no unit conversion (already SI Pa, C, J)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 5.06e-05,
+    "notes": "No common variable exceeds rtol=0.001. compare_solution.py prints 5.06e-05 for both V_dot_su and v_su. Unrounded, V_dot_su is the maximum at 5.057521e-05 and v_su is 5.057469e-05. CoolProp Air gives v_su = 1.030541406 m3/kg against the EES stored 1.030593528 m3/kg. M_dot is fixed by the similarity laws before the property call, so V_dot_su = M_dot*v_su carries that specific-volume difference. rpm differs by 1.98e-10 and M_dot by 1.09e-10. A second compare_solution.py run with --ees-units converted no reference value and rewrote no name (the units column is empty). The equations were not changed. t_su = 50 was left in Celsius; the stored solution has t_su = 50 and CoolSolve matches it. The system is square with both t_su/T_su and p_su/P_su left as written."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0226",
+  "name": "turbojet_component_efficiencies",
+  "title": "Turbojet with component efficiencies (exercise)",
+  "summary": "Ideal-gas turbojet exercise with constant cold-side and hot-side specific heats, isentropic component efficiencies and a shaft balance. It returns the specific thrust, the fuel-air ratio and the specific fuel consumption at the stored compressor pressure ratio.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "turbojet_component_efficiencies.eescode",
+  "fluids": ["Air"],
+  "tags": ["exercise", "turbojet", "gas turbine", "air standard", "ideal gas", "constant specific heat"],
+  "language_features": ["arrays", "string variables"],
+  "stats": {"n_equations": 39, "largest_block": 2},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R6/autres exo/THD10_R07_E5.EES",
+    "candidate_id": "TM-0436",
+    "authors": ["S. Quoilin"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.423",
+    "language": "fr",
+    "course": "ULiège MECA0002"
+  },
+  "verification": {
+    "summary": "Compared with the stored solution of THD10_R07_E5.EES (kPa and kJ converted by hand). compare_solution.py --ees-units: 37 common variables, 9 differ (rtol=0.001); only in EES: 18; only in CoolSolve: 2. The 9 differences are temperatures kept in kelvin; --ees-units shifts unit K to °C. Max rel. diff 1.172318 on T[1] and T_amb. Fs agrees (rel. 4.90e-09). No property call.",
+    "checks": ["ees-stored-solution", "energy-balance", "order-of-magnitude"],
+    "reference": "EES stored solution of thermodynamique appliquee/2022-2023/R6/autres exo/THD10_R07_E5.EES (EES X8.423)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 1.172318,
+    "notes": "compare_solution.py --ees-units. 37 common variables, 9 differ (rtol=0.001); only in EES: 18; only in CoolSolve: 2. The 9 differences are T[1], T_amb, T0[1], T0[2], T0[3], T0[4], T0[5], T0[7] and T[7]: the model keeps kelvin (T_amb = -40+273) and --ees-units subtracts 273.15 from a unit of K when the name starts with T. Maximum relative difference 1.172318 = 273.15/233 on T[1] and T_amb. Blank units and m/s are not scaled and agree. After the kPa and kJ scaling, the largest relative difference on the other common variables is 4.90e-09 on Fs. Only in EES: c_6, m, n, p0[6], p[2], p[3], p[4], p[6], q_m_e, s[1], s[2], s[3], s[4], T0[6], T[2], T[3], T[4], T[6] (variable-window entries absent from the equation window). Only in CoolSolve: Cs (the equation is in the window; EES did not store it) and fluid$ (string, also written as 0 in the .sol). All 39 equations satisfied. 11 iterations with the stored-root initials, 45 without; same positive c_7."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

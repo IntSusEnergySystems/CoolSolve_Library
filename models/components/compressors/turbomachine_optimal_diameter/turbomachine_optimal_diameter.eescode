@@ -1,0 +1,45 @@
+{=============================================================================
+  Teaching exercise: optimal diameter and speed of a turbomachine
+  CoolSolve Library model CSL-0235
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège, Machines et systèmes thermiques, repetition 4,
+  exercise 6). Air enters at 1 bar and 20 °C with a volume flow of
+  6000 m³/h and leaves at 2.5 bar. The flow factor and the enthalpy
+  factor are given. The file returns the diameter and the rotation
+  speed that realise those two factors.
+
+  Phi is written both as 0.3 and as C_su/U. Psi is written both as 1.4
+  and as 2*DELTAh_s/U^2. Enthalpy and entropy of Air are called at T_su
+  in °C. The guesses stored with the file are the positive diameter and
+  the positive speed taken from the EES solution.
+
+  Inputs : P_su, T_su, P_ex, V_dot_su, Phi, Psi
+  Outputs: D_opt, rpm_opt, DELTAh_s
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Stéphane Bertagnolio, ULiège MSTh - see README.md
+=============================================================================}
+
+"!Given state and factors"
+P_su=1E5                       "suction pressure [Pa]"
+T_su=20                        "suction temperature [C]"
+P_ex=2.5E5                     "discharge pressure [Pa]"
+V_dot_su=6000/3600             "suction volume flow; 6000 m3/h as in the original [m3/s]"
+Phi=0.3                        "flow factor, as in the original [-]"
+Psi=1.4                        "enthalpy factor, as in the original [-]"
+
+"!Flow factor"
+Phi=C_su/U                     "same flow factor, as in the original [-]"
+C_su=V_dot_su/A_su             "C_su = V_dot_su/A_su [m/s]"
+A_su=PI*D^2/4                  "area A_su [m2]"
+U=PI*D*N                       "U = PI*D*N, as in the original [m/s]"
+
+"!Enthalpy factor"
+Psi=2*DELTAh_s/U^2             "same enthalpy factor, as in the original [-]"
+DELTAh_s=h_3_s-h_1             "h_3_s - h_1, as in the original [J/kg]"
+h_3_s=ENTHALPY(Air,s=s_su,P=P_ex)  "enthalpy of Air at s_su and P_ex [J/kg]"
+s_su=ENTROPY(Air,T=T_su,P=P_su)    "entropy of Air at the suction state [J/kg-K]"
+h_1=ENTHALPY(Air,T=T_su)       "enthalpy of Air at T_su [J/kg]"
+
+"!Optimal diameter and speed"
+D_opt=D                        "optimal diameter [m]"
+rpm_opt=N*60                   "optimal rotation speed [rev/min]"

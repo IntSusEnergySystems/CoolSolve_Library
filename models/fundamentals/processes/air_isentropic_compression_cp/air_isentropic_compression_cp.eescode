@@ -1,0 +1,44 @@
+{=============================================================================
+  Isentropic compression of air: constant cp versus property functions
+  CoolSolve Library model CSL-0237
+ -----------------------------------------------------------------------------
+  Closed-system isentropic compression of air from 100 kPa and 17 C to
+  800 kPa. The exit temperature and the specific work are computed with
+  constant specific heats, and again with the air property functions at
+  variable heat capacity. Teaching exercise (Cengel 7-75) from the KU Leuven
+  collection. The equation window names nobody. One compression: no
+  diagram-state arrays.
+
+  Inputs : p_1, T_1, p_2
+  Outputs: T_2, w, w_bis
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Cengel 7-75, file 07-75.EES; the equation window names nobody
+           - see README.md
+  Licence: MIT. Status: verified against the EES stored solution.
+=============================================================================}
+
+"!Data"
+p_1 = 100E3                                              "inlet pressure [Pa], 100E3 as written"
+T_1 = 17                                                 "inlet temperature [°C]"
+p_2 = 800E3                                              "exit pressure [Pa], 800E3 as written"
+
+"!Constant specific heats"
+"Considering constant c_p (=> constant k), the isentropic relation below is used, as in the original."
+"The original calls that relation an isentropic evolution for a real gas."
+c_p = cp(Air, t=t_1)                                     "specific heat at constant pressure at the inlet [J/kg-K]; the original writes t_1"
+c_v = c_p - r                                            "specific heat at constant volume [J/kg-K]"
+r = R#/molarmass(Air)                                    "specific gas constant [J/kg-K]"
+k = c_p/c_v                                              "specific-heat ratio [-]"
+
+"Calculation of T_2, as in the original."
+(T_2 + 273.15)/(T_1 + 273.15) = (p_2/p_1)^((k-1)/k)     "isentropic relation; T_1 and T_2 stay in °C [-]"
+
+"Specific work (closed system), as in the original."
+w = c_v * (T_2 - T_1)                                    "specific work with constant specific heats [J/kg]"
+
+"!Variable specific heats"
+"Second method: property functions, which consider variable heat capacity, as in the original."
+s_1 = entropy(Air, t=t_1, p=p_1)                        "specific entropy at the inlet [J/kg-K]; the original writes t_1"
+u_1 = intenergy(Air, T=T_1, P=p_1)                      "specific internal energy at the inlet [J/kg]; P=p_1 is passed with the temperature"
+u_2 = intenergy(Air, P=p_2, s=s_1)                      "specific internal energy at the exit pressure and the inlet entropy [J/kg]"
+w_bis = u_2 - u_1                                        "specific work from the internal-energy change [J/kg]"

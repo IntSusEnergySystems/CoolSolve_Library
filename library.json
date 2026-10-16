@@ -1,9 +1,9 @@
 {
  "snapshot": {
-  "content_hash": "sha256:afe1b94ccba9b920",
-  "files": 1127,
-  "bytes": 8561957,
-  "models": 219,
+  "content_hash": "sha256:718a703400721aa1",
+  "files": 1253,
+  "bytes": 8976448,
+  "models": 244,
   "functions": 449,
   "taxonomy_version": "0.2"
  },
@@ -236,6 +236,46 @@
    ],
    "path": "models/buildings/heat_pump_house_carnot",
    "main_file": "heat_pump_house_carnot.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0239",
+   "name": "heat_pump_house_seasonal_power",
+   "title": "Exercise: seasonal power of a heat pump for a house",
+   "category": "buildings",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching exercise 6.21. A Carnot heat pump meets the winter loss of a house, then runs at the same power as a refrigerator. The model computes the winter mechanical power and the summer outdoor temperature above 25 °C stored with that solution.",
+   "fluids": [],
+   "tags": [
+    "exercise",
+    "heat pump",
+    "Carnot",
+    "heating",
+    "cooling"
+   ],
+   "n_equations": 11,
+   "largest_block": 3,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R04/SBe/THD09_R04_Ex03.EES",
+   "authors": [
+    "Stéphane Bertagnolio"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@7d66c3b",
+   "verified_on": "2026-10-16",
+   "verification_summary": "compare_solution.py on THD09_R04_Ex03.EES, without --ees-units: 11 common variables, 0 differ (rtol=0.001); only in EES: 4; only in CoolSolve: 0. Maximum relative difference over all common variables is 4.71e-10 on Q_dot_ete. W_dot_pac_hiver = 909.6594462448 W (stored 909.6594462), COP_pac_hiver = 14.6575 (stored 14.6575), t_out_ete = 45.16984000548 °C (stored 45.16984002).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
+   "path": "models/buildings/heat_pump_house_seasonal_power",
+   "main_file": "heat_pump_house_seasonal_power.eescode",
    "figures": 0
   },
   {
@@ -1492,6 +1532,127 @@
    "figures": 0
   },
   {
+   "id": "CSL-0231",
+   "name": "turbocompressor_optimal_inlet",
+   "title": "Teaching exercise: turbocompressor optimal speed and flow at a new inlet",
+   "category": "components/compressors",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching exercise on the optimal regime of a turbocompressor. With the two similarity constants given, the model computes the optimal rotation speed and suction volume flow for air at 0.9 bar and 50 °C discharging at 2.5 bar.",
+   "fluids": [
+    "Air"
+   ],
+   "tags": [
+    "turbocompressor",
+    "similarity",
+    "reduced mass flow",
+    "optimal regime",
+    "exercise"
+   ],
+   "n_equations": 13,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 04/MSTH_041012_exercice_7_suite.EES",
+   "authors": [
+    "TBD (ULiège MSTh)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@332d95a",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Compared with the EES stored solution of MSTH_041012_exercice_7_suite.EES: 13 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Largest relative difference 5.06e-05 on V_dot_su; v_su prints the same 5.06e-05 (CoolProp Air specific volume 1.030541 m3/kg against the EES stored 1.030594 m3/kg). rpm and M_dot agree to about 1e-10. All 13 equations are satisfied.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/components/compressors/turbocompressor_optimal_inlet",
+   "main_file": "turbocompressor_optimal_inlet.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0235",
+   "name": "turbomachine_optimal_diameter",
+   "title": "Teaching exercise: optimal diameter and speed of a turbomachine",
+   "category": "components/compressors",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching exercise on the optimal diameter and rotation speed of a turbomachine. With the flow factor and the enthalpy factor given, the model computes that diameter and speed for air drawn at 1 bar and 20 °C, 6000 m³/h, and discharged at 2.5 bar.",
+   "fluids": [
+    "Air"
+   ],
+   "tags": [
+    "turbomachine",
+    "flow factor",
+    "enthalpy factor",
+    "optimal diameter",
+    "exercise"
+   ],
+   "n_equations": 17,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 04/SB/MSTh-SB-R4-Ex6.EES",
+   "authors": [
+    "Stéphane Bertagnolio"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@332d95a",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Compared with the EES stored solution of MSTh-SB-R4-Ex6.EES using compare_solution.py without --ees-units: 17 common variables, 3 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Those three are h_1, h_3_s and s_su. Maximum relative difference 3.19e-01 on s_su. D_opt, rpm_opt and DELTAh_s stay within rtol=0.001. All 17 equations are satisfied.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/components/compressors/turbomachine_optimal_diameter",
+   "main_file": "turbomachine_optimal_diameter.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0245",
+   "name": "grasso_screw_rpm_efficiencies",
+   "title": "Example: Grasso screw isentropic efficiencies at two speeds",
+   "category": "components/compressors",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Example from the Laborelec 2002 toolkit. Polynomial isentropic efficiencies of four Grasso screw compressors (C-52, H-5, N-5 and S-51) are evaluated at one pressure ratio and scaled from 2940 rpm to 1500 rpm.",
+   "fluids": [],
+   "tags": [
+    "screw compressor",
+    "isentropic efficiency",
+    "Grasso",
+    "rotation speed",
+    "polynomial"
+   ],
+   "n_equations": 12,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/1_Compressors/1_2_Screw Compressors/Example-Grasso Screw RPM General Simulation.EES",
+   "authors": [
+    "Felipe Trebilcock"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@6c1755b",
+   "verified_on": "2026-10-16",
+   "verification_summary": "Compared with the EES stored solution of Example-Grasso Screw RPM General Simulation.EES by compare_solution.py without --ees-units: 12 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Largest relative difference 7.29e-11 on epsilon_s_C_52_1500rpm. All 12 equations are satisfied.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/components/compressors/grasso_screw_rpm_efficiencies",
+   "main_file": "grasso_screw_rpm_efficiencies.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0037",
    "name": "scroll_expander_semi_empirical",
    "title": "Scroll expander semi-empirical model",
@@ -1909,6 +2070,88 @@
    ],
    "path": "models/components/expanders_turbines/turboexpander_parameter_identification",
    "main_file": "turboexpander_parameter_identification.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0224",
+   "name": "steam_turbine_heat_loss",
+   "title": "Steam turbine with heat loss (example 5.10)",
+   "category": "components/expanders_turbines",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "1.5 kg/s of steam enters a turbine that gives up 8.5 kW of heat. Inlet and outlet pressure, temperature or quality, velocity and elevation are known. The first law for a steady open system gives the power. Teaching example 5.10, ULiège THD, 2017-2018.",
+   "fluids": [
+    "Water"
+   ],
+   "tags": [
+    "turbine",
+    "steam",
+    "heat loss",
+    "first law",
+    "example"
+   ],
+   "n_equations": 27,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R02/R2_E5_borguet.EES",
+   "authors": [
+    "TBD (ULiège THD)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@332d95a",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Against the stored solution of R2_E5_borguet.EES, compare_solution.py --ees-units: 19 common variables, 4 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 8. Maximum relative difference 2.85e-03 on W_dot (-657477 W against -655604 W). h_in and h_out stay within rtol (+1094 and -154 J/kg). The four differences follow from that enthalpy gap through the energy balance.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/components/expanders_turbines/steam_turbine_heat_loss",
+   "main_file": "steam_turbine_heat_loss.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0234",
+   "name": "turboexpander_ideal_nozzle_laval",
+   "title": "Turbo-expander: ideal nozzle and Laval wheel (exercise)",
+   "category": "components/expanders_turbines",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Steady exercise model of one turbo-expander: an ideal nozzle with total-enthalpy conservation and a throat that can choke, followed by a Laval wheel. The specified power is 5 MW. The model computes the mass flow, the throat area and the wheel diameter.",
+   "fluids": [
+    "Air"
+   ],
+   "tags": [
+    "turbo-expander",
+    "nozzle",
+    "Laval wheel",
+    "choked flow",
+    "exercise"
+   ],
+   "n_equations": 28,
+   "largest_block": 5,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 04/R4-Ex2.EES",
+   "authors": [
+    "TBD (ULiège MSTh)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@332d95a",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Compared with the stored solution of R4-Ex2.EES. compare_solution.py: 28 common variables, 17 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Maximum relative difference 2.85e-01 on s_su. The 28 equations are satisfied. eta_laval is 0.8673469388 in both. M_dot is 10.260 kg/s against 9.238; D is 0.71839 m against 0.70601. Inlet enthalpy is 126553 J/kg above EES.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/components/expanders_turbines/turboexpander_ideal_nozzle_laval",
+   "main_file": "turboexpander_ideal_nozzle_laval.eescode",
    "figures": 0
   },
   {
@@ -3758,6 +4001,47 @@
    "figures": 0
   },
   {
+   "id": "CSL-0240",
+   "name": "sihi_pump_simulation",
+   "title": "SIHI pump simulation from dimensionless polynomials",
+   "category": "components/pumps_fans",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Example simulation of a SIHI pump. Cubics of the flow coefficient give the dimensionless head and absorbed-power coefficients, and the affinity-law definitions return the pressure rise and the shaft power. Water enters only through the suction density.",
+   "fluids": [
+    "Water"
+   ],
+   "tags": [
+    "pump",
+    "SIHI",
+    "affinity laws",
+    "dimensionless",
+    "catalogue"
+   ],
+   "n_equations": 14,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/3_Pumps and Fans/3_1_Pumps/Examples/Pumps_SIHI_simulation_021016.EES",
+   "authors": [
+    "Felipe Trebilcock"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@7d66c3b",
+   "verified_on": "2026-10-16",
+   "verification_summary": "compare_solution.py --ees-units: 14 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Maximum relative difference 2.544516e-05 on rho_su_p. DELTAP_p differs by 2.544491e-05. W_dot_shaft_p and epsilon_s_p match the stored solution. CoolSolve reports all 14 equations satisfied.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/components/pumps_fans/sihi_pump_simulation",
+   "main_file": "sihi_pump_simulation.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0009",
    "name": "dhw_tank_dynamic",
    "title": "Domestic hot-water storage tank: dynamic temperature evolution",
@@ -4803,6 +5087,100 @@
    "figures": 0
   },
   {
+   "id": "CSL-0223",
+   "name": "turbocharged_engine_expander",
+   "title": "Turbocharged engine with expander temperature drop (TP6 exercise 2)",
+   "category": "cycles/engines",
+   "kind": "steady",
+   "level": 1,
+   "status": "blocked",
+   "summary": "Teaching exercise: air and fuel mass flows of a turbocharged eight-cylinder engine, with the volumetric efficiency defined on the ambient density, and the useful power of an expander whose temperature drop is given.",
+   "fluids": [
+    "Air",
+    "O2",
+    "N2"
+   ],
+   "tags": [
+    "exercise",
+    "turbocharged engine",
+    "volumetric efficiency",
+    "expander",
+    "stoichiometric combustion",
+    "air flow",
+    "internal combustion engine"
+   ],
+   "n_equations": 31,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP6/EX2_PNG_2019.EES",
+   "authors": [
+    "P. Ngendakumana"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [
+    "CS-GAP-MOLARMASS-ELEMENT"
+   ],
+   "related": [],
+   "coolsolve_version": "0.3.0@332d95a",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Concerns the runnable variant (native file blocked by CS-GAP-MOLARMASS-ELEMENT). compare_solution.py against EX2_PNG_2019.EES: 31 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Max relative difference 3.31325e-04 on rho_a_bis. M_dot_a 0.285069 versus 0.285070 kg/s; M_dot_f 0.0189619 versus 0.0189622 kg/s; W_dot_exp_utile 13384.06 versus 13384.11 W.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "order-of-magnitude"
+   ],
+   "path": "models/cycles/engines/turbocharged_engine_expander",
+   "main_file": "turbocharged_engine_expander.eescode",
+   "figures": 0,
+   "variants": [
+    "turbocharged_engine_expander_coolsolve.eescode"
+   ]
+  },
+  {
+   "id": "CSL-0244",
+   "name": "engine_dynamometer_test",
+   "title": "Engine dynamometer test (TP3 exercise 5)",
+   "category": "cycles/engines",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching exercise: shaft power, friction power, brake mean effective pressure and torque of a four-stroke engine, from a dynamometer reading and the dynamometer and mechanical efficiencies.",
+   "fluids": [],
+   "tags": [
+    "exercise",
+    "dynamometer",
+    "four-stroke",
+    "brake mean effective pressure",
+    "mechanical efficiency",
+    "internal combustion engine"
+   ],
+   "n_equations": 14,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP3_EX-1-2-3-4-5/MCI_TP3_Ex 5.EES",
+   "authors": [
+    "P. Ngendakumana",
+    "R. Dickes"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@4ded1eb",
+   "verified_on": "2026-10-16",
+   "verification_summary": "Compared with the EES stored solution of MCI_TP3_Ex 5.EES (16 names). compare_solution.py: 14 common variables, 0 differ (rtol=0.001); only in EES: 2; only in CoolSolve: 1. Maximum relative difference 2.34e-10 on W_dot_f. W_dot_sh -75698.92473 W, W_dot_f -16616.83714 W, bmep 9.462365591 bar, Tau 180.7178709 N.m.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical",
+    "order-of-magnitude"
+   ],
+   "path": "models/cycles/engines/engine_dynamometer_test",
+   "main_file": "engine_dynamometer_test.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0011",
    "name": "two_shaft_gas_turbine_compressor_map",
    "title": "Two-shaft gas turbine with a compressor map and two expanders",
@@ -5343,6 +5721,50 @@
    "figures": 0
   },
   {
+   "id": "CSL-0226",
+   "name": "turbojet_component_efficiencies",
+   "title": "Turbojet with component efficiencies (exercise)",
+   "category": "cycles/gas_turbines",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Ideal-gas turbojet exercise with constant cold-side and hot-side specific heats, isentropic component efficiencies and a shaft balance. It returns the specific thrust, the fuel-air ratio and the specific fuel consumption at the stored compressor pressure ratio.",
+   "fluids": [
+    "Air"
+   ],
+   "tags": [
+    "exercise",
+    "turbojet",
+    "gas turbine",
+    "air standard",
+    "ideal gas",
+    "constant specific heat"
+   ],
+   "n_equations": 39,
+   "largest_block": 2,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R6/autres exo/THD10_R07_E5.EES",
+   "authors": [
+    "S. Quoilin"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@332d95a",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Compared with the stored solution of THD10_R07_E5.EES (kPa and kJ converted by hand). compare_solution.py --ees-units: 37 common variables, 9 differ (rtol=0.001); only in EES: 18; only in CoolSolve: 2. The 9 differences are temperatures kept in kelvin; --ees-units shifts unit K to °C. Max rel. diff 1.172318 on T[1] and T_amb. Fs agrees (rel. 4.90e-09). No property call.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance",
+    "order-of-magnitude"
+   ],
+   "path": "models/cycles/gas_turbines/turbojet_component_efficiencies",
+   "main_file": "turbojet_component_efficiencies.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0019",
    "name": "orc_simple_r245fa",
    "title": "Simple ORC with imposed component performance (R245fa)",
@@ -5732,6 +6154,47 @@
    "variants": [
     "orc_void_fraction_charge_coolsolve.eescode"
    ]
+  },
+  {
+   "id": "CSL-0229",
+   "name": "orc_r113_power_to_power_ratio",
+   "title": "R113 power-to-power ratio of an ORC and a heat pump (example)",
+   "category": "cycles/organic_rankine",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching example for an R113 installation. The ORC turbine electrical power follows from a given enthalpy drop of 17.5 kJ/kg. The heat-pump compressor electrical power follows from the saturated evaporator exit and a condenser inlet superheated by 5 °C. The model computes the absolute power-to-power ratio of those two AC powers.",
+   "fluids": [
+    "R113"
+   ],
+   "tags": [
+    "example",
+    "organic Rankine cycle",
+    "heat pump",
+    "R113",
+    "power-to-power ratio"
+   ],
+   "n_equations": 18,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/Aout 2022/Q5_power_to_power_ratio.EES",
+   "authors": [
+    "S. Quoilin"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@332d95a",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Against the stored solution of Q5_power_to_power_ratio.EES, compare_solution.py --ees-units reports: 18 common variables, 6 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum is 9.15e-01 on T2 (kelvin rewritten to °C). W_turb_fluide_elec is 18740.4 W in both. W_cp is 9437.15 W versus 9477.93 W and Power_to_power_ratio is 1.98581 versus 1.97727 (both 4.30e-03).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/cycles/organic_rankine/orc_r113_power_to_power_ratio",
+   "main_file": "orc_r113_power_to_power_ratio.eescode",
+   "figures": 0
   },
   {
    "id": "CSL-0001",
@@ -6799,6 +7262,130 @@
    "figures": 0
   },
   {
+   "id": "CSL-0222",
+   "name": "r22_unloaded_cylinders",
+   "title": "R22 refrigeration machine with unloaded cylinders (exercise)",
+   "category": "cycles/refrigeration_heat_pumps",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Teaching exercise: an R22 reciprocating compressor at full displacement (4 cylinders) and at half displacement (2 cylinders), with losses applied before an adiabatic compression. The evaporator and the condenser are effectiveness-NTU exchangers on water. A weight theta mixes the reduced-displacement water outlet with the idle outlet to hold 14 °C.",
+   "fluids": [
+    "R22",
+    "Water"
+   ],
+   "tags": [
+    "refrigeration",
+    "reciprocating compressor",
+    "unloaded cylinders",
+    "volumetric efficiency",
+    "clearance volume",
+    "part-load",
+    "effectiveness-NTU",
+    "exercise"
+   ],
+   "n_equations": 117,
+   "largest_block": 30,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 10/MSTH_041123_exercice_2.EES",
+   "authors": [
+    "TBD (ULiège MSTh)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@332d95a",
+   "verified_on": "2026-10-15",
+   "verification_summary": "compare_solution.py without --ees-units, against the solution stored in MSTH_041123_exercice_2.EES: 101 common variables, 3 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 16. Maximum relative difference 1.66e-03 on t_ev (R22 properties). The 16 CoolSolve-only names are the diagram arrays. Cooling capacity, power and COP of both regimes stay within rtol.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/cycles/refrigeration_heat_pumps/r22_unloaded_cylinders",
+   "main_file": "r22_unloaded_cylinders.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0228",
+   "name": "r113_heat_pump_second_law",
+   "title": "Second-law efficiency of an R113 heat pump (exercise)",
+   "category": "cycles/refrigeration_heat_pumps",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching exercise for an R113 heat pump. The model computes the real COP, the Carnot COP between the condenser and evaporator saturation temperatures, and the second-law efficiency.",
+   "fluids": [
+    "R113"
+   ],
+   "tags": [
+    "exercise",
+    "heat pump",
+    "second law",
+    "R113"
+   ],
+   "n_equations": 31,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/Aout 2022/Q1_rendement_II_principe.EES",
+   "authors": [
+    "S. Quoilin"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@332d95a",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Against the stored solution of Q1_rendement_II_principe.EES, compare_solution.py --ees-units reports: 15 common variables, 9 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 16. The maximum it prints is 9.15e-01 on T1 (stored kelvin rewritten to °C). COP_reel 3.33573 against 3.32517, COP_carnot 5.79692 against 5.81875, n_II_principe 57.5432 against 57.1458. All 31 equations are satisfied.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "order-of-magnitude"
+   ],
+   "path": "models/cycles/refrigeration_heat_pumps/r113_heat_pump_second_law",
+   "main_file": "r113_heat_pump_second_law.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0246",
+   "name": "heat_pump_room_cop",
+   "title": "Heat pump heating a room: power from COP (exercise)",
+   "category": "cycles/refrigeration_heat_pumps",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "A heat pump with COP 2.5 heats 800 kg of air. The temperature rise is written as 32 - 20, the heat uses c_v, and the heating rate over 15 minutes gives the power. Teaching exercise Cengel 6-44.",
+   "fluids": [],
+   "tags": [
+    "exercise",
+    "heat pump",
+    "COP"
+   ],
+   "n_equations": 8,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/06-44.EES",
+   "authors": [
+    "S. Quoilin"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@6c1755b",
+   "verified_on": "2026-10-16",
+   "verification_summary": "Against the stored solution of 06-44.EES, compare_solution.py (no --ees-units) reports: 8 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum relative difference 0.00e+00, tied on all eight common variables. Q_dot is 7680 W and W_dot is 3072 W, matching 800*720*12/(15*60) and 7680/2.5.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
+   "path": "models/cycles/refrigeration_heat_pumps/heat_pump_room_cop",
+   "main_file": "heat_pump_room_cop.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0004",
    "name": "rankine_cycle_60mw",
    "title": "Rankine cycle of a 60 MW steam power plant",
@@ -7240,6 +7827,47 @@
    "figures": 0
   },
   {
+   "id": "CSL-0236",
+   "name": "power_plant_river_carnot",
+   "title": "1 GW power plant cooled by river water (exercise 6.22)",
+   "category": "cycles/steam_power",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching exercise for a 1 GW power plant that rejects heat to river water. The condensation pressure fixes the low temperature of an equivalent Carnot cycle, and the model returns the Carnot efficiency, the condenser heat rate and the river temperature rise.",
+   "fluids": [
+    "Water"
+   ],
+   "tags": [
+    "power plant",
+    "carnot",
+    "river cooling",
+    "condenser",
+    "exercise"
+   ],
+   "n_equations": 13,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R04/SBe/THD09_R04_Ex04.EES",
+   "authors": [
+    "Stéphane Bertagnolio"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@7d66c3b",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Against the stored solution of THD09_R04_Ex04.EES, compare_solution.py without --ees-units reports: 13 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum relative difference 3.63e-04 on t_cond, and the same on t_f. eta, Q_dot_cond and DELTAt_w stay inside rtol. All 13 equations are satisfied.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/cycles/steam_power/power_plant_river_carnot",
+   "main_file": "power_plant_river_carnot.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0146",
    "name": "cgam_cogeneration",
    "title": "CGAM cogeneration benchmark (gas turbine + HRSG)",
@@ -7290,6 +7918,43 @@
    ],
    "path": "models/energy_systems/cogeneration/cgam_cogeneration",
    "main_file": "cgam_cogeneration.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0233",
+   "name": "cogeneration_monthly_demand",
+   "title": "Cogeneration monthly balance and annual demand (exercise)",
+   "category": "energy_systems/cogeneration",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching exercise for a monthly balance. The model computes the water capacity rate and the slope, the November and December captured heat and backup energy, and the annual heat demand.",
+   "fluids": [],
+   "tags": [
+    "exercise",
+    "cogeneration",
+    "monthly balance"
+   ],
+   "n_equations": 17,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 12/MSTH051213 EXERCICE 2.EES",
+   "authors": [
+    "TBD (ULiège MSTh)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@332d95a",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Against the stored solution of MSTH051213 EXERCICE 2.EES, compare_solution.py (no --ees-units) reports: 15 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 2. The maximum relative difference over all 15 common variables is 3.14e-10 on eta_dec. November backup, December backup and the annual demand match the stored 183.01875, 205.51875 and 2865.478125 kWh.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/energy_systems/cogeneration/cogeneration_monthly_demand",
+   "main_file": "cogeneration_monthly_demand.eescode",
    "figures": 0
   },
   {
@@ -8137,6 +8802,244 @@
    "figures": 0
   },
   {
+   "id": "CSL-0225",
+   "name": "co2_tank_ideal_gas",
+   "title": "CO2 in a 200 L tank: real-gas mass and ideal-gas error (exercise)",
+   "category": "fundamentals/processes",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching exercise for carbon dioxide in a 200 L tank at 35 °C and 2 MPa. The model computes the real-gas mass, the mass from volume(CO2), the percentage error between those two masses, and a second ideal-gas specific volume from the gas constant.",
+   "fluids": [
+    "CarbonDioxide",
+    "CO2"
+   ],
+   "tags": [
+    "exercise",
+    "closed system",
+    "ideal gas",
+    "carbon dioxide"
+   ],
+   "n_equations": 13,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R1/R1_E2_2022.EES",
+   "authors": [
+    "S. Quoilin"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@332d95a",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Against the stored solution of R1_E2_2022.EES, compare_solution.py --ees-units reports: 13 common variables, 5 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. The maximum it prints is 1.00e+00 on erreur and on x_CO2. T stays 308.15 K; the tool rewrites it to 35 °C. volume(CO2) follows the real equation of state, so m_gp equals m (7.591476 kg); EES ideal-gas m_gp is 6.871023 kg.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/fundamentals/processes/co2_tank_ideal_gas",
+   "main_file": "co2_tank_ideal_gas.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0230",
+   "name": "rigid_vessel_water_heat_removal",
+   "title": "Rigid 50 L vessel: heat removed from water at constant volume (exercise)",
+   "category": "fundamentals/processes",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching exercise for a closed rigid 50 L vessel of water at 120 °C and quality 0.6. The model computes the mass, the final quality at the temperature stored in the equation window, and the heat removed at constant volume.",
+   "fluids": [
+    "Water"
+   ],
+   "tags": [
+    "exercise",
+    "closed system",
+    "rigid vessel",
+    "water"
+   ],
+   "n_equations": 12,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R2/R2_E1_2022.EES",
+   "authors": [
+    "S. Quoilin"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@332d95a",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Against the stored solution of R2_E1_2022.EES, compare_solution.py --ees-units reports: 12 common variables, 2 differ (rtol=0.001); only in EES: 1; only in CoolSolve: 0. The maximum over all common variables is 9.65e-01 on T_f. T_i and T_f stay 393.15 K and 283.15 K; the tool rewrites those kelvin values to °C. Q is -155559 J (stored -155.539 kJ), m_eau is 0.0934315 kg and x_f is 0.00502483.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/fundamentals/processes/rigid_vessel_water_heat_removal",
+   "main_file": "rigid_vessel_water_heat_removal.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0237",
+   "name": "air_isentropic_compression_cp",
+   "title": "Isentropic compression of air: constant cp versus property functions (exercise)",
+   "category": "fundamentals/processes",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Closed-system isentropic compression of air from 100 kPa and 17 °C to 800 kPa. The model computes the exit temperature and the specific work with constant specific heats, and again from the air property functions at variable heat capacity. Teaching exercise Cengel 7-75.",
+   "fluids": [
+    "Air"
+   ],
+   "tags": [
+    "exercise",
+    "closed system",
+    "isentropic",
+    "ideal gas",
+    "air"
+   ],
+   "n_equations": 13,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/07-75.EES",
+   "authors": [
+    "TBD (KU Leuven)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@7d66c3b",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Against the stored solution of 07-75.EES, compare_solution.py (no --ees-units) reports: 13 common variables, 7 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Maximum relative difference 3.78e-01 on u_1. w prints 1.92e-04; w_bis prints 2.52e-03. All 13 equations are satisfied.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/fundamentals/processes/air_isentropic_compression_cp",
+   "main_file": "air_isentropic_compression_cp.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0241",
+   "name": "helium_balloon_buoyancy",
+   "title": "Helium balloon buoyancy and acceleration (exercise)",
+   "category": "fundamentals/processes",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching exercise for a spherical helium balloon of diameter 10 m. The air density is 1.16 kg/m³, the helium density is one seventh of that, and the mass is written as 70*2 kg. The model computes the buoyancy force, the total mass and the upward acceleration.",
+   "fluids": [],
+   "tags": [
+    "exercise",
+    "buoyancy",
+    "helium"
+   ],
+   "n_equations": 10,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/01-101.EES",
+   "authors": [
+    "S. Quoilin"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@7d66c3b",
+   "verified_on": "2026-10-16",
+   "verification_summary": "Against the stored solution of 01-101.EES, compare_solution.py (no --ees-units) reports: 10 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. The extra name is pi. Maximum relative difference 8.63e-11 on rho_he. a, F_b and m_tot agree with the stored values.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/fundamentals/processes/helium_balloon_buoyancy",
+   "main_file": "helium_balloon_buoyancy.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0242",
+   "name": "hydroelectric_head_power",
+   "title": "Hydroelectric plant: power from flow rate, head and turbine efficiency (exercise)",
+   "category": "fundamentals/processes",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Energy balance of a hydroelectric turbine with a volume flow rate of 100 m³/s, a head of 120 m, a turbine efficiency of 0.8 and a density of 1000 kg/m³. The model computes the mass flow rate, the turbine power and the loss rate. Teaching exercise Cengel 2-123.",
+   "fluids": [],
+   "tags": [
+    "exercise",
+    "hydroelectric",
+    "turbine",
+    "energy balance"
+   ],
+   "n_equations": 11,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/02-123.EES",
+   "authors": [
+    "S. Quoilin"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@7d66c3b",
+   "verified_on": "2026-10-16",
+   "verification_summary": "Against the stored solution of 02-123.EES, compare_solution.py (no --ees-units) reports: 11 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. The extra name is g#. Maximum relative difference 3.57e-05, tied on E_dot_in, W_dot_t and Q_dot_losses. M_dot matches 100000.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/fundamentals/processes/hydroelectric_head_power",
+   "main_file": "hydroelectric_head_power.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0243",
+   "name": "water_tank_entropy_change",
+   "title": "Entropy change of water in an insulated rigid tank (exercise)",
+   "category": "fundamentals/processes",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching exercise for a closed rigid tank with 2 kg of saturated water at 100 kPa, three quarters liquid. The final state is saturated vapour at the same specific volume, and the model computes the entropy change of the water.",
+   "fluids": [
+    "Water"
+   ],
+   "tags": [
+    "exercise",
+    "closed system",
+    "rigid tank",
+    "entropy",
+    "two-phase"
+   ],
+   "n_equations": 16,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/07-34.EES",
+   "authors": [
+    "S. Quoilin"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@4ded1eb",
+   "verified_on": "2026-10-16",
+   "verification_summary": "Against the stored solution of 07-34.EES, compare_solution.py reports: 16 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum over all common variables is 2.66e-04 on T (99.6059 °C vs stored 99.6324 °C). DELTAS is 8096.12 J/K vs stored 8097.54 J/K and equals m*(s_2-s_1).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/fundamentals/processes/water_tank_entropy_change",
+   "main_file": "water_tank_entropy_change.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0003",
    "name": "methane_tank_evaporation",
    "title": "Evaporation of liquid methane in a tank",
@@ -8464,6 +9367,47 @@
    ],
    "path": "models/fundamentals/properties/r1233zd_thermal_conductivity",
    "main_file": "r1233zd_thermal_conductivity.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0238",
+   "name": "r134a_two_states",
+   "title": "R134a properties at three states (exercise)",
+   "category": "fundamentals/properties",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching exercise: R134a properties at three independent states. Specific volume and quality from temperature and pressure, pressure and quality from temperature and specific volume, and temperature from pressure and quality.",
+   "fluids": [
+    "R134a"
+   ],
+   "tags": [
+    "exercise",
+    "properties",
+    "R134a",
+    "quality",
+    "saturation"
+   ],
+   "n_equations": 11,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/03-31.EES",
+   "authors": [
+    "S. Quoilin"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@7d66c3b",
+   "verified_on": "2026-10-16",
+   "verification_summary": "Compared with the solution stored in 03-31.EES. compare_solution.py without --ees-units reports: 11 common variables, 2 differ (rtol=0.001); only in EES: 2; only in CoolSolve: 0. The maximum relative difference over all common variables is 1.00e+00 on x_1 (EES stores -100, CoolSolve returns 0; it feeds no equation). T_3 prints 1.30e-03. v_1, P_2 and x_2 stay inside rtol.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/fundamentals/properties/r134a_two_states",
+   "main_file": "r134a_two_states.eescode",
    "figures": 0
   },
   {
@@ -10415,6 +11359,48 @@
    ]
   },
   {
+   "id": "CSL-0227",
+   "name": "evaporative_condenser_effectiveness",
+   "title": "Evaporative condenser as a semi-isothermal exchanger (exercise)",
+   "category": "hvac/air_handling",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Nominal point of an evaporative condenser treated as a semi-isothermal exchanger: the air-side heat rate sets a capacity rate from the inlet and outlet wet-bulb temperatures, and the effectiveness, NTU and overall exchange coefficient follow.",
+   "fluids": [
+    "AirH2O"
+   ],
+   "tags": [
+    "exercise",
+    "evaporative condenser",
+    "effectiveness",
+    "NTU",
+    "semi-isothermal",
+    "humid air"
+   ],
+   "n_equations": 13,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 05/SB/R5 - SB - Ex 3.EES",
+   "authors": [
+    "Stéphane Bertagnolio"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@332d95a",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Compared with the EES stored solution of R5 - SB - Ex 3.EES using compare_solution.py without unit scaling. The tool reports: 13 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum relative difference 2.74e-04 on C_dot_a_f, from the inlet wet-bulb residual. All 13 equations are satisfied.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/hvac/air_handling/evaporative_condenser_effectiveness",
+   "main_file": "evaporative_condenser_effectiveness.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0030",
    "name": "two_speed_cooling_tower",
    "title": "Two-speed cooling tower (regimes and mean fan power vs water set-point)",
@@ -10701,6 +11687,49 @@
    ],
    "path": "models/hvac/cooling_towers/cooling_tower_half_speed",
    "main_file": "cooling_tower_half_speed.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0232",
+   "name": "cooling_tower_water_air_sides",
+   "title": "Cooling tower water and air sides (exercise)",
+   "category": "hvac/cooling_towers",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Teaching exercise: a direct-contact cooling tower closed on the water side and on the moist-air side, with the fictitious air capacity rate fixed by the specific-heat ratio and the air enthalpy balance.",
+   "fluids": [
+    "AirH2O",
+    "Water"
+   ],
+   "tags": [
+    "exercise",
+    "cooling tower",
+    "effectiveness",
+    "NTU",
+    "humid air",
+    "wet-bulb"
+   ],
+   "n_equations": 28,
+   "largest_block": 18,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 06/SB/MSTh-SB-R6-Ex1.EES",
+   "authors": [
+    "Stéphane Bertagnolio"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@332d95a",
+   "verified_on": "2026-10-15",
+   "verification_summary": "Compared with the EES stored solution of MSTh-SB-R6-Ex1.EES using compare_solution.py without unit scaling. The tool reports: 28 common variables, 1 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum relative difference 1.38e-03 on omega_f. Q_dot_ct, T_w_ex and T_a_ex agree more closely. All 28 equations are satisfied.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/hvac/cooling_towers/cooling_tower_water_air_sides",
+   "main_file": "cooling_tower_water_air_sides.eescode",
    "figures": 0
   },
   {
@@ -14600,15 +15629,6 @@
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
-  "CS-GAP-END-PROCEDURE": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P2",
-   "text": "The `END PROCEDURE` terminator of a `PROCEDURE` (`End procedure`; EES accepts `end` followed by the subprogram kind.",
-   "detail": "Not recognised as a terminator: the line is a parse error (*\"Could not parse line\"* since `CS-BUG-BODY-LINE-DROP`; it was dropped silently) and the following definitions keep being read into the …",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
   "CS-GAP-INTEGRAL-MULTIVAR": {
    "kind": "gap",
    "state": "open",
@@ -15077,24 +16097,6 @@
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
-  "CS-BUG-INPUT-CLAMP": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P2 (valid inputs unusable, loud)",
-   "text": "**Property inputs below a floor are clamped silently during the solve and not in the final verification**: `src/evaluator.cpp` (`clampInput`) raises a pressure below **1000 Pa** to 1000 Pa, a temperature below **50 K** to 50 K and a density below 1e-4 kg/m³, …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-NEWTON1D-DIVERGE": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P2",
-   "text": "A **size-1 block whose equation is hyperbolic in its unknown diverges in `Newton1D` and is reported as `SingularJacobian`**: `phi = V/(U*A)` from the default guess `A` = 1 with the root 0.0157 — the first step (‖dx‖ = 63) throws `A` to the negative side, ‖F‖ …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
   "CS-BUG-NONSQUARE-DIAG": {
    "kind": "bug",
    "state": "open",
@@ -15181,6 +16183,15 @@
    "state": "open",
    "priority": "P3",
    "text": "An **assignment `x := 3` in the main program** (also in a main-program DUPLICATE) is dropped by `IR::fromAST`, which ignores `Assignment` statements: the model loses the statement; when `x` is used elsewhere the run ends with a structural error that does not …",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-NEWTON1D-BRACKET-COLLAPSE": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3",
+   "text": "Phase 3 of Newton1D declares convergence when the bracket width falls below `stepTolerance` without checking",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -15802,6 +16813,33 @@
    "state": "closed",
    "priority": "",
    "text": "The `DUPLICATE` header is read without its inline comment (`\"…\"`, `//`; a comma or `=` in the comment no longer matters), in the main program and in bodies, through one shared helper (`parseDuplicateStatement`); the `UNTIL (c)` line too (a `)` in its comment …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-NEWTON1D-DIVERGE": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "Newton1D rejects a Newton step that increases",
+   "detail": "",
+   "fixed_in": "F",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-INPUT-CLAMP": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "Only a property-call input that depends on the unknowns of its block (a Newton trial point: non-zero AD gradient) is limited, to 1000 Pa / 50 K / 1e-4 kg/m³ or the fluid's `p_triple` / `Tmin` in CoolProp when lower (cached per fluid, no extra CoolProp call …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-END-PROCEDURE": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "`END FUNCTION` / `END PROCEDURE` (the routine's kind) and `END <name>` (its name) close a FUNCTION/PROCEDURE body, in any case, with an optional comment; another word, or a named END while a DUPLICATE/REPEAT is open, is an error (*\"END foo does not close …",
    "detail": "",
    "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
    "anchor": "7-closed-gaps-and-bugs"

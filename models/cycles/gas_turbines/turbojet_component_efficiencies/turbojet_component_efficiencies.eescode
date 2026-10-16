@@ -1,0 +1,86 @@
+{=============================================================================
+  Turbojet with component efficiencies (exercise)
+  CoolSolve Library model CSL-0226
+ -----------------------------------------------------------------------------
+  Teaching example (ULiège MECA0002). Station-by-station ideal-gas turbojet:
+  inlet diffuser, compressor, combustor, turbine and nozzle. Cold-side and
+  hot-side specific heats and gamma are constant. Compressor and turbine
+  isentropic efficiencies are given; the shaft balance uses eta_m.
+  Specific thrust and specific fuel consumption follow from the nozzle-exit
+  velocity. Temperatures stay in kelvin (T_amb = -40+273, T0[4] = 1200+273).
+  The original comments out pi_c = 12; the stored solution pi_c = 20 is the
+  only equation added.
+
+  Inputs : p_amb, T_amb, c_0, T0[4], pi_c, pi_b, eta_c, eta_t, eta_m,
+           C_p_c, C_p_t, gamma_c, gamma_t, PCI
+  Outputs: Fs, Cs, f, w_c, w_t, c_7
+  Units  : SI - temperatures in K, pressures in Pa, energies in J
+  Source : ULiège MECA0002, S. Quoilin - see README.md
+=============================================================================}
+
+"!Data"
+fluid$ = 'Air' "working fluid = air treated as a perfect gas, as in the original"
+p_amb = 22e3 [Pa] "22 kPa in the original"
+T_amb = -40+273 "ambient static temperature [K]"
+c_0 = 800/3.6 "flight speed, 800 km/h as in the original [m/s]"
+
+T0[4] = 1200+273 "turbine inlet total temperature [K]"
+eta_c = 0.85 "compressor isentropic efficiency [-]"
+eta_t = 0.88 "turbine isentropic efficiency [-]"
+pi_c = 20 "compressor pressure ratio [-]; the original comments pi_c = 12, and the stored solution is 20"
+pi_b = 0.97 "pressure ratio across the combustion chamber [-]"
+eta_m = 0.99 "as in the original [-]"
+
+C_p_c = 1005 [J/kg-K] "cold-side specific heat, before the combustor (1.005 kJ/kg-K in the original)"
+C_p_t = 1140 [J/kg-K] "hot-side specific heat, after the combustor (1.140 kJ/kg-K in the original)"
+gamma_c = 1.4 "cold-side ratio of specific heats [-]"
+gamma_t = 1.333 "hot-side ratio of specific heats [-]"
+R = 287 [J/kg-K] "perfect-gas constant of air (0.287 kJ/kg-K in the original)"
+PCI = 43.1e6 [J/kg] "kerosene lower heating value (43.1e3 kJ/kg in the original)"
+
+"!Solution"
+"The original solves the cycle from inlet station 1 to exit station 6, computing each component exit from its inlet and the heat and mechanical power exchanged."
+"Each component is an open system in steady flow. Kinetic and potential energy changes are neglected, except where the original says otherwise."
+"The aircraft speed is not neglected: it produces a ram compression, so the cycle is written with total quantities."
+
+"!Total conditions at the diffuser inlet: station 1"
+T[1] = T_amb "static temperature [K]"
+T0[1] = T[1] + c_0^2/(2*C_p_c) "total temperature [K]; c_0^2/2000/C_p_c in the original (Cp in kJ/kg-K)"
+p[1] = p_amb "static pressure [Pa]"
+p0[1] = p[1] * (T0[1]/T[1])^(gamma_c/(gamma_c-1)) "total pressure [Pa]"
+
+"!Diffuser exit / compressor inlet: station 2"
+T0[2] = T0[1] "first law, as in the original [K]"
+"The original states an isentropic diffuser: with T0[2] = T0[1] the total pressure is conserved."
+p0[2] = p0[1] "total pressure [Pa]"
+
+"!Compressor exit: station 3"
+p0[3] = p0[2]*pi_c "total pressure [Pa]"
+eta_c * (T0[3]/T0[2]-1.0) = pi_c^((gamma_c-1)/gamma_c) - 1.0 "compressor isentropic efficiency [-]"
+w_c = c_p_c * (T0[3]-T0[2]) "compressor specific work [J/kg]"
+
+"!Combustor exit: station 4"
+p0[4] = pi_b*p0[3] "total pressure [Pa]"
+(1+f) * c_p_t*T0[4] = c_p_c * T0[3] + q_b "first law on the combustor, per unit air mass flow [J/kg]"
+q_b = PCI * f "f is the fuel-air mass ratio [-]; q_b [J/kg of air]"
+
+"!Turbine exit: station 5"
+w_t*eta_m + w_c = 0 "shaft balance: the turbine drives the compressor [J/kg]"
+w_t = c_p_t * (T0[5]-T0[4]) "turbine specific work [J/kg]"
+eta_t * (pi_t^((gamma_t-1)/gamma_t) - 1) = (T0[5]/T0[4]-1) "turbine isentropic efficiency [-]"
+p0[5] = pi_t * p0[4] "total pressure [Pa]"
+
+"!Nozzle exit: station 7"
+T0[7] = T0[5] "total temperature [K]"
+"The original states an isentropic nozzle: with the total temperatures equal, the total pressure is conserved."
+p0[7] = p0[5] "total pressure [Pa]"
+"The nozzle converts gas enthalpy into kinetic energy. The original assumes a complete expansion, so the static pressure at the nozzle exit equals the ambient pressure."
+p[7] = p_amb "static pressure [Pa]"
+T[7]/T0[7] = (p[7]/p0[7])^((gamma_t-1)/gamma_t) "isentropic static temperature at the nozzle exit [-]"
+T0[7] = T[7] + c_7^2/(2*C_p_t) "total temperature [K]; c_7^2/2000/C_p_t in the original (Cp in kJ/kg-K)"
+
+"!Specific thrust from a momentum balance. The original comment writes (1+f)*c_6 - c_0; the equation uses c_7."
+Fs = (1+f) * c_7 - c_0 "specific thrust [m/s]"
+
+"!Specific fuel consumption: fuel mass flow over thrust, which is f/Fs per unit air mass flow."
+Cs = f/Fs "specific fuel consumption [kg/(N-s)]"

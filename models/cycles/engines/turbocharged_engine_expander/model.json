@@ -1,0 +1,71 @@
+{
+  "id": "CSL-0223",
+  "name": "turbocharged_engine_expander",
+  "title": "Turbocharged engine with expander temperature drop (TP6 exercise 2)",
+  "summary": "Teaching exercise: air and fuel mass flows of a turbocharged eight-cylinder engine, with the volumetric efficiency defined on the ambient density, and the useful power of an expander whose temperature drop is given.",
+  "kind": "steady",
+  "level": 1,
+  "status": "blocked",
+  "main_file": "turbocharged_engine_expander.eescode",
+  "fluids": [
+    "Air",
+    "O2",
+    "N2"
+  ],
+  "tags": [
+    "exercise",
+    "turbocharged engine",
+    "volumetric efficiency",
+    "expander",
+    "stoichiometric combustion",
+    "air flow",
+    "internal combustion engine"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 31,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP6/EX2_PNG_2019.EES",
+    "candidate_id": "TM-0246",
+    "authors": [
+      "P. Ngendakumana"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.589",
+    "language": "fr",
+    "course": "ULiège MCI, TP6, sixth exercise session, statement 2 (turbocharged engine with an expander temperature drop)"
+  },
+  "verification": {
+    "summary": "Concerns the runnable variant (native file blocked by CS-GAP-MOLARMASS-ELEMENT). compare_solution.py against EX2_PNG_2019.EES: 31 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Max relative difference 3.31325e-04 on rho_a_bis. M_dot_a 0.285069 versus 0.285070 kg/s; M_dot_f 0.0189619 versus 0.0189622 kg/s; W_dot_exp_utile 13384.06 versus 13384.11 W.",
+    "checks": [
+      "ees-stored-solution",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of EX2_PNG_2019.EES (31 values; EES X10.589), compared with the runnable variant",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 3.31325e-04,
+    "notes": "Maximum relative difference over all 31 common variables is 3.31325e-04 on rho_a_bis (the compare table prints 3.31e-04). M_dot_a_bis has the same relative difference to the printed digits. M_dot_p_bis and W_dot_exp_utile_bis are 3.306e-04. Nothing exceeds rtol 0.001. rho_a = p/(r*T) is 1.148238 kg/m^3 versus 1.148242 kg/m^3 (rel 3.06e-06) and does not carry the CoolProp density residual. rho_a_bis = Density(Air) at 23 °C and 98000 Pa is 1.153199 versus 1.152817 kg/m^3. The equation window has no enthalpy and no entropy. M_dot_a is 0.2850692438 kg/s versus 0.285070116 kg/s (rel 3.06e-06). M_dot_f is 0.01896192387 kg/s versus 0.01896220351 kg/s (rel 1.47e-05). W_dot_exp_utile is 13384.06006 W versus 13384.11077 W (rel 3.79e-06). w_exp is -50600 J/kg on both sides. R_u = R# is 8314.462618 versus 8314.34 J/(kmol·K) (rel 1.47e-05). The only name present only in CoolSolve is R#, the built-in constant. L, D and r are the three decoded names with a guess and no stored value; none is an equation variable, so only in EES is 0. All 31 equations are satisfied (max relative residual 0). With the stored guesses and without them the solver reports 4 iterations and the same solution."
+  },
+  "missing_features": [
+    "CS-GAP-MOLARMASS-ELEMENT"
+  ],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

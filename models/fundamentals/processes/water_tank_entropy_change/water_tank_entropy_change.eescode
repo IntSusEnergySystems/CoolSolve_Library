@@ -1,0 +1,45 @@
+{=============================================================================
+  Entropy change of water in an insulated rigid tank (exercise)
+  CoolSolve Library model CSL-0243
+ -----------------------------------------------------------------------------
+  A closed rigid tank holds 2 kg of saturated water at 100 kPa. Three
+  quarters of the mass is liquid. The final state is saturated vapour at
+  the same specific volume, and the model computes the entropy change.
+  Teaching exercise Cengel 7-34 from the KU Leuven collection. The
+  equation window names nobody. Two named states of one tank: no
+  diagram-state arrays. The fluid token stays water.
+
+  Inputs : m, p, m_l, m_v
+  Outputs: DELTAS, T, s_1, s_2
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Cengel 7-34, file 07-34.EES; authors S. Quoilin (inventory)
+           - see README.md
+  Licence: MIT. Status: verified against the EES stored solution.
+=============================================================================}
+
+"!Input data"
+m = 2                                                    "mass of water [kg], as written"
+p = 100e3                                                "pressure [Pa], 100e3 as written"
+m_l = 2 * 3/4                                            "liquid mass [kg], 2*3/4 as written"
+m_v = 2 * 1/4                                            "vapour mass [kg], 2*1/4 as written"
+
+"!Saturation properties"
+x = m_v/m                                                "vapour quality [-], vapour mass over total mass, as written"
+T = T_sat(water,p=p)                                     "saturation temperature [°C] at p, as written"
+
+"!Initial state"
+v_1 = volume(water,x=x,p=p)                             "initial specific volume [m^3/kg] from quality and pressure, as written"
+u_1 = intenergy(water,x=x,p=p)                          "initial specific internal energy [J/kg] from quality and pressure, as written"
+h_1 = enthalpy(water,x=x,p=p)                           "initial specific enthalpy [J/kg] from quality and pressure, as written"
+s_1 = entropy(water,x=x,p=p)                            "initial specific entropy [J/kg-K] from quality and pressure, as written"
+
+"!Final state"
+x_2 = 1                                                  "final vapour quality [-], as written"
+v_2 = v_1                                                "final specific volume [m^3/kg], equal to the initial value, as written"
+u_2 = intenergy(water,x=x_2,v=v_2)                      "final specific internal energy [J/kg] from quality and specific volume, as written"
+h_2 = enthalpy(water,x=x_2,v=v_2)                       "final specific enthalpy [J/kg] from quality and specific volume, as written"
+s_2 = entropy(water,x=x_2,v=v_2)                        "final specific entropy [J/kg-K] from quality and specific volume, as written"
+
+"!Entropy change"
+"The entropy change uses the thermodynamic properties of water, as in the original."
+DELTAS = m * (s_2 - s_1)                                 "entropy change of the water [J/K]"

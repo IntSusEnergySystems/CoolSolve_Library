@@ -1,0 +1,61 @@
+{
+  "id": "CSL-0244",
+  "name": "engine_dynamometer_test",
+  "title": "Engine dynamometer test (TP3 exercise 5)",
+  "summary": "Teaching exercise: shaft power, friction power, brake mean effective pressure and torque of a four-stroke engine, from a dynamometer reading and the dynamometer and mechanical efficiencies.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "engine_dynamometer_test.eescode",
+  "fluids": [],
+  "tags": [
+    "exercise",
+    "dynamometer",
+    "four-stroke",
+    "brake mean effective pressure",
+    "mechanical efficiency",
+    "internal combustion engine"
+  ],
+  "language_features": [],
+  "stats": {
+    "n_equations": 14,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP3_EX-1-2-3-4-5/MCI_TP3_Ex 5.EES",
+    "candidate_id": "TM-0238",
+    "authors": ["P. Ngendakumana", "R. Dickes"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.589",
+    "language": "fr",
+    "course": "ULiège MCI, TP3, exercise 5 (engine dynamometer test). Equation-window stamp PNG07032019."
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of MCI_TP3_Ex 5.EES (16 names). compare_solution.py: 14 common variables, 0 differ (rtol=0.001); only in EES: 2; only in CoolSolve: 1. Maximum relative difference 2.34e-10 on W_dot_f. W_dot_sh -75698.92473 W, W_dot_f -16616.83714 W, bmep 9.462365591 bar, Tau 180.7178709 N.m.",
+    "checks": [
+      "ees-stored-solution",
+      "analytical",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of MCI_TP3_Ex 5.EES (16 names decoded by ees_extract.py; EES X10.589)",
+    "date": "2026-10-16",
+    "coolsolve_version": "0.3.0@4ded1eb",
+    "max_rel_diff": 2.34e-10,
+    "notes": "The converted window is square: 14 equations and 14 variables. The two names present only in the EES stored solution are D (0.24) and L (0.36); they are absent from the equation window and were not restored. The CoolSolve-only name is pi, the constant in omega = 2*pi*(N/60), written into the .sol. The factor 1e-5 in the bmep equation is unchanged, so bmep stays in bar. Differences on the common variables are the rounding of the stored EES values. With initials the solver takes 2 iterations; without initials, 3. The two solutions are identical."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-16",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{=============================================================================
+  Rigid 50 L vessel: heat removed from water at constant volume
+  CoolSolve Library model CSL-0230
+ -----------------------------------------------------------------------------
+  A closed rigid vessel of 50 L holds water at 120 C with a vapour quality
+  of 0.6. The vessel is cooled at constant volume. The model computes the
+  mass, the final quality and the heat transferred. Teaching exercise of
+  ULiège MECA0002, thermodynamique appliquée, repetition 2 (2022-2023),
+  not an exam. One vessel, initial and final states: no diagram-state arrays.
+
+  Inputs : Vol, T_i, x_i, T_f
+  Outputs: m_eau, x_f, Q
+  Units  : SI - temperatures in K, pressures in Pa, energies in J
+           (property calls receive °C)
+  Source : ULiège MECA0002, R2_E1_2022.EES; the equation window names no
+           author - see README.md
+  Licence: MIT. Status: verified against the EES stored solution.
+=============================================================================}
+
+"!Problem"
+"Exercise 1: a closed rigid vessel of 50 L contains water at 120 C with a quality of 60 percent, as in the original."
+"The statement says the vessel is cooled to -10 C. The equation window stores +10 C. That stored temperature is kept."
+"Calculate the heat transferred during the process, as in the original."
+
+"!Data"
+Vol = 50e-3 [m^3]                                        "vessel volume [m^3], 50 L as written"
+T_i = 120 [K]+273.15 [K]                                 "initial temperature [K]; 120 C written as 120 K + 273.15 K, as stored"
+x_i = 0.6                                                "initial vapour quality [-]"
+T_f = 10 [K]+273.15 [K]                                  "final temperature [K]; the equation window stores 10 C, not the -10 C of the statement"
+
+"!Resolution"
+"The vessel is assumed closed and rigid. Its volume is constant, so no work is done, as in the original."
+"The first law gives Q = U_2 - U_1 = m * (u_2 - u_1): the change of internal energy equals the heat transferred, as in the original."
+
+"!Mass of water"
+"The mass of water in the vessel is conserved because the vessel is closed, as in the original."
+v_i = volume(Water, T=T_i-273.15, x=x_i)                "initial specific volume [m^3/kg]; temperature and quality are known, as in the original; the call takes °C and T_i is in K"
+m_eau = Vol/v_i                                          "mass of water [kg], from the definition of specific volume"
+
+"!Internal energy of the mixture"
+u_i = intenergy(Water, t=t_i-273.15, x=x_i)             "initial specific internal energy [J/kg]; the original writes t_i; the call takes °C and returns J"
+
+"!Final state"
+"The specific volume is unchanged (volume and mass are conserved because the vessel is rigid and closed) and the temperature is known, as in the original."
+v_f = v_i                                                "final specific volume [m^3/kg]"
+
+x_f = quality(Water, T=T_f-273.15, v=v_f)               "final vapour quality [-]; the call takes °C and T_f is in K; v is the specific volume, as in the original"
+u_f = intenergy(Water, T=T_f-273.15, x=x_f)             "final specific internal energy from temperature and quality [J/kg]; the call takes °C and returns J"
+u_f_bis = intenergy(Water, T=T_f-273.15, v=v_f)         "final specific internal energy from temperature and specific volume [J/kg]; the call takes °C and returns J"
+
+"!Heat transferred"
+Q = m_eau*(u_f-u_i)                                      "heat transferred [J]; a negative Q means the system gives heat to the surroundings, as in the original"

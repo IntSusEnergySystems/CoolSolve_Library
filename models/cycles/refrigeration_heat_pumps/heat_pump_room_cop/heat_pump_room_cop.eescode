@@ -1,0 +1,33 @@
+{=============================================================================
+  Heat pump heating a room: power from COP
+  CoolSolve Library model CSL-0246
+ -----------------------------------------------------------------------------
+  A heat pump with a given COP heats 800 kg of air. The temperature rise is
+  written as 32 - 20. The heat is the mass times c_v times that rise, the
+  heating rate divides that heat by 15 minutes, and the power follows from
+  COP = Q_dot/W_dot. c_p = 1000 is an equation and is not used elsewhere.
+  Teaching exercise Cengel 6-44 from the KU Leuven collection. The equation
+  window names nobody. The window has no pressure. c_v and c_p stay in
+  J/kg-K. No fluid call and no cycle: no diagram-state arrays.
+
+  Inputs : COP, m, c_v, c_p, the two temperatures in DELTAT
+  Outputs: Q_dot, W_dot, DELTAQ
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Cengel 6-44, file 06-44.EES; authors S. Quoilin (inventory)
+           - see README.md
+  Licence: MIT. Status: verified against the EES stored solution.
+=============================================================================}
+
+"!Data"
+COP = 2.5                                                "coefficient of performance [-], as written"
+m = 800                                                  "mass of air [kg], as written"
+c_v = 720                                                "specific heat at constant volume [J/kg-K], as written"
+c_p = 1000                                               "specific heat at constant pressure [J/kg-K], as written; not used in another equation"
+
+"!Temperature rise and heat"
+DELTAT = 32 - 20                                         "temperature rise [K], as written"
+DELTAQ = m * c_v * DELTAT                                "heat [J], as written"
+
+"!Heating rate and power"
+Q_dot = DELTAQ / (15 * 60)                               "heating rate [W]; 15 minutes written as 15 * 60 [s]"
+COP = Q_dot/W_dot                                        "COP definition; power W_dot [W], as written"

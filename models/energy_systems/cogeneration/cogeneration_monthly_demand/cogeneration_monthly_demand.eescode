@@ -1,0 +1,55 @@
+{=============================================================================
+  Cogeneration monthly balance and annual demand (exercise)
+  CoolSolve Library model CSL-0233
+ -----------------------------------------------------------------------------
+  MSTh repetition, exercise 2 (file MSTH051213, 2005-12-13). The window
+  computes a monthly balance for November and December: capacity rate,
+  slope, heat demand, captured heat and backup energy, then the annual
+  demand. Temperatures t_nov and t_dec are assigned and unused elsewhere.
+  The intersection notes 350 and 200 are comments; those numbers already
+  sit in the captured-heat equations. December backup uses 30 days.
+  No fluid, no property call, and no diagram-state array. Not an exam.
+
+  Inputs : M_dot, c_w, A, t_nov, t_dec, and the demand and capture equations
+  Outputs: Q_dot_appoint_kWh_mois_nov, Q_dot_appoint_kWh_dec, Q_demande_kWh_an
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+           (the kWh results stay as written; nothing is rescaled)
+  Source : ULiège MSTh, MSTH051213 EXERCICE 2.EES; the equation window
+           names nobody - see README.md
+  Licence: MIT. Status: verified against the EES stored solution.
+=============================================================================}
+
+"!Data"
+"MSTH051213 exercise 2, as in the original."
+M_dot = 150/(24*3600)                                          "mass flow rate [kg/s]; 150/(24*3600) as in the original"
+C_dot = M_dot*c_w                                              "capacity rate [W/K]"
+c_w = 4187                                                     "specific heat [J/kg-K]; an equation, as in the original"
+pente = C_dot*24/A                                             "slope [W/K]; 24/A as written"
+A = 5                                                          "A, as in the original"
+"As in the original: one finds pente = 34.89."
+
+"!November"
+"November, as in the original."
+t_nov = 5.5                                                    "November temperature [°C]; no other equation uses it"
+"Intersection: 350, as in the original."
+
+"!Monthly balance"
+"Monthly balance, as in the original."
+Q_dot_demande = C_dot*(55-10)                                  "demand heat rate [W]; (55-10) as in the original"
+Q_dot_capté_nov = 350*(A/24)                                   "captured heat rate in November [W]; 350 already in this equation"
+Q_dot_appoint_nov = Q_dot_demande-Q_dot_capté_nov              "backup heat rate in November [W] (appoint)"
+Q_dot_appoint_kWh_mois_nov = Q_dot_appoint_nov*30*24/1000      "backup energy in November [kWh]; 30 days as in the original"
+eta_nov = Q_dot_capté_nov/Q_dot_demande                        "November ratio of captured heat to demand [-]"
+
+"!December"
+"December, as in the original."
+t_dec = 3.5                                                    "December temperature [°C]; no other equation uses it"
+"Intersection: 200, as in the original."
+Q_dot_capté_dec = 200*(A/24)                                   "captured heat rate in December [W]; 200 already in this equation"
+Q_dot_appoint_dec = Q_dot_demande-Q_dot_capté_dec              "backup heat rate in December [W] (appoint)"
+Q_dot_appoint_kWh_dec = Q_dot_appoint_dec*30*24/1000           "backup energy in December [kWh]; 30 days as in the original"
+eta_dec = Q_dot_capté_dec/Q_dot_demande                        "December ratio of captured heat to demand [-]"
+
+"!Annual demand"
+"Annual demand in kWh, as in the original."
+Q_demande_kWh_an = Q_dot_demande*365*24/1000                   "annual demand [kWh]; 365 days as in the original"

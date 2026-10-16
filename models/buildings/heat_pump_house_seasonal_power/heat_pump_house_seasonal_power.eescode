@@ -1,0 +1,41 @@
+{=============================================================================
+  Exercise: seasonal power of a heat pump for a house
+  CoolSolve Library model CSL-0239
+ -----------------------------------------------------------------------------
+  Teaching exercise 6.21 (THD09, R04, Ex03). A heat pump heats a house in
+  winter and, reversed, cools it in summer. Heat flow through the building
+  envelope is proportional to the indoor-outdoor temperature difference.
+  The machine is an ideal reversible Carnot cycle between the indoor air
+  and the outdoor air, as the original states.
+
+  (a) Outdoors at 0 °C and indoors at 20 °C: mechanical power of the heat
+  pump. (b) The same power, in refrigerator mode, indoors at 25 °C: the
+  outdoor temperature. Two roots exist; the stored one is above 25 °C.
+
+  Inputs : t_in_ete, t_in_hiver, t_out_hiver, AU_pertes
+  Outputs: W_dot_pac_hiver, COP_pac_hiver, t_out_ete, Q_dot_ete, COP_frigo
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Stéphane Bertagnolio, ULiège THD - see README.md
+=============================================================================}
+
+"!Exercise 6.21"
+
+"Data"
+AU_pertes = 2400E3/3600                 "building loss coefficient [W/K], as in the original"
+t_in_ete = 25 [C]                       "indoor temperature in summer [°C]"
+t_in_hiver = 20 [C]                     "indoor temperature in winter [°C]"
+t_out_hiver = 0 [C]                     "outdoor temperature in winter [°C]"
+
+"!a) Mechanical power required to run the heat pump"
+"The first and second laws give an ideal reversible Carnot cycle:"
+"COP_pac = Q_c/W = t_c/(t_c-t_f), as in the original."
+Q_dot_hiver = AU_pertes*(t_in_hiver-t_out_hiver)    "heat flow through the building envelope [W]"
+COP_pac_hiver = (t_in_hiver+273.15)/(t_in_hiver-t_out_hiver)    "Carnot heating COP, Celsius temperatures shifted by 273.15 [-]"
+W_dot_pac_hiver = Q_dot_hiver/COP_pac_hiver         "mechanical power of the heat pump in winter [W]"
+
+"!b) Refrigerator mode"
+"Cooling COP; it depends on the unknown t_out_ete, as in the original."
+COP_frigo = (t_in_ete+273.15)/(t_out_ete-t_in_ete)  "Carnot cooling COP, Celsius temperatures shifted by 273.15 [-]"
+Q_dot_ete = COP_frigo*W_dot_frigo                   "summer heat flow from the COP and the power [W]"
+W_dot_frigo = W_dot_pac_hiver                       "electric power held constant [W]"
+Q_dot_ete = AU_pertes*(t_out_ete-t_in_ete)          "heat flow through the building envelope in summer [W]"

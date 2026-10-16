@@ -1,0 +1,67 @@
+{=============================================================================
+  Turbocharged engine with expander temperature drop
+  CoolSolve Library model CSL-0223
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège MCI, sixth exercise session, statement 2).
+  The air and fuel flows of a turbocharged eight-cylinder engine follow
+  from a volumetric efficiency defined on the ambient density. The given
+  value is 1.9: the reference is ambient air, not the intake manifold.
+  The expander temperature drop is given as -44 K. The useful power is
+  the power available to drive the compressor. A second set of flows
+  uses the built-in ideal-gas properties of Air.
+
+  Inputs : V_tot, n_c, i, r_v, RPM, epsilon_v, DELTAT_exp, eta_mec,
+           T_amb, p_amb, cp_g, m, n
+  Outputs: M_dot_a, M_dot_f, M_dot_p, W_dot_exp_utile,
+           M_dot_a_bis, M_dot_f_bis, W_dot_exp_utile_bis
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : P. Ngendakumana, ULiège MCI TP6 - see README.md
+  Status : BLOCKED in CoolSolve (valid EES): CS-GAP-MOLARMASS-ELEMENT.
+           Runnable variant: turbocharged_engine_expander_coolsolve.eescode.
+=============================================================================}
+
+"!Data"
+
+V_tot = 5.6e-3                   "total displacement, as in the original [m^3]"
+n_c = 8                          "number of cylinders [-]"
+i = 0.5                          "number of cycles per revolution, as in the original [-]"
+r_v = 9.4                        "volumetric compression ratio; the original says it is unused [-]"
+RPM = 2800                       "rotational speed; the original says vitesse de rotation [1/min]"
+epsilon_v = 1.9                  "volumetric efficiency of the supercharged engine, referenced to ambient air and not to the intake manifold [-]"
+DELTAT_exp = -44                 "temperature drop in the expander, as in the original [K]"
+eta_mec = 0.87                   "mechanical efficiency of the expander [-]"
+
+T_amb = 23                       "ambient temperature [°C]"
+p_amb = 98e3                     "ambient pressure [Pa]"
+cp_g = 1150                      "specific heat of the exhaust gas, as in the original [J/(kg·K)]"
+
+"!Air and fuel flow (CmHn), and the exhaust-gas flow"
+
+V_s = V_tot/n_c                  "volume swept by one cylinder [m^3]"
+m = 8                            "carbon atoms in the fuel C8H18, as in the original [-]"
+n = 18                           "hydrogen atoms in the fuel C8H18, as in the original [-]"
+"Stoichiometric combustion reaction, as written in the original: CmHn + (m+n/4)*(O2+(79/21)*N2) -> m*CO2 + (n/2)*H20 + (m+n/4)*(79/21)*N2"
+f_st = (m*MolarMass(C)+n*MolarMass(H))/((m+n/4)*(MolarMass(O2)+(79/21)*MolarMass(N2)))  "stoichiometric fuel-air ratio [kg/kg]"
+f = f_st                         "stoichiometric operation, as in the original [-]"
+M_dot_f = f*M_dot_a              "fuel mass flow [kg/s]"
+epsilon_v = M_dot_a/(rho_a*V_s*(RPM/60)*n_c*i)  "definition of epsilon_v, which solves M_dot_a [-]"
+rho_a = p_amb/(r_a*(T_amb+273.15))  "ambient density from the ideal-gas law [kg/m^3]"
+r_a = R_u/MM_a                   "specific gas constant of the air used in the combustion equation [J/(kg·K)]"
+R_u = R#                         "universal gas constant; R# is the built-in constant [J/(kmol·K)]"
+MM_a = 0.21*MolarMass(O2)+0.79*MolarMass(N2)  "molar mass of the air used in the combustion equation [kg/kmol]"
+
+M_dot_p = M_dot_a+M_dot_f        "exhaust-gas mass flow [kg/s]"
+
+"If the built-in properties of air are used, as in the original"
+MM_a_bis = MolarMass(Air)        "molar mass of Air [kg/kmol]"
+rho_a_bis = Density(Air,T=T_amb,P=P_amb)  "ambient density of Air; P_amb is the same variable as p_amb [kg/m^3]"
+epsilon_v = M_dot_a_bis/(rho_a_bis*V_s*(RPM/60)*n_c*i)  "definition of epsilon_v, which solves M_dot_a_bis [-]"
+M_dot_f_bis = f*M_dot_a_bis      "fuel mass flow with the Air density [kg/s]"
+M_dot_p_bis = M_dot_a_bis+M_dot_f_bis  "exhaust-gas mass flow with the Air density [kg/s]"
+
+"!Power available to drive the compressor"
+
+w_exp = cp_g*DELTAT_exp          "specific work of the expander [J/kg]"
+W_dot_exp_utile = -eta_mec*M_dot_p*w_exp  "useful expander power available to drive the compressor [W]"
+
+W_dot_exp_utile_bis = -eta_mec*M_dot_p_bis*w_exp  "same power if the built-in properties of air are used [W]"

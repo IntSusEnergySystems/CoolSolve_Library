@@ -1,0 +1,64 @@
+{
+  "id": "CSL-0240",
+  "name": "sihi_pump_simulation",
+  "title": "SIHI pump simulation from dimensionless polynomials",
+  "summary": "Example simulation of a SIHI pump. Cubics of the flow coefficient give the dimensionless head and absorbed-power coefficients, and the affinity-law definitions return the pressure rise and the shaft power. Water enters only through the suction density.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "sihi_pump_simulation.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "pump",
+    "SIHI",
+    "affinity laws",
+    "dimensionless",
+    "catalogue"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 14,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/3_Pumps and Fans/3_1_Pumps/Examples/Pumps_SIHI_simulation_021016.EES",
+    "candidate_id": "TM-0305",
+    "authors": [
+      "Felipe Trebilcock"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X6.596",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "compare_solution.py --ees-units: 14 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Maximum relative difference 2.544516e-05 on rho_su_p. DELTAP_p differs by 2.544491e-05. W_dot_shaft_p and epsilon_s_p match the stored solution. CoolSolve reports all 14 equations satisfied.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution in Pumps_SIHI_simulation_021016.EES (14 variables)",
+    "date": "2026-10-16",
+    "coolsolve_version": "0.3.0@7d66c3b",
+    "max_rel_diff": 2.544516e-05,
+    "notes": "14 common variables, none above rtol=0.001. The maximum relative difference over all common variables is 2.544516e-05 on rho_su_p. DELTAP_p is 2.544491e-05. CoolProp water at 20 °C and 101300 Pa is 998.207139 kg/m3; the stored rho_su_p is 998.2325392 kg/m3. --ees-units prints: Converted EES reference values: P_w_su_p (kPa x1000). A blank unit is not scaled. DELTAP_p and W_dot_shaft_p have blank stored unit strings and stay 1127087.439 Pa and 11852.78207 W. With the shipped initials, W_dot_shaft_p matches the stored value and the power-coefficient absolute residual is 3.452e-10 (all 14 equations satisfied). Without initials, 23 iterations, W_dot_shaft_p is 11852.48048 W and that residual is 0. The .sol baseline is the run with initials (3 iterations). The name only in the CoolSolve solution is pi."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-16",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

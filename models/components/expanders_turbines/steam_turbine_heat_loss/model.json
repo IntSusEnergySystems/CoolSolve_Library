@@ -1,0 +1,65 @@
+{
+  "id": "CSL-0224",
+  "name": "steam_turbine_heat_loss",
+  "title": "Steam turbine with heat loss (example 5.10)",
+  "summary": "1.5 kg/s of steam enters a turbine that gives up 8.5 kW of heat. Inlet and outlet pressure, temperature or quality, velocity and elevation are known. The first law for a steady open system gives the power. Teaching example 5.10, ULiège THD, 2017-2018.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "steam_turbine_heat_loss.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "turbine",
+    "steam",
+    "heat loss",
+    "first law",
+    "example"
+  ],
+  "language_features": [
+    "property functions",
+    "array variables"
+  ],
+  "stats": {
+    "n_equations": 27,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R02/R2_E5_borguet.EES",
+    "candidate_id": "TM-0363",
+    "authors": [
+      "TBD (ULiège THD)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.423",
+    "language": "fr",
+    "course": "ULiège THD, 2017-2018"
+  },
+  "verification": {
+    "summary": "Against the stored solution of R2_E5_borguet.EES, compare_solution.py --ees-units: 19 common variables, 4 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 8. Maximum relative difference 2.85e-03 on W_dot (-657477 W against -655604 W). h_in and h_out stay within rtol (+1094 and -154 J/kg). The four differences follow from that enthalpy gap through the energy balance.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution in R2_E5_borguet.EES (19 variables, EES X8.423)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 0.002847923747,
+    "notes": "19 common variables (compare_solution.py --ees-units). The summary line is: 19 common variables, 4 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 8. The tool prints the maximum as 2.85e-03 on W_dot; the exact ratio is 2.847923747e-03. CoolSolve minus EES: h_in +1094.311 J/kg (rel 3.49e-04), h_out -153.984 J/kg (rel 5.76e-05), both within rtol=0.001. They are not a constant reference-state offset. Deltah residual -1248.295 J/kg (rel 2.70e-03) is h_out minus h_in of those two residuals. pctEC and pctEP have the same relative difference because DeltaEC and DeltaEP match exactly. W_dot is -657476.541 W against -655604.098 W (difference -1872.443 W), equal to q_m times the Deltah residual. All 27 equations are satisfied (max residual 0). --ees-units scaled Q_dot, W_dot (kW), p_in, p_out (kPa), Deltah, DeltaEC, DeltaEP, h_in, h_out (kJ in the unit numerator). It did not scale T_in (°C), the percentages, or the mass flow, velocities, elevations, g, or x_out. The 8 CoolSolve-only names are P[1], h[1], T[1], s[1], P[2], h[2], T[2], s[2]. 2 iterations with .initials, 14 without. The diagram block does not change the 19 original variables (relative difference 0). Before that block the window was square: 19 equations, 19 variables. Inlet temperature 350 °C prints a hint that the value is Celsius rather than kelvin; the value used is 350 °C."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0241",
+  "name": "helium_balloon_buoyancy",
+  "title": "Helium balloon buoyancy and acceleration (exercise)",
+  "summary": "Teaching exercise for a spherical helium balloon of diameter 10 m. The air density is 1.16 kg/m³, the helium density is one seventh of that, and the mass is written as 70*2 kg. The model computes the buoyancy force, the total mass and the upward acceleration.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "helium_balloon_buoyancy.eescode",
+  "fluids": [],
+  "tags": ["exercise", "buoyancy", "helium"],
+  "language_features": [],
+  "stats": {"n_equations": 10, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/01-101.EES",
+    "candidate_id": "TM-0327",
+    "authors": ["S. Quoilin"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.920",
+    "language": "en",
+    "course": "KU Leuven"
+  },
+  "verification": {
+    "summary": "Against the stored solution of 01-101.EES, compare_solution.py (no --ees-units) reports: 10 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. The extra name is pi. Maximum relative difference 8.63e-11 on rho_he. a, F_b and m_tot agree with the stored values.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in 01-101.EES (10 variables, EES X9.920), compared with compare_solution.py",
+    "date": "2026-10-16",
+    "coolsolve_version": "0.3.0@7d66c3b",
+    "max_rel_diff": 8.63e-11,
+    "notes": "compare_solution.py without --ees-units. 10 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1 (pi, the built-in constant written into the solution). Maximum over all common variables is 8.63e-11 on rho_he (unrounded 8.629e-11). a is 16.46509153865 m/s^2 against 16.46509154 (prints 8.20e-11). F_b is 5958.344626798 N against 5958.344627 (prints 3.39e-11). m_tot is 226.7677970991 kg against 226.7677971 (prints 3.97e-12). The residuals are the rounding of the stored EES values. 2 iterations with .initials and 2 without. The converted window is square (10 equations, 10 variables), so pi stays as written and no stored unknown was added. There is no variant."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-16", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

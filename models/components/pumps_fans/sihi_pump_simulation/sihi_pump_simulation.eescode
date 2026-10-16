@@ -1,0 +1,43 @@
+{=============================================================================
+  SIHI pump simulation from dimensionless polynomials
+  CoolSolve Library model CSL-0240
+ -----------------------------------------------------------------------------
+  Example simulation of a SIHI pump. The head and absorbed-power
+  coefficients are cubics of the flow coefficient, as written in the
+  original equation window. The affinity-law definitions return the
+  pressure rise and the shaft power at the stated diameter and speed.
+  Water enters only through the suction density. The volume flow is the
+  stored solution, 0.00508 m^3/s. The original brace comment
+  V_dot_p = 0.00211 is not an equation.
+
+  Inputs : volume flow, impeller diameter, speed, suction temperature
+           and pressure
+  Outputs: pressure rise, shaft power, epsilon_s
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J;
+           speed kept in rev/min (omega in rad/s)
+  Source : Felipe Trebilcock, Laborelec toolkit 2002 - see README.md
+=============================================================================}
+
+"!Polynomials for the dimensionless coefficients"
+psi_p = 0.06593 + 193.982*phi_p - 2.68298E6*phi_p^2 + 2.14012E9*phi_p^3    "head coefficient [-]"
+Lambda_p = 0.000005387 + 0.07254*phi_p - 91.0212*phi_p^2 + 42483*phi_p^3    "absorbed-power coefficient [-]"
+epsilon_s_p = (psi_p*phi_p)/lambda_p    "epsilon_s = psi*phi/lambda [-], as in the original"
+
+"!Affinity-law definitions"
+psi_p = DELTAP_p/(rho_su_p*omega_p^2*D_p^2)    "head coefficient from the pressure rise [-]"
+phi_p = V_dot_p/(D_p^3*omega_p)    "flow coefficient [-]"
+Lambda_p = W_dot_shaft_p/(D_p^5*omega_p^3*rho_su_p)    "absorbed-power coefficient [-]"
+
+"The original comment says the catalogue data for the polynomial identification belong in the parametric table. They are not equations of this window."
+
+"!Suction state"
+rho_su_p = DENSITY(Water, T=T_w_su_p, P=P_w_su_p)    "suction density [kg/m^3]"
+
+"!Catalogue data and inputs"
+D_p = 0.50    "impeller diameter [m]"
+rpm_p = 2900    "rotational speed [rev/min]; original annotation [rev/m]"
+omega_p = (rpm_p*2*pi)/60    "angular speed [rad/s]"
+T_w_su_p = 20    "suction temperature [°C]"
+P_w_su_p = 101300    "suction pressure [Pa]; 101.3 kPa in the original"
+g = 9.81    "gravitational acceleration [m/s^2], as in the original"
+V_dot_p = 0.00508    "volume flow rate [m^3/s]; stored solution. The original brace comment lists 0.00211 and is not an equation"

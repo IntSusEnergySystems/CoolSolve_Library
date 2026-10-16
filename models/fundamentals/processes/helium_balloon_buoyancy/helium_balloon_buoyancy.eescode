@@ -1,0 +1,35 @@
+{=============================================================================
+  Helium balloon buoyancy and acceleration (exercise)
+  CoolSolve Library model CSL-0241
+ -----------------------------------------------------------------------------
+  A spherical helium balloon of diameter 10 m. The air density is given,
+  and the helium density is one seventh of it. The carried mass is written
+  as 70*2. The buoyancy force is the weight of the displaced air, the total
+  mass adds the helium, and the acceleration follows Newton's second law
+  as written. Teaching exercise Cengel 1-101 from the KU Leuven collection.
+  The equation window names nobody. g = 9.81 stays; g = g# is a comment.
+  No fluid call and no cycle: no diagram-state arrays.
+
+  Inputs : rho_air, d, m, g
+  Outputs: a, F_b, m_tot
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Cengel 1-101, file 01-101.EES; authors S. Quoilin (inventory)
+           - see README.md
+  Licence: MIT. Status: verified against the EES stored solution.
+=============================================================================}
+
+"!Data"
+rho_air = 1.16                                           "air density [kg/m^3], as written"
+d = 10                                                   "balloon diameter [m], as written"
+m = 70 * 2                                               "carried mass [kg], 70*2 as written"
+g = 9.81                                                 "gravitational acceleration [m/s^2], as written"
+"or, as in the original:"
+"g = g#"                                                 "left as a comment; g# is not used"
+rho_he = rho_air/7                                       "helium density [kg/m^3], as written"
+
+"!Buoyancy and acceleration"
+F_b = rho_air * g * V_balloon                            "buoyancy force [N], as written"
+V_balloon = 4/3 * pi * r^3                               "balloon volume [m^3]; the window writes pi"
+r = d/2                                                  "balloon radius [m], as written"
+m_tot = m + rho_he * V_balloon                           "total mass [kg], carried mass plus helium, as written"
+F_b - m_tot*g = m_tot * a                                "upward acceleration [m/s^2], as written"

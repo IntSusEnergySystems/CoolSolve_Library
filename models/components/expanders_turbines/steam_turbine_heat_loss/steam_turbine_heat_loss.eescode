@@ -1,0 +1,65 @@
+{=============================================================================
+  Steam turbine with heat loss (example 5.10)
+  CoolSolve Library model CSL-0224
+ -----------------------------------------------------------------------------
+  Example 5.10. The mass flow at the inlet of a steam turbine is 1.5 kg/s
+  and the heat given up by the turbine is 8.5 kW. Inlet: 2 MPa, 350 °C,
+  50 m/s, elevation 6 m. Outlet: 100 kPa, saturated vapour, 200 m/s,
+  elevation 3 m. The fluid is Water. The first law for a steady open
+  system with one inlet and one outlet gives the power. Kinetic and
+  potential energy are kept. Heat lost by the turbine is a negative Q_dot.
+
+  Inputs : q_m, Q_dot, p_in, T_in, c_in, z_in, p_out, x_out, c_out, z_out, g
+  Outputs: W_dot, h_in, h_out, Deltah, DeltaEC, DeltaEP
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège THD, 2017-2018, thermo_models - see README.md
+  Authors: TBD (ULiège THD)
+  License: MIT
+  Status : verified against the EES stored solution
+=============================================================================}
+
+"!Inputs, as in the original"
+q_m = 1.5                                    "mass flow rate [kg/s]"
+Q_dot = -8500                                "heat transfer rate [W] (-8.5 kW in the original); negative because lost by the turbine, as in the original"
+p_in = 2000e3                                "inlet pressure [Pa] (2000 kPa in the original)"
+T_in = 350                                   "inlet temperature [°C]"
+c_in = 50                                    "inlet velocity [m/s]"
+z_in = 6                                     "inlet elevation [m]"
+p_out = 0.1e6                                "exit pressure [Pa] (0.1e3 kPa in the original)"
+x_out = 1                                    "exit vapour quality [-]"
+c_out = 200                                  "exit velocity [m/s]"
+z_out = 3                                    "exit elevation [m]"
+g = 9.8066                                   "gravitational acceleration [m/s^2]"
+
+"!First law for a steady open system"
+"Mass conservation, as in the original: the outlet mass flow equals the inlet mass flow, so one mass flow is used."
+"First law, equation 25, slide 35, chapter 4, one inlet and one outlet, as in the original."
+Q_dot + W_dot = q_m*(Deltah + DeltaEC + DeltaEP)    "steady-flow energy balance [W]"
+
+"!Specific enthalpy change"
+Deltah = h_out - h_in                        "specific enthalpy change [J/kg]"
+h_out = enthalpy(Water, x=x_out, p=p_out)    "exit enthalpy [J/kg]"
+h_in = enthalpy(Water, T=T_in, p=p_in)       "inlet enthalpy [J/kg]"
+
+"!Kinetic-energy change"
+DeltaEC = 0.5*(c_out^2 - c_in^2)             "specific kinetic-energy change [J/kg]; the original divided by 1000 to obtain kJ/kg"
+
+"!Potential-energy change"
+DeltaEP = g*(z_out - z_in)                   "specific potential-energy change [J/kg]; the original divided by 1000 to obtain kJ/kg"
+
+pctEC = DeltaEC/Deltah*100                   "kinetic-energy change as a percentage of the enthalpy change [%]"
+pctEP = DeltaEP/Deltah*100                   "potential-energy change as a percentage of the enthalpy change [%]"
+
+"The potential-energy change is negligible beside the enthalpy change of the fluid, as in the original.
+The kinetic-energy change is about 4 % of the enthalpy change, mainly because the exit velocity is fairly high, as in the original."
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: inlet. 2: outlet. Both states are already computed in the window.}
+P[1] = p_in                                   "inlet pressure [Pa]"
+h[1] = h_in                                   "inlet enthalpy [J/kg]"
+T[1] = T_in                                   "inlet temperature [°C]"
+s[1] = entropy(Water, T=T_in, p=p_in)         "inlet entropy [J/kg-K]"
+P[2] = p_out                                  "exit pressure [Pa]"
+h[2] = h_out                                  "exit enthalpy [J/kg]"
+T[2] = temperature(Water, x=x_out, p=p_out)   "exit temperature [°C]"
+s[2] = entropy(Water, x=x_out, p=p_out)       "exit entropy [J/kg-K]"

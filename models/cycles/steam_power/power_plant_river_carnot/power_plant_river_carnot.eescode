@@ -1,0 +1,50 @@
+{=============================================================================
+  1 GW power plant cooled by river water (exercise 6.22)
+  CoolSolve Library model CSL-0236
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège, thermodynamique appliquée, THD09, R04,
+  exercise 6.22). A plant of 1 GW rejects heat to river water. The
+  condensation pressure fixes the saturation temperature, taken as the
+  low temperature of an equivalent Carnot cycle. The file returns the
+  Carnot efficiency, the condenser heat rate and the river temperature
+  rise after perfect mixing.
+
+  eta = (t_c - t_f)/(t_c + 273.15) uses both temperatures in °C.
+  This is not a cycle of states, so there are no diagram-state arrays.
+
+  Inputs : t_c, P_cond, W_dot, q_v_w, rho_w, c_p_w
+  Outputs: eta, Q_dot_cond, DELTAt_w
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Stéphane Bertagnolio, ULiège THD09 - see README.md
+  Licence: MIT. Status: verified against the EES stored solution.
+=============================================================================}
+
+"!Exercise 6.22"
+"THD09 - R04 - Ex04. Exercise 6.22, as in the original."
+
+"!Data"
+t_c=550 [C]                                              "t_c of the equivalent Carnot cycle [C]"
+P_cond=10000 [Pa]                                        "condensation pressure [Pa]"
+W_dot=1000E6 [W]                                         "power [W]"
+
+"!Condensation temperature"
+"The condensation pressure gives the condensation temperature (saturated state), and thus the low temperature of the equivalent Carnot cycle, as in the original."
+t_cond=temperature(Water,P=P_cond,x=1)                  "saturation temperature of Water at P_cond and x = 1 [C]"
+t_f=t_cond                                               "low temperature of the equivalent Carnot cycle [C]"
+
+"!Carnot efficiency of the engine cycle"
+eta=(t_c-t_f)/(t_c+273.15)                               "Carnot efficiency between t_c and t_f, both in C [-]"
+
+"!Condenser power"
+eta=W_dot/Q_dot_utile                                    "efficiency written as W_dot/Q_dot_utile, as in the original [-]"
+Q_dot_cond=Q_dot_utile-W_dot                             "condenser heat rate [W]"
+
+"!River water flow"
+q_v_w=8*60*10/60                                         "river volume flow, as written [m^3/s]"
+q_m_w=q_v_w*rho_w                                        "river mass flow [kg/s]"
+rho_w=1000 [kg/m^3]                                      "river water density [kg/m^3]"
+
+"!River temperature rise"
+"Assuming perfect mixing in the river after the heat is rejected, as in the original."
+Q_dot_cond=q_m_w*c_p_w*DELTAt_w                          "energy balance on the river water [W]"
+c_p_w=4187                                               "specific heat of river water [J/kg-K]"

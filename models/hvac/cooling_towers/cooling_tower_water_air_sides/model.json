@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0232",
+  "name": "cooling_tower_water_air_sides",
+  "title": "Cooling tower water and air sides (exercise)",
+  "summary": "Teaching exercise: a direct-contact cooling tower closed on the water side and on the moist-air side, with the fictitious air capacity rate fixed by the specific-heat ratio and the air enthalpy balance.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "cooling_tower_water_air_sides.eescode",
+  "fluids": ["AirH2O", "Water"],
+  "tags": ["exercise", "cooling tower", "effectiveness", "NTU", "humid air", "wet-bulb"],
+  "language_features": ["humid-air properties", "property functions", "min/max"],
+  "stats": {"n_equations": 28, "largest_block": 18},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 06/SB/MSTh-SB-R6-Ex1.EES",
+    "candidate_id": "TM-0100",
+    "authors": ["Stéphane Bertagnolio"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh, repetition 6, exercise 1"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of MSTh-SB-R6-Ex1.EES using compare_solution.py without unit scaling. The tool reports: 28 common variables, 1 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum relative difference 1.38e-03 on omega_f. Q_dot_ct, T_w_ex and T_a_ex agree more closely. All 28 equations are satisfied.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in MSTh-SB-R6-Ex1.EES (28 variables)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 0.0013789545,
+    "notes": "Maximum relative difference 1.3789545e-03 on omega_f (the tool prints 1.38e-03). omega_f = C_dot_w/C_dot_a_f, so the relative residuals of cp_w (7.90e-04, Water) and C_dot_a_f (5.89e-04) add. Q_dot_ct is 1973285.89 W against 1974133.611 W (4.29e-04). T_w_ex is 25.557912 °C against 25.561327 °C (1.34e-04). T_a_ex is 28.751566 °C against 28.757024 °C (1.90e-04). h_a_ex and h_a_su differ by 1.28e-04 and 3.54e-05; h_a_ex - h_a_su differs by 4.29e-04, the same relative amount as Q_dot_ct. --ees-units printed no converted names. Solver: 3 iterations with the stored guesses (max |residual| 1.0664e-07); without them, 1 Newton iteration then SingularJacobian."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

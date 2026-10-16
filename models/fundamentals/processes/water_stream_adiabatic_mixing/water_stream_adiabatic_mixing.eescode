@@ -1,0 +1,35 @@
+{=============================================================================
+  Adiabatic mixing of two water streams (exercise)
+  CoolSolve Library model CSL-0247
+ -----------------------------------------------------------------------------
+  Two water streams mix at one pressure. One stream is at 80 °C and
+  0.5 kg/s, the other at 20 °C, and the mixture leaves at 42 °C.
+  The pressure is written 250e3 Pa. Steady mass and energy balances
+  give the unknown inlet flow and the mixture flow. Teaching exercise
+  Cengel 5-75 from the KU Leuven collection. The equation window
+  names nobody. One open mixer: no diagram-state arrays.
+
+  Inputs : T_1, M_dot_1, T_2, T_3, p
+  Outputs: M_dot_2, M_dot_3, h_1, h_3
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Cengel 5-75, file 05-75.EES; authors S. Quoilin (inventory)
+           - see README.md
+  Licence: MIT. Status: verified against the EES stored solution.
+=============================================================================}
+
+"!Stream data"
+T_1 = 80                                                     "stream 1 temperature [°C], as written"
+M_dot_1 = 0.5                                                "stream 1 mass flow [kg/s], as written"
+T_2 = 20                                                     "stream 2 temperature [°C], as written"
+T_3 = 42                                                     "mixture temperature [°C], as written"
+p = 250e3                                                    "pressure [Pa], 250e3 as written"
+
+"!Specific enthalpies"
+h_1=Enthalpy(Water,T=T_1,P=P)                                "stream 1 specific enthalpy [J/kg], fluid Water and capital P as written"
+h_2 = enthalpy(water,t=t_2,p=p)                              "stream 2 specific enthalpy [J/kg], fluid water and t_2 as written"
+h_3 = enthalpy(water,t=t_3,p=p)                              "mixture specific enthalpy [J/kg], fluid water and t_3 as written"
+
+"Mass balance:"
+M_dot_3 = M_dot_1 + M_dot_2                                  "steady mass balance, as in the original [kg/s]"
+"Energy balance:"
+M_dot_3 * h_3 = M_dot_1 * h_1 + M_dot_2 * h_2                "steady energy balance, as in the original [W]"

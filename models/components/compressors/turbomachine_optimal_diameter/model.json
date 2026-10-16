@@ -1,0 +1,49 @@
+{
+  "id": "CSL-0235",
+  "name": "turbomachine_optimal_diameter",
+  "title": "Teaching exercise: optimal diameter and speed of a turbomachine",
+  "summary": "Teaching exercise on the optimal diameter and rotation speed of a turbomachine. With the flow factor and the enthalpy factor given, the model computes that diameter and speed for air drawn at 1 bar and 20 °C, 6000 m³/h, and discharged at 2.5 bar.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "turbomachine_optimal_diameter.eescode",
+  "fluids": ["Air"],
+  "tags": [
+    "turbomachine",
+    "flow factor",
+    "enthalpy factor",
+    "optimal diameter",
+    "exercise"
+  ],
+  "language_features": ["property functions"],
+  "stats": {"n_equations": 17, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 04/SB/MSTh-SB-R4-Ex6.EES",
+    "candidate_id": "TM-0068",
+    "authors": ["Stéphane Bertagnolio"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège, Machines et systèmes thermiques, repetition 4, exercise 6"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of MSTh-SB-R4-Ex6.EES using compare_solution.py without --ees-units: 17 common variables, 3 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Those three are h_1, h_3_s and s_su. Maximum relative difference 3.19e-01 on s_su. D_opt, rpm_opt and DELTAh_s stay within rtol=0.001. All 17 equations are satisfied.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution of thermo_models TM-0068 (MSTh-SB-R4-Ex6.EES, EES X7.458, 17 variables); tools/compare_solution.py, no unit conversion (already SI Pa, C, J)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 0.319399,
+    "notes": "The printed maximum is 3.19e-01 on s_su. Unrounded, s_su is the maximum over the 17 common variables at 0.3193992439 (3867.259359 J/kg-K against the EES stored 5682.126158 J/kg-K). h_1 is +125870.58 J/kg and h_3_s is +125897.35 J/kg above the EES values, so the Air enthalpy offset is not constant. That 26.77 J/kg gap is the gap on DELTAh_s (relative difference 3.0378e-04, printed 3.04e-04). D_opt differs by 7.6305e-05 and rpm_opt by 2.2825e-04, both under rtol=0.001. The name present only in CoolSolve is PI. With the .initials file, CoolSolve reports 12 iterations and all 17 equations satisfied (max relative residual 9.1177e-11). Without it, 47 iterations, and D stays positive."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

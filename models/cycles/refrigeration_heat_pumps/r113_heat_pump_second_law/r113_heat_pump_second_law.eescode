@@ -1,0 +1,64 @@
+{=============================================================================
+  Second-law efficiency of an R113 heat pump (exercise)
+  CoolSolve Library model CSL-0228
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège, thermodynamique appliquée, MECA0002). Second-law
+  efficiency of a heat pump: the real COP divided by the Carnot COP between
+  the condenser and evaporator saturation temperatures. R113. Evaporator
+  45 kPa, condenser 320 kPa. Evaporator inlet quality 0.35; evaporator outlet
+  (compressor inlet) is saturated vapour. Superheat of 5 K at the condenser
+  inlet. h4 = h1, as in the original. Temperatures stay in kelvin. Property
+  calls pass °C.
+
+  Inputs : p1, p3, evaporator inlet quality 0.35, superheat 5 K
+  Outputs: COP_reel, COP_carnot, n_II_principe
+  Units  : SI - temperatures in K, pressures in Pa, energies in J
+           (property calls receive °C)
+  Source : S. Quoilin, ULiège MECA0002 - see README.md
+  Licence: MIT
+  Status : verified against the stored EES solution (see README.md)
+=============================================================================}
+
+"!Pressures (as in the original; the window already stores pascal)"
+p1 = 45e3 [Pa]                                  "evaporator pressure [Pa]; 45 kPa in the statement, 45e3 Pa in the window"
+p2 = p1                                         "evaporator outlet pressure [Pa]"
+p3 = 320e3 [Pa]                                 "condenser pressure [Pa]; 320 kPa in the statement, 320e3 Pa in the window"
+p4 = p3                                         "state 4 pressure [Pa]"
+
+"!Temperatures in kelvin. T_sat returns °C, so 273.15 is added at the property boundary."
+T1 = T_sat(R113, P=p1)+273.15                   "evaporator saturation temperature [K]"
+T2 = T1                                         "saturated vapour at the evaporator outlet [K], as in the original"
+T_cond = T_sat(R113, P=p3)+273.15               "condenser saturation temperature [K]"
+T3 = T_cond+5                                   "condenser inlet temperature [K]; 5 K superheat, as in the original"
+
+"!Carnot COP between the phase-change temperatures, both in kelvin"
+COP_carnot = (T_cond)/(T_cond-T1)               "Carnot heat-pump COP [-]"
+
+"!Enthalpies [J/kg]. h1 and h2 have no temperature argument. h3 passes °C."
+h1 = enthalpy(R113, x=0.35, P=p1)               "evaporator inlet enthalpy, quality 0.35 [J/kg]"
+h2 = enthalpy(R113, P=p2, x=1)                  "saturated vapour enthalpy at the evaporator outlet [J/kg]"
+h3 = enthalpy(R113, T=T3-273.15, P=p3)          "condenser inlet enthalpy [J/kg]; the call takes °C and T3 is in K"
+h4 = h1                                         "as in the original [J/kg]"
+
+"!Second-law efficiency"
+COP_reel = (h3-h4)/(h3-h2)                      "real heat-pump COP [-], as in the original"
+n_II_principe = COP_reel/COP_carnot*100         "second-law efficiency [%]"
+
+"!State points for the thermodynamic diagrams (post-processing)"
+{1 evaporator inlet, 2 evaporator outlet, 3 condenser inlet, 4 state at condenser pressure with h4.}
+P[1] = p1
+h[1] = h1
+T[1] = T1                                       "kelvin, as stored for T1"
+s[1] = entropy(R113, P=p1, x=0.35)              "specific entropy [J/kg-K]; pair (P, x)"
+P[2] = p2
+h[2] = h2
+T[2] = T2                                       "kelvin, as stored for T2"
+s[2] = entropy(R113, P=p2, x=1)                 "saturated vapour [J/kg-K]; pair (P, x)"
+P[3] = p3
+h[3] = h3
+T[3] = T3                                       "kelvin, as stored for T3"
+s[3] = entropy(R113, T=T3-273.15, P=p3)         "specific entropy [J/kg-K]; pair (T, P), T in °C"
+P[4] = p4
+h[4] = h4
+T[4] = temperature(R113, H=h4, P=p4)+273.15     "temperature [K]; temperature() returns °C; pair (H, P)"
+s[4] = entropy(R113, H=h4, P=p4)                "specific entropy [J/kg-K]; pair (H, P)"

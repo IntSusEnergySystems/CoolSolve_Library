@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0238",
+  "name": "r134a_two_states",
+  "title": "R134a properties at three states (exercise)",
+  "summary": "Teaching exercise: R134a properties at three independent states. Specific volume and quality from temperature and pressure, pressure and quality from temperature and specific volume, and temperature from pressure and quality.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "r134a_two_states.eescode",
+  "fluids": ["R134a"],
+  "tags": ["exercise", "properties", "R134a", "quality", "saturation"],
+  "language_features": ["property functions"],
+  "stats": {"n_equations": 11, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/03-31.EES",
+    "candidate_id": "TM-0332",
+    "authors": ["S. Quoilin"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.920",
+    "language": "en",
+    "course": "KU Leuven, textbook exercise Cengel 3-31"
+  },
+  "verification": {
+    "summary": "Compared with the solution stored in 03-31.EES. compare_solution.py without --ees-units reports: 11 common variables, 2 differ (rtol=0.001); only in EES: 2; only in CoolSolve: 0. The maximum relative difference over all common variables is 1.00e+00 on x_1 (EES stores -100, CoolSolve returns 0; it feeds no equation). T_3 prints 1.30e-03. v_1, P_2 and x_2 stay inside rtol.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution of thermo_kuleuven/exercices/03-31.EES (EES X9.920, 13 stored names), compared with compare_solution.py",
+    "date": "2026-10-16",
+    "coolsolve_version": "0.3.0@7d66c3b",
+    "max_rel_diff": 1.0,
+    "notes": "compare_solution.py summary: 11 common variables, 2 differ (rtol=0.001); only in EES: 2; only in CoolSolve: 0. Maximum over all common variables is 1.00e+00 on x_1 (exact relative difference 1): EES stores -100, CoolSolve returns 0. x_1 feeds no equation, so CS-GAP-QUALITY-DOME is not listed in missing_features. T_3 prints 1.30e-03 (unrounded 1.297e-03): CoolSolve -12.7124453496 °C, EES -12.72895832 °C, absolute difference 0.0165 °C, saturation temperature at 180 kPa. P_2 prints 5.78e-04 (770196.303077 Pa against 770641.9152 Pa). x_2 prints 7.58e-04 (0.548766107515 against 0.5491822976). v_1 prints 1.65e-07 (7.569328309920e-04 m^3/kg against 0.0007569329561 m^3/kg). p_1, p_3, T_1, T_2, v_2 and x_3 print 0. Only in EES: T=1 and P=1, absent from the equation window and not added. No enthalpy call, so no R134a reference-state offset. 0 iterations with .initials and 0 without. System square: Yes (11 equations, 11 variables). t_1/T_1 and t_2/T_2 were not unified. The pressure() hints that t=30 looks like Fahrenheit and that v=0.015 m^3/kg is unusually large are cosmetic: T_2 stays 30 °C and v_2 stays 0.015 m^3/kg. The .sol unit tag on v_1 and v_2 says kg/m^3; the numbers are the specific volumes. Binary mtime 2026-10-16 00:09:33, checkout commit 7d66c3b."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-16", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

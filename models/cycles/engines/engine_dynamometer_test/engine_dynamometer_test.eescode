@@ -1,0 +1,43 @@
+{=============================================================================
+  Engine dynamometer test
+  CoolSolve Library model CSL-0244
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège MCI, TP3, exercise 5). Shaft power is the
+  dynamometer reading divided by the dynamometer efficiency. Indicated
+  power follows from the mechanical efficiency; friction power is their
+  difference. Brake mean effective pressure uses the four-stroke volume
+  flow. Torque follows from the shaft power and the angular speed.
+  The dynamometer power is negative, as written. bmep keeps the factor
+  1e-5, so the value is in bar.
+
+  Inputs : n_c, i, W_dot_sh_dyna, eta_dyna, N, V_s_tot, eta_m
+  Outputs: W_dot_sh, W_dot_i, W_dot_f, bmep, V_dot_th, omega, Tau
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : P. Ngendakumana and R. Dickes, ULiège MCI - see README.md
+=============================================================================}
+
+"!Data"
+
+n_c = 3                          "number of cylinders [-]"
+i = 0.5                          "intermittency factor for a 4-stroke engine [-]"
+W_dot_sh_dyna = -70.4e3          "power measured by the dynamometer [W]"
+eta_dyna = 0.93                  "dynamometer efficiency [-]"
+N = 4000                         "engine rotational speed [1/min]"
+V_s_tot = 2.4e-3                 "engine displacement [m^3]"
+eta_m = 0.82                     "mechanical efficiency [-]"
+
+"!Friction losses"
+
+W_dot_sh = W_dot_sh_dyna/eta_dyna   "shaft power [W]"
+W_dot_i = W_dot_sh/eta_m            "indicated power [W]"
+W_dot_f = W_dot_i - W_dot_sh        "friction power [W]"
+
+"!Brake mean effective pressure"
+
+bmep = -(W_dot_sh/V_dot_th)*1e-5    "brake mean effective pressure; the factor 1e-5 reports bar, as in the original [bar]"
+V_dot_th = i*V_s_tot*(N/60)         "as in the original [m^3/s]"
+
+"!Engine torque"
+
+W_dot_sh = - omega*Tau              "as in the original [W]"
+omega = 2*pi*(N/60)                 "angular speed [rad/s]"

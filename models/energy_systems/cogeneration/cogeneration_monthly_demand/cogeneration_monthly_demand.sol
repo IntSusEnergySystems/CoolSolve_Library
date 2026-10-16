@@ -1,0 +1,17 @@
+A = 5.000000000000e+00
+C_dot = 7.269097222222e+00
+c_w = 4.187000000000e+03
+eta_dec = 1.273783934400e-01
+eta_nov = 2.229121885200e-01
+M_dot = 1.736111111111e-03
+pente = 3.489166666667e+01
+Q_demande_kWh_an = 2.865478125000e+03
+Q_dot_appoint_dec = 2.854427083333e+02
+Q_dot_appoint_kWh_dec = 2.055187500000e+02
+Q_dot_appoint_kWh_mois_nov = 1.830187500000e+02
+Q_dot_appoint_nov = 2.541927083333e+02
+Q_dot_capté_dec = 4.166666666667e+01
+Q_dot_capté_nov = 7.291666666667e+01
+Q_dot_demande = 3.271093750000e+02
+t_dec = 3.500000000000e+00
+t_nov = 5.500000000000e+00

@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0243",
+  "name": "water_tank_entropy_change",
+  "title": "Entropy change of water in an insulated rigid tank (exercise)",
+  "summary": "Teaching exercise for a closed rigid tank with 2 kg of saturated water at 100 kPa, three quarters liquid. The final state is saturated vapour at the same specific volume, and the model computes the entropy change of the water.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "water_tank_entropy_change.eescode",
+  "fluids": ["Water"],
+  "tags": ["exercise", "closed system", "rigid tank", "entropy", "two-phase"],
+  "language_features": ["property functions"],
+  "stats": {"n_equations": 16, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/07-34.EES",
+    "candidate_id": "TM-0342",
+    "authors": ["S. Quoilin"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.920",
+    "language": "en",
+    "course": "KU Leuven, textbook exercise Cengel 7-34"
+  },
+  "verification": {
+    "summary": "Against the stored solution of 07-34.EES, compare_solution.py reports: 16 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum over all common variables is 2.66e-04 on T (99.6059 °C vs stored 99.6324 °C). DELTAS is 8096.12 J/K vs stored 8097.54 J/K and equals m*(s_2-s_1).",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in 07-34.EES (16 variables, EES X9.920), compared with compare_solution.py",
+    "date": "2026-10-16",
+    "coolsolve_version": "0.3.0@4ded1eb",
+    "max_rel_diff": 2.66e-04,
+    "notes": "Largest relative difference printed by compare_solution.py --all is 2.66e-04 on T (99.60592890 °C against the stored 99.6324495 °C). DELTAS prints 1.74e-04 (8096.122997 J/K against 8097.535034 J/K). s_1 prints 4.34e-06 (2816.780817 against 2816.768591 J/kg-K). s_2 prints 1.01e-04 (6864.842315 against 6865.536107 J/kg-K). The solved DELTAS equals m*(s_2-s_1) (8096.122996953 J/K). Enthalpy and internal energy differ by 55.48 J/kg (h_1), 475.48 J/kg (h_2), 45.73 J/kg (u_1) and 447.87 J/kg (u_2). Those are Water property residuals; every common variable is inside rtol 0.001. 0 iterations with .initials and 0 without. All 16 equations are satisfied (max residual 0). intenergy() warns that v=0.424264 m³/kg is unusually large. The value is the specific volume, and the (x,v) calls stay."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-16", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

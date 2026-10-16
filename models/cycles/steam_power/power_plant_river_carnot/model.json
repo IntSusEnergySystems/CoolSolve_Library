@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0236",
+  "name": "power_plant_river_carnot",
+  "title": "1 GW power plant cooled by river water (exercise 6.22)",
+  "summary": "Teaching exercise for a 1 GW power plant that rejects heat to river water. The condensation pressure fixes the low temperature of an equivalent Carnot cycle, and the model returns the Carnot efficiency, the condenser heat rate and the river temperature rise.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "power_plant_river_carnot.eescode",
+  "fluids": ["Water"],
+  "tags": ["power plant", "carnot", "river cooling", "condenser", "exercise"],
+  "language_features": ["property functions"],
+  "stats": {"n_equations": 13, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R04/SBe/THD09_R04_Ex04.EES",
+    "candidate_id": "TM-0373",
+    "authors": ["Stéphane Bertagnolio"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "fr",
+    "course": "ULiège, thermodynamique appliquée, THD09, R04, exercise 6.22 (2009)"
+  },
+  "verification": {
+    "summary": "Against the stored solution of THD09_R04_Ex04.EES, compare_solution.py without --ees-units reports: 13 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum relative difference 3.63e-04 on t_cond, and the same on t_f. eta, Q_dot_cond and DELTAt_w stay inside rtol. All 13 equations are satisfied.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution of THD09_R04_Ex04.EES (EES X7.888, 13 variables), compared with compare_solution.py without --ees-units",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@7d66c3b",
+    "max_rel_diff": 3.629488367788e-04,
+    "notes": "The printed maximum is 3.63e-04 on t_cond. t_f has the same relative difference. Unrounded, both are 3.629488367788e-04 (45.8063289238 °C against the stored 45.78970357 °C), and that is the maximum over all 13 common variables. eta prints 3.30e-05 (0.6125173675226 against 0.6125375648). Q_dot_cond prints 8.51e-05 (632606766.6578 W against 632552936.4 W). DELTAt_w prints 8.51e-05 (1.888603912879 °C against 1.888443206 °C). temperature(Water, P=10000 Pa, x=1) returns °C; the call stays, and the saturation-temperature difference is inside rtol=0.001. All 13 equations are satisfied (max residual 6.6595e-10). 4 iterations with .initials and 38 without."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

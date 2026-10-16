@@ -1,0 +1,47 @@
+{=============================================================================
+  R113 ORC turbine outlet temperature (example)
+  CoolSolve Library model CSL-0248
+ -----------------------------------------------------------------------------
+  Teaching example of ULiège MECA0002 (August 2022). The ORC turbine inlet
+  is 150 kPa and 65 °C. The isentropic efficiency is 0.89 and the enthalpy
+  drop is 17.5 kJ/kg. The model computes the turbine outlet temperature.
+  Temperatures stay in kelvin. Property calls pass °C. The outlet pressure
+  uses the isentropic enthalpy and the inlet entropy, pair (H, S). The
+  outlet can still be superheated vapour. No diagram-state arrays.
+
+  Inputs : p8, T8, delta_h_turb, eta_is_turb
+  Outputs: T5, h5, h8, p5
+  Units  : SI - temperatures in K, pressures in Pa, energies in J
+           (property calls receive °C)
+  Source : ULiège MECA0002, Q2_temp_sortie_turb.EES; the equation
+           window names no author - see README.md
+  Licence: MIT. Status: verified against the EES stored solution.
+=============================================================================}
+
+"!Problem"
+"Teaching example, as in the original. The ORC turbine has an isentropic efficiency of 89 %. The turbine inlet pressure and temperature are 150 kPa and 65 °C."
+"The fluid enthalpy changes by 17.5 kJ/kg inside the turbine, as in the original."
+"Calculate the turbine outlet temperature, in °C, as in the original. The conditions are not optimised, and the outlet can still be superheated vapour."
+
+"!Given data"
+delta_h_turb = 17.5*1000 [J/kg]                          "turbine enthalpy drop [J/kg]; 17.5 kJ/kg written as 17.5*1000, as in the original"
+eta_is_turb = 0.89                                        "turbine isentropic efficiency [-], as in the original"
+p8 = 150e3 [Pa]                                           "turbine inlet pressure [Pa]; 150 kPa written as 150e3, as in the original"
+T8 = 65 [K]+273.15 [K]                                    "turbine inlet temperature [K]; 65 °C written as 65+273.15, as in the original"
+
+"!Inlet saturation temperature. T_sat returns °C, so 273.15 is added."
+T_sat8 = T_sat(R113, P=p8)+273.15                        "saturation temperature at the turbine inlet pressure [K]"
+
+"!Inlet enthalpy and entropy. The calls take °C and T8 is in K."
+h8 = enthalpy(R113, T=T8-273.15, P=p8)                  "turbine inlet enthalpy [J/kg]"
+s8 = entropy(R113, T=T8-273.15, P=p8)                   "turbine inlet entropy [J/kg-K]"
+
+"!Isentropic and actual turbine outlet enthalpy, as in the original"
+h5s = -delta_h_turb/eta_is_turb+h8                       "isentropic outlet enthalpy [J/kg], as in the original"
+h5 = h8-delta_h_turb                                     "actual outlet enthalpy [J/kg], as in the original"
+
+"!Outlet pressure from the isentropic enthalpy and the inlet entropy. Pair (H, S), as written."
+p5 = Pressure(R113, H=h5s, S=s8)                         "turbine outlet pressure [Pa]; pair (H, S), as in the original"
+
+"!Outlet temperature. Temperature returns °C, so 273.15 is added."
+T5 = Temperature(R113, H=h5, P=p5)+273.15                "turbine outlet temperature [K]; pair (H, P)"

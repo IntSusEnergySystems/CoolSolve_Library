@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0233",
+  "name": "cogeneration_monthly_demand",
+  "title": "Cogeneration monthly balance and annual demand (exercise)",
+  "summary": "Teaching exercise for a monthly balance. The model computes the water capacity rate and the slope, the November and December captured heat and backup energy, and the annual heat demand.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "cogeneration_monthly_demand.eescode",
+  "fluids": [],
+  "tags": ["exercise", "cogeneration", "monthly balance"],
+  "language_features": [],
+  "stats": {"n_equations": 17, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 12/MSTH051213 EXERCICE 2.EES",
+    "candidate_id": "TM-0174",
+    "authors": ["TBD (ULiège MSTh)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh, repetition TP 12, exercise 2 (2005-12-13)"
+  },
+  "verification": {
+    "summary": "Against the stored solution of MSTH051213 EXERCICE 2.EES, compare_solution.py (no --ees-units) reports: 15 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 2. The maximum relative difference over all 15 common variables is 3.14e-10 on eta_dec. November backup, December backup and the annual demand match the stored 183.01875, 205.51875 and 2865.478125 kWh.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in MSTH051213 EXERCICE 2.EES (15 variables, EES X7.458), compared with compare_solution.py",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 3.14e-10,
+    "notes": "compare_solution.py without --ees-units. Summary line: 15 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 2. The maximum relative difference over the 15 common variables, printed by the tool as 3.14e-10, is on eta_dec (stored 0.1273783934, solved 0.12737839344). Next are Q_dot_appoint_nov 1.31e-10 and Q_dot_appoint_dec 1.17e-10, then pente 9.54e-11, eta_nov 8.97e-11, M_dot 6.39e-11 and C_dot 3.05e-11. Those gaps are the last stored digit. Q_dot_appoint_kWh_mois_nov, Q_dot_appoint_kWh_dec, Q_demande_kWh_an, Q_dot_demande, A, c_w, t_nov and t_dec print 0.00e+00. Only in CoolSolve: Q_dot_capté_nov (72.91666666667 W) and Q_dot_capté_dec (41.66666666667 W). The window is square (17 equations, 17 variables, largest block 1), so no stored unknown was added. 0 iterations with .initials and 0 without. Units were already SI MASS DEG PA C J; no value was scaled."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

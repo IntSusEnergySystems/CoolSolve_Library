@@ -1,0 +1,70 @@
+{=============================================================================
+  Turbo-expander: ideal nozzle and Laval wheel (exercise)
+  CoolSolve Library model CSL-0234
+ -----------------------------------------------------------------------------
+  Steady model of one turbo-expander, as in the original MSTh repetition:
+  an ideal nozzle with total-enthalpy conservation, a throat that can choke,
+  and a Laval wheel. Exercise 2. gamma is an unknown of the temperature
+  ratio. The commented value 1.4 is a first approximation, not an equation.
+  The inlet is 850 °C and 1e6 Pa, the exit pressure is 1e5 Pa, and the
+  power is 5 MW. The wheel diameter and the throat area are results.
+  Property calls keep Air, with temperatures in °C. The +273 sits inside
+  the original temperature ratio and does not replace those calls.
+
+  Inputs : rpm, T_su, P_su, P_ex, epsilon_s, eta_mec, W_dot, alpha
+  Outputs: M_dot, A_thr, D, eta_laval, C_thr, C_exn, P_thr
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MSTh repetition R4 exercise 2, R4-Ex2.EES - see README.md
+=============================================================================}
+
+"!Exercise 2"
+rpm = 10000                                 "rotational speed [1/min]"
+N = 10000/60                                "rotational speed [1/s]"
+T_su = 850                                  "inlet temperature [°C]"
+P_su = 1000000                              "inlet pressure [Pa]"
+P_ex = 100000                               "exit pressure [Pa]"
+epsilon_s = 0.85                            "as in the original [-]"
+eta_mec = 0.98                              "as in the original [-]"
+epsilon_s = eta_mec*eta_laval               "as in the original [-]"
+W_dot = 5E6                                 "as in the original [W]"
+alpha = 15                                  "nozzle angle [°]"
+
+"!Inlet"
+h_0_su = h_su                               "total enthalpy at the inlet, as in the original [J/kg]"
+h_su = enthalpy(Air, T=T_su)                "inlet specific enthalpy [J/kg]"
+
+"!Ideal nozzle and Laval wheel"
+"!Nozzle inlet"
+"Total enthalpy is conserved in the nozzle, as in the original."
+h_0_su = h_0_thr                            "as in the original [J/kg]"
+h_0_thr = h_thr + C_thr^2/2                 "as in the original [J/kg]"
+"C_thr and C_exn enter as squares. The .initials file holds the stored positive speeds."
+
+h_thr = enthalpy(Air, P=P_thr, s=s_su)      "as in the original [J/kg]"
+s_su = entropy(Air, T=T_su, P=P_su)         "inlet specific entropy [J/kg-K]"
+
+C_thr = M_dot*v_thr/A_thr                   "as in the original [m/s]"
+v_thr = volume(Air, T=T_thr, P=P_thr)       "as in the original [m^3/kg]"
+T_thr = temperature(Air, h=h_thr)           "throat temperature [°C]"
+
+"Possible choking in the nozzle, as in the original."
+"EES treats P_thr and p_thr as one name, and P_ex and p_ex as one name. Both spellings are kept."
+p_thrmin = ((2/(gamma + 1))^(gamma/(gamma - 1)))*P_su    "critical pressure; it depends only on the inlet pressure, as in the original [Pa]"
+p_thr = max(p_ex, p_thrmin)                 "throat pressure: the greater of the exit pressure and the critical pressure [Pa]"
+
+"First approximation in the original, left as a comment. The next equation solves gamma."
+"gamma=1.4"
+"Exact calculation, as in the original. The +273 is the original conversion inside this ratio."
+(T_thr + 273)/(T_su + 273) = (P_thr/P_su)^((gamma - 1)/gamma)    "as in the original [-]"
+
+"!Nozzle exit (fully isentropic expansion)"
+h_0_su = h_0_exn                            "as in the original [J/kg]"
+h_0_exn = h_exn + C_exn^2/2                 "as in the original [J/kg]"
+h_exn = enthalpy(Air, s=s_su, P=P_ex)       "as in the original [J/kg]"
+
+"!Laval wheel"
+eta_laval = 4*U/C_exn*(cos(alpha) - U/C_exn)    "as in the original [-]"
+U = PI*D*N                                  "as in the original [m/s]"
+
+"!Balance"
+W_dot = M_dot*eta_laval*C_exn^2/2           "as in the original [W]"

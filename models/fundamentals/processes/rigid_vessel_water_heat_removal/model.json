@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0230",
+  "name": "rigid_vessel_water_heat_removal",
+  "title": "Rigid 50 L vessel: heat removed from water at constant volume (exercise)",
+  "summary": "Teaching exercise for a closed rigid 50 L vessel of water at 120 °C and quality 0.6. The model computes the mass, the final quality at the temperature stored in the equation window, and the heat removed at constant volume.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "rigid_vessel_water_heat_removal.eescode",
+  "fluids": ["Water"],
+  "tags": ["exercise", "closed system", "rigid vessel", "water"],
+  "language_features": ["property functions"],
+  "stats": {"n_equations": 12, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R2/R2_E1_2022.EES",
+    "candidate_id": "TM-0397",
+    "authors": ["S. Quoilin"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "ULiège, thermodynamique appliquée, MECA0002, repetition 2, 2022-2023"
+  },
+  "verification": {
+    "summary": "Against the stored solution of R2_E1_2022.EES, compare_solution.py --ees-units reports: 12 common variables, 2 differ (rtol=0.001); only in EES: 1; only in CoolSolve: 0. The maximum over all common variables is 9.65e-01 on T_f. T_i and T_f stay 393.15 K and 283.15 K; the tool rewrites those kelvin values to °C. Q is -155559 J (stored -155.539 kJ), m_eau is 0.0934315 kg and x_f is 0.00502483.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in R2_E1_2022.EES (13 variables, EES X10.836), compared with compare_solution.py --ees-units",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 9.65e-01,
+    "notes": "Largest relative difference printed by compare_solution.py --ees-units is 9.65e-01 on T_f. T_i prints 6.95e-01. The equation window stores T_i = 393.15 K and T_f = 283.15 K, and the model keeps those kelvin values. The tool subtracts 273.15 from a stored kelvin value whose name starts with T and compares 393.15 with 120 and 283.15 with 10. Q prints 1.26e-04 (-155558.556 J against the stored -155.5389041 kJ). m_eau prints 1.27e-04 (0.093431492 kg against 0.093419626 kg). x_f prints 1.64e-05 (0.005024835 against 0.005024752), inside the dome. u_i prints 6.27e-07 and u_f and u_f_bis print 6.61e-07; both final internal energies are equal, and Q stays inside rtol. The only name present in EES alone is x = 0 m^2, which is not in the equation window. 0 iterations with .initials and 0 without. All 12 equations are satisfied (max residual 0). The quality() warning that v looks like a density is cosmetic; v_i is a specific volume."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

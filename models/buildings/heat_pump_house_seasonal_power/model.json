@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0239",
+  "name": "heat_pump_house_seasonal_power",
+  "title": "Exercise: seasonal power of a heat pump for a house",
+  "summary": "Teaching exercise 6.21. A Carnot heat pump meets the winter loss of a house, then runs at the same power as a refrigerator. The model computes the winter mechanical power and the summer outdoor temperature above 25 °C stored with that solution.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "heat_pump_house_seasonal_power.eescode",
+  "fluids": [],
+  "tags": ["exercise", "heat pump", "Carnot", "heating", "cooling"],
+  "language_features": [],
+  "stats": {"n_equations": 11, "largest_block": 3},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R04/SBe/THD09_R04_Ex03.EES",
+    "candidate_id": "TM-0372",
+    "authors": ["Stéphane Bertagnolio"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "fr",
+    "course": "ULiège thermodynamique appliquée, exercise 6.21 (THD09 R04)"
+  },
+  "verification": {
+    "summary": "compare_solution.py on THD09_R04_Ex03.EES, without --ees-units: 11 common variables, 0 differ (rtol=0.001); only in EES: 4; only in CoolSolve: 0. Maximum relative difference over all common variables is 4.71e-10 on Q_dot_ete. W_dot_pac_hiver = 909.6594462448 W (stored 909.6594462), COP_pac_hiver = 14.6575 (stored 14.6575), t_out_ete = 45.16984000548 °C (stored 45.16984002).",
+    "checks": ["ees-stored-solution", "analytical"],
+    "reference": "EES stored solution in THD09_R04_Ex03.EES (15 variables, EES X7.888) and the closed form of the equation window",
+    "date": "2026-10-16",
+    "coolsolve_version": "0.3.0@7d66c3b",
+    "max_rel_diff": 4.71e-10,
+    "notes": "compare_solution.py without --ees-units. 11 common variables, 0 differ (rtol=0.001); only in EES: 4 (COP, COP_pac, t_c, t_f); only in CoolSolve: 0. Printed maximum 4.71e-10 on Q_dot_ete (unrounded 4.715e-10). The system is square (11 equations, 11 variables), so those four stored names were not restored. With the shipped initials, 2 Newton iterations, t_out_ete = 45.16984000548 °C. Without initials, 4 iterations, t_out_ete = 4.830160123477 °C, the other root. Closed form: COP_pac_hiver = 293.15/20 = 14.6575, W_dot_pac_hiver = 909.6594462448 W, t_out_ete = 45.1698400055 °C and 4.8301599945 °C."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-16", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}

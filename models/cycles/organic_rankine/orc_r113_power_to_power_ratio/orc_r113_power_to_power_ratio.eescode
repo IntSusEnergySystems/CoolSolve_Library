@@ -1,0 +1,56 @@
+{=============================================================================
+  R113 power-to-power ratio of an ORC and a heat pump
+  CoolSolve Library model CSL-0229
+ -----------------------------------------------------------------------------
+  Teaching example of ULiège MECA0002 (August 2022). The ratio is the
+  turbine AC electrical power over the compressor AC electrical power.
+  The turbine uses a given enthalpy drop of 17.5 kJ/kg. The compressor
+  uses the saturated evaporator exit and a condenser inlet superheated
+  by 5 C. Mechanical efficiency 97 %, converter efficiency 92 %. The
+  stated 89 % isentropic efficiency is not written as an equation.
+  Compressor inlet and outlet only: no diagram-state arrays.
+
+  Inputs : m_dot_orc, m_dot_pac, delta_h_turb, p1, p3, eta_meca, eta_conv
+  Outputs: Power_to_power_ratio, W_cp, W_turb_fluide_elec
+  Units  : SI - temperatures in K, pressures in Pa, energies in J
+           (property calls receive °C)
+  Source : ULiège MECA0002, Q5_power_to_power_ratio.EES; the equation
+           window names no author - see README.md
+  Licence: MIT. Status: verified against the EES stored solution.
+=============================================================================}
+
+"!Problem"
+"Teaching example, as in the original. The ORC turbine has an isentropic efficiency of 89 % and the fluid enthalpy changes by 17.5 kJ/kg. The ORC refrigerant flow is 1.2 kg/s."
+"The power-to-power ratio is the absolute value of the turbine AC electrical power over the compressor AC electrical power, as in the original."
+"The compressor is driven by an electric motor through a converter. The turbine drives a generator through a mechanical link and a converter, as in the original."
+"The mechanical efficiency of each link is 97 %. The converter efficiency is 92 %, as in the original."
+"The heat-pump fluid flow is 200 g/s. The evaporator and condenser pressures are 45 kPa and 320 kPa, as in the original."
+"The fluid is superheated by 5 C at the condenser inlet. At the evaporator outlet (compressor inlet) the fluid is saturated, as in the original."
+
+"!Given data"
+m_dot_orc = 1.2 [kg/s]                                    "ORC refrigerant mass flow [kg/s], as in the original"
+m_dot_pac = 0.2 [kg/s]                                    "heat-pump fluid mass flow [kg/s], 200 g/s as in the original"
+delta_h_turb = 17.5*1000 [J/kg]                          "turbine enthalpy drop [J/kg]; 17.5 kJ/kg written as 17.5*1000, as in the original"
+
+p1 = 45e3 [Pa]                                            "evaporator pressure [Pa], 45 kPa written as 45e3, as in the original"
+p2 = p1                                                   "compressor inlet pressure [Pa], as in the original"
+p3 = 320e3 [Pa]                                           "condenser pressure [Pa], 320 kPa written as 320e3, as in the original"
+p4 = p3                                                   "set equal to p3, as in the original"
+
+"!Heat-pump compressor inlet and outlet"
+"Temperatures stay in kelvin. T_sat returns °C, so 273.15 is added at the property boundary."
+T2 = T_sat(R113, P=p2) + 273.15                          "saturation temperature at the compressor inlet [K]"
+T_cond = T_sat(R113, P=p3) + 273.15                      "saturation temperature at the condenser pressure [K]"
+T3 = T_cond + 5                                           "condenser inlet temperature [K]; superheat of 5 °C, as in the original"
+
+h2 = enthalpy(R113, P=p2, x=1)                           "saturated vapour enthalpy at the compressor inlet [J/kg], as in the original"
+h3 = enthalpy(R113, T=T3-273.15, P=p3)                   "enthalpy at the condenser inlet [J/kg]; the call takes °C and T3 is in K"
+
+"!Efficiencies and power-to-power ratio"
+eta_meca = 0.97                                           "mechanical efficiency of each link [-], as in the original"
+eta_conv = 0.92                                           "converter efficiency [-], as in the original"
+
+W_cp = abs(m_dot_pac*(h3-h2))/eta_meca/eta_conv          "compressor electrical power [W], absolute value as in the original"
+W_turb_fluide = m_dot_orc*delta_h_turb                    "turbine fluid power [W], as in the original"
+W_turb_fluide_elec = W_turb_fluide*eta_meca*eta_conv      "turbine electrical power [W], as in the original"
+Power_to_power_ratio = W_turb_fluide_elec/W_cp            "power-to-power ratio [-], as in the original"

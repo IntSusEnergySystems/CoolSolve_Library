@@ -1,0 +1,36 @@
+{=============================================================================
+  R134a properties at three states (exercise)
+  CoolSolve Library model CSL-0238
+ -----------------------------------------------------------------------------
+  Three independent R134a states, as in the equation window of 03-31.EES.
+  State 1 gives specific volume and quality from temperature and pressure.
+  State 2 gives pressure and quality from temperature and specific volume.
+  State 3 gives temperature from pressure and vapour quality. Property
+  evaluations only: no cycle and no enthalpy call. The original comment
+  is "properties of r134a". The window writes t_1 with T_1 and t_2 with
+  T_2; CoolSolve treats each pair as one variable, so both spellings stay.
+
+  Inputs : T_1, p_1, T_2, v_2, p_3, x_3
+  Outputs: v_1, x_1, P_2, x_2, T_3
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. Quoilin, KU Leuven course exercise, file 03-31.EES
+           - see README.md
+  Licence: MIT. Status: verified against the EES stored solution.
+=============================================================================}
+
+"!State 1"
+T_1 = -8                                         "temperature [°C]"
+p_1 = 320e3                                      "pressure [Pa]"
+v_1 = volume(r134a,t=t_1,p=p_1)                 "specific volume [m^3/kg]"
+x_1 = quality(r134a,t=t_1,p=p_1)                "quality [-]"
+
+"!State 2"
+T_2 = 30                                         "temperature [°C]"
+v_2 = 0.015                                      "specific volume [m^3/kg]"
+P_2 = pressure(r134a,t=t_2,v=v_2)               "pressure [Pa]"
+x_2 = quality(r134a,t=t_2,v=v_2)                "quality [-]"
+
+"!State 3"
+p_3 = 180e3                                      "pressure [Pa]"
+x_3 = 1                                          "quality [-]"
+T_3 = temperature(r134a,p=p_3,x=x_3)            "temperature [°C]"

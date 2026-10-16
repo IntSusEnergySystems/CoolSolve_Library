@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0234",
+  "name": "turboexpander_ideal_nozzle_laval",
+  "title": "Turbo-expander: ideal nozzle and Laval wheel (exercise)",
+  "summary": "Steady exercise model of one turbo-expander: an ideal nozzle with total-enthalpy conservation and a throat that can choke, followed by a Laval wheel. The specified power is 5 MW. The model computes the mass flow, the throat area and the wheel diameter.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "turboexpander_ideal_nozzle_laval.eescode",
+  "fluids": ["Air"],
+  "tags": ["turbo-expander", "nozzle", "Laval wheel", "choked flow", "exercise"],
+  "language_features": ["property functions (Air)", "max()", "cos (degrees)"],
+  "stats": {"n_equations": 28, "largest_block": 5},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 04/R4-Ex2.EES",
+    "candidate_id": "TM-0062",
+    "authors": ["TBD (ULiège MSTh)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh, repetition R4, exercise 2"
+  },
+  "verification": {
+    "summary": "Compared with the stored solution of R4-Ex2.EES. compare_solution.py: 28 common variables, 17 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Maximum relative difference 2.85e-01 on s_su. The 28 equations are satisfied. eta_laval is 0.8673469388 in both. M_dot is 10.260 kg/s against 9.238; D is 0.71839 m against 0.70601. Inlet enthalpy is 126553 J/kg above EES.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in R4-Ex2.EES (EES X7.458)",
+    "date": "2026-10-15",
+    "coolsolve_version": "0.3.0@332d95a",
+    "max_rel_diff": 0.2848500975169177,
+    "notes": "28 common variables. The tool prints 2.85e-01 on s_su; the exact ratio is 0.2848500975169177. The extra CoolSolve name is PI, the built-in in U = PI*D*N, not an unknown. The stored solution has P_su = 900000 Pa and W_dot = 4348190.393 W, while the equation window (the system that was solved) has P_su = 1000000 and W_dot = 5E6; those stored numbers are the previous solution, and the variable-info guesses are 1000000 and 5000000. eta_laval matches exactly. M_dot is 10.2600726525 kg/s against 9.238092977. D is 0.7183857689 m against 0.7060103283. CoolSolve - EES on h_su is +126552.65 J/kg and on h_thr is +126790.88 J/kg. 29 iterations with .initials. Without .initials the throat block is singular at the default gamma = 1 and does not converge. A start from the negated stored speeds still returns the positive speeds (34 iterations)."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+  ]
+}
