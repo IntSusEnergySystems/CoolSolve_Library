@@ -7,28 +7,30 @@ each tested and marked done. *How* each step is executed is described in
 [docs/model_workflow.md](docs/model_workflow.md); the classification rules are
 in [docs/taxonomy.md](docs/taxonomy.md).
 
-*Last update: 2026-10-15.*
+*Last update: 2026-10-18.*
 
 ---
 
 ## 1. Status at a glance
 
-| Library (2026-10-15, 13:25 — work stopped; counts of 2026-10-15; earlier note: counts updated 2026-10-11 after T-RECHECK `CS-GAP-IF5`, `CS-GAP-IF-DIRECTIVE`/`CS-BUG-STRING-CASE`, the `INTEGRAL` family, the lookup fixes, the CALL-output fixes, the identifier-character fixes, `CS-BUG-COMMON-PROC` and `CS-GAP-CALL-WARNING`) | Count |
+| Library (2026-10-18, CoolSolve 0.3.0@4798e2b) | Count |
 |---|---:|
-| Models (`library.json`) | 164 |
-| … verified / blocked / failing (`runs` merged into `verified`, D15) | 131 / 32 / 1 |
-| … blocked with a runnable `_coolsolve` variant (with `.sol`) / not runnable at all | 26 / 6 (`CSL-0040`, `CSL-0043`, `CSL-0081`, `CSL-0116`, `CSL-0150`, `CSL-0162`; +`CSL-0155` failing) |
-| … steady / function / dynamic / optimization | 121 / 37 / 5 / 1 |
-| Functions and procedures (`library.json`) | 442 |
-| Regression (`test_models.py`) | 166 targets (130 main files + 36 variants), 0 failure on 2026-10-15 12:50 (excluding the slow `CSL-0009:coolsolve`); two models added since (`CSL-0148`, `CSL-0154:coolsolve`) tested by their lanes |
-| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md) §4–§5) | 96 (51 gaps, 43 bugs, 2 doc issues; register of CoolSolve `fix/library-gaps-2` @47bb416 + the uncommitted `CALL WARNING` change, recounted by row prefix: `CS-GAP-IDEAL-ENTROPY` and `CS-GAP-CALL-WARNING` closed, `CS-GAP-AIR-ENTHALPY-REF` dropped) |
-| … closed (§7) | 37 (18 gaps, 18 bugs, 1 doc issue) |
-| … unverified suggestions (§8 *Unverified by a reviewer*) | 2 |
+| Models (`library.json`) | 247 |
+| … verified / blocked / failing (`runs` merged into `verified`, D15) | 228 / 16 / 3 |
+| … blocked with a runnable `_coolsolve` variant (with `.sol`) / not runnable at all | 11 / 5 (`CSL-0040`, `CSL-0081`, `CSL-0116`, `CSL-0150`, `CSL-0162`); failing: `CSL-0078`, `CSL-0155`, `CSL-0202` |
+| … steady / function / dynamic / optimization | 204 / 37 / 5 / 1 |
+| Functions and procedures (`library.json`) | 449 |
+| Regression (`test_models.py`) | 251 targets (227 main files + 24 variants), 0 failure on 2026-10-18 (excluding the slow `CSL-0009:coolsolve`; `CSL-0162:coolsolve` has no `.sol`) |
+| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md) §4–§5) | 61 (35 gaps, 24 bugs, 2 doc issues; counted by row prefix) |
+| … closed (§7) | 99 (43 gaps, 55 bugs, 1 doc issue) |
+| … unverified suggestions (§8 *Unverified by a reviewer*) | 9 |
 
-Not runnable at all (no verified variant): `CSL-0081` (borefield, dynamic), `CSL-0043` (LiBr absorption chiller),
-`CSL-0040` (biomass ORC CHP), `CSL-0116` (Vitocal heat pump, catalogue vintage), `CSL-0150` (flame with dissociation,
-CS-GAP-CHEM-EQUIL), `CSL-0162` (run-around loop, CS-BUG-NEWTON-CYCLE) — 6 blocked models — and `CSL-0155` (inverter heat
-pump, status `failing` since the re-check of 2026-10-10: one 151-variable coupled block does not converge — register §8).
+Not runnable at all (no verified variant): `CSL-0081` (borefield, dynamic; `CS-GAP-INTEGRALVALUE`), `CSL-0040` (biomass
+ORC CHP; `CS-GAP-IF-NO-CONSTANT`), `CSL-0116` (Vitocal heat pump; `CS-GAP-INCLUDE`, catalogue table missing), `CSL-0150`
+(flame with dissociation; `CS-GAP-CHEM-EQUIL`, `CS-GAP-FLUIDS-NASA-SPECIES`), `CSL-0162` (run-around loop;
+`CS-GAP-INCLUDE`, `CS-BUG-NEWTON-CYCLE`) — 5 blocked models. Failing: `CSL-0078` (the native file is over-determined as the
+original stands), `CSL-0155` (inverter heat pump, one 151-variable coupled block does not converge — register §8) and
+`CSL-0202`.
 
 | Backlog (source inventories) | Candidates | todo | added | merged | duplicate | discarded | parked |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -51,6 +53,20 @@ TESPy 8 / 8 / 23 / 13 / 0.
 
 Refresh with `python3 tools/build_index.py` (models) and
 `python3 tools/backlog_stats.py` (candidates).
+
+### State of 2026-10-18 (CoolSolve v0.4 preparation)
+
+- Re-checks of the closed CoolSolve gaps (rounds 3 and 4, CoolSolve 0.3.0@4798e2b) are done: 33 models changed or added
+  (log lines of 2026-10-18 in §8). 228 verified, 16 blocked, 3 failing; the native file is now the verified file of
+  `CSL-0035`, `CSL-0043`, `CSL-0046`, `CSL-0072`, `CSL-0075`, `CSL-0079`, `CSL-0080`, `CSL-0115`, `CSL-0152`, `CSL-0153`,
+  `CSL-0154`, `CSL-0157`, `CSL-0159`, `CSL-0160`, `CSL-0164`, `CSL-0188`, `CSL-0223`, `CSL-0012` (variants deleted).
+- New model `CSL-0249` (ammonia-water chiller) needs CoolSolve `feat/nh3h2o` (not merged into `main`, under review:
+  CoolSolve `docs/nh3h2o_review.md`).
+- Decisions left to the maintainer: `CSL-0075` (`Gamma` 1.4095 from CoolProp's `cv`, 3.3e-04 from the EES `Di_dph`),
+  `CSL-0146` (deviation from the Ebsilon table 5.7e-03 since constants below 1000 Pa are no longer clamped, above the
+  5e-03 bound of the source test), `CSL-0069` (level 2 kept although it now converges from the default guesses),
+  `CSL-0080` (the native default operating point is the stored EES one), `CSL-0044` (`coolsolve_version` without commit).
+- The working tree of the library is not committed.
 
 ### Where to resume (handover, 2026-10-09, 20:00)
 
@@ -1211,3 +1227,27 @@ and adds the log line in §8.
 | 2026-10-16 | C-271 `CSL-0245` | Added *grasso_screw_rpm_efficiencies* (TM-0287) — verified. Pressure ratio 5.4 is the stored value; the braced guess 1 stays a comment. The four 1500 rpm efficiencies match. No number was scaled. Author Felipe Trebilcock |
 | 2026-10-16 | C-272 `CSL-0246` | Added *heat_pump_room_cop* (TM-0338, Cengel 6-44) — verified. Heating rate 7680 W and power 3072 W match the closed form. No number was scaled. Author S. Quoilin |
 | 2026-10-15 | C-160 partial | Library regression on CoolSolve 0.3.0@c11a18d: 170 targets (132 main files, 38 variants), 0 failures. `CSL-0162:coolsolve` (*glycol_runaround_recovery_loop*) has no `.sol` and was not tested. Inventory cross-check of B-11 (`CSL-0148`…`0167`) clean. |
+| 2026-10-18 | T-RECHECK `CSL-0079` | CS-GAP-ELSEIF-CHAIN + CS-GAP-UPPERCASE closed in CoolSolve `a77efaa`: native file solves unchanged (289 iter., warnings P008 for the surplus ENDIFs of `Brineprop.lib`) — now **verified** on the native file vs the glycol-loop EES reference (3 common, 0 differ, max 4.77e-10); native `.sol` baseline, `_coolsolve` variant and its tables deleted (native = variant to 4.8e-10); worker opencode (GLM) |
+| 2026-10-18 | T-RECHECK `CSL-0072` | Same gaps closed: native file solves unchanged (82 iter.) — now **verified** vs the EES stored solution (32 common, 0 differ, max 2.75e-07 `P_dynam_periph_pump`, table-coefficient rounding; `DELTAP_pump`/`W_dot_shaft_pump` 6.4e-08); native `.sol` baseline, `_coolsolve` variant and its tables deleted (native = variant to 2.1e-10); worker opencode (GLM) |
+| 2026-10-18 | T-RECHECK `CSL-0078` | Gaps closed: the native `BRINEPROP` runs (hybrid vs variant 1.1e-10 on `cp_glw`) and `missing_features` is empty, but the native file stays over-determined as the original stands (164 eq. / 161 unknowns; `P_ev`/`P_cd`/`M_dot_r` inputs; without them square but the 76-variable block 42 fails, MaxIterations) — status **failing**, variant kept; worker opencode (GLM) |
+| 2026-10-18 | `CSL-0249` | Added *nh3h2o_absorption_chiller* — single-effect NH3-H2O absorption chiller with rectifier, solution and refrigerant heat exchangers on the new EES fluid `NH3H2O` (CoolSolve `feat/nh3h2o`, IAPWS G4-01): verified by the closure of the whole-cycle energy balance (2e-11 W on 22 kW) and plausibility (COP 0.45, circulation ratio 6.3); no reference solution; 14 state points as arrays; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0035` | CS-GAP-INTERP-EES, CS-GAP-INTERP-EXTRAP closed: the native file solves and reproduces the EES stored solution at r_p = 6 — **verified** on the native file; runnable variant and its table deleted, native `.sol` baseline; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0157` | CS-GAP-LOOKUP-NONAME, CS-BUG-DUPLICATE-VAR-BOUND closed: the native file solves and equals its variant in all 399 variables (1e-12) — **verified** on the native file; variant and its table deleted, native `.sol`; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0154` | CS-BUG-DUPLICATE-INDEX-EXPR closed: the native file solves and equals its variant in all 176 variables — **verified** on the native file; variant deleted, native `.sol`; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0153` | CS-GAP-END-PROCEDURE closed: the native file solves and equals its variant in all 362 variables — **verified** on the native file; variant deleted, native `.sol`; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0012` | CS-GAP-LOOKUPROW (+ CS-BUG-LOOKUP-STRING) closed: the native file (`$if`, `LOOKUP$ROW`, string-keyed tables) solves and equals its numeric variant in all 57 common variables — **verified** on the native file; variant and its tables deleted, native `.sol`; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0122`, `CSL-0129`, `CSL-0127` | CS-GAP-SUM-INDEXED, CS-BUG-DUPLICATE-INDEX-EXPR closed: `CSL-0122` and `CSL-0129` now write the faithful indexed `SUM` and the `DUPLICATE h[i+1] = …` march of the source (results unchanged); `missing_features` emptied for the three; `CSL-0144` and `CSL-0127` README notes cleaned; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0160` | CS-GAP-END-PROCEDURE, CS-GAP-CONVERT-UNQUOTED, CS-GAP-LOOKUPROW closed: the native file solves and equals its numeric-key variant (2.5e-06) — **verified** on the native file (EES stored solution 333 variables, parametric table 300/300); variant and its table deleted, native `.sol`; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0188`, `CSL-0223` | CS-GAP-MOLARMASS-ELEMENT closed: the native files solve (0 and 4 iterations) and equal their variants exactly — **verified** on the native files; variants, guess files and `.sol` deleted, native `.sol`; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0115` | CS-GAP-REPEAT-UNTIL-BARE closed: the native file solves (6 iterations) and equals its variant in all 32 variables; its 7 `Lookup('tprofile',i,k) = …` writes are reported (P009) and not executed (diagnostic output only) — **verified** on the native file (the 2-point state array of the variant moved into it); variant deleted, native `.sol`; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0046` | CS-GAP-FLUIDS-C8H18 closed: the native file solves and equals its variant to 8.8e-06 (`molarmass(C8H18)` 114.229 vs 114.23, `TAF` identical) — **verified** on the native file; variant deleted, guess file renamed, native `.sol`; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0069` | CS-BUG-NEWTON1D-DIVERGE closed: both files (air, methane) now converge from the default guesses (44, 48 iterations; 4 with the guess files, kept); solutions unchanged; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0152` | CS-GAP-SUM-INDEXED, CS-GAP-MOLARMASS-ELEMENT, CS-GAP-INCOMPRESSIBLE closed: the native file solves (63 iterations, needs its guess file: the intercooler block of 10 variables fails from the default guesses) and equals its variant in all 221 variables — **verified** on the native file; variant deleted, guess file renamed, native `.sol`; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0075` | CS-GAP-ISIDEALGAS, CS-BUG-HUMIDAIR-PROPS closed: the native file solves (9 iterations with the guess file) — **verified**: `Di_dph` 0.01702254 vs the EES stored 0.01702816 (3.3e-04); `Gamma` 1.4095 (CoolProp humid-air `cv`) vs the variant's 1.3863 and the ≈1.398 of the EES mixture rules; variant deleted, guess file renamed, native `.sol`; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0159` | CS-BUG-HUMIDAIR-PROPS closed: the native file solves (31 iterations with its guess file); `rho_sf_cd` 1.19067 vs EES 1.1903, closer to the EES stored solution than the variant (max 8.0e-03 vs 1.2e-02; `M_charge` 5.6e-04) — **verified** on the native file; variant, its guess file and `.sol` deleted, native `.sol`; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0080` | CS-GAP-FLUIDS-C8H18 closed (`C4H10`): the native file solves (28 iterations, `coolsolve.conf`, guess file) at the operating point of the stored EES solution (moved into the native file; the control-panel full-load values do not converge in the cooling-coil block, documented) and equals its variant; `h_C4H10` 2.8e-03 from EES — **verified** on the native file; variant, its guess file and `.sol` deleted, native `.sol`; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0043` | CS-GAP-FLUIDS-ABS (ASHRAE `X_LIBR`/`H_LIBR`) closed: the native file solves (59 iterations) and matches the EES stored solution (30/30 variables, max 5.6e-04) — now **verified**; native `.sol` baseline; worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0123` | The original `until i>9` and `convert(lbm/hr,kg/s)` restored (CS-GAP-REPEAT-UNTIL-BARE, CS-BUG-CONVERT-UNIT closed); solution unchanged (1.7e-12); worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0116`, `CSL-0011`, `CSL-0149`, `CSL-0081`, `CSL-0150` | Still blocked, `missing_features` cut to the open IDs: `CSL-0116` → `CS-GAP-INCLUDE` (BRINEPROP2; the catalogue table is missing from the collection, not a gap); `CSL-0011`, `CSL-0149` → `CS-GAP-INCLUDE` (the `_coolsolve` variants now keep the native `INTERPOLATE` call form and are valid EES); `CSL-0081` → `CS-GAP-INTEGRALVALUE` (the GOTO ladders parse); `CSL-0150` → `CS-GAP-CHEM-EQUIL`, `CS-GAP-FLUIDS-NASA-SPECIES` (the no-dissociation case runs unchanged with `DISSOCIATION$ = 'NO'`); worker: Claude |
+| 2026-10-18 | Re-baseline `CSL-0008` (3 files), `CSL-0146` | CS-BUG-INPUT-CLAMP closed: constants below 1000 Pa are no longer clamped. `CSL-0008`: `specheat(cf$,T=..,P=1)` is evaluated at the 1 Pa of the source (≤ 5e-05 change). `CSL-0146`: the CO2 partial pressures in the air (30–300 Pa) are evaluated at their true values — `T2` 611.48 → 611.60 K, `W_comp` 29.740 → 29.764 MW; the maximum deviation from the Ebsilon table moves from 4.7e-03 to 5.7e-03 (`ds[6]-ds[4]`), above the 5e-03 bound of the source test; against a TESPy re-run (2026-10-19) the maximum is 2.9e-03 (2.0e-03 before); worker: Claude |
+| 2026-10-18 | T-RECHECK `CSL-0164` | CS-BUG-HUMIDAIR-PROPS closed (`Density(AirH2O)` = 1/`Vda`): the native file solves (11 iterations with its guess file) and equals its variant in all 43 variables (6e-11) — **verified** on the native file; variant and its `.sol` deleted, guess file renamed, native `.sol`; worker: Claude |

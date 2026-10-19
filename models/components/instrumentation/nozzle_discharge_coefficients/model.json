@@ -48,17 +48,21 @@
   },
   "verification": {
     "summary": "Compared with the EES stored solution of TM-0558: 7 common variables, 3 differ at rtol=0.001 (w 4.27e-03, viscosity 2.42e-03, humid-air backend). The ISO 5167 demo point was recomputed to 2e-5 and the admission results equal the ideal-gas isentropic nozzle equations exactly.",
-    "checks": ["ees-stored-solution", "analytical"],
+    "checks": [
+      "ees-stored-solution",
+      "analytical"
+    ],
     "reference": "EES stored solution of TM-0558 (7 state variables consistent with the current inputs) and its stored M_dot_ah_cd = 0.1565179395 of the matching run; equation identity of the ISO 5167 part with the sibling TM-0256 of the CSL-0075 family plus recomputation (TM-0559 stored solution is stale, CS-BUG-EXTRACT-STALE); published ideal-gas isentropic nozzle equations for admission (exact)",
     "date": "2026-10-07",
     "coolsolve_version": "0.3.0@7addbbc",
     "max_rel_diff": 0.0043,
     "notes": "compare_solution.py: 7 common variables, 3 differ (rtol=0.001): w 4.27e-03 and viscosity 2.42e-03 (CoolProp vs EES humid-air backend); densities within 5.1e-5. M_dot_ah_cd 2.3e-5 vs the stored matching-run value. ISO demo point recomputed to 2e-5. Admission: diff_choked_adm = diff_sub_adm = 0."
   },
-  "missing_features": [
-    "CS-GAP-SUM-INDEXED"
+  "missing_features": [],
+  "related": [
+    "CSL-0075",
+    "CSL-0118"
   ],
-  "related": ["CSL-0075", "CSL-0118"],
   "related_external": [],
   "supersedes": [],
   "previous_paths": [],
@@ -72,6 +76,11 @@
       "date": "2026-10-11",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @47bb416 (uncommitted CALL WARNING build) (T-RECHECK, CS-GAP-CALL-WARNING closed): still lists CS-GAP-SUM-INDEXED (source files); README and comments updated, code unchanged",
       "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b): the bank sum is the indexed sum(M_dot_a_nz[i], i=1, 4) of the source; results unchanged (regression passes); missing_features emptied",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

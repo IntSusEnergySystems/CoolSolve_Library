@@ -1,6 +1,6 @@
 # Discretised (finite-volume) evaporator with three U-value zones
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0115`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0115`
 
 Counterflow evaporator discretised in N cells (finite volumes, `PROCEDURE hxfem`):
 the refrigerant is heated from subcooled liquid through the two-phase dome and
@@ -19,7 +19,7 @@ outlet temperature is solved by iteration over the procedure.
 | **Source** | ULiège collection, `procedures EES/hx - fem SQ011025.EES` (EES X8.423) |
 | **Authors** | Sylvain Quoilin (ULiège Thermodynamics Laboratory) — file signed `SQ`, author named in the inventory |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file blocked (`CS-GAP-REPEAT-UNTIL-BARE`, `CS-BUG-LOOKUP-WRITE`); runnable variant verified against the EES stored solution (max 2.2e-03) |
+| **CoolSolve** | native file runs (6 iterations); verified against the EES stored solution (max 2.2e-03) |
 
 ## Problem statement
 
@@ -50,33 +50,25 @@ cooling from 170 °C, R245fa evaporating at 20 bar.
   `T_hf_ex` is the unknown closed by the `CALL` (an iterative block, as in EES).
 
 The original also writes the cell profile into the embedded lookup table
-`tprofile` (write-only: the model never reads it).
+`tprofile` (write-only: the model never reads it). CoolSolve does not execute
+lookup-cell writes: it reports each as a warning (`P009`) and does not store
+the value; the cell results are in the solution of the solve itself.
 
 ## How to run
 
-The native file `hx_fem_evaporator_discretised.eescode` keeps the original EES
-syntax and is blocked:
-
-- the `REPEAT` loop ends with a bare `until i>=N` (parentheses optional in EES)
-  → parse error (`CS-GAP-REPEAT-UNTIL-BARE`);
-- the procedure writes the profile with `Lookup('tprofile',i,2) = T` on the
-  left-hand side → parsed as an equation, system not square
-  (`CS-BUG-LOOKUP-WRITE`).
-
-Run the variant instead:
-
 ```bash
-coolsolve ./hx_fem_evaporator_discretised_coolsolve.eescode
+coolsolve ./hx_fem_evaporator_discretised.eescode
 ```
 
-Tested as `CSL-0115:coolsolve` (regression on `hx_fem_evaporator_discretised_coolsolve.sol`).
 It solves in 6 iterations with the `.initials` shipped (also without: 45).
 The companion table `hx_fem_evaporator_discretised-tprofile.csv` is the table
-embedded in the source file, shipped for the native file (write-only).
+embedded in the source file (write-only in the model). The solve prints seven
+`P009` warnings, one per `Lookup('tprofile',i,k) = …` line of the procedure
+(see *Limitations*).
 
 ## Results (default run)
 
-| Variable | EES | CoolSolve (variant) |
+| Variable | EES | CoolSolve |
 |---|---:|---:|
 | `T_hf_ex` water outlet | 158.078 °C | 158.045 °C |
 | `Q_dot` transferred power | 15 547 W | 15 581 W |
@@ -91,9 +83,8 @@ The refrigerant leaves inside the two-phase dome (`T_ex = t_sat` exactly,
 
 ## Verification
 
-The **variant** (not the native file, which does not run) was solved and
-compared with the EES stored solution of the source file
-(`compare_solution.py`, rtol=0.001):
+The model was solved and compared with the EES stored solution of the source
+file (`compare_solution.py`, rtol=0.001):
 
 ```text
 21 common variables, 3 differ (rtol=0.001); only in EES: 2; only in CoolSolve: 11
@@ -142,16 +133,9 @@ revision. The header names the EES licence of the J. Lebrun laboratory
   The parametric table `Table 1` (98×2, `Q_dot` vs `node`, values
   76 644 / 82 392 / inf…) belongs to an older or failed run (it does not
   match the stored solution) and was not used for verification.
-- **2026-10-07 — runnable variant** (`hx_fem_evaporator_discretised_coolsolve.eescode`,
-  the only place where code is changed):
-  1. `until i>=N` → `until (i>=N)` (`CS-GAP-REPEAT-UNTIL-BARE`; valid EES, same behaviour);
-  2. the 7 `Lookup('tprofile',…)` profile writes of the procedure removed
-     (`CS-BUG-LOOKUP-WRITE`; diagnostic output only, no equation of the model
-     reads the table);
-  3. a 2-point state array (`P[i]`, `h[i]`, `T[i]`, `s[i]`, i = 1 supply,
-     2 exhaust) appended for the CoolSolve diagrams; the other results are
-     unchanged (same solve, same comparison as above).
-     No CoolSolve-only syntax is used.
+- **State points.** A 2-point state array (`P[i]`, `h[i]`, `T[i]`, `s[i]`,
+  i = 1 supply, 2 exhaust) is appended for the CoolSolve diagrams; the other
+  results are unchanged. The rest of the file is the original EES code.
 - **Level**: equations 32 (<50) → 0; largest block 4 (≤5) → 0; procedure +
   cell loop → 1; discretised structure → 1; physics (no calibration/off-design
   law, U values imposed) → 0; numerics (solves without curated guesses) → 0.
@@ -159,17 +143,15 @@ revision. The header names the EES licence of the J. Lebrun laboratory
 
 ## Limitations and CoolSolve gaps
 
-- `CS-GAP-REPEAT-UNTIL-BARE` — bare `until i>=N` is valid EES (parentheses
-  optional); CoolSolve fails with *"REPEAT missing UNTIL(condition)"*.
-- `CS-BUG-LOOKUP-WRITE` — `Lookup('tprofile',i,2) = T` on the left-hand side
-  inside the procedure (the EES way a subprogram writes into a lookup table;
-  evidence: this source file) is parsed as an equation: system not square.
-- Variant-only limitation (`CS-GAP-QUALITY-DOME`, not blocking the default
-  run): CoolSolve `quality` returns 0 outside the dome instead of ±100. For
-  the stored operating point the refrigerant leaves two-phase and every value
-  agrees; at operating points where the vapour appears before the outlet, the
-  variant would pick the wrong branch U (U_l instead of U_v) after the
-  transition, where EES uses U_v.
+- The seven `Lookup('tprofile',i,k) = …` cell writes of the procedure (the EES
+  way a subprogram writes into a lookup table) are not executed by CoolSolve:
+  each is reported as warning `P009` and the `tprofile` table is not filled.
+  They are diagnostic output only; no equation of the model reads the table.
+- `CS-GAP-QUALITY-DOME` (not blocking the default run): CoolSolve `quality`
+  returns 0 outside the dome instead of ±100. For the stored operating point
+  the refrigerant leaves two-phase and every value agrees; at operating points
+  where the vapour appears before the outlet, the model would pick the wrong
+  branch U (U_l instead of U_v) after the transition, where EES uses U_v.
 - The `U_lbis`/`U_tpbis`/`U_vbis` series-fraction equations of the original are
   kept (they document where the U values come from); they are not used by the
   procedure.

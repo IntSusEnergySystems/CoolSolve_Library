@@ -1,15 +1,12 @@
 {=============================================================================
   Reciprocating compressor from catalogue data (R717)
-  CoolSolve Library model CSL-0157 - native file (BLOCKED)
+  CoolSolve Library model CSL-0157
  -----------------------------------------------------------------------------
   Isentropic and volumetric effectiveness of an R717 reciprocating compressor
   computed directly from manufacturer (catalogue) data: the catalogue rows
   (condensing/evaporating temperature, capacity, electrical power, mass flow)
   are read from a lookup table and turned into epsilon_s and epsilon_v versus
   pressure ratio, plus a power-law extrapolation of epsilon_s to 1000/750 rpm.
-  STATUS: blocked - CS-BUG-DUPLICATE-VAR-BOUND (DUPLICATE i=1,n dropped),
-  CS-GAP-LOOKUP-NONAME (nameless lookup(i,col) rejected). Run the verified
-  variant reciprocating_catalogue_r717_coolsolve.eescode (README.md).
   Inputs : lookup table (17 rows), fluid$, V_s_cp, rpm_cp, rpm2, rpm3,
            DELTAT_oh, m; Outputs: epsilon_s_cp_mes[i], epsilon_v_cp_mes[i],
            R_p_cp[i], epsilon_s_1000_rpm[i], epsilon_s_750_rpm[i]

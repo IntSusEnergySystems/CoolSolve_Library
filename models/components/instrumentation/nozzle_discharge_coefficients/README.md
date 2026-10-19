@@ -16,7 +16,7 @@ through a valve or nozzle opening) and three validity-range checkers.
 | **Source** | ULiège collection — `procedures EES/`: `airflow rate - ashrae 41.2.EES` (TM-0558), `airflowrate - long radius.EES` (TM-0559), `tuyere.EES` (TM-0587), `Out of range warning.EES` (TM-0581) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory, `procedures EES/` toolkit; EES licence stamp of the J. Lebrun lab) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 + `CALL WARNING` (CoolSolve branch `fix/library-gaps-2`) — library file runs and is verified; the source files need `CS-GAP-SUM-INDEXED` (see *Limitations*) |
+| **CoolSolve** | 0.3.0@4798e2b — library file runs and is verified (see *Verification*) |
 
 ## Functions
 
@@ -166,12 +166,8 @@ Source files, collection of S. Quoilin:
   and in demonstration 2 `rho_a_su_noz = (1+w)/volume(AirH2O,…)` (per kg of
   mixture, as in the original). All other humid-air calls (`humrat`,
   `volume`, `viscosity`, `dewpoint`) keep their original form with `w=`.
-- **2026-10-07 — indexed SUM (CS-GAP-SUM-INDEXED, registered with this
-  model).** `M_dot_ah_cd = sum(M_dot_a_nz[i], i=1, 4)` of TM-0558 is not
-  expanded by CoolSolve (the index and the element become symbolic
-  unknowns); the demonstration uses the explicit 4-term sum — valid EES,
-  same result. `DUPLICATE i=1.4` (decimal-comma range notation of the
-  original) is written `i=1,4`.
+- **2026-10-07 — indexed SUM.** `M_dot_ah_cd = sum(M_dot_a_nz[i], i=1, 4)` as in TM-0558.
+  `DUPLICATE i=1.4` (decimal-comma range notation of the original) is written `i=1,4`.
 - **2026-10-07 — dead code removed from `admission`** (TM-0587): the unused
   `m_dot_old` (a parenthesis typo of the choked formula) and the unused
   `M_dot_bis` (algebraically equivalent subsonic form). The equivalent
@@ -189,11 +185,9 @@ Source files, collection of S. Quoilin:
 
 ## Limitations and CoolSolve gaps
 
-- The library file runs, but a faithful import of the **source files** would
-  be blocked by the registered gap `CS-GAP-SUM-INDEXED` (TM-0558 uses the
-  indexed `SUM`, worked around in the demonstration as above). TM-0559's
-  checker branches fire at its own operating point; in the library file the
+- TM-0559's checker branches fire at its own operating point; in the library file the
   branches are not taken.
+- No CoolSolve gap blocks the model.
 - `CS-GAP-MODULE` (not planned) is not a blocker: the modules are flattened
   (decision D10).
 - The `warning_error_6` ranges are those of the original file (a

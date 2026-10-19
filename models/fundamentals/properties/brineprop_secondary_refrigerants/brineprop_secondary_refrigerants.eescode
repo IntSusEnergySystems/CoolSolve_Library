@@ -22,19 +22,16 @@
   Companion tables: brineprop_secondary_refrigerants-Brine1.csv (198 x 5
            polynomial coefficients) and -Brine2.csv (11 x 2 mean concentration
            and temperature), decoded from the binary EES 4.631 lookup files
-           Brine1.lkt and Brine2.lkt of the library (CS-GAP-LKT); -Units.csv
-           (5 x 1 unit labels of the outputs, read with LOOKUP$).
-  Variant: brineprop_secondary_refrigerants_coolsolve.eescode is a faithful
-           runnable transcription of this file (valid EES; no CoolSolve-only
-           syntax); every change is logged in its header and in the README.
-=============================================================================}
+           Brine1.lkt and Brine2.lkt of the library; -Units.csv (5 x 1 unit
+           labels of the outputs, read with LOOKUP$).
+ =============================================================================}
 
 {--- BRINEPROP, copied from the BrineProp library (Brineprop.lib, inventory
      candidate TM-0479). Only the dead code that followed END in the library
      file (a statement x=1 and a commented example block) and the commented
      duplicate of the unit ladder are removed; the procedure is otherwise
-     unchanged, including its ELSE IF chains; its string array of unit labels is
-     the lookup table Units, read with LOOKUP$ (library decision D14). ---}
+     unchanged, including its ELSE IF chains; the unit labels of its string
+     array are the rows of the lookup table Units, read with LOOKUP$. ---}
 
 Procedure BRINEPROP(Pr$,Fl$,Conc,Temp:output)
 

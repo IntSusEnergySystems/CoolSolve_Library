@@ -5,7 +5,7 @@
   "summary": "Isentropic and volumetric effectiveness of an R717 reciprocating compressor computed from 17 catalogue rows (condensing/evaporating temperature, capacity, electrical power, mass flow) read from a lookup table, with a power-law extrapolation of the isentropic effectiveness to 1000 and 750 rpm.",
   "kind": "steady",
   "level": 3,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "reciprocating_catalogue_r717.eescode",
   "fluids": [
     "R717"
@@ -43,18 +43,17 @@
     "course": "Laborelec compressor toolkit 2002 (reviewers J. Lebrun, E. Winandy)"
   },
   "verification": {
-    "summary": "Concerns the runnable variant (the native file is blocked by CS-BUG-DUPLICATE-VAR-BOUND and CS-GAP-LOOKUP-NONAME): compared with the EES stored solution, 381 common variables, 51 differ at rtol=0.001, all absolute h/s reference-state offsets; all 330 derived results pass (worst 9.96e-4).",
-    "checks": ["ees-stored-solution"],
-    "reference": "EES stored solution of the source file (645 variables stored, 381 of the active model); the runnable variant reciprocating_catalogue_r717_coolsolve.eescode is verified, the native file cannot run",
-    "date": "2026-10-08",
-    "coolsolve_version": "0.3.0@7addbbc",
+    "summary": "Compared with the EES stored solution (381 common variables, 51 differ at rtol 1e-3, all absolute h/s reference-state offsets EES vs CoolProp R717); all 330 derived results pass (worst 9.96e-4).",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution of the source file (645 variables stored, 381 of the active model)",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": 0.0907,
-    "notes": "381 common variables, 51 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 18. The 51 are the absolute h/s (reference-state offset EES vs CoolProp R717: h +145.1..145.5 kJ/kg, s +482.2..482.9 J/kg-K); all 330 derived results pass rtol (worst 9.96e-4)."
+    "notes": "381 common variables, 51 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 18. The 51 are the absolute h/s (reference-state offset EES vs CoolProp R717: h +145.1..145.5 kJ/kg, s +482.2..482.9 J/kg-K); all 330 derived results pass rtol (worst 9.96e-4). Comparison made with the solution of the earlier runnable variant, which the native file reproduces in all 399 variables to 1e-12 (CoolSolve 0.3.0@4798e2b)."
   },
-  "missing_features": [
-    "CS-BUG-DUPLICATE-VAR-BOUND",
-    "CS-GAP-LOOKUP-NONAME"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0123",
     "CSL-0035"
@@ -67,6 +66,11 @@
       "date": "2026-10-08",
       "action": "added (blocked native file, verified runnable variant)",
       "by": "GLM (opencode) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b): the native file (variable-bound DUPLICATE, nameless lookup) solves and reproduces the earlier variant in all 399 variables (1e-12); status verified, variant and its table deleted, native .sol added",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

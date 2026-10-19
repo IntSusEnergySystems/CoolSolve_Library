@@ -44,12 +44,14 @@
   },
   "verification": {
     "summary": "Main file compared with the solution stored by EES in the source file: 15 common variables, 3 differ (rtol=0.001); the 12 comparable variables agree, largest relative deviation 3.04e-04, the 3 others being reference-state offsets. Methane variant against its own stored solution: largest deviation 2.58e-05.",
-    "checks": ["ees-stored-solution"],
+    "checks": [
+      "ees-stored-solution"
+    ],
     "reference": "EES stored solution of thermo_models TM-0057 (MSTH_041012_exercice_6.EES, EES 7.210, 15 variables, internally consistent run) for the main file, and of TM-0058 (MSTH_041012_exercice_6_suite.EES) for the methane variant; tools/compare_solution.py, no unit conversion needed (SI-C-Pa-J)",
-    "date": "2026-10-05",
-    "coolsolve_version": "0.3.0@536d427",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": 0.000304,
-    "notes": "Main file: 12 of 15 comparable variables agree within 0.031 % (DELTAh_s 0.0304 %, A and U 0.015 %, N and rpm 0.023 %); the 3 remaining are the absolute enthalpies/entropy, offset by the EES-7 vs CoolProp reference states (+125.87 kJ/kg on h, -1814.9 J/kg-K on s, as for CSL-0023 and CSL-0035), all energy differences agree. Methane variant: 12 of 15 comparable variables agree within 0.0026 % (DELTAh_s 2.6e-05), same reference-state offsets on h and s. No unit conversion needed (SI-C-Pa-J). Both files need their .initials with the Newton-only default pipeline (the example's SOLVER NOTE about TrustRegion does not hold for a CLI run); see README."
+    "notes": "Main file: 12 of 15 comparable variables agree within 0.031 % (DELTAh_s 0.0304 %, A and U 0.015 %, N and rpm 0.023 %); the 3 remaining are the absolute enthalpies/entropy, offset by the EES-7 vs CoolProp reference states (+125.87 kJ/kg on h, -1814.9 J/kg-K on s, as for CSL-0023 and CSL-0035), all energy differences agree. Methane variant: 12 of 15 comparable variables agree within 0.0026 % (DELTAh_s 2.6e-05), same reference-state offsets on h and s. No unit conversion needed (SI-C-Pa-J). Both files converge from the default guesses (44 and 48 Newton iterations; 4 with their .initials); re-solved with CoolSolve 0.3.0@4798e2b, solutions unchanged."
   },
   "missing_features": [],
   "related": [
@@ -71,6 +73,11 @@
       "date": "2026-10-05",
       "action": "added (roadmap card C-73, batch B-02)",
       "by": "opencode worker (space-bunny) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b): both files now converge from the default guesses (44 and 48 iterations; before, the Newton block of the inlet area diverged to SingularJacobian and the .initials were required); solutions unchanged, .initials kept (4 iterations)",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

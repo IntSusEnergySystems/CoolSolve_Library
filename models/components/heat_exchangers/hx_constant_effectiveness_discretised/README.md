@@ -179,14 +179,9 @@ Local source clone: `~/git/LaboThapPy` (commit `f03f7f47`); inventory candidate
   the pressure at the same flow position. Impact on the GasCooler case
   (liquid water, `DP_c` = 50 kPa): v·ΔP/c_p ≈ 0.012 K on the cold profile,
   i.e. ≪ the property-backend difference; zero for the main file (`DP_c` = 0).
-- **2026-10-09 — CoolSolve language workarounds** (native files stay valid EES):
-  with `DUPLICATE i=1,N` an index expression such as `h[i+1]` is not folded
-  (`CS-BUG-DUPLICATE-INDEX-EXPR`); the equal-enthalpy-step profiles are
-  therefore written in closed form (linear in the segment index, identical
-  equations) and the `MIN` cascades are unrolled. `DUPLICATE` bounds are
-  literals (`CS-BUG-DUPLICATE-VAR-BOUND`). These IDs are listed in
-  `missing_features` as the workarounds the native file uses (convention of
-  `CSL-0129`); **no gap blocks the model**.
+- **2026-10-09 — form of the profiles**: the equal-enthalpy-step profiles are written in
+  closed form (linear in the segment index) and the `MIN` cascades are unrolled; the `DUPLICATE` bounds are
+  literals.
 - **2026-10-09 — solver settings**: `coolsolve.conf` (`maxIterations = 500`,
   `tolerance = 1e-6`) for the tangential zero-pinch contact of the GasCooler
   case (see *How to run*).
@@ -197,9 +192,7 @@ Local source clone: `~/git/LaboThapPy` (commit `f03f7f47`); inventory candidate
 
 ## Limitations and CoolSolve gaps
 
-- No CoolSolve gap blocks the model; `missing_features` lists
-  `CS-BUG-DUPLICATE-INDEX-EXPR` because the native file works around it (see
-  conversion log).
+- No CoolSolve gap blocks the model.
 - Physics: no heat loss, equal enthalpy steps, pressure drops imposed (not
   correlated), counterflow only; the effectiveness is a pure input split
   (no UA/NTU calculation). Degenerate inputs (`T_su_H <= T_su_C`, zero flow)

@@ -22,7 +22,7 @@ gas turbine whose combustion side is described by mean specific heats.
 | **Source** | ULiège — course *Machines et systèmes thermiques* (MECA0006), revision exercises of 2005-12-23 (EES file `Revision JL051223-02.EES`) |
 | **Authors** | Jean Lebrun (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0+`fix/library-gaps` — the main file is **blocked** by `CS-GAP-INTERP-EES` and `CS-GAP-INCLUDE`; the runnable variants are verified against the EES stored solutions of the three revision files |
+| **CoolSolve** | the main file is **blocked** by `CS-GAP-INCLUDE` (`cpbar` and `gamma`); the runnable variants are verified against the EES stored solutions of the three revision files |
 
 ## Problem statement
 
@@ -105,9 +105,9 @@ temperature `t_4` fixed by expander 1.
 
 ## How to run
 
-The main file `two_shaft_gas_turbine_compressor_map.eescode` keeps the native
-EES syntax and **does not run** in CoolSolve v0.3.0 (see *Limitations and CoolSolve
-gaps*). The runnable transcription, written for CoolSolve, is:
+The main file `two_shaft_gas_turbine_compressor_map.eescode` keeps the original
+EES text and **does not run** in CoolSolve (see *Limitations and CoolSolve
+gaps*). The runnable transcription is:
 
 ```bash
 coolsolve ./two_shaft_gas_turbine_compressor_map_coolsolve.eescode
@@ -115,13 +115,11 @@ coolsolve ./two_shaft_gas_turbine_compressor_map_coolsolve.eescode
 
 Keep `two_shaft_gas_turbine_compressor_map_coolsolve.initials` (the solution
 stored by EES): **without it the solver converges to a nonphysical branch**
-(`f` = −0.85, `t_ex_burner` = 51 000 °C) and reports SUCCESS. Three edits
-separate the two files: the three `INTERPOLATE` calls use CoolSolve's positional
-form (CoolSolve-only syntax, **not valid EES**: the `_coolsolve` and `_ambient`
-files are not meant to be run in EES), the two `cpbar` calls become `CALL`
-statements (the `CALL cpbar(...)` form is valid EES), and the `cpbar`/`gamma`
-routines of CSL-0005 are copied in (details in *Conversion log*). No equation of
-the machine was changed.
+(`f` = −0.85, `t_ex_burner` = 51 000 °C) and reports SUCCESS. Two edits
+separate the two files: the two `cpbar` calls become `CALL` statements (the
+`CALL cpbar(...)` form is valid EES) and the `cpbar`/`gamma` routines of CSL-0005
+are copied in (details in *Conversion log*). Both files are valid EES. No
+equation of the machine was changed.
 
 Two cases are shipped as files:
 
@@ -263,21 +261,18 @@ Source file (EES X7.458, comments in French), collection of S. Quoilin:
   commented-out `c_p_p = 1100` and `gamma = 1.35` left as documentation of the
   constants they replace.
 - **2026-10-05 — runnable variant**
-  `two_shaft_gas_turbine_compressor_map_coolsolve.eescode`: three
+  `two_shaft_gas_turbine_compressor_map_coolsolve.eescode`: two
   transcriptions leaving the physics untouched —
-  (i) the three `INTERPOLATE('lookup_1', <y>, 'N_rN', N_rN=0.95)` calls written
-  in CoolSolve's positional form `INTERPOLATE('lookup_1','N_rN',<y>,0.95)`
-  (`CS-GAP-INTERP-EES`); this positional form is **CoolSolve-only syntax and
-  not valid EES**, so the `_coolsolve` and `_ambient` files are not meant to be
-  run in EES; (ii) the two calls of the `cpbar` PROCEDURE written as
+  (i) the two calls of the `cpbar` PROCEDURE written as
   `CALL cpbar(... : c_p_a, Q_4_a, x_a, e_min_a, e_a)`, the form that runs in
   CoolSolve for a 5-output procedure (where the function-call form of the main
   file is rejected) and that is valid EES; only the first output, the mean
-  specific heat, is used by the model; (iii) the `cpbar` PROCEDURE and the
+  specific heat, is used by the model; (ii) the `cpbar` PROCEDURE and the
   `gamma` FUNCTION copied from CSL-0005 in a marked block, until
   `CS-FEAT-IMPORT` provides `$INCLUDE library:cpbar_combustion_products`
-  (`CS-GAP-INCLUDE`). Verified against the EES stored solution (see
-  *Verification*).
+  (`CS-GAP-INCLUDE`). The `INTERPOLATE('lookup_1', <y>, 'N_rN', N_rN=0.95)`
+  calls of the main file are kept as they are. Verified against the EES stored
+  solution (see *Verification*).
 - **2026-10-05 — variant `two_shaft_gas_turbine_compressor_map_ambient.eescode`**
   (revision part 3, inventory `TM-0151`): only three inputs of the runnable
   variant were edited (`p_1` = 76 000 Pa, `t_1` = 0 °C, `N` = 0.95 `N_design`);
@@ -308,14 +303,9 @@ the mechanical losses of the turbine are neglected (`M_dot_p·w_exp1 =
 M_dot_a·w_cp`), expander 2 has no load, and expander 1 is described by a single
 isentropic efficiency.
 
-The main file is **blocked** by two CoolSolve gaps (see CoolSolve
-`docs/model_library_support.md`), both worked around in the runnable variants:
+The main file is **blocked** by one CoolSolve gap (see CoolSolve
+`docs/model_library_support.md`), worked around in the runnable variants:
 
-- `CS-GAP-INTERP-EES` — the native EES call
-  `INTERPOLATE('lookup_1','M_r_cp','N_rN',N_rN=0.95)` (a named argument selects
-  the *input* column) is parsed as a property call and fails with *"Unknown
-  fluid: 'lookup_1'"*; the runnable variants use CoolSolve's positional form,
-  which is not valid EES;
 - `CS-GAP-INCLUDE` / `CS-FEAT-IMPORT` — `cpbar` and `gamma` come from an EES
   `.LIB` loaded implicitly, which CoolSolve does not support; the two routines
   are therefore copied from CSL-0005 in the runnable variants and should become

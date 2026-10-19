@@ -1,0 +1,73 @@
+{
+  "id": "CSL-0249",
+  "name": "nh3h2o_absorption_chiller",
+  "title": "Single-effect ammonia-water absorption chiller with rectifier",
+  "summary": "Single-effect NH3-H2O absorption chiller at one operating point with rectifier, solution and refrigerant heat exchangers: pressures from the saturation of the refrigerant, strong and weak solution compositions, circulation ratio, heat rates of all components, COP, and the 14 state points as arrays for the diagrams.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "nh3h2o_absorption_chiller.eescode",
+  "fluids": [
+    "NH3H2O"
+  ],
+  "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "chiller",
+    "rectifier",
+    "solution heat exchanger",
+    "COP",
+    "cycle"
+  ],
+  "language_features": [
+    "NH3H2O fluid (any three of T, P, X, Q, H, S, U, V)",
+    "arrays (state points)"
+  ],
+  "stats": {
+    "n_equations": 112,
+    "largest_block": 2
+  },
+  "origin": {
+    "type": "coolsolve",
+    "source": "coolsolve",
+    "source_path": "written for the library (standard single-effect NH3-H2O cycle, Herold, Radermacher, Klein 1996)",
+    "candidate_id": "",
+    "authors": [
+      "CoolSolve project (S. Quoilin, ISES, University of Liège); drafted with Claude (Anthropic)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "Whole-cycle energy balance closes to 2e-11 W on 22 kW (E_check); mass and ammonia balances hold by construction; qualities of the two-phase states lie in [0, 1]. COP 0.45 and circulation ratio 6.3 are plausible for a single-effect NH3-H2O chiller. No reference solution exists.",
+    "checks": [
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "none (new model); property model IAPWS G4-01 verified in CoolSolve against the guideline tables",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
+    "max_rel_diff": null,
+    "notes": "Valid while x[4] < x[1] (generator above about 96 C for these conditions); COP vs T_gen: 0.278 (100 C), 0.433 (110), 0.454 (120), 0.440 (130), 0.409 (140)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0043"
+  ],
+  "related_external": [
+    "CoolSolve docs/nh3h2o_review.md (the NH3H2O property model)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-18",
+      "action": "added (new model on the EES fluid NH3H2O, CoolSolve branch feat/nh3h2o)",
+      "by": "Claude for S. Quoilin"
+    }
+  ]
+}

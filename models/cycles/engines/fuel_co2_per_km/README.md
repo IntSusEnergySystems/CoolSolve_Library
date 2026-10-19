@@ -1,6 +1,6 @@
 # CO2 emissions from fuel consumption
 
-🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0188`
+🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0188`
 
 Teaching exercise (ULiège MCI, TP7, exercise 3): the CO2 mass emitted per
 kilometre for complete combustion of a hydrocarbon CmHn, from a volumetric
@@ -15,7 +15,7 @@ consumption. The default branch is diesel; gasoline is the other `$IF` branch.
 | **Source** | `~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP7/Ex_3_PNG_2019.EES` (EES X10.589) |
 | **Authors** | TBD (ULiège MCI) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** (`CS-GAP-MOLARMASS-ELEMENT`); runnable variant `fuel_co2_per_km_coolsolve.eescode` verified against the EES stored solution (max rel. diff 4.54e-06) |
+| **CoolSolve** | native file runs (0 iterations); verified against the EES stored solution (max rel. diff 4.54e-06) |
 
 ## Problem statement
 
@@ -64,10 +64,9 @@ CO_2 = m \times Conso_{kmol} \times M_{CO_2} \times 10^{3}
 
 `Conso` stays in L/100 km, as written. The factor \(10^{-3}/100\) converts
 it to m³ of fuel per km. The last factor \(10^{3}\) converts kilograms of
-CO2 per km into g/km. In the native file, \(M_C\) and \(M_H\) are
-`MolarMass(C)` and `MolarMass(H)`. In the runnable variant they are the EES
-element values 12.0107 and 1.00794 kg/kmol. \(M_{CO_2}\) is `MolarMass(CO2)`
-in both files.
+CO2 per km into g/km. \(M_C\), \(M_H\) and \(M_{CO_2}\) are `MolarMass(C)`,
+`MolarMass(H)` and `MolarMass(CO2)`; the two elements return the standard
+atomic weights, 12.0107 and 1.00794 kg/kmol, as in EES.
 
 | Quantity | Role | Value (diesel branch) |
 |---|---|---|
@@ -84,27 +83,21 @@ the file and are left out of this count while `Fuel$` is `'diesel'`.
 
 ## How to run
 
-The native file `fuel_co2_per_km.eescode` is valid EES and does not solve in
-CoolSolve (`CS-GAP-MOLARMASS-ELEMENT`: `MolarMass(C)` and `MolarMass(H)`).
-
-The runnable variant changes only those two calls. From this folder:
+From this folder:
 
 ```bash
-../../../../../CoolSolve/build/coolsolve ./fuel_co2_per_km_coolsolve.eescode
+coolsolve ./fuel_co2_per_km.eescode
 ```
 
-`fuel_co2_per_km_coolsolve.initials` holds the six decoded stored values.
-With that file the solver reports 0 iterations. Without it, 0 iterations.
-The two solutions are identical. The shipped `.sol` is the run with the
-guesses. No `coolsolve.conf`. The regression name of the variant is
-`CSL-0188:coolsolve`.
+The solver reports 0 iterations (every equation is explicit); no guess file
+and no `coolsolve.conf` are needed.
 
 Setting `Fuel$ = 'essence'` selects gasoline (m = 8, n = 18, 720 kg/m³).
 The stored solution is the diesel branch, and that is the run compared below.
 
 ## Results
 
-Diesel branch, `Conso` = 5 L/100 km. Values from the runnable variant.
+Diesel branch, `Conso` = 5 L/100 km.
 
 | Quantity | CoolSolve | EES stored |
 |---|---:|---:|
@@ -119,7 +112,7 @@ Diesel branch, `Conso` = 5 L/100 km. Values from the runnable variant.
 
 `CO2` and `Conso_kmol` are computed by the equations and were not among the
 6 decoded variables. Applying the same emission equation to the stored
-`MM_f` and `MM_CO2` gives `CO2` = 131.770458704 g/km. The variant differs
+`MM_f` and `MM_CO2` gives `CO2` = 131.770458704 g/km. The model differs
 from that figure by 4.54×10⁻⁶ relative, the `MM_CO2` gap.
 
 Order of magnitude: 5 L/100 km at 850 kg/m³ is 42.5 g of fuel per km. With
@@ -135,13 +128,10 @@ example `CO2` against `Conso`), saved as `figures/fuel_co2_per_km_sweep.png`.
 
 ## Verification
 
-The comparison is of the runnable variant. The native file stops on
-`MolarMass(C)` before a solution exists.
-
 Reference: the solution stored in the EES file (6 variables decoded by
 `ees_extract.py`). The unit system is already `SI MASS DEG PA C J`, so the
 comparison is without `--ees-units`. `compare_solution.py` on
-`fuel_co2_per_km_coolsolve.sol` against `reference/ees_variables.csv`:
+`fuel_co2_per_km.sol` against `reference/ees_variables.csv`:
 
 > 6 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 3
 
@@ -191,18 +181,13 @@ under the library licence (MIT).
   removed (it is not an equation). The unmodified extract, with those two
   directives removed, is square (9 equations, 9 variables, largest block 1),
   so no Diagram-window value was restored and no computed unknown was
-  replaced by a stored number. Stored values of the six decoded variables
-  are the `.initials` guesses of the variant. Comments translated to English.
+  replaced by a stored number. Comments translated to English.
   `m = 12 ; n = 26` and `m = 8 ; n = 18` split onto one equation per line.
   The original writes `conso` in the consumption equation and `Conso` in the
   assignment; both names are the variable `Conso`. The commented assignments
   `Fuel$ = 'essence'` and `m = 16 ; n = 34` (hexadecane) are recorded in
   comments; they are alternatives, and they stay out of the equation list.
-  The native file keeps `MolarMass(C)` and `MolarMass(H)` and is blocked by
-  `CS-GAP-MOLARMASS-ELEMENT` (*Unknown fluid: 'C'*). The runnable variant
-  `fuel_co2_per_km_coolsolve.eescode` replaces those two calls by the EES
-  element molar masses 12.0107 and 1.00794 kg/kmol and leaves `MolarMass(CO2)`
-  unchanged. The variant is valid EES and uses no CoolSolve-only syntax.
+  The file keeps `MolarMass(C)` and `MolarMass(H)` as in the original.
 - **Level**: equations 9 (< 50) → 0; largest block 1 (≤ 5) → 0; no user
   function, procedure, array or `DUPLICATE` → 0; one explicit combustion
   relation, no multi-zone discretisation → 0; the formula, the density and
@@ -212,13 +197,9 @@ under the library licence (MIT).
 
 ## Limitations and CoolSolve gaps
 
-- The native file is blocked by `CS-GAP-MOLARMASS-ELEMENT`. CoolSolve has no
-  elemental fluids `C` and `H` (`H2` is a different substance). The variant
-  uses 12.0107 and 1.00794 kg/kmol, the values EES returns for those two
-  calls. `missing_features` lists that gap and no other.
-- `MolarMass(CO2)` solves. It prints the cosmetic warning *Did you mean
-  'CO2'?* (`CS-BUG-FLUID-HINT-CO2`). The warning does not change the value
-  and is not a blocking gap.
+- `MolarMass` of an element (`C`, `H`) is the IUPAC standard atomic weight
+  (12.0107 and 1.00794 kg/kmol), the values EES returns for those two calls;
+  `H` is the element, not the fluid `H2`.
 - The fuel is a formula, a density and a volume consumption. The file does
   not call a fluid named Diesel.
 - The solved point is C12H26 at 5 L/100 km. Hexadecane is the commented

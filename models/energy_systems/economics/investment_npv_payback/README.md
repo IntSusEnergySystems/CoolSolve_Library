@@ -1,6 +1,6 @@
 # Economic evaluation of an energy-saving investment: net present value and simple payback time
 
-🟢 **Level 1 · Introductory** | ⚙️ **Steady-state** | ⛔ **Blocked** | `CSL-0154`
+🟢 **Level 1 · Introductory** | ⚙️ **Steady-state** | ✅ **Verified** | `CSL-0154`
 
 <!-- Badges (copy exactly, see docs/taxonomy.md):
   🟢 **Level 1 · Introductory** | 🔵 **Level 2 · Intermediate** | 🟠 **Level 3 · Advanced** | 🔴 **Level 4 · Research**
@@ -25,7 +25,7 @@ measure (e.g. the equipment cost model of `CSL-0153`).
 | **Source** | `~/Nextcloud/thermo_models/modeles/Economical_evaluation_of_investment/INVESTISSEMENT_RENTABILITE_SB080108.EES` (EES 7.888) |
 | **Authors** | Stéphane Bertagnolio (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0@2d15382 — native file blocked by `CS-BUG-DUPLICATE-INDEX-EXPR`; the runnable variant `investment_npv_payback_coolsolve.eescode` reproduces the EES stored solution |
+| **CoolSolve** | 0.3.0@4798e2b — verified: reproduces the EES stored solution (see *Verification*) |
 
 ## Problem statement
 
@@ -76,23 +76,11 @@ No property call, no iterative block: every equation is explicit, so no
 ## How to run
 
 ```bash
-coolsolve investment_npv_payback_coolsolve.eescode   # runnable variant (tested as CSL-0154:coolsolve)
+coolsolve investment_npv_payback.eescode
 ```
 
-The **native file** `investment_npv_payback.eescode` is the faithful import and
-**does not run in CoolSolve**: the two cumulative recurrences use an array index
-with arithmetic inside a `DUPLICATE` loop (`DPV_1[i] = DPV_1[i-1] + …`,
-`DPV_2[i] = DPV_2[i-1] + …`), which CoolSolve does not expand
-(`CS-BUG-DUPLICATE-INDEX-EXPR`: 178 unknowns for 176 equations, the two extra
-ones being `DPV_1[expr]` and `DPV_2[expr]`). The file is kept in valid EES.
-
-The **runnable variant** `investment_npv_payback_coolsolve.eescode` changes
-only what the gap forces: those two recurrences are written out with explicit
-indices (`DPV_1[2] = DPV_1[1] + (CF[2])*1/(1+k)^2`, … up to year 20). Every
-other equation, variable name and value is identical to the native file, and the
-variant is valid EES (no CoolSolve-only syntax). **Consequence:** the variant
-unrolls the accumulations for `T_lifetime = 20` years (the default value); a
-different lifetime requires re-unrolling them.
+The two cumulative recurrences use an array index with arithmetic inside a `DUPLICATE` loop (`DPV_1[i] = DPV_1[i-1] + …`, `DPV_2[i] = DPV_2[i-1] + …`) whose upper
+bound is the variable `T_lifetime`: the lifetime can be changed without editing the equations.
 
 ## Results
 
@@ -117,7 +105,7 @@ payback year 12 (the discounted present value at the end of the lifetime is
 
 ## Verification
 
-The **runnable variant** was compared with the solution stored by EES in the
+The model was compared with the solution stored by EES in the
 source file (`reference/ees_variables.csv`, the last EES calculation):
 
 ```
@@ -143,9 +131,6 @@ and 21 empty rows, so it stores no run result
 (`compare_solution.py … --row 1` → *0 common variables*). The stored solution
 is therefore the only reference, and it is complete (all the 176 variables of
 the equations agree).
-
-The native file was not solved (it is blocked); the comparison above concerns
-the variant, which reproduces the equations of the native file exactly.
 
 ## Source and attribution
 
@@ -177,16 +162,6 @@ published here under the library license (MIT).
   references and the full disclaimer of the original are in *Source and
   attribution* above. No equation was changed. No `.initials` file is shipped:
   the system is explicit (largest block 1) and needs no guess.
-- **2026-10-15 — blocked native file**: the native file is the faithful import
-  (valid EES) and is blocked by `CS-BUG-DUPLICATE-INDEX-EXPR`; it is not
-  rewritten around the gap.
-- **2026-10-15 — runnable variant** `investment_npv_payback_coolsolve.eescode`:
-  the two cumulative recurrences `DPV_1[i] = DPV_1[i-1] + (CF[i])*1/(1+k)^i`
-  and `DPV_2[i] = DPV_2[i-1] + (B[1] - C[1])` are written out with explicit
-  indices 2…20 (and 1…20), and the equations `NPV_1[i] = -INV + DPV_1[i]` were
-  moved into the remaining `DUPLICATE` loop (they keep their index `i`, which is
-  not an arithmetic expression). Same equations, same values, valid EES, no
-  CoolSolve-only syntax.
 - **Level**: taxonomy §3 — equations 176 (50–300) → 1; largest algebraic block
   1 (≤ 5) → 0; arrays/`DUPLICATE` → 1; no multi-zone, no semi-empirical
   calibration, no curated guesses → 0. Score 2 → level 2, lowered by 1 to
@@ -198,25 +173,7 @@ published here under the library license (MIT).
   flow over the whole lifetime (no escalation), which is why `PBT_2` has the
   closed form `INV/(B[1] - C[1])`; the payback time is therefore an integer
   here. Kept as in the original.
-- `CS-BUG-DUPLICATE-INDEX-EXPR` (CoolSolve `docs/model_library_support.md` §5,
-  already registered, P1) blocks the **native** file: an array index with
-  arithmetic inside a `DUPLICATE` loop of the main program is not expanded
-  (`DPV_1[i-1]`, `DPV_2[i-1]` become the unknown `DPV_1[expr]`, `DPV_2[expr]`;
-  178 unknowns for 176 equations, *System square: No*). Minimal reproducer
-  (valid EES):
-
-  ```
-  n = 3
-  DUPLICATE i = 1, n
-    x[i] = i
-    y[i] = y[i-1] + x[i]
-  END
-  ```
-
-  → *Equations: 7, Variables: 8, System square: No*, with `y[expr]` among the
-  unknowns. The register already documents this bug (reproducer
-  `T[i+1] = T[i] + 1`, and the `y[expr]` symptom as extra evidence of
-  `CSL-0144`), so no new row was added.
+- No CoolSolve gap blocks the model.
 
 ## Related models
 

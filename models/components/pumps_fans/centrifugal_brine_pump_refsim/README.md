@@ -1,6 +1,6 @@
 # Centrifugal brine pump reference simulation model (RefSim)
 
-🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** (runnable variant verified) &nbsp;|&nbsp; `CSL-0072`
+🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0072`
 
 Reference simulation (RefSim) model of a single-stage centrifugal pump
 conveying a brine (water/antifreeze mixture). The pump is described by
@@ -20,11 +20,11 @@ detailed model).
 |---|---|
 | **Category** | Components › Pumps and fans |
 | **Fluids** | brine EG (ethylene glycol/water), any BrineProp fluid |
-| **Size** | native: 33 main-program equations + the `BRINEPROP` procedure (≈ 45 statements); variant: 119 equations after analysis, largest block 1 |
+| **Size** | 34 equations after analysis, largest block 1 (33 main-program equations + the `BRINEPROP` procedure, ≈ 45 statements) |
 | **Source** | ULiège model bank *Model data bank*, Distribution_Systems/Pumps, 2008-02-18 |
 | **Authors** | Vincent Lemort (file header; inventory adds V. Teodorese, J. Lebrun) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** (it does not parse: `CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE`); variant `centrifugal_brine_pump_refsim_coolsolve.eescode` verified against the EES stored solution (see *Verification*) |
+| **CoolSolve** | **verified** against the EES stored solution (32 common variables, 0 differ, max 2.75e-07; see *Verification*) |
 
 ## Problem statement
 
@@ -65,15 +65,14 @@ from the EES stored solution (0.1333 m; 1.18, −1.466, −614, −6002; 0.01585
 
 ## How to run
 
-The native file `centrifugal_brine_pump_refsim.eescode` is kept in valid EES
-and is **blocked** in CoolSolve (gaps below). Solve the runnable variant:
-
 ```bash
-coolsolve ./centrifugal_brine_pump_refsim_coolsolve.eescode
+coolsolve ./centrifugal_brine_pump_refsim.eescode
 ```
 
-The brine is changed by editing `brine$` (`'EG'`, `'PG'`, `'CaCl2'`, …) and
-`X_brine` within the validity range of the BrineProp library.
+`solve` in 82 iterations; the baseline is `centrifugal_brine_pump_refsim.sol`
+(regression-tested as `CSL-0072`). The brine is changed by editing `brine$`
+(`'EG'`, `'PG'`, `'CaCl2'`, …) and `X_brine` within the validity range of the
+BrineProp library.
 
 ## Results
 
@@ -84,29 +83,27 @@ $\phi$ = 0.0022 (1 m³/h against a 0.133 m impeller at 1300 rpm) sits on the
 far left of the characteristics, hence the low efficiency.
 
 <!-- FIGURE (added by the maintainer, docs/model_workflow.md §7): pump characteristics
-     psi(phi) and epsilon_s(phi) with the operating point, or a Parametric sweep of
-     V_dot_pump_m3h; figures/centrifugal_brine_pump_refsim_*.png -->
+      psi(phi) and epsilon_s(phi) with the operating point, or a Parametric sweep of
+      V_dot_pump_m3h; figures/centrifugal_brine_pump_refsim_*.png -->
 
 ## Verification
 
-The variant `centrifugal_brine_pump_refsim_coolsolve.eescode` was compared
-with the solution stored in the original EES file (`compare_solution.py`):
-**32 common variables, 0 differ (rtol=0.001); only in EES: 2; only in
-CoolSolve: 88** — the maximum relative deviation on the physical results is
-6.4·10⁻⁸ (`DELTAP_pump`, `W_dot_shaft_pump`; `rho_pump` 2.9·10⁻⁹,
+The model was compared with the solution stored in the original EES file
+(`compare_solution.py`): **32 common variables, 0 differ (rtol=0.001); only
+in EES: 2; only in CoolSolve: 3** — the maximum relative deviation on the
+physical results is 2.75·10⁻⁷ (`P_dynam_periph_pump`;
+`DELTAP_pump` and `W_dot_shaft_pump` 6.4·10⁻⁸, `rho_pump` 2.9·10⁻⁹,
 `c_p_pump` 6.2·10⁻⁹, `t_ex_pump` 4.2·10⁻¹⁰), from the rounding of the
 80-bit table coefficients to 64-bit floats. The two EES-only variables are
 leftovers of the original variable-information table — dead variables of an
 earlier version of the equations (`b` = −0.236, `v` = 1), absent from the
-extracted equations; the 88 CoolSolve-only variables are
-the internal names of the flattened property evaluation (see conversion
-log). The lookup tables were decoded by hand from the binary `.lkt` files
-and validated: the decoded `Brine1`/`Brine2` coefficients reproduce the
-stored `rho_pump` = 1030.000008 kg/m³ and `c_p_pump` = 3852.099981 J/kg-K
-to ≤ 6·10⁻⁹ relative.
-
-The native file cannot be solved by CoolSolve: it fails at parse time on the
-`ELSE IF … ENDIF;ENDIF` ladders of `BRINEPROP` (`CS-GAP-ELSEIF-CHAIN`).
+extracted equations; the three CoolSolve-only variables are the string
+`brine$`, the built-in constant `pi` and the auxiliary output of the
+expression `CALL` argument `:c_p_pump/1000`. The lookup tables were decoded
+by hand from the binary `.lkt` files and validated: the decoded
+`Brine1`/`Brine2` coefficients reproduce the stored
+`rho_pump` = 1030.000008 kg/m³ and `c_p_pump` = 3852.099981 J/kg-K to
+≤ 6·10⁻⁹ relative.
 
 ## Source and attribution
 
@@ -142,69 +139,34 @@ folder.
   stored reference run (diagram-window input) used **25 %**; the library
   file keeps the stored value as the default run and says so in a comment.
 - **BrineProp library**: `BRINEPROP` copied from `Brineprop.lib` (TM-0479)
-  into the native file, unchanged except the removal of the dead code after
-  `END` (an `x=1` statement and a commented-out example block) and of the
-  `$tabStops` display directive — standard workaround of `CS-GAP-INCLUDE` /
-  `CS-FEAT-IMPORT`. The binary lookup tables `Brine1.lkt` (198 rows × 5
-  columns) and `Brine2.lkt` (11 × 2) were **decoded by hand** (EES 4.631
-  `.lkt` layout reverse-engineered from the hex dump, cf. `ees_import.md`
-  §13: per column, a 31-byte name field, 10-byte Extended values, display
-  bytes) and shipped as companion CSVs (`-Brine1.csv`, `-Brine2.csv`;
-  EES column names `Column1..5` kept); validated against the stored
-  solution as described under *Verification* (`CS-GAP-LKT` worked around).
+  into the file, unchanged except the removal of the dead code after `END`
+  (an `x=1` statement and a commented-out example block) and of the
+  `$tabStops` display directive; the unit labels of its string array are the
+  rows of the lookup table `Units`, read with `LOOKUP$`
+  (`UO$=LOOKUP$('Units',Pro,1)`; they feed no equation). The binary lookup
+  tables `Brine1.lkt` (198 rows × 5 columns) and `Brine2.lkt` (11 × 2) were
+  **decoded by hand** (EES 4.631 `.lkt` layout reverse-engineered from the
+  hex dump, cf. `ees_import.md` §13: per column, a 31-byte name field,
+  10-byte Extended values, display bytes) and shipped as companion CSVs
+  (`-Brine1.csv`, `-Brine2.csv`; EES column names `Column1..5` kept);
+  validated against the stored solution as described under *Verification*.
 - **Comments**: the original comments are already in English; the section
   title "Water state at pump exhaust" is rendered as "Brine state at pump
   exhaust (section titled water in the original)" since the fluid handled
   is the brine of `brine$`. Units added to the comments (`[-]` only for the
   dimensionless factors); `N_pump` is given in 1/s (the EES variable-info
   unit "min^-1" contradicts `rpm_pump/60`).
-- **Level**: score 3 per taxonomy §3 (119 equations after the CoolSolve
-  analysis of the variant, but largest block 1; procedure present; empirical
-  characteristic curves; no curated guesses) — one point above the ≤ 1 band
-  only because of the equation count, which comes from the flattened
-  property polynomial, not from model depth. Moved down to **1** as
-  pre-assigned by the roadmap card: a small, fully explicit single-
-  component model.
-- **2026-10-10 — unit labels**: string array `U$[…]` of `BRINEPROP` replaced by the lookup
-  table `centrifugal_brine_pump_refsim-Units.csv` and `LOOKUP$`
-  (`UO$=LOOKUP$('Units',Pro,1)`), decision D14 (CoolSolve does not support string arrays).
-- **2026-10-05 — runnable variant** `centrifugal_brine_pump_refsim_coolsolve.eescode`
-  (valid EES; no CoolSolve-only syntax). Changes forced by the gaps, logged
-  in the variant header:
-  1. `CS-GAP-ELSEIF-CHAIN` and `CS-GAP-UPPERCASE` break
-     `BRINEPROP`. It is split into (a) a selector
-     procedure `BRINEPROP_SELECT(Conc,Fl$:Fl_brine)` holding the 22
-     concentration range checks and the 11-branch fluid ladder, rewritten as
-     sequential single-line IF statements (mutually exclusive conditions;
-     property selection by tag, see below); and (b) the property evaluation
-     flattened into the main program for the two used properties (`_d`:
-     Density = 2, `_cp`: SpecHeat = 3), keeping the polynomial, the table
-     reads (`Row[k]=k+(Fl-1)*18` as a `DUPLICATE` loop — `REPEAT` is not
-     allowed in a main program) and the output scaling exactly as in the
-     original; internal variables renamed per call (`<variable>_d`,
-     `<variable>_cp`). The formal arguments `Conc`/`Fl$` are replaced by the
-     actual `X_brine`/`brine$` (`Conc` → `x_d = X_brine - xm_d`).
-  2. The expression output `:c_p_pump/1000` of the `CALL` is written as an
-     output into `c_p_pump_kJ` plus `c_p_pump = c_p_pump_kJ*1000`, a split that
-     CoolSolve no longer requires.
-  Verified against the same EES reference (see *Verification*).
+- **Level**: score 3 per taxonomy §3 (34 equations after the CoolSolve
+  analysis, but largest block 1; procedure present; empirical characteristic
+  curves; no curated guesses) — one point above the ≤ 1 band only because of
+  the equation count, which comes from the property polynomial evaluated
+  inside the procedure, not from model depth. Moved down to **1** as
+  pre-assigned by the roadmap card: a small, fully explicit single-component
+  model.
 
-## Limitations and CoolSolve gaps
+## Limitations
 
-The native file is **blocked**; `missing_features` lists every gap that blocks
-it. These are the parse errors the native file stops at:
-
-- `CS-GAP-ELSEIF-CHAIN` — the `ELSE IF … ENDIF;ENDIF` ladders of
-  `BRINEPROP` do not parse ("IF ... THEN without a matching ENDIF");
-- `CS-GAP-UPPERCASE` — the intrinsic `Uppercase$` is unknown.
-
-`CS-GAP-INCLUDE` (implicit USERLIB library) is worked around by copying
-`BRINEPROP` into the file; `CS-GAP-LKT` (binary `.lkt` tables) is worked
-around by the hand-decoded companion CSVs.
-
-Limitations of the variant: `REPEAT`/`IF` statements are procedure-only in
-EES, hence the `DUPLICATE` loop and the selector procedure of the conversion
-log; the model has no figure yet (maintainer, workflow §7).
+The model has no figure yet (maintainer, workflow §7).
 
 ## Related models
 
@@ -214,7 +176,8 @@ log; the model has no figure yet (maintainer, workflow §7).
   against an independent EES stored solution).
 - `CSL-0078` *brine_to_water_heat_pump_refsim* — another model of the bank
   that calls the same BrineProp library (density and specific heat of a 25 %
-  propylene glycol solution), with the same blocked-native-file treatment.
+  propylene glycol solution); its native file is over-determined as the
+  original stands and a runnable variant is shipped next to it.
 - `CSL-0125` *pump_curve_similarity*: pump described by manufacturer curves
   and the affinity laws (catalogue data, three operating modes); no catalogue
   curves in this reference model.

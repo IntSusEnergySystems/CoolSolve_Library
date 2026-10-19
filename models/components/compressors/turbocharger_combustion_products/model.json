@@ -5,7 +5,7 @@
   "summary": "Steady-state matching of a turbocharger on a supercharged engine: filter and compressor (given pressure ratio and isentropic efficiency), glycol-water intercooler (epsilon-NTU), combustion at the given AFR with the exhaust properties computed from the molar composition of the complete-combustion products (excess air, simplified dry air, ideal-gas CO2/H2O/O2/N2), turbine matched on the compressor power balance, equivalent exhaust-orifice diameter and heat-recovery percentages.",
   "kind": "steady",
   "level": 3,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "turbocharger_combustion_products.eescode",
   "fluids": [
     "Air",
@@ -55,19 +55,17 @@
     "course": "MCI (ULiège), TP4 exercise 1: supercharging (formulation simplifiée, PNG 24/03/2019)"
   },
   "verification": {
-    "summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-SUM-INDEXED, CS-GAP-MOLARMASS-ELEMENT and CS-GAP-INCOMPRESSIBLE): compared with the EES stored solution, 82 common variables, 52 pass at rtol = 0.001, maximum 4.5e-3 on Q_dot_2; deviations explained by backend offsets and 8 stale stored values.",
-    "checks": ["ees-stored-solution"],
-    "reference": "EES stored solution of the source file (last consistent run of 109 stored values), compared with the runnable _coolsolve variant: 52 variables agree within 4.5e-3 relative (max, Q_dot_2; most within 1e-3). 10 absolute-enthalpy/entropy variables carry backend reference offsets (`Air` h and s, `s_p_ref`: water liquid at 25 C in CoolSolve; differences agree); the entropies of the combustion products agree since CoolSolve gives the ideal gases absolute entropies; 8 stored values are stale (h_p_* constant offset -82.87 MJ/kg, s_p_ex_e_s/s_p_su_e off-scale, p_su_e/r_p_e inconsistent with the stored w_e_s) - documented in the README.",
-    "date": "2026-10-08",
-    "coolsolve_version": "0.3.0@7addbbc",
+    "summary": "Compared with the EES stored solution, 82 common variables, 52 pass at rtol = 0.001, maximum 4.5e-3 on Q_dot_2; deviations explained by backend offsets and 8 stale stored values.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution of the source file (last consistent run of 109 stored values): 52 variables agree within 4.5e-3 relative (max, Q_dot_2; most within 1e-3). 10 absolute-enthalpy/entropy variables carry backend reference offsets (`Air` h and s, `s_p_ref`: water liquid at 25 C in CoolSolve; differences agree); the entropies of the combustion products agree since CoolSolve gives the ideal gases absolute entropies; 8 stored values are stale (h_p_* constant offset -82.87 MJ/kg, s_p_ex_e_s/s_p_su_e off-scale, p_su_e/r_p_e inconsistent with the stored w_e_s) - documented in the README.",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": 0.0045,
-    "notes": "The native file does not parse (C%); the comparison concerns the variant. The stored subprogram state (ref call) is reproduced under the flattened names (x_ref[i], h_ref[i], pp_ref[i]...)."
+    "notes": "The comparison was made with the solution of the earlier runnable variant (element molar masses as constants, expanded sums, P= in the EG call), which the native file reproduces in all 221 variables (CoolSolve 0.3.0@4798e2b); the native file needs its .initials (the Newton block of the intercooler does not converge from the default guesses). The stored subprogram state (ref call) is reproduced under the flattened names (x_ref[i], h_ref[i], pp_ref[i]...)."
   },
-  "missing_features": [
-    "CS-GAP-SUM-INDEXED",
-    "CS-GAP-MOLARMASS-ELEMENT",
-    "CS-GAP-INCOMPRESSIBLE"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0005",
     "CSL-0150"
@@ -95,6 +93,11 @@
       "date": "2026-10-11",
       "action": "re-baselined: NASA-Glenn formation enthalpies (CoolSolve 9aa2842); only the 14 absolute enthalpy variables of CO2 and H2O of the _coolsolve variant changed (h_ref[i], h_su_e[i], h_ex_e[i], h_ex_e_s[i], h_su_e2[i]: +227 / -333 J/kg, and the mixture h_p_*: 1e-5); no result moves; h_ref[1] (CO2) closer to the EES stored value (9.1e-5 to 6.6e-5), h_ref[2] (H2O) farther (7.7e-5 to 1.0e-4)",
       "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b; CS-GAP-SUM-INDEXED, CS-GAP-MOLARMASS-ELEMENT, CS-GAP-INCOMPRESSIBLE closed): the native file (C% names, indexed sums, molarmass(C)/(H), Cp(EG,T=,C=)) solves with the guess file and reproduces the earlier variant in all 221 variables; status verified, variant and its .sol deleted, guess file renamed to the native name (Q_dot_2_% key), native .sol added",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

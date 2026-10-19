@@ -176,13 +176,8 @@ comes from its reference-state choice, not from the cycle model.
 - **2026-10-14 — sectioned recuperators**: the 10-section discretisation
   (post-processing UA) written as two `DUPLICATE` loops per recuperator,
   sections of equal heat, linear interpolation of enthalpies and pressures,
-  LMTD per section (function `Lmtd`). The first draft indexed the previous
-  section boundary with `[i-1]` inside the loops; CoolSolve does not expand
-  array indices with arithmetic in a `DUPLICATE` (registered bug
-  `CS-BUG-DUPLICATE-INDEX-EXPR`, this model added as extra evidence), so both
-  boundary states of each section are computed per section from the fractions
-  `(i-1)/n_sec` and `i/n_sec` — same equations, same results, still valid EES;
-  the gap therefore does not block this file.
+  LMTD per section (function `Lmtd`). Both boundary states of each section are computed per section from the fractions
+  `(i-1)/n_sec` and `i/n_sec`.
 - **2026-10-14 — exergy**: the published thermomechanical exergy split
   reproduced with the ambient state of the original class
   (`T_amb = 15 °C`, `P_amb = 1.01325 bar`).
@@ -202,10 +197,7 @@ comes from its reference-state choice, not from the cycle model.
   (Quoilin 2011) differs by 0.04 % here (documented above), and the pinch
   detection of the original (`td_pinch`) is not reproduced (not a
   specification of this design point).
-- No blocking CoolSolve gap: `CS-BUG-DUPLICATE-INDEX-EXPR` (CoolSolve bug
-  register, CoolSolve repo `docs/model_library_support.md` §5) concerns the
-  first draft of the `DUPLICATE` loops but is worked around inside valid EES
-  (see conversion log), so `missing_features` is empty.
+- No CoolSolve gap blocks the model.
 
 ## Related models
 

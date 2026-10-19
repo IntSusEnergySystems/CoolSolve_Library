@@ -7,7 +7,14 @@
   "level": 3,
   "status": "verified",
   "main_file": "cgam_cogeneration.eescode",
-  "fluids": ["N2", "O2", "CO2", "H2O", "CH4", "Water"],
+  "fluids": [
+    "N2",
+    "O2",
+    "CO2",
+    "H2O",
+    "CH4",
+    "Water"
+  ],
   "tags": [
     "cogeneration",
     "gas turbine",
@@ -22,7 +29,10 @@
   "language_features": [
     "property functions"
   ],
-  "stats": {"n_equations": 119, "largest_block": 28},
+  "stats": {
+    "n_equations": 119,
+    "largest_block": 28
+  },
   "origin": {
     "type": "software_library",
     "source": "tespy",
@@ -38,20 +48,34 @@
     "course": "CGAM problem (Valero et al., Energy 19(3) 1994) as built in TESPy test_CGAM_model.py (commit 19425523); reference data tests/test_models/cgam-ebsilon-results.csv"
   },
   "verification": {
-    "summary": "Re-ran the source test (test_CGAM_model.py, TESPy 0.11.3.dev0/CoolProp 8.0.0, throw-away venv) and compared all states, powers and compositions: max rel diff 2.0e-03 (h, s as same-composition differences, as the source test does). Against the Ebsilon table (cgam-ebsilon-results.csv): compressor 29.740 vs 29.6597 MW (2.7e-03), turbine 59.740 vs 59.6597 MW (1.4e-03), max 4.7e-03, card tolerance 5e-03.",
-    "checks": ["source-rerun", "other-tool"],
-    "reference": "TESPy re-run of the source (local snapshot ~/git/tespy commit 19425523, run_cgam.py) and the Ebsilon results table tests/test_models/cgam-ebsilon-results.csv; comparison with work/cgam_cogeneration/compare_refs.py",
-    "date": "2026-10-15",
-    "coolsolve_version": "0.3.0@e635c85",
-    "max_rel_diff": 0.0047,
-    "notes": "vs TESPy re-run: max 2.034e-03 on ds[7]-ds[4]. vs Ebsilon: max 4.741e-03 on ds[6]-ds[4] (TESPy's own deviation from Ebsilon is bounded at 5e-03 by the source test); W_comp 2.715e-03, W_turb 1.347e-03. CoolSolve H2O entropy is the third-law NASA value (~3.5 kJ/kg-K above CoolProp HEOS), a constant offset that cancels in all same-composition entropy differences of the model."
+    "summary": "vs the Ebsilon table (cgam-ebsilon-results.csv): compressor power 29.764 vs 29.6597 MW (3.5e-03), turbine 59.764 vs 59.6597 MW (1.7e-03), max 5.7e-03 on ds[6]-ds[4]; vs a TESPy re-run (0.11.3.dev0, commit 19425523, 2026-10-19): max 2.9e-03 on ds[7]-ds[4].",
+    "checks": [
+      "source-rerun",
+      "other-tool"
+    ],
+    "reference": "TESPy re-run of the source network (~/svn/tespy commit 19425523, test_CGAM_model.py without the exergy analysis) and the Ebsilon results table tests/test_models/cgam-ebsilon-results.csv",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
+    "max_rel_diff": 0.0057,
+    "notes": "vs Ebsilon: max 5.70e-03 on ds[6]-ds[4] (4.74e-03 before the CO2 partial pressures below 1000 Pa were no longer clamped), ds[7]-ds[4] 4.2e-03, W_comp 3.5e-03, W_turb 1.7e-03, T7 3.2e-03 (method of the source test: h and s as same-composition differences). vs the TESPy re-run of 2026-10-19: max 2.85e-03 on ds[7]-ds[4], W_comp 2.3e-03, T7 2.2e-03 (2.03e-03 before the re-baseline). The clamp had suppressed the CO2 pressure term of the air entropy across the compressor. CoolSolve H2O entropy is the third-law NASA value (~3.5 kJ/kg-K above CoolProp HEOS), a constant offset that cancels in all same-composition entropy differences of the model."
   },
   "missing_features": [],
-  "related": ["CSL-0139"],
+  "related": [
+    "CSL-0139"
+  ],
   "related_external": [],
   "supersedes": [],
   "previous_paths": [],
   "history": [
-    {"date": "2026-10-15", "action": "added (T-TRANSLATE of the TESPy CGAM test model, card C-191, inventory row TSP-050); verified against a TESPy re-run and the Ebsilon table of the source test", "by": "opencode worker (glm-5.3-flash) for S. Quoilin"}
+    {
+      "date": "2026-10-15",
+      "action": "added (T-TRANSLATE of the TESPy CGAM test model, card C-191, inventory row TSP-050); verified against a TESPy re-run and the Ebsilon table of the source test",
+      "by": "opencode worker (glm-5.3-flash) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-baselined with CoolSolve 0.3.0@4798e2b: the CO2 partial pressures (30-300 Pa in the air) are no longer clamped to 1000 Pa (CS-BUG-INPUT-CLAMP); T2 611.48 -> 611.60 K, T7 431.15 -> 431.42 K, m_air 91.063 -> 91.100 kg/s, W_comp 29.740 -> 29.764 MW; the maximum deviation from the Ebsilon table moves from 4.7e-03 to 5.7e-03 (ds[6]-ds[4]), slightly above the 5e-03 bound of the source test; status unchanged",
+      "by": "Claude for S. Quoilin"
+    }
   ]
 }

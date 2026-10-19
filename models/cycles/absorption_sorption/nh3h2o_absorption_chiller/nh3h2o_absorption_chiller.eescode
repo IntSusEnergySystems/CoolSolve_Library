@@ -1,0 +1,166 @@
+{=============================================================================
+  Single-effect ammonia-water absorption chiller with rectifier
+  CoolSolve Library model CSL-0249
+ -----------------------------------------------------------------------------
+  Ammonia is the refrigerant, water the absorbent. The strong solution leaves the
+  absorber saturated, is pumped, heated in a solution heat exchanger and boiled
+  in the generator (weak solution and ammonia-rich vapour). The rectifier purifies
+  the vapour to a given ammonia mass fraction; its reflux has the composition and
+  temperature of the weak solution. The refrigerant is condensed, sub-cooled
+  by the cold stream in a refrigerant heat exchanger, expanded and evaporated; the
+  weak solution is cooled, expanded and absorbs the vapour. One operating point.
+  Properties: EES fluid NH3H2O (ammonia mass fractions x, IAPWS G4-01 in CoolSolve).
+
+  Inputs : Q_dot_ev, T_ev, T_cd, T_abs, T_gen [C], x_ref, q_ev, effectivenesses, eta_pump
+  Outputs: pressures, state points 1 to 14, circulation ratio, heat rates [W], COP [-]
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : written for the library, standard single-effect cycle - see README.md
+=============================================================================}
+
+"!Given data"
+Q_dot_ev = 10000      "cooling capacity [W]"
+T_ev = -10            "evaporator inlet (saturated liquid) temperature, where the evaporation starts [C]"
+q_ev = 0.99           "vapour quality at the evaporator outlet [-]; the rest is a water-rich liquid (the evaporation of 0.9995 ammonia has a large temperature glide)"
+T_cd = 40             "condenser outlet (saturated liquid) temperature [C]"
+T_abs = 35            "absorber outlet (saturated strong solution) temperature [C]"
+T_gen = 120           "generator outlet (saturated weak solution) temperature [C]"
+x_ref = 0.9995        "ammonia mass fraction of the refrigerant leaving the rectifier [kg/kg]"
+epsilon_SHX = 0.7     "solution heat exchanger effectiveness (weak-solution side temperatures) [-]"
+epsilon_RHX = 0.7     "refrigerant heat exchanger effectiveness (liquid side temperatures) [-]"
+eta_pump = 0.6        "solution pump isentropic efficiency [-]"
+
+"!Pressures"
+P_low = PRESSURE(NH3H2O,T=T_ev,X=x_ref,Q=0)     "evaporator pressure: bubble point of the refrigerant at T_ev [Pa]"
+P_high = PRESSURE(NH3H2O,T=T_cd,X=x_ref,Q=0)    "condenser pressure: bubble point of the refrigerant at T_cd [Pa]"
+
+"!1: absorber outlet, saturated strong solution"
+P[1] = P_low                                    "[Pa]"
+T[1] = T_abs                                    "[C]"
+x[1] = MASSFRACTION(NH3H2O,T=T[1],P=P[1],Q=0)   "ammonia mass fraction of the strong solution [kg/kg]"
+h[1] = ENTHALPY(NH3H2O,T=T[1],P=P[1],Q=0)       "[J/kg]"
+s[1] = ENTROPY(NH3H2O,T=T[1],P=P[1],Q=0)        "[J/kg-K]"
+
+"!Solution pump 1 -> 2"
+P[2] = P_high                                   "[Pa]"
+x[2] = x[1]                                     "[kg/kg]"
+h_2s = ENTHALPY(NH3H2O,P=P[2],X=x[2],S=s[1])    "isentropic pump outlet [J/kg]"
+h[2] = h[1] + (h_2s - h[1])/eta_pump            "[J/kg]"
+T[2] = TEMPERATURE(NH3H2O,P=P[2],X=x[2],H=h[2]) "[C]"
+s[2] = ENTROPY(NH3H2O,P=P[2],X=x[2],H=h[2])     "[J/kg-K]"
+W_dot_pump = m_dot[1]*(h[2] - h[1])             "pump power [W]"
+
+"!3: strong solution leaving the solution heat exchanger"
+P[3] = P_high                                   "[Pa]"
+x[3] = x[1]                                     "[kg/kg]"
+h[3] = h[2] + Q_dot_SHX/m_dot[1]                "[J/kg]"
+T[3] = TEMPERATURE(NH3H2O,P=P[3],X=x[3],H=h[3]) "[C]"
+s[3] = ENTROPY(NH3H2O,P=P[3],X=x[3],H=h[3])     "[J/kg-K]"
+
+"!4: generator outlet, saturated weak solution"
+P[4] = P_high                                   "[Pa]"
+T[4] = T_gen                                    "[C]"
+x[4] = MASSFRACTION(NH3H2O,T=T[4],P=P[4],Q=0)   "ammonia mass fraction of the weak solution [kg/kg]"
+h[4] = ENTHALPY(NH3H2O,T=T[4],P=P[4],Q=0)       "[J/kg]"
+s[4] = ENTROPY(NH3H2O,T=T[4],P=P[4],Q=0)        "[J/kg-K]"
+
+"!Solution heat exchanger: weak solution 4 -> 5, strong solution 2 -> 3"
+P[5] = P_high                                   "[Pa]"
+x[5] = x[4]                                     "[kg/kg]"
+T[5] = T[4] - epsilon_SHX*(T[4] - T[2])         "[C]"
+h[5] = ENTHALPY(NH3H2O,T=T[5],P=P[5],X=x[5])    "[J/kg]"
+s[5] = ENTROPY(NH3H2O,T=T[5],P=P[5],X=x[5])     "[J/kg-K]"
+Q_dot_SHX = m_dot[4]*(h[4] - h[5])              "heat recovered [W]"
+
+"!Weak solution expansion valve 5 -> 6 (isenthalpic)"
+P[6] = P_low                                    "[Pa]"
+x[6] = x[4]                                     "[kg/kg]"
+h[6] = h[5]                                     "[J/kg]"
+T[6] = TEMPERATURE(NH3H2O,P=P[6],X=x[6],H=h[6]) "[C]"
+s[6] = ENTROPY(NH3H2O,P=P[6],X=x[6],H=h[6])     "[J/kg-K]"
+
+"!7: vapour leaving the generator, in equilibrium with the weak solution"
+P[7] = P_high                                   "[Pa]"
+T[7] = T_gen                                    "[C]"
+x[7] = MASSFRACTION(NH3H2O,T=T[7],P=P[7],Q=1)   "[kg/kg]"
+h[7] = ENTHALPY(NH3H2O,T=T[7],P=P[7],Q=1)       "[J/kg]"
+s[7] = ENTROPY(NH3H2O,T=T[7],P=P[7],Q=1)        "[J/kg-K]"
+
+"!Rectifier: vapour 7 -> refrigerant vapour 8 and reflux 9 (liquid of the composition and temperature of the weak solution)"
+P[8] = P_high                                   "[Pa]"
+x[8] = x_ref                                    "[kg/kg]"
+T[8] = TEMPERATURE(NH3H2O,P=P[8],X=x[8],Q=1)    "dew point of the refrigerant [C]"
+h[8] = ENTHALPY(NH3H2O,P=P[8],X=x[8],Q=1)       "[J/kg]"
+s[8] = ENTROPY(NH3H2O,P=P[8],X=x[8],Q=1)        "[J/kg-K]"
+P[9] = P_high                                   "[Pa]"
+T[9] = T[4]                                     "[C]"
+x[9] = x[4]                                     "[kg/kg]"
+h[9] = h[4]                                     "[J/kg]"
+s[9] = s[4]                                     "[J/kg-K]"
+m_dot[7] = m_dot[8] + m_dot[9]                  "mass [kg/s]"
+m_dot[7]*x[7] = m_dot[8]*x[8] + m_dot[9]*x[9]   "ammonia [kg/s]"
+Q_dot_rect = m_dot[7]*h[7] - m_dot[8]*h[8] - m_dot[9]*h[9]   "heat rejected by the rectifier [W]"
+
+"!Generator and rectifier together: strong solution 3 in, refrigerant 8 and weak solution 4 out"
+m_dot[1] = m_dot[8] + m_dot[4]                  "mass [kg/s]"
+m_dot[1]*x[1] = m_dot[8]*x[8] + m_dot[4]*x[4]   "ammonia [kg/s]"
+Q_dot_gen = m_dot[8]*h[8] + m_dot[4]*h[4] + Q_dot_rect - m_dot[1]*h[3]   "heat supplied to the generator [W]"
+m_dot[2] = m_dot[1]                             "[kg/s]"
+m_dot[3] = m_dot[1]                             "[kg/s]"
+m_dot[5] = m_dot[4]                             "[kg/s]"
+m_dot[6] = m_dot[4]                             "[kg/s]"
+
+"!Condenser: 8 -> 10, saturated liquid"
+P[10] = P_high                                  "[Pa]"
+T[10] = T_cd                                    "[C]"
+x[10] = x_ref                                   "[kg/kg]"
+h[10] = ENTHALPY(NH3H2O,P=P[10],X=x[10],Q=0)    "[J/kg]"
+s[10] = ENTROPY(NH3H2O,P=P[10],X=x[10],Q=0)     "[J/kg-K]"
+Q_dot_cd = m_dot[8]*(h[8] - h[10])              "condenser heat rate [W]"
+
+"!13: evaporator outlet, vapour quality q_ev"
+P[13] = P_low                                   "[Pa]"
+x[13] = x_ref                                   "[kg/kg]"
+T[13] = TEMPERATURE(NH3H2O,P=P[13],X=x[13],Q=q_ev) "[C]"
+h[13] = ENTHALPY(NH3H2O,P=P[13],X=x[13],Q=q_ev) "[J/kg]"
+s[13] = ENTROPY(NH3H2O,P=P[13],X=x[13],Q=q_ev)  "[J/kg-K]"
+
+"!Refrigerant heat exchanger: liquid 10 -> 11, cold stream 13 -> 14 (effectiveness on the liquid temperatures, relative to T[13])"
+P[11] = P_high                                  "[Pa]"
+x[11] = x_ref                                   "[kg/kg]"
+T[11] = T[10] - epsilon_RHX*(T[10] - T[13])     "[C]"
+h[11] = ENTHALPY(NH3H2O,T=T[11],P=P[11],X=x[11]) "[J/kg]"
+s[11] = ENTROPY(NH3H2O,T=T[11],P=P[11],X=x[11]) "[J/kg-K]"
+P[14] = P_low                                   "[Pa]"
+x[14] = x_ref                                   "[kg/kg]"
+h[14] = h[13] + (h[10] - h[11])                 "[J/kg]"
+T[14] = TEMPERATURE(NH3H2O,P=P[14],X=x[14],H=h[14]) "[C]"
+s[14] = ENTROPY(NH3H2O,P=P[14],X=x[14],H=h[14]) "[J/kg-K]"
+
+"!Refrigerant expansion valve 11 -> 12 (isenthalpic) and evaporator"
+P[12] = P_low                                   "[Pa]"
+x[12] = x_ref                                   "[kg/kg]"
+h[12] = h[11]                                   "[J/kg]"
+T[12] = TEMPERATURE(NH3H2O,P=P[12],X=x[12],H=h[12]) "[C]"
+s[12] = ENTROPY(NH3H2O,P=P[12],X=x[12],H=h[12]) "[J/kg-K]"
+Q_dot_ev = m_dot[8]*(h[13] - h[12])             "cooling capacity [W]"
+m_dot[10] = m_dot[8]                            "[kg/s]"
+m_dot[11] = m_dot[8]                            "[kg/s]"
+m_dot[12] = m_dot[8]                            "[kg/s]"
+m_dot[13] = m_dot[8]                            "[kg/s]"
+m_dot[14] = m_dot[8]                            "[kg/s]"
+
+"!Absorber: vapour 14 and weak solution 6 absorbed into the strong solution 1"
+Q_dot_abs = m_dot[14]*h[14] + m_dot[6]*h[6] - m_dot[1]*h[1]   "heat rejected by the absorber [W]"
+
+"!Vapour quality of the states that can be two-phase"
+q[3] = QUALITY(NH3H2O,P=P[3],X=x[3],H=h[3])     "strong solution leaving the solution heat exchanger, -0.001 = sub-cooled liquid [-]"
+q[5] = QUALITY(NH3H2O,P=P[5],X=x[5],H=h[5])     "weak solution leaving the solution heat exchanger [-]"
+q[6] = QUALITY(NH3H2O,P=P[6],X=x[6],H=h[6])     "weak solution after its expansion valve [-]"
+q[12] = QUALITY(NH3H2O,P=P[12],X=x[12],H=h[12]) "refrigerant after its expansion valve [-]"
+q[13] = q_ev                                    "evaporator outlet [-]"
+q[14] = QUALITY(NH3H2O,P=P[14],X=x[14],H=h[14]) "refrigerant heat exchanger outlet, cold side [-]"
+
+"!Performance and global energy balance"
+COP = Q_dot_ev/Q_dot_gen                        "thermal coefficient of performance [-]"
+f_circ = m_dot[1]/m_dot[8]                      "circulation ratio: strong solution per kg of refrigerant [-]"
+E_check = Q_dot_gen + Q_dot_ev + W_dot_pump - Q_dot_abs - Q_dot_cd - Q_dot_rect   "closure of the energy balance of the whole cycle [W]"

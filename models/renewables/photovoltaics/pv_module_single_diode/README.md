@@ -1,12 +1,11 @@
 # PV module single-diode I-V curve
 
-🟢 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** (verified variant) &nbsp;|&nbsp; `CSL-0160`
+🟢 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0160`
 
 Five-parameter single-diode model of a flat-plate PV module: the module
 parameters are read by name from an embedded `PVModules` lookup table and the
 I-V (and P-V) curve is computed in 100 voltage points at a given cell
-temperature and irradiance. The native file is blocked by CoolSolve lookup
-gaps; the verified variant `pv_module_single_diode_coolsolve.eescode` runs it.
+temperature and irradiance.
 
 | | |
 |---|---|
@@ -16,7 +15,7 @@ gaps; the verified variant `pv_module_single_diode_coolsolve.eescode` runs it.
 | **Source** | ULiège Thermodynamics Laboratory course file `modeles/photovoltaique/PV_model.EES` (EES X7.991), derived from the University of Wisconsin Solar Energy Laboratory PV module model |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory); original formulation: W. De Soto, S. A. Klein, W. A. Beckman (Solar Energy Laboratory, UW-Madison) |
 | **License** | MIT |
-| **CoolSolve** | native **blocked** (`CS-GAP-END-PROCEDURE`, `CS-GAP-LOOKUPROW`, `CS-BUG-LOOKUP-STRING`, `CS-GAP-CONVERT-UNQUOTED`); variant verified against the EES stored solution |
+| **CoolSolve** | native file runs; verified against the EES stored solution |
 
 ## Problem statement
 
@@ -49,13 +48,13 @@ The original reads the module row with `LOOKUP$ROW` on the string column
 ## How to run
 
 ```bash
-coolsolve ./pv_module_single_diode_coolsolve.eescode
+coolsolve ./pv_module_single_diode.eescode
 ```
 
-The variant selects the module row by number (`Row`, 1…8; the mapping of the
-8 module names is in the comment at `Row`). The native
-`pv_module_single_diode.eescode` documents the original EES formulation and is
-kept in valid EES syntax.
+The module is selected by name with `PVModule$` (the 8 names of the `PVModules`
+table: `Solarex_Multi-crystal_Si`, `II-10`, `II-13`, `II-11`, `I-14`, `II-15`,
+`II-01`, `I-05`); the file is valid EES and reads the table in `PROCEDURE
+ReadPV` with `LOOKUP$ROW` and named-column lookups, as the original does.
 
 ## Results
 
@@ -76,15 +75,18 @@ obtained at T_c = 32 °C is consistent with the catalogue power coefficient
 
 ## Verification
 
-1. **Variant vs EES stored solution** (`compare_solution.py`): 333 common
+1. **EES stored solution** (`compare_solution.py`): 333 common
    variables, 1 differ at `rtol=0.001` — `P[1]` only: EES −2.04506e-08 W,
    CoolSolve 0 W (V[1] = 0; absolute difference 2·10⁻⁸ W). Excluding it, the
    largest relative deviation on the 332 remaining variables is 1.37e-06
    (`I[97]`); all module parameters and model variables agree to better than
    1e-6 relative. The `only in EES` variables are stale array records left in
    the binary by earlier file versions (I/V/P[888…1001], `inf` values), not
-   model variables; the 4 `only in CoolSolve` variables are the inputs the
-   original took from its diagram window (`PVModule$`, `T_c`, `G`) and `Row`.
+   model variables; the `only in CoolSolve` variables are the inputs the
+   original took from its diagram window (`PVModule$`, `T_c`, `G`). The
+   comparison was made with the solution of the first runnable form of the
+   file (module row given by its number); the file as it stands reproduces
+   that solution to 2.5·10⁻⁶ relative on all common variables.
 2. **I-V parametric table.** The original stores a 100-row × 3-column
    parametric table (`I[i]`, `P[i]`, `V[i]`) — the plotted curve of the last
    run. Its 300 cells were decoded by hand from the binary (the extractor
@@ -143,25 +145,8 @@ ULiège course data.
   are what the extractor's heuristic does not skip (cf.
   `CS-BUG-EXTRACT-LOOKUP-STRING`). The hand decoding was validated against the
   EES stored solution (all 8 rows × 16 parameters of module II-10 and the
-  300 I-V cells match exactly). The native file ships the table as EES expects
-  it (`pv_module_single_diode-pvmodules.csv`, all 22 columns, string key); the
-  variant has its own numeric-key companion table
-  (`pv_module_single_diode_coolsolve-pvmodules.csv`: `Row` + the 16 parameter
-  columns, same values).
-- **Variant changes** (each forced by a registered gap, valid EES throughout):
-  1. `END ReadPV` → no PROCEDURE: `PROCEDURE ReadPV` is flattened into the
-     main program; CoolSolve also rejects the named terminator
-     (`CS-GAP-END-PROCEDURE` — *"Procedure 'ReadPV' missing END"*).
-
-  2. `Row = LOOKUP$ROW('PVModules','PV Name',PVModule$)` → `Row = 2` with the
-     name→row mapping in a comment (`CS-GAP-LOOKUPROW`).
-  3. The 16 named-column lookups → positional numeric lookups
-     `Lookup('pvmodules', Row, <col nr>)` on the numeric-key companion table
-     (`CS-BUG-LOOKUP-STRING` string columns; column-name strings avoided). Table name lowercase `pvmodules` = companion
-     file name convention; EES table names are case-insensitive.
-  4. `ConvertTemp(C,K,·)` → `ConvertTemp('C','K',·)` (`CS-GAP-CONVERT-UNQUOTED`:
-     unquoted unit names become variables, system not square).
-  Variable names, equations and values are otherwise unchanged.
+  300 I-V cells match exactly). The model ships the table as EES expects it
+  (`pv_module_single_diode-pvmodules.csv`, all 22 columns, string key).
 
 - **Level**: score 4 of taxonomy §3 (equations band 2 for 337 equations,
   structures 1, semi-empirical parameters 1) → moved to level 2: the 300
@@ -170,10 +155,6 @@ ULiège course data.
   plus one scalar implicit diode equation per point, with default guesses.
 
 ## Limitations and CoolSolve gaps
-
-- Native file blocked (the file stays in valid EES): `CS-GAP-END-PROCEDURE` (parse fails
-  first), `CS-GAP-CONVERT-UNQUOTED` (not square: `C`/`K` taken as variables), then
-  `CS-GAP-LOOKUPROW` and `CS-BUG-LOOKUP-STRING` on the table read.
 
 - The `II-06` entry of the original diagram-window module list has no row in
   the local `PVModules` table (8 rows); selecting it in EES would fail — the

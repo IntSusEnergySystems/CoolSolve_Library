@@ -5,7 +5,7 @@
   "summary": "Octane burned with 400 % theoretical air in steady flow: adiabatic flame temperature from the first law on the combustion reaction (formation enthalpies), fuel-air ratio and stoichiometric dosage; excess-air effect on the flame temperature.",
   "kind": "steady",
   "level": 1,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "octane_combustion_400pct_air.eescode",
   "fluids": [
     "CO2",
@@ -43,17 +43,17 @@
     "course": "Thermodynamique appliquée (ULiège MECA0002), repetition 11, exercise 1"
   },
   "verification": {
-    "summary": "Not the native file (blocked by `CS-GAP-FLUIDS-C8H18`): the runnable `_coolsolve` variant was compared with the solution stored in the original EES file; the 3 flagged variables are unit-annotation artifacts and the maximum relative deviation is 2.2e-4 on `TAF` (688.56 vs 688.71 °C).",
-    "checks": ["ees-stored-solution"],
-    "reference": "EES stored solution of the source file (compare_solution.py --ees-units) against the runnable _coolsolve variant (the native file is blocked, see missing_features)",
-    "date": "2026-10-05",
-    "coolsolve_version": "0.3.0",
+    "summary": "Compared with the solution stored in the original EES file: the 3 flagged variables are unit-annotation artifacts and the maximum relative deviation is 2.2e-4 on `TAF` (688.56 vs 688.71 °C).",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution of the source file (compare_solution.py --ees-units)",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": 0.00022,
-    "notes": "35 common variables, 3 differ (rtol=0.001) - all 3 are unit-annotation artifacts, hand-checked (h_H2O_*_bis stored without units in kJ/kg: 8.7e-5; TAF_K stored in K but converted by the tool: 1.5e-4). Max over all common variables 2.2e-4 on TAF (CoolProp's ideal-gas enthalpy rise vs EES; the absolute species enthalpies h_CO2_*, h_H2O_* agree with the stored values within 1.4e-4). Stale EES records x, y, mm ignored."
+    "notes": "35 common variables, 3 differ (rtol=0.001) - all 3 are unit-annotation artifacts, hand-checked (h_H2O_*_bis stored without units in kJ/kg: 8.7e-5; TAF_K stored in K but converted by the tool: 1.5e-4). Max over all common variables 2.2e-4 on TAF (CoolProp's ideal-gas enthalpy rise vs EES; the absolute species enthalpies h_CO2_*, h_H2O_* agree with the stored values within 1.4e-4). Stale EES records x, y, mm ignored. Comparison made with the solution of the earlier runnable variant (MM_f = 114.23), which the native file reproduces to 8.8e-6 (molarmass(C8H18) = 114.229 in CoolSolve; TAF identical; CoolSolve 0.3.0@4798e2b)."
   },
-  "missing_features": [
-    "CS-GAP-FLUIDS-C8H18"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0005",
     "CSL-0058",
@@ -73,6 +73,11 @@
       "date": "2026-10-11",
       "action": "re-baselined: NASA-Glenn formation enthalpies (CoolSolve 9aa2842); only the 4 absolute species-enthalpy variables of the _coolsolve variant changed (h_CO2_ref/taf +227 J/kg, h_H2O_ref/taf -333 J/kg, 2.5e-5 relative; TAF and every other result unchanged): CO2 closer to the EES stored values (9.1e-5 to 6.6e-5), H2O farther (7.7e-5 to 1.0e-4)",
       "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b, CS-GAP-FLUIDS-C8H18 closed): the native file solves and reproduces the earlier variant to 8.8e-6 (molarmass(C8H18) = 114.229 vs 114.23), TAF identical; status verified, variant and its .sol deleted, guess file renamed to the native name, native .sol added",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

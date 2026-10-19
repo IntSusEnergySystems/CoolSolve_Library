@@ -12,10 +12,6 @@
   (repetition 11, exercise 2): COP of the simple cycle once a 75 % effective
   solution heat exchanger is added between absorber and generator.
 
-  BLOCKED in CoolSolve: X_LIBR/H_LIBR are not implemented (gap
-  CS-GAP-FLUIDS-ABS, already registered for the CoolSolve example
-  water_libr). The file is kept in native EES syntax.
-
   Inputs : T_ev, T_abs, T_cd, T_gen [C], DELTAT_oh, DELTAT_sc [K],
            M_dot_w [kg/s], epsilon_HEX [-]
   Outputs: x_abs, x_gen (mass %), solution flow rates [kg/s], Q_dot_ev,
@@ -74,7 +70,7 @@ Q_dot_HEX = M_dot_rich*(h_rich_gen_ex - h_rich_abs_su)                   "rich s
 COP = Q_dot_ev/Q_dot_gen                     "coefficient of performance [-]"
 
 "!State points for the thermodynamic diagrams (water loop; post-processing added
- by the library, results unchanged; not exercised until CS-GAP-FLUIDS-ABS is closed)"
+ by the library, results unchanged)"
 P[1] = P_ev                                  "1: evaporator outlet [Pa]"
 T[1] = T_ev                                  "[C]"
 h[1] = h_w_ev_ex                             "[J/kg]"

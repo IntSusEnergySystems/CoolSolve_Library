@@ -23,25 +23,25 @@
   Companion tables: brine_to_water_heat_pump_refsim-Brine1.csv (198 x 5
            polynomial coefficients) and -Brine2.csv (11 x 2 mean
            concentration and temperature), decoded from the binary lookup
-           files Brine1.lkt / Brine2.lkt of the BrineProp library (CS-GAP-LKT,
-           library model CSL-0079); -Units.csv (5 x 1 unit labels of
+           files Brine1.lkt / Brine2.lkt of the BrineProp library (library
+           model CSL-0079); -Units.csv (5 x 1 unit labels of
            BRINEPROP, read with LOOKUP$).
 
-  Status: BLOCKED in CoolSolve (the native file is kept in valid EES): the
-  BRINEPROP procedure copied below uses the EES "ELSE IF" chains closed by
-  repeated "ENDIF" keywords (CS-GAP-ELSEIF-CHAIN) and the intrinsic string
-  function Uppercase$ (CS-GAP-UPPERCASE). A faithful runnable variant is shipped as
-  brine_to_water_heat_pump_refsim_coolsolve.eescode; every change is logged in
-  its header and in the README.
-=============================================================================}
+  Status: FAILING in CoolSolve: the model is over-determined by three
+   equations as the original stands (P_ev, P_cd and M_dot_r are assigned
+   inputs although three duplicated relations of the original determine
+   them); with those assignments removed the system is square but its
+   76-variable block does not converge. A faithful runnable variant is
+   shipped as brine_to_water_heat_pump_refsim_coolsolve.eescode; every
+   change is logged in its header and in the README.
+ =============================================================================}
 
 {--- Library procedure copied from the BrineProp library (Brineprop.lib of
-     the ULiège model bank, inventory candidate TM-0479, tables Brine1/
-     Brine2): EES loads it implicitly from the USERLIB folder. Copied
-     unchanged except for the removal of the dead code after END (this is
-     the standard workaround of CS-GAP-INCLUDE / CS-FEAT-IMPORT) and the
-     string array U$ of the unit labels, which is the lookup table Units
-     read with LOOKUP$ (library decision D14). ---}
+      the ULiège model bank, inventory candidate TM-0479, tables Brine1/
+      Brine2): EES loads it implicitly from the USERLIB folder. Copied
+      unchanged except for the removal of the dead code after END and of the
+      unit labels, which are the rows of the lookup table Units read with
+      LOOKUP$. ---}
 
 Procedure BRINEPROP(Pr$,Fl$,Conc,Temp:output)
 

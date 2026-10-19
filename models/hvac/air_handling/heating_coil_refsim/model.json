@@ -5,7 +5,7 @@
   "summary": "Reference simulation model of a hot-water air heating coil from the ULiège model bank: a counter-flow exchanger whose duty follows the epsilon-NTU relation, with the overall conductance as the series of the air-side, metal and water-side resistances scaled with the flow rates.",
   "kind": "steady",
   "level": 2,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "heating_coil_refsim.eescode",
   "fluids": [
     "AirH2O",
@@ -43,17 +43,17 @@
     "course": "ULiège model bank, heating coil reference simulation model, 2008-03-17"
   },
   "verification": {
-    "summary": "Concerns the runnable variant (native file blocked by CS-BUG-HUMIDAIR-PROPS: Density(AirH2O) returns 1E4). Against the EES stored solution: 43 common variables, 3 differ above rtol = 0.001, maximum 4.11e-03 on the humidity ratio (CoolProp vs EES humid air).",
-    "checks": ["ees-stored-solution"],
-    "reference": "EES stored solution in HEATINGCOIL_REFSIM_EES_MODEL_SB080317.EES (48 decoded variables) against the runnable variant heating_coil_refsim_coolsolve.eescode",
-    "date": "2026-10-15",
-    "coolsolve_version": "0.3.0@261f0b9",
+    "summary": "Against the EES stored solution: 43 common variables, 3 differ above rtol = 0.001, maximum 4.11e-03 on the humidity ratio (CoolProp vs EES humid air).",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution in HEATINGCOIL_REFSIM_EES_MODEL_SB080317.EES (48 decoded variables)",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": 0.00411,
-    "notes": "43 common variables, 3 differ above rtol=0.001, maximum relative difference 4.11e-03 (w_su_heatingcoil and w_ex_heatingcoil, 0.00146432 against 0.0014583). RH_ex_heatingcoil differs by 1.58e-03. Both come from the EES and CoolProp humid-air formulations, as in the other humid-air models of the library. At rtol=1e-4, 19 variables differ; the largest after the humidity ratio are omega_heatingcoil 9.93e-04 and c_p_w_heatingcoil 7.84e-04 (water specific heat). Q_dot_heatingcoil, AU_heatingcoil and both pressure drops stay within 1e-4. Five decoded EES names are not variables of the model: a, b, c, M_dot_w_hotwater, W_dot_pump (Diagram-window leftovers, no equation)."
+    "notes": "43 common variables, 3 differ above rtol=0.001, maximum relative difference 4.11e-03 (w_su_heatingcoil and w_ex_heatingcoil, 0.00146432 against 0.0014583). RH_ex_heatingcoil differs by 1.58e-03. Both come from the EES and CoolProp humid-air formulations, as in the other humid-air models of the library. At rtol=1e-4, 19 variables differ; the largest after the humidity ratio are omega_heatingcoil 9.93e-04 and c_p_w_heatingcoil 7.84e-04 (water specific heat). Q_dot_heatingcoil, AU_heatingcoil and both pressure drops stay within 1e-4. Five decoded EES names are not variables of the model: a, b, c, M_dot_w_hotwater, W_dot_pump (Diagram-window leftovers, no equation). Re-checked with CoolSolve 0.3.0@4798e2b: the native file (Density(AirH2O) = 1/Volume per kg of dry air) solves in 11 iterations with the guess file and reproduces the earlier variant in all 43 variables (6e-11)."
   },
-  "missing_features": [
-    "CS-BUG-HUMIDAIR-PROPS"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0074"
   ],
@@ -65,6 +65,11 @@
       "date": "2026-10-15",
       "action": "added",
       "by": "Cursor agent for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b, CS-BUG-HUMIDAIR-PROPS closed): the native file solves (11 iterations with the guess file) and reproduces the earlier variant in all 43 variables; status verified, variant and its .sol deleted, guess file renamed, native .sol added",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

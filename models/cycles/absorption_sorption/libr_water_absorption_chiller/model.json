@@ -5,7 +5,7 @@
   "summary": "Single-effect LiBr-H2O absorption chiller at one operating point: solution concentrations from the EES built-in X_LIBR/H_LIBR routines, mass and LiBr conservation for the weak/rich solution flow rates, generator energy balance for the driving heat and the COP, 75 % solution heat exchanger.",
   "kind": "steady",
   "level": 2,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "libr_water_absorption_chiller.eescode",
   "fluids": [
     "Water",
@@ -20,7 +20,7 @@
     "exercise"
   ],
   "language_features": [
-    "EES built-in LiBr solution routines X_LIBR and H_LIBR",
+    "EES built-in LiBr solution routines X_LIBR and H_LIBR (ASHRAE correlations)",
     "property functions (Water)"
   ],
   "stats": {
@@ -42,18 +42,20 @@
     "course": "Machines et systèmes thermiques (ULiège), repetition 11 (LiBr-H2O absorption chiller), exercise 2"
   },
   "verification": {
-    "summary": "Not verified: the model is blocked by `CS-GAP-FLUIDS-ABS` (no LiBr solution properties) and does not run in CoolSolve; the EES stored solution is only the reference for a future re-check.",
-    "checks": [],
-    "reference": "EES stored solution of the original file TM-0167 (30/30 variables), reported in the README as the target for the re-check; the model does not solve in CoolSolve, so no comparison was made",
-    "date": "2026-10-05",
-    "coolsolve_version": "0.3.0@536d427",
-    "max_rel_diff": null,
-    "notes": "Blocked, not verified. coolsolve ./libr_water_absorption_chiller.eescode -> Block 16 failed: Unknown or unsupported function: X_LIBR with 3 arguments (gap CS-GAP-FLUIDS-ABS, already registered for the CoolSolve example water_libr). The system is square (46 equations / 46 variables, largest block 3); the water-side property calls are supported."
+    "summary": "CoolSolve solution against the EES stored solution of the original file (30 of 30 variables): 30 common variables, 0 differ at rtol=0.001; maximum relative difference 5.6e-04 (M_dot_rich), of the size expected from the water property backends (saturation pressure at 45 C 9595.0 vs 9589.78 Pa).",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution of the original file TM-0167 (MSTH-SB-R11-EX2.EES, 30/30 variables)",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
+    "max_rel_diff": 0.00056,
+    "notes": "30 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 16 (diagram state points). Largest differences: M_dot_rich 5.6e-04, Q_dot_HEX 5.5e-04, P_cd 5.4e-04, M_dot_libr 5.1e-04; COP 0.746646 vs 0.746697 (6.8e-05). Solves in 59 iterations from the default guesses."
   },
-  "missing_features": [
-    "CS-GAP-FLUIDS-ABS"
+  "missing_features": [],
+  "related": [
+    "CSL-0249"
   ],
-  "related": [],
   "related_external": [
     "CoolSolve examples/water_libr.eescode (verbatim transcription of the same original, kept as test case for CS-GAP-FLUIDS-ABS)"
   ],
@@ -64,6 +66,11 @@
       "date": "2026-10-05",
       "action": "added (roadmap card C-45: CoolSolve example CSX-046 and its EES original TM-0167 added; TM-0164/0165/0166/0168/0169/0170 and TM-0466/0467/0468 merged as described variants of the same exercise)",
       "by": "opencode worker for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b, CS-GAP-FLUIDS-ABS closed for X_LIBR/H_LIBR): the native file solves (59 iterations) and matches the EES stored solution (30/30 variables, max 5.6e-04); status verified, native .sol added",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

@@ -47,10 +47,13 @@
   },
   "verification": {
     "summary": "Compared with the EES stored solution: 12 common variables, 7 differ at rtol=0.001. The property states agree (v_su_cp 0.011 %), but the catalogue-dependent outputs differ by a factor 3-4 because the stored run used a table version absent from the collection; the M polynomial recomputed in Python agrees to the last digit.",
-    "checks": ["ees-stored-solution", "analytical"],
+    "checks": [
+      "ees-stored-solution",
+      "analytical"
+    ],
     "reference": "EES stored solution of the source file for the property states (T_ev, T_cd, T_su_cp, v_su_cp within 0.03 %, h_su_cp shifted by the 148.16 kJ/kg R134a reference-state offset) and exactness self-checks for the function (W_err = 0; M polynomial recomputed in Python from the shipped tables). The catalogue-dependent outputs are not comparable: the stored run used an older external version of the ZH38K4E-TFD table (Vs = 82.61 cm^3, factor 3-4 in W) that is absent from the collection. Comparison run on the native file; it equals the former _coolsolve variant on all 13 variables.",
-    "date": "2026-10-10",
-    "coolsolve_version": "0.3.0@d5d6b37",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": 0.029,
     "notes": "Native file (lookup(table$, i+1, coef$) in a FUNCTION) now run and compared, with CoolSolve fix/library-gaps-2 (CS-BUG-LOOKUP-COL-ARG and CS-GAP-LOOKUP-PROC closed): the .sol equals the one of the former variant on the 13 variables (max relative difference 2e-12, h_su_cp). compare_solution.py: 12 common variables, 7 differ (rtol=0.001): T_ev rel. diff 2.9e-2 as printed (0.019 K absolute on a 0.65 C saturation temperature), T_su_cp 3.4e-3 (same cause); h_su_cp differs by the documented reference-state offset; W_dot/M_dot/Vs/epsilon_v differ by the documented catalogue vintage. Status runs, not verified: the function results (the purpose of the model) have no independent reference because the table of the stored run is lost; only the property states and the exactness of the polynomial are checked."
   },
@@ -79,6 +82,11 @@
       "date": "2026-10-14",
       "action": "status runs → verified (verification field)",
       "by": "claude-haiku"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b): the original 'until i>9' and convert(lbm/hr,kg/s) restored (CS-GAP-REPEAT-UNTIL-BARE and CS-BUG-CONVERT-UNIT are closed); solution unchanged (1.7e-12)",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

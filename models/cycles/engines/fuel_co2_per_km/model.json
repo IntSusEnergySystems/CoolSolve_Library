@@ -5,7 +5,7 @@
   "summary": "Teaching exercise: CO2 mass emitted per kilometre from a fuel consumption in L/100 km, by complete combustion of a hydrocarbon CmHn. The fuel is a chemical formula, a density and a volume consumption, for diesel or gasoline.",
   "kind": "steady",
   "level": 1,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "fuel_co2_per_km.eescode",
   "fluids": [
     "CO2"
@@ -43,21 +43,19 @@
     "course": "ULiège MCI, TP7, exercise 3 (CO2 emissions from fuel consumption)."
   },
   "verification": {
-    "summary": "Concerns the runnable variant (native file blocked by CS-GAP-MOLARMASS-ELEMENT). compare_solution.py against the stored solution of Ex_3_PNG_2019.EES: 6 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 3. Largest relative difference 4.54e-06 on MM_CO2 (CoolProp 44.0098 kg/kmol, EES 44.01). At Conso = 5 L/100 km, CO2 is 131.770 g/km.",
+    "summary": "compare_solution.py against the stored solution of Ex_3_PNG_2019.EES: 6 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 3. Largest relative difference 4.54e-06 on MM_CO2 (CoolProp 44.0098 kg/kmol, EES 44.01). At Conso = 5 L/100 km, CO2 is 131.770 g/km.",
     "checks": [
       "ees-stored-solution",
       "analytical",
       "order-of-magnitude"
     ],
-    "reference": "EES stored solution of Ex_3_PNG_2019.EES (6 variables decoded by ees_extract.py), compared with the runnable variant",
-    "date": "2026-10-15",
-    "coolsolve_version": "0.3.0@17e9bcc",
+    "reference": "EES stored solution of Ex_3_PNG_2019.EES (6 variables decoded by ees_extract.py)",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": 4.54e-06,
-    "notes": "No common variable exceeds rtol 0.001. MM_CO2 is MolarMass(CO2): CoolProp returns 44.0098 kg/kmol and EES stores 44.01. MM_f = 12*12.0107 + 26*1.00794 equals the stored 170.33484 (relative difference printed 0.00e+00). CO2 and Conso_kmol are absent from the 6 decoded variables. The emission equation with the stored MM_CO2 gives CO2 = 131.770458704 g/km; the variant gives 131.769859883 g/km (relative 4.54e-06, the same gap as MM_CO2). Fuel$ is the string 'diesel'; CoolSolve also writes it as 0 in the numeric list. With the stored guesses and without them the solver reports 0 iterations and the same solution. The warning \"Did you mean 'CO2'?\" is CS-BUG-FLUID-HINT-CO2 and leaves the value unchanged."
+    "notes": "No common variable exceeds rtol 0.001. MM_CO2 is MolarMass(CO2): CoolProp returns 44.0098 kg/kmol and EES stores 44.01. MM_f = 12*12.0107 + 26*1.00794 equals the stored 170.33484 (relative difference printed 0.00e+00). CO2 and Conso_kmol are absent from the 6 decoded variables. The emission equation with the stored MM_CO2 gives CO2 = 131.770458704 g/km; the variant gives 131.769859883 g/km (relative 4.54e-06, the same gap as MM_CO2). Fuel$ is the string 'diesel'; CoolSolve also writes it as 0 in the numeric list. The native file (MolarMass(C), MolarMass(H) = 12.0107, 1.00794 kg/kmol) solves in 0 iterations and reproduces the earlier runnable variant exactly (CoolSolve 0.3.0@4798e2b)."
   },
-  "missing_features": [
-    "CS-GAP-MOLARMASS-ELEMENT"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0185"
   ],
@@ -69,6 +67,11 @@
       "date": "2026-10-15",
       "action": "added",
       "by": "Cursor agent for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b, CS-GAP-MOLARMASS-ELEMENT closed): the native file solves (0 iterations) and reproduces the earlier variant exactly; status verified, variant, guess file and its .sol deleted, native .sol added",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

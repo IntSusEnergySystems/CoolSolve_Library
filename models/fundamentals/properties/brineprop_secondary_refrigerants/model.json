@@ -5,7 +5,7 @@
   "summary": "Single EES procedure BRINEPROP of the ULiège BrineProp library: freezing point, density, specific heat, thermal conductivity and dynamic viscosity of eleven aqueous secondary refrigerants (EG, PG, EA, MA, GL, NH3, K2CO3, CaCl2, MgCl2, NaCl, KAc) as a function of mass concentration and temperature, from an 18-term polynomial read in two coefficient lookup tables.",
   "kind": "function",
   "level": 2,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "brineprop_secondary_refrigerants.eescode",
   "fluids": [
     "EG",
@@ -43,7 +43,7 @@
     "CALL ERROR"
   ],
   "stats": {
-    "n_equations": 440,
+    "n_equations": 18,
     "largest_block": 1
   },
   "origin": {
@@ -61,18 +61,15 @@
     "course": "ULiège model bank (Laborelec toolkit lineage), Model data bank / AHU_Components, 1997"
   },
   "verification": {
-    "summary": "Concerns the runnable variant (native file blocked). Compared with the stored solution of the glycol run-around loop model of the same library: 3 common variables, 0 differ (rtol=0.001), maximum relative difference 4.77e-10. The decoded tables also agree with those of CSL-0072.",
+    "summary": "Compared with the stored solution of the glycol run-around loop model of the same library: 3 common variables, 0 differ (rtol=0.001), maximum relative difference 4.77e-10 (rho_brine_2). The decoded tables also agree with those of CSL-0072.",
     "checks": ["ees-stored-solution", "cross-model"],
-    "reference": "EES stored solution of the glycol run-around loop reference model of the same library (GLYCOLRECOVERYLOOP_RefSim_EES_Model_SB080116.EES, EES 7.888, inventory TM-0476): BRINEPROP for ethylene glycol 25 % at t_gw_m = 6.324036551 °C stores rho_gw, c_p_gw and mu_gw; concerns the runnable variant brineprop_secondary_refrigerants_coolsolve.eescode (the native file is blocked)",
-    "date": "2026-10-05",
-    "coolsolve_version": "0.3.0@536d427",
+    "reference": "EES stored solution of the glycol run-around loop reference model of the same library (GLYCOLRECOVERYLOOP_RefSim_EES_Model_SB080116.EES, EES 7.888, inventory TM-0476): BRINEPROP for ethylene glycol 25 % at t_gw_m = 6.324036551 °C stores rho_gw, c_p_gw and mu_gw",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@a77efaa",
     "max_rel_diff": 4.77e-10,
-    "notes": "3 common variables, 0 differ (rtol=0.001); maximum relative difference 4.77e-10 (rho_brine_2), from the 80-bit to 64-bit rounding of the hand-decoded Brine1/Brine2 coefficient tables (c_p_brine_2 7.88e-13, mu_brine_2 4.38e-11). No reference variable excluded; the 437 CoolSolve-only variables are the internal variables of the ten flattened property blocks, the selector outputs and the five case-1 properties (a .lib file stores no solution of its own, so the reference holds only the three properties the glycol model stores). The same decode reproduces the CSL-0072 reference point (EG 25 % at 25 °C) to 2.9e-09 (rho) and 6.2e-09 (c_p). The native file does not parse (CS-GAP-ELSEIF-CHAIN)."
+    "notes": "3 common variables, 0 differ (rtol=0.001); maximum relative difference 4.77e-10 (rho_brine_2), from the 80-bit to 64-bit rounding of the hand-decoded Brine1/Brine2 coefficient tables (c_p_brine_2 2.2e-10, mu_brine_2 3.4e-12). No reference variable excluded; the reference holds only the three properties the glycol model stores, the other fifteen variables of the solution (demonstration outputs without an EES reference) are not compared. The same decode reproduces the CSL-0072 reference point (EG 25 % at 25 °C) to 2.9e-09 (rho) and 6.2e-09 (c_p)."
   },
-  "missing_features": [
-    "CS-GAP-ELSEIF-CHAIN",
-    "CS-GAP-UPPERCASE"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0072",
     "CSL-0074",
@@ -107,6 +104,11 @@
       "date": "2026-10-10",
       "action": "string array U$[…] of BRINEPROP replaced by the lookup table brineprop_secondary_refrigerants-Units.csv and LOOKUP$ (decision D14: string arrays are not supported by CoolSolve); missing_features: CS-GAP-STRING-ARRAY removed; still blocked (CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE); native file checked in a scratch copy with the frozen binary: no string-array error, first error is the ELSE IF chain (CS-GAP-ELSEIF-CHAIN); in a scratch copy with the ELSE IF chains and Uppercase$ worked around the native BRINEPROP (UO$ read from Units with LOOKUP$) gives the variant values to 4.8e-10; variant unchanged, its .sol unchanged",
       "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked with CoolSolve 0.3.0@a77efaa (T-RECHECK, CS-GAP-ELSEIF-CHAIN and CS-GAP-UPPERCASE closed): the native file solves unchanged (289 iterations, SUCCESS; warnings P008 for the 2 surplus ENDIFs of Brineprop.lib); status verified on the native file (3 common variables with the glycol-loop EES reference, 0 differ, max 4.77e-10 as before); native .sol written as the baseline; _coolsolve variant, its .sol and its companion tables deleted (the native file reproduces the variant to 4.8e-10); README and file header rewritten",
+      "by": "opencode worker (GLM) for S. Quoilin"
     }
   ]
 }

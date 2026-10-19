@@ -5,7 +5,7 @@
   "summary": "Year-by-year cash flow of an energy-saving measure over its lifetime: discounted cash flow method (net present value NPV_1 of the escalated benefit and cost, discounted at the rate k) and simple payback method (undiscounted accumulation NPV_2, payback time PBT_2). No thermodynamics: meant to be fed with the cost and saving figures of an energy model.",
   "kind": "steady",
   "level": 1,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "investment_npv_payback.eescode",
   "fluids": [],
   "tags": [
@@ -39,16 +39,21 @@
     "course": "Machines et systèmes thermiques (ULiège), economic evaluation of energy-saving measures"
   },
   "verification": {
-    "summary": "The runnable variant investment_npv_payback_coolsolve.eescode was compared with the EES stored solution: 176 common variables, 0 differ at rtol=0.001 (largest residual 3.6e-10, rounding of the stored values). Cash flows recomputed independently in Python (PBT_2 = 10 years). Native file blocked by CS-BUG-DUPLICATE-INDEX-EXPR.",
-    "checks": ["ees-stored-solution", "analytical"],
+    "summary": "Compared with the EES stored solution: 176 common variables, 0 differ at rtol=0.001 (largest residual 3.6e-10, rounding of the stored values). Cash flows recomputed independently in Python (PBT_2 = 10 years).",
+    "checks": [
+      "ees-stored-solution",
+      "analytical"
+    ],
     "reference": "EES stored solution of the source file (the last EES calculation): all 176 variables of the equations agree; the 121 other stored values (D, TIR, a[], DPV, NPV, PBT without subscripts) are leftovers of an earlier version of the file. The parametric table1 (23x2) of the card holds only the placeholder columns Z and ZZ with a row of zeros: no run result, not usable as a reference.",
-    "date": "2026-10-15",
-    "coolsolve_version": "0.3.0@2d15382",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": 3.6e-10,
-    "notes": "The native file is the faithful import (176 equations, 178 unknowns: DPV_1[expr] and DPV_2[expr] are created by the array index arithmetic DPV_1[i-1]/DPV_2[i-1] inside the DUPLICATE loops). The variant writes those two recurrences out with explicit indices 1..20 (valid EES, no CoolSolve-only syntax) and solves in 176 explicit blocks, 0 iterations. Unit system of the source: SI MASS DEG PA C J (no conversion)."
+    "notes": "The native file (176 equations, array index arithmetic DPV_1[i-1], DPV_2[i-1] inside DUPLICATE loops with the variable bound T_lifetime) solves in 176 explicit blocks, 0 iterations, and reproduces the earlier runnable variant in all 176 variables (0.0); the comparison with the EES stored solution is that of the variant. Unit system of the source: SI MASS DEG PA C J (no conversion)."
   },
-  "missing_features": ["CS-BUG-DUPLICATE-INDEX-EXPR"],
-  "related": ["CSL-0153"],
+  "missing_features": [],
+  "related": [
+    "CSL-0153"
+  ],
   "related_external": [],
   "supersedes": [],
   "previous_paths": [],
@@ -57,6 +62,11 @@
       "date": "2026-10-15",
       "action": "added (native file blocked by CS-BUG-DUPLICATE-INDEX-EXPR, runnable variant investment_npv_payback_coolsolve.eescode verified against the EES stored solution)",
       "by": "opencode (space-bunny-free) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b): the native file (array index arithmetic in DUPLICATE) solves and equals the earlier variant in all 176 variables; status verified, variant deleted, native .sol added",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

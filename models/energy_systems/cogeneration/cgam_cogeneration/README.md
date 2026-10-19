@@ -93,17 +93,17 @@ defaults — see the conversion log).
 
 | Quantity | CoolSolve | Ebsilon (`cgam-ebsilon-results.csv`) | rel. diff. |
 |---|---|---|---|
-| air flow m1 [kg/s] | 91.063 | 90.956 | 1.2e-03 |
-| fuel flow m10 [kg/s] | 1.648 | 1.644 | 2.3e-03 |
-| flue-gas flow m4 [kg/s] | 92.711 | 92.600 | 1.2e-03 |
-| compressor outlet T2 [K] | 611.48 | 611.00 | 7.8e-04 |
+| air flow m1 [kg/s] | 91.100 | 90.956 | 1.6e-03 |
+| fuel flow m10 [kg/s] | 1.649 | 1.644 | 2.7e-03 |
+| flue-gas flow m4 [kg/s] | 92.748 | 92.600 | 1.6e-03 |
+| compressor outlet T2 [K] | 611.60 | 611.00 | 9.8e-04 |
 | turbine outlet T5 [K] | 1011.27 | 1010.99 | 2.7e-04 |
-| chimney T7 [K] | 431.15 | 430.04 | 2.6e-03 |
-| compressor power [MW] | 29.740 | 29.6597 | 2.7e-03 |
-| turbine power [MW] | 59.740 | 59.6597 | 1.4e-03 |
+| chimney T7 [K] | 431.42 | 430.04 | 3.2e-03 |
+| compressor power [MW] | 29.764 | 29.6597 | 3.5e-03 |
+| turbine power [MW] | 59.764 | 59.6597 | 1.7e-03 |
 | flue-gas N2 / O2 / CO2 / H2O [mol frac.] | 0.7505 / 0.1368 / 0.0316 / 0.0810 | 0.7506 / 0.1369 / 0.0316 / 0.0810 | ≤ 8.6e-04 |
 
-Derived results (CoolSolve run): thermal input 82.44 MW, net power
+Derived results (CoolSolve run): thermal input 82.47 MW, net power
 efficiency 36.4 %, HRSG duty 37.68 MW (evaporator 27.41 + economiser 10.28),
 chamber heat loss 1.65 MW, overall energy utilisation 82.1 %. The drum
 produces 14 kg/s of saturated steam at 20 bar (212.38 °C); the recirculation
@@ -128,14 +128,24 @@ third-law NASA value, ~3.5 kJ/kg-K above CoolProp's HEOS value — a constant
 offset that cancels in every equation of the model, all of which use
 same-composition entropy differences).
 
-- vs the TESPy re-run: maximum relative deviation 2.0e-03 (on
-  `ds[7]−ds[4]`); all temperatures, pressures, mass flows, powers,
-  enthalpy/entropy differences and molar fractions below 2.1e-03.
-- vs the Ebsilon table: **compressor power 29.740 vs 29.6597 MW (2.7e-03),
-  turbine power 59.740 vs 59.6597 MW (1.4e-03)** — inside the 0.5 %
-  tolerance of the card; maximum over all compared quantities 4.7e-03 (on
-  `ds[6]−ds[4]`, the same order as TESPy's own deviation from Ebsilon,
-  which the source test bounds at 5e-03).
+- vs the TESPy re-run (the network of the source test without the exergy
+  analysis, TESPy 0.11.3.dev0 at commit `19425523`, re-run on 2026-10-19):
+  maximum relative deviation 2.9e-03 (on `ds[7]−ds[4]`), then 2.3e-03 (compressor
+  power), 2.2e-03 (`T7`, `ds[1]−ds[2]`, `ds[4]−ds[6]`); all temperatures,
+  pressures, mass flows, powers, enthalpy/entropy differences and molar
+  fractions below 2.9e-03 (2.0e-03 before the CO2 partial pressures were
+  evaluated at their true values).
+- vs the Ebsilon table: **compressor power 29.764 vs 29.6597 MW (3.5e-03),
+  turbine power 59.764 vs 59.6597 MW (1.7e-03)**; maximum over all compared
+  quantities 5.7e-03 (on `ds[6]−ds[4]`), then 4.2e-03 (`ds[7]−ds[4]`), 3.5e-03
+  (compressor power) and 3.2e-03 (T7). TESPy's own deviation from Ebsilon is
+  bounded at 5e-03 by the source test: since the CO2 partial pressures of the
+  mixtures (30–300 Pa in the air) are evaluated at their
+  true values instead of being clamped to 1000 Pa, CoolSolve is 1.0e-03 farther
+  from the Ebsilon entropy differences than the earlier run (4.7e-03). The clamp
+  had suppressed the CO2 pressure term of the air entropy across the compressor
+  (both ends clamped to the same 1000 Pa), which brought the earlier run closer
+  by compensation.
 
 The source test also contains an exergy analysis (`exerpy`, external
 package, Ahrendts reference environment); it is out of scope of this

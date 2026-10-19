@@ -1,6 +1,6 @@
 # ISO 5167 orifice plate (diaphragm) flow-rate calculation
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** (runnable variant ✅ verified) &nbsp;|&nbsp; `CSL-0075`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0075`
 
 Flow-rate calculation of the ISO 5167-1980 standard for a **diaphragm** (orifice
 plate with **corner pressure tappings**), from the ULiège model bank
@@ -21,7 +21,7 @@ branches.
 | **Source** | ULiège model bank — `Model data bank/EES_Functions/iso5167/` (EES file `ISO5167 flow rate calculation - diaphragm.EES`) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory model bank, Laborelec toolkit lineage; EES licence stamp of the J. Lebrun lab) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** (`CS-GAP-ISIDEALGAS`, `CS-BUG-HUMIDAIR-PROPS`); runnable variant `iso5167_orifice_plate_flow_rate_coolsolve.eescode` verified (see *Verification*) |
+| **CoolSolve** | native file runs (9 iterations with the shipped `.initials`); verified (see *Verification*) |
 
 ## Problem statement
 
@@ -75,21 +75,18 @@ on beta) and reports violations with `CALL WARNING`.
 ## How to run
 
 ```bash
-coolsolve ./iso5167_orifice_plate_flow_rate_coolsolve.eescode
+coolsolve ./iso5167_orifice_plate_flow_rate.eescode
 ```
 
-The native file `iso5167_orifice_plate_flow_rate.eescode` is valid EES and is
-kept unchanged (module flattened, comments translated). In CoolSolve it takes the
-`AirH2O` branch and stops in block 16 (6 unknowns of the ISO 5167 iteration) with
-*SingularJacobian*, because of the wrong humid-air `density` and `cv` of
-`CS-BUG-HUMIDAIR-PROPS` (`isidealgas` is still unknown, but only the other-fluid
-branch uses it). The runnable variant is documented in its header; each of its
-changes is listed in the conversion log below.
+The file is valid EES (module flattened, comments translated). It solves in 9
+iterations with the shipped `iso5167_orifice_plate_flow_rate.initials`; from the
+default guesses the block of the 6 unknowns of the ISO 5167 iteration
+(`epsilon_dph`, `C_D_dph`, `E_dph`, …) stops with *SingularJacobian*.
 
 ## Results
 
-At the default operating point the variant gives `Di_dph` = 17.025 mm,
-`Re_D_dph` = 1.619·10⁵, `C_D_dph` = 0.5999, `epsilon_dph` = 0.9813. The
+At the default operating point the model gives `Di_dph` = 17.023 mm,
+`Re_D_dph` = 1.619·10⁵, `C_D_dph` = 0.5999, `epsilon_dph` = 0.9816. The
 expansibility factor differs from 1 by 1.9 % (0.5 bar drop on 8 bar), and the
 discharge coefficient is close to its low-Reynolds asymptote 0.5959 plus the
 Reynolds term.
@@ -112,26 +109,26 @@ older runs with the current inputs. Evidence in the stored values themselves:
 
 The only stored values consistent with the current operating point are the
 inputs and the solved bore diameter `Di_dph` = **0.01702816341** (the last
-design inversion run). The variant was verified against it:
+design inversion run). The model was verified against it:
 
 ```text
-python3 tools/compare_solution.py iso5167_orifice_plate_flow_rate_coolsolve.sol <consistent rows of reference/ees_variables.csv>
+python3 tools/compare_solution.py iso5167_orifice_plate_flow_rate.sol <consistent rows of reference/ees_variables.csv>
 → 7 common variables (inputs and Di_dph), 0 differ (rtol=0.001)
 ```
 
-| Variable | EES stored | CoolSolve variant | rel. diff |
+| Variable | EES stored | CoolSolve | rel. diff |
 |---|---:|---:|---:|
-| `Di_dph` [m] | 0.01702816341 | 0.01702515 | 1.8·10⁻⁴ |
+| `Di_dph` [m] | 0.01702816341 | 0.01702254 | 3.3·10⁻⁴ |
 
 (the 6 other common variables are the inputs, identical by construction)
 
 Independent sanity checks of the humid-air state (hand calculation with
 standard psychrometrics, EES-equivalent mixture rules): density 8.583 vs
 8.575 kg/m³ (+0.10 %), humidity ratio 0.009975 vs 0.009750 (+2.3 %, CoolProp
-vs ASHRAE saturation pressure), viscosity 1.967·10⁻⁵ Pa·s, `Gamma` 1.3863 vs
-≈1.398 (CoolProp cp of humid air vs the EES ideal-mixture cp, ≈0.8 %; effect
-on `Di_dph` ≈0.03 %). All within the real-fluid/property-backend tolerance of
-`docs/ees_import.md` §11.
+vs ASHRAE saturation pressure), viscosity 1.967·10⁻⁵ Pa·s, `Gamma` 1.4095 vs
+≈1.398 (CoolProp real-gas cp and cv of humid air at 8 bar vs the EES
+ideal-mixture rules, +0.8 %; effect on `Di_dph` ≈0.03 %). All within the
+real-fluid/property-backend tolerance of `docs/ees_import.md` §11.
 
 ## Source and attribution
 
@@ -168,52 +165,15 @@ Source file (EES 7.793), collection of S. Quoilin:
   is not a blocker after flattening and is not listed in `missing_features`.
 - **2026-10-05 — stale stored solution.** See *Verification*: only the inputs
   and `Di_dph` are used as reference.
-- **2026-10-05 — runnable variant** `iso5167_orifice_plate_flow_rate_coolsolve.eescode`
-  (native file kept in valid EES). Changes, each forced by a gap:
-  1. `coef_dph = if(0.039/0.09 - L1_ratio_dph, 0.09, 0.039)`: the 5-argument
-     intrinsic `if(A,B,X,Y,Z)` (X if A<B, Y if A=B, Z if A>B) rewritten with
-     the 3-argument CoolSolve form; exactly equivalent here because the A=B
-     and A>B branches of the original both return 0.039. The 5-argument form is
-     accepted by CoolSolve now, so this rewrite is not required.
-  2. `isidealgas(Fluid$)` unsupported (`CS-GAP-ISIDEALGAS`): the
-     ideal-gas special case of `fluidprop` is dropped and
-     `viscosity`/`cp`/`cv` are always called with (T=, P=), which CoolProp
-     accepts for ideal gases too. For the default fluid the branch used was
-     already the humid-air one: no effect on the verified operating point.
-  3. `fluid$ = 'airh2o'` written `'AirH2O'`: CoolSolve compared strings
-     case-sensitively, so the lowercase spelling of the original missed the
-     `AirH2O` branch of `fluidprop` and silently returned the fallback density
-     10⁴ kg/m³; the comparison is case-insensitive now, so this rewrite is not
-     required. Same fluid in EES.
-  4. `Rho = (1+w)/volume(AirH2O, T, P, R)`: `density(AirH2O, ..., R=)` returns
-     the fallback value 1E4 in CoolSolve (`CS-BUG-HUMIDAIR-PROPS`);
-     EES `density` = 1/`volume` for AirH2O (per kg of dry air), times (1+w)
-     as in the original.
-  5. `Gamma = cp/(cp - R_mix)` with `R_mix = (287.055 + w*461.495)/(1+w)`:
-     `cv(AirH2O, ...)` returns cp in CoolSolve (`CS-BUG-HUMIDAIR-PROPS`);
-     cv = cp − R_mix is the EES relation for the ideal-gas humid-air mixture.
-  6. The six `CALL WARNING` statements of `warning_error` are replaced by
-     comments with the same validity ranges (change made when CoolSolve had no
-     `CALL WARNING`: it raised *"Unknown procedure: warning"* when a range check fired
-     on the broken humid-air properties of points 4–5 or on an iterate far from the
-     solution; `CS-GAP-CALL-WARNING` is closed since, and the native statements
-     run); with correct properties and the shipped guesses none of the ranges is
-     violated at the solution.
 - **Level justification** (taxonomy §3): 34 equations (0) + largest block 6
   (1) + procedures present (1) + no discretisation (0) + no calibration
   (0) + curated guesses needed (1) = score 3 → **level 2**.
 ## Limitations and CoolSolve gaps
 
-- Native file blocked; `missing_features` (model.json) lists every gap that
-  blocks a faithful CoolSolve run: `CS-GAP-ISIDEALGAS` (hard error, only for a
-  fluid other than `AirH2O`) and `CS-BUG-HUMIDAIR-PROPS` (silent wrong results,
-  then *SingularJacobian* in block 16).
-- `CALL WARNING` does not block the native file: at the stored operating point
-  no warning branch is taken, and CoolSolve reports the warnings that hold at the
-  solution without stopping.
-- The variant inherits the CoolProp humid-air backend (see *Verification*):
-  `w` +2.3 %, `Gamma` −0.8 % vs EES mixture rules, `Di_dph` within 2·10⁻⁴.
-- The `warning_error` procedure checks are documentation-only in the variant.
+- `CALL WARNING`: at the stored operating point no warning branch is taken;
+  CoolSolve reports the warnings that hold at the solution without stopping.
+- The humid-air properties come from the CoolProp backend (see *Verification*):
+  `w` +2.3 %, `Gamma` +0.8 % vs EES mixture rules, `Di_dph` within 3.3·10⁻⁴.
 - The ISO 5167-1980 Stolz equation is the 1980 edition of the standard (the
   current edition is ISO 5167-2:2003 with slightly different coefficients);
   the model reproduces the 1980 text, as in the original.

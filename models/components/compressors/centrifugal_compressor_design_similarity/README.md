@@ -17,7 +17,7 @@ compressor of the same type compressing methane, as the exercise asks.
 | **Source** | ULiège — course *Machines et systèmes thermiques*, repetition 4 (2004-10-12), exercise 4 (EES file `MSTH_041012_exercice_6.EES`, continuation `..._exercice_6_suite.EES`) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory, course *Machines et systèmes thermiques*, repetition of 2004-10-12, exercise 4; individual author not identified) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0@536d427 — main file and variant verified against the EES stored solutions (see *Verification*) |
+| **CoolSolve** | v0.3.0@4798e2b — main file and variant verified against the EES stored solutions (see *Verification*) |
 
 ## Problem statement
 
@@ -75,13 +75,9 @@ and press *Solve*, or from a terminal:
 coolsolve ./centrifugal_compressor_design_similarity.eescode
 ```
 
-**The `.initials` file is required.** With the default guesses (1 for every
-unknown) the Newton solver of the default pipeline diverges in the block that
-computes the inlet area and stops with *SingularJacobian*; with the stored EES
-solution as initial values the model converges in 4 iterations (see
-*Limitations and CoolSolve gaps*). Adding `TrustRegion` to the solver pipeline
-(`coolsolve.conf` with `solverPipeline = Newton, TrustRegion`) also converges
-without any initial value.
+The shipped `.initials` holds the stored EES solution: the model converges in
+4 iterations with it, and in 44 (air) or 48 (methane) iterations from the
+default guesses (1 for every unknown).
 
 The methane variant is run the same way and has its own `.initials`:
 
@@ -212,15 +208,15 @@ CoolSolve repository as a test case.
   (checked line by line after stripping comments and blanks); only the header
   comment differs (the example adds a `SOLVER NOTE`, see below). The library
   model follows the EES original, and drops the *Solution* printout of the
-  example. The example's `SOLVER NOTE` states that "the default solver
-  configuration includes TrustRegion and will converge": the shipped
-  `examples/coolsolve.conf` does not change the solver pipeline (its default
-  is `Newton`), so a CLI run and the example test report fail (see *Limitations
-  and CoolSolve gaps*).
+  example. The example's `SOLVER NOTE` states that the default solver
+  configuration converges from the default guesses, as EES does; so does this
+  model.
 - **Level 2** (taxonomy.md §3): 15 equations (0) + largest block 1 (0) + no
   function, procedure or array (0) + single component (0) + similarity
   factors imposed on a nominal point, semi-empirical design closure (1) +
-  curated guesses required (1) = 2 → Intermediate.
+  curated guesses (0: it converges from the default guesses) = 1; kept at
+  level 2 (the rating may be moved by one: the machine is sized from two
+  similarity factors, a closure that is not a plain exercise).
 
 ## Limitations and CoolSolve gaps
 
@@ -233,22 +229,9 @@ CoolSolve repository as a test case.
   shows that the choice changes the result by ~0.2 %.
 - The `enthalpy(): fluid 'Air'` hint (suggesting `AirH2O` for moist air) is
   spurious here: dry-air ideal-gas properties are intended.
-- **Solver diagnosis of the failure of the CoolSolve example** (reproduced on
-  the unmodified example, debug folder): the system is square (15 equations,
-  15 unknowns, 15 blocks of 1). With the default guesses, the Newton1D block
-  that solves `phi = V_dot_su/(U*A)` for `A` starts at `A` = 1, its first step
-  (`ΔA` = 62.9, from `A = 1`) throws `A` far on the negative side, and the
-  sequence diverges towards −∞; `∂F/∂A = V̇_su/(U·A²)` then underflows to zero
-  and the block reports *SingularJacobian* (a diverged 1-D block, not a
-  genuinely singular one). The same file converges from the same guesses when
-  `TrustRegion` is added to the solver pipeline, and converges with the stored
-  EES values as initial guesses with Newton alone (4 iterations, the state
-  shipped here). The root cause is a too distant default guess, so the
-  `.initials` file is the fix; the step taken in the failing block is worth a
-  look, but no register row was added for it here: the CoolSolve behaviour is
-  reproduced, yet nothing shows that EES converges from the same guesses, so it
-  is listed as an unverified suggestion in
-  §8 (*Unverified by a reviewer*) of `CoolSolve/docs/model_library_support.md` rather than in the register.
+- Convergence: from the default guesses the model needs 44 (air) / 48
+  (methane) Newton iterations; with the shipped `.initials` (the stored EES
+  values) 4.
 
 ## Related models
 

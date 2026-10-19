@@ -1,6 +1,6 @@
 # Brine-to-water heat pump reference model (RefSim)
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0078`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ❌ **Failing** (runnable variant shipped) &nbsp;|&nbsp; `CSL-0078`
 
 Reference simulation model of a brine-to-water (ground-source) heat pump of the
 ULiège model bank: a rotary (scroll) compressor described step by step between
@@ -19,7 +19,7 @@ closes the model.
 | **Source** | ULiège model bank (Laborelec toolkit lineage), heat production by vapour compression, reference simulation model, 8 January 2008 (`BrinetoWaterHeatPump_RefSim_EES_Model_VL080108.EES`, EES 7.888) |
 | **Authors** | Vincent Lemort (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** by `CS-GAP-ELSEIF-CHAIN` (with `CS-GAP-UPPERCASE`); runnable variant `brine_to_water_heat_pump_refsim_coolsolve.eescode` verified against the solution stored by EES (see *Verification*) |
+| **CoolSolve** | native file **failing** (over-determined by three equations as the original stands, see *Limitations*); runnable variant `brine_to_water_heat_pump_refsim_coolsolve.eescode` compared with the solution stored by EES (see *Verification*) |
 
 ## Problem statement
 
@@ -99,10 +99,11 @@ consistency-check structure of the RefSim models of the bank.
 
 ## How to run
 
-The **native file** `brine_to_water_heat_pump_refsim.eescode` is valid EES but
-does not parse in CoolSolve (the `BRINEPROP` procedure of the BrineProp library
-uses the `ELSE IF` ladders closed by repeated `ENDIF` and `Uppercase$`:
-`CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE`).
+The **native file** `brine_to_water_heat_pump_refsim.eescode` is valid EES;
+it parses in CoolSolve and its `BRINEPROP` procedure runs, but the model is
+**over-determined by three equations** as the original stands (the
+assignments of `P_ev`, `P_cd` and `M_dot_r`, see *Limitations*):
+164 equations, 161 unknowns.
 
 The **runnable variant** is `brine_to_water_heat_pump_refsim_coolsolve.eescode`
 (tested as `CSL-0078:coolsolve`, with its `.sol` baseline and its own companion
@@ -340,11 +341,13 @@ model bank, so nothing was merged into or split from this model.
 
 ## Limitations and CoolSolve gaps
 
-- The native file is **blocked** by `CS-GAP-ELSEIF-CHAIN` (the `BRINEPROP`
-  ladders of the BrineProp library), with `CS-GAP-UPPERCASE`; the runnable variant above is shipped next to it. The
+- The native file **does not solve** (status `failing`): the model is
+  over-determined by three equations as the original stands — not a CoolSolve
+  gap, a property of this import (see the next bullet); the runnable variant
+  above is shipped next to it. The
   companion tables of the native file are the ones EES expects for the
-  procedure's `LOOKUP` calls (decoded from the binary `.lkt` files, `CS-GAP-LKT`,
-  as in `CSL-0072`).
+  procedure's `LOOKUP` calls (decoded from the binary `.lkt` files, as in
+  `CSL-0072`).
 - **Over-determined by three equations as the original stands** (not a CoolSolve
   gap, a property of this import). The three assignments `P_ev=436182.6219`,
   `P_cd=1730328.509` and `M_dot_r=0.07561309079` of the *INPUTS* section are not
@@ -356,12 +359,13 @@ model bank, so nothing was merged into or split from this model.
   effectiveness relation against the refrigerant-side balance (`Q_dot_ev`), the
   condenser (`Q_dot_cd`) and the swept-volume flow against the mixing relation
   (`M_dot_s_cp`); the fourth pair (`h_ex1_cp`) is balanced by `gamma_leak_cp`, an
-  unknown in EES (the isentropic relation across the orifice). In a scratch copy
-  with the three assignments commented out the model is square (161 equations,
-  161 unknowns, 86 blocks, largest block 76), but CoolSolve does not converge the
+  unknown in EES (the isentropic relation across the orifice). With the three
+  assignments commented out the model is square (161 equations,
+  161 unknowns, largest block 76), but CoolSolve does not converge the
   76-variable block from the shipped `.initials` (EES stored solution:
-  `MaxIterations`; without them `SingularJacobian`; not investigated further). So
-  the *redundant check equations* of the import are not redundant in EES; the
+  `MaxIterations`, block 42, residual 4.7e5; without them `SingularJacobian`;
+  not investigated further). So the
+  *redundant check equations* of the import are not redundant in EES; the
   variant's "checks" (`Q_dot_ev_chk` +4.8 %, `Q_dot_cd_chk` −3.8 %,
   `M_dot_s_cp_chk` +1.8 %) are the relations that would move `P_ev`, `P_cd` and
   `M_dot_r` to the CoolProp-consistent operating point; the variant evaluates the
@@ -404,14 +408,13 @@ model bank, so nothing was merged into or split from this model.
 - `CSL-0079` *brineprop_secondary_refrigerants*: the function library whose
   `BRINEPROP` procedure (and the Brine1/Brine2 coefficient tables shipped here)
   gives the density and specific heat of the 25 % propylene glycol solution.
-- `CSL-0072` *centrifugal_brine_pump_refsim*: another model of the bank that
-  calls the same BrineProp library, with the same blocked-native-file /
-  runnable-variant treatment.
+- `CSL-0072` *centrifugal_brine_pump_refsim*: another model of the bank
+  that calls the same BrineProp library (verified on its native file).
 - `CSL-0007` *scroll_compressor_semi_empirical*: the same scroll machine at a
   different level of detail (semi-empirical characteristic maps).
 - `CSL-0081` *vertical_ghes_refsim*: the borefield (ground source) that feeds
-  such a brine loop, from the same model bank; dynamic, and blocked like this
-  model but without a runnable variant.
+  such a brine loop, from the same model bank; dynamic, blocked and without a
+  runnable variant.
 - `CSL-0068` *heat_pump_scroll_compressor_data_check*: a data-consistency check
   of a scroll compressor heat pump on the same refrigerant family.
 - `CSL-0155` *inverter_air_water_heat_pump*: air-to-water counterpart of this complete heat-pump system model (Daikin Altherma type, heating branch imported).

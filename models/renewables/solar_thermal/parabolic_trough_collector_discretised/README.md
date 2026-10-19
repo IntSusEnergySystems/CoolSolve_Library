@@ -114,8 +114,7 @@ cd models/renewables/solar_thermal/parabolic_trough_collector_discretised
 The model solves without guesses (no `.initials`) and without `coolsolve.conf`;
 all blocks are of size 1 and the solution is reached in 0 Newton iterations
 from the default values. Changing the number of elements means editing the
-literal `20` in `DUPLICATE i=1,20` **and** unrolling the enthalpy march to the
-same number of lines (see *Conversion log*).
+literal `20` in the two `DUPLICATE` blocks and in the `sum`, and the index `21` (= `n_disc`+1) of `h_ex`.
 
 ## Results
 
@@ -275,21 +274,15 @@ The model is published under the library licence (MIT).
   value here (`Theta = 10 [deg]`); the state indices are 1-based
   (`T[i]` in the source is the inlet of element `i`, `T[i+1]` its outlet).
 - **2026-10-08 — sum and energy balance**: the source sums the element powers
-  with `sum(Q_dot_abs_disc)`; the indexed `SUM(X[i],i=1,N)` is not available
-  (`CS-GAP-SUM-INDEXED`), so the 20 terms are written out in the variadic `sum`
-  of CoolSolve (same result). `Q_dot_bal = m_dot*(h_ex-h[1])` is added as a
-  diagnostic identity (it is not an extra constraint on the solution).
-- **2026-10-08 — enthalpy march unrolled**: a `DUPLICATE` loop cannot shift an
-  array index in CoolSolve: with `DUPLICATE i=1,20`, `T[i+1]` is parsed as
-  `T[(2.000000 + 1.000000)]`, a variable that does not match `T[i]` or
-  `T[n_disc+1]`, so the model is refused as not square (19 unmatched equations
-  of 23). The 20 enthalpy states are therefore written out explicitly, and only
-  the per-element quantities (inlet temperature, temperature rise, efficiency on
-  the map, incident and absorbed power) stay in the `DUPLICATE` loop. This is
-  the CoolSolve bug `CS-BUG-DUPLICATE-INDEX-EXPR` (index expressions inside a
-  `DUPLICATE` body are not folded); it is listed in `missing_features` although
-  it does not block the model, the march being written out (same convention as
-  for `CS-GAP-SUM-INDEXED` in the entry above).
+  with `sum(Q_dot_abs_disc)`, here `Q_dot = sum(Q_dot_abs_disc[i], i=1, 20)`.
+  `Q_dot_bal = m_dot*(h_ex-h[1])` is added as a diagnostic identity (it is not
+  an extra constraint on the solution).
+- **2026-10-08 — enthalpy march**: the march along the absorber is the
+  `DUPLICATE i=1,20` block `h[i+1] = h[i] + Q_dot_abs_disc[i]/m_dot`, the shift
+  of the array index being the one of the source (`T[i]` is the inlet of
+  element `i`, `T[i+1]` its outlet); the per-element quantities (inlet
+  temperature, temperature rise, efficiency on the map, incident and absorbed
+  power) are in the other `DUPLICATE` block.
 - **2026-10-08 — map table**: `coll_eff` is the 6 × 17 Soponova efficiency map
   as a companion table `parabolic_trough_collector_discretised-sopo_map.csv`
   (`Irrad,DT_C,eta_coll`, 102 rows), read with `interpolate2`. The Fahrenheit
@@ -311,14 +304,7 @@ The model is published under the library licence (MIT).
 ## Limitations and CoolSolve gaps
 
 * No CoolSolve gap or bug blocks the model: it runs as it stands
-  (`status: verified`). `missing_features` lists the two IDs whose workaround
-  the native file uses, as `CSL-0122` does for its sum:
-  - `CS-BUG-DUPLICATE-INDEX-EXPR`: an index expression inside a `DUPLICATE`
-    body is not folded, so `h[i+1] = h[i] + Q[i]/m_dot` cannot be written inside
-    the loop; the 20 enthalpy states are written out instead (see *Conversion
-    log*);
-  - `CS-GAP-SUM-INDEXED`: the indexed `SUM(X[i],i=1,N)` is not available, so
-    `Q_dot` uses the variadic `sum` of the 20 element terms.
+  (`status: verified`).
 * Physics: isobaric absorber, no pressure drop, no thermal inertia, no
   residence time, one incidence angle (tracking), datasheet map extrapolated
   flat outside its range (CoolSolve clamps, `CS-GAP-INTERP-EXTRAP`); the map is

@@ -1,6 +1,6 @@
 # Heating coil RefSim model, epsilon-NTU
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0164`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0164`
 
 Reference simulation of a hot-water air heating coil from the ULiège model
 bank. The coil is a counter-flow exchanger: the heating duty follows the
@@ -19,7 +19,7 @@ RefSim model `CSL-0074`.
 | **Source** | ULiège model bank, heating coil reference simulation model (2008-03-17) |
 | **Authors** | Stéphane Bertagnolio (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0@261f0b9 — native file blocked by `CS-BUG-HUMIDAIR-PROPS`; the runnable variant is verified (see *Verification*) |
+| **CoolSolve** | native file runs (11 iterations with the shipped `.initials`); verified (see *Verification*) |
 
 ## Problem statement
 
@@ -67,24 +67,17 @@ run used 4 m³/h, and 4 m³/h is kept.
 
 ## How to run
 
-The native file `heating_coil_refsim.eescode` keeps `Density(AirH2O, …)` and
-does **not** give the EES density in CoolSolve (`CS-BUG-HUMIDAIR-PROPS`: the
-call returns 1E4 kg/m³). The runnable variant
-`heating_coil_refsim_coolsolve.eescode` changes only that call, to
-`1/Volume(AirH2O, …)` per kg of dry air (valid EES syntax; logged below):
-
 ```bash
-coolsolve ./heating_coil_refsim_coolsolve.eescode
+coolsolve ./heating_coil_refsim.eescode
 ```
 
-The variant needs `heating_coil_refsim_coolsolve.initials` (the EES stored
-values). Without it the 24-variable block stops with *SingularJacobian*
-(residual 4183). With the shipped guesses it converges in 4 iterations.
-Tested as `CSL-0164:coolsolve`.
+The model needs `heating_coil_refsim.initials` (the EES stored values). Without
+it the 24-variable block stops with *SingularJacobian* (residual 4183). With the
+shipped guesses it converges in 11 iterations.
 
 ## Results
 
-Default operating point of the stored run (variant). The EES column is the
+Default operating point of the stored run. The EES column is the
 stored solution.
 
 | Quantity | CoolSolve | EES |
@@ -105,8 +98,7 @@ stored solution.
 
 ## Verification
 
-Concerns the runnable variant. `compare_solution.py` against the 48 variables
-decoded from the EES file:
+`compare_solution.py` against the 48 variables decoded from the EES file:
 
 > 43 common variables, 3 differ (rtol=0.001); only in EES: 5; only in CoolSolve: 0
 
@@ -126,10 +118,9 @@ psychrometric formulation, of the same size as in `CSL-0070` (4.4e-03) and
 At rtol = 1e-4, 19 variables differ; the largest after the humidity ratio are
 `omega_heatingcoil` 9.93e-04 and `c_p_w_heatingcoil` 7.84e-04 (water specific
 heat, EES against CoolProp). The duty, the conductance and both pressure
-drops stay within 1e-4. The humid-air density used by the variant,
-`1/Volume`, is 1.20826 kg/m³ against the stored `Density` 1.20782 kg/m³
-(3.62e-04); `(1+w)/Volume` would be the mixture density and is farther from
-the stored value.
+drops stay within 1e-4. The humid-air density, `Density(AirH2O, …)` = `1/Volume`
+per kg of dry air as in EES, is 1.20826 kg/m³ against the stored 1.20782 kg/m³
+(3.62e-04).
 
 Five decoded names are not variables of the model: `a`, `b`, `c`,
 `M_dot_w_hotwater` and `W_dot_pump`. They appear in the variable records and
@@ -167,13 +158,6 @@ different model and stays in the backlog.
   stored value, which makes the model square (43 equations, 43 variables).
   Nominal water flow: the string says 3.7 m³/h, the stored value is 4 m³/h;
   the stored value is kept.
-- **Runnable variant** `heating_coil_refsim_coolsolve.eescode`, one change,
-  forced by `CS-BUG-HUMIDAIR-PROPS` (also logged in its header):
-  `rho_a_heatingcoil = Density(AirH2O, T=, P=, w=)` becomes
-  `rho_a_heatingcoil = 1/Volume(AirH2O, T=, P=, w=)`. At the stored state,
-  `1/Volume` reproduces the stored density (3.62e-04); `Density` itself
-  returns 1E4 kg/m³ and the native file then does not converge (Newton
-  residual stuck at 9998). No new gap: the bug is already registered.
 - **Level**: 43 equations (0), largest block 24 (1), no procedure or array
   (0), one component (0), flow-scaled resistances, off-design (1), curated
   guesses required (1) → score 3 → level 2.
@@ -185,10 +169,6 @@ resistances and the two pressure-drop exponents are hypotheses of the
 original (laminar air side, turbulent water side), not identified from
 measurements. The nominal water flow of the stored run (4 m³/h) is not the
 3.7 m³/h written in the equations window.
-
-- `CS-BUG-HUMIDAIR-PROPS` (P1, silent): `Density(AirH2O, …)` returns
-  1E4 kg/m³ with a success status. It is the only gap that blocks the native
-  file. The variant replaces that one call.
 
 ## Related models
 

@@ -1,6 +1,6 @@
 # BrineProp: thermophysical properties of aqueous secondary refrigerants (function library)
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; 🧩 **Function library** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0079`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; 🧩 **Function library** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0079`
 
 The single procedure `BRINEPROP` of the **BrineProp** library of the ULiège
 model bank: for a solution name (`EG`, `PG`, `EA`, `MA`, `GL`, `NH3`, `K2CO3`,
@@ -17,11 +17,11 @@ rows of the inventory name it).
 |---|---|
 | **Category** | Fundamentals › Properties |
 | **Fluids** | aqueous solutions EG, PG, EA, MA, GL, NH3, K2CO3, CaCl2, MgCl2, NaCl, KAc (secondary refrigerants; not CoolProp fluids) |
-| **Size** | 440 equations after analysis (largest block: 1); the procedure itself is ~60 lines; two lookup tables (198 × 5 and 11 × 2 coefficients) and a third one with the 5 unit labels |
+| **Size** | 18 equations after analysis (largest block: 1); the procedure itself is ~60 lines; two lookup tables (198 × 5 and 11 × 2 coefficients) and a third one with the 5 unit labels |
 | **Source** | ULiège Thermodynamics Laboratory — EES library `Brineprop.lib` (1997 edition according to its EES help file; compiled stamp EES 7.793) with the binary lookup tables `Brine1.lkt` and `Brine2.lkt` (EES 4.631) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory; the EES help file of the library credits its 1997 edition and refers to IIR thermo-physical data, no personal name; the inventory attributes the library to the laboratory, J. Lebrun et al.) |
 | **License** | MIT |
-| **CoolSolve** | **blocked**: the native file does not parse (`CS-GAP-ELSEIF-CHAIN`, `CS-GAP-UPPERCASE`); the runnable variant `brineprop_secondary_refrigerants_coolsolve.eescode` is **verified** against the EES stored solution (≤ 4.77e-10) |
+| **CoolSolve** | **verified** against the EES stored solution of the glycol run-around loop model of the same library (≤ 4.77e-10) |
 
 ## Problem statement
 
@@ -89,23 +89,14 @@ kJ/kg·K, W/m·K, milliPa·s and °C.
 
 ## How to run
 
-The native file `brineprop_secondary_refrigerants.eescode` **does not parse** in
-CoolSolve (the `ELSE IF … ENDIF;ENDIF` ladders of the procedure,
-`CS-GAP-ELSEIF-CHAIN`); it is kept in valid EES. The faithful runnable
-transcription is
-
 ```bash
-coolsolve ./brineprop_secondary_refrigerants_coolsolve.eescode
+coolsolve ./brineprop_secondary_refrigerants.eescode
 ```
 
-`solve` in 3 iterations; its baseline is
-`brineprop_secondary_refrigerants_coolsolve.sol` (regression-tested as
-`CSL-0079:coolsolve`). The variant changes only what the gaps force (selector
-procedure + flattened property blocks, see *Conversion log*); it is valid EES,
-with no CoolSolve-only syntax, and keeps the variable names of the native file.
-Companion tables: `brineprop_secondary_refrigerants-Brine1.csv` /
-`-Brine2.csv` for the native file, `…_coolsolve-Brine1.csv` / `-Brine2.csv`
-for the variant, all four holding the same decoded values.
+`solve` in 289 iterations; the baseline is
+`brineprop_secondary_refrigerants.sol` (regression-tested as `CSL-0079`).
+Companion tables: `brineprop_secondary_refrigerants-Brine1.csv`,
+`-Brine2.csv` and `-Units.csv`.
 
 Models that call these routines copy their definitions
 (`{--- Library procedure copied from CSL-0079 ---}`) until
@@ -115,7 +106,7 @@ Models that call these routines copy their definitions
 ## Results
 
 Demonstration program (after the procedure definition), regression case of the
-variant (`brineprop_secondary_refrigerants_coolsolve.sol`):
+baseline (`brineprop_secondary_refrigerants.sol`):
 
 Case 1 — propylene glycol 50 % at 65 °C, the case of the commented example
 block of the original library:
@@ -144,10 +135,8 @@ glycol run-around loop reference model of the same library (inventory
      of EG 25 % and PG 50 % versus temperature (−20…80 °C) as a parametric sweep. -->
 ## Verification
 
-Status **blocked** (the native file does not parse); the **runnable variant**
-`brineprop_secondary_refrigerants_coolsolve.eescode` is **verified**: the three
-properties that an independent EES reference holds agree to 4.77e-10, well
-inside the tolerance.
+Status **verified** (native file): the three properties that an independent
+EES reference holds agree to 4.77e-10, well inside the tolerance.
 
 1. **EES reference.** A `.lib` file stores no solution of its own, so the
    reference is the stored solution of the *glycol run-around loop* reference
@@ -155,22 +144,21 @@ inside the tolerance.
    (EES 7.888, inventory `TM-0476`), which calls `BRINEPROP` for ethylene
    glycol 25 % at `t_gw_m` = 6.324036551 °C and stores the three results
    (`rho_gw`, `c_p_gw`, `mu_gw`). Extracted with `tools/ees_extract.py`; the
-   three values, converted to the units of the variant, form the reference
+   three values, converted to the units of the model, form the reference
    CSV. Comparison with `tools/compare_solution.py` (default rtol = 0.001):
 
    | Variable | EES | CoolSolve | rel. diff |
    |---|---:|---:|---:|
-   | `c_p_brine_2` [J/kg·K] | 3805.35 | 3805.35 | 7.88e-13 |
-   | `mu_brine_2` [Pa·s] | 0.00294346 | 0.00294346 | 4.38e-11 |
+   | `c_p_brine_2` [J/kg·K] | 3805.35 | 3805.35 | 2.23e-10 |
+   | `mu_brine_2` [Pa·s] | 0.00294346 | 0.00294346 | 3.4e-12 |
    | `rho_brine_2` [kg/m³] | 1036.23 | 1036.23 | 4.77e-10 |
 
-   `3 common variables, 0 differ (rtol=0.001); only in EES: 0; only in
-   CoolSolve: 437`. The 437 CoolSolve-only variables are the internal
-   variables of the ten flattened property blocks, the outputs of the selector
-   procedure and the five case-1 properties; the reference file holds only the
-   three properties the EES model stores, so the other seven properties of the
-   demonstration program have **no** EES reference and are not part of the
-   figure. No variable of the reference was excluded.
+   `3 common variables, 0 differ (rtol=0.001)`. The reference file holds only
+   the three properties the glycol model stores, so the other fifteen
+   variables of the solution (the demonstration outputs of case 1 and the
+   freezing points and thermal conductivities of case 2) have **no** EES
+   reference and are not part of the figure. No variable of the reference was
+   excluded.
 2. **Lookup tables.** `Brine1.lkt` and `Brine2.lkt` (EES 4.631 binary lookup
    files) were **decoded by hand** from the EES layout documented in
    `ees_import.md` §13 (per column: a short-string name in a 31-byte field,
@@ -180,13 +168,13 @@ inside the tolerance.
    EES column names `Column1…5`. Both tables were then checked against the
    EES stored solution above: the decoded coefficients reproduce
    `rho_gw` = 1036.228755 kg/m³, `c_p_gw` = 3805.350851 J/kg·K and
-   `mu_gw` = 0.002943460833 Pa·s of the glycol loop model to 4.8e-10 relative
-   (`CS-GAP-LKT` worked around). The decode was also made independently of
-   `CSL-0072`, which ships the same two tables for the same library: both
-   decodes agree to the last printed digit (max. absolute difference 0.0).
+   `mu_gw` = 0.002943460833 Pa·s of the glycol loop model to 4.8e-10 relative.
+   The decode was also made independently of `CSL-0072`, which ships the same
+   two tables for the same library: both decodes agree to the last printed
+   digit (max. absolute difference 0.0).
 3. **Independent computation** (work folder, deleted): a Python transcription
    of the procedure (same tables, same polynomial, no CoolSolve code) gives
-   the same values as the variant for the two demonstration cases and for the
+   the same values as the model for the two demonstration cases and for the
    5 properties of all 11 solutions, i.e. the transcription of the procedure is
    faithful over the whole table, not only at the verified point.
 
@@ -218,12 +206,15 @@ folder (candidate `TM-0480`) holds the second-generation procedure
   the `{$DS.}`-like stamp `$SB1-X7.793` was dropped. Unit system already
   SI-°C-Pa-J on mass basis → **no unit conversion**. The procedure is copied
   unchanged (22 `Call ERROR` range checks, `Uppercase$` normalisation, the two
-  `ELSE IF` ladders, the unit labels (the `U$` string array of the original, see the
-  `2026-10-10` line below), the `REPEAT` loop, the polynomial
-  and the output scaling); the only edits are the removal of the dead code that
-  followed `END` in the library file (a stray `x=1` statement and the
-  commented example block, which became the demonstration program) and of a
-  commented-out duplicate of the unit ladder.
+  `ELSE IF` ladders, the `REPEAT` loop, the polynomial and the output
+  scaling); the only edits are the removal of the dead code that followed
+  `END` in the library file (a stray `x=1` statement and the commented
+  example block, which became the demonstration program) and of a
+  commented-out duplicate of the unit ladder, and the unit labels: the string
+  array `U$[…]` of the original is shipped as the lookup table `Units` and
+  read with `LOOKUP$` (`UO$=LOOKUP$('Units',Pro,1)`), the five labels being
+  the rows of the table in the order of the property indices `Freeze` …
+  `DynVisc` (they feed no equation).
 - **2026-10-05 — demonstration program**: written after the procedure
   definition (workflow §4), in the pattern of the example block of the
   library: case 1 is that example (PG, 50 %, `T_g_avg`), case 2 is the state
@@ -242,57 +233,21 @@ folder (candidate `TM-0480`) holds the second-generation procedure
   `T_brine_1 = 65 [C]` and says so in a comment. This is the only reading
   decision taken in the import.
 - **2026-10-05 — lookup tables**: decoded by hand from the binary `.lkt` files
-  (see *Verification* item 2) and shipped as the four companion CSVs of the
-  model; `CS-GAP-LKT` worked around. The CSV values are written with full
-  round-trip precision (17 significant digits, Python `repr`) rather than the
-  5 significant digits of an EES CSV export: the 18-term polynomial cancels, and
-  the 5-digit rounding shifts the results by up to 1.4e-5 (viscosity), while the
-  full precision keeps them at 5e-10.
-- **2026-10-10 — unit labels**: string array `U$[…]` replaced by the lookup table
-  `brineprop_secondary_refrigerants-Units.csv` and `LOOKUP$`
-  (`UO$=LOOKUP$('Units',Pro,1)`), decision D14 (CoolSolve does not support string
-  arrays); the five labels are the rows of the table in the order of the property
-  indices `Freeze` … `DynVisc`.
-- **2026-10-05 — runnable variant** `brineprop_secondary_refrigerants_coolsolve.eescode`
-  (valid EES; no CoolSolve-only syntax). Changes forced by the gaps, logged in
-  the variant header:
-  1. `CS-GAP-ELSEIF-CHAIN` and `CS-GAP-UPPERCASE` break
-     `BRINEPROP`. The 22 range checks and the 11-branch solution ladder become a
-     selector procedure `BRINEPROP_SELECT(Conc,Fl$ : Fl_brine)` of sequential
-     single-line `IF` statements (conditions mutually exclusive, behaviour
-     unchanged; kept in a procedure because `IF` statements are procedure-only
-     in EES). The `Uppercase$` normalisation and the unit label `UO$` (read from the
-     lookup table `Units` in the native file; it feeds no equation) are dropped, and an explicit
-     `Call ERROR` for an unrecognized solution name is added — the error the
-     original raises only through its failed lookup.
-  2. The property evaluation is flattened into the main program, one block per call of the demonstration program (library decision
-     D10 style), the procedure-internal variables renamed per call
-     (`<variable>_<tag>`, tags `_fz_1`, `_rho_1`, `_cp_1`, `_tc_1`, `_mu_1`
-     and `_fz_2` … `_mu_2`), the `REPEAT` loop becoming a `DUPLICATE` loop. The
-     polynomial, the tables, `Row[k]=k+(Fl-1)*18`, `xm`/`ym` and the output
-     scaling are unchanged; the two outputs of case 2 are scaled to SI by the
-     two explicit equations of the native file.
-  3. `CS-GAP-LKT`: own companion tables (same decoded values).
-- **Level 2** although the raw score is 4 (440 equations after the CoolSolve
-  analysis, largest block 1, procedure present, semi-empirical correlation):
-  the equation count comes entirely from the ten flattened repetitions of the
-  same 18-term polynomial, not from model depth — the library routine itself is
-  one polynomial and two table reads. Kept in line with the inventory guess and
-  with the level-2 function library `CSL-0005` (`cpbar_combustion_products`).
+  (see *Verification* item 2) and shipped as the companion CSVs of the model.
+  The CSV values are written with full round-trip precision (17 significant
+  digits, Python `repr`) rather than the 5 significant digits of an EES CSV
+  export: the 18-term polynomial cancels, and the 5-digit rounding shifts the
+  results by up to 1.4e-5 (viscosity), while the full precision keeps them at
+  5e-10.
+- **Level 2** although the raw score is 4 (440 equations when the ten
+  demonstration calls are flattened, largest block 1, procedure present,
+  semi-empirical correlation): the equation count comes entirely from the ten
+  repetitions of the same 18-term polynomial, not from model depth — the
+  library routine itself is one polynomial and two table reads. Kept in line
+  with the inventory guess and with the level-2 function library `CSL-0005`
+  (`cpbar_combustion_products`).
 
-## Limitations and CoolSolve gaps
-
-The native file is **blocked**; `missing_features` lists every gap that blocks
-it. The two gaps below are the first parse errors:
-
-- `CS-GAP-ELSEIF-CHAIN` — the two `ELSE IF … ENDIF;ENDIF` ladders of
-  `BRINEPROP` do not parse ("IF ... THEN without a matching ENDIF", 20 errors);
-- `CS-GAP-UPPERCASE` — the intrinsic `Uppercase$` is unknown.
-
-Worked around, not blocking the native file: `CS-GAP-INCLUDE` (the library is
-implicit in EES, its definitions are copied into this file and into the models
-that call them) and `CS-GAP-LKT` (binary `.lkt` tables decoded to CSV
-companions). The runnable variant carries no gap of its own.
+## Limitations
 
 Physics and accuracy: the correlations are those of the laboratory (1997), with
 IIR thermo-physical data; they are empirical polynomials valid only inside the
@@ -311,12 +266,12 @@ of the same function library, by a follow-up card.
 
 ## Related models
 
-- `CSL-0072` *centrifugal_brine_pump_refsim* — first user: its native and
-  runnable files carry a copy of `BRINEPROP` (density and specific heat of EG
-  25 %) and its own copies of the two coefficient tables; its EES reference
-  values for EG 25 % at 25 °C (ρ = 1030.000008 kg/m³, c_p = 3852.099981
-  J/kg·K) are reproduced by the tables of this model to 2.9e-09 and 6.2e-09
-  relative (work folder, Python, deleted).
+- `CSL-0072` *centrifugal_brine_pump_refsim* — first user: its file carries a
+  copy of `BRINEPROP` (density and specific heat of EG 25 %) and its own
+  copies of the two coefficient tables; its EES reference values for EG 25 %
+  at 25 °C (ρ = 1030.000008 kg/m³, c_p = 3852.099981 J/kg·K) are reproduced
+  by the tables of this model to 2.9e-09 and 6.2e-09 relative (work folder,
+  Python, deleted).
 - `CSL-0074` *cooling_coil_refsim* — cooling coil of the same model bank that
   calls the library for the brine side (copy in its file).
 - `CSL-0087` *internal_turbulent_nusselt*: the other translated function
@@ -338,8 +293,7 @@ of the same function library, by a follow-up card.
   (candidate `TM-0480`, merged here); the runnable variant resolves the stored
   water run.
 - `CSL-0162` *glycol_runaround_recovery_loop*: model of the same model bank
-  calling `BRINEPROP` the same way ('SPECHEAT'/'DENSITY'/'DYNVISC' on EG 25 %);
-  its runnable variant flattens the calls like this variant does.
+  calling `BRINEPROP` the same way ('SPECHEAT'/'DENSITY'/'DYNVISC' on EG 25 %).
 - `CSL-0163` *cooling_coil_paramid*: calls this library's `BRINEPROP`
   procedure for the ethylene-glycol properties of the identified coil
   (card C-155; its runnable variant uses the stored brine values).

@@ -1,6 +1,6 @@
 # Condensing boiler reference model (RefSim)
 
-🟠 **Level 3 · Advanced** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0080`
+🟠 **Level 3 · Advanced** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0080`
 
 Reference simulation model of a **condensing boiler** of the ULiège model bank
 (Laborelec toolkit lineage). The boiler is described as an assembly of a supposed
@@ -9,18 +9,18 @@ wet gas-water — a cooling coil where the fumes condense — and a
 water-environment exchanger standing for the heat losses). The combustion is
 represented by five fictitious processes and the mean specific heat of the
 combustion products comes from the `cpbar` function of the bank. The file is
-shipped as valid EES and is **blocked**; a runnable `_coolsolve` variant is
-shipped and verified against the solution stored by EES (see *Verification*).
+valid EES and is verified against the solution stored by EES (see
+*Verification*).
 
 | | |
 |---|---|
 | **Category** | Components › Boilers and burners |
 | **Fluids** | Water (real), AirH2O (moist air), Air, N2, O2, CO2, H2O, CH4, C2H6, C3H8, C4H10 (ideal gases, formation enthalpy included), Methane (real) |
-| **Size** | 258 equations, largest block 52 (native file and variant; the native file stops at its first `C4H10` call) |
+| **Size** | 258 equations, largest block 52 |
 | **Source** | ULiège model bank (Laborelec toolkit lineage), heat production by combustion, condensing boiler reference simulation model, 9 January 2008 (`CondensingBoiler_RefSim_EES_Model_VLAR080109.EES`, EES 7.888) |
 | **Authors** | Vincent Lemort, Andrés Rodríguez (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** by `CS-GAP-FLUIDS-C8H18`; runnable variant `condensing_boiler_refsim_coolsolve.eescode` verified against the solution stored by EES |
+| **CoolSolve** | native file runs (28 iterations with the shipped `coolsolve.conf` and `.initials`); verified against the solution stored by EES |
 
 ## Problem statement
 
@@ -111,13 +111,8 @@ including the consistency checks of the original).
 
 ## How to run
 
-The native file does **not** run in CoolSolve (it parses, and the solve stops at
-*"Unknown fluid: 'C4H10'"*). The runnable variant
-is `condensing_boiler_refsim_coolsolve.eescode` (baseline
-`condensing_boiler_refsim_coolsolve.sol`, tested as `CSL-0080:coolsolve`):
-
 ```bash
-coolsolve ./condensing_boiler_refsim_coolsolve.eescode     # 258 equations, SUCCESS (28 iterations)
+coolsolve ./condensing_boiler_refsim.eescode     # 258 equations, SUCCESS (28 iterations)
 ```
 
 `coolsolve.conf` (in the folder) keeps the solver pipeline `Newton,
@@ -126,19 +121,17 @@ coupling moist-air properties, the `cpbar` function and the ε-NTU laws) needs
 them at the shipped operating point. The guesses of `.initials` are the values
 the block takes at that operating point.
 
-**Operating point of the variant.** The variant runs the operating point of the
-solution stored by EES in the source file (`x_load` 0.37, `T_w_su_boil` 30 °C,
+**Operating point.** The file runs the operating point of the solution stored
+by EES in the source file (`x_load` 0.37, `T_w_su_boil` 30 °C,
 `V_dot_w_boil_ls` 5.6 l/s, `T_amb` 20 °C, `T_a_su_boil` 25 °C, `P_atm` 1 bar,
-`RH_amb` 0.5) instead of the input block of the file (`x_load` 1,
-`T_w_su_boil` 20 °C, `V_dot_w_boil_ls` 5 l/s, `T_amb` 25 °C): at full load the
-cooling-coil block does not converge (Newton: *LineSearchFailed* at iteration 0,
-residual 1.34e5; with multi-start the residual plateaus at 6.4e-2), and only the
-stored operating point has a reference. The **native** file keeps the input
-block of the source file.
+`RH_amb` 0.5), the only one that has a reference. The control-panel values of
+the source file (`x_load` 1, `T_w_su_boil` 20 °C, `V_dot_w_boil_ls` 5 l/s,
+`T_amb` 25 °C) are given in the comments of the four input lines; at those
+values the cooling-coil block does not converge (see *Limitations*).
 
 ## Results
 
-Results of the runnable variant at its operating point (compare with the EES
+Results at the operating point of the stored EES solution (compare with the EES
 stored solution of the source file, last column):
 
 | Variable | CoolSolve | EES stored |
@@ -187,12 +180,12 @@ mixture of four ideal gases and are therefore not plotted.
 ## Verification
 
 The transcription is verified against the **solution stored by EES** in the
-source file (243 of its 258 variable records hold a value) with the **runnable
-variant** at the operating point of that stored solution:
+source file (243 of its 258 variable records hold a value) at the operating point
+of that stored solution:
 
 ```
-compare_solution.py condensing_boiler_refsim_coolsolve.sol <reference>/ees_variables.csv
-225 common variables, 81 differ (rtol=0.001)
+compare_solution.py condensing_boiler_refsim.sol <reference>/ees_variables.csv
+225 common variables, 80 differ (rtol=0.001)
 ```
 
 The useful power, the efficiencies and the water temperature agree to better
@@ -211,10 +204,10 @@ differences have four documented causes:
    (0.003·(0.102/0.03530528)^0.6 = 0.0056699) and not of the 0.0025 K/W of the
    equations window (0.0047249); the stored `Q_dot_wenv` = 7.2868 W corresponds to
    `AU_wenv` = 0.5 W/K and not to the 2 W/K of the equations window
-   (2 W/K gives 29.15 W, the value of the variant). This explains the whole
+   (2 W/K gives 29.15 W, the value of this model). This explains the whole
    family of differences on `epsilon_gw` (+3.4·10⁻³), `Q_dot_gw` (−2.9·10⁻³),
    `Q_dot_coil` (+2.5·10⁻²), `Q_dot_sens_coil` (+1.1·10⁻¹) and `ratio_loss`
-   (7.5·10⁻¹). Re-running the variant with the parameters of the stored solution
+   (7.5·10⁻¹). Re-running the model with the parameters of the stored solution
    (`a_gw` = 0.62, `R_a_coil_n` = 0.003 K/W, `R_m_coil` = 10⁻⁴ K/W,
    `AU_wenv` = 0.5 W/K, work copy) gives `Q_dot_u_boil` 106 660.6 W (−9·10⁻⁵),
    `eta_HHV` 0.978626 (−8·10⁻⁵), `T_w_ex_boil` 34.57344 °C, `T_g_ex_boil`
@@ -226,8 +219,9 @@ differences have four documented causes:
    and the enthalpy of humid air differ between EES 7.888 and CoolProp. All the
    differences stay below 2.1·10⁻² and none of them changes the regime selected
    by the coil.
-3. **`h_C4H10_ref` and `h_C4H10_su`**: relative difference 1 (the variant
-   replaces them by constants, `CS-GAP-FLUIDS-C8H18`); `x_C4H10 = 0`, so the
+3. **`h_C4H10_ref` and `h_C4H10_su`** (−2.17881·10⁶ stored, −2.17265·10⁶
+   J/kg, 2.8·10⁻³): the absolute enthalpy of butane, of the same kind as item 4
+   below (the formation enthalpy of the older EES data); `x_C4H10 = 0`, so the
    enthalpy difference cancels in `Q_dot_2_bis` and no result is affected.
 
 4. **Absolute enthalpies of the fuels** (`h_CH4_ref`/`h_CH4_su`, `h_C2H6_ref`/`h_C2H6_su`,
@@ -242,8 +236,7 @@ differences have four documented causes:
    the model is affected. The absolute enthalpies of CO2 and H2O agree with the stored
    values within 6·10⁻⁵.
 
-**Maximum relative difference over the 225 common variables: 1.00** (`h_C4H10_ref`
-and `h_C4H10_su`, the constants of the variant); excluding those two, **0.75**
+**Maximum relative difference over the 225 common variables: 0.75**
 (`ratio_loss = Q_dot_wenv/Q_dot_u_boil`, a consequence of the stale `AU_wenv` of
 the stored solution). `RH_a_ex_coil_dry` (1.55·10⁻¹ in the parameter set of the
 stored solution) is a diagnostic output of the *dry* regime, which feeds no
@@ -323,22 +316,11 @@ this file; they are separate candidates.
 - **2026-10-06 — removed**: the `Example of solution` comment block of the
   original (224 lines of values of an older run), documented in *Verification*.
   No equation was touched.
-- **2026-10-06 — runnable variant** `condensing_boiler_refsim_coolsolve.eescode`,
-  changes forced by the gaps only, each one valid EES (no CoolSolve-only
-  syntax): (1) `C%` → `C_pc` and `H%` → `H_pc`, a renaming that CoolSolve no
-  longer requires;
-  (2) `MM_C4H10=molarmass(C4H10)` → `MM_C4H10=58.12` (the value EES returns,
-  `CS-GAP-FLUIDS-C8H18`) and `h_C4H10_su`/`h_C4H10_ref` → 0 (they only enter
-  `Q_dot_2_bis` multiplied by `y_C4H10_su = 0`); (3) the seven five-argument
-  `IF(A,B,X,Y,Z)` calls (the five of the source and the two that select the
-  outputs of the flattened coil) rewritten as three-argument `IF(cond,X,Z)`
-  (CoolSolve accepts the five-argument form now, so this rewrite is not
-  required): the original returns X if A<B, Y if A=B and Z if A>B, so
-  `IF(A,B,X,X,Z) = IF(X−A, X, Z)` and `IF(A,B,1,1,0) = IF(B−A, 1, 0)`; the two
-  coil outputs read `Q_dot_coil_wet=if(flag_dp, Q_dot_coil_wet_if, 0)` and
-  `T_wb_ex_coil_wet=if(flag_dp, T_wb_ex_coil_wet_if, T_wb_su_coil)`. The
-  operating point of the variant is the one of the stored EES solution (see
-  *How to run*).
+- **Operating point.** The input lines `x_load`, `T_w_su_boil`,
+  `V_dot_w_boil_ls` and `T_amb` carry the operating point of the stored EES
+  solution (the control-panel values of the source file are recorded in their
+  comments), because the cooling-coil block does not converge at those
+  control-panel values and only the stored point has a reference.
 - **Level**: taxonomy §3 — one adiabatic combustion chamber (five fictitious
   processes), three heat exchangers (two of them ε-NTU models, one of them
   solved twice with a regime selection), a moist-air block (wet-bulb by
@@ -349,23 +331,16 @@ this file; they are separate candidates.
   distribution/discretisation, no dynamic behaviour) → **level 3**.
 ## Limitations and CoolSolve gaps
 
-Gaps blocking the native file (all in `model.json` `missing_features`, see the
-CoolSolve register `docs/model_library_support.md`):
-
-- **`CS-GAP-FLUIDS-C8H18`** — the EES ideal-gas substance `C4H10` of
-  `molarmass(C4H10)` and `enthalpy(C4H10,T=…)` is unknown to CoolSolve
-  (*"Unknown fluid: 'C4H10'"*); the same gap as `C8H18`, "the other hydrocarbons
-  of the EES ideal-gas substance list beyond C3". `x_C4H10 = 0`, so the terms
-  that use it vanish, but the calls must still evaluate.
 - **`CS-BUG-MULTILINE-COMMENT-START`** is worked around by a comment-only edit
   (stoichiometry block) and does not block the file.
 
-Convergence: at the input block of the source file (full load) the cooling-coil
-block does not converge (Newton *LineSearchFailed* at iteration 0, residual
-1.34·10⁵; with multi-start the residual plateaus at 6.4·10⁻²). The same block
-converges in 28 iterations at the operating point of the stored EES solution,
-which is the operating point shipped in the variant. This is a convergence
-question, not a registered gap: the simplest remedy would be a
+Convergence: at the control-panel values of the source file (full load,
+`x_load` 1, `T_w_su_boil` 20 °C, `V_dot_w_boil_ls` 5 l/s, `T_amb` 25 °C) the
+cooling-coil block does not converge (Newton *LineSearchFailed* at iteration 0,
+residual 1.34·10⁵; with `Newton, LevenbergMarquardt` and 2000 iterations the
+residual plateaus at 7·10⁻²). The same block converges in 28 iterations at the
+operating point of the stored EES solution, which is the one shipped. This is a
+convergence question, not a registered gap: the simplest remedy would be a
 `[deepsearch]`-style pipeline or better scaling of the moist-air block.
 
 Physical limitations of the model (as in the original): the combustion is

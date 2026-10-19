@@ -146,17 +146,10 @@ no author (initials `SQ` by the folder convention of the collection).
   `index` ("1"…"10") that the function does not use and the companion CSVs
   omit. `ZRD42KCE-TFD(copy)` renamed `ZRD42KCE-TFD_copy` (file-name-safe
   table name).
-- **`until (i>9)`**: the original writes `until i>9` without parentheses —
-  gap `CS-GAP-REPEAT-UNTIL-BARE`; the parenthesised form (valid EES as well) is
-  used. A trailing comment after `until (i>9)` on the same line is rejected by
-  the CoolSolve parser, so the comment is on its own line (see *Limitations*).
-- **`convert(lbm/hr,kg/s)`**: the original converts the `M` column with
-  `convert(lbm/hr,kg/s)`. CoolSolve returns **1** for this conversion, quoted
-  or not (bug `CS-BUG-CONVERT-UNIT`: 1 lbm/hr = 1.259978805556e-4 kg/s
-  applied by EES, see its stored `M_dot`); the demonstration multiplies by
-  the exact factor `0.0001259978805556` instead ([ees_import.md
-  §6.2](https://github.com/CoolProp/CoolSolve/blob/main/docs/ees_import.md):
-  prefer converted numbers), keeping the file runnable and correct.
+- **`until i>9`**: kept as in the original (no parentheses).
+- **`convert(lbm/hr,kg/s)`**: the demonstration converts the `M` column with
+  `convert(lbm/hr,kg/s)` as the original does (1 lbm/hr = 1.259978805556e-4
+  kg/s).
 - **Exhaust-state equations of the original demo omitted** (see
   *Demonstration program*): with the embedded catalogues `W_dot/M_dot` ≈
   20.9 MJ/kg and the `(p,h)` call leaves the fluid range — a consequence of
@@ -166,11 +159,11 @@ no author (initials `SQ` by the folder convention of the collection).
   structure → 0; explicit catalogue correlation, no calibration inside the
   model → 0; no curated guesses (0 iterations) → 0. Total 1 → level 1.
 
-## Limitations and CoolSolve notes
+## Limitations
 
-- Unverified suggestion (not registered, no evidence of EES validity at
-  hand): a trailing comment after `until (…)` in a `REPEAT` loop is rejected
-  by the CoolSolve parser.
+- The catalogues embedded in the file are another vintage than the table of
+  the stored run (see *Verification*): the stored `W_dot`, `M` and `Vs` are
+  not reproduced.
 
 ## Related models
 

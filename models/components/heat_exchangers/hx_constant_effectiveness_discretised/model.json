@@ -49,23 +49,23 @@
   },
   "verification": {
     "summary": "Both case studies of the LaboThapPy example were re-run: Q_dot +0.11 % (RecupHT) and +1.02 % (GasCooler), max 1.33 % on h_ex_H, explained by the original's bisection tolerance and 1 % steps. Against a tightened exact-root reference Q_dot agrees to +0.012 % and +0.015 %.",
-    "checks": ["source-rerun"],
+    "checks": [
+      "source-rerun"
+    ],
     "reference": "Both case studies (RecupHT, GasCooler) of labothappy/component/examples/heat_exchanger/hex_csteff_disc_example.py re-run in a throw-away venv (CoolProp 8.0.0, LaboThapPy commit f03f7f47), plus a tightened brentq zero-pinch reference",
     "date": "2026-10-09",
     "coolsolve_version": "0.3.0@7addbbc",
     "max_rel_diff": 0.0133,
     "notes": "Vs the source example: Q_dot +0.11 % (RecupHT, the original's bisection tolerance on Q_dot_max plus the BICUBIC-vs-HEOS backend) and +1.02 % (GasCooler, the original stops at the last 1 % effectiveness step: DT_pinch 11.50 K vs the enforced 10 K); max 1.33 % on h_ex_H (GasCooler) is that Q_dot difference propagated. epsilon exact (0.95), DT_pinch = Pinch_min exactly in the GasCooler case. Vs a tightened exact-root reference: Q_dot +0.012/+0.015 % (property backend only), DT_pinch within 7.6e-5 K. See README Verification."
   },
-  "missing_features": [
-    "CS-BUG-DUPLICATE-INDEX-EXPR"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0126",
     "CSL-0014",
     "CSL-0090",
     "CSL-0115",
-  
-    "CSL-0138"],
+    "CSL-0138"
+  ],
   "related_external": [],
   "supersedes": [],
   "previous_paths": [],
@@ -74,6 +74,11 @@
       "date": "2026-10-09",
       "action": "added (T-TRANSLATE of LaboThapPy HexCstEffDisc, verified vs the two case studies of hex_csteff_disc_example.py)",
       "by": "opencode/GLM worker for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b): no gap blocks the model; missing_features emptied (the closed-form profiles and unrolled MIN cascades are kept: same equations)",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

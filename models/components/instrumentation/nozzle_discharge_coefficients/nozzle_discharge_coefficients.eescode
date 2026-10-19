@@ -134,7 +134,7 @@ duplicate i=1,4
   call warning_error_ashrae(C_nz[i]:aaa[i])
 end
 
-M_dot_ah_cd=M_dot_a_nz[1]+M_dot_a_nz[2]+M_dot_a_nz[3]+M_dot_a_nz[4]   "humid-air mass flow rate through the bank (sum(M_dot_a_nz[i],i=1,4) in the original, CS-GAP-SUM-INDEXED) [kg/s]"
+M_dot_ah_cd=sum(M_dot_a_nz[i],i=1,4)                           "humid-air mass flow rate through the bank [kg/s]"
 M_dot_ah_cd=(1+w_a_su_nz)*M_dot_a_cd                            "dry-air mass flow rate [kg/s]"
 
 "!Demonstration 2: ISO 5167 long-radius nozzle (flattened MODULE of the source)"

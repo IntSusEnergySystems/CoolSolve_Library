@@ -1,6 +1,6 @@
 # LiBr-water absorption chiller cycle with a solution heat exchanger
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0043`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0043`
 
 Single-effect absorption chiller on the LiBr-H2O pair at one operating point:
 water is the refrigerant, a lithium-bromide solution the absorbent. The
@@ -10,12 +10,8 @@ and `H_LIBR`; mass and LiBr conservation give the solution flow rates and a
 generator energy balance gives the driving heat and the COP, with a 75 %
 effective solution heat exchanger between absorber and generator.
 
-**Blocked**: CoolSolve has no LiBr-H2O solution properties (`X_LIBR`/`H_LIBR`
-unknown, gap `CS-GAP-FLUIDS-ABS`, registered for the CoolSolve example
-`water_libr`). The model file is kept in native EES syntax; CoolSolve parses
-it, finds the system square (46 equations / 46 variables, largest block 3)
-and stops on `Block 16 failed: Unknown or unsupported function: X_LIBR with 3
-arguments`.
+The model file is native EES syntax; CoolSolve evaluates `X_LIBR` and `H_LIBR`
+with the ASHRAE LiBr-H2O correlations of the EES routines.
 
 | | |
 |---|---|
@@ -25,7 +21,7 @@ arguments`.
 | **Source** | ULiège — course *Machines et systèmes thermiques*, repetition 11, exercise 2 (EES file `MSTH-SB-R11-EX2.EES`) |
 | **Authors** | TBD (ULiège MSTh course: J. Lebrun, V. Lemort, S. Bertagnolio) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — blocked by `CS-GAP-FLUIDS-ABS` (no LiBr solution properties) |
+| **CoolSolve** | native file runs (59 iterations); verified against the EES stored solution (max 5.6e-04) |
 
 ## Problem statement
 
@@ -50,37 +46,44 @@ the solution heat exchanger (`epsilon_HEX = 0.75`). `COP = Q_dot_ev/Q_dot_gen`.
 
 The arrays `P[i]`, `h[i]`, `T[i]`, `s[i]` (i = 1 evaporator outlet, 2 generator
 outlet, 3 condenser outlet, 4 evaporator inlet) describe the water loop on the
-diagrams (added by the library as post-processing; not exercised until the
-blocking gap is closed).
+diagrams (added by the library as post-processing).
 
 ## How to run
 
-Not runnable: CoolSolve stops on the unknown LiBr functions (see above). Open
-`libr_water_absorption_chiller.eescode` in EES, or solve the CoolSolve example
-`examples/water_libr.eescode` once `CS-GAP-FLUIDS-ABS` is closed (same
-equations, same blocked status).
+```bash
+coolsolve ./libr_water_absorption_chiller.eescode
+```
 
-## Results (EES stored solution of the original, 30/30 variables)
+It solves in 59 iterations from the default guesses. The CoolSolve example
+`examples/water_libr.eescode` has the same equations.
 
-| Variable | Value | Variable | Value |
-|---|---:|---|---:|
-| `P_ev` | 872.60 Pa | `Q_dot_ev` | 2.3213 MW |
-| `P_cd` | 9589.78 Pa | `Q_dot_cd` | 2.5558 MW |
-| `x_abs` | 58.303 mass % | `Q_dot_gen` | 3.1088 MW |
-| `x_gen` | 74.776 mass % | `Q_dot_HEX` | 0.39578 MW |
-| `M_dot_weak` | 4.5395 kg/s | `epsilon_HEX` | 0.75 |
-| `M_dot_rich` | 3.5395 kg/s | `COP` | 0.7467 |
+## Results (EES stored solution of the original, 30 variables, and CoolSolve)
 
-These are the reference values a future CoolSolve run must reproduce
-(verification when `CS-GAP-FLUIDS-ABS` is closed).
+| Variable | EES | CoolSolve |
+|---|---:|---:|
+| `P_ev` [Pa] | 872.60 | 872.58 |
+| `P_cd` [Pa] | 9589.78 | 9595.0 |
+| `x_abs` [mass %] | 58.303 | 58.308 |
+| `x_gen` [mass %] | 74.776 | 74.772 |
+| `M_dot_weak` [kg/s] | 4.5395 | 4.5415 |
+| `M_dot_rich` [kg/s] | 3.5395 | 3.5415 |
+| `Q_dot_ev` [MW] | 2.3213 | 2.3216 |
+| `Q_dot_cd` [MW] | 2.5558 | 2.5563 |
+| `Q_dot_gen` [MW] | 3.1088 | 3.1094 |
+| `Q_dot_HEX` [MW] | 0.39578 | 0.39600 |
+| `epsilon_HEX` [-] | 0.75 | 0.75 |
+| `COP` [-] | 0.7467 | 0.7466 |
 
 ## Verification
 
-Not verified: the model is blocked and no CoolSolve run exists. The EES stored
-solution of the original file (`MSTH-SB-R11-EX2.EES`, 30/30 variables, table
-above) is the reference for the re-check. CoolSolve reproduces the water-side
-properties (the example `water_libr.eescode` parses and the system is square);
-only the LiBr routines are missing.
+CoolSolve solution against the EES stored solution of the original file
+(`MSTH-SB-R11-EX2.EES`, 30 of 30 variables; `compare_solution.py`, rtol 1e-3):
+30 common variables, 0 differ; maximum relative difference **5.6·10⁻⁴**
+(`M_dot_rich`, `Q_dot_HEX`, `P_cd`: 5.4·10⁻⁴). The 16 variables only in CoolSolve
+are the diagram state points added by the library. The small differences are
+those expected from the water properties (CoolProp against EES, for example the
+saturation pressure at 45 °C, 9595.0 against 9589.78 Pa) and from the stored
+EES run; their origin was not separated further.
 
 ## Source and attribution
 
@@ -93,7 +96,7 @@ S. Quoilin:
 
 The CoolSolve example `examples/water_libr.eescode` is a verbatim transcription
 of the same file (equation diff identical, only the comments differ); it stays
-in the CoolSolve repository as a test case for `CS-GAP-FLUIDS-ABS`.
+in the CoolSolve repository as an example.
 
 ## Conversion log
 
@@ -110,13 +113,7 @@ in the CoolSolve repository as a test case for `CS-GAP-FLUIDS-ABS`.
 - **2026-10-05 — diagram support**: block of 16 post-processing equations
   (water-loop state arrays `P[i]`, `h[i]`, `T[i]`, `s[i]`) added at the end;
   pure post-processing on existing variables, results unchanged by
-  construction; not exercised until the gap is closed.
-- **2026-10-05 — no runnable variant**: the register's workaround for
-  `CS-GAP-FLUIDS-ABS` ("external correlations as EES functions") requires a
-  published LiBr property correlation, which is not available in the source
-  collection (the originals call the EES built-in routines); no correlation
-  constants were at hand, so none were invented. A variant will be added at
-  the re-check, once a correlation source is chosen.
+  construction.
 - **Level justification** (taxonomy.md §3): 46 equations (<50 → 1), largest
   block 3 (≤5 → 0), no procedures/arrays (0), ≥3 coupled components (0/1 →
   1), no calibration/off-design (0), no curated guesses needed (0); score 2 →
@@ -124,8 +121,10 @@ in the CoolSolve repository as a test case for `CS-GAP-FLUIDS-ABS`.
 
 ## Limitations and CoolSolve gaps
 
-- Blocked by `CS-GAP-FLUIDS-ABS` (no `X_LIBR`/`H_LIBR`/`LiBrH2O` support in
-  CoolSolve); the only gap of the native file.
+- `X_LIBR` and `H_LIBR` are the ASHRAE-handbook correlations (validity
+  ranges 45…75 % and 40…70 %, documented and not enforced, as in EES). The
+  `V_LIBR` routine of the variant files is not available in CoolSolve
+  (`CS-GAP-FLUIDS-ABS`).
 - The solution pump work is neglected (as in the original exercise; the VL
   version of the same exercise computes it with `V_LIBR`, same gap).
 
@@ -147,4 +146,5 @@ in the CoolSolve repository as a test case for `CS-GAP-FLUIDS-ABS`.
 
 - CoolSolve example `examples/water_libr.eescode` (verbatim transcription of
   the same original, kept in the CoolSolve repository).
-- No other absorption model in the library yet (2026-10-05).
+- `CSL-0249` *nh3h2o_absorption_chiller*: the ammonia-water single-effect
+  chiller with rectifier, the other working pair of the library.

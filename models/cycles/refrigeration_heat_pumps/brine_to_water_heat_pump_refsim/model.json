@@ -5,7 +5,7 @@
   "summary": "Reference simulation model of a brine-to-water (ground-source) heat pump of the ULiège model bank: a scroll compressor described in five steps (suction heating-up, isentropic compression to an adapted pressure, isochoric compression to the discharge plenum, exhaust cooling-down and internal leakage through the scroll throat) with all its heat transfers referred to a fictitious envelope of uniform temperature, a brine evaporator and a water condenser, both described by three thermal resistances in series referred to their nominal flows; the brine properties come from the BrineProp library.",
   "kind": "steady",
   "level": 2,
-  "status": "blocked",
+  "status": "failing",
   "main_file": "brine_to_water_heat_pump_refsim.eescode",
   "fluids": [
     "R407C",
@@ -60,18 +60,15 @@
     "course": "ULiège model bank (Laborelec toolkit lineage), heat production by vapour compression, reference simulation model, 8 January 2008"
   },
   "verification": {
-    "summary": "Concerns the runnable variant (native file blocked). Against the EES stored solution: 142 common variables, 73 differ above rtol = 0.001, maximum 5.54e-01 (reference-state offset on absolute enthalpies). Derived results agree to 0.4–3.3 %, above the expected tolerance (R407C properties) and not investigated further.",
+    "summary": "Concerns the runnable variant (the native file is over-determined by three equations as the original stands, status failing). Against the EES stored solution: 142 common variables, 73 differ above rtol = 0.001, maximum 5.54e-01 (reference-state offset on absolute enthalpies). Derived results agree to 0.4–3.3 %, above the expected tolerance (R407C properties) and not investigated further.",
     "checks": ["ees-stored-solution"],
-    "reference": "EES stored solution of the source file (142 of its 146 variable records hold a value; the reference point is the operating point stored by EES); the comparison concerns the runnable variant brine_to_water_heat_pump_refsim_coolsolve.eescode, the native file being blocked",
+    "reference": "EES stored solution of the source file (142 of its 146 variable records hold a value; the reference point is the operating point stored by EES); the comparison concerns the runnable variant brine_to_water_heat_pump_refsim_coolsolve.eescode",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
     "max_rel_diff": 0.554,
     "notes": "142 common variables, 73 differ above rtol=0.001, maximum relative difference 5.54e-01 (h_ex_cd). The largest differences are the absolute enthalpies and entropies of R407C, offset by +143405 J/kg and +763.4 J/kg-K between EES 7.888 and CoolProp (reference state); the derived results agree to 0.4-3.3 % (COP_heating 4.112 / 4.254, Q_dot_ev 11933 / 12232 W, Q_dot_cd 15463 / 15708 W, W_dot_cp 3760 / 3693 W) and the remaining differences follow the specific heat of R407C vapour at the suction (+10 %) and the R407C saturation line near 0 and 42 °C (t_ev -3.544 / -3.808 °C), where the zeotropic blend is described differently by EES and CoolProp. gamma_leak_cp is fixed at the default value 1.03 of the commented line of the original instead of being solved by the bisection relation (see the conversion log), which accounts for 1.40e-02 on that variable. No reference variable excluded from the comparison; the 110 CoolSolve-only variables are the state points of the diagrams, the internal variables of the two flattened BRINEPROP blocks, the six consistency checks and the string variable fluid$."
   },
-  "missing_features": [
-    "CS-GAP-ELSEIF-CHAIN",
-    "CS-GAP-UPPERCASE"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0077",
     "CSL-0079",
@@ -107,6 +104,11 @@
       "date": "2026-10-10",
       "action": "string array U$[…] of BRINEPROP replaced by the lookup table brine_to_water_heat_pump_refsim-Units.csv and LOOKUP$ (decision D14: string arrays are not supported by CoolSolve); missing_features: CS-GAP-STRING-ARRAY removed; still blocked (CS-GAP-ELSEIF-CHAIN, CS-GAP-UPPERCASE); native file checked in a scratch copy with the frozen binary: no string-array error, first error is the ELSE IF chain (CS-GAP-ELSEIF-CHAIN); variant unchanged, its .sol unchanged",
       "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked with CoolSolve 0.3.0@a77efaa (T-RECHECK, CS-GAP-ELSEIF-CHAIN and CS-GAP-UPPERCASE closed): the native file parses and its BRINEPROP procedure runs (a hybrid of the variant with the native procedure solves and agrees with the variant to 1.1e-10 on cp_glw); missing_features emptied; the native file stays over-determined as the original stands (164 equations, 161 unknowns: P_ev, P_cd and M_dot_r fixed at the stored EES values) and, with the three assignments removed, square (161/161) but its 76-variable block 42 does not converge (MaxIterations, residual 4.7e5); status failing; variant kept with its .sol, .initials and companion tables",
+      "by": "opencode worker (GLM) for S. Quoilin"
     }
   ]
 }

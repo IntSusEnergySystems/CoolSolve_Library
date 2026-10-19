@@ -5,7 +5,7 @@
   "summary": "Five-parameter single-diode model of a flat-plate PV module: module parameters read from an embedded PVModules catalogue table, I-V/P-V curve computed in 100 points at a given cell temperature and irradiance.",
   "kind": "steady",
   "level": 2,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "pv_module_single_diode.eescode",
   "fluids": [],
   "tags": [
@@ -43,20 +43,18 @@
     "course": "ULiège Thermodynamics Laboratory course file (photovoltaique), derived from the UW F-Chart PV module model"
   },
   "verification": {
-    "summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-END-PROCEDURE, CS-GAP-CONVERT-UNQUOTED, CS-GAP-LOOKUPROW and CS-BUG-LOOKUP-STRING): vs the EES stored solution 333 common variables, 1 differ at rtol=0.001 (P[1], floating noise), max 1.37e-06 otherwise; the stored I-V parametric table matches exactly (300/300 within 1e-9).",
-    "checks": ["ees-stored-solution", "ees-parametric-table"],
-    "reference": "EES stored solution (333 common variables) and the 100x3 I-V parametric table stored in the source file (hand-decoded from the binary); both concern the runnable variant pv_module_single_diode_coolsolve",
-    "date": "2026-10-08",
-    "coolsolve_version": "0.3.0@7addbbc",
+    "summary": "Native file vs the EES stored solution: 333 common variables, 1 differs at rtol=0.001 (P[1], floating noise), max 1.37e-06 otherwise; the stored I-V parametric table matches exactly (300/300 within 1e-9).",
+    "checks": [
+      "ees-stored-solution",
+      "ees-parametric-table"
+    ],
+    "reference": "EES stored solution (333 common variables) and the 100x3 I-V parametric table stored in the source file (hand-decoded from the binary)",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": 1.37e-06,
-    "notes": "Variant vs EES stored solution: 333 common variables, 1 differ (P[1]: EES -2.04506e-08 W vs 0, floating noise at V[1]=0); excluding it the largest relative deviation is 1.37e-06 (I[97]). I-V parametric table matches the stored solution exactly."
+    "notes": "333 common variables, 1 differs (P[1]: EES -2.04506e-08 W vs 0, floating noise at V[1]=0); excluding it the largest relative deviation is 1.37e-06 (I[97]). I-V parametric table matches the stored solution exactly. Comparison made with the solution of the earlier runnable variant, which the native file reproduces in all common variables to 2.5e-6 (CoolSolve 0.3.0@4798e2b)."
   },
-  "missing_features": [
-    "CS-GAP-END-PROCEDURE",
-    "CS-GAP-CONVERT-UNQUOTED",
-    "CS-GAP-LOOKUPROW",
-    "CS-BUG-LOOKUP-STRING"
-  ],
+  "missing_features": [],
   "related": [],
   "related_external": [
     "De Soto, Klein, Beckman, Improvement and validation of a model for photovoltaic array performance, Solar Energy 80 (2006) 78-88 (UW F-Chart PV model)"
@@ -73,6 +71,11 @@
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @d5d6b37 (T-RECHECK, CS-GAP-LOOKUP-PROC closed); still blocked by CS-GAP-END-PROCEDURE (first error: line 40 and 'Procedure ReadPV missing END', parse fails before any lookup is evaluated), CS-GAP-CONVERT-UNQUOTED, CS-GAP-LOOKUPROW and CS-BUG-LOOKUP-STRING; variant kept",
       "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b): the native file (PROCEDURE ReadPV with END, LOOKUP$ROW, string-keyed lookups, unquoted ConvertTemp) solves and reproduces the earlier variant to 2.5e-6; status verified, variant and its table deleted, native .sol added",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

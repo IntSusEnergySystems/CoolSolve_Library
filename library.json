@@ -1,9 +1,9 @@
 {
  "snapshot": {
-  "content_hash": "sha256:718a703400721aa1",
-  "files": 1253,
-  "bytes": 8976448,
-  "models": 244,
+  "content_hash": "sha256:5a29b03c5db7fd2c",
+  "files": 1235,
+  "bytes": 8752757,
+  "models": 247,
   "functions": 449,
   "taxonomy_version": "0.2"
  },
@@ -15,7 +15,7 @@
    "category": "buildings",
    "kind": "steady",
    "level": 2,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Predicted Mean Vote (PMV) and Predicted Percentage of Dissatisfied (PPD) after Fanger (1970): full body heat balance (breathing, perspiration, sweat, clothing, radiation, convection) with the activity and clothing selected from two embedded lookup tables.",
    "fluids": [
     "AirH2O",
@@ -43,26 +43,20 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-LOOKUPROW",
-    "CS-BUG-LOOKUP-STRING"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0042",
     "CSL-0106"
    ],
-   "coolsolve_version": "0.3.0@536d427",
-   "verified_on": "2026-10-05",
-   "verification_summary": "Native file blocked by CS-GAP-LOOKUPROW and CS-BUG-LOOKUP-STRING. Runnable variant compared with EES stored solution: 46 of 57 variables within 0.1%, 51/57 within 0.5%.",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Compared with the EES stored solution: 46 of 57 variables within 0.1 %, 51/57 within 0.5 %; the rest are 5 stale cells of a second run and property-driven deviations (humid-air formulation).",
    "verification_checks": [
     "ees-stored-solution"
    ],
    "path": "models/buildings/thermal_comfort_pmv_ppd",
    "main_file": "thermal_comfort_pmv_ppd.eescode",
-   "figures": 0,
-   "variants": [
-    "thermal_comfort_pmv_ppd_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0042",
@@ -345,7 +339,7 @@
    "category": "components/boilers_burners",
    "kind": "steady",
    "level": 3,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Reference simulation model of a condensing boiler of the ULiège model bank (Laborelec toolkit lineage): a supposed adiabatic combustion chamber described by five fictitious processes (cooling of the air and of the fuel to the reference temperature, stoichiometric combustion, CO2-CO dissociation of the air excess, heating of the products), a counter-flow dry gas-water heat exchanger (epsilon-NTU), a cooling coil standing for the wet gas-water exchanger in which the fumes condense (solved as fully dry and as fully wet, the regime of highest cooling power being kept) and a semi-isothermal water-environment exchanger standing for the heat losses to the ambient; the mean specific heat of the combustion products comes from the cpbar function of the bank.",
    "fluids": [
     "Water",
@@ -389,27 +383,22 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-FLUIDS-C8H18"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0006",
     "CSL-0005",
     "CSL-0081",
     "CSL-0166"
    ],
-   "coolsolve_version": "0.3.0@536d427",
-   "verified_on": "2026-10-06",
-   "verification_summary": "Concerns the runnable variant at the operating point of the stored EES solution: 225 common variables, 81 differ (rtol=0.001), mostly from a stale stored solution and moist-air properties. Useful power, efficiencies and water temperature agree to better than 2e-05.",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "At the operating point of the stored EES solution: 225 common variables, 80 differ (rtol=0.001), mostly from a stale stored solution and moist-air properties. Useful power, efficiencies and water temperature agree to better than 2e-05.",
    "verification_checks": [
     "ees-stored-solution"
    ],
    "path": "models/components/boilers_burners/condensing_boiler_refsim",
    "main_file": "condensing_boiler_refsim.eescode",
-   "figures": 0,
-   "variants": [
-    "condensing_boiler_refsim_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0166",
@@ -827,8 +816,8 @@
    "category": "components/compressors",
    "kind": "steady",
    "level": 2,
-   "status": "blocked",
-   "summary": "Constant-speed centrifugal air compressor characterised by a three-point performance map: reduced mass flow rate and isentropic efficiency interpolated from the map at the pressure ratio, then mass flow rate and absorbed power. Native EES INTERPOLATE form (blocked); a runnable variant ships beside it.",
+   "status": "verified",
+   "summary": "Constant-speed centrifugal air compressor characterised by a three-point performance map: reduced mass flow rate and isentropic efficiency interpolated from the map at the pressure ratio, then mass flow rate and absorbed power.",
    "fluids": [
     "Air"
    ],
@@ -850,28 +839,22 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-INTERP-EES",
-    "CS-GAP-INTERP-EXTRAP"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0011",
     "CSL-0023",
     "CSL-0069",
     "CSL-0157"
    ],
-   "coolsolve_version": "0.3.0@536d427",
-   "verified_on": "2026-10-05",
-   "verification_summary": "Not the native file (blocked by `CS-GAP-INTERP-EES` and `CS-GAP-INTERP-EXTRAP`): the runnable variant was compared with the EES stored solution of TM-0061. `w_s` differs by 9.55e-04; the map-extrapolation group differs because EES extrapolates where CoolSolve clamps, and extrapolating by hand reproduces the stored values.",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Compared with the EES stored solution of TM-0061 at p_ex = 5.4 bar (r_p = 6, linear extrapolation of the map as in EES): epsilon_s, M_r and M_dot agree to 3e-9; w_s and W_dot differ by 9.6e-4 (EES 7 vs CoolProp Air); h and s carry constant reference-state offsets.",
    "verification_checks": [
     "ees-stored-solution"
    ],
    "path": "models/components/compressors/centrifugal_compressor_lookup_map",
    "main_file": "centrifugal_compressor_lookup_map.eescode",
-   "figures": 0,
-   "variants": [
-    "centrifugal_compressor_lookup_map_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0067",
@@ -958,8 +941,8 @@
     "CSL-0035",
     "CSL-0177"
    ],
-   "coolsolve_version": "0.3.0@536d427",
-   "verified_on": "2026-10-05",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
    "verification_summary": "Main file compared with the solution stored by EES in the source file: 15 common variables, 3 differ (rtol=0.001); the 12 comparable variables agree, largest relative deviation 3.04e-04, the 3 others being reference-state offsets. Methane variant against its own stored solution: largest deviation 2.58e-05.",
    "verification_checks": [
     "ees-stored-solution"
@@ -1009,8 +992,8 @@
     "CSL-0157",
     "CSL-0136"
    ],
-   "coolsolve_version": "0.3.0@d5d6b37",
-   "verified_on": "2026-10-10",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
    "verification_summary": "Compared with the EES stored solution: 12 common variables, 7 differ at rtol=0.001. The property states agree (v_su_cp 0.011 %), but the catalogue-dependent outputs differ by a factor 3-4 because the stored run used a table version absent from the collection; the M polynomial recomputed in Python agrees to the last digit.",
    "verification_checks": [
     "ees-stored-solution",
@@ -1079,7 +1062,7 @@
    "category": "components/compressors",
    "kind": "steady",
    "level": 3,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Steady-state matching of a turbocharger on a supercharged engine: filter and compressor (given pressure ratio and isentropic efficiency), glycol-water intercooler (epsilon-NTU), combustion at the given AFR with the exhaust properties computed from the molar composition of the complete-combustion products (excess air, simplified dry air, ideal-gas CO2/H2O/O2/N2), turbine matched on the compressor power balance, equivalent exhaust-orifice diameter and heat-recovery percentages.",
    "fluids": [
     "Air",
@@ -1112,27 +1095,20 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-SUM-INDEXED",
-    "CS-GAP-MOLARMASS-ELEMENT",
-    "CS-GAP-INCOMPRESSIBLE"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0005",
     "CSL-0150"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-08",
-   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-SUM-INDEXED, CS-GAP-MOLARMASS-ELEMENT and CS-GAP-INCOMPRESSIBLE): compared with the EES stored solution, 82 common variables, 52 pass at rtol = 0.001, maximum 4.5e-3 on Q_dot_2; deviations explained by backend offsets and 8 stale stored values.",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Compared with the EES stored solution, 82 common variables, 52 pass at rtol = 0.001, maximum 4.5e-3 on Q_dot_2; deviations explained by backend offsets and 8 stale stored values.",
    "verification_checks": [
     "ees-stored-solution"
    ],
    "path": "models/components/compressors/turbocharger_combustion_products",
    "main_file": "turbocharger_combustion_products.eescode",
-   "figures": 0,
-   "variants": [
-    "turbocharger_combustion_products_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0156",
@@ -1188,7 +1164,7 @@
    "category": "components/compressors",
    "kind": "steady",
    "level": 3,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Isentropic and volumetric effectiveness of an R717 reciprocating compressor computed from 17 catalogue rows (condensing/evaporating temperature, capacity, electrical power, mass flow) read from a lookup table, with a power-law extrapolation of the isentropic effectiveness to 1000 and 750 rpm.",
    "fluids": [
     "R717"
@@ -1212,26 +1188,20 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-BUG-DUPLICATE-VAR-BOUND",
-    "CS-GAP-LOOKUP-NONAME"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0123",
     "CSL-0035"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-08",
-   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-BUG-DUPLICATE-VAR-BOUND and CS-GAP-LOOKUP-NONAME): compared with the EES stored solution, 381 common variables, 51 differ at rtol=0.001, all absolute h/s reference-state offsets; all 330 derived results pass (worst 9.96e-4).",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Compared with the EES stored solution (381 common variables, 51 differ at rtol 1e-3, all absolute h/s reference-state offsets EES vs CoolProp R717); all 330 derived results pass (worst 9.96e-4).",
    "verification_checks": [
     "ees-stored-solution"
    ],
    "path": "models/components/compressors/reciprocating_catalogue_r717",
    "main_file": "reciprocating_catalogue_r717.eescode",
-   "figures": 0,
-   "variants": [
-    "reciprocating_catalogue_r717_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0167",
@@ -2250,8 +2220,8 @@
     "CSL-0115",
     "CSL-0138"
    ],
-   "coolsolve_version": "0.3.0@536d427",
-   "verified_on": "2026-10-05",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
    "verification_summary": "Each of the three configurations was compared with the solution stored by EES in its original file: zone duties within 0.23 %, 0.13 % and 0.09 %, AU and NTU within 0.41 %, 0.48 % and 0.1 %, air pressure drop 0.87 % to 0.9 %. Deviations are explained by enthalpy reference states and viscosities.",
    "verification_checks": [
     "ees-stored-solution"
@@ -2558,16 +2528,15 @@
    "license": "MIT",
    "url": "",
    "missing_features": [
-    "CS-GAP-INTEGRALVALUE",
-    "CS-GAP-GOTO"
+    "CS-GAP-INTEGRALVALUE"
    ],
    "related": [
     "CSL-0078",
     "CSL-0080"
    ],
-   "coolsolve_version": "0.3.0@536d427",
-   "verified_on": "2026-10-06",
-   "verification_summary": "Not verified: native file blocked by CS-GAP-INTEGRALVALUE and CS-GAP-GOTO, no runnable variant. The stored EES values were only recomputed by hand from the file's own equations, agreeing to 10 significant digits.",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Not verified: native file blocked by CS-GAP-INTEGRALVALUE, no runnable variant. The stored EES values were only recomputed by hand from the file's own equations, agreeing to 10 significant digits.",
    "verification_checks": [],
    "path": "models/components/heat_exchangers/vertical_ghes_refsim",
    "main_file": "vertical_ghes_refsim.eescode",
@@ -3095,7 +3064,7 @@
    "category": "components/heat_exchangers",
    "kind": "steady",
    "level": 2,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Counterflow evaporator discretised in N cells by a PROCEDURE with a REPEAT-UNTIL loop; the overall heat-transfer coefficient passes smoothly from liquid to two-phase to vapour values over a 0.1 quality window (the smoothing that fixes the convergence problems of the earlier sharp-switching revision TM-0275). Water inlet temperature imposed, water outlet and refrigerant outlet solved by iteration over the procedure.",
    "fluids": [
     "R245fa",
@@ -3120,10 +3089,7 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-REPEAT-UNTIL-BARE",
-    "CS-BUG-LOOKUP-WRITE"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0008",
     "CSL-0113",
@@ -3132,18 +3098,15 @@
     "CSL-0114",
     "CSL-0127"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-07",
-   "verification_summary": "Not verified for the native file (blocked by CS-GAP-REPEAT-UNTIL-BARE and CS-BUG-LOOKUP-WRITE). The runnable variant was compared with the EES stored solution: 21 common variables, 3 differ at rtol=0.001, max 2.20e-03 on the R245fa enthalpies and Q_dot (property backend).",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Compared with the EES stored solution: 21 common variables, 3 differ at rtol=0.001, max 2.20e-03 on the R245fa enthalpies and Q_dot (property backend).",
    "verification_checks": [
     "ees-stored-solution"
    ],
    "path": "models/components/heat_exchangers/hx_fem_evaporator_discretised",
    "main_file": "hx_fem_evaporator_discretised.eescode",
-   "figures": 0,
-   "variants": [
-    "hx_fem_evaporator_discretised_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0126",
@@ -3232,9 +3195,7 @@
    ],
    "license": "Apache-2.0",
    "url": "https://github.com/PyLaboThap/LaboThapPy",
-   "missing_features": [
-    "CS-BUG-DUPLICATE-INDEX-EXPR"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0126",
     "CSL-0014",
@@ -3520,7 +3481,7 @@
    "category": "components/instrumentation",
    "kind": "steady",
    "level": 2,
-   "status": "blocked",
+   "status": "verified",
    "summary": "ISO 5167-1980 flow-rate procedure for a diaphragm (orifice plate with corner tappings): fluid properties at the upstream state (humid air supported), Stolz discharge coefficient and expansibility factor; the default operating point is written inversely and solves the bore diameter from an imposed mass flow rate.",
    "fluids": [
     "AirH2O"
@@ -3546,26 +3507,20 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-ISIDEALGAS",
-    "CS-BUG-HUMIDAIR-PROPS"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0122"
    ],
-   "coolsolve_version": "0.3.0@536d427",
-   "verified_on": "2026-10-05",
-   "verification_summary": "Concerns the runnable variant (native file blocked). The stored EES solution is stale; only the solved bore diameter is consistent: 0.01702816341 stored vs 0.01702515, 1.8e-4 apart (7 common variables, 0 differ, rtol=0.001). A hand check of the humid-air state agrees within 0.1 % on density.",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "The stored EES solution is stale; only the solved bore diameter is consistent: 0.01702816341 stored vs 0.01702254, 3.3e-4 apart (7 common variables, 0 differ, rtol=0.001). A hand check of the humid-air state agrees within 0.1 % on density.",
    "verification_checks": [
     "ees-stored-solution",
     "analytical"
    ],
    "path": "models/components/instrumentation/iso5167_orifice_plate_flow_rate",
    "main_file": "iso5167_orifice_plate_flow_rate.eescode",
-   "figures": 0,
-   "variants": [
-    "iso5167_orifice_plate_flow_rate_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0122",
@@ -3601,9 +3556,7 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-SUM-INDEXED"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0075",
     "CSL-0118"
@@ -3678,7 +3631,7 @@
    "category": "components/pumps_fans",
    "kind": "steady",
    "level": 1,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Reference simulation of a centrifugal pump on a hydraulic network: dimensionless characteristic curves (cubic psi(phi) and Lambda(phi) polynomials) with brine properties from the ULiège BrineProp library; computes pressure rise, shaft power, efficiency and exhaust state.",
    "fluids": [
     "EG"
@@ -3693,7 +3646,7 @@
     "reference model",
     "model bank"
    ],
-   "n_equations": 119,
+   "n_equations": 34,
    "largest_block": 1,
    "origin_type": "research",
    "source": "thermo_models",
@@ -3705,27 +3658,21 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-ELSEIF-CHAIN",
-    "CS-GAP-UPPERCASE"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0079",
     "CSL-0078",
     "CSL-0125"
    ],
-   "coolsolve_version": "0.3.0@536d427",
-   "verified_on": "2026-10-05",
-   "verification_summary": "Concerns the runnable variant (native file blocked by CS-GAP-ELSEIF-CHAIN and CS-GAP-UPPERCASE). Compared with the solution stored in the original EES file: 32 common variables, 0 differ (rtol=0.001), maximum relative deviation 6.4e-08 (rounding of decoded table coefficients).",
+   "coolsolve_version": "0.3.0@a77efaa",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Compared with the solution stored in the original EES file: 32 common variables, 0 differ (rtol=0.001), maximum relative deviation 2.75e-07 (rounding of decoded table coefficients).",
    "verification_checks": [
     "ees-stored-solution"
    ],
    "path": "models/components/pumps_fans/centrifugal_brine_pump_refsim",
    "main_file": "centrifugal_brine_pump_refsim.eescode",
-   "figures": 0,
-   "variants": [
-    "centrifugal_brine_pump_refsim_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0125",
@@ -4401,7 +4348,7 @@
    "category": "cycles/absorption_sorption",
    "kind": "steady",
    "level": 2,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Single-effect LiBr-H2O absorption chiller at one operating point: solution concentrations from the EES built-in X_LIBR/H_LIBR routines, mass and LiBr conservation for the weak/rich solution flow rates, generator energy balance for the driving heat and the COP, 75 % solution heat exchanger.",
    "fluids": [
     "Water",
@@ -4425,16 +4372,65 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-FLUIDS-ABS"
+   "missing_features": [],
+   "related": [
+    "CSL-0249"
    ],
-   "related": [],
-   "coolsolve_version": "0.3.0@536d427",
-   "verified_on": "2026-10-05",
-   "verification_summary": "Not verified: the model is blocked by `CS-GAP-FLUIDS-ABS` (no LiBr solution properties) and does not run in CoolSolve; the EES stored solution is only the reference for a future re-check.",
-   "verification_checks": [],
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "CoolSolve solution against the EES stored solution of the original file (30 of 30 variables): 30 common variables, 0 differ at rtol=0.001; maximum relative difference 5.6e-04 (M_dot_rich), of the size expected from the water property backends (saturation pressure at 45 C 9595.0 vs 9589.78 Pa).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/cycles/absorption_sorption/libr_water_absorption_chiller",
    "main_file": "libr_water_absorption_chiller.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0249",
+   "name": "nh3h2o_absorption_chiller",
+   "title": "Single-effect ammonia-water absorption chiller with rectifier",
+   "category": "cycles/absorption_sorption",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Single-effect NH3-H2O absorption chiller at one operating point with rectifier, solution and refrigerant heat exchangers: pressures from the saturation of the refrigerant, strong and weak solution compositions, circulation ratio, heat rates of all components, COP, and the 14 state points as arrays for the diagrams.",
+   "fluids": [
+    "NH3H2O"
+   ],
+   "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "chiller",
+    "rectifier",
+    "solution heat exchanger",
+    "COP",
+    "cycle"
+   ],
+   "n_equations": 112,
+   "largest_block": 2,
+   "origin_type": "coolsolve",
+   "source": "coolsolve",
+   "source_path": "written for the library (standard single-effect NH3-H2O cycle, Herold, Radermacher, Klein 1996)",
+   "authors": [
+    "CoolSolve project (S. Quoilin, ISES, University of Liège); drafted with Claude (Anthropic)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [
+    "CSL-0043"
+   ],
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Whole-cycle energy balance closes to 2e-11 W on 22 kW (E_check); mass and ammonia balances hold by construction; qualities of the two-phase states lie in [0, 1]. COP 0.45 and circulation ratio 6.3 are plausible for a single-effect NH3-H2O chiller. No reference solution exists.",
+   "verification_checks": [
+    "energy-balance",
+    "order-of-magnitude"
+   ],
+   "path": "models/cycles/absorption_sorption/nh3h2o_absorption_chiller",
+   "main_file": "nh3h2o_absorption_chiller.eescode",
    "figures": 0
   },
   {
@@ -4696,16 +4692,15 @@
    "license": "MIT",
    "url": "",
    "missing_features": [
-    "CS-GAP-INTERP-EES",
     "CS-GAP-INCLUDE"
    ],
    "related": [
     "CSL-0034",
     "CSL-0005"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-08",
-   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-INTERP-EES): compared with the EES stored solution, 97 common variables, 6 differ at rtol=0.001, max 9.4e-3 on cp_f (ideal-gas vs real-fluid heat capacity), all deviations explained. The charge mass balance and chamber energy balance are closed.",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Concerns the runnable variant (the native file is blocked: the five-output cpbar procedure called in function position, CS-GAP-INCLUDE): compared with the EES stored solution, 97 common variables, 6 differ at rtol=0.001, max 9.4e-3 on cp_f (ideal-gas vs real-fluid heat capacity), all deviations explained. The charge mass balance and chamber energy balance are closed.",
    "verification_checks": [
     "ees-stored-solution",
     "energy-balance"
@@ -4861,7 +4856,7 @@
    "category": "cycles/engines",
    "kind": "steady",
    "level": 1,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Teaching exercise: CO2 mass emitted per kilometre from a fuel consumption in L/100 km, by complete combustion of a hydrocarbon CmHn. The fuel is a chemical formula, a density and a volume consumption, for diesel or gasoline.",
    "fluids": [
     "CO2"
@@ -4885,15 +4880,13 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-MOLARMASS-ELEMENT"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0185"
    ],
-   "coolsolve_version": "0.3.0@17e9bcc",
-   "verified_on": "2026-10-15",
-   "verification_summary": "Concerns the runnable variant (native file blocked by CS-GAP-MOLARMASS-ELEMENT). compare_solution.py against the stored solution of Ex_3_PNG_2019.EES: 6 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 3. Largest relative difference 4.54e-06 on MM_CO2 (CoolProp 44.0098 kg/kmol, EES 44.01). At Conso = 5 L/100 km, CO2 is 131.770 g/km.",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "compare_solution.py against the stored solution of Ex_3_PNG_2019.EES: 6 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 3. Largest relative difference 4.54e-06 on MM_CO2 (CoolProp 44.0098 kg/kmol, EES 44.01). At Conso = 5 L/100 km, CO2 is 131.770 g/km.",
    "verification_checks": [
     "ees-stored-solution",
     "analytical",
@@ -4901,10 +4894,7 @@
    ],
    "path": "models/cycles/engines/fuel_co2_per_km",
    "main_file": "fuel_co2_per_km.eescode",
-   "figures": 0,
-   "variants": [
-    "fuel_co2_per_km_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0192",
@@ -5093,7 +5083,7 @@
    "category": "cycles/engines",
    "kind": "steady",
    "level": 1,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Teaching exercise: air and fuel mass flows of a turbocharged eight-cylinder engine, with the volumetric efficiency defined on the ambient density, and the useful power of an expander whose temperature drop is given.",
    "fluids": [
     "Air",
@@ -5119,23 +5109,18 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-MOLARMASS-ELEMENT"
-   ],
+   "missing_features": [],
    "related": [],
-   "coolsolve_version": "0.3.0@332d95a",
-   "verified_on": "2026-10-15",
-   "verification_summary": "Concerns the runnable variant (native file blocked by CS-GAP-MOLARMASS-ELEMENT). compare_solution.py against EX2_PNG_2019.EES: 31 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Max relative difference 3.31325e-04 on rho_a_bis. M_dot_a 0.285069 versus 0.285070 kg/s; M_dot_f 0.0189619 versus 0.0189622 kg/s; W_dot_exp_utile 13384.06 versus 13384.11 W.",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "compare_solution.py against EX2_PNG_2019.EES: 31 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Max relative difference 3.31325e-04 on rho_a_bis. M_dot_a 0.285069 versus 0.285070 kg/s; M_dot_f 0.0189619 versus 0.0189622 kg/s; W_dot_exp_utile 13384.06 versus 13384.11 W.",
    "verification_checks": [
     "ees-stored-solution",
     "order-of-magnitude"
    ],
    "path": "models/cycles/engines/turbocharged_engine_expander",
    "main_file": "turbocharged_engine_expander.eescode",
-   "figures": 0,
-   "variants": [
-    "turbocharged_engine_expander_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0244",
@@ -5219,7 +5204,6 @@
    "license": "MIT",
    "url": "",
    "missing_features": [
-    "CS-GAP-INTERP-EES",
     "CS-GAP-INCLUDE"
    ],
    "related": [
@@ -5230,9 +5214,9 @@
     "CSL-0052",
     "CSL-0060"
    ],
-   "coolsolve_version": "0.3.0+fix/library-gaps@fbdb6a7",
-   "verified_on": "2026-10-05",
-   "verification_summary": "Not the main file (blocked by `CS-GAP-INTERP-EES` and `CS-GAP-INCLUDE`): its runnable variants reproduce the EES stored solutions of the three revision files (TM-0150, TM-0151, TM-0149) with a max relative deviation of 1.6·10⁻³ and derived results within 1.1·10⁻³ (EES vs CoolProp air).",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Not the main file (blocked by `CS-GAP-INCLUDE`): its runnable variants reproduce the EES stored solutions of the three revision files (TM-0150, TM-0151, TM-0149) with a max relative deviation of 1.6·10⁻³ and derived results within 1.1·10⁻³ (EES vs CoolProp air).",
    "verification_checks": [
     "ees-stored-solution"
    ],
@@ -6040,7 +6024,7 @@
    "category": "cycles/organic_rankine",
    "kind": "steady",
    "level": 3,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Complete ORC recovering heat from an exhaust-gas/thermal-oil stream: three-zone plate evaporator and condenser with Thonon/Kuo/Hsieh correlations, scroll expander with fixed volume ratio, pump, pipe sizing and total equipment/investment cost; refrigerant properties as CoolProp calls on the mixture R245fa+R134a (the source uses the EES REFPROP interface; stored run: pure R245fa).",
    "fluids": [
     "R245fa+R134a",
@@ -6073,9 +6057,7 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-END-PROCEDURE"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0019",
     "CSL-0113",
@@ -6085,18 +6067,15 @@
     "CSL-0159",
     "CSL-0154"
    ],
-   "coolsolve_version": "0.3.0@20b59a6",
-   "verified_on": "2026-10-13",
-   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-END-PROCEDURE): compared with the EES stored solution, 356 common variables; about 90 are affected by corrections of two errors of the original (A_cd 10.96 vs 5.459 m²), the rest differ by a few % (property backend). A scratch run restoring the two errors gives eta_cycle 6.942 % (EES 6.964 %).",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Compared with the EES stored solution, 356 common variables; about 90 are affected by corrections of two errors of the original (A_cd 10.96 vs 5.459 m²), the rest differ by a few % (property backend). A scratch run restoring the two errors gives eta_cycle 6.942 % (EES 6.964 %).",
    "verification_checks": [
     "ees-stored-solution"
    ],
    "path": "models/cycles/organic_rankine/orc_whr_refprop_cost",
    "main_file": "orc_whr_refprop_cost.eescode",
-   "figures": 0,
-   "variants": [
-    "orc_whr_refprop_cost_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0159",
@@ -6105,7 +6084,7 @@
    "category": "cycles/organic_rankine",
    "kind": "steady",
    "level": 4,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Low-temperature R134a Rankine cycle (ULiège lab model, 2007): pump, three-zone evaporator and condenser weighted by the refrigerant mass per zone, detailed expander (throat pressure drop, leakage, isochoric expansion, cooling); the refrigerant charge M_charge is solved from a global void-fraction balance so that the condenser subcooling is met.",
    "fluids": [
     "R134a",
@@ -6133,27 +6112,22 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-BUG-HUMIDAIR-PROPS"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0153",
     "CSL-0036",
     "CSL-0037",
     "CSL-0084"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-08",
-   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-BUG-HUMIDAIR-PROPS): compared with the EES stored solution, cycle results within 2.4e-03, max 1.21e-02 on Q_dot_ex_exp (small denominator); absolute h/s carry a constant reference offset, differences within 6e-04.",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Compared with the EES stored solution: cycle results within 9.3e-04 (M_charge 5.6e-04), max 8.0e-03 on the evaporator zone shares (glycol-water backend); absolute h/s carry a constant reference offset, differences within 6e-04.",
    "verification_checks": [
     "ees-stored-solution"
    ],
    "path": "models/cycles/organic_rankine/orc_void_fraction_charge",
    "main_file": "orc_void_fraction_charge.eescode",
-   "figures": 0,
-   "variants": [
-    "orc_void_fraction_charge_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0229",
@@ -6194,6 +6168,48 @@
    ],
    "path": "models/cycles/organic_rankine/orc_r113_power_to_power_ratio",
    "main_file": "orc_r113_power_to_power_ratio.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0248",
+   "name": "orc_r113_turbine_outlet_temperature",
+   "title": "R113 ORC turbine outlet temperature (example)",
+   "category": "cycles/organic_rankine",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching example for an R113 ORC turbine. The inlet is 150 kPa and 65 °C, the isentropic efficiency is 0.89 and the enthalpy drop is 17.5 kJ/kg. The model computes the turbine outlet temperature.",
+   "fluids": [
+    "R113"
+   ],
+   "tags": [
+    "example",
+    "organic Rankine cycle",
+    "turbine",
+    "R113"
+   ],
+   "n_equations": 11,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/Aout 2022/Q2_temp_sortie_turb.EES",
+   "authors": [
+    "S. Quoilin"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@6c1755b",
+   "verified_on": "2026-10-16",
+   "verification_summary": "Against the stored solution of Q2_temp_sortie_turb.EES, compare_solution.py reports: 11 common variables, 5 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum is 5.36e-01 on s8. T5 is 309.5075967834 K against 309.6273251 K (3.87e-04). h8-h5 is 17500 J/kg on both sides. p5 is 36236.26686 Pa against 36090.73529 Pa (4.02e-03).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance",
+    "order-of-magnitude"
+   ],
+   "path": "models/cycles/organic_rankine/orc_r113_turbine_outlet_temperature",
+   "main_file": "orc_r113_turbine_outlet_temperature.eescode",
    "figures": 0
   },
   {
@@ -6730,7 +6746,7 @@
    "category": "cycles/refrigeration_heat_pumps",
    "kind": "steady",
    "level": 2,
-   "status": "blocked",
+   "status": "failing",
    "summary": "Reference simulation model of a brine-to-water (ground-source) heat pump of the ULiège model bank: a scroll compressor described in five steps (suction heating-up, isentropic compression to an adapted pressure, isochoric compression to the discharge plenum, exhaust cooling-down and internal leakage through the scroll throat) with all its heat transfers referred to a fictitious envelope of uniform temperature, a brine evaporator and a water condenser, both described by three thermal resistances in series referred to their nominal flows; the brine properties come from the BrineProp library.",
    "fluids": [
     "R407C",
@@ -6763,10 +6779,7 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-ELSEIF-CHAIN",
-    "CS-GAP-UPPERCASE"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0077",
     "CSL-0079",
@@ -6779,7 +6792,7 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
-   "verification_summary": "Concerns the runnable variant (native file blocked). Against the EES stored solution: 142 common variables, 73 differ above rtol = 0.001, maximum 5.54e-01 (reference-state offset on absolute enthalpies). Derived results agree to 0.4–3.3 %, above the expected tolerance (R407C properties) and not investigated further.",
+   "verification_summary": "Concerns the runnable variant (the native file is over-determined by three equations as the original stands, status failing). Against the EES stored solution: 142 common variables, 73 differ above rtol = 0.001, maximum 5.54e-01 (reference-state offset on absolute enthalpies). Derived results agree to 0.4–3.3 %, above the expected tolerance (R407C properties) and not investigated further.",
    "verification_checks": [
     "ees-stored-solution"
    ],
@@ -6832,12 +6845,7 @@
    "license": "MIT",
    "url": "",
    "missing_features": [
-    "CS-GAP-CONVERT-UNQUOTED",
-    "CS-GAP-LKT",
-    "CS-GAP-INCLUDE",
-    "CS-GAP-INCOMPRESSIBLE",
-    "CS-GAP-GE-ARROW",
-    "CS-GAP-REPEAT-UNTIL-BARE"
+    "CS-GAP-INCLUDE"
    ],
    "related": [
     "CSL-0007",
@@ -6847,9 +6855,9 @@
     "CSL-0123",
     "CSL-0155"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-07",
-   "verification_summary": "Not verified: the native file does not run (gaps CS-GAP-CONVERT-UNQUOTED, CS-GAP-LKT, CS-GAP-INCLUDE, CS-GAP-INCOMPRESSIBLE, CS-GAP-GE-ARROW, CS-GAP-REPEAT-UNTIL-BARE) and no runnable variant exists; the EES stored solution is only documented as a future reference.",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Not verified: the native file parses (235 equations) but stops at the BRINEPROP2 procedure (CS-GAP-INCLUDE) and no runnable variant exists; the EES stored solution is only documented as a future reference.",
    "verification_checks": [],
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_vitocal_300g",
    "main_file": "heat_pump_vitocal_300g.eescode",
@@ -7909,9 +7917,9 @@
    "related": [
     "CSL-0139"
    ],
-   "coolsolve_version": "0.3.0@e635c85",
-   "verified_on": "2026-10-15",
-   "verification_summary": "Re-ran the source test (test_CGAM_model.py, TESPy 0.11.3.dev0/CoolProp 8.0.0, throw-away venv) and compared all states, powers and compositions: max rel diff 2.0e-03 (h, s as same-composition differences, as the source test does). Against the Ebsilon table (cgam-ebsilon-results.csv): compressor 29.740 vs 29.6597 MW (2.7e-03), turbine 59.740 vs 59.6597 MW (1.4e-03), max 4.7e-03, card tolerance 5e-03.",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "vs the Ebsilon table (cgam-ebsilon-results.csv): compressor power 29.764 vs 29.6597 MW (3.5e-03), turbine 59.764 vs 59.6597 MW (1.7e-03), max 5.7e-03 on ds[6]-ds[4]. The earlier TESPy re-run comparison (max 2.0e-03, test_CGAM_model.py, TESPy 0.11.3.dev0/CoolProp 8.0.0) was made with the version of 2026-10-15 and not repeated.",
    "verification_checks": [
     "source-rerun",
     "other-tool"
@@ -8017,7 +8025,7 @@
    "category": "energy_systems/economics",
    "kind": "steady",
    "level": 1,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Year-by-year cash flow of an energy-saving measure over its lifetime: discounted cash flow method (net present value NPV_1 of the escalated benefit and cost, discounted at the rate k) and simple payback method (undiscounted accumulation NPV_2, payback time PBT_2). No thermodynamics: meant to be fed with the cost and saving figures of an energy model.",
    "fluids": [],
    "tags": [
@@ -8038,25 +8046,20 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-BUG-DUPLICATE-INDEX-EXPR"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0153"
    ],
-   "coolsolve_version": "0.3.0@2d15382",
-   "verified_on": "2026-10-15",
-   "verification_summary": "The runnable variant investment_npv_payback_coolsolve.eescode was compared with the EES stored solution: 176 common variables, 0 differ at rtol=0.001 (largest residual 3.6e-10, rounding of the stored values). Cash flows recomputed independently in Python (PBT_2 = 10 years). Native file blocked by CS-BUG-DUPLICATE-INDEX-EXPR.",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Compared with the EES stored solution: 176 common variables, 0 differ at rtol=0.001 (largest residual 3.6e-10, rounding of the stored values). Cash flows recomputed independently in Python (PBT_2 = 10 years).",
    "verification_checks": [
     "ees-stored-solution",
     "analytical"
    ],
    "path": "models/energy_systems/economics/investment_npv_payback",
    "main_file": "investment_npv_payback.eescode",
-   "figures": 0,
-   "variants": [
-    "investment_npv_payback_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0005",
@@ -8129,7 +8132,7 @@
    "category": "fundamentals/combustion",
    "kind": "steady",
    "level": 1,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Octane burned with 400 % theoretical air in steady flow: adiabatic flame temperature from the first law on the combustion reaction (formation enthalpies), fuel-air ratio and stoichiometric dosage; excess-air effect on the flame temperature.",
    "fluids": [
     "CO2",
@@ -8155,27 +8158,22 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-FLUIDS-C8H18"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0005",
     "CSL-0058",
     "CSL-0150",
     "CSL-0139"
    ],
-   "coolsolve_version": "0.3.0",
-   "verified_on": "2026-10-05",
-   "verification_summary": "Not the native file (blocked by `CS-GAP-FLUIDS-C8H18`): the runnable `_coolsolve` variant was compared with the solution stored in the original EES file; the 3 flagged variables are unit-annotation artifacts and the maximum relative deviation is 2.2e-4 on `TAF` (688.56 vs 688.71 °C).",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Compared with the solution stored in the original EES file: the 3 flagged variables are unit-annotation artifacts and the maximum relative deviation is 2.2e-4 on `TAF` (688.56 vs 688.71 °C).",
    "verification_checks": [
     "ees-stored-solution"
    ],
    "path": "models/fundamentals/combustion/octane_combustion_400pct_air",
    "main_file": "octane_combustion_400pct_air.eescode",
-   "figures": 0,
-   "variants": [
-    "octane_combustion_400pct_air_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0058",
@@ -8340,9 +8338,7 @@
    "url": "",
    "missing_features": [
     "CS-GAP-CHEM-EQUIL",
-    "CS-GAP-FLUIDS-NASA-SPECIES",
-    "CS-GAP-SUM-INDEXED",
-    "CS-BUG-DUPLICATE-VAR-BOUND"
+    "CS-GAP-FLUIDS-NASA-SPECIES"
    ],
    "related": [
     "CSL-0005",
@@ -8350,9 +8346,9 @@
     "CSL-0152",
     "CSL-0139"
    ],
-   "coolsolve_version": "0.3.0@f319f0c",
-   "verified_on": "2026-10-10",
-   "verification_summary": "Not verified: the native file is blocked (CS-GAP-CHEM-EQUIL, CS-GAP-FLUIDS-NASA-SPECIES, CS-GAP-SUM-INDEXED, CS-BUG-DUPLICATE-VAR-BOUND) and no runnable variant is shipped. Only a scratch copy of the no-dissociation case was checked against a hand balance (1788.7 vs 1787.85 degC).",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Not verified: the native file is blocked (CS-GAP-CHEM-EQUIL, CS-GAP-FLUIDS-NASA-SPECIES) and no runnable variant is shipped. Only a scratch copy of the no-dissociation case (DISSOCIATION$ = 'NO', one line changed) was checked against a hand balance (1788.7 vs 1787.85 degC).",
    "verification_checks": [],
    "path": "models/fundamentals/combustion/adiabatic_flame_dissociation",
    "main_file": "adiabatic_flame_dissociation.eescode",
@@ -9040,6 +9036,48 @@
    "figures": 0
   },
   {
+   "id": "CSL-0247",
+   "name": "water_stream_adiabatic_mixing",
+   "title": "Adiabatic mixing of two water streams (exercise)",
+   "category": "fundamentals/processes",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching exercise for the adiabatic mixing of two water streams at 250 kPa. Stream 1 is at 80 °C and 0.5 kg/s, stream 2 is at 20 °C, and the mixture leaves at 42 °C. The model computes the unknown inlet flow and the mixture flow from the steady mass and energy balances.",
+   "fluids": [
+    "Water"
+   ],
+   "tags": [
+    "exercise",
+    "open system",
+    "mixing",
+    "mass balance",
+    "energy balance"
+   ],
+   "n_equations": 10,
+   "largest_block": 2,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermo_kuleuven/exercices/05-75.EES",
+   "authors": [
+    "S. Quoilin"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.3.0@6c1755b",
+   "verified_on": "2026-10-16",
+   "verification_summary": "Against the stored solution of 05-75.EES, compare_solution.py reports: 10 common variables, 5 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum over all common variables is 7.19e-01 on h_2. The five are h_1, h_2, h_3, M_dot_2 and M_dot_3. The original mass and energy balances are satisfied.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance"
+   ],
+   "path": "models/fundamentals/processes/water_stream_adiabatic_mixing",
+   "main_file": "water_stream_adiabatic_mixing.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0003",
    "name": "methane_tank_evaporation",
    "title": "Evaporation of liquid methane in a tank",
@@ -9185,7 +9223,7 @@
    "category": "fundamentals/properties",
    "kind": "function",
    "level": 2,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Single EES procedure BRINEPROP of the ULiège BrineProp library: freezing point, density, specific heat, thermal conductivity and dynamic viscosity of eleven aqueous secondary refrigerants (EG, PG, EA, MA, GL, NH3, K2CO3, CaCl2, MgCl2, NaCl, KAc) as a function of mass concentration and temperature, from an 18-term polynomial read in two coefficient lookup tables.",
    "fluids": [
     "EG",
@@ -9213,7 +9251,7 @@
     "function library",
     "model bank"
    ],
-   "n_equations": 440,
+   "n_equations": 18,
    "largest_block": 1,
    "origin_type": "software_library",
    "source": "thermo_models",
@@ -9223,10 +9261,7 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-ELSEIF-CHAIN",
-    "CS-GAP-UPPERCASE"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0072",
     "CSL-0074",
@@ -9241,19 +9276,16 @@
     "CSL-0162",
     "CSL-0163"
    ],
-   "coolsolve_version": "0.3.0@536d427",
-   "verified_on": "2026-10-05",
-   "verification_summary": "Concerns the runnable variant (native file blocked). Compared with the stored solution of the glycol run-around loop model of the same library: 3 common variables, 0 differ (rtol=0.001), maximum relative difference 4.77e-10. The decoded tables also agree with those of CSL-0072.",
+   "coolsolve_version": "0.3.0@a77efaa",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Compared with the stored solution of the glycol run-around loop model of the same library: 3 common variables, 0 differ (rtol=0.001), maximum relative difference 4.77e-10 (rho_brine_2). The decoded tables also agree with those of CSL-0072.",
    "verification_checks": [
     "ees-stored-solution",
     "cross-model"
    ],
    "path": "models/fundamentals/properties/brineprop_secondary_refrigerants",
    "main_file": "brineprop_secondary_refrigerants.eescode",
-   "figures": 0,
-   "variants": [
-    "brineprop_secondary_refrigerants_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0121",
@@ -11314,7 +11346,7 @@
    "category": "hvac/air_handling",
    "kind": "steady",
    "level": 2,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Reference simulation model of a hot-water air heating coil from the ULiège model bank: a counter-flow exchanger whose duty follows the epsilon-NTU relation, with the overall conductance as the series of the air-side, metal and water-side resistances scaled with the flow rates.",
    "fluids": [
     "AirH2O",
@@ -11339,24 +11371,19 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-BUG-HUMIDAIR-PROPS"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0074"
    ],
-   "coolsolve_version": "0.3.0@261f0b9",
-   "verified_on": "2026-10-15",
-   "verification_summary": "Concerns the runnable variant (native file blocked by CS-BUG-HUMIDAIR-PROPS: Density(AirH2O) returns 1E4). Against the EES stored solution: 43 common variables, 3 differ above rtol = 0.001, maximum 4.11e-03 on the humidity ratio (CoolProp vs EES humid air).",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Against the EES stored solution: 43 common variables, 3 differ above rtol = 0.001, maximum 4.11e-03 on the humidity ratio (CoolProp vs EES humid air).",
    "verification_checks": [
     "ees-stored-solution"
    ],
    "path": "models/hvac/air_handling/heating_coil_refsim",
    "main_file": "heating_coil_refsim.eescode",
-   "figures": 0,
-   "variants": [
-    "heating_coil_refsim_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0227",
@@ -12038,7 +12065,7 @@
    "category": "renewables/photovoltaics",
    "kind": "steady",
    "level": 2,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Five-parameter single-diode model of a flat-plate PV module: module parameters read from an embedded PVModules catalogue table, I-V/P-V curve computed in 100 points at a given cell temperature and irradiance.",
    "fluids": [],
    "tags": [
@@ -12060,26 +12087,18 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-END-PROCEDURE",
-    "CS-GAP-CONVERT-UNQUOTED",
-    "CS-GAP-LOOKUPROW",
-    "CS-BUG-LOOKUP-STRING"
-   ],
+   "missing_features": [],
    "related": [],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-08",
-   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-END-PROCEDURE, CS-GAP-CONVERT-UNQUOTED, CS-GAP-LOOKUPROW and CS-BUG-LOOKUP-STRING): vs the EES stored solution 333 common variables, 1 differ at rtol=0.001 (P[1], floating noise), max 1.37e-06 otherwise; the stored I-V parametric table matches exactly (300/300 within 1e-9).",
+   "coolsolve_version": "0.3.0@4798e2b",
+   "verified_on": "2026-10-18",
+   "verification_summary": "Native file vs the EES stored solution: 333 common variables, 1 differs at rtol=0.001 (P[1], floating noise), max 1.37e-06 otherwise; the stored I-V parametric table matches exactly (300/300 within 1e-9).",
    "verification_checks": [
     "ees-stored-solution",
     "ees-parametric-table"
    ],
    "path": "models/renewables/photovoltaics/pv_module_single_diode",
    "main_file": "pv_module_single_diode.eescode",
-   "figures": 0,
-   "variants": [
-    "pv_module_single_diode_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0082",
@@ -12256,10 +12275,7 @@
    ],
    "license": "MIT (declared in pyproject.toml; LICENSE.txt is Apache-2.0) / model published under the library MIT licence",
    "url": "https://github.com/PyLaboThap/LaboThapPy",
-   "missing_features": [
-    "CS-BUG-DUPLICATE-INDEX-EXPR",
-    "CS-GAP-SUM-INDEXED"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0083",
     "CSL-0082"
@@ -15542,9 +15558,9 @@
   "CS-GAP-UNITSYSTEM": {
    "kind": "gap",
    "state": "open",
-   "priority": "P1 (warning) / P3 (native support)",
+   "priority": "P3 (native support; the warning is done)",
    "text": "`$UnitSystem` and the EES unit settings (kPa, bar, MPa, kJ, K, molar, radians)",
-   "detail": "Directive parsed but ignored: a model in kPa/kJ/K gives wrong results **silently**.",
+   "detail": "Directive parsed but ignored (units fixed); since round 3 a directive that differs from `SI MASS DEG PA C J` gives warning `P010` naming the differing settings (the warning part is closed, §7).",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
@@ -15605,9 +15621,18 @@
   "CS-GAP-FLUIDS-ABS": {
    "kind": "gap",
    "state": "open",
-   "priority": "P2",
-   "text": "`NH3H2O`, `LiBrH2O`, `X_LIBR`/`H_LIBR` (absorption machines)",
-   "detail": "Unsupported fluids/functions (CoolProp has no such mixtures)",
+   "priority": "P3",
+   "text": "The remaining routines of the EES **ASHRAE** LiBr-H2O library (the four of §7, `X_LIBR`, `H_LIBR`, `T_LIBR` and `P_LIBR`, are implemented): `V_LIBR` (Herold fit to Uemura & Hasaba 1964, coefficients not published; used only by the variant files …",
+   "detail": "Evaluation error *\"<NAME>: EES LiBr-H2O routine not implemented in CoolSolve yet (register CS-GAP-FLUIDS-ABS); the ASHRAE routines X_LIBR, H_LIBR, T_LIBR, P_LIBR are available\"* (it was *Unknown or …",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-GAP-LIBR-PK": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P3",
+   "text": "**Future work.** The EES `LiBrH2O` library (Pátek & Klomfar, *Int.",
+   "detail": "Evaluation error *\"<NAME>: EES LiBr-H2O routine not implemented in CoolSolve yet (register CS-GAP-LIBR-PK); the ASHRAE routines … are available\"*; `ENTHALPY(LiBrH2O, …)` names the register item too",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
@@ -15665,48 +15690,12 @@
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
-  "CS-GAP-LOOKUPROW": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P2",
-   "text": "`LOOKUP$ROW('table','col',key)` (the row whose column `col` matches a string or a number): the way EES reads tables with a key column (`ees_vs_coolsolve.csv` lines 159 and 256 list it as *No*).",
-   "detail": "Evaluation error *\"Unknown or unsupported function: LOOKUP$ROW with 3 arguments\"* (warning *\"Unknown function 'LOOKUP$ROW'\"*).",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-BUG-IDEAL-INTENERGY": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P3",
-   "text": "The alias `intenergy` (and `internalenergy`) is not in the list of temperature-only properties of ideal gases: `intenergy(CO2,T=25)` fails with *\"Ideal gas property 'intenergy' requires pressure input\"* while `enthalpy`, `cp`, `cv` accept a single input …",
-   "detail": "–",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-BUG-FLUID-HINT-CO2": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P3",
-   "text": "Every property call on the ideal-gas fluid `CO2` (`molarmass(CO2)`, `enthalpy(CO2,T=…)`) raises the warning *\"Did you mean 'CO2'?\"*: the fluid-name hint table (`src/user_hints.cpp`) maps `co2` to `CO2` and does not check that the name already is the …",
-   "detail": "–",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
   "CS-GAP-PSYCHRO-SAT": {
    "kind": "gap",
    "state": "open",
    "priority": "P3",
    "text": "Saturated-state temperature of humid air at given humidity ratio: `TEMPERATURE(AirH2O, P=…, w=…, R=1)` (valid EES: used by `EES_ok/humidair2.EES` — VL050429, repetition 10, exercise 3 — with stored solution `T_c = 7.117 °C` for `w_c = 0.006346`)",
    "detail": "Evaluation error *\"CoolProp HumidAir cannot accept both R (relative humidity) and W (humidity ratio) as inputs\"* (block of 1 fails to converge).",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-GAP-FLUIDS-C8H18": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P3",
-   "text": "Octane C8H18 (and the other hydrocarbons of the EES ideal-gas substance list beyond C3) as an ideal-gas substance: molarmass(C8H18), enthalpy(C8H18,T=…) (valid EES: the source file thermo_models/thermodynamique …",
-   "detail": "*\"Unknown fluid: 'C8H18'\"* — the fluid registry has no octane (12 ideal-gas substances: Air, N2, O2, H2, He, Ar, CO2, CO, CH4, C2H6, C3H8, H2O; real `n-Octane`/`IsoOctane` are not in CoolProp …",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
@@ -15725,6 +15714,15 @@
    "priority": "P2",
    "text": "Humid air (`AirH2O`, EES `Air_ha`) **above 350 °C**: EES evaluates it (the source file of `CSL-0052`, `thermo_models/thermodynamique appliquee/2022-2023/R7/R07_E05_2022.EES`, stores `h_TGV[3]` = 1396.83 kJ/kg and `s_TGV[3]` = 7.84397 kJ/kg-K for …",
    "detail": "An error naming the call and the limit since `CS-BUG-HUMIDAIR-HIGHT` (it returned 1e4 silently).",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-GAP-IDEAL-GAS-MODEL": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P2 (silent with T and P)",
+   "text": "**EES's ideal-gas substances are exactly ideal** (NASA-type polynomials: pv = RT, h and u functions of T only).",
+   "detail": "`u = intenergy(CO2, T=25)` ⏎ `h = enthalpy(CO2, T=25)` → h − u − R·T = −284 J/kg (Z = 0.995; N2 Z−1 = −1.9e-4, Air −3.2e-4, H2O vapour −6e-5); `intenergy(CO2, T=25, P=1E6)` differs from the T-alone …",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
@@ -15764,48 +15762,12 @@
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
-  "CS-GAP-ISIDEALGAS": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P2",
-   "text": "The intrinsic `ISIDEALGAS(Fluid$)` (returns 1 if the substance is modelled as an ideal gas, 0 otherwise), used to select the arguments of property calls, e.g.",
-   "detail": "Parse warning *\"Unknown function 'isidealgas'\"*, then evaluation error *\"Unknown or unsupported function: isidealgas with 1 arguments\"*.",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
   "CS-GAP-INTEGRALVALUE": {
    "kind": "gap",
    "state": "open",
    "priority": "P2",
    "text": "The intrinsic `INTEGRALVALUE(t, 'X')` (value of the variable `X` at an earlier value of the integration variable), the way EES reads the history of the trajectory being integrated — `INTEGRALVALUE(t-0.5,'y')`, `INTEGRALVALUE(t,'y')` (Language Reference §12.4).",
    "detail": "Evaluation error *\"Unknown or unsupported function: INTEGRALVALUE with 2 arguments\"* (the parser knows the name, the evaluator does not dispatch it), both for `INTEGRALVALUE(t-1,'q_dot')` and …",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-GAP-INCOMPRESSIBLE": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P2",
-   "text": "The EES **incompressible-substance property libraries**: property calls of the form `cp('EG',T=T,C=30)`, `density('EG',T=T,C=30)`, `viscosity('EG',T=T,C=30)`, `conductivity('EG',T=T,C=30)` — substance name plus a **concentration argument `C` in %** (EES …",
-   "detail": "Parse warning *\"C=30 looks like Fahrenheit…\"*, then evaluation error *\"cp requires exactly 2 input properties (e.g.",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-GAP-GE-ARROW": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P3",
-   "text": "The **`=>` spelling of the greater-or-equal relational operator** in IF conditions (`IF (Z => 0.001) AND (W>0) THEN …`, EES accepts `>=` and `=>`; same for `=<`).",
-   "detail": "Parse error *\"Could not parse IF condition '(Z => 0.001) and (W>0)'\"* on every line that uses it; `>=` parses.",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-GAP-REPEAT-UNTIL-BARE": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P3",
-   "text": "The **`UNTIL` condition without parentheses**: `REPEAT … UNTIL i>9` (parentheses optional in EES; the EES manual writes `UNTIL (cond)` but the files use both forms).",
-   "detail": "Parse error *\"REPEAT missing UNTIL(condition)\"* pointing at the `REPEAT` line; the parenthesised form `until (i>9)` parses and solves.",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
@@ -15854,15 +15816,6 @@
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
-  "CS-GAP-MOLARMASS-ELEMENT": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P3",
-   "text": "`molarmass(C)` and `molarmass(H)` — the chemical **element symbols** as argument of `MOLARMASS` (EES Manual, *Built-in Functions*: MolarMass accepts substances including the elements; the standard way to build a fuel CmHn from its elemental mass composition).",
-   "detail": "Evaluation error *\"Unknown fluid: 'C'.",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
   "CS-GAP-STRINGPOS": {
    "kind": "gap",
    "state": "open",
@@ -15898,24 +15851,6 @@
    "detail": "The locals of a body appear nowhere: not in the `.sol`, not in the JSON result, the GUI or `coolsolve_residuals.md`.",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-GAP-EXPORT": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "",
-   "text": "The EES **`$Export` directive** (and, in the model-bank files, the path built with `concat$(EESFILEDIR$, 'name.txt')`).",
-   "detail": "**Not planned.** `$Export` is recognised and ignored (*SUCCESS*, no file, no warning).",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-BUG-TINY-VALUE": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "",
-   "text": "A **computed variable value below about 1E-16 is silently stored and reported as 0** (the literals and the arithmetic are fine: the value is lost when it is assigned to the solution of a block, so every variable of the `.sol` file below ~1E-16 reads …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
   "CS-BUG-LOOKUP-HINT": {
    "kind": "bug",
@@ -15953,29 +15888,11 @@
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
-  "CS-BUG-LOOKUP-STRING": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P2",
-   "text": "Every lookup function (`LOOKUP`, `INTERPOLATE`, …) returns **NaN** on a table that has a **string column** (the EES tables with a string key), even when the requested cell is numeric and the string column is not the one read: the solver prints *\"SUCCESS\"*, …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
   "CS-BUG-EXTRACT-LOOKUP-STRING": {
    "kind": "bug",
    "state": "open",
    "priority": "P2",
    "text": "`tools/ees_extract.py` mis-decodes embedded **Lookup** tables that have a string key column: the key columns are dropped, the numeric column of one table is chained to the *name* of the next table (invented row count, the bytes of the next strings read as …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-HINT-FAHRENHEIT": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P3",
-   "text": "The \"looks like Fahrenheit\" input hint (`src/user_hints.cpp`, `hintTemperature`, `nearValue(v, ref.f, 3.0)`) fires for every temperature within ±3 of 32, 77 or 212 °C, i.e. for legitimate Celsius values such as a skin temperature (34 °C), warm water (74–80 …",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -16052,15 +15969,6 @@
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
-  "CS-BUG-LOOKUP-WRITE": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P3",
-   "text": "A **statement that writes a lookup-table cell**, `lookup('ev', 1, 1) = M_dot_r*h_r_su_l`, is counted by the parser as an **equation** of the calling program, so a valid EES file that fills a lookup table becomes *\"There are 3 equations and 2 unknowns.",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
   "CS-BUG-EXTRACT-TABLE-FP": {
    "kind": "bug",
    "state": "open",
@@ -16115,42 +16023,6 @@
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
-  "CS-BUG-EX-REFRIGERATION-COMPRESSOR": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P3",
-   "text": "**Example fix**: `examples/refrigeration_compressor.eescode` (CSX-041) line 94 reads `V_dot_su_2=M_dot_1*v_1_2` (the regime-1 flow rate in the regime-2 volumetric efficiency); it must be `V_dot_su_2=M_dot_2*v_1_2`.",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-EX-TURBOCOMPRESSOR": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P3",
-   "text": "**Example fix**: `examples/turbocompressor.eescode` (CSX-044) imposes the impeller pressure ratio (`r_p_i=1.25`, *\"provisional estimate, without diffuser\"*, line 33) and has the defining equation commented out (`//r_p_i=p_2/p_1`, line 31).",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-EX-RANKINE2": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P3",
-   "text": "**Example fix**: `examples/rankine2.eescode` (CSX-037) announces a 25 bar extraction in its title and header (*\"Steam Rankine Cycle with Regenerative Extraction at 25 bar\"*) but sets `P_3a=14E5 \"see parametric table\"` (line 29), so it solves the 14 bar case …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-EXPLICIT-ROUNDOFF": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P3",
-   "text": "An **explicit equation is solved as `x − residual`** (`Solver::tryExplicitSolve`), which leaves round-off on an exact constant: `D = 0.02` is stored as 0.02 + 1.7e-17, so a strict bound test on the value (`IF (v > 0.02) THEN CALL WARNING(…)`) fires at the …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
   "CS-BUG-CALL-ERROR-ITERATE": {
    "kind": "bug",
    "state": "open",
@@ -16165,15 +16037,6 @@
    "state": "open",
    "priority": "P3",
    "text": "**GUI warnings are not colour-coded**: diagnostics reach the Console as `[warning]`, but `gui/src/components/Console.tsx` and `CodeEditor.tsx` test for `[Warning]` / `'Warning'` (case-sensitive), so no warning line is highlighted (contributing §3.9).",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-LOOKUP-STRING-ARG": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P3",
-   "text": "**A string function as the table or column argument of a lookup function fails**, although the Language Reference §11.8 documents it for `LOOKUP$` (*\"as the table or column argument of another lookup function\"*): `evaluateFunctionCall` (`src/evaluator.cpp`) …",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -16196,11 +16059,29 @@
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
+  "CS-BUG-TINY-IMPLICIT": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P2 (silent)",
+   "text": "An **implicit block cannot recover a tiny value**: its absolute residual tolerance (1e-9) is met while the unknown is still far from a solution of order 1e-20, so the solve reports SUCCESS with a wrong value.",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
   "CS-BUG-STRING-FUNC-WARNING": {
    "kind": "bug",
    "state": "open",
    "priority": "P3",
    "text": "`String$` is evaluated but missing from the parser's list of built-in functions (`knownBuiltinFunctions`, `src/parser.cpp`): every use raises the spurious warning *\"Unknown function 'String$'\"* (cosmetic).",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-INTERNALENERGY-UNQUOTED": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3",
+   "text": "The alias **`internalenergy`** of `intenergy` is evaluated but missing from the parser's list of thermophysical functions, so an unquoted fluid (`internalenergy(Water, T=20, P=1e5)`) is read as a variable: structural error *\"1 equations and 2 unknowns\"* …",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -16842,6 +16723,231 @@
    "text": "`END FUNCTION` / `END PROCEDURE` (the routine's kind) and `END <name>` (its name) close a FUNCTION/PROCEDURE body, in any case, with an optional comment; another word, or a named END while a DUPLICATE/REPEAT is open, is an error (*\"END foo does not close …",
    "detail": "",
    "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-LOOKUPROW": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "`LOOKUP$ROW('table', col, key)`: the first row whose column `col` (name or number) holds the key, a string (literal, string variable, string function, string input of a body) matched without regard to case against the cell text, or a number (relative 1e-9; an …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-LOOKUP-STRING": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "No longer reproduces (the text cells of `CS-GAP-STRING-ARRAY`): the numeric cells of a table with a text column are read by `LOOKUP` and `INTERPOLATE`; regression tests added with `CS-GAP-LOOKUPROW`.",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-LOOKUP-STRING-ARG": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "The lookup functions are dispatched before their arguments are evaluated as numbers, so a string function (`LOOKUP$`, `Uppercase$`) can be the table or column argument, as §11.8 documents (fixed with `CS-GAP-LOOKUPROW`; each lookup call no longer evaluates …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-GE-ARROW": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "The EES spellings => and =< of >= and <= are read in IF and UNTIL conditions, IF-function arguments and equation comparisons (one shared helper), and never taken for a named argument; = >, == and the $IF directives stay errors; CSL-0116's If …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-REPEAT-UNTIL-BARE": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "The UNTIL condition is the whole text after `UNTIL` (comments and a closing `;` removed), read by `parseCondition` like an IF condition: parentheses optional, `=`, `<>`, strings, AND, OR, `=>`; an empty or unreadable condition stays *\"REPEAT missing …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-TINY-VALUE": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "An explicit equation `x = expr` stored `x − residual` evaluated at the guess, losing every digit of `expr` below ulp(x): a value below ~1E-16 became 0 from the default guess 1 (`c = 2.33E-20`, `m = e#`), a value near 1e-10 kept ~6 digits.",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-EXPLICIT-ROUNDOFF": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "Same fix as `CS-BUG-TINY-VALUE`: `D = 0.02` is stored as exactly 0.02 (it was 0.02 + 1.7e-17, and a strict bound test in a FUNCTION fired a spurious `CALL WARNING`)",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-LOOKUP-WRITE": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "A lookup-table cell write `LOOKUP/LOOKUP$(...) = value` (main program or body) is neither an equation nor a statement of a body: it is reported with warning `P009` (one per source line; the value is not evaluated) and left out of the program, so the register …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-ISIDEALGAS": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "`ISIDEALGAS(Fluid$)`: 1 for the ideal-gas fluids of the registry (Air, N2, O2, H2, He, Ar, CO2, CO, CH4, C2H6, C3H8, H2O), 0 for real fluids, humid air (`AirH2O`, to confirm in EES), incompressibles and mixtures; an unknown fluid is an error; the fluid …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-IDEAL-TRANSPORT-T": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "`viscosity`, `conductivity` and `prandtl` of an ideal gas take `T` alone (or `h`/`u`), evaluated at the internal pressure already used for `h`/`cp`/`cv` (101325 Pa, 100 Pa for `H2O`; within 0.1–0.3 % of CoolProp's dilute limit; air viscosity 1.8448e-5 Pa·s at …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-IDEAL-SINGLE-INPUT": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "A single input of an ideal-gas property call is accepted only when it fixes the temperature (`T`, `h`, `u`) and the output depends on T only (cp, cv, h, u, T, viscosity, conductivity, Prandtl); any other single input (`d`, `v`, `s`, `x`, `P`) is an error …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-IDEAL-INTENERGY": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "The temperature-only outputs of an ideal gas with a single input come from the output table of the two-input path: `intenergy`, `internalenergy`, `u`, `h`, `specheat`, `specificheat`, `c_p`, `c`, `c_v` take T (or h, u) alone; u has the reference of h (u = h − …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-EX-REFRIGERATION-COMPRESSOR": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "Example `refrigeration_compressor` (CSX-041) corrected as in the original `MSTh-SB-R1-Ex2.EES` (TM-0016): `V_dot_su_2=M_dot_2*v_1_2` (line 94; the SB variant TM-0017 has the typo), comment `//C = 0.06`, `.initials` regenerated; `EXPECTED_SOLUTIONS` …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-EX-TURBOCOMPRESSOR": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "Example `turbocompressor` (CSX-044) as in the original `MSTH_041012_exercice_2.EES` (TM-0055): `r_p_i=p_2/p_1` active and `\"r_p_i=1.25\"` a comment; `.initials` `r_p_i` = 1.0502; the run reports `r_p_i` = 1.0502 = `p_2/p_1` (it printed the imposed 1.25), every …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-EX-RANKINE2": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "Example `rankine2` (CSX-037) solves the 25 bar extraction its title announces, as the original `EES_ok/rankine2.EES`: `P_3a=25E5` (it set the 14 bar of the previous exercise; the stale comment \"see parametric table\" reworded); `.initials` `P_3a`, `eta`; …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-FLUIDS-C8H18": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "The normal alkanes `C4H10`, `C5H12`, `C6H14`, `C7H16`, `C8H18` are ideal-gas substances (CoolProp n-Butane … n-Octane; the register said CoolProp has no octane: it has), with the NASA-Glenn formation enthalpy and s° (1 bar, `thermo.inp` of NASA CEA, cited); …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-MOLARMASS-ELEMENT": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "`MOLARMASS(<element symbol>)` (and `MM`; unquoted, quoted or a string variable, any case) returns the IUPAC 2005 standard atomic weight in kg/kmol (C 12.0107, H 1.00794, as EES; Wieser, *Pure Appl.",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-INCOMP-LIBR": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "The incompressible `LiBr` is CoolProp's aqueous lithium-bromide **solution** (`INCOMP::LiBr`, mass based, Pátek-Klomfar fits, 0–75 %, 273–500 K; density, cp, h/s/u integrated from cp; no viscosity, no conductivity), registered as a pure fluid (`addIncomp`): …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-INCOMP-SEAWATER": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "The incompressible `SeaWater` is CoolProp's `INCOMP::MITSW`, a salinity **solution** (Sharqawy, Lienhard & Zubair 2010, MIT seawater library; mass based, 0–12 %, 0–120 °C, liquid phase only; density, cp, viscosity, conductivity, h/s/u integrated from cp), …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-INCOMP-SOLIDS": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "Aluminum and Copper were registered as pure incompressibles (addIncomp) and listed as supported in the Language Reference (§5), but CoolProp has no solid (dev/incompressible_liquids/json holds liquids and solutions only; PropsSI: Initialize failed …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-INCOMP-CONC-AD": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "The concentration of an incompressible solution (second positional argument, `C=`, `conc=`, `concentration=`; mass %) was read as a plain double: its derivative was dropped (an unknown concentration had a zero Jacobian column) and it reached CoolProp in the …",
+   "detail": "",
+   "fixed_in": "post-v0.3.0, `fix/library-gaps-4`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-HINT-FAHRENHEIT": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "The unit hints (`C002`, `src/user_hints.cpp`) report values of the model only: a property call checks its inputs in one more evaluation of its block at the solution, once per run (`ExpressionEvaluator::setUnitHints`, `SystemEvaluator::reportCallWarnings`), …",
+   "detail": "",
+   "fixed_in": "2026-10-18, `main`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-HINT-ARG-DEFAULT": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "An argument that is no known state input (`u=`, `mu=`, `B=` of a real fluid, an unknown CoolProp input) is never checked; for `AirH2O` the enthalpy is not checked",
+   "detail": "",
+   "fixed_in": "2026-10-18, `main`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-FLUID-HINT-CO2": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "No *\"Did you mean\"* for a registered fluid (`CO2`, `R22`, `Steam`, `Air`); the AirH2O hint for `Air` only with `humrat`, `relhum`, `wetbulb`, `dewpoint`",
+   "detail": "",
+   "fixed_in": "2026-10-18, `main`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-NH3H2O": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "The EES ammonia-water mixture: the fluid `NH3H2O` (any three of `T`, `P`, `X` mass fraction, `Q`, `H`, `S`, `U`, `V`; `Enthalpy`, `Entropy`, `IntEnergy`, `Volume`, `Density`, `Temperature`, `Pressure`, `Quality`, `MassFraction`, `SpecHeat`, `VolExpCoef`) and …",
+   "detail": "",
+   "fixed_in": "v0.4 preparation, `feat/nh3h2o`",
    "anchor": "7-closed-gaps-and-bugs"
   }
  }

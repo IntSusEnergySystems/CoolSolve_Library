@@ -179,7 +179,9 @@ model (its `.initials` were used to start the crossflow variant).
 
 - The air cp in the two-phase zone is evaluated at P = 1 Pa in the
   originals (kept; effect < 0.05 % on the duties — the CoolSolve example
-  uses 101 325 Pa, the EES references used 1 Pa).
+  uses 101 325 Pa, the EES references used 1 Pa). CoolSolve warns that `P=1`
+  may be a bar or MPa value and evaluates it at 1 Pa; the `.sol` baselines are
+  those of this evaluation.
 - `Air_ha` is treated as real dry air by both EES (no humidity data given)
   and CoolSolve; no psychrometric effect.
 - All refrigerant-side pressure-drop coefficients are zero in the shipped

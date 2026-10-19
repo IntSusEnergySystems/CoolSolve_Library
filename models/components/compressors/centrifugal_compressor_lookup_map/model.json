@@ -2,10 +2,10 @@
   "id": "CSL-0035",
   "name": "centrifugal_compressor_lookup_map",
   "title": "Centrifugal compressor with a lookup-table performance map (air)",
-  "summary": "Constant-speed centrifugal air compressor characterised by a three-point performance map: reduced mass flow rate and isentropic efficiency interpolated from the map at the pressure ratio, then mass flow rate and absorbed power. Native EES INTERPOLATE form (blocked); a runnable variant ships beside it.",
+  "summary": "Constant-speed centrifugal air compressor characterised by a three-point performance map: reduced mass flow rate and isentropic efficiency interpolated from the map at the pressure ratio, then mass flow rate and absorbed power.",
   "kind": "steady",
   "level": 2,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "centrifugal_compressor_lookup_map.eescode",
   "fluids": [
     "Air"
@@ -41,18 +41,17 @@
     "course": "ULiège, Machines et systèmes thermiques, repetition 4 (2004-10-12), exercise 6"
   },
   "verification": {
-    "summary": "Not the native file (blocked by `CS-GAP-INTERP-EES` and `CS-GAP-INTERP-EXTRAP`): the runnable variant was compared with the EES stored solution of TM-0061. `w_s` differs by 9.55e-04; the map-extrapolation group differs because EES extrapolates where CoolSolve clamps, and extrapolating by hand reproduces the stored values.",
-    "checks": ["ees-stored-solution"],
-    "reference": "EES stored solution of thermo_models TM-0061 (EES 7.210, 12 variables, internally consistent run at p_ex = 5.4 bar / r_p = 6.0), compared with tools/compare_solution.py (variant)",
-    "date": "2026-10-05",
-    "coolsolve_version": "0.3.0@536d427",
-    "max_rel_diff": 0.000955,
-    "notes": "Concerns the runnable variant. p_su, p_ex, r_p, t_su exact; w_s 9.55e-04 (largest comparable deviation; EES 7 vs CoolProp Air, within the 0.5 % tolerance); h_su, h_exs and s_su are left out of the comparison (constant EES-7-vs-CoolProp Air reference-state offsets: +125.87 kJ/kg on h, -1814.8 J/kg-K on s). epsilon_s, M_r, M_dot and W_dot differ at r_p = 6 only because EES extrapolates the map linearly where CoolSolve clamps (CS-GAP-INTERP-EXTRAP): applying the extrapolation by hand reproduces all four stored values (epsilon_s 1.093333, M_r 29.9, M_dot 1.572099 rel 1e-10, W_dot 283013 with the CoolSolve w_s, rel 9.6e-4 = the w_s deviation; 282742.25 exactly with the EES w_s). The 127x2 parametric table of the original is not usable as reference (lost .lkt, values inconsistent with the published map - see README)."
+    "summary": "Compared with the EES stored solution of TM-0061 at p_ex = 5.4 bar (r_p = 6, linear extrapolation of the map as in EES): epsilon_s, M_r and M_dot agree to 3e-9; w_s and W_dot differ by 9.6e-4 (EES 7 vs CoolProp Air); h and s carry constant reference-state offsets.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution of thermo_models TM-0061 (EES 7.210, 12 variables, internally consistent run at p_ex = 5.4 bar / r_p = 6.0)",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
+    "max_rel_diff": 0.00096,
+    "notes": "Native file solved with p_ex = 5.4E5. p_su, p_ex, r_p, t_su exact; epsilon_s 1.093333, M_r 29.9, M_dot 1.572099 (3e-9); w_s 196824 vs 196636 J/kg and W_dot 283013 vs 282742 W (9.6e-4, EES 7 vs CoolProp Air); h_su, h_exs and s_su left out (constant EES-7-vs-CoolProp Air reference-state offsets: +125.87 kJ/kg on h, -1814.8 J/kg-K on s). The 127x2 parametric table of the original is not usable as reference (lost .lkt, values inconsistent with the published map - see README)."
   },
-  "missing_features": [
-    "CS-GAP-INTERP-EES",
-    "CS-GAP-INTERP-EXTRAP"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0011",
     "CSL-0023",
@@ -69,6 +68,11 @@
       "date": "2026-10-05",
       "action": "added (roadmap card C-36, batch B-03; native file blocked by CS-GAP-INTERP-EES/CS-GAP-INTERP-EXTRAP, runnable variant CSL-0035:coolsolve verified)",
       "by": "opencode worker for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b): the native file solves and reproduces the EES stored solution at r_p = 6 (INTERPOLATE named-argument form and linear extrapolation now supported); status verified, runnable variant and its table deleted, native .sol added",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

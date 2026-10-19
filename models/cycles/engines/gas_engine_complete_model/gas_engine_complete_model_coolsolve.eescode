@@ -5,18 +5,17 @@
   CoolSolve Library model CSL-0149, runnable CoolSolve VARIANT
  -----------------------------------------------------------------------------
   Same model as the native CSL-0149 file (see it and README.md); details of
-  the two changes in the status line below.
+  the change in the status line below.
   Source  : ULiege MSTh repetition TP 08 Ex 1-5 - J. Lebrun, V. Lemort,
             S. Bertagnolio (ULiege), MIT - ~/Nextcloud/thermo_models/
             machines et systemes thermiques/MSTh - Repetitions/TP 08/SB/
             MSTH-SB-R8-EX1-2-3-4-5.EES (TM-0136)
   Units   : SI - temperatures in C, pressures in Pa, energies in J
-  Status  : runnable VARIANT of the native CSL-0149 file; only changes (all
-            else identical, incl. variable names): 1. INTERPOLATE in
-            CoolSolve positional form (CoolSolve-only syntax, CS-GAP-INTERP-EES),
-            2. the two cpbar calls in the valid-EES CALL form (CoolSolve
-            refuses the function form with the five-output PROCEDURE).
-            Verified against the stored EES solution - see README.md.
+  Status  : runnable VARIANT of the native CSL-0149 file; only change (all
+            else identical, incl. variable names): the two cpbar calls in the
+            valid-EES CALL form (CoolSolve refuses the function form with the
+            five-output PROCEDURE). Valid EES. Verified against the stored
+            EES solution - see README.md.
  =============================================================================}
 {--- Library functions copied from CSL-0005 (cpbar_combustion_products) ---
   Copied as in CSL-0005 (P. Ngendakumana, ULiege 2003; 0/0 guard included) until
@@ -161,8 +160,7 @@ T_m=39.79            "friction torque [N.m]"
  points of the original, kept as inactive strings: DELTAP_throttling =
  DELTAP_throttling_stb (stand-by operation). At the maximum-power point below
  the throttle is wide open, DELTAP_throttling = 0."
-DELTAP_throttling_stb=INTERPOLATE('lookup_1','W_dot_sh','DELTAP_throttling',0)   "CoolSolve positional form; native EES form:
- DELTAP_throttling_stb=INTERPOLATE('lookup_1','DELTAP_throttling','W_dot_sh',W_dot_sh=0) (CS-GAP-INTERP-EES)"
+DELTAP_throttling_stb=INTERPOLATE('lookup_1','DELTAP_throttling','W_dot_sh',W_dot_sh=0)
 
 "!Maximum-power operating point (exercises 2 to 5)"
 i=1/2                "working cycles per revolution (1/2: four-stroke) [-]"

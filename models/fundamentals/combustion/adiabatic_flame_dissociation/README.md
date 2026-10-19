@@ -19,7 +19,7 @@ is accounted for.
 | **Source** | ULiège — course MCI, TP1 exercises 3-4, 2016 (EES file `Ex_3-4_CH4-Fuel Oil_Tadiab with or without dissociation_2016.EES`) |
 | **Authors** | P. Ngendakumana, R. Dickes (ULiège Thermotechnics; see *Source and attribution*) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** by `CS-GAP-CHEM-EQUIL`, `CS-GAP-FLUIDS-NASA-SPECIES`, `CS-GAP-SUM-INDEXED`; no runnable variant (see *Why no runnable variant*) |
+| **CoolSolve** | native file **blocked** by `CS-GAP-CHEM-EQUIL` and `CS-GAP-FLUIDS-NASA-SPECIES`; no runnable variant (see *Why no runnable variant*) |
 
 ## Problem statement
 
@@ -63,13 +63,11 @@ Unknowns of the stored run (CH4, dissociation): `T_adiab` (from
 The file is valid EES: open it in EES and select the case by
 commenting/uncommenting the `FUEL$` and `DISSOCIATION$` lines. In CoolSolve
 it does **not** run: `CALL CHEM_EQUIL` is an unknown procedure
-(`CS-GAP-CHEM-EQUIL`), six of the fourteen species (OH, H, O, N, NO, NO2) are no
-CoolSolve fluids (`CS-GAP-FLUIDS-NASA-SPECIES`) and the indexed
-`sum(..., i=1, Nprod)` is not expanded (`CS-GAP-SUM-INDEXED`); as shipped the
-system is not square (50 equations, 53 unknowns). The `$IF`/`$IFNOT` directives are
-resolved (with the file as shipped, `FUEL$ = 'CH4'` and `DISSOCIATION$ = 'YES'`, the
-`'Oil'` lines are removed) and the `C%`/`H%` names of the `'Oil'` branch parse (with
-`FUEL$ = 'Oil'` the system has 61 equations and 65 unknowns).
+(`CS-GAP-CHEM-EQUIL`) and six of the fourteen species (OH, H, O, N, NO, NO2) are no
+CoolSolve fluids (`CS-GAP-FLUIDS-NASA-SPECIES`). The file as shipped is square (78
+equations); the `$IF`/`$IFNOT` directives are resolved (with the file as shipped,
+`FUEL$ = 'CH4'` and `DISSOCIATION$ = 'YES'`, the `'Oil'` lines are removed). With
+`DISSOCIATION$ = 'NO'` the file runs (see *Verification*).
 
 ## Results (EES stored solution)
 
@@ -103,10 +101,8 @@ equations!"* (translated; kept in the model file).
 **Partial, in a scratch copy.** The file as shipped does not run in CoolSolve
 (status `blocked`, no runnable variant, see below). The no-dissociation case (CH4,
 `DISSOCIATION$ = 'NO'`, e = 0.2, reactants at 288 K), solved in a scratch copy in which
-the indexed sum was written out and the `DUPLICATE` bound `Nprod` replaced by its value
-(4; a `DUPLICATE` with a variable bound is dropped silently, `CS-BUG-DUPLICATE-VAR-BOUND`;
-worked around in the copy only), the species names being read from `Species4` with
-`LOOKUP$`, gives `T_adiab` = 1788.7 °C
+only that line of the file was changed (27 equations, 6 iterations; the species names
+are read from `Species4` with `LOOKUP$`), gives `T_adiab` = 1788.7 °C
 (2061.8 K) and `H_react` = `H_prod` = −78 351 kJ/kmol fuel. An independent hand
 balance (Python; sensible enthalpies from the NASA-Glenn polynomials of `thermo.inp`, formation
 enthalpies −74 600, −393 510 and −241 826 kJ/kmol for CH4, CO2 and H2O vapour as in
@@ -174,8 +170,7 @@ S. Quoilin:
     the `A\O`-style names, the `CHEM_EQUIL` call signature) is unchanged.
 - **Blocked in CoolSolve** (native file kept in valid EES): `CALL CHEM_EQUIL` →
   *"Unknown procedure: CHEM_EQUIL"* (`CS-GAP-CHEM-EQUIL`), `enthalpy(OH, …)` and the
-  five other species → *"Unknown fluid"* (`CS-GAP-FLUIDS-NASA-SPECIES`), indexed
-  `sum(..., i=1, Nprod)` not expanded (`CS-GAP-SUM-INDEXED`). The EES stored bounds
+  five other species → *"Unknown fluid"* (`CS-GAP-FLUIDS-NASA-SPECIES`). The EES stored bounds
   of `T` (1000–3500 K) also keep EES in the physical branch (`CS-GAP-BOUNDS`); not
   blocking.
 

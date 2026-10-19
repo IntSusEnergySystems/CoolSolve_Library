@@ -1,6 +1,6 @@
 # Thermal comfort: Fanger PMV-PPD model
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0012`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0012`
 
 Thermal comfort of a person in a room, after the Fanger model (1970) as
 taught by J. Lebrun (ULiège, course *Climatisation*, 2006-2007): the full
@@ -15,11 +15,11 @@ insulation are either given directly or picked from two lookup tables
 |---|---|
 | **Category** | Buildings |
 | **Fluids** | Humid air (`AirH2O`), water |
-| **Size** | native file: 59 equations for 59 unknowns once CoolSolve has resolved the `$if` directives (the `$else` branches are kept); runnable variant: 57 equations (largest block: 7) |
+| **Size** | native file: 59 equations for 59 unknowns once CoolSolve has resolved the `$if` directives (the `$else` branches are kept); largest block: 7 |
 | **Source** | ULiège Thermodynamics Laboratory — thermal comfort model (EES file `thermal_confort_PMV_PPD SQSB080131.EES`) |
 | **Authors** | S. Quoilin, J. Lebrun, S. Bertagnolio (ULiège Thermodynamics Laboratory, 2008-01-30) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** by `CS-GAP-LOOKUPROW` (and then `CS-BUG-LOOKUP-STRING`, because its tables have string keys); the variant `thermal_comfort_pmv_ppd_coolsolve.eescode` runs and is verified against the EES stored solution (46/57 within 1e-3, 51/57 within 0.5 %, rest explained) |
+| **CoolSolve** | 0.3.0@4798e2b — verified against the EES stored solution (46/57 within 1e-3, 51/57 within 0.5 %, rest explained) |
 
 ## Problem statement
 
@@ -58,10 +58,8 @@ walls at 20 °C, 50 % RH, still air (PMV ≈ −2.69, PPD ≈ 77 % — too cold)
 | `RH_a` / `U` / `P_a` | 0.5 / 0.05 m/s / 1 bar | `T_cl` clothing temperature | 26.51 °C |
 
 Lookup tables shipped with the model (keys decoded from the source binary).
-The native file reads `thermal_comfort_pmv_ppd-activite.csv` / `-veture.csv`, whose first
-column holds these keys (ASCII-folded: `Ete`, `Interieur (legere)`, …); the runnable variant
-reads `thermal_comfort_pmv_ppd_coolsolve-*.csv`, whose first column is the row number
-(see *Conversion log*):
+The file reads `thermal_comfort_pmv_ppd-activite.csv` / `-veture.csv`, whose first
+column holds these keys (ASCII-folded: `Ete`, `Interieur (legere)`, …; see *Conversion log*):
 
 | `activite` (`alpha_E` [W/m²]) | | `veture` (`clo`) | |
 |---|---|---|---|
@@ -75,24 +73,16 @@ reads `thermal_comfort_pmv_ppd_coolsolve-*.csv`, whose first column is the row n
 
 ## How to run
 
-The original file `thermal_comfort_pmv_ppd.eescode` keeps the native EES
-syntax (`$if` string selections `activite$` / `Veture$`, `LOOKUP$ROW`) and
-does **not** run in CoolSolve (59 equations for 59 unknowns once the `$if`
-directives are resolved, but `LOOKUP$ROW` is unknown: see *Limitations and
-CoolSolve gaps*). The runnable variant fixes the EES selections of the default
-run (activity row 3, clothing row 2) and uses positional `lookup()` with the
-same column numbering as EES, because of `CS-GAP-LOOKUPROW` and
-`CS-BUG-LOOKUP-STRING`:
-
 ```bash
-coolsolve ./thermal_comfort_pmv_ppd_coolsolve.eescode    # seconds, needs the *-coolsolve-*.csv tables next to it
+coolsolve ./thermal_comfort_pmv_ppd.eescode    # seconds
 ```
 
-To study another activity or garment, change `row`/`row2` (keys above);
-to give the metabolism or the clothing resistance directly, replace
-`E_dot_m = alpha_E_dot*A_sk` by `E_dot_m = E_dot_m_in` (default 100 W) or
-`I_cl = lookup('veture',row2,2)` by `I_cl = I_cl_in` (default 1 clo) —
-the two `$if` branches of the native file.
+The file keeps the native EES syntax: the `$if` string selections `activite$` / `Veture$` and `LOOKUP$ROW` pick the metabolism and the clothing from the two tables
+(default run: `activite$ = 'Repos_debout'`, `Veture$ = 'Ete'`, the stored EES selections).
+
+To study another activity or garment, change the keys above (`Veture$ = 'Hiver'`, …);
+to give the metabolism or the clothing resistance directly, set `activite$ = 'définie par le métabolisme'` and `E_dot_m_in` (default 100 W), or
+`Veture$ = 'Définie par sa résistance'` and `I_cl_in` (default 1 clo) — the two `$if` branches of the file.
 
 ## Results
 
@@ -109,7 +99,7 @@ Default run (activity row 3, clothing row 2 — the EES selections):
 | `Q_dot_c` / `Q_dot_R` / `Q_dot_cl` [W] | 117.37 / 51.94 / 169.31 | same | ≤ 0.05 % |
 | `T_cl` [°C] | 26.508 | 26.508 | 0.001 % |
 
-Sensitivity of the comfort indices to the air temperature, for three clothing levels (runnable variant,
+Sensitivity of the comfort indices to the air temperature, for three clothing levels (
 activity row 3 = 127 W, `T_w` = 20 °C, `RH_a` = 0.5, `U` = 0.05 m/s; clothing = `row2` 2, 4 or 5; PMV / PPD in each cell):
 
 | `T_a` [°C] | 0.5 clo (`row2` = 2) | 1.0 clo (`row2` = 4) | 1.5 clo (`row2` = 5) |
@@ -123,14 +113,14 @@ activity row 3 = 127 W, `T_w` = 20 °C, `RH_a` = 0.5, `U` = 0.05 m/s; clothing =
 
 With 1.0 clo the neutral point lies at 24 °C of air temperature (sedentary activity, 20 °C radiant temperature);
 thin clothing (0.5 clo) still gives 10 % dissatisfied at 26 °C, thick clothing (1.5 clo) becomes too warm above 20 °C.
-(Sweep computed with the CoolSolve variant by changing `T_a` and `row2`, not stored in the EES file.)
+(Sweep computed with CoolSolve by changing `T_a` and the clothing selection (rows 2, 4 and 5 of `veture`), not stored in the EES file.)
 
 <!-- FIGURE (added by the maintainer, docs/model_workflow.md §7): parametric sweep plot, e.g. PMV vs air temperature (decision D7: humid-air models get a parametric sweep figure until CS-FEAT-PSYCHRO exists) -->
 
 ## Verification
 
-`compare_solution.py` of the runnable variant against the 57 variables
-stored in the source EES file (rtol 1e-3): **46/57 agree** (51/57 within
+`compare_solution.py` against the 57 variables
+stored in the source EES file (rtol 1e-3; the comparison was made with the earlier numeric-selection transcription, whose 57 variables the native file reproduces exactly): **46/57 agree** (51/57 within
 0.5 %); most of them are exact or ≤ 0.05 %: the whole
 radiation/convection/clothing cluster, the breathing stoichiometry, `C`,
 `L_dot`, `PMV`, `Q_dot_a`. The 11 others are 5 stale cells of a second run
@@ -150,7 +140,7 @@ radiation/convection/clothing cluster, the breathing stoichiometry, `C`,
   100 W direct-metabolism run (`E_dot_m`/`Q_dot_m` = 100,
   `M_dot_CO2` = 1.05e-5, `T_sk` = 34.16 °C, `H_dot_sweat` = 0), while the
   rest of the panel — including `PMV`/`PPD` — is the 127 W lookup run
-  (`Repos_debout`, row 3) that the variant reproduces. CoolSolve values
+  (`Repos_debout`, row 3) that the model reproduces. CoolSolve values
   for these 5 cells are the correct solutions of the equations
   (e.g. `M_dot_R` = 1.75544e-4 by direct arithmetic).
 
@@ -193,35 +183,21 @@ recorded as `duplicate`).
   Travail_leger/Travail_lourd/Sport → 41/60/70/160/120/250/350 W/m²;
   `veture`: Tropicale/Eté/Intérieur (légère)/Normale (intérieur hiver)/
   Hiver/Polaire → 0.35/0.5/0.7/1.0/1.5/3.5 clo. Column numbering kept
-  (values in column 2, as in EES); the first column carries the EES row
-  numbers in the variant tables (CoolSolve `lookup()` returns NaN on
-  tables with string cells — `CS-BUG-LOOKUP-STRING`); the native file keeps
-  string-keyed CSVs (ASCII-folded keys, `activite,alpha_E` and
-  `veture,I_cl`) so that it can run unchanged once the gaps are closed.
+  (values in column 2, as in EES); the CSVs are string-keyed (ASCII-folded keys, `activite,alpha_E` and
+  `veture,I_cl`).
   The missing-`veture` warning of the extraction report is explained: both
   tables were always in the file.
-- **2026-10-05 — runnable variant**
-  `thermal_comfort_pmv_ppd_coolsolve.eescode`: the two `$if` blocks
-  resolved to the lookup branches with the EES selections (`row = 3`,
-  `row2 = 2`; positional `lookup()`, same columns as EES), physics
-  unchanged; companion tables and initials duplicated under the
-  variant stem (CoolSolve resolves them per file name).
-- **Level 2** (score 3: 57 equations in the variant, largest block 7, array
+- **Level 2** (score 3: 59 equations, largest block 7, array
   assignments `PPD[1]`/`PMV_abs[1]`; explicit empirical model, solves
   from default guesses).
 - No `$UnitSystem` directive (library convention; already SI-C-Pa-J).
 
 ## Limitations and CoolSolve gaps
 
-- The native file is **blocked** by `CS-GAP-LOOKUPROW`
-  (`LOOKUP$ROW('table','col',value)` is unsupported; see CoolSolve
-  `docs/model_library_support.md`). The `$if` directives are resolved and the
-  `$else` branches are kept (`activite$ = 'Repos_debout'`, `Veture$ = 'Ete'`).
-- Extraction bugs found on the way: `CS-BUG-EXTRACT-LOOKUP-STRING`
-  (string key columns dropped, adjacent tables merged into a spurious
-  74×2 CSV), `CS-BUG-LOOKUP-STRING` (every lookup function is NaN on a
-  table with a string column — hence numeric-only CSVs for the variant, and
-  a blocker of the native file as well).
+- The `$if` directives are resolved and the `$else` branches are kept (`activite$ = 'Repos_debout'`, `Veture$ = 'Ete'`).
+- Extraction bug found on the way: `CS-BUG-EXTRACT-LOOKUP-STRING` (string key columns dropped, adjacent tables merged into a spurious
+  74×2 CSV).
+- No CoolSolve gap blocks the model.
 - Physics notes: the source `PPD` quartic is not Fanger's exponential
   law and leaves [0, 100] outside its fit range (e.g. −449 % at
   PMV = −4.29 for the 100 W direct-metabolism branch); the Stefan–
@@ -236,6 +212,5 @@ recorded as `duplicate`).
 
 - `CSL-0042` *3R2C building thermal network with weather lookup*: the other
   `buildings/` model, from the same CLIM course; its native file (lookup
-  inside an `INTEGRAL` model) is **verified**, whereas this model keeps a
-  blocked native file with a verified runnable `_coolsolve` variant.
+  inside an `INTEGRAL` model) is **verified**, as is this one.
 - `CSL-0106` *conduction_resistances_and_shapes*: the conduction function library of the `ht` source (wall resistances, shape factors, R-value conversions); the envelope U-value/R-value bookkeeping of this model could be fed from its conversion functions.

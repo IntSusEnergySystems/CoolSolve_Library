@@ -50,16 +50,17 @@
     "course": "MECA0006 Machines et systèmes thermiques (ULiège), revision exercises of 2005-12-23, part 2"
   },
   "verification": {
-    "summary": "Not the main file (blocked by `CS-GAP-INTERP-EES` and `CS-GAP-INCLUDE`): its runnable variants reproduce the EES stored solutions of the three revision files (TM-0150, TM-0151, TM-0149) with a max relative deviation of 1.6·10⁻³ and derived results within 1.1·10⁻³ (EES vs CoolProp air).",
-    "checks": ["ees-stored-solution"],
+    "summary": "Not the main file (blocked by `CS-GAP-INCLUDE`): its runnable variants reproduce the EES stored solutions of the three revision files (TM-0150, TM-0151, TM-0149) with a max relative deviation of 1.6·10⁻³ and derived results within 1.1·10⁻³ (EES vs CoolProp air).",
+    "checks": [
+      "ees-stored-solution"
+    ],
     "reference": "EES stored solutions of the three files of the revision exercise: TM-0150 (main file, nominal speed), TM-0151 (ambient variant, 0.76 bar and 0 °C) and TM-0149 (95 % speed, t_ex_burner and epsilon_s_exp1 given), compared with tools/compare_solution.py",
-    "date": "2026-10-05",
-    "coolsolve_version": "0.3.0+fix/library-gaps@fbdb6a7",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": 0.0016,
-    "notes": "40 of the 44 EES variables agree within 1.6e-3 relative (largest: the mean specific heat of air, 1.6e-3); all derived results (powers, temperatures, efficiency, flows) within 1.1e-3. h_1, h_2, h_2s and s_1 differ by CoolProp's reference state for air; their differences agree to 6e-4. Same deviations for the ambient variant (max 1.4e-3) and for the 95 % speed case."
+    "notes": "40 of the 44 EES variables agree within 1.6e-3 relative (largest: the mean specific heat of air, 1.6e-3); all derived results (powers, temperatures, efficiency, flows) within 1.1e-3. h_1, h_2, h_2s and s_1 differ by CoolProp's reference state for air; their differences agree to 6e-4. Same deviations for the ambient variant (max 1.4e-3) and for the 95 % speed case. Re-solved with CoolSolve 0.3.0@4798e2b: the variants now use the native INTERPOLATE call form (named argument), solutions unchanged."
   },
   "missing_features": [
-    "CS-GAP-INTERP-EES",
     "CS-GAP-INCLUDE"
   ],
   "related": [
@@ -83,6 +84,11 @@
       "date": "2026-10-11",
       "action": "cpbar: 0/0 guard when the two temperatures coincide (mean cp evaluated over ±0.005 K) in PROCEDURE cpbar and FUNCTION gamma (_ambient and _coolsolve files); regression baselines unchanged (checked at rtol 1e-9)",
       "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b): CS-GAP-INTERP-EES is closed - the three INTERPOLATE calls of the _coolsolve and _ambient variants are the native EES form (named argument), the variants are valid EES and their solutions unchanged (baselines re-written); the main file stays blocked by CS-GAP-INCLUDE (cpbar, gamma); the five-output PROCEDURE cpbar still cannot be called in function position",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

@@ -5,7 +5,7 @@
   "summary": "Complete ORC recovering heat from an exhaust-gas/thermal-oil stream: three-zone plate evaporator and condenser with Thonon/Kuo/Hsieh correlations, scroll expander with fixed volume ratio, pump, pipe sizing and total equipment/investment cost; refrigerant properties as CoolProp calls on the mixture R245fa+R134a (the source uses the EES REFPROP interface; stored run: pure R245fa).",
   "kind": "steady",
   "level": 3,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "orc_whr_refprop_cost.eescode",
   "fluids": [
     "R245fa+R134a",
@@ -57,17 +57,17 @@
     "course": ""
   },
   "verification": {
-    "summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-END-PROCEDURE): compared with the EES stored solution, 356 common variables; about 90 are affected by corrections of two errors of the original (A_cd 10.96 vs 5.459 m²), the rest differ by a few % (property backend). A scratch run restoring the two errors gives eta_cycle 6.942 % (EES 6.964 %).",
-    "checks": ["ees-stored-solution"],
-    "reference": "EES stored solution of the source file (386 variables), compared with the runnable _coolsolve variant: 356 common variables; about 90 are affected by the corrections of kuo and Hsieh_new (condenser, evaporator area, costs and cycle outputs downstream); the others differ by a few % at most, apart from the air enthalpy reference offset (see README)",
-    "date": "2026-10-13",
-    "coolsolve_version": "0.3.0@20b59a6",
+    "summary": "Compared with the EES stored solution, 356 common variables; about 90 are affected by corrections of two errors of the original (A_cd 10.96 vs 5.459 m²), the rest differ by a few % (property backend). A scratch run restoring the two errors gives eta_cycle 6.942 % (EES 6.964 %).",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution of the source file (386 variables): 356 common variables; about 90 are affected by the corrections of kuo and Hsieh_new (condenser, evaporator area, costs and cycle outputs downstream); the others differ by a few % at most, apart from the air enthalpy reference offset (see README)",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": 0.252,
-    "notes": "max_rel_diff excludes the ~90 outputs affected by the corrections (listed in the README). Maximum of the others: 0.252 = absolute air enthalpies h_a_ex_liq (reference-state offset EES ideal gas vs CoolProp Air); excluding that pair, 0.061 on Cp_r_ex_vap_cd (property backend). P_evap (26.18 bar in both files) is not counted: --ees-units scales its bar value by 1e5 (comparison tool artefact). Corrected values (re-baselined 2026-10-13 after the CoolSolve fix of CS-BUG-PI-FUNCTION, g# read as 1 in function bodies): A_cd 10.96 m2 (EES 5.46), W_dot_net 3213 W (3425), eta_cycle 6.50 % (6.96 %), SIC 3653 EUR/kW (2700); a scratch run with the original's two errors restored gives A_cd 5.53 m2, eta_cycle 6.94 %, SIC 2708 EUR/kW (0.3 % from EES). Native file not runnable (CS-GAP-END-PROCEDURE; then the undefined local string fluidev$ of hx_cd)."
+    "notes": "max_rel_diff excludes the ~90 outputs affected by the corrections (listed in the README). Maximum of the others: 0.252 = absolute air enthalpies h_a_ex_liq (reference-state offset EES ideal gas vs CoolProp Air); excluding that pair, 0.061 on Cp_r_ex_vap_cd (property backend). P_evap (26.18 bar in both files) is not counted: --ees-units scales its bar value by 1e5 (comparison tool artefact). Corrected values (re-baselined 2026-10-13 after the CoolSolve fix of CS-BUG-PI-FUNCTION, g# read as 1 in function bodies): A_cd 10.96 m2 (EES 5.46), W_dot_net 3213 W (3425), eta_cycle 6.50 % (6.96 %), SIC 3653 EUR/kW (2700); a scratch run with the original's two errors restored gives A_cd 5.53 m2, eta_cycle 6.94 %, SIC 2708 EUR/kW (0.3 % from EES). Native file not runnable (CS-GAP-END-PROCEDURE; then the undefined local string fluidev$ of hx_cd). The comparison was made with the earlier pure-R245fa transcription, whose solution the native file reproduces in all 362 variables (CoolSolve 0.3.0@4798e2b)."
   },
-  "missing_features": [
-    "CS-GAP-END-PROCEDURE"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0019",
     "CSL-0113",
@@ -135,6 +135,11 @@
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @20b59a6 (T-RECHECK, CS-BUG-COMMON-PROC closed: $COMMON rejected, WorkingFluidMix$ passed as argument of the five procedures); still blocked by CS-GAP-END-PROCEDURE (first error: lines 518/520, End procedure; with End, the next is 'String variable not found: fluidev$' in hx_cd); variant kept, unchanged (its .sol identical); README results refreshed",
       "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b): the native file (End procedure, mixture string at MM_fraction = 1) solves and reproduces the earlier variant in all 362 variables; status verified, variant deleted, native .sol added",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

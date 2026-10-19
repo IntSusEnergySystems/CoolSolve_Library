@@ -1,6 +1,6 @@
 # Reciprocating compressor from catalogue data (R717)
 
-🟠 **Level 3 · Advanced** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0157`
+🟠 **Level 3 · Advanced** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0157`
 
 Catalogue-data model of an R717 (ammonia) reciprocating compressor, from the
 2002 Laborelec compressor toolkit of the ULiège Thermodynamics Laboratory: the
@@ -18,7 +18,7 @@ with a power-law extrapolation of the isentropic effectiveness to 1000 and
 | **Source** | ULiège — Laborelec compressor toolkit 2002 (`Catalogue_data_model-RPM_simulation-Part_speed-Full_load.EES`, EES 6.596) |
 | **Authors** | Felipe Trebilcock (ULiège Thermodynamics Laboratory); reviewers J. Lebrun, E. Winandy |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file blocked (`CS-BUG-DUPLICATE-VAR-BOUND`, `CS-GAP-LOOKUP-NONAME`); the runnable variant is verified against the EES stored solution |
+| **CoolSolve** | 0.3.0@4798e2b — verified against the EES stored solution (see *Verification*) |
 
 ## Problem statement
 
@@ -54,21 +54,16 @@ coefficients are not defined in this file).
 
 ## How to run
 
-The native file keeps the original EES syntax and is **blocked**; run the
-variant (valid EES as well, no CoolSolve-only syntax):
-
 ```bash
-coolsolve ./reciprocating_catalogue_r717_coolsolve.eescode
+coolsolve ./reciprocating_catalogue_r717.eescode
 ```
 
-Both files are accompanied by their lookup table (`reciprocating_catalogue_r717-lookup_1.csv`
-for the native file, `reciprocating_catalogue_r717_coolsolve-lookup_1.csv`
-for the variant; identical SI values). The variant is regression-tested as
-`CSL-0157:coolsolve`.
+The catalogue rows are read from the lookup table `reciprocating_catalogue_r717-lookup_1.csv` (nameless `lookup(row, col)` form: EES's default
+*Lookup Table #1*); the loop bound `n = 17` is a variable, as in the original.
 
 ## Results
 
-Effectiveness map computed by the variant (extract of its `.sol` baseline;
+Effectiveness map computed by the model (extract of its `.sol` baseline;
 all values agree with the EES stored solution to the tolerances of
 *Verification*):
 
@@ -93,7 +88,7 @@ two extrapolated curves are outputs of the file's own law — no measured
 
 ## Verification
 
-The variant is verified against the **EES stored solution** of the source file
+The model is verified against the **EES stored solution** of the source file
 (645 variables stored, all valid; 381 are variables of the active model — the
 string `fluid$`, the loop index and 261 stale records of commented-out
 equations are not part of it). Unit conversion of the reference: the file is
@@ -116,10 +111,6 @@ and enthalpies; the 42 stored unit tags, all `kW`, are stale — the one on
   property tolerance (EES 6.596 vs CoolProp ammonia).
 - `t_su_cp[i]` has no stored EES value; checked by hand (20.001 °C =
   T_ev + 5.001 K).
-
-The native file cannot be verified: CoolSolve drops its `DUPLICATE` loop
-(silently reducing it to the 8 constant assignments, *SUCCESS*) and rejects
-its nameless `lookup` calls.
 
 ## Source and attribution
 
@@ -164,11 +155,6 @@ Source file (EES 6.596), collection of S. Quoilin:
   same way, so none of its equations is active, and the stored `DELTAT_sc`/
   `T_ex_cd`/`Q_dot_ev` values are stale records of an earlier version of the
   file. Comments translated to English; standard header added.
-- **2026-10-08 — runnable variant** `reciprocating_catalogue_r717_coolsolve.eescode`:
-  only the two gap-forced changes — `DUPLICATE i = 1, n` → `DUPLICATE i = 1, 17`
-  (`n = 17` kept, unused) and nameless `lookup(i, col)` →
-  `lookup('lookup_1', i, col)`; both original forms are valid EES. No
-  CoolSolve-only syntax. Verified against the same EES reference (above).
 - **Level** (taxonomy §3): equations 399 → 2; largest block 1 → 0;
   functions/arrays/`DUPLICATE` present → 1; multi-zone/≥3 components no → 0;
   semi-empirical/part-load (catalogue maps, speed extrapolation) → 1;
@@ -176,19 +162,12 @@ Source file (EES 6.596), collection of S. Quoilin:
 
 ## Limitations and CoolSolve gaps
 
-- `CS-BUG-DUPLICATE-VAR-BOUND`: a `DUPLICATE` loop whose bounds are variables
-  (`duplicate i = 1, n`, valid EES, used here) is **silently dropped** — the
-  native file *solves* with only its 8 constant equations and *SUCCESS*,
-  computing nothing. Blocks the native file.
-- `CS-GAP-LOOKUP-NONAME`: the nameless catalogue form `lookup(row, col)`
-  (valid EES; EES reads its default "Lookup Table #1" — the stored solution of
-  this file proves it) is rejected with *"Expression is not a string literal
-  or variable"*. Blocks the native file.
 - The catalogue rows and `V_s_cp` come from the original file; the compressor
   model/displacement they refer to is not documented further in the source.
 - Physical: the speed extrapolation is the file's own power law (no measured
   1000/750 rpm data in this file); the effectiveness is a *global*
   (electrical → isentropic) effectiveness, as in the original.
+- No CoolSolve gap blocks the model.
 
 ## Related models
 
@@ -196,5 +175,4 @@ Source file (EES 6.596), collection of S. Quoilin:
   polynomial correlation — same catalogue-data approach for the Copeland
   scroll members of this 5-file family (TM-0288/TM-0289).
 - `CSL-0035` *centrifugal_compressor_lookup_map*: compressor performance read
-  from a lookup table (the native `INTERPOLATE` map form, also blocked by its
-  lookup gap, with a runnable variant).
+  from a lookup table (the native `INTERPOLATE` map form).

@@ -4,20 +4,15 @@
   CoolSolve Library model CSL-0011 - variant of
   two_shaft_gas_turbine_compressor_map_coolsolve.eescode
  -----------------------------------------------------------------------------
-  The main file keeps the native EES syntax and does not run in CoolSolve. This
-  transcription is identical to it, with three changes. This file is
-  CoolSolve-only: it is not meant to be run in EES, because of change 1.
+  The main file keeps the original EES text and does not run in CoolSolve. This
+  transcription is identical to it, with two changes; it is valid EES.
 
-    1. the three INTERPOLATE calls are written in CoolSolve's positional form
-       (x column, y column, abscissa) instead of the native EES form with a
-       named argument - gap CS-GAP-INTERP-EES. This positional form is
-       CoolSolve-only syntax and is not valid EES;
-    2. the two calls of the cpbar PROCEDURE are written as CALL statements
-       (this form is also valid EES), because CoolSolve does not accept the
-       5-output cpbar of CSL-0005 inside an expression ("cannot be called as a
-       function"). Only c_bar_p (the first output) is used by the model; the
-       other outputs (Q_4 = 0, x = 1, e_min = 0, e) are diagnostics;
-    3. the cpbar PROCEDURE and the gamma FUNCTION are copied from the library
+    1. the two calls of the cpbar PROCEDURE are written as CALL statements
+       (valid EES), because CoolSolve does not accept the 5-output cpbar of
+       CSL-0005 inside an expression ("cannot be called as a function"). Only
+       c_bar_p (the first output) is used by the model; the other outputs
+       (Q_4 = 0, x = 1, e_min = 0, e) are diagnostics;
+    2. the cpbar PROCEDURE and the gamma FUNCTION are copied from the library
        model CSL-0005 (gap CS-GAP-INCLUDE, until CS-FEAT-IMPORT provides
        $INCLUDE library:cpbar_combustion_products).
 
@@ -309,9 +304,9 @@ M_r_cp = M_dot_1*sqrt(t_1+273)/(p_1/1E5)   "reduced flow of the compressor [(kg/
 "N = N_design*0.95"
 
 "!Compressor map (embedded table lookup_1: N_rN, M_r_cp, r_p, epsilon_s_cp)"
-M_r_cp = INTERPOLATE('lookup_1','N_rN','M_r_cp',0.95)   "native EES form: INTERPOLATE('lookup_1','M_r_cp','N_rN',N_rN=0.95), CoolSolve-only positional form here (CS-GAP-INTERP-EES)"
-r_p = INTERPOLATE('lookup_1','N_rN','r_p',0.95)
-epsilon_s_cp = INTERPOLATE('lookup_1','N_rN','epsilon_s_cp',0.95)
+M_r_cp = INTERPOLATE('lookup_1','M_r_cp','N_rN',N_rN=0.95)
+r_p = INTERPOLATE('lookup_1','r_p','N_rN',N_rN=0.95)
+epsilon_s_cp = INTERPOLATE('lookup_1','epsilon_s_cp','N_rN',N_rN=0.95)
 
 "!Compressor balance"
 w_cp = w_s_cp/epsilon_s_cp     "specific work consumed by the compressor [J/kg]"

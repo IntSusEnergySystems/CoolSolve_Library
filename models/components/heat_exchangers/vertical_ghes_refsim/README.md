@@ -23,7 +23,7 @@ ULiège model data bank.
 | **Source** | ULiège model data bank — `VerticalGHES_RefSim_EES_Model_SB080213.EES` (EES X7.888), inside `VerticalGHES_EXE_Model_SB080213.zip` |
 | **Authors** | Stéphane Bertagnolio (ULiège Thermodynamics Laboratory, from the header of the file) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** by `CS-GAP-GOTO` and `CS-GAP-INTEGRALVALUE`; no runnable variant |
+| **CoolSolve** | native file **blocked** by `CS-GAP-INTEGRALVALUE`; no runnable variant |
 
 ## Problem statement
 
@@ -81,17 +81,18 @@ temperature of the loop, and the energy extracted from the ground.
 
 The model **cannot be run in CoolSolve**: the native file keeps the
 original syntax and is blocked (see *Limitations and CoolSolve gaps*). There is
-**no runnable variant**, because the two gaps that block the physics of the
-model (`INTEGRALVALUE`, `GOTO`) cannot be worked around without replacing the
-Multiple Load Aggregation Algorithm by a different algorithm.
+**no runnable variant**, because the gap that blocks the physics of the model
+(`INTEGRALVALUE`) cannot be worked around without replacing the Multiple Load
+Aggregation Algorithm by a different algorithm.
 
 ```bash
-coolsolve ./vertical_ghes_refsim.eescode    # -> "Parse failed: Line 108: Could not parse line" … (GOTO ladders)
+coolsolve ./vertical_ghes_refsim.eescode    # -> "Parse failed: Line 119: variable 'Q_dot_bf' is read in PROCEDURE 'mean' before it is assigned" …
 ```
 
-(the `$IF` directives are resolved — branch `'B'` is kept, the model is square — and the
-first error is the parse error of the `GOTO` statements and labels of the two procedures,
-lines 108–183.)
+(the `$IF` directives are resolved — branch `'B'` is kept — and the `GOTO` ladders
+of the two procedures parse; the first error is the check of variables read
+before their assignment, lines 119 and 156–159, which are the `INTEGRALVALUE`
+history reads.)
 
 The file is otherwise complete: no missing library function, no lookup table,
 no external data file, unit system already SI-°C-Pa-J.
@@ -248,31 +249,28 @@ Fourier number is taken constant over the simulation; the heat pump is
 represented by a constant COP and a constant load. The model is a
 semi-empirical design-stage model, not a design tool.
 
-CoolSolve gaps blocking the native file (CoolSolve
-`docs/model_library_support.md`; every ID is in `missing_features`):
+CoolSolve gap blocking the native file (CoolSolve
+`docs/model_library_support.md`; the ID is in `missing_features`):
 
 - `CS-GAP-INTEGRALVALUE` — the MLAA
   reads the load history of the trajectory being integrated:
   `INTEGRALVALUE((t-1)*DELTAtau, q_day)`, and the `summation` procedure loops
   over it (`90: j:=j-1 … IF((j>t-h+1) AND (j>1)) THEN GOTO 90`). CoolSolve
-  parses `INTEGRALVALUE` but has no evaluator for it: *"Unknown or unsupported
-  function: INTEGRALVALUE with 2 arguments"* (both the quoted and the unquoted
-  spelling of the variable name). It is a planned improvement in CoolSolve
-  (`docs/integral_table.md` §7.2, item 4).
-- `CS-GAP-GOTO` — the two MLAA
-  procedures are written as `GOTO` ladders with numeric statement labels
-  (`IF (t=1) THEN GOTO 1000`, `10:`, `20:`, `999:`). CoolSolve parses the
-  labels and **silently ignores the jumps**, so every branch of a ladder is
-  executed in turn: the values are wrong with a *SUCCESS* solver status. This
-  is a silent wrong answer, not an error.
+  parses `INTEGRALVALUE` but has no evaluator for it (*"Unknown or unsupported
+  function: INTEGRALVALUE with 2 arguments"*, both the quoted and the unquoted
+  spelling of the variable name); the history variables it reads (`q_day`,
+  `q_week`, …) are assigned by `PROCEDURE mean` and read by `PROCEDURE
+  summation`, so the file is rejected at the parse by the check of variables
+  read before their assignment in a procedure (lines 119, 156–159). It is a
+  planned improvement in CoolSolve (`docs/integral_table.md` §7.2, item 4).
 - `CS-DOC-SQUARE-INTEGRAL` — the `-d` analysis of a model with `INTEGRAL`
   calls reports `System square: No` and lists *all* variables as unmatched
   (`Equations: 74, Variables: 70`), which is why the real diagnosis comes from
   the `Algebraic subsystem is not square: N equations vs M unknowns` line of
   the debug folder (`integral.md`).
 
-**No runnable variant is shipped.** `INTEGRALVALUE` and `GOTO` are what makes
-the Multiple Load Aggregation Algorithm work: without them the five-zone
+**No runnable variant is shipped.** `INTEGRALVALUE` is what makes the Multiple
+Load Aggregation Algorithm work: without it the five-zone
 aggregation of the load history cannot be expressed at all, and replacing it
 (keeping a `DUPLICATE` array of the whole trajectory, say) would be a
 different model, not a transcription of this one. The `$IF` selection and the

@@ -1,6 +1,6 @@
 # Low-temperature ORC (R134a) with void-fraction charge of the heat exchangers
 
-🔴 **Level 4 · Research** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0159`
+🔴 **Level 4 · Research** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0159`
 
 Low-temperature organic Rankine cycle (R134a) from the ULiège laboratory work
 (~2007): pump, evaporator and condenser are each split into liquid / two-phase
@@ -15,11 +15,11 @@ to the built-in volume ratio, supply/exhaust cooling, ambient losses).
 |---|---|
 | **Category** | Cycles and machines › Organic Rankine cycles |
 | **Fluids** | R134a (working fluid), AirH2O (condenser air) |
-| **Size** | 312 equations (largest block: 112); the runnable variant adds 1 |
+| **Size** | 312 equations (largest block: 112) |
 | **Source** | ULiège — laboratory ORC model, file `ORC simple model with void fraction.EES` (EES 8.139) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory; comments signed "ARA") |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file blocked by `CS-BUG-HUMIDAIR-PROPS`; the `_coolsolve` variant is verified against the EES stored solution |
+| **CoolSolve** | native file runs (31 iterations with the shipped `.initials`); verified against the EES stored solution |
 
 ## Problem statement
 
@@ -56,41 +56,34 @@ refrigerant charge `M_charge` (≈ 0.393 kg) are outputs.
   exchangers, as in the original. Indices 21–24 give the four cycle points
   (post-processing) for the CoolSolve diagrams.
 
-| Inputs | Value | Outputs (variant) | Value |
+| Inputs | Value | Outputs | Value |
 |---|---:|---|---:|
-| `Q_dot_ev` imposed duty | 12 990 W | **`M_charge` refrigerant charge** | 0.3934 kg |
-| `DELTAt_oh_ex_ev` superheating | 10 K | `rpm_pump` pump speed | 1595 min⁻¹ |
-| `DELTAt_sc_ex_cd` subcooling | 3 K | `W_dot_Rankine` net power | 681 W |
+| `Q_dot_ev` imposed duty | 12 990 W | **`M_charge` refrigerant charge** | 0.3932 kg |
+| `DELTAt_oh_ex_ev` superheating | 10 K | `rpm_pump` pump speed | 1596 min⁻¹ |
+| `DELTAt_sc_ex_cd` subcooling | 3 K | `W_dot_Rankine` net power | 680 W |
 | `t_sf_su_ev` glycol inlet | 88.47 °C | `eta_Rankine` efficiency | 0.0524 |
-| `t_sf_su_cd` air inlet | 20 °C | `M_ev` / `M_cd` / `M_line` | 0.209 / 0.067 / 0.118 kg |
-| `V_s_cp` expander swept volume | 110·10⁻⁶ m³ | `p_su_exp` / `p_ex_exp` | 22.46 / 8.92 bar |
+| `t_sf_su_cd` air inlet | 20 °C | `M_ev` / `M_cd` / `M_line` | 0.208 / 0.067 / 0.118 kg |
+| `V_s_cp` expander swept volume | 110·10⁻⁶ m³ | `p_su_exp` / `p_ex_exp` | 22.46 / 8.93 bar |
 
 The cycle efficiency is low (5.2 %) because the heat source is a 88 °C
 glycol-water loop; the evaporator runs at 72.8 °C, the condenser at 35.2 °C.
 
 ## How to run
 
-The **native file is blocked**: CoolSolve silently returns 1E4 kg/m³ for
-`Density(AirH2O,…)`, which makes the condenser air flow ~10 000 × too large
-without any error (`CS-BUG-HUMIDAIR-PROPS`). The native file is kept in valid
-EES syntax. The runnable variant is:
-
 ```bash
-coolsolve ./orc_void_fraction_charge_coolsolve.eescode
+coolsolve ./orc_void_fraction_charge.eescode
 ```
 
-Its only change is the registered workaround
-`rho_sf_cd = (1+w_air_cd)/Volume(AirH2O,…)` (EES `density` = 1/`volume` for
-AirH2O); see the conversion log. Convergence needs the reference-offset-corrected
-guesses shipped in `orc_void_fraction_charge_coolsolve.initials` (see
-*Verification*); the 112-equation loop does not converge from raw guesses.
+The file is valid EES. Convergence needs the reference-offset-corrected
+guesses shipped in `orc_void_fraction_charge.initials` (see *Verification*);
+the 112-equation loop does not converge from the raw guesses.
 
 ## Results
 
-Variant vs EES (see *Verification*): the charge is `M_charge` = 0.39339 kg
-(EES 0.39342, −0.009 %), `eta_Rankine` = 0.05242 (EES 0.05230), `W_dot_Rankine`
-= 680.9 W (EES 679.4 W), `rpm_pump` = 1595 (EES 1596), all temperatures within
-0.25 %. Note that `w_exp_2` = −3050 J/kg is negative: the expander is
+CoolSolve vs EES (see *Verification*): the charge is `M_charge` = 0.39320 kg
+(EES 0.39342, −0.056 %), `eta_Rankine` = 0.05235 (EES 0.05230), `W_dot_Rankine`
+= 680.0 W (EES 679.4 W), `rpm_pump` = 1596 (EES 1596), all temperatures within
+0.1 %. Note that `w_exp_2` = −3073 J/kg is negative: the expander is
 under-expanded (adapted pressure below exhaust pressure), as in the original.
 
 <!-- FIGURE (added by the maintainer, docs/model_workflow.md §7): T-s or P-h diagram of the cycle
@@ -101,14 +94,17 @@ under-expanded (adapted pressure below exhaust pressure), as in the original.
 
 Reference: the EES stored solution shipped in the source file (298 of 299
 stored values valid; 5 stored values belong to equations that are commented
-out in the file version). `compare_solution.py` on the **variant**:
-293 common variables; excluding the absolute-enthalpy/entropy variables
-(`h_*`, `s_*`, `H_dot[1..16]`, constant EES↔CoolProp reference-state offset,
-see below) and the three diagnostic qualities, the maximum relative difference
-is **1.21e-02** (`Q_dot_ex_exp`, −13.5 vs −13.3 W, small denominator), then
-1.12e-02 on `w_exp_2` and 7.6e-03 on `rho_sf_cd`/`M_dot_sf_cd` (humid-air
-density backend, see below); the charge and all pressures/temperatures agree
-within **2.4e-03** (`M_charge`: 8.6e-05, i.e. −0.009 %).
+out in the file version). `compare_solution.py`: 293 common variables;
+excluding the absolute-enthalpy/entropy variables (`h_*`, `s_*`, `H_dot[1..16]`,
+constant EES↔CoolProp reference-state offset, see below) and the three
+diagnostic qualities, the maximum relative difference is **8.0e-03**
+(`omega_vapor_ev`, a zone share of the evaporator), then 7.5e-03 on
+`NTU_ev_twophase`, 7.3e-03 on `omega_liquid` and 7.2e-03 on
+`M_dot_sf_ev`/`C_dot_sf_ev` (glycol-water heat-capacity backend, which sets
+the evaporator zone shares); the cycle results agree better:
+`M_charge` 5.6e-04, `W_dot_Rankine`/`eta_Rankine` 9.3e-04, `rpm_pump` 2.5e-04,
+`rho_sf_cd` 3.2e-04, all pressures and temperatures within 9.2e-04 (the glycol
+outlet temperature `t_sf_ex_ev`; the pressures 6.0e-04).
 
 - **Absolute h/s**: EES and CoolProp use different reference states for R134a
   (constant offsets Δh = −148.15 kJ/kg, Δs = −795.7 J/kg-K, determined on
@@ -120,22 +116,19 @@ within **2.4e-03** (`M_charge`: 8.6e-05, i.e. −0.009 %).
 - **`X_ex_ev` / `X_ex_exp` / `X_ex_cd`**: EES returns ±100 outside the dome,
   CoolSolve returns 0 — registered deviation `CS-GAP-QUALITY-DOME` (the three
   states are superheated, superheated, subcooled; the value feeds no equation).
-- **`rho_sf_cd`**: 1.1994 vs 1.1903 kg/m³ (+0.76 %), the EES-vs-CoolProp
-  humid-air difference; it propagates to `M_dot_sf_cd`/`C_dot_sf_cd`
-  (+0.73 %) and dominates the zone-share deviations of the condenser.
+- **`rho_sf_cd`**: 1.19067 vs 1.1903 kg/m³ (+0.03 %): `Density(AirH2O,…)` is
+  1/`Vda` (kg of dry air per m³), as in EES.
 - Only in the EES reference: `DELTAt_ln_ev_vapor`, `h_exs_pump`, `M_dot`,
   `s_su_pump`, `W_dot_exp` (commented-out equations of the original). Only in
-  CoolSolve: `w_air_cd` (variant), `c_p_sf_cd` (defined in the file but absent
-  from the EES stored table), `pi`, the string variables and the state-point arrays.
-- The **native file** was not compared numerically: it solves to silently
-  wrong values (`rho_sf_cd` = 1E4 kg/m³), which is exactly the registered bug.
+  CoolSolve: `c_p_sf_cd` (defined in the file but absent from the EES stored
+  table), `pi`, the string variables and the state-point arrays.
 
-A first solve from the raw stored values failed (`SingularJacobian` on the
+A solve from the raw stored values fails (`SingularJacobian` on the
 112-equation loop): the reference offset makes every property-call equation
 wrong by ~148 kJ/kg at the start point. The shipped `.initials` therefore
 contain the stored EES values shifted by the reference offsets
 (+148 160 J/kg on `h_*`, +795.62 J/kg-K on `s_*`); they are guesses, not
-equations, and with them the variant converges in ~32 iterations.
+equations, and with them the model converges in 31 iterations.
 
 ## Source and attribution
 
@@ -167,13 +160,6 @@ Source file (EES 8.139), collection of S. Quoilin:
   since `h_ex_exp=enthalpy(fluid$,P=P_ex_exp,T=t_ex_exp)` defines it at
   `P_ex_exp` (`CS-GAP-PROP-TH` applies but is not listed in
   `missing_features`: not planned, rewritten per the library workflow §6).
-- **2026-10-08 — variant `orc_void_fraction_charge_coolsolve`** (the only
-  change of the variant; valid EES syntax, no CoolSolve-only construct):
-  `rho_sf_cd=Density(fluid3$,T=…,r=0.5,P=101325)` is replaced by
-  `w_air_cd=humrat(…)` + `rho_sf_cd=(1+w_air_cd)/Volume(fluid3$,…)`, the
-  registered workaround of `CS-BUG-HUMIDAIR-PROPS` (CoolSolve returns the
-  1E4 fallback for `Density(AirH2O,…)`, silently). Verified against the same
-  EES reference as the native file (see *Verification*).
 - **2026-10-08 — diagram support**: block of 16 post-processing equations
   (state arrays `P[21..24]`, `h[21..24]`, `T[21..24]`, `s[21..24]`; indices
   1–16 are taken by the original T-Ḣ arrays) added at the end; checked to
@@ -186,10 +172,6 @@ Source file (EES 8.139), collection of S. Quoilin:
 
 ## Limitations and CoolSolve gaps
 
-- `CS-BUG-HUMIDAIR-PROPS` (P1, silent): `Density(AirH2O,…)` returns 1E4 kg/m³,
-  which blocks the native file (the condenser air flow would be ~10 000 × too
-  large without any error or warning). The `_coolsolve` variant applies the
-  registered workaround. Re-check the native file once the bug is fixed.
 - `CS-GAP-QUALITY-DOME` (not blocking): the diagnostic qualities return 0
   instead of EES's ±100 outside the saturation dome.
 - The three `epsilon_*_ev`/`epsilon_*_cd` effectiveness equations are solved

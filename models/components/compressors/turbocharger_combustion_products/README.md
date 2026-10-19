@@ -1,6 +1,6 @@
 # Turbocharger matching with combustion-product composition
 
-🟠 **Level 3 · Advanced** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0152`
+🟠 **Level 3 · Advanced** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0152`
 
 Steady-state matching of a turbocharger on a supercharged engine (simplified
 formulation of P. Ngendakumana): ambient air drawn through the filter is
@@ -18,11 +18,11 @@ recovered as a percentage of the fuel energy.
 |---|---|
 | **Category** | Components › Compressors (turbocharger compressor–turbine matching) |
 | **Fluids** | Air (compressor–intercooler–engine), EG 40 % (glycol-water loop), ideal-gas CO2, H2O, O2, N2 (exhaust products) |
-| **Size** | 219 equations, largest block 10 (runnable variant; the native file parses and reports 219 equations and 240 unknowns, see *Limitations*) |
+| **Size** | 219 equations, largest block 10 |
 | **Source** | ULiège — MCI course, TP4 exercise 1 (EES file `SURALIMENTATION_FORMULATION SIMPLE_V2017-1.EES`, "formulation simplifiée", PNG 24/03/2019) |
 | **Authors** | P. Ngendakumana (ULiège Thermodynamics Laboratory); R. Dickes (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** (3 gaps, see below); runnable variant `turbocharger_combustion_products_coolsolve.eescode` verified against the EES stored solution |
+| **CoolSolve** | native file runs (63 iterations with the shipped `.initials`); verified against the EES stored solution |
 
 ## Model
 
@@ -32,7 +32,7 @@ One operating point, all default values of the original:
 |---|---|---|---|
 | `r_p_c` compressor pressure ratio | 2.16 | `AFR` air-fuel ratio | 20 |
 | `epsilon_s_c` compressor isentropic eff. | 0.70 | `k` fraction of fuel energy to exhaust | 1/3 |
-| `Filtre` filter pressure drop | 50 mm H2O | `C_pc` mass fraction of C in the fuel | 86.9 % |
+| `Filtre` filter pressure drop | 50 mm H2O | `C%` mass fraction of C in the fuel | 86.9 % |
 | `epsilon_hex` intercooler effectiveness | 0.80 | `LHV_f` fuel LHV | 43 MJ/kg |
 | `M_dot_a` / `M_dot_w` air / glycol-water flow | 0.045 / 0.025 kg/s | `epsilon_s_e` turbine isentropic eff. | 0.70 |
 | `Conc` glycol concentration | 40 % | `eta_m_e` turbine mechanical eff. | 0.85 |
@@ -48,14 +48,16 @@ represented by an equivalent orifice (`M_dot_p = A_eq_e*rho_ex_e*C_ex_e` with
 ## How to run
 
 ```bash
-coolsolve ./turbocharger_combustion_products_coolsolve.eescode
+coolsolve ./turbocharger_combustion_products.eescode
 ```
 
-The native file `turbocharger_combustion_products.eescode` is the faithful
-transcription (valid EES, SUBPROGRAM flattened); it does not solve in
-CoolSolve (see *Limitations*).
+The file is the faithful transcription of the original (valid EES, SUBPROGRAM
+flattened). It solves in 63 iterations with the shipped
+`turbocharger_combustion_products.initials` (the guesses of the stored EES run
+for the 109 stored values); from the default guesses the Newton block of the
+intercooler (`c_w`, `T_bar_w_hex`, `T_w_ex_hex`, …) does not converge.
 
-## Results (runnable variant, default operating point)
+## Results (default operating point)
 
 | Quantity | Value | Quantity | Value |
 |---|---:|---|---:|
@@ -71,12 +73,12 @@ Sanity checks of the original verified: `HR_bis = HR` (independent route),
 `C_a > C_ex_e` (subsonic), `epsilon_s_c = epsilon_s_e = 0.7` by construction.
 
 <!-- FIGURE (added by the maintainer, docs/model_workflow.md §7): parametric sweep
-     suggested by the blocked status (e.g. HR and phi_e vs k), figures/…png -->
+     (e.g. HR and phi_e vs k), figures/…png -->
 
 ## Verification
 
-Against the EES stored solution of the source file (`compare_solution.py`,
-runnable variant; the native file is not square in CoolSolve). The EES variable table
+Against the EES stored solution of the source file (`compare_solution.py`).
+The EES variable table
 holds 111 records, 109 with values (`AU` and `C` are dead variables without
 values; the subprogram-internal records `x[i]`, `h[i]`, `s[i]`, `MM[i]`,
 `pp[i]`, `temp`, `pres`, `f_st`, `e`, `ntkmol`, `h_p`, `s_p` are the state of
@@ -129,8 +131,7 @@ the last subprogram execution, i.e. the `ref` call at 25 °C / 1 bar).
 - The stored subprogram state (ref call) is reproduced under the flattened
   names: `x_ref[i]` / `MM_ref[i]` / `pp_ref[i]` / `h_ref[i]` / `f_st_ref` /
   `e_ref` / `ntkmol_ref` / `MM_p_ref` match the stored `x[i]`… within 3e-3
-  (composition and partial pressures exact; the small composition deviation
-  comes from the element molar masses substituted in the variant).
+  (composition and partial pressures exact).
 
 ## Source and attribution
 
@@ -179,32 +180,8 @@ Source file (EES X10.589, comments in French):
 - **Level justification** (taxonomy §3): 219 equations (1), largest block 10
   (1), functions + arrays (1), ≥ 3 coupled components (1), off-design
   matching physics (1), curated guesses needed (1) → score 6 → level 3.
-- **2026-10-08 — runnable variant** `turbocharger_combustion_products_coolsolve.eescode`
-  (only what the four gaps force; still valid EES):
-  1. `C%` → `C_pc`, `Q_dot_2_%` → `Q_dot_2_pc` (a renaming CoolSolve no longer requires);
-  2. `molarmass(C)`/`molarmass(H)` → 12.0107 / 1.00794 kg/kmol, the values EES
-     returns (recomputed from the stored `m`, `n`) (`CS-GAP-MOLARMASS-ELEMENT`), in
-     `FUNCTION mm_p`, in `m`, `n` and in the five `f_st_<tag>` lines;
-  3. the 16 indexed sums `sum(expr,i=1,4)` expanded as explicit 4-term sums,
-     the terms of `h_p`/`s_p` parenthesised before the `/MM_p_<tag>` division
-     (`CS-GAP-SUM-INDEXED`);
-  4. `Cp(EG,T=T_bar_w_hex,C=Conc)` → `Cp(EG,T=T_bar_w_hex,P=p_atm,C=Conc)`
-     (`CS-GAP-INCOMPRESSIBLE`); no physical effect for an incompressible
-     solution (CoolSolve EG 40 % at 44.6 °C: 3615.4 vs EES 3615.1 J/kg-K).
-  Verified against the same EES reference (see *Verification*).
-
 
 ## Limitations and CoolSolve gaps
-
-The native file is **blocked** by three gaps (`missing_features`):
-
-- `CS-GAP-SUM-INDEXED` — the 16 indexed `sum(expr,i=1,4)` make the system
-  not-square (219 equations / 240 unknowns, no error on the sum lines);
-- `CS-GAP-MOLARMASS-ELEMENT` — `molarmass(C)`, `molarmass(H)` ("Unknown
-  fluid: 'C'");
-- `CS-GAP-INCOMPRESSIBLE` — `Cp(EG,T=…,C=40)` ("cp requires exactly 2 input
-  properties …, got 1"; adding `P=` unblocks the call, CoolSolve has the EG
-  solution fluid and agrees with EES within 1e-4).
 
 The stored EES solution mixes stale values from older sessions
 (`CS-BUG-EXTRACT-STALE`); the verification above separates the consistent

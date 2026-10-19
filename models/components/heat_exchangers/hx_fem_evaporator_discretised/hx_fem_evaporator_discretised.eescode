@@ -17,8 +17,6 @@
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
   Source : ~/Nextcloud/thermo_models/procedures EES/hx - fem SQ011025.EES
            (TM-0575), author S. Quoilin - see README.md
-  Status : blocked in CoolSolve (CS-GAP-REPEAT-UNTIL-BARE, CS-BUG-LOOKUP-WRITE);
-           runnable variant hx_fem_evaporator_discretised_coolsolve.eescode
 =============================================================================}
 
 "Finite volumes model of an evaporator. 3 different heat exchange coefficients
@@ -111,3 +109,14 @@ T_ex = temperature(fluid$,h=h_ex,p=p)
 DELTAT_ex = T_ex - T_sat
 
 Q_dot = M_dot * (h_ex - h_su)
+
+"! ############## State points for the thermodynamic diagrams (refrigerant) ############## "
+N_pt = 2
+P[1] = p
+h[1] = h_su
+T[1] = t_su
+s[1] = entropy(fluid$,h=h_su,p=p)
+P[2] = p
+h[2] = h_ex
+T[2] = T_ex
+s[2] = entropy(fluid$,h=h_ex,p=p)

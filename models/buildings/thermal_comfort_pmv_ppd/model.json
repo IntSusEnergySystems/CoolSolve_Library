@@ -5,7 +5,7 @@
   "summary": "Predicted Mean Vote (PMV) and Predicted Percentage of Dissatisfied (PPD) after Fanger (1970): full body heat balance (breathing, perspiration, sweat, clothing, radiation, convection) with the activity and clothing selected from two embedded lookup tables.",
   "kind": "steady",
   "level": 2,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "thermal_comfort_pmv_ppd.eescode",
   "fluids": [
     "AirH2O",
@@ -50,19 +50,21 @@
     "course": "Climatisation (ULiège), thermal comfort chapter"
   },
   "verification": {
-    "summary": "Native file blocked by CS-GAP-LOOKUPROW and CS-BUG-LOOKUP-STRING. Runnable variant compared with EES stored solution: 46 of 57 variables within 0.1%, 51/57 within 0.5%.",
-    "checks": ["ees-stored-solution"],
-    "reference": "EES solution stored in the source file (57 variables) against the runnable variant thermal_comfort_pmv_ppd_coolsolve.eescode (activity row 3, clothing row 2)",
-    "date": "2026-10-05",
-    "coolsolve_version": "0.3.0@536d427",
+    "summary": "Compared with the EES stored solution: 46 of 57 variables within 0.1 %, 51/57 within 0.5 %; the rest are 5 stale cells of a second run and property-driven deviations (humid-air formulation).",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES solution stored in the source file (57 variables); activity row 3, clothing row 2 (activite$ = 'Repos_debout', Veture$ = 'Ete')",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": 0.0052,
-    "notes": "46/57 variables agree within 1e-3 (51/57 within 0.5%; mostly exact); the 5 EES-side overwritten cells (E_dot_m, Q_dot_m, M_dot_CO2, T_sk, H_dot_sweat) mix a second operating point into the stored panel (see README); largest consistent-subset deviation 5.2e-3 on w_R_ex (humid-air formulation)."
+    "notes": "46/57 variables agree within 1e-3 (51/57 within 0.5%; mostly exact); the 5 EES-side overwritten cells (E_dot_m, Q_dot_m, M_dot_CO2, T_sk, H_dot_sweat) mix a second operating point into the stored panel (see README); largest consistent-subset deviation 5.2e-3 on w_R_ex (humid-air formulation). The comparison was made with the earlier numeric-selection variant, whose 57 variables the native file (LOOKUP$ROW, string-keyed tables) reproduces exactly (CoolSolve 0.3.0@4798e2b)."
   },
-  "missing_features": [
-    "CS-GAP-LOOKUPROW",
-    "CS-BUG-LOOKUP-STRING"
+  "missing_features": [],
+  "related": [
+    "CSL-0042",
+    "CSL-0106"
   ],
-  "related": ["CSL-0042", "CSL-0106"],
   "related_external": [],
   "supersedes": [],
   "previous_paths": [],
@@ -76,6 +78,11 @@
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @9423934 (T-RECHECK, CS-GAP-IF-DIRECTIVE closed); still blocked by CS-GAP-LOOKUPROW (native file now resolves both $if, 59 equations/59 unknowns, first error LOOKUP$ROW) and CS-BUG-LOOKUP-STRING; _coolsolve variant kept",
       "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b): the native file ($if, LOOKUP$ROW, string-keyed tables) solves and reproduces the earlier numeric variant in all 57 common variables; status verified, variant and its tables deleted, native .sol added",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

@@ -33,8 +33,7 @@ FUNCTION copeland_ari(table$, coef$, T_ev, T_cd)
   repeat
     C[i] = lookup(table$, i+1, coef$)   "coefficients from rows 1..10 of the catalogue"
     i = i + 1
-  "the original writes 'until i>9' without parentheses (CS-GAP-REPEAT-UNTIL-BARE)"
-  until (i>9)
+  until i>9
   copeland_ari = C[0] + C[1]*T_ev + C[2]*T_cd + C[3]*T_ev^2 + C[4]*T_ev*T_cd + C[5]*T_cd^2 + C[6]*T_ev^3 + C[7]*T_cd*T_ev^2 + C[8]*T_ev*T_cd^2 + C[9]*T_cd^3
 END
 
@@ -53,7 +52,7 @@ v_su_cp = volume(fluid$, t=T_su_cp, p=p_su_cp)          "supply specific volume 
 
 W_dot = copeland_ari(comp$, 'W', T_ev, T_cd)                "catalogue electrical power [W]"
 M_lbmhr = copeland_ari(comp$, 'M', T_ev, T_cd)              "catalogue mass flow [lbm/hr]"
-M_dot = M_lbmhr*0.0001259978805556                      "mass flow [kg/s]; 1 lbm/hr = 0.45359237 kg / 3600 s, the value of convert('lbm/hr','kg/s') in EES - the original writes convert(lbm/hr,kg/s) (CS-BUG-CONVERT-UNIT: CoolSolve returns 1 for it)"
+M_dot = M_lbmhr*convert(lbm/hr,kg/s)           "mass flow [kg/s]"
 Vs = lookup(comp$, 1, 'Vs')                             "swept volume per revolution [cm^3]"
 epsilon_v = M_dot/(Vs*50/1E6/v_su_cp)                   "volumetric effectiveness at 3000 rpm (as in the original) [-]"
 

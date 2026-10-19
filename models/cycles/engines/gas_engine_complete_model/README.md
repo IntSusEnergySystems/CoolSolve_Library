@@ -24,7 +24,7 @@ family.
 | **Source** | ULiège MSTh repetition TP 08, exercises 1–5, S. Bertagnolio (`~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 08/SB/MSTH-SB-R8-EX1-2-3-4-5.EES`, EES X7.458) |
 | **Authors** | ULiège MSTh course (J. Lebrun, V. Lemort, S. Bertagnolio) |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0@7addbbc — native file blocked by `CS-GAP-INTERP-EES`; the runnable variant `gas_engine_complete_model_coolsolve.eescode` is verified against the stored EES solution (97 common variables, all deviations explained) |
+| **CoolSolve** | native file blocked (`cpbar` in function position, `CS-GAP-INCLUDE`); the runnable variant `gas_engine_complete_model_coolsolve.eescode` is verified against the stored EES solution (97 common variables, all deviations explained) |
 
 ## Problem statement
 
@@ -88,9 +88,9 @@ which interpolates cubically; CoolSolve interpolates linearly — the
 
 ## How to run
 
-The **native file** is blocked: CoolSolve parses the native EES `INTERPOLATE`
-call form as a property call (*"Unknown fluid: 'lookup_1'"*, gap
-`CS-GAP-INTERP-EES`). It is kept in valid EES syntax.
+The **native file** is blocked: it calls the five-output `cpbar` procedure in
+function position, which CoolSolve refuses (see *Limitations*). It is kept in
+valid EES syntax.
 
 The **runnable variant** solves as is (note the `./`):
 
@@ -213,17 +213,11 @@ is handled correctly by this build (the `CS-BUG-INTERP-DESC` fix).
   `cp_p=1300`, `cp_p_67=1300`, `cp_w_gw=4187` vs `CP(Water,…)` — both forms
   kept where the original keeps them) are quoted in the comments. No equation
   was added, removed or modified.
-* **2026-10-08 — blocked status**: the native file fails on the native
-  `INTERPOLATE('lookup_1','DELTAP_throttling','W_dot_sh',W_dot_sh=0)` call
-  form — *"Unknown fluid: 'lookup_1'"* — registered gap `CS-GAP-INTERP-EES`
-  (no new gap to report; the implicit `cpbar` user library is
-  `CS-GAP-INCLUDE`). It also cannot run for a second reason, the function-
-  position `cpbar` calls with the five-output procedure (see *Limitations*).
-  Runnable variant changes (logged in its header): 1. the same call in
-  CoolSolve's positional form `INTERPOLATE('lookup_1','W_dot_sh',
-  'DELTAP_throttling',0)` (CoolSolve-only syntax, column roles reversed
-  w.r.t. EES); 2. the two `cpbar` calls in the valid-EES `CALL` form.
-  Everything else, including all variable names, is unchanged.
+* **2026-10-08 — blocked status**: the native file calls `cpbar` in function
+  position with the five-output procedure (see *Limitations*; the implicit
+  `cpbar` user library is `CS-GAP-INCLUDE`). Runnable variant change (logged in
+  its header): the two `cpbar` calls in the valid-EES `CALL` form. Everything
+  else, including all variable names and the `INTERPOLATE` call, is unchanged.
 * **2026-10-08 — review (C-141)**: the file headers shortened to the library
   rule (~10–20 lines, details moved to this README); the native file restored
   to the source's function-position `cpbar` calls (see *Limitations*), the

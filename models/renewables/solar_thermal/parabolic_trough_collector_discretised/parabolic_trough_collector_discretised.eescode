@@ -8,7 +8,7 @@
   Soponova MicroCSP datasheet map (irradiance, fluid temperature rise over the
   ambient, companion table sopo_map), and the fluid marches along the absorber
   at constant pressure. The Python loop over the elements is a DUPLICATE array
-  of cells; the enthalpy states are written out one by one (see README).
+  of cells.
 
   Inputs : fluid, m_dot, P_su, T_su, T_amb, DNI, Theta, v_wind, n_disc,
            L_coll, W
@@ -28,7 +28,7 @@ T_amb = 25           "ambient temperature [degC]"
 DNI = 900            "direct normal irradiance [W/m^2]"
 Theta = 10           "incidence angle [deg] (10 deg in the original example)"
 v_wind = 5           "wind speed on the absorber [m/s]"
-n_disc = 20          "number of discretisation elements [-]; the loop below is unrolled over 20 elements, as EES and CoolSolve expand it at parse time"
+n_disc = 20          "number of discretisation elements [-]; the loops below and the index 21 of h_ex are written for 20 elements"
 L_coll = 36.57       "absorber length of the collector field [m] (10 collectors of 3.657 m in series)"
 W = 1.524            "collector aperture width [m]"
 
@@ -50,29 +50,12 @@ END
 "Suction state and enthalpy march along the absorber: the fluid enthalpy
  increases by the absorbed power of the element divided by the mass flow rate"
 h[1] = enthalpy(fluid$,T=T_su,P=P_su)        "specific enthalpy at the suction side [J/kg]"
-h[2] = h[1] + Q_dot_abs_disc[1]/m_dot        "outlet of element 1 [J/kg]"
-h[3] = h[2] + Q_dot_abs_disc[2]/m_dot        "outlet of element 2 [J/kg]"
-h[4] = h[3] + Q_dot_abs_disc[3]/m_dot        "outlet of element 3 [J/kg]"
-h[5] = h[4] + Q_dot_abs_disc[4]/m_dot        "outlet of element 4 [J/kg]"
-h[6] = h[5] + Q_dot_abs_disc[5]/m_dot        "outlet of element 5 [J/kg]"
-h[7] = h[6] + Q_dot_abs_disc[6]/m_dot        "outlet of element 6 [J/kg]"
-h[8] = h[7] + Q_dot_abs_disc[7]/m_dot        "outlet of element 7 [J/kg]"
-h[9] = h[8] + Q_dot_abs_disc[8]/m_dot        "outlet of element 8 [J/kg]"
-h[10] = h[9] + Q_dot_abs_disc[9]/m_dot       "outlet of element 9 [J/kg]"
-h[11] = h[10] + Q_dot_abs_disc[10]/m_dot     "outlet of element 10 [J/kg]"
-h[12] = h[11] + Q_dot_abs_disc[11]/m_dot     "outlet of element 11 [J/kg]"
-h[13] = h[12] + Q_dot_abs_disc[12]/m_dot     "outlet of element 12 [J/kg]"
-h[14] = h[13] + Q_dot_abs_disc[13]/m_dot     "outlet of element 13 [J/kg]"
-h[15] = h[14] + Q_dot_abs_disc[14]/m_dot     "outlet of element 14 [J/kg]"
-h[16] = h[15] + Q_dot_abs_disc[15]/m_dot     "outlet of element 15 [J/kg]"
-h[17] = h[16] + Q_dot_abs_disc[16]/m_dot     "outlet of element 16 [J/kg]"
-h[18] = h[17] + Q_dot_abs_disc[17]/m_dot     "outlet of element 17 [J/kg]"
-h[19] = h[18] + Q_dot_abs_disc[18]/m_dot     "outlet of element 18 [J/kg]"
-h[20] = h[19] + Q_dot_abs_disc[19]/m_dot     "outlet of element 19 [J/kg]"
-h[21] = h[20] + Q_dot_abs_disc[20]/m_dot     "outlet of element 20 [J/kg]"
+DUPLICATE i=1,20
+  h[i+1] = h[i] + Q_dot_abs_disc[i]/m_dot        "outlet of element i [J/kg]"
+END
 
 "Outputs"
-Q_dot = sum(Q_dot_abs_disc[1],Q_dot_abs_disc[2],Q_dot_abs_disc[3],Q_dot_abs_disc[4],Q_dot_abs_disc[5],Q_dot_abs_disc[6],Q_dot_abs_disc[7],Q_dot_abs_disc[8],Q_dot_abs_disc[9],Q_dot_abs_disc[10],Q_dot_abs_disc[11],Q_dot_abs_disc[12],Q_dot_abs_disc[13],Q_dot_abs_disc[14],Q_dot_abs_disc[15],Q_dot_abs_disc[16],Q_dot_abs_disc[17],Q_dot_abs_disc[18],Q_dot_abs_disc[19],Q_dot_abs_disc[20])   "power absorbed by the collector field [W]"
+Q_dot = sum(Q_dot_abs_disc[i], i=1, 20)   "power absorbed by the collector field [W]"
 h_ex = h[21]                "specific enthalpy at the exhaust side [J/kg]"
 T_ex = temperature(fluid$,h=h_ex,p=P_su)   "exhaust temperature [degC]"
 p_ex = P_su                 "exhaust pressure, constant along the absorber [Pa]"

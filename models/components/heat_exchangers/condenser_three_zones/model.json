@@ -44,10 +44,12 @@
   },
   "verification": {
     "summary": "Each of the three configurations was compared with the solution stored by EES in its original file: zone duties within 0.23 %, 0.13 % and 0.09 %, AU and NTU within 0.41 %, 0.48 % and 0.1 %, air pressure drop 0.87 % to 0.9 %. Deviations are explained by enthalpy reference states and viscosities.",
-    "checks": ["ees-stored-solution"],
+    "checks": [
+      "ees-stored-solution"
+    ],
     "reference": "EES stored solutions of the three original configuration files (TM-0266 combined, TM-0264 counterflow, TM-0265 crossflow)",
-    "date": "2026-10-05",
-    "coolsolve_version": "0.3.0@536d427",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": 0.009,
     "notes": "Zone duties and total duty within 0.25 %, AU and NTU within 0.5 %, air pressure drop 0.87 % (EES vs CoolProp dry-air viscosity 1.7 %). Absolute enthalpies differ by the constant reference-state offsets (+148.15 kJ/kg R134a, +125.99 kJ/kg air); enthalpy differences agree within 5e-5."
   },
@@ -63,8 +65,8 @@
     "CSL-0113",
     "CSL-0112",
     "CSL-0115",
-  
-    "CSL-0138"],
+    "CSL-0138"
+  ],
   "related_external": [
     "CoolSolve examples/condenser_3zones.eescode (same model, crossflow configuration, SI conversion of the original)"
   ],
@@ -77,6 +79,11 @@
       "date": "2026-10-05",
       "action": "added (roadmap C-07; TM-0266 group merged as variants)",
       "by": "opencode worker (GLM) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-baselined with CoolSolve 0.3.0@4798e2b (3 files): the air cp of the two-phase zone, specheat(cf$,T=..,P=1) as in the original, is evaluated at the 1 Pa of the source instead of the 1000 Pa it was clamped to (CS-BUG-INPUT-CLAMP); the results move by <= 5e-05 (AU/NTU of the superheated zone), no deviation from the EES stored solutions changes",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

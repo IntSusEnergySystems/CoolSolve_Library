@@ -61,21 +61,16 @@
     "course": ""
   },
   "verification": {
-    "summary": "Not verified: the native file does not run (gaps CS-GAP-CONVERT-UNQUOTED, CS-GAP-LKT, CS-GAP-INCLUDE, CS-GAP-INCOMPRESSIBLE, CS-GAP-GE-ARROW, CS-GAP-REPEAT-UNTIL-BARE) and no runnable variant exists; the EES stored solution is only documented as a future reference.",
+    "summary": "Not verified: the native file parses (235 equations) but stops at the BRINEPROP2 procedure (CS-GAP-INCLUDE) and no runnable variant exists; the EES stored solution is only documented as a future reference.",
     "checks": [],
     "reference": "EES stored solution shipped in the source file (234 variables; key values in the README). Not reproduced by CoolSolve: the native file is blocked and no runnable variant exists. Re-check after C-134: the catalogue table of CSL-0123 (recovered from TM-0560) is a different vintage than the stored run's table (Vs 211.22 vs 82.61 cm3, factor 3-4 in W at the stored point), so it cannot reproduce the stored solution either.",
-    "date": "2026-10-07",
-    "coolsolve_version": "0.3.0@7addbbc",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": null,
-    "notes": "Blocked: documented reference values only (COP 3.0747, W_dot_cp 3004.20 W, Q_dot_cd 9237.10 W, M_dot_r 0.052602 kg/s). No variant: see README 'How to run' (re-check after C-134)."
+    "notes": "Blocked: documented reference values only (COP 3.0747, W_dot_cp 3004.20 W, Q_dot_cd 9237.10 W, M_dot_r 0.052602 kg/s). No variant: see README 'How to run' (re-check after C-134). Re-checked with CoolSolve 0.3.0@4798e2b: the file parses and is square (235 equations, largest block 45); the first error is Unknown procedure: BRINEPROP2."
   },
   "missing_features": [
-    "CS-GAP-CONVERT-UNQUOTED",
-    "CS-GAP-LKT",
-    "CS-GAP-INCLUDE",
-    "CS-GAP-INCOMPRESSIBLE",
-    "CS-GAP-GE-ARROW",
-    "CS-GAP-REPEAT-UNTIL-BARE"
+    "CS-GAP-INCLUDE"
   ],
   "related": [
     "CSL-0007",
@@ -125,6 +120,11 @@
       "date": "2026-10-10",
       "action": "native file rewritten per decision D12: (s, v) state as (P, s) and (T, v), corrected (v, u) branch as (P, h) with h = u + p v and volume(P, h) = v; checked in scratch at the stored point (832 826 and 832 798 Pa against 832 732 Pa stored, EES reference shifted to IIR); still blocked by the listed gaps",
       "by": "Claude (Haiku) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b): CS-GAP-CONVERT-UNQUOTED, CS-GAP-GE-ARROW, CS-GAP-REPEAT-UNTIL-BARE and CS-GAP-INCOMPRESSIBLE are closed and CS-GAP-LKT is not a gap (maintainer decision 2026-10-12; the catalogue table is missing from the collection); the file is square (235 equations) and stops at the BRINEPROP2 procedure (CS-GAP-INCLUDE); still blocked, no variant",
+      "by": "Claude for S. Quoilin"
     }
   ]
 }

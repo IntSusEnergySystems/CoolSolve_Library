@@ -1,6 +1,6 @@
 # Turbocharged engine with expander temperature drop
 
-🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0223`
+🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0223`
 
 Teaching exercise (ULiège MCI, sixth exercise session, statement 2): air
 and fuel mass flows of a turbocharged eight-cylinder engine, then the
@@ -17,7 +17,7 @@ efficiency uses the built-in density of Air.
 | **Source** | `~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP6/EX2_PNG_2019.EES` (EES X10.589) |
 | **Authors** | P. Ngendakumana |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** (`CS-GAP-MOLARMASS-ELEMENT`); runnable variant `turbocharged_engine_expander_coolsolve.eescode` verified against the EES stored solution (max rel. diff 3.31325e-04 on `rho_a_bis`) — 0.3.0@332d95a |
+| **CoolSolve** | native file runs (4 iterations); verified against the EES stored solution (max rel. diff 3.31325e-04 on `rho_a_bis`) — 0.3.0@4798e2b |
 
 ## Problem statement
 
@@ -70,9 +70,9 @@ MM_a = 0.21\,M_{O_2} + 0.79\,M_{N_2}, \qquad r_a = R_u/MM_a, \qquad R_u = R\#
 \rho_a = p_{amb}/\big(r_a\,(T_{amb}+273.15)\big)
 \]
 
-In the native file, \(M_C\) and \(M_H\) are `MolarMass(C)` and `MolarMass(H)`.
-In the runnable variant they are the EES element values 12.0107 and
-1.00794 kg/kmol. `MolarMass(O2)` and `MolarMass(N2)` stay calls in both files.
+\(M_C\) and \(M_H\) are `MolarMass(C)` and `MolarMass(H)`, the standard atomic
+weights 12.0107 and 1.00794 kg/kmol, as in EES; `MolarMass(O2)` and
+`MolarMass(N2)` are calls too.
 
 The original writes the stoichiometric reaction as a comment, with `H20` in
 that comment. It is not an equation, and there is no heating-value call.
@@ -136,26 +136,18 @@ used in another equation, as the original says.
 
 ## How to run
 
-The native file `turbocharged_engine_expander.eescode` is valid EES and does
-not solve in CoolSolve (`CS-GAP-MOLARMASS-ELEMENT`: `MolarMass(C)` and
-`MolarMass(H)`).
-
-The runnable variant changes only those two calls. From this folder:
+From this folder:
 
 ```bash
-../../../../../CoolSolve/build/coolsolve ./turbocharged_engine_expander_coolsolve.eescode
+coolsolve ./turbocharged_engine_expander.eescode
 ```
 
-`turbocharged_engine_expander_coolsolve.initials` holds the 31 stored values
-of the variables that exist in the equation window. `L`, `D` and `r` are not
-among them. With that file the solver reports 4 iterations. Without it, 4
-iterations. The two solutions are identical. The shipped `.sol` is the run
-with the guesses. No `coolsolve.conf`. The regression name of the variant is
-`CSL-0223:coolsolve`.
+The solver reports 4 iterations from the default guess; no guess file and no
+`coolsolve.conf` are needed.
 
 ## Results
 
-Values from the runnable variant. The combustion-air column uses
+The combustion-air column uses
 `rho_a = p/(r*T)`. The Air column uses `Density(Air)`.
 
 | Quantity | CoolSolve | EES stored |
@@ -191,13 +183,10 @@ air path and the expander, saved as
 
 ## Verification
 
-The comparison is of the runnable variant. The native file stops on
-`MolarMass(C)` before a solution exists.
-
 Reference: the solution stored in `EX2_PNG_2019.EES` (34 names decoded by
 `ees_extract.py`, 31 with a stored value). The unit system is already
 `SI MASS DEG PA C J`, so the comparison is without `--ees-units`.
-`compare_solution.py` on `turbocharged_engine_expander_coolsolve.sol` against
+`compare_solution.py` on `turbocharged_engine_expander.sol` against
 `reference/ees_variables.csv`:
 
 > 31 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1
@@ -264,18 +253,14 @@ licence (MIT).
   removed. The file has no `$Export` line. The unmodified extract, with the
   NUL and those directives removed, is square (31 equations, 31 variables,
   largest block 1). CoolSolve treats `p_amb` and `P_amb` as one variable, so
-  both spellings are left as written; that is not a variant. `L`, `D` and `r`
+  both spellings are left as written. `L`, `D` and `r`
   were not restored: the system is square without them, and none has a stored
   value. Comments translated to English. `m = 8 ; n = 18` split onto one
   equation per line. The combustion line that writes `H20` stays a comment.
   `epsilon_v = 1.9` and `DELTAT_exp = -44` are unchanged. `R#` is kept. No
-  heating-value call was added, and no diagram-state arrays. The native file
-  keeps `MolarMass(C)` and `MolarMass(H)` and is blocked by
-  `CS-GAP-MOLARMASS-ELEMENT` (*Unknown fluid: 'C'*). The runnable variant
-  `turbocharged_engine_expander_coolsolve.eescode` replaces those two calls
-  by 12.0107 and 1.00794 kg/kmol and leaves `MolarMass(O2)`, `MolarMass(N2)`,
-  `MolarMass(Air)` and `Density(Air, …)` unchanged. The variant is valid EES
-  and uses no CoolSolve-only syntax.
+  heating-value call was added, and no diagram-state arrays. The file keeps
+  `MolarMass(C)`, `MolarMass(H)`, `MolarMass(O2)`, `MolarMass(N2)`,
+  `MolarMass(Air)` and `Density(Air, …)` as in the original.
 - **Level**: equations 31 (< 50) → 0; largest block 1 (≤ 5) → 0; no user
   function, procedure, array or `DUPLICATE` → 0; the two flow evaluations and
   the expander power are sequential assignments, not a multi-zone model → 0;
@@ -286,23 +271,17 @@ licence (MIT).
 
 ## Limitations and CoolSolve gaps
 
-- The native file is blocked by `CS-GAP-MOLARMASS-ELEMENT`. CoolSolve has no
-  elemental fluids `C` and `H`. The error on the native file is
-  *Unknown fluid: 'C'. The first argument must be a fluid name (e.g. Water, R134a) or a string variable (fluid$).*
-  A separate one-line call of `MolarMass(H)` returns the same sentence with
-  `'H'`. The variant uses 12.0107 and 1.00794 kg/kmol, the values EES returns
-  for those two calls. `missing_features` lists that gap and no other.
-- `MolarMass(O2)`, `MolarMass(N2)` and `MolarMass(Air)` solve. `MolarMass(Air)`
-  prints *For moist air properties use AirH2O (humrat, wetbulb, …), not 'air'.*
-  The call still returns 28.96546 kg/kmol. The fluid in the file is ideal-gas
-  `Air`.
+- `MolarMass` of an element (`C`, `H`) is the IUPAC standard atomic weight
+  (12.0107 and 1.00794 kg/kmol), the values EES returns for those two calls.
+  `MolarMass(Air)` returns 28.96546 kg/kmol; the fluid in the file is
+  ideal-gas `Air`.
 - `epsilon_v = 1.9` is the data of the exercise. It is greater than one
   because the original defines it on the ambient density, not on the intake
   manifold.
 - `DELTAT_exp = -44` K is the temperature drop as written. `w_exp` is
   −50600 J/kg.
 - `rho_a` is the ideal-gas density `p/(r*T)` and does not carry the CoolProp
-  density residual. `rho_a_bis` does. The equations of the variant are
+  density residual. `rho_a_bis` does. The equations are
   satisfied.
 - `r_v` is unused, as the original says.
 

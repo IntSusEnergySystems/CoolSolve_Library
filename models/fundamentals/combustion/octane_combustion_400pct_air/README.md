@@ -1,6 +1,6 @@
 # Combustion of octane with 400 % theoretical air
 
-🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** (verified runnable variant) &nbsp;|&nbsp; `CSL-0046`
+🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0046`
 
 Introductory combustion exercise: octane C8H18 at 25 °C is burned with 400 %
 theoretical air, also at 25 °C, in a steady-flow adiabatic process. The
@@ -16,7 +16,7 @@ dosage follow from the molar masses.
 | **Source** | ULiège — course *Thermodynamique appliquée* (MECA0002), repetition 11, exercise 1 (EES file `R11_E01_2022.EES`) |
 | **Authors** | TBD (ULiège course MECA0002 repetition team) |
 | **License** | MIT |
-| **CoolSolve** | v0.3.0 — native file blocked by `CS-GAP-FLUIDS-C8H18`; the runnable `_coolsolve` variant is verified against the EES stored solution (see *Verification*) |
+| **CoolSolve** | native file runs (4 iterations with the shipped `.initials`); verified against the EES stored solution (see *Verification*) |
 
 ## Problem statement
 
@@ -60,16 +60,12 @@ original.)
 
 ## How to run
 
-The native file `octane_combustion_400pct_air.eescode` is valid EES but is
-**blocked** in CoolSolve: `molarmass(C8H18)` fails because octane is not in
-the CoolSolve fluid registry (gap `CS-GAP-FLUIDS-C8H18`). Run the variant:
-
 ```bash
-coolsolve ./octane_combustion_400pct_air_coolsolve.eescode
+coolsolve ./octane_combustion_400pct_air.eescode
 ```
 
-The variant differs by one line only (`MM_f = 114.23` instead of
-`molarmass(C8H18)`); it uses no CoolSolve-only syntax.
+`octane_combustion_400pct_air.initials` holds the converted stored values: 4
+iterations with it, 27 without.
 
 ## Results
 
@@ -93,9 +89,9 @@ conditions (λ → 1) the temperature becomes very sensitive to the excess air.
 
 ## Verification
 
-The runnable `_coolsolve` variant was solved with CoolSolve and compared with
-the solution stored in the original EES file
-(`compare_solution.py octane_combustion_400pct_air_coolsolve.sol
+The model was solved with CoolSolve and compared with the solution stored in
+the original EES file
+(`compare_solution.py octane_combustion_400pct_air.sol
 reference/ees_variables.csv --ees-units`, converting the kPa/kJ reference by
 the tool):
 
@@ -120,11 +116,11 @@ within 1.4e-4 (CO2 6.6e-5, H2O 1.0e-4). The dosages agree to
 1.2e-5. The stored records `x`, `y`, `mm` of the EES file are stale variables
 of an earlier version, not part of the equations; ignored.
 
-| Variable | EES | CoolSolve (variant) |
+| Variable | EES | CoolSolve |
 |---|---:|---:|
 | `TAF` [°C] | 688.71 | 688.56 |
-| `far` [-] | 0.0166361 | 0.0166359 |
-| `far_st` [-] | 0.0665444 | 0.0665436 |
+| `far` [-] | 0.0166361 | 0.0166358 |
+| `far_st` [-] | 0.0665444 | 0.0665430 |
 | `H_R` = `H_P` [J] | −2.49952e8 | −2.49952e8 |
 | `h_H2O_taf_bis` [J/kg] | 3.90374e6 | 3.90341e6 |
 
@@ -152,30 +148,24 @@ Source file (EES 10.836, comments in French), collection of S. Quoilin:
   terms switch consistently from kJ to J). No absolute-temperature relation
   (`TAF_K = TAF + 273.15` is unchanged in °C), no other unit-dependent
   constant. Comments translated to English, standard header added, equations
-  otherwise unchanged. `.initials` shipped for the variant (converted stored
-  values; the stale records `x`, `y`, `mm` dropped).
+  otherwise unchanged. `.initials` shipped (converted stored values; the stale
+  records `x`, `y`, `mm` dropped).
 - **Duplicate group DG-0095** (2 files, triaged per workflow §2):
   - `TM-0537` (`THD10_R11.zip!/THD10_R11_E1.EES`, 2017-2018 version,
     `duplicate`): stripped-equation diff identical to TM-0393 except three
     diagnostic lines added in 2022 (`p_ref`, `h_H2O_taf_bis`,
     `h_H2O_ref_bis`; no effect on the results). Stored solution consistent:
     far and far_st identical, TAF 688.115 °C (older EES species data).
-- **Runnable variant** (workflow §6): one line changed, `MM_f =
-  molarmass(C8H18)` → `MM_f = 114.23` (the value EES returns), because
-  `C8H18` is not in the CoolSolve fluid registry. Logged in the variant
-  header; no CoolSolve-only syntax.
 - **Level**: 35 equations (0) + largest block 5 (0) + no functions/arrays (0)
   + no multi-zone (0) + no calibration/dynamics (0) + no curated guesses (0)
   = 0 → level 1.
 
 ## Limitations and CoolSolve gaps
 
-- `CS-GAP-FLUIDS-C8H18` (blocks the native file): `molarmass(C8H18)` —
-  octane is an ideal-gas substance of EES but is not registered in CoolSolve
-  (no ideal-gas octane, `n-Octane`/`IsoOctane` not in CoolProp standard
-  fluids). Workaround in the variant: the constant 114.23 kg/kmol.
-- The warning `enthalpy(): fluid 'CO2'. Did you mean 'CO2'?`
-  (`CS-BUG-FLUID-HINT-CO2`) is informational; the results are correct.
+- `molarmass(C8H18)` returns 114.229 kg/kmol (CoolSolve registry) where EES
+  returns 114.23: `far`, `far_st` and `MM_f` differ by 9·10⁻⁶ relative, `TAF`
+  is unaffected (the molar mass of the fuel only enters the mass-based
+  dosages).
 - No EES reference is available for the excess-air sweep (GUI parametric
   study, not stored in the file): the sweep table above is a CoolSolve
   result, sanity-checked for monotonicity.

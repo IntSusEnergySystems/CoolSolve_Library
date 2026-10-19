@@ -19,11 +19,11 @@ refrigerant hold-up.
 |---|---|
 | **Category** | Cycles and machines › Refrigeration and heat pumps |
 | **Fluids** | R134a; EG brine 30 % (EES incompressible library / BrineProp2) and water on the source/sink circuits |
-| **Size** | ~392 equation lines, 8 FUNCTION/PROCEDURE definitions (`lmtd`, `thonon`, `kuo`, `hx_cd`, `hsieh`, `hx_evv`, `deltat_ln`, `copeland`); does not parse in CoolSolve (see *Limitations*) |
+| **Size** | ~392 equation lines, 8 FUNCTION/PROCEDURE definitions (`lmtd`, `thonon`, `kuo`, `hx_cd`, `hsieh`, `hx_evv`, `deltat_ln`, `copeland`); parses in CoolSolve (235 equations, largest block 45) and stops at the `BRINEPROP2` call (see *Limitations*) |
 | **Source** | ULiège Thermodynamics Laboratory — consulting/study file `HeatPump_Vitocal 300G -110_CGSQ1112288.EES` |
 | **Authors** | Sylvain Quoilin (ULiège Thermodynamics Laboratory) — from the file-name initials `SQ`; the `{$ID$}` tag names the EES licence holder (J. Lebrun), not the author |
 | **License** | MIT |
-| **CoolSolve** | **blocked** (native file; gap IDs below). No runnable variant: the compressor catalogue table `ZH38K4E-TFD` is not recoverable (see *How to run*) |
+| **CoolSolve** | **blocked** (native file: `CS-GAP-INCLUDE`, the `BRINEPROP2` procedure). No runnable variant: the compressor catalogue table `ZH38K4E-TFD` is not recoverable (see *How to run*) |
 
 ## Problem statement
 
@@ -78,8 +78,8 @@ exchanger results (areas, pressure drops, pinch points, hold-up).
 
 ## How to run
 
-Blocked: the native file does not parse in CoolSolve and no runnable variant
-is shipped. The `copeland` compressor correlation reads its coefficients in
+Blocked: the native file parses in CoolSolve and the solve stops at the unknown
+procedure `BRINEPROP2` (`CS-GAP-INCLUDE`); no runnable variant is shipped. The `copeland` compressor correlation reads its coefficients in
 an **external lookup table `ZH38K4E-TFD` (columns `W`, `M`, `Vs`) that is not
 part of the source collection** (no `.lkt` file anywhere in
 `~/Nextcloud/thermo_models/`), so the ARI mode of the stored solution cannot
@@ -97,9 +97,9 @@ stored runs. Both stored runs read `Vs` = 82.61 cm³, while the recovered ZH38K4
 W, factor ≈ 4); its `M` column gives 4.28 lbm/hr there (stored: 417.48). A variant built on
 the recovered table would therefore contradict the stored solution by construction, and a
 variant on the semi-empirical Winandy branch would not reproduce the stored run either (it
-is an `'ari'` run) and would additionally need the BrineProp2 library and the EES
-incompressible `EG` properties (`CS-GAP-INCLUDE`, `CS-GAP-INCOMPRESSIBLE`), which have no
-faithful substitute, so no runnable variant is shipped and the status stays `blocked`.
+is an `'ari'` run) and would additionally need the BrineProp2 library
+(`CS-GAP-INCLUDE`), which has no faithful substitute, so no runnable variant is
+shipped and the status stays `blocked`.
 
 
 ## Results (EES stored solution, reference — not reproduced by CoolSolve)
@@ -179,44 +179,33 @@ Source file (EES 8.940, comments in English), collection of S. Quoilin:
   run; the alternative `{gamma_leak_cp=1,03}` is commented out in the
   original).
 - **Level**: score of docs/taxonomy.md §3 — equations 392 → 2; largest block
-  estimated > 30 (the compressor envelope/leakage loop couples ~55
-  variables) → 2; procedures + arrays → 1; ≥ 3 coupled components → 1;
+  > 30 (45 in the CoolSolve analysis: the compressor envelope/leakage loop) → 2;
+  procedures + arrays → 1; ≥ 3 coupled components → 1;
   semi-empirical (catalogue-identified compressor) → 1; curated guesses → 0;
   total 7 → level 4 by the table, **moved to level 3** (±1 allowed): the
-  block size is an estimate (the native file does not parse, so CoolSolve
-  analysis is unavailable) and the rating stays consistent with the triage
+  rating stays consistent with the triage
   (C-121) and with the level-2 rating of the similar RefSim model `CSL-0078`
   (149 equations, same compressor physics).
 - Unsupported property input pairs rewritten (decision D12): `(s, v)` as `(P, s)` and `(T, v)`; the `(v, u)` branch as `(P, h)` with `h = u + p·v` and `volume(P, h) = v` (same states).
 
 ## Limitations and CoolSolve gaps
 
-The native file is blocked by every ID of `model.json` `missing_features`:
+The native file is blocked by the ID of `model.json` `missing_features`:
 
-- `CS-BUG-LOOKUP-WRITE` — the `lookup('ev',…) = …` diagnostic writes inside
-  `PROCEDURE hx_evv` are silently dropped (the table keeps its values); the writes feed
-  no equation, so they do not block the model.
-
-- `CS-GAP-CONVERT-UNQUOTED` — `convert(lbm/hr,kg/s)` in the ARI mass-flow
-  equation: the unquoted unit names are read as variables (silent wrong
-  system: 6 unknowns instead of 2, checked with a reproducer).
-- `CS-GAP-LKT` — the compressor catalogue coefficients live in an external
-  lookup table `ZH38K4E-TFD` (read by name through `comp$`), which is not
-  embedded in the file and not present anywhere in the collection
-  (see *How to run*).
 - `CS-GAP-INCLUDE` — `CALL BRINEPROP2('EG',30,-5:…)` is an implicit
   USERLIB procedure (ULiège BrineProp2 library) not shipped with the file;
-  its single-output sibling `BRINEPROP` is library model `CSL-0079`.
-- `CS-GAP-INCOMPRESSIBLE` — the EES incompressible-substance library calls
-  `cp/density/viscosity/conductivity('EG',T=…,C=30)` (Thonon `EG` branch,
-  `hx_cd`, `hx_evv`, condenser `c_w`): CoolSolve reads `C` as a Fahrenheit
-  hint and fails with *"cp requires exactly 2 input properties, got 1"*.
-- `CS-GAP-GE-ARROW` — the `=>` spelling of the greater-or-equal relational
-  operator (`If (Z => 0.001) and (W>0)` in `FUNCTION deltat_ln`): parse
-  error *"Could not parse IF condition"*.
-- `CS-GAP-REPEAT-UNTIL-BARE` — `until i>9` without parentheses
-  (`FUNCTION copeland`): *"REPEAT missing UNTIL(condition)"*; the
-  parenthesised `until (x>0.95)` of `PROCEDURE kuo` parses.
+  its single-output sibling `BRINEPROP` is library model `CSL-0079`. CoolSolve
+  stops on *"Unknown procedure: BRINEPROP2"* in the evaporator-side block.
+
+Also open, but not a CoolSolve gap: the compressor catalogue coefficients of
+`copeland` live in an external lookup table `ZH38K4E-TFD` (read by name
+through `comp$`), which is not embedded in the file and not present anywhere in
+the collection (see *How to run*); the ARI mode of the stored run cannot be
+reconstructed without it.
+
+The seven `lookup('ev',i,j) = …` diagnostic writes inside `PROCEDURE hx_evv`
+are not executed (warning `P009` per line, the table keeps its values); they
+feed no equation, so they do not block the model.
 
 Physical limitations (as in the original): the condenser water side uses the
 EG-30 % incompressible properties (`fluidcd$='EG'`) although the description
