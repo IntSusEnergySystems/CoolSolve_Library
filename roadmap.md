@@ -7,21 +7,21 @@ each tested and marked done. *How* each step is executed is described in
 [docs/model_workflow.md](docs/model_workflow.md); the classification rules are
 in [docs/taxonomy.md](docs/taxonomy.md).
 
-*Last update: 2026-10-18.*
+*Last update: 2026-10-24 (handover at the top of §1).*
 
 ---
 
 ## 1. Status at a glance
 
-| Library (2026-10-23 10:10, CoolSolve 0.4.0@9768373) | Count |
+| Library (2026-10-24 12:30, CoolSolve 0.4.0@9768373) | Count |
 |---|---:|
-| Models (`library.json`) | 273 |
-| … verified / blocked / failing (`runs` merged into `verified`, D15) | 247 / 22 / 4 |
-| … blocked with a runnable `_coolsolve` variant (with `.sol`) / not runnable at all | 17 / 5 (`CSL-0040`, `CSL-0081`, `CSL-0116`, `CSL-0150`, `CSL-0264`); failing: `CSL-0078`, `CSL-0155`, `CSL-0202`, `CSL-0275` (native; verified variant) |
-| … steady / function / dynamic / optimization | 230 / 37 / 5 / 1 |
-| Functions and procedures (`library.json`) | 454 |
-| Regression (`test_models.py`) | 278 targets (247 main files + 31 variants), 0 failure on 2026-10-23 with CoolSolve 0.4.0 (excluding the slow `CSL-0009:coolsolve`; `CSL-0162:coolsolve` has no `.sol`) |
-| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md) §4–§5) | 61 (35 gaps, 24 bugs, 2 doc issues; counted by row prefix) |
+| Models (`library.json`) | 280 |
+| … verified / blocked / failing (`runs` merged into `verified`, D15) | 252 / 24 / 4 |
+| … blocked with a runnable `_coolsolve` variant (with `.sol`) / not runnable at all | 19 / 5 (`CSL-0081`, `CSL-0040`, `CSL-0116`, `CSL-0150`, `CSL-0264`); failing: `CSL-0202`, `CSL-0275`, `CSL-0078`, `CSL-0155` |
+| … steady / function / dynamic / optimization | 237 / 37 / 5 / 1 |
+| Functions and procedures (`library.json`) | 468 |
+| Regression (`test_models.py`) | 285 targets (252 main files + 33 variants), 0 failure on 2026-10-24 with CoolSolve 0.4.0 (excluding the slow `CSL-0009:coolsolve`; `CSL-0162:coolsolve` has no `.sol`) |
+| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md) §4–§5) | 67 (40 gaps, 25 bugs, 2 doc issues; counted by row prefix, 2026-10-24) |
 | … closed (§7) | 99 (43 gaps, 55 bugs, 1 doc issue) |
 | … unverified suggestions (§8 *Unverified by a reviewer*) | 9 |
 
@@ -54,20 +54,58 @@ TESPy 8 / 8 / 23 / 13 / 0.
 Refresh with `python3 tools/build_index.py` (models) and
 `python3 tools/backlog_stats.py` (candidates).
 
-### Session of 2026-10-21 (orchestrator log, kept up to date during the run)
+### HANDOVER of 2026-10-24 (end of the session of 2026-10-21 → 24; read this first)
 
-- **Environment.** CoolSolve pulled to `main` @`9768373` (0.4.0, CoolProp pin `75af7816` unchanged) and rebuilt (cmake from a venv, `pip install
-  cmake`); the library was fast-forwarded to `origin/main` @`bfc71a9` (it already held the re-checks of 2026-10-18 and `CSL-0247`…`0249`). Full
-  regression: 251 targets, 0 failure (excluding `CSL-0009:coolsolve`); the 19 blocked/failing models re-run on scratch copies: none changes status
-  (C-277). Nothing is committed.
-- **Workers.** `glm-5.3-flash` and one opencode free worker at a time. In the opencode catalogue of today only `mimo-v2.6-flash-free` answers
-  (bunny, muse and ling-3.1 return "Unexpected server error" or are gone), so the free slot is `mimo`. Tools of the session:
-  `~/llm/scripts/csl/nextcard.py LANE TIER` (dispatches the next open card of B-15), `waitdone.sh` (blocks until a task changes state).
-- **New inputs of the maintainer** (root of `thermo_models`): two TESPy notebooks and a list of repositories → source `sources/ext_leads/`; the notebooks
-  became `CSL-0250` (C-275); the triage (C-276) found 4 duplicates and 4 leads (cards C-278…C-281). Licence/authors of the notebooks and of the KCORC and DTU
-  repositories (no LICENSE file) are **questions for the maintainer**.
-- **Queue:** B-14 (C-278…C-281), then B-15 (52 `high`/`medium` ULiège candidates, C-300…C-351), then T-PLAN of the LaboThapPy/TESPy `medium` candidates and the review
-  cards `C-160`/`C-139`.
+**State.** 280 models (252 verified / 24 blocked / 4 failing), 468 functions. Regression with CoolSolve 0.4.0 (`main` @`9768373`, CoolProp pin `75af7816`):
+285 targets (252 main files + 33 variants), 0 failure (excluding the slow `CSL-0009:coolsolve`). The maintainer committed the library as `79c315b` during the session; only this `roadmap.md` is modified afterwards. The CoolSolve register
+`docs/model_library_support.md` (new rows, see below) is **modified and uncommitted** in `~/git/CoolSolve`, which is on `main`, pulled and rebuilt; its build dir is `build/`, cmake from a venv:
+`python3 -m venv v && v/bin/pip install cmake`, then `PATH=v/bin:$PATH make -j10 coolsolve` in `build/`). The library was fast-forwarded to `origin/main` @`bfc71a9` at the start
+of the session (it held the CoolSolve re-checks of 2026-10-18). No worker is running, the supervisor is stopped and `opencode serve` was killed; the heartbeat cron was deleted.
+
+**Done in this session** (log rows in §8; all merged with `csl.py merge`, ticked with `csl.py tick`):
+- CoolSolve updated, full regression, T-RECHECK of the 19 blocked/failing models (C-277): none changes status with 0.4.0.
+- New source `sources/ext_leads/` (the maintainer's two TESPy notebooks + list of repositories): `CSL-0250` cascade geothermal→DH heat pump (+ ammonia variant), `CSL-0251`
+  R245fa HTHP, `CSL-0252` two-stage ORC (KCORC), `CSL-0253` zeotropic/transcritical HTHP (blocked: `CS-GAP-FLUIDS-R1336MZZ`, R365mfc variant), `CSL-0254` DTU recuperated Brayton HTHP.
+  4 leads were duplicates of existing models. **Credits rule (maintainer, 2026-10-22):** no model is put on hold for a missing licence — authors from the repository history,
+  permanent link with the commit, licence field "No LICENSE file in the original; credited and linked" (never "MIT" for such a source). The authors/licence of the two notebooks of
+  `CSL-0250` are credited to the KCORC exercise (F. Witte, A. Steinhauer); the maintainer may want to correct.
+- B-15 (ULiège `high`/`medium`): `CSL-0260`…`CSL-0311` (≈ 30 models, see the log) — new registered items: `CS-GAP-FLUIDS-R1336MZZ`, `CS-GAP-HX` (EES `HX` function),
+  `CS-BUG-EXTRACT-NAME-CHARS`, extra evidence on `CS-GAP-CHEM-EQUIL`, `CS-GAP-FLUIDS-ALIAS`, `CS-GAP-FLUIDS-NASA-SPECIES`, `CS-GAP-IDEAL-GAS-MODEL`, `CS-BUG-EXTRACT-FMT-BYTE`.
+- **Novelty rule** (maintainer, 2026-10-22; §2 and `docs/model_workflow.md` §2): every model must bring something new and specific. Applied: `CSL-0297` (FluidProp ORC), `CSL-0231`, `CSL-0198`, `CSL-0179`
+  dropped (tool `~/llm/scripts/csl/drop_model.py`), `CSL-0300` (ideal supercritical Rankine) built then not imported, 15 queued cards merged/discarded by pre-screen
+  (`~/llm/scripts/csl/audit.py --lib | --cand TM,…` = equation overlap), 8 LaboThapPy/TESPy rows discarded/merged by the orchestrator (LTP-001/004/008/010, TSP-019/020/028/029).
+  Workers must write a README section *Niche* and name the nearest model.
+
+**Open queue (in order).**
+1. B-15, 4 cards left (`[ ]` lines of §6): C-316 valve overlap (TM-0242), C-341 brine pump ParamID (TM-0486; check against `CSL-0072`), C-349 Aug-2022 Q6 (TM-0462; same exam example as
+   `CSL-0228/0229/0248`: probably `merged`), C-350 isentropic nozzle with critical pressure (TM-0002; check `CSL-0190`/`CSL-0118`). Dispatch: `cd ~/llm/scripts/csl && python3 nextcard.py LANE std`
+   (state of dispatched cards: `b15_state.json`; remove an entry to re-dispatch).
+2. **C-352 T-PLAN** of the remaining LaboThapPy/TESPy `medium` rows (≈ 15 + 15 after the pre-screen) — notes ready in `~/llm/scripts/csl/b16_plan.txt`; dispatch with
+   `csl.py dispatch mimo C-352 "T-PLAN LaboThapPy+TESPy medium → sources/labothappy, sources/tespy" --extra-file b16_plan.txt`; the worker proposes translation cards from C-360 (novelty rule applies).
+   Expected keepers: TSP-004 (Baumann wet-expansion), TSP-013/032 (sectioned HX, UA part load), TSP-038/041/045/052 (two-stage NH3 / ground-coupled / screw-map heat pumps),
+   TSP-043 (CCPP with district heat), LTP-015/016/021/031 (fin-tube HX, Bell MB, PCM storage, Han plate dp), LTP-049, LTP-057/058/059 (off-design ORC, CO2 cycles).
+3. Reviews `C-160` (B-11) and `C-139` (taxonomy at M2: the library has 280 models; propose splits of crowded categories — `fundamentals/processes`, `cycles/engines`, `components/compressors`).
+4. Remaining `thermo_models` rows are `low` priority (≈ 150) — apply the novelty pre-screen before any card; most are expected to be duplicates.
+5. Figures (maintainer task, `build_index.py` lists the runnable models without figure), authors `TBD`, the borderline pairs below.
+
+**Workers and quotas (read before dispatching).**
+- **z.ai `glm-5.3-flash`: WEEKLY limit exhausted, reset 2026-10-28 15:25 (quoted; possibly UTC+8).** Before that every 5-hour window gave ≈ 1–2 h of work (a card = 10–40 min); the supervisor retries by itself.
+  Probe: `bash ~/llm/scripts/csl/probe.sh zai-coding-plan/glm-5.3-flash 0`.
+- opencode free: only `mimo-v2.6-flash-free` is usable (bunny, muse, ling are gone; **one free worker at a time**). Its allowance is ≈ 1–3 h of work per day, then "Free usage exceeded" for many hours (retried every 10–30 min).
+  `opencode serve` must be restarted after an `opencode upgrade`; start everything with `python3 ~/llm/scripts/oc-orch.py up` (supervisor + server), stop with `down` (+ kill the server by PID).
+- Free workers can be unreliable on hard cards (they fabricate gaps/verification): review every `check` + `result` (the orchestrator loop of the 2026-10-09 handover below), reproduce every new gap claim with a 3-line file.
+- **A Claude orchestrator only acts while a turn is open**: the cron heartbeat did not fire in this app, finished cards waited for hours. Stay inside the turn with `~/llm/scripts/csl/waitfinish.sh 590`
+  (returns when a task finishes) and process each result at once.
+- A worker stopped by a limit may have left a complete lane: `csl.py check LANE`; if the folder, `.sol` and inventory row are done, `oc-orch.py abort tN`, `csl.py merge LANE`, finish the bookkeeping by hand.
+
+**Borderline pairs left to the maintainer** (same method, other data or level; decision: keep / merge / drop with `drop_model.py`): `CSL-0203`/`0240` (dimensionless-polynomial pumps),
+`CSL-0063`/`0064` (moist-air mixing), `CSL-0199`/`0207` (turbo-expander exercise and its identification), `CSL-0157`/`0269` (R717 compressor catalogues), `CSL-0006`/`0263` (fuel-oil boiler),
+`CSL-0007`/`0260` (scroll compressor ± reed valve), gas-turbine series `CSL-0200`/`0218`/`0220`/`0293`/`0296`/`0050`, `CSL-0028`/`0292` (room air conditioning, two closures),
+`CSL-0185`/`0277` (diesel injection), `CSL-0273`/`0274` (two solutions of the same engine exam).
+
+**Questions for the maintainer.** (1) Authors and licence of `CSL-0250` (credited to F. Witte and A. Steinhauer of the KCORC exercise; the draft notebooks are not in that repository);
+the KCORC and DTU repositories have no LICENSE (credited and linked as decided). (2) The new register rows (`CS-GAP-HX`, `CS-GAP-FLUIDS-R1336MZZ`, `CS-BUG-EXTRACT-NAME-CHARS`) are in the CoolSolve
+register (uncommitted). (3) Whether Claude sub-agents may be used for the `[hard]` cards while glm is out. (4) The 4 over-long or borderline verification statements were shortened; `CSL-0044` still lacks a commit in `coolsolve_version`.
 
 ### State of 2026-10-18 (CoolSolve v0.4 preparation)
 
@@ -83,7 +121,7 @@ Refresh with `python3 tools/build_index.py` (models) and
   `CSL-0080` (the native default operating point is the stored EES one), `CSL-0044` (`coolsolve_version` without commit).
 - The working tree of the library is not committed.
 
-### Where to resume (handover, 2026-10-09, 20:00)
+### Where to resume (HISTORICAL handover of 2026-10-09/15 — the orchestrator loop and the lessons below still apply; the current state is the HANDOVER of 2026-10-24 above)
 
 - **State (2026-10-15):** B-01 … B-10 and **B-12 are closed** (review `C-193`
   done). **Open: B-11** — `C-156` (`CSL-0164`) and `C-157` (`CSL-0165`) are done. Next: the review `C-160` and the taxonomy review `C-139`
@@ -889,7 +927,7 @@ C-170), tagged [hard]/[std]. Worker notes: `~/llm/scripts/csl/b12_plan.txt` (pla
 [x] C-193 T-REVIEW     B-12                                                                                      — light scripted review (orchestrator)
 ```
 
-### B-14 — New inputs of 2026-10-21, re-check on CoolSolve `main`, resumed B-13 (Phase 3) ☐
+### B-14 — New inputs of 2026-10-21, re-check on CoolSolve `main`, resumed B-13 (Phase 3) ✅
 
 Session of 2026-10-21 (orchestrator: Claude Code; workers: `glm-5.3-flash` and one opencode free worker at a time —
 `mimo-v2.6-flash-free`, the only qualified free model still in the opencode catalogue: bunny, muse and ling are gone or
@@ -907,7 +945,7 @@ root of `~/Nextcloud/thermo_models/`; they form the new source `sources/ext_lead
 [x] C-281 T-TRANSLATE LDS-008 → cycles/refrigeration_heat_pumps/recuperated_brayton_hthp — [hard] air recuperated Brayton HTHP, steady design point (S. Grandin, DTU, https://github.com/SamueleGrandinDTU/recuperated_Brayton_HTHP, work in progress; no LICENSE: published with credit and a link to the original, maintainer decision 2026-10-22) — CSL-0254
 ```
 
-### B-15 — ULiège collection: remaining high and medium candidates (Phase 3B) ☐
+### B-15 — ULiège collection: remaining high and medium candidates (Phase 3B) 🔄 (4 cards left)
 
 The 52 remaining `high`/`medium` representatives of `thermo_models` (inventory of 2026-10-21; `TM-0236` excluded: C-237 stopped on
 `LowerHeatingValue(H2)`). Cards are generated from the inventory rows (title, category guess, stored-solution count), ordered high first, then by
@@ -969,6 +1007,12 @@ Worker notes: `~/llm/scripts/csl/b11_extra.txt` (imports from the ULiège collec
 [ ] C-349 T-IMPORT TM-0462 → cycles/refrigeration_heat_pumps/<name> — [std] Aug 2022 exam Q6: thermal losses of a heat pump with humid outdoor air (R113); verification: EES stored solution (32/32) — CSL-0309
 [ ] C-350 T-IMPORT TM-0002 → components/valves_nozzles_piping/<name> — [std] Isentropic nozzle model with critical pressure (MSTh R1); verification: EES stored solution (4/16) — CSL-0310
 [x] C-351 T-IMPORT TM-0484 → components/valves_nozzles_piping/<name> — [hard] Return duct parameter-identification model (parametric study and curve fits); verification: EES stored solution (107/107) — CSL-0311
+```
+
+### B-16 — LaboThapPy and TESPy: `medium` candidates after the novelty pre-screen (Phase 3D/3E) ☐
+
+```
+[ ] C-352 T-PLAN LaboThapPy + TESPy medium (≈ 30 rows todo) → sources/labothappy/, sources/tespy/ — [std] novelty triage against the library (notes `~/llm/scripts/csl/b16_plan.txt`), then translation cards from C-360
 ```
 
 ## 7. Dispatching a batch to agents
