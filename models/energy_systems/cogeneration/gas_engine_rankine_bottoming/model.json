@@ -1,0 +1,50 @@
+{
+  "id": "CSL-0261",
+  "name": "gas_engine_rankine_bottoming",
+  "title": "Gas engine with Rankine bottoming cycle (positive-displacement expander)",
+  "summary": "Steady-state model of a spark-ignition engine whose exhaust gas feeds a recovery boiler (effectiveness 0.8) and a bottoming Rankine cycle on Water with positive-displacement expander and pump: engine states from intake to exhaust, boiler/expander/condenser/pump states, steam flow, Rankine and global efficiencies.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "gas_engine_rankine_bottoming.eescode",
+  "fluids": ["Air", "Water"],
+  "tags": ["cogeneration", "waste heat recovery", "internal combustion engine", "gasoline", "mean specific heat", "combustion products", "positive displacement", "exercise"],
+  "language_features": [
+    "procedures",
+    "CALL with several outputs",
+    "IF/THEN/ELSE (in cpbar)",
+    "single-input property calls",
+    "min/max",
+    "UNITSYSTEM / CALL ERROR (in cpbar)"
+  ],
+  "stats": {"n_equations": 127, "largest_block": 32},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 12/MSTH-SB-R12-EX8.EES",
+    "candidate_id": "TM-0172",
+    "authors": ["ULiege MSTh course (J. Lebrun, V. Lemort, S. Bertagnolio)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiege MSTh, machines et systemes thermiques, repetition TP 12 (exercise 8)"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of MSTH-SB-R12-EX8.EES with compare_solution.py: '99 common variables, 5 differ (rtol=0.001)'. The 5 are the constant Air entropy reference offset (s_2, 0.32) and the cpbar mean specific heats with the variables that follow them (cp_p_67, cp_p_78, C_3, A_soupapes, 1.3-1.7e-3, ideal-gas species data EES vs CoolProp); all 94 others agree to <= 9.7e-4.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution of the source file (work reference ees_variables.csv)",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.32,
+    "notes": "The s_2 deviation is a constant entropy reference-state offset of Air (EES ideal-gas Air vs CoolProp pseudo-pure Air); it cancels in the isentropic inversion (T_3, v_3 agree to 5e-4). Needs the shipped .initials (EES guesses): the flame temperature sits inside the cpbar calls and default guesses diverge."
+  },
+  "missing_features": [],
+  "related": ["CSL-0005", "CSL-0034"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-22", "action": "added (T-IMPORT card, verified against the EES stored solution)", "by": "opencode worker for S. Quoilin"}
+  ]
+}

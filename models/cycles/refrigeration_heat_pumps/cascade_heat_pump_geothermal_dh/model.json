@@ -1,0 +1,74 @@
+{
+  "id": "CSL-0250",
+  "name": "cascade_heat_pump_geothermal_dh",
+  "title": "Cascade (LT/HT) heat pump, geothermal water to district heating",
+  "summary": "Two-loop cascade heat pump between geothermal water (60 to 40 degC, 100 kg/s) and district heating (60 to 90 degC, mass flow a result); four sectioned exchangers with an imposed 5 K pinch close the saturation pressures. Main file: R1233zd(E) with series IHX; variant: ammonia with desuperheaters.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "cascade_heat_pump_geothermal_dh.eescode",
+  "fluids": [
+    "R1233zd(E)",
+    "Ammonia",
+    "Water"
+  ],
+  "tags": [
+    "heat pump",
+    "cascade",
+    "district heating",
+    "geothermal",
+    "pinch",
+    "sectioned heat exchanger",
+    "internal heat exchanger",
+    "desuperheater",
+    "TESPy translation",
+    "exercise"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "MIN function"
+  ],
+  "stats": {
+    "n_equations": 148,
+    "largest_block": 38
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "ext_leads",
+    "source_path": "~/Nextcloud/thermo_models/variant_2_series_IHX.ipynb",
+    "candidate_id": "LDS-001",
+    "authors": [
+      "Francesco Witte",
+      "Amalia Steinhauer"
+    ],
+    "url": "https://github.com/fwitte/KCORC_summer_school/blob/85a2362/tespy/HP_design/LT_HeatPump_R1233zdE_GroupA.ipynb",
+    "license": "No LICENSE file (repository: shared for educational use); TESPy is MIT. Credited, linked to the original",
+    "ees_version": "",
+    "language": "en",
+    "course": "KCORC summer school exercise drafts (TESPy); variant notebook variant_4_ammonia_desuperheater.ipynb (LDS-002)"
+  },
+  "verification": {
+    "summary": "Both TESPy notebooks (0.11.3) were re-run headless in a throw-away venv (work/venv, MPLBACKEND=Agg) and their full-precision results compared with the CoolSolve .sol of both files: 28 and 30 common variables, 0 differ at rtol=0.001, maximum relative deviation 3.2e-06 (variant 2, T_2_HT) and 3.0e-06 (variant 4, Q_dh). Pinch checks PPTD_MIN_* = 5 K and the overall energy balance close.",
+    "checks": ["source-rerun", "energy-balance"],
+    "reference": "Re-run of the source notebooks variant_2_series_IHX.ipynb and variant_4_ammonia_desuperheater.ipynb (TESPy 0.11.3, CoolProp backend)",
+    "date": "2026-10-21",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 3.2e-06,
+    "notes": "compare_solution.py: 28 common variables, 0 differ (rtol=0.001) for the main file and 30 common variables, 0 differ (rtol=0.001) for the ammonia variant; max rel diff 3.2e-06 / 3.0e-06, within the CoolProp-version expectation."
+  },
+  "missing_features": [],
+  "related": ["CSL-0133", "CSL-0039", "CSL-0014", "CSL-0145", "CSL-0138", "CSL-0013"],
+  "related_external": [
+    "fwitte/KCORC_summer_school tespy/HP_design/LT_HeatPump_R1233zdE_GroupA.ipynb (parent exercise of the translated drafts)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-21",
+      "action": "added (T-TRANSLATE of the TESPy notebooks LDS-001/LDS-002, batch B-14 card CSL-0250)",
+      "by": "Claude (GLM) for S. Quoilin"
+    }
+  ]
+}

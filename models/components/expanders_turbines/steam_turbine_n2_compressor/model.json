@@ -1,0 +1,71 @@
+{
+ "id": "CSL-0282",
+ "name": "steam_turbine_n2_compressor",
+ "title": "Steam turbine driving a nitrogen compressor (exercise 5.54)",
+ "summary": "An adiabatic steam turbine (4 MPa, 350 °C to 20 kPa, x = 0.95) delivers 42 kW to a nitrogen compressor and the rest to a generator. First law on two control volumes: generator power and heat rejected by the nitrogen, with a real-fluid vs ideal-gas comparison.",
+ "kind": "steady",
+ "level": 1,
+ "status": "verified",
+ "main_file": "steam_turbine_n2_compressor.eescode",
+ "fluids": [
+  "Water",
+  "Nitrogen",
+  "N2"
+ ],
+ "tags": [
+  "steam turbine",
+  "compressor",
+  "first law",
+  "open system",
+  "perfect gas",
+  "exercise"
+ ],
+ "language_features": [
+  "property functions",
+  "array variables"
+ ],
+ "stats": {
+  "n_equations": 38,
+  "largest_block": 1
+ },
+ "origin": {
+  "type": "teaching",
+  "source": "thermo_models",
+  "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R03/THD10_R03_E2.EES",
+  "candidate_id": "TM-0366",
+  "authors": [
+   "TBD (ULiège THD)"
+  ],
+  "url": "",
+  "license": "MIT",
+  "ees_version": "X8.423",
+  "language": "fr",
+  "course": "ULiège THD, repetition 3 exercise 2, 2017-2018 (exercise 5.54)"
+ },
+ "verification": {
+  "summary": "Against the stored solution of THD10_R03_E2.EES (EES X8.423), compare_solution.py --ees-units: 22 common variables, 2 differ (rtol=0.001); only in EES: 1 (leftover variable P, not in the equations); only in CoolSolve: 16 (state-point arrays). Maximum relative difference 3.25e-03 on W_dot_gen, from the steam inlet enthalpy (EES 8.4 water tables vs CoolProp, each h within 5e-04); all other variables within 2.8e-04.",
+  "checks": [
+   "ees-stored-solution"
+  ],
+  "reference": "EES stored solution in THD10_R03_E2.EES (23 variables, EES X8.423)",
+  "date": "2026-10-23",
+  "coolsolve_version": "0.4.0@9768373",
+  "max_rel_diff": 0.0032640170250360645,
+  "notes": "W_dot_turb rel. diff 2.35e-03 and W_dot_gen 3.26e-03 (exact ratios), both traced to h_in_tv +0.048 % (CoolSolve 3093322 against EES 3091841 J/kg), amplified by the enthalpy difference; h_out_tv 2.7e-05. Real Nitrogen enthalpies within 3e-06 (no reference-state offset); ideal-gas N2 enthalpies up to 4.1e-04 (EES vs CoolProp ideal-gas data), Q_dot_N2_gp within 2.7e-06, err_Q within 1.6e-04. 6 iterations with .initials."
+ },
+ "missing_features": [],
+ "related": [
+  "CSL-0189",
+  "CSL-0224"
+ ],
+ "related_external": [],
+ "supersedes": [],
+ "previous_paths": [],
+ "history": [
+  {
+   "date": "2026-10-23",
+   "action": "added",
+   "by": "glm-5.3-flash agent for S. Quoilin"
+  }
+ ]
+}

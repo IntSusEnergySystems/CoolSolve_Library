@@ -1,0 +1,205 @@
+{=============================================================================
+  Cascade (LT/HT) heat pump, geothermal water to district heating
+  CoolSolve Library model CSL-0250 - main file (variant 2: series IHX)
+ -----------------------------------------------------------------------------
+  Two refrigerant loops (LT, HT) coupled in cascade between a geothermal
+  water source (60 -> 50 -> 40 degC, 100 kg/s in series through the HT then
+  LT evaporators) and a district-heating network (60 -> 90 degC, mass flow
+  is a result, in series through the LT then HT condensers). The four
+  evaporators/condensers are sectioned exchangers with an imposed pinch
+  (5 K): one energy balance per refrigerant zone and the pinch condition
+  PPTD = MIN(zone-boundary temperature differences) = pinch replace the
+  imposed saturation pressures of the original. Each loop adds an internal
+  heat exchanger (IHX, 10 K extra suction superheat); expansion is
+  isenthalpic, compression has eta_s = 0.75, no pressure drops.
+  This translation of TESPy notebook variant_2_series_IHX.ipynb is the main
+  file; the ammonia/desuperheater variant is
+  cascade_heat_pump_geothermal_dh_ammonia_desuperheater.eescode (README.md).
+  Source: F. Witte, A. Steinhauer (KCORC summer school, github.com/fwitte/KCORC_summer_school)
+  Status: verified vs the notebook re-run (TESPy 0.11.3); original: no LICENSE (educational use)
+=============================================================================}
+
+"!Design inputs (values of the original notebooks)"
+fluid$ = 'R1233zd(E)'        "LT and HT refrigerant (CoolProp name, as in the original)"
+TD_PINCH_EVAP_LT = 5         "imposed pinch, LT evaporator [K]"
+TD_PINCH_COND_LT = 5         "imposed pinch, LT condenser [K]"
+TD_PINCH_EVAP_HT = 5         "imposed pinch, HT evaporator [K]"
+TD_PINCH_COND_HT = 5         "imposed pinch, HT condenser [K]"
+SH_LT = 5                    "superheating at the LT evaporator outlet [K]"
+SC_LT = 3                    "subcooling at the LT condenser outlet [K]"
+SH_HT = 5                    "superheating at the HT evaporator outlet [K]"
+SC_HT = 5                    "subcooling at the HT condenser outlet [K]"
+ETA_S = 0.75                 "isentropic efficiency of both compressors [-]"
+DT_IHX = 10                  "extra suction superheat added by the IHX [K]"
+T_GEO_IN = 60                "geothermal production temperature [C]"
+T_GEO_MID = 50               "geothermal temperature between the HT and LT evaporators [C]"
+T_GEO_OUT = 40               "geothermal injection temperature [C]"
+M_GEO = 100                  "geothermal water mass flow rate [kg/s]"
+T_DH_IN = 60                 "district-heating return temperature [C]"
+T_DH_OUT = 90                "district-heating supply temperature [C]"
+P_WATER = 5E5                "water sides pressure [Pa] (5 bar in the original)"
+
+"!Geothermal and district-heating water states (no pressure drop)"
+h_g1 = ENTHALPY('Water', T=T_GEO_IN, P=P_WATER)     "geothermal production enthalpy [J/kg]"
+h_g2 = ENTHALPY('Water', T=T_GEO_MID, P=P_WATER)    "geothermal enthalpy between the evaporators [J/kg]"
+h_g3 = ENTHALPY('Water', T=T_GEO_OUT, P=P_WATER)    "geothermal injection enthalpy [J/kg]"
+h_d1 = ENTHALPY('Water', T=T_DH_IN, P=P_WATER)      "DH return enthalpy [J/kg]"
+h_d3 = ENTHALPY('Water', T=T_DH_OUT, P=P_WATER)     "DH supply enthalpy [J/kg]"
+
+"!LT loop: saturation states and main points (labels of the original connections)"
+{P_ev_LT, P_cond_LT, P_ev_HT, P_cond_HT, m_LT, m_HT, m_dh, h_d2: unknowns closed by the pinch, energy-balance and DH-supply conditions}
+T_ev_LT = TEMPERATURE(fluid$, P=P_ev_LT, x=1)     "LT evaporating (dew) temperature [C]"
+T_cond_LT = TEMPERATURE(fluid$, P=P_cond_LT, x=0)     "LT condensing (bubble) temperature [C]"
+T_1_LT = T_ev_LT + SH_LT + DT_IHX       "LT 1: compressor suction, after the IHX [C]"
+h_1_LT = ENTHALPY(fluid$, T=T_1_LT, P=P_ev_LT)    "LT 1 enthalpy [J/kg]"
+s_1_LT = ENTROPY(fluid$, T=T_1_LT, P=P_ev_LT)     "LT 1 entropy [J/kg-K]"
+T_1a_LT = T_ev_LT + SH_LT               "LT 1a: evaporator outlet, before the IHX [C]"
+h_1a_LT = ENTHALPY(fluid$, T=T_1a_LT, P=P_ev_LT)  "LT 1a enthalpy [J/kg]"
+h_2s_LT = ENTHALPY(fluid$, P=P_cond_LT, s=s_1_LT)     "LT 2s: isentropic discharge enthalpy [J/kg]"
+h_2_LT = h_1_LT + (h_2s_LT - h_1_LT)/ETA_S          "LT 2: discharge enthalpy [J/kg]"
+T_2_LT = TEMPERATURE(fluid$, P=P_cond_LT, h=h_2_LT)   "LT 2: discharge temperature [C]"
+T_3_LT = T_cond_LT - SC_LT              "LT 3: condenser outlet [C]"
+h_3_LT = ENTHALPY(fluid$, P=P_cond_LT, T=T_3_LT)      "LT 3 enthalpy [J/kg]"
+h_3b_LT = h_3_LT - (h_1_LT - h_1a_LT)   "LT 3b: after the IHX (energy balance, cycle closure h_1b = h_1) [J/kg]"
+h_4_LT = h_3b_LT                        "LT 4: after the valve, isenthalpic [J/kg]"
+T_4_LT = TEMPERATURE(fluid$, P=P_ev_LT, h=h_4_LT) "LT 4 temperature [C]"
+x_4_LT = QUALITY(fluid$, P=P_ev_LT, h=h_4_LT)     "LT 4 vapour quality [-]"
+
+"!HT loop: saturation states and main points"
+T_ev_HT = TEMPERATURE(fluid$, P=P_ev_HT, x=1)     "HT evaporating (dew) temperature [C]"
+T_cond_HT = TEMPERATURE(fluid$, P=P_cond_HT, x=0)     "HT condensing (bubble) temperature [C]"
+T_1_HT = T_ev_HT + SH_HT + DT_IHX       "HT 1: compressor suction, after the IHX [C]"
+h_1_HT = ENTHALPY(fluid$, T=T_1_HT, P=P_ev_HT)    "HT 1 enthalpy [J/kg]"
+s_1_HT = ENTROPY(fluid$, T=T_1_HT, P=P_ev_HT)     "HT 1 entropy [J/kg-K]"
+T_1a_HT = T_ev_HT + SH_HT               "HT 1a: evaporator outlet, before the IHX [C]"
+h_1a_HT = ENTHALPY(fluid$, T=T_1a_HT, P=P_ev_HT)  "HT 1a enthalpy [J/kg]"
+h_2s_HT = ENTHALPY(fluid$, P=P_cond_HT, s=s_1_HT)     "HT 2s: isentropic discharge enthalpy [J/kg]"
+h_2_HT = h_1_HT + (h_2s_HT - h_1_HT)/ETA_S          "HT 2: discharge enthalpy [J/kg]"
+T_2_HT = TEMPERATURE(fluid$, P=P_cond_HT, h=h_2_HT)   "HT 2: discharge temperature [C]"
+T_3_HT = T_cond_HT - SC_HT              "HT 3: condenser outlet [C]"
+h_3_HT = ENTHALPY(fluid$, P=P_cond_HT, T=T_3_HT)      "HT 3 enthalpy [J/kg]"
+h_3b_HT = h_3_HT - (h_1_HT - h_1a_HT)   "HT 3b: after the IHX (energy balance, cycle closure h_1b = h_1) [J/kg]"
+h_4_HT = h_3b_HT                        "HT 4: after the valve, isenthalpic [J/kg]"
+T_4_HT = TEMPERATURE(fluid$, P=P_ev_HT, h=h_4_HT) "HT 4 temperature [C]"
+x_4_HT = QUALITY(fluid$, P=P_ev_HT, h=h_4_HT)     "HT 4 vapour quality [-]"
+
+"!Evaporators: refrigerant mass flows from the geothermal energy balances"
+M_GEO*(h_g2 - h_g3) = m_LT*(h_1a_LT - h_4_LT)   "LT evaporator energy balance [W]"
+M_GEO*(h_g1 - h_g2) = m_HT*(h_1a_HT - h_4_HT)   "HT evaporator energy balance [W]"
+
+"!Evaporator water-side boundary temperatures (for the pinch conditions)"
+h_g_ev_LT = ENTHALPY(fluid$, P=P_ev_LT, x=1)      "saturated vapour enthalpy at P_ev_LT [J/kg]"
+h_w_ev_LT = h_g3 + m_LT*(h_g_ev_LT - h_4_LT)/M_GEO  "geothermal water enthalpy at the LT dew-point boundary [J/kg]"
+T_w_ev_LT = TEMPERATURE('Water', P=P_WATER, h=h_w_ev_LT)   "geothermal water temperature at the LT dew-point boundary [C]"
+h_g_ev_HT = ENTHALPY(fluid$, P=P_ev_HT, x=1)      "saturated vapour enthalpy at P_ev_HT [J/kg]"
+h_w_ev_HT = h_g2 + m_HT*(h_g_ev_HT - h_4_HT)/M_GEO  "geothermal water enthalpy at the HT dew-point boundary [J/kg]"
+T_w_ev_HT = TEMPERATURE('Water', P=P_WATER, h=h_w_ev_HT)   "geothermal water temperature at the HT dew-point boundary [C]"
+
+"!Evaporator pinch: imposed at the boundary where the minimum occurs (the cold
+ end here: the refrigerant stays at T_ev through the two-phase zone, so the
+ smallest zone-boundary difference is the water outlet against T_ev); the
+ PPTD_MIN_* equations check afterwards that the minimum over all boundaries
+ is the imposed value (the notebook's pinch() helper does the same)"
+PP_ev_hot_LT = T_GEO_MID - T_1a_LT      "LT evaporator hot end: water inlet / superheated outlet [K]"
+PP_ev_dew_LT = T_w_ev_LT - T_ev_LT      "LT evaporator dew-point boundary [K]"
+PP_ev_cold_LT = T_GEO_OUT - T_ev_LT     "LT evaporator cold end: water outlet / two-phase inlet [K]"
+PPTD_MIN_EV_LT = MIN(PP_ev_hot_LT, MIN(PP_ev_dew_LT, PP_ev_cold_LT))  "check: actual minimum [K]"
+T_ev_LT = T_GEO_OUT - TD_PINCH_EVAP_LT  "design condition: pinch at the cold end, closes P_ev_LT"
+PP_ev_hot_HT = T_GEO_IN - T_1a_HT       "HT evaporator hot end: water inlet / superheated outlet [K]"
+PP_ev_dew_HT = T_w_ev_HT - T_ev_HT      "HT evaporator dew-point boundary [K]"
+PP_ev_cold_HT = T_GEO_MID - T_ev_HT     "HT evaporator cold end: water outlet / two-phase inlet [K]"
+PPTD_MIN_EV_HT = MIN(PP_ev_hot_HT, MIN(PP_ev_dew_HT, PP_ev_cold_HT))  "check: actual minimum [K]"
+T_ev_HT = T_GEO_MID - TD_PINCH_EVAP_HT  "design condition: pinch at the cold end, closes P_ev_HT"
+
+"!Condensers: zone duties on the refrigerant side"
+h_g_cd_LT = ENTHALPY(fluid$, P=P_cond_LT, x=1)        "saturated vapour enthalpy at P_cond_LT [J/kg]"
+h_f_cd_LT = ENTHALPY(fluid$, P=P_cond_LT, x=0)        "saturated liquid enthalpy at P_cond_LT [J/kg]"
+Q_desup_LT = m_LT*(h_2_LT - h_g_cd_LT)              "LT condenser desuperheating duty [W]"
+Q_cond_tp_LT = m_LT*(h_g_cd_LT - h_f_cd_LT)         "LT condenser condensing duty [W]"
+Q_sub_LT = m_LT*(h_f_cd_LT - h_3_LT)                "LT condenser subcooling duty [W]"
+Q_cond_LT = Q_desup_LT + Q_cond_tp_LT + Q_sub_LT    "LT condenser total duty [W]"
+h_g_cd_HT = ENTHALPY(fluid$, P=P_cond_HT, x=1)        "saturated vapour enthalpy at P_cond_HT [J/kg]"
+h_f_cd_HT = ENTHALPY(fluid$, P=P_cond_HT, x=0)        "saturated liquid enthalpy at P_cond_HT [J/kg]"
+Q_desup_HT = m_HT*(h_2_HT - h_g_cd_HT)              "HT condenser desuperheating duty [W]"
+Q_cond_tp_HT = m_HT*(h_g_cd_HT - h_f_cd_HT)         "HT condenser condensing duty [W]"
+Q_sub_HT = m_HT*(h_f_cd_HT - h_3_HT)                "HT condenser subcooling duty [W]"
+Q_cond_HT = Q_desup_HT + Q_cond_tp_HT + Q_sub_HT    "HT condenser total duty [W]"
+
+"!Condensers: DH water heated in series, boundary temperatures"
+m_dh*(h_d2 - h_d1) = Q_cond_LT              "DH water through the LT condenser [W]"
+m_dh*(h_d3 - h_d2) = Q_cond_HT              "DH water through the HT condenser [W]"
+T_d2 = TEMPERATURE('Water', P=P_WATER, h=h_d2)      "DH water between the two condensers [C]"
+h_w_sub_LT = h_d1 + Q_sub_LT/m_dh           "DH water enthalpy at the LT bubble-point boundary [J/kg]"
+T_w_sub_LT = TEMPERATURE('Water', P=P_WATER, h=h_w_sub_LT)  "DH water temperature at the LT bubble-point boundary [C]"
+h_w_cond_LT = h_w_sub_LT + Q_cond_tp_LT/m_dh        "DH water enthalpy at the LT dew-point boundary [J/kg]"
+T_w_cond_LT = TEMPERATURE('Water', P=P_WATER, h=h_w_cond_LT)  "DH water temperature at the LT dew-point boundary [C]"
+h_w_sub_HT = h_d2 + Q_sub_HT/m_dh           "DH water enthalpy at the HT bubble-point boundary [J/kg]"
+T_w_sub_HT = TEMPERATURE('Water', P=P_WATER, h=h_w_sub_HT)  "DH water temperature at the HT bubble-point boundary [C]"
+h_w_cond_HT = h_w_sub_HT + Q_cond_tp_HT/m_dh        "DH water enthalpy at the HT dew-point boundary [J/kg]"
+T_w_cond_HT = TEMPERATURE('Water', P=P_WATER, h=h_w_cond_HT)  "DH water temperature at the HT dew-point boundary [C]"
+
+"!Condenser pinch: imposed at the boundary where the minimum occurs (the
+ dew-point boundary here, where the DH water is warmest under condensing
+ refrigerant); PPTD_MIN_COND_* checks afterwards that the minimum over all
+ zone boundaries is the imposed value"
+PP_cond_hot_LT = T_2_LT - T_d2              "LT condenser hot end: discharge / water outlet [K]"
+PP_cond_dew_LT = T_cond_LT - T_w_cond_LT    "LT condenser dew-point boundary [K]"
+PP_cond_bub_LT = T_cond_LT - T_w_sub_LT     "LT condenser bubble-point boundary [K]"
+PP_cond_cold_LT = T_3_LT - T_DH_IN          "LT condenser cold end: subcooled outlet / water inlet [K]"
+PPTD_COND_LT = TD_PINCH_COND_LT             "design condition at the dew-point boundary, closes P_cond_LT"
+PPTD_COND_LT = PP_cond_dew_LT
+PPTD_MIN_COND_LT = MIN(PP_cond_hot_LT, MIN(PP_cond_dew_LT, MIN(PP_cond_bub_LT, PP_cond_cold_LT)))  "check: actual minimum [K]"
+PP_cond_hot_HT = T_2_HT - T_DH_OUT          "HT condenser hot end: discharge / water outlet [K]"
+PP_cond_dew_HT = T_cond_HT - T_w_cond_HT    "HT condenser dew-point boundary [K]"
+PP_cond_bub_HT = T_cond_HT - T_w_sub_HT     "HT condenser bubble-point boundary [K]"
+PP_cond_cold_HT = T_3_HT - T_d2             "HT condenser cold end: subcooled outlet / water inlet [K]"
+PPTD_COND_HT = TD_PINCH_COND_HT             "design condition at the dew-point boundary, closes P_cond_HT"
+PPTD_COND_HT = PP_cond_dew_HT
+PPTD_MIN_COND_HT = MIN(PP_cond_hot_HT, MIN(PP_cond_dew_HT, MIN(PP_cond_bub_HT, PP_cond_cold_HT)))  "check: actual minimum [K]"
+
+"!Compressors, duties and system performance"
+W_LT = m_LT*(h_2_LT - h_1_LT)               "LT compressor power [W]"
+W_HT = m_HT*(h_2_HT - h_1_HT)               "HT compressor power [W]"
+Q_evap_LT = m_LT*(h_1a_LT - h_4_LT)         "LT evaporator duty [W]"
+Q_evap_HT = m_HT*(h_1a_HT - h_4_HT)         "HT evaporator duty [W]"
+Q_dh = m_dh*(h_d3 - h_d1)                   "district-heating duty [W]"
+Q_geo = M_GEO*(h_g1 - h_g3)                 "geothermal duty [W]"
+W_tot = W_LT + W_HT                         "total compressor power [W]"
+COP = Q_dh/W_tot                            "system COP, heating [-]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{LT loop: 1 suction, 2 discharge, 3 condenser outlet, 4 evaporator inlet;
+ use the arrays h_LT[i]/P_LT[i] or s_LT[i]/T_LT[i] (and the _HT ones) with the
+ "Overlay array path" option of the CoolSolve Diagram tab.}
+P_LT[1] = P_ev_LT
+h_LT[1] = h_1_LT
+T_LT[1] = T_1_LT
+s_LT[1] = s_1_LT
+P_LT[2] = P_cond_LT
+h_LT[2] = h_2_LT
+T_LT[2] = T_2_LT
+s_LT[2] = ENTROPY(fluid$, P=P_cond_LT, h=h_2_LT)
+P_LT[3] = P_cond_LT
+h_LT[3] = h_3_LT
+T_LT[3] = T_3_LT
+s_LT[3] = ENTROPY(fluid$, P=P_cond_LT, T=T_3_LT)
+P_LT[4] = P_ev_LT
+h_LT[4] = h_4_LT
+T_LT[4] = T_4_LT
+s_LT[4] = ENTROPY(fluid$, P=P_ev_LT, h=h_4_LT)
+P_HT[1] = P_ev_HT
+h_HT[1] = h_1_HT
+T_HT[1] = T_1_HT
+s_HT[1] = s_1_HT
+P_HT[2] = P_cond_HT
+h_HT[2] = h_2_HT
+T_HT[2] = T_2_HT
+s_HT[2] = ENTROPY(fluid$, P=P_cond_HT, h=h_2_HT)
+P_HT[3] = P_cond_HT
+h_HT[3] = h_3_HT
+T_HT[3] = T_3_HT
+s_HT[3] = ENTROPY(fluid$, P=P_cond_HT, T=T_3_HT)
+P_HT[4] = P_ev_HT
+h_HT[4] = h_4_HT
+T_HT[4] = T_4_HT
+s_HT[4] = ENTROPY(fluid$, P=P_ev_HT, h=h_4_HT)

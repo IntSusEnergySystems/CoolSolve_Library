@@ -1,0 +1,109 @@
+{=============================================================================
+  Recuperated Brayton high-temperature heat pump (air / HITEC molten salt)
+  CoolSolve Library model CSL-0254
+ -----------------------------------------------------------------------------
+  Steady design point of an air-cycle heat pump: the compressor raises the
+  pressure of ambient air, the hot compressed air gives heat to a molten-salt
+  loop (HITEC, 235 to 290 °C) in the "sink" exchanger, and a gas-gas
+  recuperator preheats the ambient air with the turbine exhaust before it
+  returns to atmosphere. With no pressure losses anywhere (pr = 1 in the
+  source), the compressor pressure ratio is an output: the sink terminal
+  temperature differences fix T at its inlet/outlet, the recuperator
+  effectiveness fixes the compressor inlet temperature, and the isentropic
+  efficiency equation then determines the pressure ratio.
+  Translated from TESPy (Python); loops and solver glue become simultaneous
+  equations. Air is the EES ideal-gas substance; the HITEC molten salt is the
+  linear cp fit of the tabulated data of the source (exact on the 4 points).
+  TES-integrated and intercooled layouts of the source are not translated
+  (see README.md). Case-study parameters: design point, Q = 1 MW.
+  Status: verified (source rerun, see README.md).
+  Source: Samuele Grandin (DTU), github.com/SamueleGrandinDTU/recuperated_Brayton_HTHP
+  (no LICENSE file in the original; credited and linked).
+=============================================================================}
+
+"!Design data (case-study parameters of the source)"
+Q_dot = 1.0E6          "heat delivered to the molten-salt loop [W] (TESPy sink Q = -1 MW)"
+T_0 = 15               "ambient air temperature at the recuperator cold inlet [°C]"
+P_0 = 1.0E5            "ambient air pressure [Pa] (1 bar in the source)"
+T_t1 = 235             "HITEC inlet temperature [°C]"
+T_t2 = 290             "HITEC outlet temperature [°C]"
+ttd_u = 10             "upper terminal temperature difference of the sink exchanger [K]"
+ttd_l = 7              "lower terminal temperature difference of the sink exchanger [K]"
+eta_s_compressor = 0.8 "compressor isentropic efficiency [-]"
+eta_s_turbine = 0.9    "turbine isentropic efficiency [-]"
+eff_cold = 0.94        "recuperator effectiveness, cold side [-] (source eff_cold)"
+
+"!Pressure levels (no pressure drop: pr1 = pr2 = 1 for both exchangers, as in the source)"
+P_1 = P_0              "compressor inlet [Pa]"
+P_5 = P_0              "turbine exhaust (atmosphere) [Pa]"
+P_3 = P_2              "sink hot outlet = recuperator hot inlet [Pa]"
+P_4 = P_2              "recuperator hot outlet = turbine inlet [Pa]"
+
+"!Temperatures imposed by the sink exchanger terminal differences"
+T_2 = T_t2 + ttd_u     "compressor outlet = sink hot inlet [°C]"
+T_3 = T_t1 + ttd_l     "sink hot outlet = recuperator hot inlet [°C]"
+
+"!HITEC molten salt: enthalpy from the linear cp fit of the tabulated data of the source"
+h_t1 = 1560.1*(T_t1 + 273.15 - 473.15) + 0.001*(T_t1 + 273.15 - 473.15)^2   "HITEC enthalpy at T_t1 [J/kg]"
+h_t2 = 1560.1*(T_t2 + 273.15 - 473.15) + 0.001*(T_t2 + 273.15 - 473.15)^2   "HITEC enthalpy at T_t2 [J/kg]"
+
+"!Recuperator (gas-gas, equal air mass flow on both sides)"
+h_0 = ENTHALPY(Air, T=T_0, P=P_0)      "ambient air enthalpy [J/kg]"
+h_1 = ENTHALPY(Air, T=T_1, P=P_1)      "compressor inlet enthalpy [J/kg]"
+h_3 = ENTHALPY(Air, T=T_3, P=P_3)      "recuperator hot inlet enthalpy [J/kg]"
+(h_1 - h_0)/(h_3 - h_0) = eff_cold     "cold-side effectiveness, as in the source [-]"
+h_4 = h_3 - (h_1 - h_0)                "recuperator hot outlet enthalpy [J/kg]"
+T_4 = TEMPERATURE(Air, h=h_4, P=P_4)   "turbine inlet temperature [°C]"
+
+"!Compressor"
+s_1 = ENTROPY(Air, T=T_1, P=P_1)       "compressor inlet entropy [J/kg-K]"
+h_2 = ENTHALPY(Air, T=T_2, P=P_2)      "compressor outlet enthalpy [J/kg]"
+s_2 = ENTROPY(Air, T=T_2, P=P_2)       "compressor outlet entropy [J/kg-K]"
+h_2s = ENTHALPY(Air, s=s_1, P=P_2)     "isentropic compression: enthalpy at (s_1, P_2) [J/kg]"
+eta_s_compressor = (h_2s - h_1)/(h_2 - h_1)    "fixes the pressure ratio P_2/P_0 [-]"
+
+"!Turbine"
+s_4 = ENTROPY(Air, h=h_4, P=P_4)       "turbine inlet entropy [J/kg-K]"
+h_5s = ENTHALPY(Air, s=s_4, P=P_5)     "isentropic expansion: enthalpy at (s_4, P_5) [J/kg]"
+h_5 = h_4 - eta_s_turbine*(h_4 - h_5s)         "turbine exhaust enthalpy, from the isentropic efficiency [-]"
+T_5 = TEMPERATURE(Air, h=h_5, P=P_5)   "turbine exhaust temperature [°C]"
+s_0 = ENTROPY(Air, T=T_0, P=P_0)       "ambient air entropy [J/kg-K]"
+s_5 = ENTROPY(Air, T=T_5, P=P_5)       "turbine exhaust entropy [J/kg-K]"
+
+"!Mass flows, power and COP"
+Q_dot = m_air*(h_2 - h_3)              "air-side energy balance of the sink exchanger; m_air [kg/s]"
+Q_dot = m_HITEC*(h_t2 - h_t1)          "HITEC-side energy balance; m_HITEC [kg/s]"
+W_dot_compressor = m_air*(h_2 - h_1)   "compressor power (taken from the shaft) [W]"
+W_dot_turbine = m_air*(h_4 - h_5)      "turbine power (returned to the shaft) [W]"
+W_dot_net = W_dot_compressor - W_dot_turbine   "net electrical input (same shaft, as in the source) [W]"
+COP = Q_dot/W_dot_net                  "coefficient of performance [-]"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{i = 1…6 are the source connections "0"…"5": 1 ambient air/recuperator cold inlet,
+ 2 recuperator cold outlet/compressor inlet, 3 compressor outlet/sink hot inlet,
+ 4 sink hot outlet/recuperator hot inlet, 5 recuperator hot outlet/turbine inlet,
+ 6 turbine exhaust. CoolSolve has no ideal-gas diagram yet (CS-FEAT-DIAGRAM-IDEAL).}
+P[1] = P_0
+T[1] = T_0
+h[1] = h_0
+s[1] = s_0
+P[2] = P_1
+T[2] = T_1
+h[2] = h_1
+s[2] = s_1
+P[3] = P_2
+T[3] = T_2
+h[3] = h_2
+s[3] = s_2
+P[4] = P_2
+T[4] = T_3
+h[4] = h_3
+s[4] = ENTROPY(Air, T=T_3, P=P_3)
+P[5] = P_2
+T[5] = T_4
+h[5] = h_4
+s[5] = s_4
+P[6] = P_0
+T[6] = T_5
+h[6] = h_5
+s[6] = s_5

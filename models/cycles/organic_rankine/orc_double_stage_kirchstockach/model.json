@@ -1,0 +1,82 @@
+{
+  "id": "CSL-0252",
+  "name": "orc_double_stage_kirchstockach",
+  "title": "Double-stage (HT + LT series) ORC power plant Kirchstockach, design point",
+  "summary": "Design point of the Kirchstockach geothermal plant: two R245fa ORC cycles (HT 13.85 bar, LT 5.97 bar) in series on the 135.1 degC brine, air-cooled condensers sized by an imposed pinch, brine branch split and mixing, gross/net power and second-law efficiencies.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "orc_double_stage_kirchstockach.eescode",
+  "fluids": [
+    "R245fa",
+    "Water",
+    "Air"
+  ],
+  "tags": [
+    "ORC",
+    "two-stage",
+    "series cycles",
+    "geothermal",
+    "brine",
+    "air-cooled condenser",
+    "pinch",
+    "design",
+    "published-reference"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 167,
+    "largest_block": 23
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "KCORC_summer_school (github.com/fwitte/KCORC_summer_school)",
+    "source_path": "",
+    "candidate_id": "LDS-005",
+    "authors": [
+      "Francesco Witte",
+      "Amalia Steinhauer"
+    ],
+    "url": "https://github.com/fwitte/KCORC_summer_school/blob/85a2362b99841a9f18e720d5b4237e1694695580/tespy/ORC_offdesign/complete_ORC.ipynb",
+    "license": "No LICENSE file in the original (README: shared for educational use); credited and linked",
+    "ees_version": "",
+    "language": "en",
+    "course": "KCORC summer school, TESPy workshop"
+  },
+  "verification": {
+    "summary": "The source notebook complete_ORC.ipynb was re-run headless (TESPy 0.11.3, CoolProp, repo commit 85a2362b) and all 27 quantities of its validation table agree with the CoolSolve solution within 1.9e-8 relative (worst, on T_07); air mass flows and brine exergy agree as well. Notebook itself validated against Table 3 of Heberle et al. 2015.",
+    "checks": [
+      "source-rerun",
+      "publication",
+      "energy-balance"
+    ],
+    "reference": "Re-run of tespy/ORC_offdesign/complete_ORC.ipynb (KCORC_summer_school @ 85a2362b); Heberle, Jahrfeld, Brueggemann 2015, Table 3",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 1.9e-8,
+    "notes": "vs notebook re-run: worst 1.9e-8 relative over the 27 validation-table quantities (same CoolProp backend). vs Heberle 2015 Table 3: gross power 5468.6 vs 5309.6 kW (+3.0%), the deviation the notebook itself documents (property backend, pinch at the dew-point boundary)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0014",
+    "CSL-0133",
+    "CSL-0019",
+    "CSL-0040",
+    "CSL-0134"
+  ],
+  "related_external": [
+    "Heberle, Jahrfeld, Brueggemann 2015, Proceedings World Geothermal Congress, paper 26002 (double-stage ORC Kirchstockach)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added (T-TRANSLATE of LDS-005, card C-279)",
+      "by": "Claude (GLM) for S. Quoilin"
+    }
+  ]
+}

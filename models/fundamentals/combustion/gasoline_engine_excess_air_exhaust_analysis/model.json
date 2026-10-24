@@ -1,0 +1,77 @@
+{
+  "id": "CSL-0266",
+  "name": "gasoline_engine_excess_air_exhaust_analysis",
+  "title": "Gasoline engine: excess air and useful power from exhaust-gas analysis",
+  "summary": "Combustion of gasoline (CH1.95) with excess air in an engine, analysed from the dry exhaust-gas CO mole fraction (incomplete combustion); the excess air follows from the fuel-air ratio and the useful power from the five-box energy balance, with the fuel vaporised at the reference state (its LHV is defined for gaseous fuel).",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "gasoline_engine_excess_air_exhaust_analysis.eescode",
+  "fluids": [
+    "Air",
+    "CO",
+    "CO2",
+    "H2O",
+    "N2",
+    "O2"
+  ],
+  "tags": [
+    "combustion",
+    "gasoline engine",
+    "exhaust gas analysis",
+    "excess air",
+    "incomplete combustion",
+    "fuel-air ratio",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 54,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R11.zip!/THD10_R11_E2.EES",
+    "candidate_id": "TM-0538",
+    "authors": [
+      "Stéphane Bertagnolio",
+      "S. Borguet (ULiège, per the collection inventory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.423",
+    "language": "fr",
+    "course": "ULiège THD course (2010), repetition 11 (combustion), exercise 2"
+  },
+  "verification": {
+    "summary": "Not the native file but its runnable variant was compared with the EES stored solution of THD10_R11_E2.EES: 54 common variables, 6 differ (rtol=0.001), all absolute-Air-enthalpy reference offsets or ideal-gas property differences <= 2.73e-03; e, lambda, far and Q_dot_utile agree within 2.6e-04.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution of the source file (54 variables, --ees-units); the comparison concerns the runnable variant gasoline_engine_excess_air_exhaust_analysis_coolsolve.eescode, the native file being blocked",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.3,
+    "notes": "Native file: 'Unknown fluid: CarbonMonoxide' (CS-GAP-FLUIDS-ALIAS), square system otherwise (54/54). Variant vs EES: 6 of 54 variables differ above rtol=0.001 - h_a_ref/h_a_su (absolute Air enthalpy reference: EES 0 at 0 K vs CoolProp), h_N2_ex, q_N2 (1.24e-03), q_CO2 (2.73e-03), Q_dot_1 (1.71e-03, 0.4 W absolute) - ideal-gas EES-vs-CoolProp property differences within the 0.5 % tolerance. Key results: e 0.0471045 vs 0.0471167, lambda 104.7104 vs 104.7117 %, Q_dot_utile -83938.0 vs -83921.5 W."
+  },
+  "missing_features": [
+    "CS-GAP-FLUIDS-ALIAS"
+  ],
+  "related": [
+    "CSL-0058",
+    "CSL-0278"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added (C-306, T-IMPORT TM-0538): native file blocked by CS-GAP-FLUIDS-ALIAS (real-fluid CarbonMonoxide molar mass), runnable _coolsolve variant verified against the EES stored solution",
+      "by": "opencode (mimo) for S. Quoilin"
+    }
+  ]
+}

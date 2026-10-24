@@ -1,0 +1,212 @@
+{=============================================================================
+  Evaporative condenser with catalogue data (BAC VXC) and operating checks
+  CoolSolve Library model CSL-0303
+ -----------------------------------------------------------------------------
+  Simulation model of an evaporative condenser (Laborelec 2002 toolkit):
+  the heat flow rate from the condensing ammonia (R717) to the air and spray
+  water is computed on the air side with the fictitious-fluid theory (air
+  leaving saturated, capacity rate defined at the wet-bulb temperature) and
+  on the refrigerant side with a condensing resistance; the air-side
+  resistance follows an off-design law on the air mass flow and its nominal
+  value and the nominal capacity come from a catalogue lookup table (BAC VXC
+  series). Check procedures issue caution messages. The original is an EES
+  Diagram-Window model: this file reproduces its stored operating point.
+  Inputs : fluid$, P_atm, t_a_su_cd, RH_AIR, t_ev, DELTAt_sh, DELTAt_sc,
+           T_cd, epsilon_s, F_F, Condenser$ (or the *_input values)
+  Outputs: Q_dot_cd, Q_dot_ev, W_dot_cp, COP, air/water/refrigerant states
+  Source : ULiège/Laborelec toolkit 2002 (F. Trebilcock), EES 6.596
+           Diagram-Window file - see README.md for the conversion log
+  Status : verified vs the EES stored solution (MIT licence); kPa/kJ
+           converted by hand; catalogue table hand-decoded from the .LKT
+=============================================================================}
+
+"!################################################################"
+PROCEDURE CONDENSERDATA(Condenser$,R_a_cd_N_input,R_r_cd_N_input,V_dot_a_cd_N_input,Q_dot_cd_N_input:R_a_cd_N,R_r_cd_N,V_dot_a_cd_N,Q_dot_cd_N)
+"Condenser parameters and nominal values from the catalogue table, or from the user-defined inputs (as in the original)"
+
+if Condenser$='User defined' then
+  R_a_cd_N = R_a_cd_N_input
+  R_r_cd_N = R_r_cd_N_input
+  V_dot_a_cd_N = V_dot_a_cd_N_input
+  Q_dot_cd_N = Q_dot_cd_N_input
+else
+  R_a_cd_N = lookup('condenserdata',1,Condenser$)          "air-side resistance at nominal air flow [K/W]"
+  R_r_cd_N = lookup('condenserdata',2,Condenser$)          "refrigerant-side (condensing) resistance [K/W]"
+  V_dot_a_cd_N = lookup('condenserdata',3,Condenser$)      "nominal air volume flow rate [m^3/s]"
+  Q_dot_cd_N = lookup('condenserdata',4,Condenser$)        "nominal heat rejection capacity [W]"
+endif
+end
+
+"!################################################################"
+
+PROCEDURE EPSILONCHECK(epsilon_s:NOTE1$)
+NOTE1$=''
+if (epsilon_s<0) or (epsilon_s>1) then
+NOTE1$='Error: The isentropic effectiveness is outside the limits'
+else
+NOTE1$=''
+endif
+end
+
+"!################################################################"
+
+PROCEDURE LIMITSCHECK(t_wb_su_cd,t_cd:NOTE2$)
+NOTE2$=''
+if (t_wb_su_cd<10) or (t_wb_su_cd>28) or (t_cd<29) or (t_cd>45) then
+NOTE2$='Caution: Simulation is outside manufacturers information'
+else
+NOTE2$=''
+endif
+end
+
+"!################################################################"
+
+PROCEDURE FOOLINGCHECK(F_F:NOTE3$)
+NOTE3$=''
+if (F_F<0) or (F_F>100) then
+NOTE3$='Error: The fooling factor is outside the limits'
+else
+NOTE3$=''
+endif
+end
+
+"!################################################################"
+
+PROCEDURE SUBCOOLINGCHECK(DELTAt_sc,T_r_ex_cd,t_a_su_cd:NOTE4$,NOTE5$)
+Diference=T_r_ex_cd-t_a_su_cd
+
+NOTE4$=''
+NOTE5$=''
+if (DELTAt_sc>10) or (Diference<0) then
+NOTE4$='Attention: High subcooling plus close values of Tcd-Tev'
+NOTE5$='may cause physical meaningless results (Tr,ex<Ta,su)'
+else
+NOTE4$=''
+NOTE5$=''
+endif
+end
+
+"!################################################################"
+"MODEL"
+"!################################################################"
+"We will refer the following model in accordance to the scheme shown in figure 1 in the Diagram Window. It represents the heat flow rate occurring through the Evaporative Condenser."
+"For the air side:"
+Q_dot_cd = M_dot_a_cd * ( h_a_ex_cd - h_a_su_cd )          "heat flow rate from the air-side balance [W]"
+Q_dot_cd = C_dot_af_cd * ( t_wb_ex_cd - t_wb_su_cd )       "heat flow rate on the fictitious fluid [W]"
+
+"Where, in accordance to the assumptions, a fictitious capacity flow rate for the humid air is assumed, which can be expressed as"
+C_dot_af_cd = M_dot_a_cd * c_p_af_cd                       "fictitious capacity rate [W/K]"
+
+"Where it can be observed that the fictitious fluid enters the heat exchanger at the wet-bulb temperature and is characterized by the specific heat c_p_af. By combining these equations together, we get also:
+c_p_af_cd = (h_a_ex_cd - h_a_su_cd)/(t_wb_ex_cd - t_wb_su_cd)."
+
+"For the refrigerant side:"
+Q_dot_cd = M_dot_r * ( h_r_su_cd - h_r_ex_cd )             "heat rejected by the condensing refrigerant [W]"
+Q_dot_cd = (t_cd - t_w_cd)/R_r_cd                          "heat flow rate through the condensing resistance [W]"
+
+"In accordance to the heat exchanger model, the heat flow rate in the condenser can be defined by"
+Q_dot_cd = epsilon_af_cd * C_dot_min_af_cd * ( t_w_cd - t_wb_su_cd )   "effectiveness form [W]"
+C_dot_min_af_cd = C_dot_af_cd                              "the air side has the minimum capacity rate"
+
+"as we consider that the condensing and water temperature remain essentially constant, the effectiveness for such situation is given by the following simplified equation"
+epsilon_af_cd = 1 - exp(-NTU_af_cd)                        "effectiveness of one fluid at constant temperature [-]"
+
+"that's defined on the basis of the fictitious perfect gas, so a fictitious NTU is considered as"
+NTU_af_cd = 1/(R_af_cd * C_dot_af_cd)                      "fictitious number of transfer units [-]"
+
+"The convection resistances on the refrigerant side assumed to be equal to the nominal resistance, assuming no dependence on the refrigerant mass flow rate"
+R_r_cd = R_r_cd_N                                          "condensing resistance [K/W]"
+
+"On the air side, the resistance will consider the fictitious perfect gas, so the definition of a fictitious air resistance is derived from the classical Merkel's theory"
+R_af_cd = R_a_cd*c_p_a_cd/(c_p_af_cd*Fooling_F)            "fictitious air-side resistance [K/W]"
+Fooling_F = F_F/100                                        "fooling factor [-]"
+c_p_a_cd = specheat(AIRH2O,T=t_a_su_cd,P=P_atm,R=RH_su_cd) "specific heat of the humid air at the inlet [J/kg-K]"
+
+"where the resistance dependence on the air mass flow rate is represented as follows"
+R_a_cd = R_a_cd_N*(M_dot_a_cd/M_dot_a_N_cd)^(-0.5)         "air-side resistance [K/W]"
+
+"The humid air properties:"
+h_a_su_cd = enthalpy(AIRH2O,T=t_a_su_cd,P=P_atm,R=RH_su_cd)       "inlet air enthalpy [J/kg]"
+W_su_cd = humrat(AIRH2O,T=t_a_su_cd,P=P_atm,R=RH_su_cd)           "inlet air humidity ratio [kg/kg dry air]"
+t_wb_su_cd = wetbulb(AIRH2O,T=t_a_su_cd,P=P_atm,R=RH_su_cd)       "inlet air wet-bulb temperature [°C]"
+h_a_ex_cd = enthalpy(AIRH2O,T=t_a_ex_cd,P=P_atm,R=RH_ex_cd)       "exhaust air enthalpy [J/kg]"
+W_ex_cd = humrat(AIRH2O,T=t_a_ex_cd,P=P_atm,R=RH_ex_cd)           "exhaust air humidity ratio [kg/kg dry air]"
+t_wb_ex_cd = wetbulb(AIRH2O,T=t_a_ex_cd,P=P_atm,R=RH_ex_cd)       "exhaust air wet-bulb temperature [°C]"
+M_dot_a_cd = V_dot_a_cd*rho_a_cd                                  "air mass flow rate [kg/s]"
+rho_a_cd = density(AIRH2O,T=t_a_su_cd,P=P_atm,R=RH_su_cd)         "inlet air density [kg/m^3]"
+T_DEW = Dewpoint(AirH2O,p=P_atm,T=t_a_su_cd,R=RH_su_cd)           "inlet air dew-point temperature [°C]"
+
+"The refrigerant properties:"
+h_r_su_cd = enthalpy(fluid$,T=T_r_su_cd,P=P_r_su_cd)       "refrigerant enthalpy at the condenser inlet [J/kg]"
+h_r_ex_cd = enthalpy(fluid$,T=T_r_ex_cd,P=P_r_ex_cd)       "refrigerant enthalpy at the condenser outlet [J/kg]"
+t_cd = temperature(fluid$,x=0,P=P_cd)                      "condensing temperature [°C]"
+T_r_ex_cd = t_cd - DELTAt_sc                               "subcooled liquid temperature [°C]"
+P_r_su_cd = P_cd                                           "condenser inlet pressure [Pa]"
+P_r_ex_cd = P_cd                                           "condenser outlet pressure [Pa]"
+
+
+"The compressor model:"
+"Calculation of the shaft power:"
+W_dot_cp = M_dot_r * w                                     "compressor shaft power [W]"
+w = w_s/epsilon_s                                          "specific compression work [J/kg]"
+w_s = h_r_exs_cp - h_r_su_cp                               "isentropic specific compression work [J/kg]"
+h_r_ex_cp = h_r_su_cp + W_dot_cp/M_dot_r                   "discharge enthalpy [J/kg]"
+
+"if adiabatic compressor"
+t_r_ex_cp = temperature(fluid$,h=h_r_ex_cp,P=P_r_ex_cp)    "discharge temperature [°C]"
+
+"Fluid definition:"
+v_r_su_cp = volume(fluid$,t=t_r_su_cp,p=p_ev)              "suction specific volume [m^3/kg]"
+h_r_su_cp = enthalpy(fluid$,t=t_r_su_cp,p=p_ev)            "suction enthalpy [J/kg]"
+s_r_su_cp = entropy(fluid$,t=t_r_su_cp,p=p_ev)             "suction entropy [J/kg-K]"
+h_r_exs_cp = enthalpy(fluid$,p=P_r_ex_cp,s=s_r_su_cp)      "isentropic discharge enthalpy [J/kg]"
+
+"Then, it is possible to calculate the following variables"
+COP = Q_dot_ev/W_dot_cp                                    "coefficient of performance [-]"
+Q_dot_ev = Q_dot_cd - W_dot_cp                             "cooling capacity [W]"
+p_ev = pressure(fluid$,T=t_ev,x=1)                         "evaporation pressure [Pa]"
+
+"The connection between the compressor and the condenser is made in accordance to the following relations:"
+P_r_ex_cp = P_r_su_cd
+T_r_su_cd = t_r_ex_cp
+
+"And the connection evaporator-compressor gives"
+t_r_su_cp = t_ev + DELTAt_sh                               "suction temperature [°C]"
+
+"Inputs (Diagram-window interface of the original; stored operating point)"
+fluid$ = 'R717'                                            "refrigerant (ammonia)"
+P_atm = 101300                                             "atmospheric pressure [Pa] (101.3 kPa in the original)"
+t_a_su_cd = 25                                             "supply air temperature [°C]"
+RH_AIR = 60                                                "supply air relative humidity [%]"
+RH_su_cd = RH_AIR/100                                      "supply air relative humidity [-]"
+RH_ex_cd = 1                                               "exhaust air saturated [-]"
+t_ev = -5                                                  "evaporation temperature [°C]"
+DELTAt_sh = 5                                              "suction superheating [K]"
+DELTAt_sc = 5                                              "subcooling [K] (1 in a commented line of the original, 5 at the stored run)"
+epsilon_s = 0.75                                           "isentropic effectiveness [-]"
+F_F = 100                                                  "fooling factor [%]"
+Condenser$ = 'VXC-714 (Q_dot_cd=3076 [kW])'                "condenser selection in the catalogue table"
+R_a_cd_N_input = 3.5E-6                                    "user-defined air-side resistance [K/W] (0.0035 K/kW in the original)"
+R_r_cd_N_input = 1.0E-6                                    "user-defined condensing resistance [K/W] (0.001 K/kW in the original)"
+V_dot_a_cd_N_input = 24                                    "user-defined nominal air volume flow rate [m^3/s]"
+Q_dot_cd_N_input = 1E6                                     "user-defined nominal capacity [W] (1000 kW in the original)"
+
+"Active Diagram-window modes of the stored run"
+V_dot_a_cd = V_dot_a_cd_N                                  "nominal air flow mode: the air volume flow rate equals the catalogue value [m^3/s]"
+T_cd = 36                                                  "condensing-temperature mode: imposed condensing temperature [°C] (37 in a commented line of the original)"
+
+"Nominal point"
+M_dot_a_N_cd = V_dot_a_cd_N*rho_a_cd                       "nominal air mass flow rate [kg/s]"
+
+"Temperature changes"
+DELTAT_r = T_r_ex_cd - T_r_su_cd                           "refrigerant temperature change in the condenser [K]"
+DELTAT_a = t_a_ex_cd - t_a_su_cd                           "air temperature change [K]"
+DELTAT_wb = t_wb_ex_cd - t_wb_su_cd                        "wet-bulb temperature change [K]"
+
+"!============= END OF THE MODEL ================="
+
+call CONDENSERDATA(Condenser$,R_a_cd_N_input,R_r_cd_N_input,V_dot_a_cd_N_input,Q_dot_cd_N_input:R_a_cd_N,R_r_cd_N,V_dot_a_cd_N,Q_dot_cd_N)
+call EPSILONCHECK(epsilon_s:NOTE1$)
+call LIMITSCHECK(t_wb_su_cd,t_cd:NOTE2$)
+call FOOLINGCHECK(F_F:NOTE3$)
+call SUBCOOLINGCHECK(DELTAt_sc,T_r_ex_cd,t_a_su_cd:NOTE4$,NOTE5$)

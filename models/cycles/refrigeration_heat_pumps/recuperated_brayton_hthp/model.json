@@ -1,0 +1,66 @@
+{
+  "id": "CSL-0254",
+  "name": "recuperated_brayton_hthp",
+  "title": "Recuperated Brayton high-temperature heat pump (air / HITEC molten salt)",
+  "summary": "Steady design point of an air-cycle high-temperature heat pump delivering 1 MW to a molten-salt (HITEC) loop at 235-290 °C: compressor, gas-gas recuperator (cold-side effectiveness 0.94) and gas-to-salt exchanger with imposed terminal temperature differences; the pressure ratio is an output.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "recuperated_brayton_hthp.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "heat pump",
+    "Brayton",
+    "high temperature",
+    "recuperator",
+    "molten salt",
+    "research",
+    "design"
+  ],
+  "language_features": [
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 65,
+    "largest_block": 8
+  },
+  "origin": {
+    "type": "research",
+    "source": "ext_leads",
+    "source_path": "main/standalone_base_recup_hthp.py (+ src/, src/input/ JSON specifications) in the repository below",
+    "candidate_id": "LDS-008",
+    "authors": [
+      "Samuele Grandin (DTU)"
+    ],
+    "url": "https://github.com/SamueleGrandinDTU/recuperated_Brayton_HTHP/tree/fbc50b426924953f72cdee6c2555185b0861398b",
+    "license": "No LICENSE file in the original (README silent on licensing); credited and linked",
+    "ees_version": "",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "The source was re-run in a Python venv (TESPy, repository commit fbc50b4): all state points, mass flows, powers and COP of the design case agree within 0.09 % (most below 0.05 %, same CoolProp air properties), and the Benvenuti validation variant agrees within 0.2 % on temperatures (0.02 % in K).",
+    "checks": ["source-rerun", "energy-balance", "order-of-magnitude"],
+    "reference": "TESPy design-point rerun of main/standalone_base_recup_hthp.py (commit fbc50b4) and its stored results/tables; data/processed/Benvenuti_validation_recuperated.csv for the validation variant",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.0009,
+    "notes": "Design case: COP 1.3288 vs 1.3291, P_2 1.4764 vs 1.476 bar, m_air 16.5937 vs 16.594 kg/s. Benvenuti variant: T_4 26.37 vs 26.32 °C (0.02 % in K), P_2 1.8821 vs 1.881 bar. The source's own validation against the Benvenuti reference data shows deviations up to 14 K (work in progress upstream); the CoolSolve model matches the TESPy rerun, not that reference."
+  },
+  "missing_features": [],
+  "related": ["CSL-0212", "CSL-0133", "CSL-0039"],
+  "related_external": [
+    "TESPy (oemof/tespy), the Python library the source model is written in"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added (T-TRANSLATE of LDS-008, card C-281)",
+      "by": "GLM (opencode) for S. Quoilin"
+    }
+  ]
+}

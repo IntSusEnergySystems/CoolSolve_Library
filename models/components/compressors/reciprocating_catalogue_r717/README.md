@@ -176,3 +176,7 @@ Source file (EES 6.596), collection of S. Quoilin:
   scroll members of this 5-file family (TM-0288/TM-0289).
 - `CSL-0035` *centrifugal_compressor_lookup_map*: compressor performance read
   from a lookup table (the native `INTERPOLATE` map form).
+- `CSL-0269` *grasso_screw_catalogue_r717*: the screw-compressor sibling in
+  the same Laborelec toolkit (DG-0067, Grasso C-52 on R717 at 2940 rpm) —
+  there the catalogue capacity and the evaporator balance swap roles (the
+  mass flow is computed) and a part-load correction is added.

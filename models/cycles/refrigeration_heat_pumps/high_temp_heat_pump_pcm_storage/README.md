@@ -169,3 +169,5 @@ the same exercise, so no cross-source triage was needed.
   the same script (the Zorlu cyclopentane plant with an internal heat exchanger)
   is not translated there; the propane pinch heat pump of its `basic_HP` case
   is, and was cross-checked against this plant's component pattern.
+- `CSL-0250` *cascade_heat_pump_geothermal_dh*: two-loop cascade heat pump on a geothermal water source feeding a district-heating network, sized by imposed pinches.
+- `CSL-0254` *recuperated_brayton_hthp*: another high-temperature heat pump case study (air Brayton cycle with recuperator, HITEC molten-salt heat sink, translated from TESPy).

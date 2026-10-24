@@ -1,0 +1,280 @@
+{=============================================================================
+  Identified full-load point of a 5 L four-stroke natural-gas engine
+  CoolSolve Library model CSL-0272 - runnable CoolSolve VARIANT
+ -----------------------------------------------------------------------------
+  Steady-state model of the gas engine of the ULiege MSTh course at its
+  maximum-power point (2400 rpm, about 90 kW), recomputed from the engine
+  characteristics identified in exercise 1 (valve area, jacket and
+  water-to-environment conductance products, indicated efficiency, friction
+  torque): intake and valve pressure drop, adiabatic combustion with the
+  cpbar mean specific heat, expansion, jacket (eps-NTU) and ambient losses.
+  Shaft power and fuel flow are outputs (exercise 2, second part).
+
+  Source  : ULiege MSTh repetition TP 08, exercise 2, S. Bertagnolio,
+            ~/Nextcloud/thermo_models/machines et systemes thermiques/
+            MSTh - Repetitions/TP 08/SB/MSTh - R8 - Ex 2 SB.EES (TM-0133)
+  Authors : J. Lebrun, V. Lemort, S. Bertagnolio (ULiege) - MIT licence
+  Units   : SI - temperatures in C, pressures in Pa, energies in J
+  Variant : runnable variant of the blocked native file; the only change (all
+            else identical, incl. variable names): the three cpbar calls in
+            the valid-EES CALL form (CoolSolve refuses the function form with
+            the five-output PROCEDURE). Valid EES; see README.md.
+=============================================================================}
+
+{--- Library functions copied from CSL-0005 (cpbar_combustion_products) ---
+  Copied as in CSL-0005 (P. Ngendakumana, ULiege 2003; 0/0 guard included) until
+  $INCLUDE library:cpbar_combustion_products is available (CS-FEAT-IMPORT).
+  The original calls cpbar in function position, kept as such here; CoolSolve
+  refuses the function form with the five-output PROCEDURE (see README).}
+
+PROCEDURE cpbar(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)
+
+{CPBAR procedure returns cp_bar (J/kg.K) of the combustion products of a CmHn
+hydrocarbon between two temperatures. The inputs are : the type of fuel (m and n),
+the fuel-air ratio (f) and  the two temperatures (T_p1 and T_p2) in °C.
+
+In the case of incomplete combustion (negative excess air value), the procedure
+returns also : the energy losses by CO (Q_4 in J/kg of fuel), the fraction (x) of C
+atoms oxidized into CO2 and the mininum excess air (e_min) to get x>0.
+
+Simplified air is used. In the case of incomplete combustion, it is also assumed that
+there is no O2 in the combustion products.
+
+Moreover, the procedure returns the specific heat for pure air if f=0 (whatever m and n).
+
+When using this procedure, don't forget to set mass basis calculation in the unit system
+settings.}
+
+"Check of the units setting"
+IF (unitsystem('K')=1)  THEN CALL error('Please, set °C for temperature units!')
+If (unitsystem('Molar')=1)  then CALL error('Please, set Mass basis!')
+
+"Default values (in the case of complete combustion)"
+Q_4 = 0
+x = 1
+e_min = 0
+e = 0
+
+"Removable singularity: for T_p1 = T_p2 the mean specific heat is 0/0 (its limit is cp(T)).
+Below 0.01 K the mean is taken over a 0.01 K window centred on the mean temperature."
+IF (ABS(T_p1-T_p2)<0.01) THEN
+  T_hi = (T_p1+T_p2)/2+0.005
+  T_lo = (T_p1+T_p2)/2-0.005
+ELSE
+  T_hi = T_p1
+  T_lo = T_p2
+ENDIF
+
+"Composition of simplified air"
+x_air_N2 = 0.79 ; x_air_O2= 0.21
+
+"Universal gas constant"
+R_u = 8314 "J/kmol.K"
+
+"Molar masses of the species"
+MM_CO = molarmass(CO) ; MM_N2 = molarmass(N2) ; MM_O2 = molarmass(O2)
+MM_CO2 = molarmass(CO2) ; MM_H2O = molarmass(H2O)
+
+IF (f>0) Then "combustion products (not pure air)"
+
+"f  stoichiometric, excess air and f"
+parfuel = m+n/4
+MM_f = 12*m+1*n
+f_st = MM_f/(parfuel*(MM_O2+(x_air_N2/x_air_O2)*MM_N2))
+e = (f_st/f)-1
+
+IF (f>f_st) Then "air deficiency"
+
+"Stoichiometric combustion : CmHn+(m+n/4)*(O2+(79/21)*N2"
+e_min = -m/(2*parfuel) "to ensure x>0"
+f_max = f_st/(1+e_min)
+
+"Assumption : enough air to oxidize H to H2O and no O2 in the flue gases"
+"Hence : CmHn+(m+n/4)*(O2+(79/21)*N2)*(1+e) = a*CO2+b*CO+c*H2O+g*N2"
+g = parfuel*(1+e)*(79/21)
+c = n/2
+x=2*(e*parfuel+m/2)/m
+a = m*x "x is the fraction of the C atoms oxidized into CO2"
+b = m*(1-x)
+"Molar fractions of the constituents"
+nkmoltot = a+ b + c +g
+x_CO2 = a/nkmoltot
+x_CO = b/nkmoltot
+x_H2O = c/nkmoltot
+x_N2 = g/nkmoltot
+mmprod = x_CO2*MM_CO2+x_CO*MM_CO+x_H2O*MM_H2O+x_N2*MM_N2
+"!Mean c_p of combustion products"
+h_CO2 = (enthalpy(CO2,T=T_hi)-enthalpy(CO2,T=T_lo))*MM_CO2
+h_CO = (enthalpy(CO,T=T_hi)-enthalpy(CO,T=T_lo))*MM_CO
+h_H2O =(enthalpy(H2O,T=T_hi)-enthalpy(H2O,T=T_lo))*MM_H2O
+h_N2 = (enthalpy(N2,T=T_hi)-enthalpy(N2,T=T_lo))*MM_N2
+c_bar_p = ((x_CO2*h_CO2+x_CO*h_CO+x_H2O*h_H2O+x_N2*h_N2)/mmprod)/(T_hi-T_lo)
+
+"Unburned-CO losses per kmol of fuel"
+T_ref = 25
+LHV_CO_mol = enthalpy(CO,T=T_ref)*MM_CO+0.5*enthalpy(O2,T=T_ref)*MM_O2-ENTHALPY(CO2,T=T_ref)*MM_CO2
+LHV_CO_mas = LHV_CO_mol/MM_CO
+Q_4 = LHV_CO_mol*b
+
+ELSE
+
+"Molar fractions of the constituents"
+nkmoltot = m+ n/2 + parfuel*(e+(1+e)*(x_air_N2/x_air_O2))
+x_CO2 = m/nkmoltot
+x_H2O = (n/2)/nkmoltot
+x_O2 = parfuel*e/nkmoltot
+x_N2 = parfuel*(1+e)*(x_air_N2/x_air_O2)/nkmoltot
+
+"Molar mass of combustion products"
+MM_prod = x_CO2*MM_CO2+x_H2O*MM_H2O+x_O2*MM_O2+x_N2*MM_N2
+
+"Enthalpy and mean specific heat of combustion products [per kg of products]"
+hp_1 = (enthalpy(CO2,T=T_hi)-enthalpy(CO2, T=T_lo))*MM_CO2
+hp_2 = (enthalpy(H2O,T=T_hi)-enthalpy(H2O, T=T_lo))*MM_H2O
+hp_3 = (enthalpy(O2,T=T_hi)-enthalpy(O2, T=T_lo))*MM_O2
+hp_4 = (enthalpy(N2,T=T_hi)-enthalpy(N2, T=T_lo))*MM_N2
+hp = (x_CO2*hp_1+x_H2O*hp_2+x_O2*hp_3+x_N2*hp_4)/MM_prod
+c_bar_p  = hp/(T_hi-T_lo)
+
+ENDIF
+
+ELSE
+
+"Pure air case"
+MM_a = x_air_O2*MM_O2+x_air_N2*MM_N2
+ha_1 = (enthalpy(O2,T=T_hi)-enthalpy(O2, T=T_lo))*MM_O2
+ha_2 = (enthalpy(N2,T=T_hi)-enthalpy(N2, T=T_lo))*MM_N2
+ha = (x_air_O2*ha_1+x_air_N2*ha_2)/MM_a
+c_bar_p  = ha/(T_hi-T_lo)
+ENDIF
+
+END
+
+
+"!Engine characteristics identified in exercise 1 (as in the original)"
+AU_amb=127.4             "water-to-environment conductance product [W/K]"
+AU_gw=83.8               "jacket conductance product, gas to cooling water [W/K]"
+A_f_soupapes=0.002072 [m^2]  "total valve area [m^2]"
+eta_in=0.3277 [-]        "indicated efficiency of the active part of the cycle [-]"
+T_m=39.79 [Nm]           "friction torque [N.m]"
+
+"!Data (as in the original)"
+i=1/2                    "working cycles per revolution (1/2: four-stroke) [-]"
+ncV_s=0.005[m^3]         "engine displacement [m^3]"
+f=0.055                  "fuel-air ratio [kg/kg]"
+T_a_su=20 [°C]           "ambient air temperature [C] (restored: see README)"
+P_a_su=1E5[Pa]           "ambient pressure [Pa]"
+rpm=2400                 "engine speed [rpm]"
+"donc" N=rpm/60          "rotation rate [1/s]"
+M_dot_w=0.9[kg/s]        "cooling water mass flow rate [kg/s]"
+T_w_su=60[°C]            "cooling water supply temperature [C]"
+LHV_f=50E6[J/kg]         "lower heating value of the fuel [J/kg]"
+
+"!CALCULATIONS - nominal regime"
+
+"!Load control"
+P_2=P_1-DELTAP_throttling  "intake pressure after the throttle [Pa]"
+P_1=P_a_su                 "intake pressure before the throttle [Pa]"
+DELTAP_throttling=0        "maximum power -> full load, no throttling [Pa]"
+
+"!Carburettor 1-2"
+M_dot_g=M_dot_a+M_dot_f    "gas mass flow rate [kg/s]"
+M_dot_a=M_dot_f/f          "air mass flow rate [kg/s]"
+T_1=T_a_su
+T_2=T_1                    "air and fuel at the same temperature (assumption)"
+
+"!Valve (pressure loss) 2 - 3"
+cp_23*(T_2-T_3)=C_3^2/2    "conservation of the total enthalpy [J/kg]"
+cp_23=CP(Air,T=T_2)        "specific heat of the air at T_2 [J/kg-K]"
+T_3=TEMPERATURE(Air,s=s_2,P=P_3)  "isentropic path to the throat pressure [C]"
+s_2=ENTROPY(Air,T=T_2,P=P_2)      "isentropic path between the inlet and the throat [J/kg-K]"
+C_3=V_dot_3/A_f_soupapes   "gas velocity at the valve throat [m/s]"
+V_dot_3=M_dot_g*v_3        "volume flow rate at the throat [m^3/s]"
+v_3=VOLUME(Air,T=T_3,P=P_3) "specific volume at state 3 [m^3/kg]"
+
+"!Cylinder inlet 4 - 5"
+P_4=P_3                    "isobaric between the throat and the valve exit [Pa]"
+T_4=T_2
+V_dot_4=V_dot_s
+V_dot_s=i*N*ncV_s          "swept volume flow rate of the engine [m^3/s]"
+
+V_dot_4=M_dot_g*v_4        "volume flow rate at the cylinder inlet [m^3/s]"
+v_4=VOLUME(Air,T=T_4,P=P_4) "specific volume at state 4 [m^3/kg]"
+
+"At this stage the mixture enters the adiabatic combustion chamber (as in the
+original: M_dot_g=0.1172 kg/s, P_4=98634 Pa, T_4=20 C, v_4=0.8531 m^3/kg)"
+
+"!Adiabatic combustion chamber 5 - 6"
+
+"balance"
+Q_dot_1+Q_dot_2+Q_dot_3+Q_dot_4+Q_dot_5=0  "energy balance of the chamber [W]"
+T_ref=25[°C]               "reference temperature of the combustion [C]"
+
+"air inlet - brought to T_ref (1st fictitious heat exchanger)"
+Q_dot_1=M_dot_a*cp_a*(T_ref-T_4)  "heat received by the air [W]"
+cp_a=CP(Air,T=T_4)         "specific heat of the air [J/kg-K]"
+
+"fuel inlet - brought to T_ref (2nd fictitious heat exchanger)"
+Q_dot_2=M_dot_f*cp_f*(T_ref-T_4)  "heat received by the fuel [W]"
+cp_f=CP(CH4,T=T_4)         "specific heat of the fuel [J/kg-K]"
+
+"Complete combustion"
+Q_dot_3=-M_dot_f*LHV_f     "power released by the fuel [W]"
+
+"Incomplete-combustion effect (CO dissociation)"
+Q_dot_4=0                  "not considered here [W]"
+
+"Heating of the combustion products (3rd fictitious heat exchanger)"
+Q_dot_5=M_dot_g*cp_g_6*(T_6-T_ref)  "enthalpy of the products [W]"
+CALL cpbar(m_f,n_f,f,T_ref,T_6:cp_g_6_p,Q_4_a,x_a,e_min_a,e_a)  "mean specific heat of the products between T_ref and T_6 [J/kg-K]"
+cp_g_6=cp_g_6_p
+m_f=1                      "C of the CmHn fuel [-]"
+n_f=4                      "H of the CmHn fuel [-]"
+
+"!Converter: thermal to mechanical energy 6 - 7"
+M_dot_g*cp_g_67*(T_6-T_7)=W_dot_sh  "shaft power from the expansion of the products [W]"
+CALL cpbar(m_f,n_f,f,T_6,T_7:cp_g_67_p,Q_4_67,x_67,e_min_67,e_67)  "mean specific heat of the products between T_6 and T_7 [J/kg-K]"
+cp_g_67=cp_g_67_p
+W_dot_sh+W_dot_m+W_dot_pumping=W_dot_in  "indicated work of the active part of the cycle [W]"
+W_dot_pumping=V_dot_4*(P_1-P_4)      "pumping work [W]"
+
+"!Engine cooling (gas-water heat exchanger) 7 - 8"
+
+"effectiveness"
+Q_dot_gw=epsilon_gw*C_dot_min_gw*(T_g_su-T_w_su)  "heat given to the cooling water [W]"
+T_g_su=T_7
+"gas side"
+Q_dot_gw=C_dot_78*(T_7-T_8)  "heat given by the products [W]"
+C_dot_78=M_dot_g*cp_g_78
+CALL cpbar(m_f,n_f,f,T_7,T_8:cp_g_78_p,Q_4_78,x_78,e_min_78,e_78)  "mean specific heat of the products between T_7 and T_8 [J/kg-K]"
+cp_g_78=cp_g_78_p
+"water side"
+Q_dot_gw=C_dot_w_1*(T_w_ex_1-T_w_su)  "heat received by the cooling water [W]"
+C_dot_w_1=M_dot_w*cp_w_1
+cp_w_1=4187                 "specific heat of liquid water [J/kg-K]"
+"effectiveness"
+epsilon_gw=(1-exp(-NTU_gw*(1-omega_gw)))/(1-omega_gw*exp(-NTU_gw*(1-omega_gw)))
+omega_gw=C_dot_min_gw/C_dot_max_gw
+C_dot_min_gw=min(C_dot_78,C_dot_w_1)
+C_dot_max_gw=max(C_dot_78,C_dot_w_1)
+NTU_gw=AU_gw/C_dot_min_gw
+
+"!Losses to the environment (water-air semi-isothermal heat exchanger)"
+Q_dot_amb=epsilon_amb*C_dot_min_amb*(T_w_ex_1-T_a_su)  "heat given to the environment [W]"
+C_dot_min_amb=C_dot_w_2  "the air temperature is constant: its capacity rate is
+'infinite'; the water capacity rate is finite (semi-isothermal exchanger) [W/K]"
+Q_dot_amb=C_dot_w_2*(T_w_ex_1-T_w_ex)  "heat given by the water [W]"
+C_dot_w_2=M_dot_w*cp_w_2
+cp_w_2=4187                "specific heat of liquid water [J/kg-K]"
+
+epsilon_amb=1-exp(-NTU_amb)
+NTU_amb=AU_amb/C_dot_w_2
+
+"!Indicated efficiency of the active part of the cycle"
+eta_in=W_dot_in/(M_dot_f*LHV_f)  "[-]"
+
+"!Shaft efficiency"
+eta_sh=W_dot_sh/(M_dot_f*LHV_f)  "[-]"
+
+"!Friction losses"
+W_dot_m=2*PI*N*T_m         "friction power [W]"

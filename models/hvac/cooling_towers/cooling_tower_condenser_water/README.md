@@ -164,3 +164,7 @@ was found in the source folder.
 - `CSL-0076` *cooling_tower_direct_contact_refsim*: the direct-contact tower of
   the ULiège model bank (ε-NTU on a fictitious fluid, air-side pressure drop
   and fan law referred to the nominal conditions).
+- `CSL-0287` *cooling_tower_chiller_variable_airflow*: condenser-water tower of
+  a chiller plant with continuous variable air flow, rated on the effectiveness-
+  NTU model with a global plant COP.
+- `CSL-0292` *room_air_conditioning_coil_reheat*: exercise 3 of the same 2010 repetition (archive `THD10_R10.zip`), the room-air counterpart of this session (cooling-dehumidifying coil, reheat and condensate balance).

@@ -1,0 +1,63 @@
+{=============================================================================
+  Vehicle exhaust emissions from fuel flow and gas fractions (MCI TP7 Ex1)
+  CoolSolve Library model CSL-0278
+ -----------------------------------------------------------------------------
+  Teaching exercise: CO, NO2 and HC emissions of a vehicle from the fuel
+  mass flow, the excess-air factor and the wet-gas mole fractions, as
+  emission indices in g/kg fuel, g/km and g/kWh of brake work.
+  Inputs : fuel mass flow, excess-air factor, brake power, wet-gas mole
+           fractions of CO, NO2, HC, exhaust-gas molar mass
+  Outputs: emission indices y_*_f, y_*_km, y_*_W [g/kg, g/km, g/kWh]
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MCI course, TP séance 7, exercise 1 (P. Ngendakumana,
+           2019) - see README.md
+  Status : blocked - molarmass(NO2) needs the species NO2, unknown to
+           CoolProp (CS-GAP-FLUIDS-NASA-SPECIES); runnable variant
+           vehicle_exhaust_emissions_coolsolve.eescode
+=============================================================================}
+
+"!Data"
+V = 60/3600         "vehicle speed: 60 km/h [m/s]"
+M_dot_f = 4.303e-3  "fuel mass flow [kg/s]"
+Lambda = 2          "excess-air factor [-]"
+W_dot_sh = 80e3     "brake (effective) power [W]"
+AFR_st = 14.6       "stoichiometric air-fuel ratio [-]"
+x_CO = 2200e-6      "CO mole fraction, wet gas [-]"
+x_NO2 = 1000e-6     "NO2 mole fraction, wet gas [-]"
+x_HC = 300e-6       "HC mole fraction (taken as C3H8), wet gas [-]"
+MM_g = 28.6         "exhaust-gas molar mass [kg/kmol]"
+
+"!Molar masses"
+MM_CO = molarmass(CO)                 "CO molar mass [kg/kmol]"
+MM_NO2 = molarmass(NO2)               "NO2 molar mass [kg/kmol]"
+MM_HC = molarmass(C3H8)               "HC (as C3H8) molar mass [kg/kmol]"
+
+"!Conversion of the mole fractions x to mass fractions y: kg of pollutant per kg of gas"
+y_CO = x_CO*MM_CO/MM_g                "kg CO/kg gas"
+y_NO2 = x_NO2*MM_NO2/MM_g             "kg NO2/kg gas"
+y_HC = x_HC*MM_HC/MM_g                "kg HC/kg gas"
+
+"!Air and exhaust-gas mass flows"
+Lambda = AFR/AFR_st                   "AFR from the excess-air factor [-]"
+AFR = M_dot_a/M_dot_f                 "air mass flow [kg/s]"
+M_dot_g = M_dot_a + M_dot_f           "exhaust-gas mass flow [kg/s]"
+
+"!Pollutant mass flows emitted [kg/s]"
+M_dot_CO = y_CO*M_dot_g
+M_dot_NO2 = y_NO2*M_dot_g
+M_dot_HC = y_HC*M_dot_g
+
+"!Emissions referred to the fuel mass [g/kg fuel]"
+y_CO_f = 1e3*M_dot_CO/M_dot_f         "g CO/kg fuel"
+y_NO2_f = 1e3*M_dot_NO2/M_dot_f       "g NO2/kg fuel"
+y_HC_f = 1e3*M_dot_HC/M_dot_f         "g HC/kg fuel"
+
+"!Emissions referred to the distance covered [g/km]"
+y_CO_km = 1e3*M_dot_CO/V              "g CO/km"
+y_NO2_km = 1e3*M_dot_NO2/V            "g NO2/km"
+y_HC_km = 1e3*M_dot_HC/V              "g HC/km"
+
+"!Emissions referred to the brake work [g/kWh]"
+y_CO_W = 1e3*M_dot_CO/(W_dot_sh*1e-3/3600)    "g CO/(kW.h)"
+y_NO2_W = 1e3*M_dot_NO2/(W_dot_sh*1e-3/3600)  "g NO2/(kW.h)"
+y_HC_W = 1e3*M_dot_HC/(W_dot_sh*1e-3/3600)    "g HC/(kW.h)"

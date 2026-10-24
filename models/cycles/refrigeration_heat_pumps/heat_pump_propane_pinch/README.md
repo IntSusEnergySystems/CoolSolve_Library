@@ -260,6 +260,9 @@ involved.
 - `CSL-0014` (*hx_constant_pinch*): the condenser branch of the same
   `HexCstPinch` component, standalone; this model is the cycle that closes both
   exchangers with the pinch condition.
+- `CSL-0253` (*high_temp_heat_pump_zeotropic_transcritical*): same
+  imposed-pinch heat-pump structure on imposed pressures (transcritical
+  R1336mzz(Z), water capacity flow rates closed by the pinches).
 - `CSL-0013` (*heat_pump_basic_tespy*): the same cycle topology (constant-η
   compressor, isenthalpic valve) on R134a from the TESPy tutorial, with fixed
   evaporating/condensing temperatures instead of imposed pinches.
@@ -269,3 +272,6 @@ involved.
 - `CSL-0039` (*high_temp_heat_pump_pcm_storage*): the Zorlu cyclopentane plant
   for which the same LaboThapPy script also contains a case (`basic_IHX_HP`,
   with an internal heat exchanger); not translated here, used as cross-check.
+- `CSL-0250` *cascade_heat_pump_geothermal_dh*: cascade heat pump sized by imposed pinches in sectioned exchangers; uses the same MIN-of-zone-boundary-differences pinch pattern, split into an imposed boundary plus a check (see its conversion log).
+- `CSL-0252` *orc_double_stage_kirchstockach*: double-stage ORC with the same pinch-designed condensers; its pinch condition is written at the binding dew-point boundary instead of a `MIN` over the zone candidates.
+- `CSL-0254` *recuperated_brayton_hthp*: another 1 MW-class high-temperature heat pump design model of the same category, on an air Brayton cycle with molten-salt heat sink instead of a vapour-compression cycle on propane.

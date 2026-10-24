@@ -1,0 +1,75 @@
+{
+  "id": "CSL-0277",
+  "name": "fuel_injection_ci_engine",
+  "title": "Fuel injection in an atmospheric compression-ignition engine",
+  "summary": "Teaching exercise: a 5-cylinder naturally aspirated diesel engine captures a given air mass per cycle; the fuel mass follows from an equivalence ratio with C12H26, and the injector outlet area and diameter from the incompressible orifice equation over the injection window.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "fuel_injection_ci_engine.eescode",
+  "fluids": [
+    "Air",
+    "O2",
+    "N2"
+  ],
+  "tags": [
+    "exercise",
+    "compression-ignition engine",
+    "fuel injection",
+    "injector sizing",
+    "discharge coefficient",
+    "stoichiometric fuel-air ratio",
+    "dodecane",
+    "internal combustion engine"
+  ],
+  "language_features": [
+    "property functions",
+    "Molarmass of elements"
+  ],
+  "stats": {
+    "n_equations": 29,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP6/EX3_PNG_2019.EES",
+    "candidate_id": "TM-0247",
+    "authors": [
+      "P. Ngendakumana"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.589",
+    "language": "fr",
+    "course": "ULiège MCI, TP6, exercise 3 (after Pulkrabek, Engineering Fundamentals of the Internal Combustion Engine, problems 5-9 and 5-10)"
+  },
+  "verification": {
+    "summary": "compare_solution.py --ees-units against the EES stored solution of EX3_PNG_2019.EES: 21 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 9. Max relative difference 3.20e-04 on rho_a (EES vs CoolProp molar mass of ideal-gas Air); m_dot_f and A differ by 3.08e-04.",
+    "checks": [
+      "ees-stored-solution",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of EX3_PNG_2019.EES (21 values; EES X10.589)",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.00032,
+    "notes": "Maximum relative difference over the 21 common variables is 3.20e-04 on rho_a (EES 1.16845 vs CoolSolve 1.16883 kg/m^3, ideal-gas Air molar mass); m_dot_f and A inherit 3.08e-04. T_amb and T_su stored in K by EES, compared after conversion to °C. 9 CoolSolve-only entries (V_s, m_a, f, f_st, conv, DELTATau, m_f, diam, pi) have no stored EES value; all 29 equations satisfied, results plausible (diam 0.261 mm, f = 0.0536)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0185",
+    "CSL-0221",
+    "CSL-0223"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added",
+      "by": "Claude for S. Quoilin"
+    }
+  ]
+}

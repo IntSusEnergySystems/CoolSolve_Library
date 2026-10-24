@@ -1,0 +1,76 @@
+{
+  "id": "CSL-0275",
+  "name": "square_v6_engine_exercise",
+  "title": "Square V6 four-stroke engine (MCI TP3 exercises 1-3)",
+  "summary": "Teaching exercise on one square V6 four-stroke engine (bore = stroke): exercise 1 computes bore/stroke, clearance volume and piston kinematics at the end of the combustion; exercise 2 shaft and indicated power, brake mean effective pressure and friction losses; exercise 3 (default) mixture mass per cycle, fuel and air mass flows, volumetric efficiency, specific fuel consumption and thermal efficiency. The exercise is selected by the string Exercice$ ($IF).",
+  "kind": "steady",
+  "level": 1,
+  "status": "failing",
+  "main_file": "square_v6_engine_exercise.eescode",
+  "fluids": [
+    "Air",
+    "CH4"
+  ],
+  "tags": [
+    "internal combustion engine",
+    "four-stroke",
+    "square engine",
+    "V6",
+    "piston kinematics",
+    "brake mean effective pressure",
+    "volumetric efficiency",
+    "specific consumption",
+    "ideal gas",
+    "exercise"
+  ],
+  "language_features": [
+    "string variables",
+    "$if directives",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 46,
+    "largest_block": 9
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP3_EX-1-2-3-4-5/MCI_TP3_EX-1-2-3.EES",
+    "candidate_id": "TM-0239",
+    "authors": [
+      "Philippe Ngendakumana (ULiege)",
+      "Remi Dickes (ULiege)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.589",
+    "language": "fr",
+    "course": "Machines, combustion et energie (ULiege), TP3, exercises 1-3"
+  },
+  "verification": {
+    "summary": "Runnable variant _coolsolve (native over-determined by one redundant identity in the default branch) compared with the EES stored solution of MCI_TP3_EX-1-2-3.EES: compare_solution.py --ees-units, 31 common variables, 0 differ at rtol=0.001, max rel. diff 8.33e-04 (epsilon_v; EES vs CoolProp R#, molar masses, air density). Exercises 1 and 2 branches reproduce the stored values.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution of MCI_TP3_EX-1-2-3.EES (45 names decoded by ees_extract.py; EES X10.589)",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.000833,
+    "notes": "Small deviations from the EES backend constants: R# 8314.46 vs 8310.26 J/(kmol-K) (5.06e-04), MolarMass(Air) 28.9655 vs 28.96547, density(Air) 3.26e-04. 14 stored names belong to the other exercise branches or are not in the equation window (bmep, C, C_m, eta_m, R, rapV_c, rho_mixt, V_dot_th, W_dot_in*); named here, not excluded silently."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0244",
+    "CSL-0178"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added (T-IMPORT card C-315, candidate TM-0239; native failing, runnable _coolsolve variant)",
+      "by": "opencode worker (mimo-v2.6-flash-free) for S. Quoilin"
+    }
+  ]
+}

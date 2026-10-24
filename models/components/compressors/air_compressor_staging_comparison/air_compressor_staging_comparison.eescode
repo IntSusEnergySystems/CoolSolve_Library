@@ -1,0 +1,108 @@
+{=============================================================================
+  Air compression: single-stage vs two-stage, isentropic vs polytropic model
+  CoolSolve Library model CSL-0270
+ -----------------------------------------------------------------------------
+  Exercise: air enters a compressor at 70 °C and 2 bar and is compressed to
+  10 bar. Three compression paths are compared on the T-s diagram: (a)
+  single-stage with 60 % isentropic efficiency, (b) two stages with intermediate
+  pressure 5 bar, 60 % isentropic efficiency per stage (as in the original, the
+  second stage takes the exit state of the first: no intercooling heat
+  rejection), (c) single-stage polytropic model with efficiency 60 %. Bonus:
+  the isentropic efficiency equivalent to the polytropic path.
+  Inputs : T_e, p_e, p_s, p_int, eta_is, eta_is_2et, eta_p
+  Outputs: outlet temperatures [°C] and specific works [J/kg] of the paths
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : THD10_R05_E2.EES (2010), ULiege THD10 course - see README.md
+=============================================================================}
+
+"!Data"
+fluid$ = 'Air'
+T_e = 70  [°C]
+p_e = 200E3  [Pa]  "200 kPa in the original"
+p_s = 1000E3  [Pa]  "1000 kPa in the original"
+p_int = 500E3  [Pa]  "500 kPa in the original"
+eta_is = 0.6
+eta_is_2et = 0.6
+eta_p = 0.6
+
+p_s_pol = 1000E3  [Pa]  "1000 kPa in the original"
+
+"!Solution"
+
+"!a) Single-stage compression with 60 % isentropic efficiency"
+
+"By definition of the isentropic efficiency of a work-consuming component: eta_is = ideal work / real work"
+eta_is = (h_s_is_1et - h_e)/(h_s - h_e)
+h_e = enthalpy(fluid$, T=T_e)  "enthalpy at the inlet"
+h_s_is_1et = enthalpy(fluid$, s=s_e, p=p_s)  "enthalpy at the outlet for an isentropic evolution to the same final pressure"
+s_e = entropy(fluid$, T=T_e, p=p_e)  "entropy at the inlet"
+T_s = temperature(fluid$, h=h_s)  "temperature at the outlet"
+s_s = entropy(fluid$, h=h_s, p=p_s)  "entropy at the outlet"
+w_1et = h_s - h_e  "specific work of the single-stage compression with 60 % isentropic efficiency [J/kg]"
+
+"!b) Two-stage compression with 60 % isentropic efficiency per stage"
+
+"First stage"
+eta_is_2et = (h_int_is - h_e)/(h_int - h_e)  "state int = outlet of the first stage"
+h_int_is = enthalpy(fluid$, s=s_e, p=p_int)
+T_int = temperature(fluid$, h=h_int)
+
+"Second stage"
+eta_is_2et = (h_s_is_2et - h_int)/(h_s_2et - h_int)  "state int = inlet of the second stage"
+h_s_is_2et = enthalpy(fluid$, s=s_int, p=p_s)
+s_int = entropy(fluid$, p=p_int, T=T_int)
+T_s_2et = temperature(fluid$, h=h_s_2et)
+s_s_2et = entropy(fluid$, h=h_s_2et, p=p_s)
+w_2et = h_s_2et - h_e  "specific work of the two-stage compression [J/kg]"
+
+"!c) Single-stage compression with 60 % polytropic efficiency"
+eta_p*ln((T_s_p+273)/(T_e+273)) = (gamma-1)/gamma*ln(p_s_pol/p_e)  "outlet temperature from the polytropic model (+273 as in the original)"
+gamma = cp(fluid$, T=(T_e+T_s_p)/2)/cv(fluid$, T=(T_e+T_s_p)/2)
+h_s_p = enthalpy(fluid$, T=T_s_p)
+s_s_p = entropy(fluid$, h=h_s_p, p=p_s_pol)
+w_p = h_s_p - h_e  "specific work of the polytropic compression [J/kg]"
+
+"!Bonus: isentropic efficiency equivalent to the polytropic model, leading to the same final state"
+pi_c = p_s_pol/p_e
+eta_is2 = (pi_c^((gamma-1)/gamma)-1)/(pi_c^(1/eta_p*(gamma-1)/gamma)-1)
+"The equivalent isentropic efficiency is lower than the polytropic efficiency"
+
+"Explanation (as in the original):"
+"A polytropic evolution can be approached by a succession of evolutions of isentropic efficiency equal to the polytropic efficiency"
+"An isentropic efficiency of 60 % considers all the irreversibilities of the compression at once"
+"The polytropic model spreads these irreversibilities along the process; this explains the higher final temperature of the polytropic path"
+
+"!State points for the thermodynamic diagrams (T-s / h-s)"
+"Path a: single-stage, isentropic efficiency"
+P_a[1] = p_e
+P_a[2] = p_s
+h_a[1] = h_e
+h_a[2] = h_s
+s_a[1] = s_e
+s_a[2] = s_s
+T_a[1] = T_e
+T_a[2] = T_s
+
+"Path b: two stages with intermediate pressure"
+P_b[1] = p_e
+P_b[2] = p_int
+P_b[3] = p_s
+h_b[1] = h_e
+h_b[2] = h_int
+h_b[3] = h_s_2et
+s_b[1] = s_e
+s_b[2] = s_int
+s_b[3] = s_s_2et
+T_b[1] = T_e
+T_b[2] = T_int
+T_b[3] = T_s_2et
+
+"Path c: single-stage, polytropic model"
+P_c[1] = p_e
+P_c[2] = p_s_pol
+h_c[1] = h_e
+h_c[2] = h_s_p
+s_c[1] = s_e
+s_c[2] = s_s_p
+T_c[1] = T_e
+T_c[2] = T_s_p

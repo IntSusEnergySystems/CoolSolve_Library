@@ -1,0 +1,72 @@
+{
+  "id": "CSL-0296",
+  "name": "regenerative_two_shaft_gas_turbine",
+  "title": "Regenerative two-shaft gas turbine (THD10 R05 exercise 4)",
+  "summary": "Gas turbine plant on ideal-gas air: compressor, regenerator, combustion chamber, a HP turbine driving only the compressor and a LP (power) turbine expanding to ambient pressure. The seven stations are solved simultaneously from the compressor and turbine isentropic efficiencies (95 %) and the regenerator effectiveness (90 %).",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "regenerative_two_shaft_gas_turbine.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "gas turbine",
+    "Brayton cycle",
+    "regenerator",
+    "two shaft",
+    "ideal gas",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 43,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R05.zip!/THD10_R05_E4.EES",
+    "candidate_id": "TM-0518",
+    "authors": [
+      "TBD (no author name in the file; sources/thermo_models inventory credits S. Bertagnolio and S. Borguet for the 2010 THD exercise sets)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.423",
+    "language": "fr",
+    "course": "ULiège, Thermodynamique appliquée (THD10), session R5, 2010, exercise 4"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of THD10_R05_E4.EES (45 stored names, 42 common variables) with compare_solution.py --ees-units: all 25 derived variables (pressures, temperatures, powers, heat rates) agree within 9.3e-04; the absolute h/s of the 17 remaining common variables differ only by the constant EES-vs-CoolProp Air reference-state offset (+126 kJ/kg, -1814 J/kg-K), and their differences agree to 6.7e-04 (h) and 1.9e-03 (s).",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance"
+    ],
+    "reference": "EES stored solution of THD10_R05_E4.EES (45 variables decoded by ees_extract.py, EES X8.423, unit system SI MASS DEG KPA C KJ)",
+    "date": "2026-10-24",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 9.3e-04,
+    "notes": "Printed: '42 common variables, 17 differ (rtol=0.001)'; the 17 are exactly the absolute h[i], h_2_is, h_5_is, h_6_is and s[i] carrying the reference-state offset (documented in CoolSolve docs/ees_import.md §11), excluded from the verdict and named in the README. Only in EES reference: n, P_1, R (leftover entries of the EES variable list, in no equation); only in CoolSolve: fluid$. The regenerator and HP-shaft balances were checked on the solution (they are equations of the model)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0050",
+    "CSL-0060",
+    "CSL-0011",
+    "CSL-0293"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-24",
+      "action": "added",
+      "by": "glm-5.3-flash (card T-IMPORT TM-0518)"
+    }
+  ]
+}

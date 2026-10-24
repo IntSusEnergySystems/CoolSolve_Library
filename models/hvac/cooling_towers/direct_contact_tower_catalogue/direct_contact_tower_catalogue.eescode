@@ -1,0 +1,187 @@
+{=============================================================================
+  Direct-contact cooling tower with catalogue data (B.A.C.) and nominal checks
+  CoolSolve Library model CSL-0290
+ -----------------------------------------------------------------------------
+  Open (direct-contact) cooling tower of the Laborelec 2002 toolkit: a
+  counter-flow heat exchanger between the cooling water and the air leaving
+  it saturated; the air side uses the fictitious fluid defined at the
+  wet-bulb temperature. The tower parameters (dry heat transfer coefficient,
+  its water/air flow exponents) and the nominal values are read from a
+  catalogue lookup table (B.A.C. towers) or entered by the user; check
+  procedures issue caution messages for out-of-range fooling factor, water
+  flow and fan speed. The original is an EES Diagram-Window model: this file
+  reproduces the stored operating point (air mass flow imposed, water flow at
+  its nominal value); the Diagram-window modes are not reproducible in
+  CoolSolve (see README.md).
+  Inputs : air_flow, t_w_su_ct, t_a_su_ct, RH_AIR, P_atm, Fluid$, Directcontac$
+  Outputs: Q_dot_ct, t_w_ex_ct, t_a_ex_ct, approach, range, E_ct, NOTE1-4$
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège/Laborelec toolkit 2002, "Direct Contact Cooling Tower.EES"
+           (~/Nextcloud/thermo_models/modeles/LABORELEC_2002/...)
+  Status : verified vs the EES stored solution; kPa/kJ converted by hand;
+           catalogue table hand-decoded from the .LKT file
+=============================================================================}
+
+"!################################################################"
+PROCEDURE DIRECTCONTACTDATA(Directcontac$,AU_dry_n_input,m_ct_input,n_ct_input,V_dot_a_N_input,M_dot_w_N_input,M_dot_w_min_input,M_dot_w_max_input:AU_dry_n_ct,m_ct,n_ct,V_dot_a_N_ct,M_dot_w_n_ct,M_dot_w_min,M_dot_w_max)
+"Defines the cooling tower parameters and nominal values from the catalogue data (as in the original)"
+
+if Directcontac$='User defined' then
+
+AU_dry_n_ct=AU_dry_n_input
+m_ct=m_ct_input
+n_ct=n_ct_input
+V_dot_a_N_ct=V_dot_a_N_input
+M_dot_w_n_ct=M_dot_w_N_input
+M_dot_w_min=M_dot_w_min_input
+M_dot_w_max=M_dot_w_max_input
+else
+  AU_dry_n_ct=lookup('directcontactdata',1,Directcontac$)
+  m_ct=lookup('directcontactdata',2,Directcontac$)
+  n_ct=lookup('directcontactdata',3,Directcontac$)
+  V_dot_a_N_ct=lookup('directcontactdata',4,Directcontac$)
+  M_dot_w_n_ct=lookup('directcontactdata',5,Directcontac$)
+M_dot_w_min=lookup('directcontactdata',6,Directcontac$)
+M_dot_w_max=lookup('directcontactdata',7,Directcontac$)
+endif
+end
+"!################################################################"
+
+PROCEDURE FOOLINGCHECK(F_F:NOTE1$)
+NOTE1$=''
+if (F_F<0) or (F_F>100) then
+NOTE1$='Error: The fooling factor is outside the limits'
+else
+NOTE1$=''
+endif
+end
+"!################################################################"
+
+PROCEDURE WATERFLOWCHECK(M_dot_w_ct,M_dot_w_min,M_dot_w_max:NOTE2$)
+NOTE2$=''
+if (M_dot_w_ct<M_dot_w_min) or (M_dot_w_ct>M_dot_w_max) then
+NOTE2$='Caution: Water flow is outside the recommended limits'
+else
+NOTE2$=''
+endif
+end
+
+"!################################################################"
+PROCEDURE RPMWARNING(rpm_fan_tmp,rpm_FAN_n_ct,airflow$:NOTE3$,NOTE4$)
+NOTE3$=''
+NOTE4$=''
+RPM_low=rpm_FAN_n_ct*0.4
+RPM_high=rpm_FAN_n_ct*1.3
+"Check only when simulating the air flow (as in the original)"
+If airflow$='Simulate// $include simulated.TXT' then
+	if (rpm_fan_tmp<RPM_low) or (rpm_fan_tmp>RPM_high) then
+		If (rpm_fan_tmp<RPM_low) then
+			NOTE3$='Caution: Fan speed is lower than 40% of the nominal value'
+		endif
+		If (rpm_fan_tmp>RPM_high) then
+			NOTE4$='Caution: Fan speed is  30% higher than the nominal value'
+		endif
+	else
+		NOTE3$=''
+		NOTE4$=''
+	endif
+endif
+end
+
+"!################################################################"
+"MODEL"
+"!################################################################"
+"The energy balance on the air side gives (fictitious fluid at the wet-bulb temperature, as in the original)"
+Q_dot_ct = C_dot_af_ct*(t_wb_ex_ct - t_wb_su_ct)      "tower heat flow rate [W]"
+Q_dot_ct = M_dot_a_ct*(h_a_ex_ct - h_a_su_ct)         "tower heat flow rate [W]"
+C_dot_af_ct = M_dot_a_ct*c_p_af_ct                    "fictitious humid-air capacity flow rate [W/K]"
+
+"The energy balance on the water side gives"
+Q_dot_ct = C_dot_w_ct*(t_w_su_ct - t_w_ex_ct)         "tower heat flow rate [W]"
+C_dot_w_ct = M_dot_w_ct*c_w                           "water capacity flow rate [W/K]"
+
+"The heat flow rate of the equivalent heat exchanger"
+Q_dot_ct = epsilon_f_ct*C_dot_min_f_ct*(t_w_su_ct - t_wb_su_ct)     "tower heat flow rate [W]"
+C_dot_min_f_ct = min(C_dot_w_ct,C_dot_af_ct)          "minimum fictitious capacity flow rate [W/K]"
+
+"Cooling tower effectiveness, counter flow arrangement"
+epsilon_f_ct = (1 - exp(-NTU_f_ct*(1 - omega_f_ct)))/(1 - omega_f_ct*exp(-NTU_f_ct*(1 - omega_f_ct)))    "fictitious effectiveness [-]"
+NTU_f_ct = AU_f_ct/C_dot_min_f_ct                     "fictitious number of transfer units [-]"
+omega_f_ct = C_dot_min_f_ct/C_dot_max_f_ct            "fictitious capacity flow rate ratio [-]"
+C_dot_max_f_ct = max(C_dot_w_ct,C_dot_af_ct)          "maximum fictitious capacity flow rate [W/K]"
+
+"Humid air properties"
+h_a_ex_ct = enthalpy(AIRH2O,t=t_wb_ex_ct,P=P_atm,R=1)          "exhaust air: saturated, enthalpy at the wet-bulb state [J/kg]"
+h_a_su_ct = enthalpy(AIRH2O,T=t_a_su_ct,P=P_atm,R=RH_su_ct)    "supply air enthalpy [J/kg]"
+t_wb_su_ct = wetbulb(AIRH2O,T=t_a_su_ct,P=P_atm,R=RH_su_ct)    "supply air wet-bulb temperature [°C]"
+T_DEW = dewpoint(AirH2O,p=P_atm,T=t_a_su_ct,R=RH_su_ct)        "supply air dew-point temperature [°C]"
+t_wb_ex_ct = wetbulb(AIRH2O,T=t_a_ex_ct,P=P_atm,R=1)           "exhaust air wet-bulb temperature (saturated air) [°C]"
+
+"The fictitious heat transfer coefficient is related to the dry one by the fooling factor"
+AU_f_ct = (AU_dry_ct*c_p_af_ct/c_p_a_ct)*Fooling_F    "fictitious heat transfer coefficient [W/K]"
+Fooling_F = F_F/100                                   "fooling factor [-]"
+c_p_a_ct = specheat(AIRH2O,T=t_a_su_ct,P=P_atm,R=RH_su_ct)     "real humid-air specific heat [J/kg-K]"
+
+"Influences of both water and air flow rates on the global (dry) heat transfer coefficient"
+AU_dry_ct = AU_dry_n_ct*(M_dot_w_ct/M_dot_w_n_ct)^m_ct*(M_dot_a_ct/M_dot_a_n_ct)^n_ct    "dry heat transfer coefficient [W/K]"
+
+"Reference variables used by practitioners (as in the original):"
+approach = t_w_ex_ct - t_wb_su_ct                     "approach [K]"
+range = t_w_su_ct - t_w_ex_ct                         "range [K]"
+
+"The tower cooling capacity is currently defined by the following ratio:"
+E_ct = range/(range + approach)                       "capacity ratio [-]"
+
+"The air flow rate gives (as in the original)"
+M_dot_a_n_ct = V_dot_a_N_ct*1.2                       "nominal air mass flow rate [kg/s]"
+v_a_ct = volume(AIRH2O,t=t_a_su_ct,p=P_atm,R=RH_su_ct)         "supply air specific volume [m^3/kg]"
+c_w = specheat(Fluid$,T=t_a_su_ct,P=P_atm)            "water specific heat [J/kg-K]"
+
+RH_su_ct = RH_AIR/100                                 "air supply relative humidity [-]"
+
+"Temperature changes"
+DELTAT_w = T_w_ex_ct - T_w_su_ct                      "water temperature change [K]"
+DELTAT_a = t_a_ex_ct - t_a_su_ct                      "air temperature change [K]"
+DELTAT_wb = t_wb_ex_ct - t_wb_su_ct                   "wet-bulb temperature change [K]"
+
+"!Inputs (values of the stored operating point; the Diagram-window inputs of the"
+"! original set the same quantities)"
+fluid$ = 'Water'                                      "water side fluid"
+Directcontac$ = 'VTL-059-H (B.A.C.)'                  "tower selected in the catalogue table"
+airflow$ = 'M_dot_a [kg/s]//$include air mass flow.txt'        "air-flow mode of the Diagram window"
+air_flow = 7.1                                        "imposed air mass flow rate [kg/s]"
+t_w_su_ct = 45                                        "water supply temperature [°C]"
+t_a_su_ct = 25                                        "air supply (dry-bulb) temperature [°C]"
+RH_AIR = 80                                           "air supply relative humidity [%]"
+P_atm = 101325                                        "atmospheric pressure [Pa] (101.325 kPa in the original)"
+rpm_FAN_n_ct = 2900                                   "nominal fan speed [min^-1]"
+eta_FAN_ct = 0.65                                     "fan efficiency [-] (used by the simulated-air-flow mode)"
+F_F = 100                                             "fooling factor [%]"
+
+"User-defined tower inputs (used only when Directcontac$='User defined')"
+AU_dry_n_input = 15000                                "dry heat transfer coefficient [W/K] (15 in the original, kW/K)"
+m_ct_input = 0.02                                     "water flow exponent [-]"
+n_ct_input = 0.2                                      "air flow exponent [-]"
+V_dot_a_N_input = 7.3                                 "nominal air volume flow rate [m^3/s]"
+M_dot_w_N_input = 8                                   "nominal water mass flow rate [kg/s]"
+M_dot_w_min_input = 6                                 "minimum recommended water mass flow rate [kg/s]"
+M_dot_w_max_input = 20                                "maximum recommended water mass flow rate [kg/s]"
+
+"Interface equations of the Diagram-window modes active in the stored run"
+"(air mass flow imposed; water flow at its nominal value)"
+M_dot_a_ct = air_flow                                 "imposed air mass flow rate [kg/s]"
+V_dot_a_ct = M_dot_a_ct*v_a_ct                        "air volume flow rate [m^3/s]"
+M_dot_w_ct = M_dot_w_n_ct                             "water mass flow rate at its nominal value [kg/s]"
+rpm_fan_tmp = rpm_FAN_n_ct                            "fan speed seen by the checks [min^-1]"
+{The other Diagram-window modes of the original (air volume flow, nominal air
+ flow, simulated air flow with the fan and pressure-drop submodel, imposed
+ water flow and temperatures, fan speed modes) are not reproduced; the
+ commented call below, present in the original, refers to a procedure the
+ file does not define:}
+{call RPMFLOW(airflow$,rpm_fan$,V_dot_a_ct_fan,air_flow,v_a_ct,V_dot_a_N_ct,V_dot_a_ct_rpm:V_dot_a_ct,M_dot_a_ct,M_dot_a_n_ct)}
+
+"Catalogue data and checks"
+call DIRECTCONTACTDATA(Directcontac$,AU_dry_n_input,m_ct_input,n_ct_input,V_dot_a_N_input,M_dot_w_N_input,M_dot_w_min_input,M_dot_w_max_input:AU_dry_n_ct,m_ct,n_ct,V_dot_a_N_ct,M_dot_w_n_ct,M_dot_w_min,M_dot_w_max)
+call FOOLINGCHECK(F_F:NOTE1$)
+call WATERFLOWCHECK(M_dot_w_ct,M_dot_w_min,M_dot_w_max:NOTE2$)
+call RPMWARNING(rpm_fan_tmp,rpm_FAN_n_ct,airflow$:NOTE3$,NOTE4$)

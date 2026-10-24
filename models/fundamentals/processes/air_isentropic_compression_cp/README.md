@@ -186,4 +186,10 @@ variant.
 
 ## Related models
 
-None.
+- `CSL-0270` *air_compressor_staging_comparison*: air compression with the
+  same property functions (`enthalpy`, `entropy`, `cp`, `cv` on `Air`), here
+  with an efficiency instead of an isentropic path, and comparing single-stage
+  and two-stage arrangements.
+- `CSL-0285` *argon_piston_compression*: the same closed-system isentropic
+  compression on argon, extended to the isothermal and polytropic paths with
+  a first-law heat check per path.

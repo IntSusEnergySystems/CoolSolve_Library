@@ -162,4 +162,10 @@ Published under the library licence (MIT).
 
 ## Related models
 
-None yet in the library (engine derating per ISO 3046/1).
+- `CSL-0273` *engine_data_coherence_derating*: worked example that applies a
+  reduced form of the same ISO 3046-type derating law (pressure/temperature
+  ratios with the charge-air-cooled exponents m = 0.7, n = 1.2, no humidity
+  and no coolant term) together with engine data-coherence checks.
+- `CSL-0274` *scania_marine_diesel_handbook*: Scania DI09/DI16 marine
+  diesel handbook analysis, which applies the same `alpha` derating law in
+  its "Détarage" section (Lake Victoria case).

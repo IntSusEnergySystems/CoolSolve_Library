@@ -245,3 +245,7 @@ Sources (never copied into the library):
 - The gas-turbine and engine models of the collection (e.g. card C-10,
   *two-shaft gas turbine*) call the same library (`cpbar`, `gamma`).
 - `CSL-0166` *boiler_modulating_burner_refsim*: the classical ON/OFF boiler of the same model bank (modulating-burner RefSim model, 2008 model bank).
+- `CSL-0263` *fuel_oil_boiler_onoff_setpoint*: same boiler structure (combustor,
+  eps-NTU gas-water exchanger, envelope) with the MSTh R7 exercise-3 data, a
+  constant 1300 J/kg-K on the gas side, ON/OFF envelope branches and a
+  set-point blend of the two water outlets.

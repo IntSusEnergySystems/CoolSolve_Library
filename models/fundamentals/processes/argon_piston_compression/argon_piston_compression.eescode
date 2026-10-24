@@ -1,0 +1,72 @@
+{=============================================================================
+  Argon compression in a piston-cylinder: adiabatic, isothermal, polytropic
+  CoolSolve Library model CSL-0285
+ -----------------------------------------------------------------------------
+  0.2 kg of argon at 100 kPa and 300 K are compressed reversibly to 600 kPa
+  in a piston-cylinder. The boundary work is computed for three reversible
+  paths: (a) adiabatic (isentropic), (b) isothermal and (c) polytropic with
+  n = 1.3; each path is checked with the first law (Q = m*cv*dT - W). The
+  three paths are drawn as T-s points (post-processing arrays). Argon is
+  treated as an ideal gas, as in the original exercise.
+  Inputs : m, T_i, p_i, p_f, n
+  Outputs: W_s, W_t, W_p (boundary works [J]); Q_s, Q_t, Q_p (heats [J]);
+           T_f_s, T_f_t, T_f_p (final temperatures [°C])
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : THD10_R05_E1.EES (2010), ULiège THD10 course - see README.md
+  Licence: MIT. Status: verified against the EES stored solution.
+=============================================================================}
+
+"!Data"
+fluid$ = 'AR'              "argon, assumed to behave as an ideal gas over this range of pressures and temperatures (as in the original)"
+m = 0.2                    "mass of argon [kg]"
+T_i = 26.85                "initial temperature [°C], 300 K in the original"
+p_i = 100E3                "initial pressure [Pa], 100 kPa in the original"
+p_f = 600E3                "final pressure [Pa], 600 kPa in the original"
+n = 1.3                    "polytropic exponent [-]"
+
+"!Gas properties"
+cp = cp(fluid$, T=T_i)      "specific heat at constant pressure [J/kg-K]"
+cv = cv(fluid$, T=T_i)      "specific heat at constant volume [J/kg-K]"
+gamma = cp/cv               "ratio of the specific heats, used in the isentropic relation [-]"
+exp_s = gamma/(gamma-1)     "exponent of the isentropic p-T relation [-]"
+R_u = 8314                  "universal gas constant [J/kmol-K], 8.314 kJ/kmol-K in the original"
+MM_Ar = molarmass(fluid$)   "molar mass of argon [kg/kmol]"
+R = R_u/MM_Ar               "specific gas constant of argon [J/kg-K]"
+
+"!a) Reversible adiabatic evolution, i.e. isentropic: p*T^(gamma/(gamma-1)) = constant"
+p_f/p_i = ((T_f_s+273.15)/(T_i+273.15))^exp_s   "final temperature [°C]"
+v_f_s = R*(T_f_s+273.15)/p_f                    "final specific volume [m^3/kg]"
+"Work from the definition W = integral(-p*dV) between the initial and the final state; with the ideal-gas law and a closed system W = m/(gamma-1)*(p2*v2 - p1*v1) = m/(gamma-1)*R*(T2-T1)"
+W_s = m*cv*(T_f_s - T_i)                        "boundary work of the adiabatic path [J]"
+"First-law check: Q_s + W_s = m*(u_2 - u_1) with u = cv*T; zero is expected since the evolution is adiabatic"
+Q_s = m*cv*(T_f_s-T_i) - W_s                    "heat transferred during the adiabatic path [J]"
+
+"!b) Reversible isothermal evolution: p*v = constant"
+T_f_t = T_i                                     "isothermal evolution"
+W_t = m*R*(T_i+273.15)*ln(v_i/v_f_t)            "boundary work of the isothermal path: W = m*R*T*ln(v_i/v_f_t) [J]"
+v_i = R*(T_i+273.15)/p_i                        "initial specific volume, from the ideal-gas law [m^3/kg]"
+v_f_t = R*(T_f_t+273.15)/p_f                    "final specific volume [m^3/kg]"
+Q_t = m*cv*(T_f_t-T_i) - W_t                    "heat transferred during the isothermal path (first law) [J]"
+
+"!c) Reversible polytropic evolution: p*v^n = constant (n = 1.3, between 1 and gamma)"
+exp_p = n/(n-1)                                 "exponent of the polytropic p-T relation [-]"
+p_f/p_i = ((T_f_p+273.15)/(T_i+273.15))^exp_p   "final temperature [°C]"
+v_f_p = R*(T_f_p+273.15)/p_f                    "final specific volume [m^3/kg]"
+W_p = m/(n-1)*R*(T_f_p - T_i)                   "boundary work of the polytropic path: W = m/(n-1)*(p2*v2 - p1*v1) [J]"
+Q_p = m*cv*(T_f_p-T_i) - W_p                    "heat transferred during the polytropic path (first law) [J]"
+
+"!T-s points of the three evolutions (post-processing, no effect on the results)"
+T_s[1] = T_i
+T_s[2] = T_f_s
+s_s[1] = entropy(fluid$,T=T_i,p=p_i)
+s_s[2] = entropy(fluid$,T=T_f_s,p=p_f)
+
+T_t[1] = T_i
+T_t[2] = T_f_t
+s_t[1] = entropy(fluid$,T=T_i,p=p_i)
+s_t[2] = entropy(fluid$,T=T_f_t,p=p_f)
+
+T_p[1] = T_i
+T_p[2] = T_f_p
+s_p[1] = entropy(fluid$,T=T_i,p=p_i)
+s_p[2] = entropy(fluid$,T=T_f_p,p=p_f)

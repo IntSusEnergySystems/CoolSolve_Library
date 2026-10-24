@@ -272,3 +272,7 @@ could not be re-run here.
   with combustion chamber and generator of the TESPy gas-turbine tutorial,
   where the combustion chemistry and the flue-gas mixture properties are kept
   instead of being neglected as here.
+- `CSL-0296` *regenerative_two_shaft_gas_turbine*: the minimal regenerative
+  two-shaft machine (single compression stage, one combustion chamber, no
+  intercooler, no reheat), of the same course family (2010 session); its
+  stations are solved simultaneously instead of station by station.

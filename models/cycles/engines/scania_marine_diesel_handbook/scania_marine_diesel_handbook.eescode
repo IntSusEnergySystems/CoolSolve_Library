@@ -1,0 +1,243 @@
+{=============================================================================
+  Scania DI09/DI16 marine diesel engines - data-handbook analysis
+  CoolSolve Library model CSL-0274
+ -----------------------------------------------------------------------------
+  Coherence check and full analysis of a marine diesel engine from its
+  manufacturer data sheet (Scania DI09/DI16, 2013 data handbook): swept
+  volume, compression ratio, mean effective pressure, torque, fuel flow,
+  thermal efficiency, excess air of the C12H26 combustion, exhaust flow,
+  thermal balance, volumetric efficiency, compressor pressure ratio and
+  isentropic efficiency, ISO 3046-type derating to Lake Victoria (1133 m,
+  30 C) and CO2 emissions per km at 25 knots. Four engines are selectable
+  with MOTEUR$ ('1'..'4'); default '3' (DI16 073M - 478 kW), the run stored
+  in the EES file.
+
+  Inputs : MOTEUR$ and the handbook data of the selected engine
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/Examen/RESOLUTION_NGEN.EES
+           (TM-0224, MCI exam solution, Ph. Ngendakumana / R. Dickes) - see README.md
+  Status : verified against the EES stored solution; one unit error of the
+           original CO2 section corrected (README, conversion log)
+=============================================================================}
+
+MOTEUR$ = '3'          "selected engine: possible values '1', '2', '3' or '4'"
+
+"!General data"
+
+p_amb = 1e5            "reference conditions [Pa]"
+T_amb = 298-273.15     "reference conditions [°C]"
+LHV_f = 42700e3        "lower heating value of the fuel (at 25 °C) [J/kg]"
+
+i = 0.5                "intermittence factor of 4-stroke engines, the only ones considered here [-]"
+
+$IF MOTEUR$ = '1'
+
+Type$ = 'DI09 070M - 162 kW'
+
+"!Engine data (handbook)"
+
+n_c = 5                "number of cylinders - in line [-]"
+D = 130e-3             "bore [m]"
+L = 140e-3             "piston stroke [m]"
+V|o_s = 9.3e-3         "displacement (handbook) [m^3]"
+r_v = 18               "volumetric compression ratio [-]"
+RPM = 1800             "engine speed [rev/min]"
+C|o_m = 8.4            "mean piston speed at 1800 rpm [m/s]"
+DELTAp_filtre = 0.030*1e5  "pressure drop in the filter [Pa]"
+
+W_dot_sh = - 162e3     "shaft power [W]"
+Tau|o = 859            "engine torque (handbook) [Nm]"
+csp = 204              "specific fuel consumption [g/kWh]"
+Q_dot_water = - 104e3  "engine cooling [W]"
+Q_dot_air = - 26e3     "cooling of the charge air cooler [W]"
+Q_dot_exhaust = - 97e3 "losses in the exhaust gases [W]"
+Q_dot_rad = -8e3       "losses to the environment by radiation [W]"
+M_dot_a = 18/60        "air mass flow rate [kg/s]"
+T_a_su_ic = 124        "air temperature before the charge air cooler [°C]"
+T_a_ex_ic = 39         "air temperature after the charge air cooler [°C]"
+p_a_su_ic = 2.1e5      "intake manifold pressure (no pressure drop in the cooler nor in the intake port; relative pressure in the data sheet) [Pa]"
+M|o_p = 19/60          "exhaust mass flow rate [kg/s]"
+
+$ELSE
+
+$IF MOTEUR$ = '2'
+
+Type$ = 'DI09 072M - 294 kW'
+
+"!Engine data (handbook)"
+
+n_c = 5                "number of cylinders - in line [-]"
+D = 130e-3             "bore [m]"
+L = 140e-3             "piston stroke [m]"
+V|o_s = 9.3e-3         "displacement (handbook) [m^3]"
+r_v = 18               "volumetric compression ratio [-]"
+RPM = 2100             "engine speed [rev/min]"
+C|o_m = 9.8            "mean piston speed corrected at 2100 rpm [m/s]"
+DELTAp_filtre = 0.030*1e5  "pressure drop in the filter [Pa]"
+
+W_dot_sh = - 294e3     "shaft power [W]"
+Tau|o = 1337           "engine torque (handbook) [Nm]"
+csp = 209              "specific fuel consumption [g/kWh]"
+Q_dot_water = - 177e3  "engine cooling [W]"
+Q_dot_air = - 49e3     "cooling of the charge air cooler [W]"
+Q_dot_exhaust = - 204e3 "losses in the exhaust gases [W]"
+Q_dot_rad = -15e3      "losses to the environment by radiation [W]"
+M_dot_a = 25/60        "air mass flow rate [kg/s]"
+T_a_su_ic = 165        "air temperature before the charge air cooler [°C]"
+T_a_ex_ic = 47         "air temperature after the charge air cooler [°C]"
+p_a_su_ic = 2.5e5      "intake manifold pressure (no pressure drop in the cooler nor in the intake port; relative pressure in the data sheet) [Pa]"
+M|o_p = 26/60          "exhaust mass flow rate [kg/s]"
+
+$ELSE
+
+$IF MOTEUR$ = '3'
+
+Type$ = 'DI16 073M - 478 kW'
+
+"!Engine data (handbook)"
+
+n_c = 8                "number of cylinders - in line [-]"
+D = 130e-3             "bore [m]"
+L = 154e-3             "piston stroke [m]"
+V|o_s = 16.4e-3        "displacement (handbook) [m^3]"
+r_v = 17.4             "volumetric compression ratio - with keel cooling [-]"
+RPM = 1500             "engine speed [rev/min]"
+C|o_m = 7.7            "mean piston speed corrected at 1500 rpm [m/s]"
+DELTAp_filtre = 0.030*1e5  "pressure drop in the filter [Pa]"
+
+W_dot_sh = - 393e3     "shaft power [W]"
+Tau|o = 2502           "engine torque (handbook) [Nm]"
+csp = 209              "specific fuel consumption [g/kWh]"
+Q_dot_water = - 264e3  "engine cooling [W]"
+Q_dot_air = - 52e3     "cooling of the charge air cooler [W]"
+Q_dot_exhaust = - 260e3 "losses in the exhaust gases [W]"
+Q_dot_rad = -20e3      "losses to the environment by radiation [W]"
+M_dot_a = 31/60        "air mass flow rate [kg/s]"
+T_a_su_ic = 157        "air temperature before the charge air cooler [°C]"
+T_a_ex_ic = 54         "air temperature after the charge air cooler [°C]"
+p_a_su_ic = 2.5e5      "intake manifold pressure (no pressure drop in the cooler nor in the intake port; relative pressure in the data sheet) [Pa]"
+M|o_p = 32/60          "exhaust mass flow rate [kg/s]"
+
+$ELSE
+
+$IF MOTEUR$ = '4'
+
+Type$ = 'DI16 079M - 552 kW'
+
+"!Engine data (handbook)"
+
+n_c = 8                "number of cylinders - in line [-]"
+D = 130e-3             "bore [m]"
+L = 154e-3             "piston stroke [m]"
+V|o_s = 16.4e-3        "displacement (handbook) [m^3]"
+r_v = 17.4             "volumetric compression ratio - with keel cooling [-]"
+RPM = 1800             "engine speed [rev/min]"
+C|o_m = 9.24           "mean piston speed at 1800 rpm [m/s]"
+DELTAp_filtre = 0.030*1e5  "pressure drop in the filter [Pa]"
+
+W_dot_sh = - 552e3     "shaft power [W]"
+Tau|o = 2928           "engine torque (handbook) [Nm]"
+csp = 205              "specific fuel consumption [g/kWh]"
+Q_dot_water = - 346e3  "engine cooling [W]"
+Q_dot_air = - 91e3     "cooling of the charge air cooler [W]"
+Q_dot_exhaust = - 348e3 "losses in the exhaust gases [W]"
+Q_dot_rad = -27e3      "losses to the environment by radiation [W]"
+M_dot_a = 44/60        "air mass flow rate [kg/s]"
+T_a_su_ic = 189        "air temperature before the charge air cooler [°C]"
+T_a_ex_ic = 66         "air temperature after the charge air cooler [°C]"
+p_a_su_ic = 3e5        "intake manifold pressure (no pressure drop in the cooler nor in the intake port; relative pressure in the data sheet) [Pa]"
+M|o_p = 45/60          "exhaust mass flow rate [kg/s]"
+
+$ENDIF
+$ENDIF
+$ENDIF
+$ENDIF
+
+"!Calculations"
+
+"Swept volume"
+V_s = pi*D^2/4*L*n_c               "to be compared with the handbook value [m^3]"
+
+"Clearance volume per cylinder"
+r_v = ((V_s/n_c)+V_c)/V_c
+RapVc = 1/r_v*100                  "clearance volume, % of the swept volume [%]"
+
+"Design parameters"
+L|star = L/D                       "dimensionless elongation of the cylinders [-]"
+N = RPM/60                         "engine speed [rev/s]"
+C_m = 2*L*N                        "mean piston speed; to be compared with the handbook value [m/s]"
+DELTAP_bar_e = - W_dot_sh/V_dot_th "brake mean effective pressure [Pa]"
+V_dot_th = i*V_s*N                 "theoretical swept flow rate [m^3/s]"
+
+"Normalized engine speed"
+N|star = (pi/32)^0.5*(DELTAP_bar_e)^0.5*(1/L|star)*C_m^1.5*i^0.5      "as in the original"
+N|star_bis = N*(-W_dot_sh/n_c)^0.5                                    "as in the original [rev/s]"
+
+"Torque developed by the engine"
+W_dot_sh = -omega*tau              "to be compared with the data sheet value [W]"
+omega = 2*pi*N                     "angular speed [rad/s]"
+
+"Fuel flow M_dot_f and thermal efficiency eta of the engine"
+csp*1e-3/(1e3*3600) = -M_dot_f/W_dot_sh   "specific consumption [g/kWh] converted to kg/J"
+eta = -100*W_dot_sh/(M_dot_f*LHV_f)       "thermal efficiency [%]"
+
+"Excess air e and exhaust gas flow"
+f = M_dot_f/M_dot_a                "fuel-air mass ratio [-]"
+parm = 12                          "carbon atoms of the fuel"
+parn = 26                          "hydrogen atoms of the fuel"
+f_st = (parm*molarmass(C)+parn*molarmass(H))/((parm+parn/4)*(molarmass(O2)+(79/21)*molarmass(N2)))   "stoichiometric fuel-air ratio; diesel fuel assimilated to C12H26 [-]"
+phi = f/f_st                       "equivalence ratio [-]"
+phi = 1/(1+e)                      "e = excess air [-]"
+M_dot_p = M_dot_a*(1+f)            "exhaust mass flow rate; to be compared with the handbook value [kg/s]"
+
+"Global thermal balance of the engine: Tol is the residue in %"
+Q_dot_cons = M_dot_f*LHV_f         "fuel input [W]"
+Rés = Q_dot_cons+W_dot_sh+Q_dot_water+Q_dot_air+Q_dot_exhaust+Q_dot_rad   "residue of the global thermal balance [W]"
+Tol = abs(100*Rés/Q_dot_cons)      "residue, % of the fuel input [%]"
+
+"Volumetric efficiency of the engine"
+T_a_su_cyl = T_a_ex_ic             "no temperature drop between the cooler outlet and the cylinder inlet [°C]"
+p_a_su_cyl = p_a_su_ic             "pressure in the intake manifold (no pressure drop in the cooler) [Pa]"
+rho_a_su_cyl = density(AIR,T=T_a_su_cyl,P=p_a_su_cyl)
+epsilon_v = M_dot_a/(rho_a_su_cyl*i*V_s*N)      "reference: cylinder inlet conditions [-]"
+rho_a_amb = density(AIR,T=T_amb,P=p_amb)
+epsilon_v_bis = M_dot_a/(rho_a_amb*i*V_s*N)     "reference: standard atmospheric conditions (ISO 3046/1) [-]"
+
+"Isentropic efficiency of the compressor"
+p_a_su_cp = p_amb - DELTAp_filtre  "compressor inlet pressure, after the filter [Pa]"
+T_a_su_cp = T_amb                  "no temperature drop in the filter [°C]"
+p_a_ex_cp = p_a_su_ic
+r_p_cp = p_a_ex_cp/p_a_su_cp       "pressure ratio in the compressor [-]"
+h_a_su_cp = enthalpy(AIR,T=T_a_su_cp)
+s_a_su_cp = entropy(AIR,T=T_a_su_cp,P=p_a_su_cp)
+s_a_ex_s_cp = s_a_su_cp
+T_a_ex_s_cp = temperature(AIR,s=s_a_ex_s_cp,P=p_a_ex_cp)
+h_a_ex_s_cp = enthalpy(AIR,T=T_a_ex_s_cp)
+T_a_ex_cp = T_a_su_ic
+h_a_ex_cp = enthalpy(AIR,T=T_a_ex_cp)
+w_cp = h_a_ex_cp-h_a_su_cp         "actual specific compressor work [J/kg]"
+w_s_cp = h_a_ex_s_cp-h_a_su_cp     "isentropic specific compressor work [J/kg]"
+epsilon_s_cp = w_s_cp/w_cp         "compressor isentropic efficiency [-]"
+
+"Derating - engine power in a boat on Lake Victoria"
+h = 1133                           "altitude [m]: see the exam statement"
+"Diesel engine with turbocharger and charge air cooling: reference D of ISO 3046/1"
+param_a = 0                        "humidity exponent [-]"
+param_m = 0.7                      "pressure exponent [-]"
+param_n = 1.2                      "temperature exponent [-]"
+param_q = 1                        "coolant temperature exponent [-]"
+W_dot_sh_x = W_dot_sh*alpha        "derated shaft power [W]"
+alpha = K-(0.7*(1-K)*(1/eta_m-1))
+eta_m = 0.85                       "mechanical efficiency: see the exam statement [-]"
+K = (p_atm_x/p_atm_ref)^param_m*(T_a_ref/T_a_x)^param_n   "humidity has no influence (param_a = 0) and no data on T_c_x [-]"
+p_atm_ref = 100                    "kPa: see ISO 3046/1"
+p_atm_x = 101.249 - 0.0118062*h + 4.72681e-7*h^2          "site atmospheric pressure [kPa]; used as a ratio with p_atm_ref"
+T_a_ref = 298                      "K: see ISO 3046/1"
+T_a_x = 30+273.15                  "ambient temperature [K]: see the exam statement"
+
+"CO2 emissions"
+v_bateau = 25*1.852/3600           "ship speed [km/s]: 25 knots, 1 knot = 1.852 km/h; divided by 3600 here (corrected, see README)"
+MM_fuel = parm*MolarMass(C)+parn*MolarMass(H)             "molar mass of the fuel [kg/kmol]"
+MM_CO2 = MolarMass(CO2)            "molar mass of CO2 [kg/kmol]"
+Masse_CO2 = parm*MM_CO2/MM_fuel    "mass of CO2 per mass of fuel [kg/kg]"
+Em_CO2 = 1e3*M_dot_f*Masse_CO2/v_bateau   "CO2 emissions per distance travelled [g/km]"

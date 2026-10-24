@@ -1,0 +1,51 @@
+{
+  "id": "CSL-0269",
+  "name": "grasso_screw_catalogue_r717",
+  "title": "Screw compressor from catalogue data (Grasso C-52, R717)",
+  "summary": "Catalogue-data model of an R717 Grasso C-52 screw compressor from the 2002 Laborelec compressor toolkit: the 24 manufacturer rows (condensing/evaporating temperature, capacity, electrical power) are read from a lookup table and turned into the global isentropic and volumetric effectiveness versus pressure ratio, plus a part-load correction at PLF = 0.42.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "grasso_screw_catalogue_r717.eescode",
+  "fluids": ["R717"],
+  "tags": [
+    "screw compressor",
+    "catalogue data",
+    "isentropic effectiveness",
+    "volumetric effectiveness",
+    "part load",
+    "ammonia",
+    "Grasso"
+  ],
+  "language_features": ["DUPLICATE", "lookup table"],
+  "stats": {"n_equations": 681, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/1_Compressors/1_2_Screw Compressors/Catalogue_data_model-Grasso C-52 - 2490rpm.EES",
+    "candidate_id": "TM-0284",
+    "authors": ["Felipe Trebilcock"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X6.596",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of the source file (701 variables stored, 656 common): 144 differ, all absolute h/s reference-state offsets EES vs CoolProp R717; all 512 derived results pass rtol 1e-3 (worst 9.51e-04 on epsilon_v_cp_mes[11]).",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution of thermo_models TM-0284 (Catalogue_data_model-Grasso C-52 - 2490rpm.EES, EES X6.596, 701 stored values); tools/compare_solution.py on a reference converted by hand from kPa/kJ to Pa/J",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.331,
+    "notes": "compare_solution.py prints: 656 common variables, 144 differ (rtol=0.001); only in EES: 45; only in CoolSolve: 25. The 144 are the absolute enthalpies (h_ex_cd, h_ex_ev, h_exs_cp, h_su_cp, h_su_ev) and the supply entropy s_su_cp: a pure reference-state offset (CoolProp - EES: h +145.12..+145.53 kJ/kg, s +482.2..+482.5 J/kg-K), as allowed by the verification policy. Max. rel. diff over all common variables 0.331 (h_ex_cd[1], the offset); over the 512 derived results 9.51e-04 on epsilon_v_cp_mes[11], within the 0.1 % real-fluid property tolerance EES 6.596 vs CoolProp ammonia. Only in EES: the stale records M_dot_cp_mes[1..25] (commented-out equation), the index-25 records of 16 array variables (an earlier n = 25) and the DUPLICATE index i. Only in CoolSolve: fluid$ (string) and t_su_cp[1..24], which the EES stored solution does not contain (checked by hand: t_su_cp = T_ev + 5.001 K)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0245", "CSL-0157"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-22", "action": "added", "by": "opencode worker (card C-309, batch B-15)"}
+  ]
+}

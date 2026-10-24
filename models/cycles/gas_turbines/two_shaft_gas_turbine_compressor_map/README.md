@@ -330,6 +330,10 @@ run*).
 
 - `CSL-0005` (*cpbar_combustion_products*): the `cpbar` procedure and the
   `gamma` function used by this model, copied into the runnable variant.
+- `CSL-0293` (*two_shaft_gas_turbine_expander_map*): the two-shaft exercise 3
+  of the SB R9 series of the same course, closed by compressor and expander
+  maps versus the pressure ratios, a mechanical efficiency and a power
+  turbine at the fixed reduced flow 188.
 - `CSL-0006` (*boiler_mean_specific_heat*): another user of the same combustion
   library, on a heating boiler.
 - `CSL-0035` (*centrifugal_compressor_lookup_map*): another map-based
@@ -348,3 +352,6 @@ run*).
 - `CSL-0060` (*gas_turbine_reheat*): the same intercooled + regenerative
   architecture on ideal-gas air, with the reheat combustion chamber between the
   turbine stages and the LP expansion to ambient pressure.
+- `CSL-0296` (*regenerative_two_shaft_gas_turbine*): two-shaft design-point
+  exercise of the same family with a regenerator, isentropic efficiencies
+  instead of maps.

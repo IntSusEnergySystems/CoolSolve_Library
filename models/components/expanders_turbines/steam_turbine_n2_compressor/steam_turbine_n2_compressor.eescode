@@ -1,0 +1,85 @@
+{=============================================================================
+  Steam turbine driving a nitrogen compressor (exercise 5.54)
+  CoolSolve Library model CSL-0282
+ -----------------------------------------------------------------------------
+  Exercise 5.54: a steam turbine drives a nitrogen compressor. Steam
+  (0.25 kg/s, 4 MPa, 350 °C to 20 kPa, x = 0.95) expands adiabatically in
+  the turbine; 42 kW go to the nitrogen compressor (0.04 kg/s, 100 kPa,
+  20 °C to 10 MPa, 35 °C after the cooler) and the rest to a generator.
+  First law for steady open systems on two control volumes: (a) power left
+  for the generator, (b) heat given up by the nitrogen through the
+  compressor + cooler. A bonus section compares the real-fluid nitrogen
+  with the ideal-gas substance N2. Power is counted negative from the
+  steam side, as in the original.
+
+  Inputs : p_in_c, T_in_c, p_out_rfd, T_out_rfd, p_in_tv, T_in_tv,
+           p_out_tv, x_out_tv, q_m_vap, q_m_N2, W_dot_cmp
+  Outputs: W_dot_turb, W_dot_gen, Q_dot_N2, Q_dot_N2_gp, err_Q
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège THD, repetition 3 exercise 2 (2017-2018), thermo_models - see README.md
+  Authors: TBD (ULiège THD)
+  License: MIT
+  Status : verified against the EES stored solution
+=============================================================================}
+
+"!Inputs, as in the original"
+p_in_c = 100e3                              "compressor-inlet nitrogen pressure [Pa] (100 kPa in the original)"
+T_in_c = 20                                 "compressor-inlet nitrogen temperature [°C]"
+p_out_rfd = 10e6                            "nitrogen pressure at the cooler outlet [Pa] (10000 kPa in the original)"
+T_out_rfd = 35                              "nitrogen temperature at the cooler outlet [°C]"
+p_in_tv = 4e6                               "steam-turbine inlet pressure [Pa] (4000 kPa in the original)"
+T_in_tv = 350                               "steam-turbine inlet temperature [°C]"
+p_out_tv = 20e3                             "steam-turbine exit pressure [Pa] (20 kPa in the original)"
+x_out_tv = 0.95                             "steam quality at the turbine exit [-]"
+q_m_vap = 0.25                              "steam mass flow rate [kg/s]"
+q_m_N2 = 0.04                               "nitrogen mass flow rate [kg/s]"
+W_dot_cmp = -42e3                           "compressor power, counted from the steam side [W] (-42 kW in the original)"
+
+"!a) Power of the turbine available to drive the generator"
+{
+As in the original: each component is an open system in steady flow with one
+inlet and one outlet. Mass conservation gives q_m_out = q_m_in, and the first
+law reads Q_dot + W_dot = q_m*(Deltah + DeltaEC + DeltaEP). The good terms
+are kept for each component. Control volume around the turbine: the heat
+losses are negligible (adiabatic turbine) and the kinetic- and
+potential-energy changes are neglected against the enthalpy drop.}
+W_dot_turb = q_m_vap*(h_out_tv - h_in_tv)   "turbine power [W]; negative from the steam side (driving machine), as in the original"
+h_out_tv = enthalpy(Water, p=p_out_tv, x=x_out_tv)    "two-phase exit: (P, x) arguments, as in the original [J/kg]"
+h_in_tv = enthalpy(Water, T=T_in_tv, p=p_in_tv)       "superheated inlet: (T, P) arguments, as in the original [J/kg]"
+W_dot_turb = W_dot_cmp + W_dot_gen          "the turbine power feeds the compressor and the generator [W]; W_dot_gen is negative from the steam side"
+
+"!b) Heat given up by the nitrogen through the compressor and the outlet cooler"
+{
+As in the original: one control volume around compressor + cooler, for lack
+of data at the compressor outlet. Kinetic- and potential-energy changes are
+neglected against the enthalpy change. The exchanges are accounted from the
+nitrogen side, so the compressor power received by the fluid is positive:
+abs(W_dot_cmp).}
+Q_dot_N2 + abs(W_dot_cmp) = q_m_N2*(h_out_rfd - h_in_c)    "energy balance of compressor + cooler [W]"
+h_out_rfd = enthalpy(Nitrogen, p=p_out_rfd, T=T_out_rfd)   "real-fluid nitrogen [J/kg]"
+h_in_c = enthalpy(Nitrogen, T=T_in_c, p=p_in_c)            "real-fluid nitrogen [J/kg]"
+
+"!Bonus: same balance with the perfect-gas model for the nitrogen"
+Q_dot_N2_gp + abs(W_dot_cmp) = q_m_N2*(h_out_rfd_gp - h_in_c_gp)    "as above, from the nitrogen side [W]"
+h_out_rfd_gp = enthalpy(N2, T=T_out_rfd)    "N2 is the ideal-gas substance in EES/CoolSolve [J/kg]"
+h_in_c_gp = enthalpy(N2, T=T_in_c)          "[J/kg]"
+err_Q = 100*abs(1 - Q_dot_N2_gp/Q_dot_N2)   "error made with the perfect-gas model [%]; below 2 % at these levels, as in the original"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: steam inlet, 2: steam exit (Water). 3: nitrogen inlet, 4: cooler exit (Nitrogen).}
+P[1] = p_in_tv                              "steam-inlet pressure [Pa]"
+h[1] = h_in_tv                              "steam-inlet enthalpy [J/kg]"
+T[1] = T_in_tv                              "steam-inlet temperature [°C]"
+s[1] = entropy(Water, T=T_in_tv, p=p_in_tv) "steam-inlet entropy [J/kg-K]"
+P[2] = p_out_tv                             "steam-exit pressure [Pa]"
+h[2] = h_out_tv                             "steam-exit enthalpy [J/kg]"
+T[2] = temperature(Water, p=p_out_tv, x=x_out_tv)   "steam-exit temperature [°C]"
+s[2] = entropy(Water, p=p_out_tv, x=x_out_tv)       "steam-exit entropy [J/kg-K]"
+P[3] = p_in_c                               "nitrogen-inlet pressure [Pa]"
+h[3] = h_in_c                               "nitrogen-inlet enthalpy [J/kg]"
+T[3] = T_in_c                               "nitrogen-inlet temperature [°C]"
+s[3] = entropy(Nitrogen, T=T_in_c, p=p_in_c)        "nitrogen-inlet entropy [J/kg-K]"
+P[4] = p_out_rfd                            "cooler-outlet pressure [Pa]"
+h[4] = h_out_rfd                            "cooler-outlet enthalpy [J/kg]"
+T[4] = T_out_rfd                            "cooler-outlet temperature [°C]"
+s[4] = entropy(Nitrogen, p=p_out_rfd, T=T_out_rfd)  "cooler-outlet entropy [J/kg-K]"

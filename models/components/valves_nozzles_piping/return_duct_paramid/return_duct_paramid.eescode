@@ -1,0 +1,241 @@
+{=============================================================================
+  Return duct reference model for parameter identification
+  CoolSolve Library model CSL-0311
+ -----------------------------------------------------------------------------
+  Reference return-duct model behind the simplified duct model CSL-0170: three
+  connected components - (01) continuous pressure drop of a tight adiabatic duct
+  (Colebrook), (02) duct leakage with infiltration/exfiltration of ambient air
+  (water and energy balances), (03) heat gain along a tight duct (epsilon-NTU) -
+  plus the normalized study outputs (DELTAp/DELTAp_n, epsilon_M/epsilon_M_n,
+  epsilon_t/epsilon_t_n, M_ex/M_ex_n) from which the simplified model fits (e.g.
+  DELTAp ~ M^1.89) were generated; the fits are comments, not used.
+
+  Inputs : M_dot_ex_duct, p_su_duct, t_su_duct, W_su_duct, p_env_duct, t_env_duct,
+           W_env_duct and the duct parameters (default run)
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ~/Nextcloud/thermo_models/Model data bank/Distribution_Systems/Ducts/
+           Return_Duct_Simplified_ParamID_Model_JL080317.zip!/Return_Duct_ParamID_
+           EES_Model_JL080317.EES (J. Lebrun, ULiège, 2008-03-17) - see README.md
+  Status : verified vs the EES stored solution; Diagram-window inputs restored
+=============================================================================}
+
+"!Default operating point (Diagram-window values of the original EES model, restored as equations;"
+" values of the stored run, which differ from the commented defaults - see README):"
+M_dot_ex_duct=1 [kg/s]          "nominal regime, as in the original"
+p_su_duct=1E5 [Pa]
+t_su_duct=20 [°C]
+W_su_duct=0.01 [-]              "supply humidity ratio"
+p_env_duct=1E5 [Pa]
+t_env_duct=10 [°C]
+W_env_duct=0.005 [-]            "ambient humidity ratio"
+L_duct=50 [m]                   "10 m in the original comment; 50 m in the stored run"
+A_duct=0.1 [m2]                 "section; the original comment wrote [m]"
+D_hydr_duct=0.25 [m]
+epsilon_duct=0.005 [-]
+A_leakage\L_duct=1.5E-4 [m]     "2E-4 m in the original comment; stored run: 0.0075 m2 / 50 m"
+D_hydr_leakage_duct=1E-4 [m]
+xi_leakage_duct=10 [-]
+n_leakage_duct=0.5 [-]
+Perimeter_in_duct=0.5 [m]
+e_insulation_duct=0 [m]         "0.025 m in the original comment; 0 in the stored run"
+k_insulation_duct=0.04 [W/(m*K)]
+
+"!Simplified model:"
+p_ex_duct=p_su_duct-DELTAp_duct
+M_dot_leakage_duct=M_dot_su_duct-M_dot_ex_duct
+epsilon_M_duct=abs(M_dot_leakage_duct/M_dot_ex_duct)
+epsilon_t_duct=(t_ex_duct-t_su_duct)/(t_env_duct-t_su_duct)
+epsilon_W_duct=(W_ex_duct-W_su_duct)/(W_env_duct-W_su_duct)
+"Output of the parametric study:"
+M\M_ex_duct_n=M_dot_ex_duct/M_dot_ex_duct_n
+M_dot_ex_duct_n=1 [kg/s]
+DELTAp\DELTAp_duct_n=DELTAp_duct/DELTAp_duct_n
+DELTAp_duct_n=234.2 [Pa]
+epsilon\epsilon_M_duct_n=epsilon_M_duct/epsilon_M_duct_n
+epsilon_M_duct_n=0.1908 [-]
+epsilon\epsilon_t_duct_n=epsilon_t_duct/epsilon_t_duct_n
+epsilon_t_duct_n=0.3192 [-]
+epsilon\epsilon_w_duct_n=epsilon_w_duct/epsilon_w_duct_n
+epsilon_w_duct_n=epsilon_M_duct_n
+"curve fit results (as in the original; the fits are comments, not used by the model):"
+"DELTAp\DELTAp_duct_n=1.00341845*M\M_ex_duct_n^(1.8898909)
+epsilon\epsilon_M_duct_n=1.00229776*M\M_ex_duct_n^(0.25992721)
+epsilon\epsilon_t_duct_n=0.960508556*M\M_ex_duct_n^(-0.439812798)
+epsilon_W_duct=epsilon_M_duct"
+"(if no condensation)"
+"!------------------------------------"
+"!Reference model:"
+"Outputs:"
+p_ex_duct=p_ex_duct_01
+M_dot_su_duct=M_dot_duct_01
+t_ex_duct=t_ex_duct_03
+W_ex_duct=W_ex_duct_02
+
+"Inputs:"
+M_dot_ex_duct_02=M_dot_ex_duct
+p_su_duct_01=p_su_duct
+t_duct_01=t_su_duct
+W_duct_01=W_su_duct
+p_env_duct_02=p_env_duct
+t_env_duct_02=t_env_duct
+W_env_duct_02=W_env_duct
+
+"Parameters:"
+L_duct=L_duct_01
+A_duct=A_duct_01
+D_hydr_duct=D_hydr_duct_01
+epsilon_duct=epsilon_duct_01
+A_leakage\L_duct=A_leakage\L_duct_02
+D_hydr_leakage_duct=D_hydr_leakage_duct_02
+xi_leakage_duct=xi_leakage_duct_02
+n_leakage_duct=n_leakage_duct_02
+Perimeter_in_duct=Perimeter_in_duct_03
+e_insulation_duct=e_insulation_duct_03
+k_insulation_duct=k_insulation_duct_03
+
+"!Pressure drop + leakage + heat gain (as in the original)"
+"--------------------------------------------------------------------"
+"Nominal regime:"
+"M_dot_ex_duct=1"
+"!01. Continuous pressure drop in tight and adiabatic air duct:"
+"Output:"
+"p_ex_duct_01"
+
+"Inputs:"
+"M_dot_duct_01=1 [kg/s]
+p_su_duct_01=1E5 [Pa]
+t_duct_01=20 [°C]
+W_duct_01=0.01 [-]"
+
+"Parameters:"
+"L_duct_01=10 [m]
+A_duct_01=0.1 [m]
+D_hydr_duct_01=0.25 [m]
+epsilon_duct_01=0.005 [-]"
+
+"Simulation model:"
+
+DELTAp_duct_01=lambda_duct_01*(L_duct_01/D_hydr_duct_01)*C_duct_01^2/2
+1/sqrt(lambda_duct_01)=-2*log10(abs(((epsilon_duct_01/D_hydr_duct_01)/3.71+2.51/(Re_duct_01*sqrt(lambda_duct_01)))))
+Re_duct_01=abs(C_duct_01)*D_hydr_duct_01/nu_duct_01
+DELTAp_duct_01=p_su_duct_01-p_ex_duct_01
+nu_duct_01=mu_duct_01*v_duct_01
+mu_duct_01=Viscosity(AirH2O,T=T_duct_01,w=w_duct_01,P=P_su_duct_01)
+v_duct_01=Volume(AirH2O,T=T_duct_01,w=w_duct_01,P=P_su_duct_01)
+C_duct_01=V_dot_duct_01/A_duct_01
+V_dot_duct_01=M_dot_duct_01*v_duct_01
+"-------------------------------------------------------------------------"
+"!02. Duct leakage:"
+"Output:"
+"M_dot_ex_duct_02
+M_dot_leakage_duct_02
+t_ex_duct_02
+W_ex_duct_02
+"
+"Inputs:"
+"M_dot_su_duct_02=1 [kg/s]
+p_su_duct_02=1.002E5 [Pa]
+t_su_duct_02=20 [°C]
+W_su_duct_02=0.01 [-]
+p_ex_duct_02=1.001E5 [Pa]"
+"These five first inputs are replaced by connections with the component 01:"
+M_dot_su_duct_02=M_dot_duct_01
+p_su_duct_02=p_ex_duct_01
+t_su_duct_02=t_duct_01
+W_su_duct_02=W_duct_01
+p_ex_duct_02=p_ex_duct_01
+"New inputs:"
+"p_env_duct_02=1E5 [Pa]
+t_env_duct_02=10 [°C]
+W_env_duct_02=0.005 [-]"
+
+"Parameters:"
+"L_duct_02=20 [m]"
+"This first parameter is the same as for component 01:"
+L_duct_02=L_duct_01
+"New parameters:"
+"A_leakage\L_duct_02=2E-4 [m]
+D_hydr_leakage_duct_02=1E-4 [m]
+xi_leakage_duct_02=10 [-]
+n_leakage_duct_02=0.5 [-]"
+
+"Simulation model:"
+"Leakage:"
+DELTAp_leakage_duct_02=(p_su_duct_02+p_ex_duct_02)/2 -p_env_duct_02
+DELTAp_leakage_duct_02=zeta_leakage_duct_02*C_leakage_duct_02*abs(C_leakage_duct_02)/(2*v_duct_02)
+zeta_leakage_duct_02=xi_leakage_duct_02/abs(Re_leakage_duct_02)^n_leakage_duct_02
+Re_leakage_duct_02=abs(C_leakage_duct_02)*D_hydr_leakage_duct_02/nu_duct_02
+nu_duct_02=mu_duct_02*v_duct_02
+"mu_duct_02=Viscosity(AirH2O,T=T_su_duct_02,w=w_su_duct_02,P=P_su_duct_02)"
+"Simplification:"
+mu_duct_02=Viscosity(AirH2O,T=T_su_duct_02,w=w_su_duct_02,P=P_su_duct_01)
+"v_duct_02=Volume(AirH2O,T=T_su_duct_02,w=w_su_duct_02,P=P_su_duct_02)"
+"Simplification:"
+v_duct_02=Volume(AirH2O,T=T_su_duct_02,w=w_su_duct_02,P=P_su_duct_01)
+C_leakage_duct_02=V_dot_leakage_duct_02/A_leakage_duct_02
+A_leakage_duct_02=A_leakage\L_duct_02*L_duct_02
+V_dot_leakage_duct_02=M_dot_leakage_duct_02*v_duct_02
+M_dot_ex_duct_02=M_dot_su_duct_02-M_dot_leakage_duct_02
+"Water balance:"
+M_dot_w_ex_duct_02=M_dot_w_su_duct_02+M_dot_w_infiltration_duct_02-M_dot_w_exfiltration_duct_02
+M_dot_w_su_duct_02=M_dot_su_duct_02*W_su_duct_02
+M_dot_w_ex_duct_02=M_dot_ex_duct_02*W_ex_duct_02
+M_dot_w_infiltration_duct_02=M_dot_infiltration_duct_02*W_env_duct_02
+M_dot_infiltration_duct_02=IF(M_dot_leakage_duct_02,0,-M_dot_leakage_duct_02,0,0)
+M_dot_w_exfiltration_duct_02=M_dot_exfiltration_duct_02*W_su_duct_02
+M_dot_exfiltration_duct_02=IF(M_dot_leakage_duct_02,0,0,0, M_dot_leakage_duct_02)
+"Energy balance:"
+H_dot_ex_duct_02=H_dot_su_duct_02+H_dot_infiltration_duct_02-H_dot_exfiltration_duct_02
+H_dot_su_duct_02=M_dot_su_duct_02*h_su_duct_02
+H_dot_ex_duct_02=M_dot_ex_duct_02*h_ex_duct_02
+H_dot_infiltration_duct_02=M_dot_infiltration_duct_02*h_env_duct_02
+H_dot_exfiltration_duct_02=M_dot_exfiltration_duct_02*h_su_duct_02
+h_su_duct_02=Enthalpy(AirH2O,T=T_su_duct_02,w=W_su_duct_02,P=P_su_duct_02)
+h_env_duct_02=Enthalpy(AirH2O,T=T_env_duct_02,w=W_env_duct_02,P=P_env_duct_02)
+t_ex_duct_02=Temperature(AirH2O,h=h_ex_duct_02,w=W_ex_duct_02,P=P_ex_duct_02)
+"-----------------------------------------------------------------------------------"
+"!03. Heat gain along a tight air duct:"
+"Output:"
+"Q_dot_duct_03,
+t_ex_duct_03
+"
+"Inputs:"
+"M_dot_duct_03=1 [kg/s]
+p_duct_03=1E5 [Pa]
+t_su_duct_03=20 [°C]
+W_duct_03=0.01 [-]
+t_env_duct_03=10 [°C]"
+"All these inputs are replaced by connections with the component 02:"
+M_dot_duct_03=M_dot_ex_duct_02
+p_duct_03=p_ex_duct_02
+t_su_duct_03=t_ex_duct_02
+W_duct_03=W_ex_duct_02
+t_env_duct_03=t_env_duct_02
+
+"Parameters:"
+"L_duct_03=10 [m]"
+"This first parameter is the same as for component 02:"
+L_duct_03=L_duct_02
+"New parameters:"
+"Perimeter_in_duct_03=0.5 [m]
+e_insulation_duct_03=0.025 [m]
+k_insulation_duct_03=0.040 [W/(m*K)]"
+
+"Simulation model:"
+Q_dot_duct_03=epsilon_duct_03*C_dot_duct_03*(t_env_duct_03-t_su_duct_03)
+epsilon_duct_03=1-exp(-NTU_duct_03)
+NTU_duct_03=AU_duct_03/C_dot_duct_03
+1/AU_duct_03=1/(A_in_duct_03*h_in_duct_03)+e_insulation_duct_03/(A_insulation_duct_03*k_insulation_duct_03)+1/(A_out_duct_03*h_out_duct_03)
+A_in_duct_03=Perimeter_in_duct_03*L_duct_03
+h_in_duct_03=25 [W/(m^2*K)]
+"(might be calculated as function of air speed)"
+A_insulation_duct_03=A_in_duct_03
+"(in first approximation)"
+A_out_duct_03=A_in_duct_03
+"(also in first approximation)"
+h_out_duct_03=10 [W/(m^2*K)]
+"(might also be calculated: globalization of convective and radiant heat exchanges)"
+C_dot_duct_03=M_dot_duct_03*c_p_duct_03
+c_p_duct_03=Cp(AirH2O,T=T_su_duct_03,w=W_duct_03,P=P_duct_03)
+Q_dot_duct_03=C_dot_duct_03*(t_ex_duct_03-t_su_duct_03)
+"-------------------------------------------------------------------------------------------------------"

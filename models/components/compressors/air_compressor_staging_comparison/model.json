@@ -1,0 +1,72 @@
+{
+  "id": "CSL-0270",
+  "name": "air_compressor_staging_comparison",
+  "title": "Air compression: single-stage vs two-stage, isentropic vs polytropic model",
+  "summary": "Air compressed from 70 °C and 2 bar to 10 bar along three paths — single-stage with 60 % isentropic efficiency, two stages of 60 % at an intermediate pressure of 5 bar (no intercooling, as in the original), and a single-stage polytropic model with 60 % efficiency — comparing outlet temperatures and specific works, plus the isentropic efficiency equivalent to the polytropic path.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "air_compressor_staging_comparison.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "compressor",
+    "air",
+    "ideal gas",
+    "isentropic efficiency",
+    "polytropic efficiency",
+    "staging",
+    "exercise"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 60,
+    "largest_block": 2
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R05.zip!/THD10_R05_E2.EES",
+    "candidate_id": "TM-0516",
+    "authors": [
+      "TBD (ULiège THD10 course solution; no author named in the file)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.423",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège, THD10), session R05, exercise 2 (2010)"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution (compare_solution.py, rtol=0.001, --ees-units): temperatures and works agree within 2.10e-03 (T_int), the works within 1.65e-03 (EES 8.4 vs CoolProp air cp). Absolute enthalpies (+1.259e5 J/kg) and absolute entropies (-1.815e3 J/kg-K), 20 variables, are excluded as ideal-gas reference-state offsets.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution of THD10_R05_E2.EES (EES 8.423), 54 variables, of which 45 are common to the model",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.0021,
+    "notes": "Max rel. diff 2.10e-03 over the 25 common variables excluding the absolute enthalpies and entropies (reference-state offsets); largest work deviation w_p 1.65e-03. 9 EES-only variables (cp, cv, R, p[1], p[2], T_s[1], T_s[2], s_s[1], s_s[2]) are dead data of the file, unused by its equations."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0010",
+    "CSL-0237",
+    "CSL-0285"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added (T-IMPORT from the EES stored solution, card C-310 / TM-0516)",
+      "by": "opencode worker (mimo), batch B-11 wave"
+    }
+  ]
+}

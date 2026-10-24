@@ -1,0 +1,103 @@
+{=============================================================================
+  Best speed exponent m for a family of reciprocating compressors
+  CoolSolve Library model CSL-0268
+ -----------------------------------------------------------------------------
+  Six Grasso reciprocating compressors (RC 212E to RC 1212E) are described by
+  identified polynomial isentropic-efficiency curves at three rotational
+  speeds (1500, 1000 and 725 rev/min) over a pressure-ratio grid taken from
+  the lookup table (50 rows, R_P_CP from 1.662 to 6.141). The efficiency at a
+  lower speed is simulated by scaling the 1500 rev/min curve with
+  (rpm1/rpm2)^m, as in the original; the best exponent m of the family is
+  found by comparing the simulated curves with the identified ones at each
+  speed (manual sweep of m, as in the original).
+
+  Inputs : m, rpm1, rpm2, rpm3 (exponent and speeds);
+           the pressure-ratio grid R_P_CP in the lookup table
+  Outputs: identified and simulated isentropic-efficiency arrays (33x50)
+  Units  : SI - efficiencies and pressure ratios dimensionless, speeds in
+           rev/min, as in the original
+  Source : Laborelec toolkit 2002, F. Trebilcock (ULiège Thermodynamics Lab)
+           - see README.md
+  Status : verified against the EES stored solution (see README.md)
+=============================================================================}
+
+"Number of rows in the lookup table"
+n = 50  "[-]"
+
+duplicate i = 1, n
+
+"!Identified polynomial efficiency curves at each speed (as in the original)"
+
+"Compressor: Grasso RC 212E"
+EPSILON_S_MES_212_1500[I] = 0.78+0.00393761028*(R_P_CP[I]-7)^2-0.175383295/(R_P_CP[I]-1.14888974)  "isentropic efficiency at 1500 rev/min [-]"
+EPSILON_S_MES_212_1000[I] = 0.85+0.00412566653*(R_P_CP[I]-7)^2-0.188365489/(R_P_CP[I]-1.12667764)  "isentropic efficiency at 1000 rev/min [-]"
+EPSILON_S_MES_212_725[I] = 0.9+0.00416200203*(R_P_CP[I]-7)^2-0.193465833/(R_P_CP[I]-1.11321814)    "isentropic efficiency at 725 rev/min [-]"
+
+"RC 312E"
+EPSILON_S_MES_312_1500[I] = 0.79+0.003435438*(R_P_CP[I]-7)^2-0.149347871/(R_P_CP[I]-1.2040418)     "[-]"
+EPSILON_S_MES_312_1000[I] = 0.86+0.00389598727*(R_P_CP[I]-7)^2-0.172593044/(R_P_CP[I]-1.15995024)  "[-]"
+EPSILON_S_MES_312_725[I] = 0.9+0.00278487356*(R_P_CP[I]-7)^2-0.124295523/(R_P_CP[I]-1.26199497)    "[-]"
+
+"RC 412E"
+EPSILON_S_MES_412_1500[I] = 0.8+0.00379473019*(R_P_CP[I]-7)^2-0.169851787/(R_P_CP[I]-1.16198433)   "[-]"
+EPSILON_S_MES_412_1000[I] = 0.86+0.00352319757*(R_P_CP[I]-7)^2-0.152193252/(R_P_CP[I]-1.20331437)  "[-]"
+EPSILON_S_MES_412_725[I] = 0.9+0.00317229049*(R_P_CP[I]-7)^2-0.136632908/(R_P_CP[I]-1.23838872)    "[-]"
+
+"RC 612E"
+EPSILON_S_MES_612_1500[I] = 0.8+0.00315551069*(R_P_CP[I]-7)^2-0.117482521/(R_P_CP[I]-1.34745061)   "[-]"
+EPSILON_S_MES_612_1000[I] = 0.87+0.00490935324*(R_P_CP[I]-7)^2-0.197805009/(R_P_CP[I]-1.13441373)  "[-]"
+EPSILON_S_MES_612_725[I] = 0.91+0.00381494797*(R_P_CP[I]-7)^2-0.156467171/(R_P_CP[I]-1.2232568)    "[-]"
+
+"RC 912E"
+EPSILON_S_MES_912_1500[I] = 0.81+0.00380058657*(R_P_CP[I]-7)^2-0.152467349/(R_P_CP[I]-1.23648294)  "[-]"
+EPSILON_S_MES_912_1000[I] = 0.87+0.00351822463*(R_P_CP[I]-7)^2-0.136911742/(R_P_CP[I]-1.2831406)   "[-]"
+EPSILON_S_MES_912_725[I] = 0.91+0.00345944829*(R_P_CP[I]-7)^2-0.138209916/(R_P_CP[I]-1.27347644)   "[-]"
+
+"RC 1212E"
+EPSILON_S_MES_1212_1500[I] = 0.82+0.00415551104*(R_P_CP[I]-7)^2-0.192754337/(R_P_CP[I]-1.11798434) "[-]"
+EPSILON_S_MES_1212_1000[I] = 0.87+0.00291823864*(R_P_CP[I]-7)^2-0.128044308/(R_P_CP[I]-1.2524749)  "[-]"
+EPSILON_S_MES_1212_725[I] = 0.91+0.00293184783*(R_P_CP[I]-7)^2-0.132454727/(R_P_CP[I]-1.24167485)  "[-]"
+
+"!Simulation at the different rotational speeds (as in the original)"
+
+"Isentropic efficiencies at 1500 rpm (polynomial expressions):"
+epsilon_s_RC212E_1500_rpm[i] = 0.78+0.00393761028*(R_P_CP[I]-7)^2-0.175383295/(R_P_CP[I]-1.14888974)  "[-]"
+epsilon_s_RC312E_1500_rpm[i] = 0.79+0.003435438*(R_P_CP[I]-7)^2-0.149347871/(R_P_CP[I]-1.2040418)     "[-]"
+epsilon_s_RC412E_1500_rpm[i] = 0.8+0.00379473019*(R_P_CP[I]-7)^2-0.169851787/(R_P_CP[I]-1.16198433)   "[-]"
+epsilon_s_RC612E_1500_rpm[i] = 0.8+0.00315551069*(R_P_CP[I]-7)^2-0.117482521/(R_P_CP[I]-1.34745061)   "[-]"
+epsilon_s_RC912E_1500_rpm[i] = 0.81+0.00380058657*(R_P_CP[I]-7)^2-0.152467349/(R_P_CP[I]-1.23648294)  "[-]"
+epsilon_s_1212E_1500_rpm[i] = 0.82+0.00415551104*(R_P_CP[I]-7)^2-0.192754337/(R_P_CP[I]-1.11798434)   "[-]"
+
+"Simulated efficiencies (rpm analysis):"
+epsilon_s_RC212E_1000_rpm[i] = epsilon_s_RC212E_1500_rpm[i]*(rpm1/rpm2)^m  "scaled from 1500 to 1000 rev/min [-]"
+epsilon_s_RC212E_725_rpm[i] = epsilon_s_RC212E_1500_rpm[i]*(rpm1/rpm3)^m   "scaled from 1500 to 725 rev/min [-]"
+
+epsilon_s_RC312E_1000_rpm[i] = epsilon_s_RC312E_1500_rpm[i]*(rpm1/rpm2)^m  "[-]"
+epsilon_s_RC312E_725_rpm[i] = epsilon_s_RC312E_1500_rpm[i]*(rpm1/rpm3)^m   "[-]"
+
+epsilon_s_RC412E_1000_rpm[i] = epsilon_s_RC412E_1500_rpm[i]*(rpm1/rpm2)^m  "[-]"
+epsilon_s_RC412E_725_rpm[i] = epsilon_s_RC412E_1500_rpm[i]*(rpm1/rpm3)^m   "[-]"
+
+epsilon_s_RC612E_1000_rpm[i] = epsilon_s_RC612E_1500_rpm[i]*(rpm1/rpm2)^m  "[-]"
+epsilon_s_RC612E_725_rpm[i] = epsilon_s_RC612E_1500_rpm[i]*(rpm1/rpm3)^m   "[-]"
+
+epsilon_s_RC912E_1000_rpm[i] = epsilon_s_RC912E_1500_rpm[i]*(rpm1/rpm2)^m  "[-]"
+epsilon_s_RC912E_725_rpm[i] = epsilon_s_RC912E_1500_rpm[i]*(rpm1/rpm3)^m   "[-]"
+
+epsilon_s_1212E_1000_rpm[i] = epsilon_s_1212E_1500_rpm[i]*(rpm1/rpm2)^m    "[-]"
+epsilon_s_1212E_725_rpm[i] = epsilon_s_1212E_1500_rpm[i]*(rpm1/rpm3)^m     "[-]"
+
+"The range for the pressure ratio should be defined in the lookup table:"
+R_P_CP[I] = lookup(i,1)  "pressure-ratio grid read from the lookup table [-]"
+
+end
+
+"!Rotational speeds and exponent (as in the original)"
+rpm1 = 1500  "reference rotational speed [rev/min]"
+rpm2 = 1000  "second rotational speed [rev/min]"
+rpm3 = 725   "third rotational speed [rev/min]"
+m = 0.18     "exponent of the speed ratio [-]"
+
+{RESULTS comment of the original:
+ Identified polynomial expressions (from curve fitting of the results):
+ Shape: epsilon_s_cp_mes[i] = a0 + a1*(R_p_cp[i]-5)^2 + a2/(R_p_cp[i]-a3)}

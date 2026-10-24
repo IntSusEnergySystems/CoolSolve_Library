@@ -1,0 +1,80 @@
+{=============================================================================
+  Fluid cooler (indirect-contact cooling tower): identification model
+  CoolSolve Library model CSL-0286
+ -----------------------------------------------------------------------------
+  Catalogue-based identification of a fluid cooler (closed-loop cooling
+  tower), Laborelec 2002 toolkit: equivalent counterflow exchanger between
+  the cooled fluid and a fictitious air at the wet-bulb temperature; air and
+  fluid side resistances with mass-flow exponents (-0.6 / -0.8), identified
+  from the B.A.C. VXI-70-3 catalogue read in table 'lookup_1' (205 points).
+  Inputs : V_dot_a_ct, M_dot_fl_ct_N, c_fl, RH_su_ct, RH_ex_ct, i (table row)
+  Outputs: R_a_ct_N, R_fl_ct_N, Q_dot_ct, ERRQ_dot_ct, operating point
+  Units  : SI - temperatures in degC, pressures in Pa, energies in J
+  Source : ULiège/Laborelec toolkit 2002, Indirect_contact_identification.EES
+           (EES 6.350), ~/Nextcloud/thermo_models/modeles/LABORELEC_2002/...
+  Authors: Felipe Trebilcock (ULiège Thermodynamics Lab, Dec 2002, for
+           Laborelec); reviewers J. Lebrun, E. Winandy - see README.md
+  Status : blocked - the EES built-in HX('counterflow',...) is not supported
+           by CoolSolve (CS-GAP-HX); runnable verified variant
+           indirect_contact_tower_identification_coolsolve.eescode
+=============================================================================}
+
+"!Fluid cooler model (identification)"
+
+"air side (fictitious air at the wet-bulb temperature, as in the original):"
+Q_dot_ct = M_dot_a_ct*(h_a_ex_ct - h_a_su_ct)                "heat flow rate [W]"
+Q_dot_ct = C_dot_af_ct*(t_wb_ex_ct - t_wb_su_ct)             "heat flow rate [W]"
+C_dot_af_ct = M_dot_a_ct*c_p_af_ct                           "fictitious air capacity flow rate [W/K]"
+M_dot_a_ct = V_dot_a_ct*rho_a_ct                             "air mass flow rate [kg/s]"
+
+"cooled fluid side:"
+Q_dot_ct = C_dot_fl_ct*(t_fl_su_ct - t_fl_ex_ct)             "heat flow rate [W]"
+C_dot_fl_ct = M_dot_fl_ct*c_fl                               "fluid capacity flow rate [W/K]"
+
+"equivalent counterflow heat exchanger:"
+Q_dot_ct = epsilon_ct*C_dot_min_ct*(t_fl_su_ct - t_wb_su_ct) "heat flow rate [W]"
+C_dot_min_ct = min(C_dot_af_ct, C_dot_fl_ct)                 "minimum capacity flow rate [W/K]"
+epsilon_ct = HX('counterflow',NTU_ct,C_dot_af_ct,C_dot_fl_ct,'epsilon')
+NTU_ct = UA_ct/C_dot_min_ct                                  "number of transfer units [-]"
+R_ct = 1/UA_ct                                               "total thermal resistance [K/W]"
+R_ct = R_af_ct + R_fl_ct                                     "resistance split [K/W]"
+R_af_ct = R_a_ct*c_p_a_ct/c_p_af_ct                          "fictitious air resistance [K/W]"
+R_a_ct = R_a_ct_N*(M_dot_a_ct/M_dot_a_ct_N)^(-0.6)           "air-side resistance [K/W]"
+R_fl_ct = R_fl_ct_N*(M_dot_fl_ct/M_dot_fl_ct_N)^(-0.8)       "fluid-side resistance [K/W]"
+
+"humid air properties:"
+h_a_su_ct = enthalpy(AIRH2O,T=t_a_su_ct,P=P_atm,R=RH_su_ct)  "supply air enthalpy [J/kg]"
+t_wb_su_ct = wetbulb(AIRH2O,T=t_a_su_ct,P=P_atm,R=RH_su_ct)  "supply air wet-bulb temperature [degC]"
+h_a_ex_ct = enthalpy(AIRH2O,T=t_a_ex_ct,P=P_atm,R=RH_ex_ct)  "exhaust air enthalpy [J/kg]"
+t_wb_ex_ct = wetbulb(AIRH2O,T=t_a_ex_ct,P=P_atm,R=RH_ex_ct)  "exhaust air wet-bulb temperature [degC]"
+c_p_a_ct = specheat(AIRH2O,T=t_a_su_ct,P=P_atm,R=RH_su_ct)   "real humid-air specific heat [J/kg-K]"
+rho_a_ct = density(AIRH2O,T=t_a_su_ct,P=P_atm,R=RH_su_ct)    "supply air density [kg/m3]"
+
+"identification of the nominal resistances (as in the original, the user adjusts (*) and (**) until the percentage error ERRQ_dot_ct is minimised):"
+R_a_ct_N = 5.2*R_fl_ct_N                                     "(**)"
+R_a_ct_N = 0.0275E-3                                         "(*) identified for the VXI-70-3 [K/W] (0.0275 K/kW in the original)"
+
+"input data (default values of the original, VXI-70-3):"
+c_fl = 4180                                                  "fluid specific heat [J/kg-K] (4.18 kJ/kg-K in the original)"
+P_atm = 101325                                               "atmospheric pressure [Pa] (101.325 kPa in the original)"
+V_dot_a_ct = 22.9                                            "air volume flow rate [m3/s]"
+M_dot_fl_ct_N = 20                                           "nominal fluid mass flow rate [kg/s]"
+RH_su_ct = 0.5                                               "supply air relative humidity [-]"
+RH_ex_ct = 1                                                 "exhaust air relative humidity [-] (saturated, as in the original)"
+M_dot_a_ct_N = M_dot_a_ct                                    "nominal air mass flow rate [kg/s]"
+i = 205                                                      "row of the catalogue table read by lookup"
+
+"operating point taken from the catalogue table:"
+t_wb_su_ct = lookup(i,1)                                     "supply air wet-bulb temperature [degC]"
+approach = lookup(i,2)                                       "approach [K]"
+Range_cat = lookup(i,3)                                      "catalogue range [K]"
+M_dot_fl_ct = lookup(i,4)                                    "fluid mass flow rate [kg/s]"
+
+"fluid cooler characteristics (as in the original):"
+t_fl_ex_ct = approach + t_wb_su_ct                           "fluid outlet temperature [degC]"
+t_fl_su_ct = t_fl_ex_ct + Range                              "fluid inlet temperature [degC]"
+
+"comparison with the catalogue data:"
+Q_dot_ct_cat = C_dot_fl_ct*Range_cat                         "catalogue heat flow rate [W]"
+ERQ_dot_ct = Q_dot_ct - Q_dot_ct_cat                         "heat flow rate error [W]"
+ERRQ_dot_ct = ERQ_dot_ct/Q_dot_ct_cat*100                    "percentage error [%]"

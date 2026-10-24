@@ -182,4 +182,9 @@ Source file (EES X6.596), collection of S. Quoilin:
 
 ## Related models
 
-No other library model is linked (`related` is empty).
+- `CSL-0268` (reciprocating_compressor_exponent_m): same toolkit and author,
+  same `(rpm1/rpm2)^m` speed scaling, on six Grasso *reciprocating*
+  compressor polynomial families over a 50-point pressure-ratio lookup table.
+- `CSL-0269` (grasso_screw_catalogue_r717): the same toolkit's catalogue-data
+  model of the Grasso C-52 screw compressor at 2940 rpm (24 manufacturer
+  rows on R717).

@@ -1,0 +1,70 @@
+{
+  "id": "CSL-0280",
+  "name": "diesel_cycle_air_standard",
+  "title": "Air-standard Diesel cycle with a 60 % efficiency target (THD R08 exercise 4)",
+  "summary": "Theoretical (air-standard) Diesel cycle on ideal-gas Air with specific heats taken constant over each transformation and evaluated at its mean temperature: isentropic compression, isobaric heat addition, isentropic expansion, isochoric heat rejection. The exercise fixes the thermal efficiency at 60 % and solves for the maximum temperature of the cycle; the four states, the heat added, the net work and the mean effective pressure follow.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "diesel_cycle_air_standard.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "Diesel cycle",
+    "air standard",
+    "internal combustion engine",
+    "ideal gas",
+    "variable specific heat",
+    "mean effective pressure",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 36,
+    "largest_block": 13
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R08.zip!/THD10_R08_E4.EES",
+    "candidate_id": "TM-0530",
+    "authors": [
+      "TBD (no author name in the file; sources/thermo_models inventory credits S. Bertagnolio and S. Borguet for the 2009-2010 THD exercise sets)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.423",
+    "language": "fr",
+    "course": "ULiège, Thermodynamique appliquée (THD10), session R8, 2010, exercise 4"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of THD10_R08_E4.EES (36 stored names) with compare_solution.py --ees-units: 35 common variables, 13 differ at rtol=0.001, max rel. diff 3.29e-03 (w_23); at rtol=0.004 all 35 agree. Deviations come from EES-vs-CoolProp cp/cv of Air (cp12 4.27e-04) amplified by r_v^gamma: ln(18)*dgamma12 = 8.24e-04 = the T[2] shift.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution of THD10_R08_E4.EES (36 variables decoded by ees_extract.py, EES X8.423, unit system SI MASS DEG KPA C KJ)",
+    "date": "2026-10-23",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.00329,
+    "notes": "Printed: '35 common variables, 13 differ (rtol=0.001); only in EES: 1; only in CoolSolve: 1' and, with --rtol 0.004, '0 differ'. Excluded by name: gamma (1.4, stored by EES but in no equation of the window, not recreated) and fluid$ (only in CoolSolve)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0049",
+    "CSL-0192"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-23",
+      "action": "added (T-IMPORT card C-320, candidate TM-0530, representative of duplicate group DG-0118)",
+      "by": "opencode worker (mimo-v2.6-flash-free) for S. Quoilin"
+    }
+  ]
+}

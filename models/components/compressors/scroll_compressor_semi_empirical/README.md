@@ -241,3 +241,4 @@ Source files (collection of S. Quoilin):
   catalogue data (EN 12900 polynomials for the isentropic and the volumetric
   efficiency) instead of a semi-empirical identification; the other way of
   getting the two efficiencies this model computes.
+- `CSL-0260` *scroll_compressor_reed_valve*: the reference scroll model with a discharge reed valve (R407C), same ULiège model bank.

@@ -1,0 +1,82 @@
+{
+  "id": "CSL-0263",
+  "name": "fuel_oil_boiler_onoff_setpoint",
+  "title": "Fuel-oil boiler with on/off envelope losses and a set-point blend (theta)",
+  "summary": "Exercise of a fuel-oil boiler: combustion stoichiometry and adiabatic flame temperature with cpbar, a gas-water eps-NTU exchanger with assigned gas-side specific heat, a water-envelope exchanger with ON and OFF branches, and the exercise-3 set-point outlet blending the ON and OFF outlets with a fraction theta (default run theta = 1).",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "fuel_oil_boiler_onoff_setpoint.eescode",
+  "fluids": [
+    "Air",
+    "Water"
+  ],
+  "tags": [
+    "exercise",
+    "boiler",
+    "fuel oil",
+    "combustion",
+    "flue gas",
+    "eps-NTU",
+    "on/off control",
+    "set point",
+    "mean specific heat"
+  ],
+  "language_features": [
+    "procedures",
+    "CALL with several outputs",
+    "IF/THEN/ELSE (in cpbar)",
+    "property calls",
+    "min",
+    "max",
+    "unit annotations"
+  ],
+  "stats": {
+    "n_equations": 54,
+    "largest_block": 6
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 07/MSTh R7 Ex 3 - 2.EES",
+    "candidate_id": "TM-0108",
+    "authors": [
+      "TBD (ULiège MSTh repetition R7; course team J. Lebrun, V. Lemort, S. Bertagnolio)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh, machines et systèmes thermiques, repetition R7 exercise 3"
+  },
+  "verification": {
+    "summary": "Stored solution of MSTh R7 Ex 3 - 2.EES (EES X7.458, 50 valued records). compare_solution.py: 50 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 4 (cpbar outputs). Max relative difference 0.000776 on eta (0.899288 vs 0.899987), from cp(Air)/cp_p; all 54 equations satisfied.",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of MSTh R7 Ex 3 - 2.EES (50 numeric values, EES X7.458)",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.000776,
+    "notes": "Max relative difference is eta (0.899287916 vs 0.899986507); below the printed rtol=0.001. cp_a 1006.31 vs 1006.68 J/kg-K, cp_p 1285.26 vs 1284.29 J/kg-K propagate to T_p_ad (1978.08 vs 1979.55 C) and Q_dot_1 (50585.2 vs 50624.2 W). The four CoolSolve-only names Q_4_ad, x_ad, e_min_ad, e_ad are unused outputs of the cpbar CALL. The 51st stored record T_w_ex has no value and no equation (commented line of the previous exercise)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0005",
+    "CSL-0006",
+    "CSL-0219",
+    "CSL-0265"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added",
+      "by": "opencode worker (CSL-0263, card C-303)"
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "id": "CSL-0253",
+  "name": "high_temp_heat_pump_zeotropic_transcritical",
+  "title": "High-temperature heat pump: zeotropic/transcritical cycle (R1336mzz(Z))",
+  "summary": "High-temperature heat pump of squoilin/NextGenerationHeatPumps on imposed cycle pressures (default run transcritical: 32 bar over the 29.04 bar critical pressure of R1336mzz(Z)), constant isentropic efficiency, and both secondary water loops recalculated from an imposed pinch (their capacity flow rates are the unknowns).",
+  "kind": "steady",
+  "level": 3,
+  "status": "blocked",
+  "main_file": "high_temp_heat_pump_zeotropic_transcritical.eescode",
+  "fluids": [
+    "R1336mzz(Z)",
+    "R365mfc"
+  ],
+  "tags": [
+    "heat pump",
+    "high temperature",
+    "transcritical",
+    "pinch",
+    "translation"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 66,
+    "largest_block": 7
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "squoilin/NextGenerationHeatPumps",
+    "source_path": "",
+    "candidate_id": "LDS-010",
+    "authors": [
+      "Sylvain Quoilin"
+    ],
+    "url": "https://github.com/squoilin/NextGenerationHeatPumps",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "nghp/advanced HTHP model.py (commit 6db23af4dbad2098043a74d1871dbcc6f8eee468); REFPROP back end replaced by CoolProp (decision D12)"
+  },
+  "verification": {
+    "summary": "The original script was re-run in a throw-away venv (CoolProp 8.0.0, HEOS instead of REFPROP, headless) with the variant's fluid and pressures; the _coolsolve variant agrees with its printed state tables, mass flow, COP, water outlet temperatures and capacity flow rates to 7.9e-08 (states 3e-11). The native file does not run: R1336mzz(Z) is missing from the CoolSolve fluid registry.",
+    "checks": [
+      "source-rerun"
+    ],
+    "reference": "nghp/advanced HTHP model.py (commit 6db23af) re-run in a venv, R365mfc at p_low = 8 bar / p_high = 32 bar (the variant operating point) and R1336mzz(Z) at 10.5/32 bar (the native default run, for the reference numbers in the README)",
+    "date": "2026-10-21",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 7.9e-08,
+    "notes": "Same CoolProp equation of state on both sides (8.1.0dev in the CoolSolve build, 8.0.0 in the venv); the reference only prints 4-6 digits, which bounds the largest deviations (C_dot_hf, T_hf_ex)."
+  },
+  "missing_features": [
+    "CS-GAP-FLUIDS-R1336MZZ"
+  ],
+  "related": [
+    "CSL-0014",
+    "CSL-0133",
+    "CSL-0145"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-21",
+      "action": "added (T-TRANSLATE of LDS-010, batch B-14)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

@@ -380,3 +380,4 @@ the electrical output added.
   compressor/turbine maps.
 - See also the CoolSolve example `examples/orc_complex.eescode` (kept in
   CoolSolve as a parser test case).
+- `CSL-0252` *orc_double_stage_kirchstockach*: two-stage series ORC on R245fa (geothermal brine), design point translated from a TESPy notebook.

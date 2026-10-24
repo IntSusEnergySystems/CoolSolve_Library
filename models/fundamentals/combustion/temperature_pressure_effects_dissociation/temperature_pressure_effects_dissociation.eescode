@@ -1,0 +1,48 @@
+{=============================================================================
+  Temperature and pressure effects on combustion-product dissociation
+  CoolSolve Library model CSL-0264
+ -----------------------------------------------------------------------------
+  Combustion of C8H18 (octane) with 20 % excess dry air: the equilibrium mole
+  fractions of the 14 product species are returned by the EES built-in
+  Chem_Equil procedure at given pressure P and temperature T, so that the
+  dissociation of the products can be studied as P and T vary (the two
+  parametric sweeps of the original are kept as $IF blocks).
+  Inputs : P pressure, T temperature, element ratios A\O, C\O, H\O, N\O
+  Outputs: x_H2 ... x_Ar equilibrium mole fractions [-], sumx check sum [-]
+  Units  : SI - temperatures in °C, pressures in Pa
+  Licence: MIT (CoolSolve Library)
+  Source : ULiège, course MCI, TP1 exercise 2, P. Ngendakumana, R. Dickes
+           - see README.md
+  Status : blocked in CoolSolve (CS-GAP-CHEM-EQUIL); native valid EES kept,
+           no runnable variant (no faithful substitute for the equilibrium)
+=============================================================================}
+
+"Default operating point (as in the original when no parametric table runs)"
+$IFNOT PARAMETRICTABLE
+P = 1E7       "[Pa]  10000 kPa in the original"
+T = 2226.85   "[°C]  2500 K in the original"
+$ENDIF
+
+$IF PARAMETRICTABLE = 'Table 1'  "Effect of pressure on dissociation"
+{P = 1E7}     "[Pa]  commented out as in the original (the table sweeps P)"
+T = 2226.85   "[°C]  2500 K in the original"
+$ENDIF
+
+$IF PARAMETRICTABLE = 'Table 2'  "Effect of temperature on dissociation"
+P = 1E7       "[Pa]  10000 kPa in the original"
+{T = 2226.85} "[°C]  commented out as in the original (the table sweeps T)"
+$ENDIF
+
+"Combustion of C8H18 with dry air (0.20 of excess): C8H18 + 12.5*(O2+3.76*N2)*(1+0.20)"
+A\O = 0      "ratio of inerts to oxygen atoms [-]"
+C\O = 8/30   "ratio of carbon to oxygen atoms [-]"
+H\O = 18/30  "ratio of hydrogen to oxygen atoms [-]"
+N\O = 3.76   "ratio of nitrogen to oxygen atoms [-]"
+
+CALL CHEM_EQUIL(P,T,A\O,C\O,H\O,N\O:x_H2,x_O2,x_H2O,x_CO,x_CO2,x_OH,x_H,x_O,x_N2,x_N,x_NO,x_NO2,x_CH4,x_Ar)
+"CHEM_EQUIL returns the equilibrium mole fractions for the above 14 species."
+
+"Check the sum of the mole fractions"
+sumx = SUM(x_H2,x_O2,x_H2O,x_CO,x_CO2,x_OH,x_H,x_O,x_N2,x_N,x_NO,x_NO2,x_CH4,x_Ar)  "sum of the 14 mole fractions [-]"
+
+"Conclusion (as in the original): dissociation increases when temperature increases and when pressure decreases"

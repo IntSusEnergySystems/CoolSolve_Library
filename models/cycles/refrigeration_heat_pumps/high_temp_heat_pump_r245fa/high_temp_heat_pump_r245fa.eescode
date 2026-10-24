@@ -1,0 +1,125 @@
+{=============================================================================
+  Simple R245fa high-temperature heat pump (T_ev 80 C / T_cd 145 C)
+  CoolSolve Library model CSL-0251
+ -----------------------------------------------------------------------------
+  Subcritical vapour-compression heat pump on R245fa with imposed cycle
+  conditions (evaporation at 80 C, condensation at 145 C, 5 K superheating,
+  5 K subcooling, compressor isentropic efficiency 0.6). The water (constant
+  cp) temperature profiles of both exchangers are recomputed on 10 nodes and
+  the local temperature differences give the pinch points. State points 0..7
+  as in the original; the arrays double as diagram overlay arrays.
+
+  Inputs : fluid$, T_ev, T_cd, DELTAT_sh, DELTAT_sc, epsilon_s (cycle);
+           T_w_su_cd, DELTAT_cd, Q_dot_cd, T_w_su_ev, DELTAT_ev (water sides)
+  Outputs: M_dot, M_dot_hw, M_dot_cw, pinch_cd, pinch_ev, profiles
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. Quoilin (MIT), nghp/simple HTHP model.py - see README.md
+  Status : verified (source re-run); no CoolSolve gap
+============================================================================}
+
+"Cycle and exchanger data (as in the original; temperatures in the original in K)"
+fluid$ = 'R245fa'       "working fluid"
+T_ev = 80               "evaporation temperature [°C] (353.15 K in the original)"
+T_cd = 145              "condensation temperature [°C] (418.15 K in the original)"
+DELTAT_sh = 5           "superheating at the compressor inlet [K]"
+DELTAT_sc = 5           "subcooling at the condenser outlet [K]"
+epsilon_s = 0.6         "compressor isentropic efficiency [-]"
+T_w_su_cd = 120         "cooling-water (heat sink) inlet temperature [°C] (393.15 K)"
+DELTAT_cd = 10          "temperature approach at the condenser water inlet [K]"
+Q_dot_cd = 10000        "imposed condenser heat duty [W] (10 kW; the original comment says 'heat capacity flowrates of cooling water kW/K' but the value is used as the duty in W)"
+T_w_su_ev = 95          "source-water (heat source) inlet temperature [°C] (368.15 K)"
+DELTAT_ev = 10          "temperature approach at the evaporator water outlet [K]"
+cp_w = 4800             "constant specific heat of the water streams [J/kg-K]"
+
+"Cycle pressures"
+P_low = PRESSURE(fluid$, T=T_ev, x=0.5)    "evaporation (low) pressure [Pa]"
+P_high = PRESSURE(fluid$, T=T_cd, x=0.5)   "condensation (high) pressure [Pa]"
+
+"State 0: evaporator outlet, saturated vapour"
+P[0] = P_low
+T[0] = T_ev
+h[0] = ENTHALPY(fluid$, T=T[0], x=1)
+s[0] = ENTROPY(fluid$, T=T[0], x=1)
+
+"State 1: compressor inlet, superheated vapour"
+P[1] = P_low
+T[1] = T[0] + DELTAT_sh
+h[1] = ENTHALPY(fluid$, T=T[1], P=P[1])
+s[1] = ENTROPY(fluid$, T=T[1], P=P[1])
+
+"State 2: compressor outlet (isentropic efficiency epsilon_s)"
+P[2] = P_high
+h_ex_cp_s = ENTHALPY(fluid$, s=s[1], P=P[2])    "isentropic compressor outlet enthalpy [J/kg]"
+h[2] = h[1] - (h[1] - h_ex_cp_s)/epsilon_s     "actual compressor outlet enthalpy [J/kg]"
+T[2] = TEMPERATURE(fluid$, h=h[2], P=P[2])
+s[2] = ENTROPY(fluid$, h=h[2], P=P[2])
+
+"State 3: saturated vapour at the condenser inlet"
+P[3] = P_high
+T[3] = T_cd
+h[3] = ENTHALPY(fluid$, T=T[3], x=1)
+s[3] = ENTROPY(fluid$, T=T[3], x=1)
+
+"State 4: saturated liquid in the condenser"
+P[4] = P_high
+T[4] = T_cd
+h[4] = ENTHALPY(fluid$, T=T[4], x=0)
+s[4] = ENTROPY(fluid$, T=T[4], x=0)
+
+"State 5: subcooled condenser outlet"
+P[5] = P_high
+T[5] = T[4] - DELTAT_sc
+h[5] = ENTHALPY(fluid$, T=T[5], P=P[5])
+s[5] = ENTROPY(fluid$, T=T[5], P=P[5])
+
+"State 6: evaporator inlet (isenthalpic expansion)"
+h[6] = h[5]
+P[6] = P_low
+T[6] = TEMPERATURE(fluid$, h=h[6], P=P[6])
+s[6] = ENTROPY(fluid$, h=h[6], P=P[6])
+
+"State 7: copy of state 0 (as in the original)"
+P[7] = P[0]
+T[7] = T[0]
+h[7] = h[0]
+s[7] = s[0]
+
+"Mass flows and water-side end temperatures (heat sink, as in the original)"
+M_dot = Q_dot_cd/(h[2] - h[5])              "refrigerant mass flow rate [kg/s]"
+T_hw[5] = T_w_su_cd                         "hot water inlet (at the refrigerant outlet end) [°C]"
+T_hw[3] = T[3] - DELTAT_cd                  "hot water temperature at the condensing temperature [°C]"
+M_dot_hw = M_dot*(h[3] - h[5])/(cp_w*(T_hw[3] - T_hw[5]))   "hot water mass flow rate [kg/s]"
+T_hw[4] = T_hw[5] + M_dot*(h[4] - h[5])/(cp_w*M_dot_hw)     "water temperature at state 4 [°C]"
+T_hw[2] = T_hw[5] + M_dot*(h[2] - h[5])/(cp_w*M_dot_hw)     "water outlet temperature [°C]"
+
+"Mass flows and water-side end temperatures (heat source, as in the original)"
+T_cw[1] = T_w_su_ev                         "source water inlet (at the refrigerant outlet end) [°C]"
+T_cw[6] = T[6] + DELTAT_ev                  "source water temperature at the evaporator refrigerant inlet [°C]"
+M_dot_cw = M_dot*(h[1] - h[6])/(cp_w*(T_cw[1] - T_cw[6]))   "source water mass flow rate [kg/s]"
+T_cw[0] = T_cw[6] + M_dot*(h[0] - h[6])/(cp_w*M_dot_cw)     "source water temperature at state 0 [°C]"
+
+"Condenser: 10-node temperature profile and pinch (hx() of the original)"
+DUPLICATE i=1,10
+  h_cd[i] = h[2] + (h[5] - h[2])*(i-1)/9          "node refrigerant enthalpy [J/kg]"
+  T_prof_cd[i] = TEMPERATURE(fluid$, h=h_cd[i], P=P_high)   "node refrigerant temperature [°C]"
+  s_cd[i] = ENTROPY(fluid$, h=h_cd[i], P=P_high)   "node refrigerant entropy [J/kg-K]"
+  T_hf[i] = T_w_su_cd + M_dot*(h_cd[i] - h[5])/(cp_w*M_dot_hw)  "hot water profile, inlet at the refrigerant outlet end [°C]"
+  dT_cd[i] = T_prof_cd[i] - T_hf[i]               "local temperature difference, refrigerant minus water [K]"
+END
+pinch_cd = MIN(dT_cd[1..10])              "pinch point of the condenser [K]"
+
+"Evaporator: 10-node temperature profile and pinch (hx() of the original)"
+DUPLICATE i=1,10
+  h_ev[i] = h[6] + (h[1] - h[6])*(i-1)/9          "node refrigerant enthalpy [J/kg]"
+  T_prof_ev[i] = TEMPERATURE(fluid$, h=h_ev[i], P=P_low)    "node refrigerant temperature [°C]"
+  s_ev[i] = ENTROPY(fluid$, h=h_ev[i], P=P_low)    "node refrigerant entropy [J/kg-K]"
+  T_cf[i] = T_w_su_ev - M_dot*(h[1] - h_ev[i])/(cp_w*M_dot_cw)  "cold water profile, inlet at the refrigerant outlet end [°C]"
+  dT_ev[i] = T_cf[i] - T_prof_ev[i]               "local temperature difference, water minus refrigerant [K]"
+END
+pinch_ev = MIN(dT_ev[1..10])              "pinch point of the evaporator [K]"
+
+"Post-processing (not in the original script; derived from its equations)"
+Q_dot_ev = M_dot*(h[1] - h[6])            "evaporator heat duty [W]"
+W_dot = M_dot*(h[2] - h[1])               "compressor power [W]"
+COP_cd = Q_dot_cd/W_dot                   "heating COP, condenser duty over compressor power [-]"
+COP_ev = Q_dot_ev/W_dot                   "cooling COP, evaporator duty over compressor power [-]"

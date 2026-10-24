@@ -294,3 +294,4 @@ four component modules above; reference: the URL above + those paths + commit
   counterpart of.
 - `CSL-0019` *orc_simple_r245fa*: a screening ORC with an imposed effectiveness,
   no pinch design, no preheater.
+- `CSL-0252` *orc_double_stage_kirchstockach*: two-stage series ORC on R245fa (geothermal brine), design point translated from a TESPy notebook.

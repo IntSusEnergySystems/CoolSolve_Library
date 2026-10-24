@@ -246,3 +246,6 @@ Source file (EES 10.836, comments in French), collection of S. Quoilin:
   toolkit.
 - `CSL-0139` *combustion_chamber*: the same fuel/air stoichiometry solved
   forwards instead of read from an exhaust-gas analysis (TESPy translation).
+- `CSL-0266` *gasoline_engine_excess_air_exhaust_analysis*: the 2010 gasoline
+  version of the same exercise (TM-0538, imported as its own model; differs
+  by the gasoline data, the vaporisation term in `Q_dot_2` and λ in %).

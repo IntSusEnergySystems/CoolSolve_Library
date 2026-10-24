@@ -1,0 +1,109 @@
+{=============================================================================
+  Runnable variant of CSL-0253 (high_temp_heat_pump_zeotropic_transcritical)
+ -----------------------------------------------------------------------------
+  Same equations and inputs as the native file except what the gap
+  CS-GAP-FLUIDS-R1336MZZ forces: the working fluid R1336mzz(Z) is missing
+  from the CoolSolve registry, so the variant runs on R365mfc with p_low
+  adjusted from 10.5 bar to 8 bar to keep the imposed 7.5 K pinches feasible
+  (R365mfc pcrit = 32.66 bar > p_high: the cycle takes the SUBCRITICAL branch
+  of the original script: states 4/5 are the saturated vapour/liquid at
+  p_high and the subcooling is referred to T[5]). Verified against the
+  original script re-run with the same fluid and pressures (README.md).
+  Uses only valid EES syntax.
+
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : github.com/squoilin/NextGenerationHeatPumps, nghp/advanced HTHP
+           model.py, commit 6db23af - Sylvain Quoilin, MIT - see README.md
+=============================================================================}
+
+"Cycle parameters (variant: fluid forced by CS-GAP-FLUIDS-R1336MZZ, p_low adjusted)"
+fluid$ = 'R365mfc'            "working fluid of the variant (native file: R1336mzz(Z))"
+p_low = 8E5                   "low pressure of the cycle [Pa] (10.5E5 in the native file)"
+p_high = 32E5                 "high pressure of the cycle [Pa]"
+DELTAT_sh = 7                 "superheating at the evaporator outlet / compressor supply [K]"
+DELTAT_sc = 32                "subcooling at the condenser outlet, referred to the saturation temperature (subcritical branch) [K]"
+epsilon_s = 0.7               "compressor isentropic efficiency [-]"
+Q_dot_cd = 10000              "heat delivered by the condenser [W]"
+
+"Heat sink (condenser) and heat source (evaporator) water, as in the original"
+T_w_su_cd = 130               "condenser water inlet temperature [C]"
+DELTAT_cd = 7.5               "imposed pinch point temperature difference of the condenser [K]"
+T_w_su_ev = 135               "evaporator water inlet temperature [C]"
+DELTAT_ev = 7.5               "imposed pinch point temperature difference of the evaporator [K]"
+
+"!Cycle states (numbering of the original script shifted by 1: state 1 = original state 0)"
+"1: evaporator outlet, saturated vapour - 2: compressor supply"
+p[1] = p_low
+T[1] = TEMPERATURE(fluid$, P=p_low, x=1)         "saturation temperature at p_low [C]"
+h[1] = ENTHALPY(fluid$, P=p_low, x=1)            "saturated vapour enthalpy [J/kg]"
+s[1] = ENTROPY(fluid$, P=p_low, x=1)             "saturated vapour entropy [J/kg-K]"
+
+T[2] = T[1] + DELTAT_sh
+h[2] = ENTHALPY(fluid$, P=p_low, T=T[2])
+s[2] = ENTROPY(fluid$, P=p_low, T=T[2])
+
+"3: compressor outlet - 3s: isentropic exhaust (the original specifies the gas phase; the plain (P,s) flash is used, see README)"
+h_s = ENTHALPY(fluid$, P=p_high, s=s[2])
+h[3] = h[2] - (h[2] - h_s)/epsilon_s
+p[3] = p_high
+T[3] = TEMPERATURE(fluid$, P=p_high, h=h[3])
+s[3] = ENTROPY(fluid$, P=p_high, h=h[3])
+
+"4, 5: saturated vapour and liquid at p_high (subcritical branch of the original script)"
+p[4] = p_high
+T[4] = TEMPERATURE(fluid$, P=p_high, x=1)        "dew-point (condensing) temperature [C]"
+h[4] = ENTHALPY(fluid$, P=p_high, x=1)
+s[4] = ENTROPY(fluid$, P=p_high, x=1)
+
+p[5] = p_high
+T[5] = TEMPERATURE(fluid$, P=p_high, x=0)        "bubble-point temperature [C]"
+h[5] = ENTHALPY(fluid$, P=p_high, x=0)
+s[5] = ENTROPY(fluid$, P=p_high, x=0)
+
+"6: condenser outlet, subcooled liquid"
+p[6] = p_high
+T[6] = T[5] - DELTAT_sc
+h[6] = ENTHALPY(fluid$, P=p_high, T=T[6])
+s[6] = ENTROPY(fluid$, P=p_high, T=T[6])
+
+"7: evaporator inlet after the isenthalpic expansion valve - 8: cycle closure (as the original state 7)"
+p[7] = p_low
+h[7] = h[6]
+T[7] = TEMPERATURE(fluid$, P=p_low, h=h[7])
+s[7] = ENTROPY(fluid$, P=p_low, h=h[7])
+
+p[8] = p_low
+h[8] = h[1]
+T[8] = T[1]
+s[8] = s[1]
+
+"!Mass flow rate and performance (as in the original)"
+M_dot = Q_dot_cd/(h[3] - h[6])                   "refrigerant mass flow rate [kg/s]"
+COP = (h[3] - h[6])/(h[3] - h[2])                "heating coefficient of performance [-]"
+Q_dot_ev = M_dot*(h[2] - h[7])                   "heat taken from the source [W]"
+
+"!Condenser pinch: water capacity flow rate unknown; candidates at the ends and at the dew/bubble interfaces (as the original 40-point grid)"
+Q_dot_sc_cd = M_dot*(h[5] - h[6])                "subcooling duty [W]"
+Q_dot_tp_cd = M_dot*(h[4] - h[5])                "condensation duty [W]"
+C_dot_hf*(T_hf_ex - T_w_su_cd) = Q_dot_cd        "water side: capacity flow rate [W/K] and outlet temperature [C]"
+T_w_bub_cd = T_w_su_cd + Q_dot_sc_cd/C_dot_hf    "water temperature at the bubble-point interface [C]"
+T_w_dew_cd = T_w_bub_cd + Q_dot_tp_cd/C_dot_hf   "water temperature at the dew-point interface [C]"
+PP_hot_cd = T[3] - T_hf_ex                       "hot end of the condenser [K]"
+PP_dew_cd = T[4] - T_w_dew_cd                    "dew-point interface [K]"
+PP_bub_cd = T[5] - T_w_bub_cd                    "bubble-point interface [K]"
+PP_cold_cd = T[6] - T_w_su_cd                    "cold end of the condenser [K]"
+PPTD_cd = MIN(PP_hot_cd, MIN(PP_dew_cd, MIN(PP_bub_cd, PP_cold_cd)))
+PPTD_cd = DELTAT_cd                              "design condition closing C_dot_hf"
+
+"!Evaporator pinch: candidates at the cold end, the dew-point interface and the warm end"
+h_g_ev = ENTHALPY(fluid$, P=p_low, x=1)          "saturated vapour enthalpy at p_low [J/kg]"
+Q_dot_tp_ev = M_dot*(h_g_ev - h[7])              "evaporation duty [W]"
+C_dot_cf*(T_w_su_ev - T_cf_ex) = Q_dot_ev        "water side: capacity flow rate [W/K] and outlet temperature [C]"
+T_cf_dew_ev = T_cf_ex + Q_dot_tp_ev/C_dot_cf     "water temperature at the dew-point interface of the evaporator [C]"
+PP_cold_ev = T_cf_ex - T[7]                      "cold end of the evaporator [K]"
+PP_int_ev = T_cf_dew_ev - T[1]                   "dew-point interface (refrigerant still at T[1]) [K]"
+PP_hot_ev = T_w_su_ev - T[2]                     "warm end of the evaporator [K]"
+PPTD_ev = MIN(PP_cold_ev, MIN(PP_int_ev, PP_hot_ev))
+PPTD_ev = DELTAT_ev                              "design condition closing C_dot_cf"
+
+"!State points for the thermodynamic diagrams (the arrays above follow the original states 0-7; use the h[i]/P[i] or s[i]/T[i] columns with the Diagram tab overlay)"

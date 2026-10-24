@@ -1,0 +1,63 @@
+{
+  "id": "CSL-0268",
+  "name": "reciprocating_compressor_exponent_m",
+  "title": "Best speed exponent m for a family of reciprocating compressors",
+  "summary": "Six Grasso reciprocating compressors given by identified polynomial isentropic-efficiency curves at three speeds over a 50-point pressure-ratio lookup table; the efficiency at lower speeds is simulated by scaling the 1500 rev/min curve with (rpm1/rpm2)^m, as in the original.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "reciprocating_compressor_exponent_m.eescode",
+  "fluids": [],
+  "tags": [
+    "reciprocating compressor",
+    "isentropic efficiency",
+    "Grasso",
+    "rotation speed",
+    "polynomial",
+    "parameter identification"
+  ],
+  "language_features": [],
+  "stats": {
+    "n_equations": 1855,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/1_Compressors/1_1_Reciprocating Compressors/Exponent m.EES",
+    "candidate_id": "TM-0283",
+    "authors": [
+      "Felipe Trebilcock"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X6.596",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of Exponent m.EES by compare_solution.py (no --ees-units; no pressure/energy in the window): 1855 common variables, 0 differ (rtol=0.001); only in EES: i (the DUPLICATE index). Largest relative difference 2.54e-10 on R_P_CP[3] (stored-solution rounding).",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution of thermo_models TM-0283 (Exponent m.EES, EES X6.596, 1856/1856); tools/compare_solution.py",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 2.54e-10,
+    "notes": "The default lookup table (50x1, R_P_CP 1.662 to 6.141) was hand-decoded from the binary .ees at offset 238114 (ees_extract.py reports 0 tables) and agrees with the stored R_P_CP[1..50] to <=5e-10."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0245"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added",
+      "by": "opencode worker (card C-308, batch B-15)"
+    }
+  ]
+}

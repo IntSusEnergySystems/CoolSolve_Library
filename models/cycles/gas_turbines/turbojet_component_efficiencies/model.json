@@ -33,7 +33,7 @@
     "notes": "compare_solution.py --ees-units. 37 common variables, 9 differ (rtol=0.001); only in EES: 18; only in CoolSolve: 2. The 9 differences are T[1], T_amb, T0[1], T0[2], T0[3], T0[4], T0[5], T0[7] and T[7]: the model keeps kelvin (T_amb = -40+273) and --ees-units subtracts 273.15 from a unit of K when the name starts with T. Maximum relative difference 1.172318 = 273.15/233 on T[1] and T_amb. Blank units and m/s are not scaled and agree. After the kPa and kJ scaling, the largest relative difference on the other common variables is 4.90e-09 on Fs. Only in EES: c_6, m, n, p0[6], p[2], p[3], p[4], p[6], q_m_e, s[1], s[2], s[3], s[4], T0[6], T[2], T[3], T[4], T[6] (variable-window entries absent from the equation window). Only in CoolSolve: Cs (the equation is in the window; EES did not store it) and fluid$ (string, also written as 0 in the .sol). All 39 equations satisfied. 11 iterations with the stored-root initials, 45 without; same positive c_7."
   },
   "missing_features": [],
-  "related": [],
+  "related": ["CSL-0295"],
   "related_external": [],
   "supersedes": [],
   "previous_paths": [],

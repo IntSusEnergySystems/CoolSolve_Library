@@ -1,0 +1,73 @@
+{
+  "id": "CSL-0262",
+  "name": "investment_npv_irr",
+  "title": "Economic evaluation of an investment: net present value and internal rate of return",
+  "summary": "Year-by-year cash-flow evaluation of an energy-saving investment over its lifetime: the PROCEDUREs NPV (escalated benefit/cost, tax, annuity, depreciation, discounting, lookup table output) and procIRR (cash flows re-discounted at the unknown rate) give the net present value, the discounted payback year and the internal rate of return solved from NPV_IRR = 0. No thermodynamics: meant to be fed with the cost and saving figures of an energy model.",
+  "kind": "steady",
+  "level": 1,
+  "status": "blocked",
+  "main_file": "investment_npv_irr.eescode",
+  "fluids": [],
+  "tags": [
+    "economics",
+    "NPV",
+    "internal rate of return",
+    "discounted cash flow",
+    "payback time",
+    "investment"
+  ],
+  "language_features": [
+    "PROCEDURE",
+    "CALL",
+    "LOOKUP",
+    "REPEAT",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 17,
+    "largest_block": 2
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/Economical_evaluation_of_investment/INVESTISSEMENT_RENTABILITE_SB080108SQ080206.EES",
+    "candidate_id": "TM-0271",
+    "authors": [
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)",
+      "Sylvain Quoilin (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.991",
+    "language": "en",
+    "course": "Machines et systèmes thermiques (ULiège), economic evaluation of energy-saving measures"
+  },
+  "verification": {
+    "summary": "Runnable variant vs the EES stored solution (compare_solution.py): 17 common variables, 0 differ at rtol=0.001; at rtol=1e-12 the largest printed residual is 4.54e-10 (k_IRR). The 461 EES-only values are procedure locals (CS-GAP-BODY-LOCALS-SOL) and stale/leftover records (CS-BUG-EXTRACT-STALE). The recomputed cash flows also match EES's own lookup table (0 differ at rtol=1e-9, max 8.06e-12).",
+    "checks": [
+      "ees-stored-solution",
+      "analytical"
+    ],
+    "reference": "EES stored solution of the source file (478 variables, the last EES calculation) and the lookup table 'data' hand-decoded from the same file (44x14 columns, rows 1-11 the default run); the parametric table1 (12502x2) is a phantom decode (CS-BUG-EXTRACT-TABLE-FP) and was not used.",
+    "date": "2026-10-21",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 4.54e-10,
+    "notes": "Concerns the runnable variant investment_npv_irr_coolsolve.eescode: 17 common variables, 0 differ (rtol=0.001); at rtol=1e-12 the printed residuals are annuite 1.82e-10, k_IRR 4.54e-10, NPV 2.28e-11 (rounding of the stored 9-10 digit values). The 461 EES-only values are the locals of the two PROCEDUREs (341, absent from every .sol: CS-GAP-BODY-LOCALS-SOL) and leftovers of an earlier version of the file (120: a[], annuite[], D, D[], PBT, R[], TIR, YEAR, j); the stored locals are stale (B[2] = 6270 = 6000*1.045, the earlier parameter set of TM-0269, vs 40 from the current equations: CS-BUG-EXTRACT-STALE). A scratch run of the native file with only the 14 write lines removed reads EES's own table and agrees with the variant on all 17 variables (0 differ at rtol=1e-9, max 8.06e-12 on k_IRR); an independent Python hand calculation gives annuite 10.000550008180202, NPV 8.140371574323868, IRR 0.12414075355640218, DDP 10. Unit system of the source: SI MASS DEG PA C J (no conversion). The stats are those of the variant; the native file does not parse."
+  },
+  "missing_features": [
+    "CS-BUG-LOOKUP-WRITE"
+  ],
+  "related": [
+    "CSL-0154"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-21",
+      "action": "added (native file blocked by CS-BUG-LOOKUP-WRITE, runnable variant investment_npv_irr_coolsolve.eescode verified against the EES stored solution)",
+      "by": "opencode (mimo-v2.6-flash-free) for S. Quoilin"
+    }
+  ]
+}

@@ -204,4 +204,11 @@ MCI, TP3, exercise 5. Published under the library licence (MIT).
 
 ## Related models
 
-None.
+- `CSL-0273` *engine_data_coherence_derating*: worked example checking engine
+  data-sheet coherence (shaft power from the torque among them).
+- `CSL-0275` *square_v6_engine_exercise*: MCI TP3 exercises 1-3 on a square
+  V6 engine (same TP series; shaft power, bmep and friction losses in its
+  exercise 2).
+- `CSL-0279` *engine_bsfc_bore_stroke_afr*: the same shaft/indicated chain of
+  the mechanical efficiency, with the fuel flow and the specific fuel
+  consumptions added (MCI TP7, exercise 2).

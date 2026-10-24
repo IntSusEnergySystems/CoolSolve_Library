@@ -285,3 +285,6 @@ which reports
 * **CSL-0149** `gas_engine_complete_model`: the maximum-power counterpart of
   this stand-by point, from the same TP 08 exercise series (SB versions),
   with the throttle map lookup, the water circuit and two recovery exchangers.
+* **CSL-0261** `gas_engine_rankine_bottoming`: MSTh R12 exercise, the same
+  engine sub-model family (intake valves, `cpbar` combustion, imposed shaft
+  efficiency) with the exhaust gas driving a bottoming Rankine cycle.

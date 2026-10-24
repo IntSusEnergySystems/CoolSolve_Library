@@ -1,0 +1,73 @@
+{
+  "id": "CSL-0285",
+  "name": "argon_piston_compression",
+  "title": "Argon compression in a piston-cylinder: adiabatic, isothermal, polytropic",
+  "summary": "Closed-system compression of 0.2 kg of argon from 100 kPa and 300 K to 600 kPa in a piston-cylinder: boundary work and first-law heat of the reversible adiabatic (isentropic), isothermal and polytropic (n = 1.3) paths, with T-s points.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "argon_piston_compression.eescode",
+  "fluids": [
+    "Ar"
+  ],
+  "tags": [
+    "ideal gas",
+    "piston-cylinder",
+    "closed system",
+    "boundary work",
+    "polytropic",
+    "isentropic",
+    "isothermal",
+    "exercise"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 39,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R05.zip!/THD10_R05_E1.EES",
+    "candidate_id": "TM-0515",
+    "authors": [
+      "TBD (ULiège THD10 course solution; no author named in the file)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.423",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège, THD10), session R05, exercise 1 (2010)"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution (compare_solution.py, rtol=0.001, --ees-units): max rel. diff 5.56e-03 on four display temperatures (0.15 K: the original used -273, the library -273.15); excluding them, max 4.21e-03 on W_s, from the argon cp difference EES 8.4 vs CoolProp (gamma 1.6667 vs 1.6695). Isothermal and polytropic works agree to 6e-09.",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance"
+    ],
+    "reference": "EES stored solution of THD10_R05_E1.EES (EES 8.423), 42 variables, 38 common with the model",
+    "date": "2026-10-23",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.00556,
+    "notes": "13 of 38 common variables differ at rtol=0.001: 4 display temperatures (273 vs 273.15 conversion), the rest cascading from the cp difference of argon between EES ideal-gas and CoolProp real-fluid data. Q_s = 0 and Q_t = -W_t recovered exactly (energy-balance check). Stale EES variables w, T_1, p[1], p[2] not defined by the file's equations."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0237",
+    "CSL-0270"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-23",
+      "action": "added (T-IMPORT TM-0515, batch B-15)",
+      "by": "glm-5.3-flash for S. Quoilin"
+    }
+  ]
+}

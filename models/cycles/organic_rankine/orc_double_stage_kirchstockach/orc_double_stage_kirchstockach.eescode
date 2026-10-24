@@ -1,0 +1,217 @@
+{=============================================================================
+  Double-stage (HT + LT series) ORC power plant Kirchstockach, design point
+  CoolSolve Library model CSL-0252
+ -----------------------------------------------------------------------------
+  Translation of the TESPy notebook tespy/ORC_offdesign/complete_ORC.ipynb
+  (KCORC summer school) into simultaneous equations: two R245fa cycles in
+  series on the geothermal brine (135.1 C, 122.4 kg/s at 10 bar), each with a
+  preheating train, a constant-isentropic-efficiency turbine and an air-cooled
+  condenser sized by an imposed pinch at the dew-point section boundary. The
+  brine is split in parallel between the LT preheater and the LHT preheater.
+  Pressure drops are imposed per exchanger, subcooling by td_bubble-type
+  conditions; turbine-generator-motor efficiency 1, as in the notebook.
+
+  Inputs : brine state and branch mass flow, efficiencies, condenser pinches,
+           air in/out temperatures, pressure drops
+  Outputs: state points 01..10a, brine states B/F/H, mass flows, gross/net
+           power, second-law efficiencies (paper and own exergy reference)
+  Units  : SI - temperatures in degC, pressures in Pa, energies in J
+  Source : F. Witte, A. Steinhauer, https://github.com/fwitte/KCORC_summer_school
+           (no LICENSE file in the repository: credited and linked, to confirm)
+  Status : verified vs the notebook re-run (TESPy 0.11.3) and Heberle et al. 2015
+=============================================================================}
+
+"!Geothermal brine (water): production state, branch split, mixing before reinjection"
+m_g = 122.4                     "brine mass flow rate [kg/s]"
+p_g = 10E5                      "brine pressure, no hot-side pressure drop [Pa]"
+T_A = 135.1                     "production temperature [C]"
+T_C = 92.95                     "HHT preheater outlet = LT evaporator inlet [C]"
+T_D1 = 70.4                     "LT evaporator outlet temperature [C]"
+m_D2 = 67.9                     "mass flow of the LHT preheater branch [kg/s]"
+T_G = 51.66                     "LHT preheater outlet temperature [C]"
+m_E = m_g - m_D2                "mass flow of the LT preheater branch [kg/s]"
+
+h_A = ENTHALPY('Water', T=T_A, P=p_g)     "production enthalpy [J/kg]"
+s_A = ENTROPY('Water', T=T_A, P=p_g)      "production entropy [J/kg-K]"
+h_B = ENTHALPY('Water', T=T_B, P=p_g)     "HT evaporator outlet enthalpy [J/kg]"
+h_C = ENTHALPY('Water', T=T_C, P=p_g)
+h_D1 = ENTHALPY('Water', T=T_D1, P=p_g)
+h_F = ENTHALPY('Water', T=T_F, P=p_g)     "LT preheater branch outlet enthalpy [J/kg]"
+h_G = ENTHALPY('Water', T=T_G, P=p_g)
+h_H = ENTHALPY('Water', T=T_H, P=p_g)     "reinjection enthalpy (mixed) [J/kg]"
+
+"!HT cycle duties: evaporator, HHT preheater (brine in series), LHT preheater (parallel branch)"
+m_HT*(h_05 - h_04) = m_g*(h_A - h_B)      "HT evaporator duty [W]"
+m_HT*(h_04 - h_03) = m_g*(h_B - h_C)      "HHT preheater duty [W]"
+m_HT*(h_03 - h_02) = m_D2*(h_D1 - h_G)    "LHT preheater duty [W]"
+
+"!HT refrigerant pressure levels (one pressure drop per preheating section)"
+DP_ph = 1.39E5/3                 "pressure drop of each preheating section [Pa]"
+p_05 = 13.85E5                   "HT turbine supply pressure [Pa]"
+p_02 = p_05 + 3*DP_ph            "HT pump outlet pressure [Pa]"
+p_03 = p_02 - DP_ph              "LHT preheater outlet pressure [Pa]"
+p_04 = p_03 - DP_ph              "HHT preheater outlet pressure [Pa]"
+
+T_05 = TEMPERATURE('R245fa', P=p_05, x=1)   "HT turbine supply: saturated vapour [C]"
+h_05 = ENTHALPY('R245fa', P=p_05, x=1)      "[J/kg]"
+s_05 = ENTROPY('R245fa', P=p_05, x=1)       "[J/kg-K]"
+T_04 = TEMPERATURE('R245fa', P=p_04, x=0) - 2.5   "preheater outlet, 2.5 K subcooled [C]"
+h_04 = ENTHALPY('R245fa', P=p_04, T=T_04)   "[J/kg]"
+
+"!HT pump and HT turbine (constant isentropic efficiencies)"
+eta_p_HT = 0.52                  "HT feed pump isentropic efficiency [-]"
+eta_t_HT = 0.883                 "HT turbine isentropic efficiency [-]"
+h_02s = ENTHALPY('R245fa', P=p_02, s=s_01)   "isentropic pump outlet enthalpy [J/kg]"
+h_02 = h_01 + (h_02s - h_01)/eta_p_HT        "pump outlet enthalpy [J/kg]"
+T_02 = TEMPERATURE('R245fa', P=p_02, h=h_02)
+p_05a = p_01                     "turbine backpressure = condensation pressure [Pa]"
+h_05s = ENTHALPY('R245fa', P=p_05a, s=s_05)  "isentropic exhaust enthalpy [J/kg]"
+h_05a = h_05 - eta_t_HT*(h_05 - h_05s)       "turbine exhaust enthalpy [J/kg]"
+T_05a = TEMPERATURE('R245fa', P=p_05a, h=h_05a)
+h_06 = h_05a                     "cycle closer, as in the notebook [J/kg]"
+
+"!HT air-cooled condenser: three sections (desuperheating, condensing, subcooling)"
+T_a1 = 8.67                      "air supply temperature [C]"
+p_air = 1E5                      "air pressure, no pressure drop [Pa]"
+h_air1 = ENTHALPY('Air', T=T_a1, P=p_air)   "air supply enthalpy [J/kg]"
+T_sat_HT = TEMPERATURE('R245fa', P=p_01, x=0)   "HT condensation temperature [C]"
+h_g1 = ENTHALPY('R245fa', P=p_01, x=1)     "saturated vapour enthalpy [J/kg]"
+h_f1 = ENTHALPY('R245fa', P=p_01, x=0)     "saturated liquid enthalpy [J/kg]"
+T_01 = T_sat_HT - 2              "condenser outlet, 2 K subcooled (td_bubble) [C]"
+h_01 = ENTHALPY('R245fa', P=p_01, T=T_01)
+s_01 = ENTROPY('R245fa', P=p_01, T=T_01)
+Q_sc_HT = m_HT*(h_f1 - h_01)     "subcooling duty [W]"
+Q_tp_HT = m_HT*(h_g1 - h_f1)     "condensing duty [W]"
+Q_sh_HT = m_HT*(h_06 - h_g1)     "desuperheating duty [W]"
+h_air_x0 = h_air1 + Q_sc_HT/m_air_HT       "air after the subcooling section [J/kg]"
+T_air_x0 = TEMPERATURE('Air', P=p_air, h=h_air_x0)
+h_air_x1 = h_air_x0 + Q_tp_HT/m_air_HT     "air at the dew-point section boundary [J/kg]"
+T_air_x1 = TEMPERATURE('Air', P=p_air, h=h_air_x1)
+h_air2 = h_air_x1 + Q_sh_HT/m_air_HT       "air outlet enthalpy [J/kg]"
+T_a2 = TEMPERATURE('Air', P=p_air, h=h_air2)
+T_a2 = 15                        "air outlet temperature [C]"
+PP_dew_HT = T_sat_HT - T_air_x1  "approach at the dew-point boundary [K]"
+PP_dew_HT = 10.5                 "imposed pinch, closes the condensation pressure [K]"
+PP_liq_HT = T_sat_HT - T_air_x0  "approach at the liquid boundary, check > pinch [K]"
+PP_cold_HT = T_01 - T_a1         "cold-end approach, check > pinch [K]"
+T_06 = TEMPERATURE('R245fa', P=p_01, h=h_06)
+PP_hot_HT = T_06 - T_a2          "hot-end approach, check > pinch [K]"
+
+"!LT cycle: evaporator duty (brine in series) and preheater duty (parallel branch)"
+m_LT*(h_10 - h_09) = m_g*(h_C - h_D1)     "LT evaporator duty [W]"
+m_LT*(h_09 - h_08) = m_E*(h_D1 - h_F)     "LT preheater duty [W]"
+h_H = (m_E*h_F + m_D2*h_G)/m_g            "adiabatic mixing of the two branches [J/kg]"
+
+"!LT refrigerant pressure levels and state points"
+DP_lt_ph = 0.78E5                "LT preheater refrigerant pressure drop [Pa]"
+p_08 = 6.75E5                    "LT pump outlet pressure [Pa]"
+p_09 = p_08 - DP_lt_ph           "LT preheater outlet = evaporator supply [Pa]"
+p_10 = p_09                      "no pressure drop in the LT evaporator [Pa]"
+T_10 = TEMPERATURE('R245fa', P=p_10, x=1)   "LT turbine supply: saturated vapour [C]"
+h_10 = ENTHALPY('R245fa', P=p_10, x=1)
+s_10 = ENTROPY('R245fa', P=p_10, x=1)
+T_09 = TEMPERATURE('R245fa', P=p_09, x=0) - 2   "evaporator supply, 2 K subcooled [C]"
+h_09 = ENTHALPY('R245fa', P=p_09, T=T_09)
+
+"!LT pump and LT turbine"
+eta_p_LT = 0.50                  "LT feed pump isentropic efficiency [-]"
+eta_t_LT = 0.827                 "LT turbine isentropic efficiency [-]"
+h_08s = ENTHALPY('R245fa', P=p_08, s=s_07)
+h_08 = h_07 + (h_08s - h_07)/eta_p_LT
+T_08 = TEMPERATURE('R245fa', P=p_08, h=h_08)
+p_10a = p_07                     "LT turbine backpressure = condensation pressure [Pa]"
+h_10s = ENTHALPY('R245fa', P=p_10a, s=s_10)
+h_10a = h_10 - eta_t_LT*(h_10 - h_10s)
+T_10a = TEMPERATURE('R245fa', P=p_10a, h=h_10a)
+h_11 = h_10a                     "cycle closer, as in the notebook [J/kg]"
+
+"!LT air-cooled condenser: three sections, pinch 11.5 K"
+T_sat_LT = TEMPERATURE('R245fa', P=p_07, x=0)   "LT condensation temperature [C]"
+h_g7 = ENTHALPY('R245fa', P=p_07, x=1)
+h_f7 = ENTHALPY('R245fa', P=p_07, x=0)
+T_07 = T_sat_LT - 3              "condenser outlet, 3 K subcooled (td_bubble) [C]"
+h_07 = ENTHALPY('R245fa', P=p_07, T=T_07)
+s_07 = ENTROPY('R245fa', P=p_07, T=T_07)
+Q_sc_LT = m_LT*(h_f7 - h_07)     "subcooling duty [W]"
+Q_tp_LT = m_LT*(h_g7 - h_f7)     "condensing duty [W]"
+Q_sh_LT = m_LT*(h_11 - h_g7)     "desuperheating duty [W]"
+h_air_x0_LT = h_air1 + Q_sc_LT/m_air_LT
+T_air_x0_LT = TEMPERATURE('Air', P=p_air, h=h_air_x0_LT)
+h_air_x1_LT = h_air_x0_LT + Q_tp_LT/m_air_LT
+T_air_x1_LT = TEMPERATURE('Air', P=p_air, h=h_air_x1_LT)
+h_air2_LT = h_air_x1_LT + Q_sh_LT/m_air_LT
+T_a2_LT = TEMPERATURE('Air', P=p_air, h=h_air2_LT)
+T_a2_LT = 15                     "air outlet temperature [C]"
+PP_dew_LT = T_sat_LT - T_air_x1_LT   "approach at the dew-point boundary [K]"
+PP_dew_LT = 11.5                 "imposed pinch, closes the condensation pressure [K]"
+PP_liq_LT = T_sat_LT - T_air_x0_LT   "approach at the liquid boundary, check > pinch [K]"
+PP_cold_LT = T_07 - T_a1             "cold-end approach, check > pinch [K]"
+PP_hot_LT = T_10a - T_a2_LT          "hot-end approach, check > pinch [K]"
+
+"!Power balance (generator and motor efficiency 1, as in the notebook)"
+W_t_HT = m_HT*(h_05 - h_05a)     "HT turbine shaft power [W]"
+W_t_LT = m_LT*(h_10 - h_10a)     "LT turbine shaft power [W]"
+W_p_HT = m_HT*(h_02 - h_01)      "HT feed pump power [W]"
+W_p_LT = m_LT*(h_08 - h_07)      "LT feed pump power [W]"
+P_gross = W_t_HT + W_t_LT        "gross power at the generator inputs [W]"
+P_net = P_gross - W_p_HT - W_p_LT   "net power delivered to the grid [W]"
+
+"!Second-law indicators (post-processing, as in the notebook helpers)"
+T_0 = 8.67                       "ambient reference temperature [C]"
+p_0 = 1.013E5                    "ambient reference pressure [Pa]"
+h_0w = ENTHALPY('Water', T=T_0, P=p_0)
+s_0w = ENTROPY('Water', T=T_0, P=p_0)
+E_GF = m_g*((h_A - h_0w) - (T_0 + 273.15)*(s_A - s_0w))   "brine exergy flow [W]"
+eta_II_gross = 100*P_gross/E_GF           "gross second-law efficiency, own reference [%]"
+eta_II_net = 100*P_net/E_GF               "net second-law efficiency, own reference [%]"
+E_GF_paper = 5309.64/0.5222*1000          "brine exergy flow implied by Table 3 [W]"
+eta_II_gross_paper = 100*P_gross/E_GF_paper
+eta_II_net_paper = 100*P_net/E_GF_paper
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{Indices follow the connection labels of the notebook: 1..6 = HT cycle
+ (01 pump inlet .. 05a turbine exhaust), 7..11 = LT cycle (07..10a).}
+P[1] = p_01
+h[1] = h_01
+T[1] = T_01
+s[1] = s_01
+P[2] = p_02
+h[2] = h_02
+T[2] = T_02
+s[2] = ENTROPY('R245fa', P=p_02, h=h_02)
+P[3] = p_03
+h[3] = h_03
+T[3] = TEMPERATURE('R245fa', P=p_03, h=h_03)
+s[3] = ENTROPY('R245fa', P=p_03, h=h_03)
+P[4] = p_04
+h[4] = h_04
+T[4] = T_04
+s[4] = ENTROPY('R245fa', P=p_04, h=h_04)
+P[5] = p_05
+h[5] = h_05
+T[5] = T_05
+s[5] = s_05
+P[6] = p_05a
+h[6] = h_05a
+T[6] = T_05a
+s[6] = ENTROPY('R245fa', P=p_05a, h=h_05a)
+P[7] = p_07
+h[7] = h_07
+T[7] = T_07
+s[7] = s_07
+P[8] = p_08
+h[8] = h_08
+T[8] = T_08
+s[8] = ENTROPY('R245fa', P=p_08, h=h_08)
+P[9] = p_09
+h[9] = h_09
+T[9] = T_09
+s[9] = ENTROPY('R245fa', P=p_09, h=h_09)
+P[10] = p_10
+h[10] = h_10
+T[10] = T_10
+s[10] = s_10
+P[11] = p_10a
+h[11] = h_10a
+T[11] = T_10a
+s[11] = ENTROPY('R245fa', P=p_10a, h=h_10a)

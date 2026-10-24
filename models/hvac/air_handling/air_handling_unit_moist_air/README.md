@@ -233,3 +233,4 @@ unit). All `thermo_models` rows therefore stay `todo` for their own cards.
   `AirH2O` obtained from dry-bulb and wet-bulb readings (same functions).
 - `CSL-0070` *adiabatic_humidifier_simplified*: humidifier component on
   `AirH2O` (effectiveness-NTU), one stage of an air-handling chain.
+- `CSL-0292` *room_air_conditioning_coil_reheat*: the same exercise (2010 version, `THD10_R10_E3`) with the other classic coil closure — a saturated coil-outlet state with the condensate enthalpy in the first law, instead of the contact factor.

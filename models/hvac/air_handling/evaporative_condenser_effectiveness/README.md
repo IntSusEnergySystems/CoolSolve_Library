@@ -149,4 +149,7 @@ The inlet wet-bulb temperature differs from the stored value by 1.48e-04, a humi
 
 ## Related models
 
-`related` is empty.
+- `CSL-0290` *direct_contact_tower_catalogue*: Diagram-Window sibling of the
+  same Laborelec toolkit (cooling-tower side).
+- `CSL-0303` *evaporative_condenser_catalogue*: the evaporative condenser of
+  the same toolkit (R717, BAC VXC catalogue, off-design air-side resistance).

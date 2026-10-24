@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0283",
+  "name": "helium_bottle_lox_displacement",
+  "title": "Helium bottle pushing liquid oxygen at constant pressure (rocket exercise)",
+  "summary": "Teaching exercise: a helium bottle pushes 5000 kg of liquid oxygen towards the engine pump of a rocket at a constant 100 kPa. The model computes the LOX tank volume, the isobaric boundary work of the helium and, from the two helium states (20 °C/14 MPa and -75 °C/100 kPa), the mass of helium and the required bottle volume.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "helium_bottle_lox_displacement.eescode",
+  "fluids": ["He"],
+  "tags": ["exercise", "rocket", "pressurization", "helium", "ideal gas", "constant pressure", "closed system"],
+  "language_features": ["property functions"],
+  "stats": {"n_equations": 18, "largest_block": 3},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R2/R2_E5_2022.EES",
+    "candidate_id": "TM-0401",
+    "authors": ["TBD (ULiège course MECA0002; companion metadata of the collection credits S. Quoilin)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.836",
+    "language": "fr",
+    "course": "ULiège, course MECA0002, exercise R2 E5 (2022-2023)"
+  },
+  "verification": {
+    "summary": "Against the EES stored solution of the 2017 file R2_E1_borguet.EES (TM-0359, identical equations; TM-0401 solved part a only): compare_solution.py --ees-units reports 17 common variables, 2 differ (rtol=0.001), max 6.30e-02 on v_he_i - CS-GAP-IDEAL-GAS-MODEL (EES ideal gas vs CoolSolve real-fluid He at 14 MPa). Part a (W=-p*dV, Vol_tank) agrees to 4.91e-11, v_he_f within 8.56e-04.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution of R2_E1_borguet.EES (TM-0359, 18 variables, EES X8.423); part a cross-checked with the stored solution of R2_E5_2022.EES (TM-0401)",
+    "date": "2026-10-23",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.063,
+    "notes": "compare_solution.py --ees-units (kPa -> Pa, K -> C). 17 common variables, 2 differ (rtol=0.001); only in EES: P (a stale variable-info record, value 1, undefined in the equation window); only in CoolSolve: W (no stored EES value). Max over all common variables 6.30e-02 on v_he_i (0.0434913 vs 0.0464131); Vol_ballon 6.28e-02; v_he_f 8.56e-04; Vol_total 7.08e-04; m_he 1.49e-04; Vol_tank/DELTAV/Vol_f 4.91e-11; data 0. Cause: CS-GAP-IDEAL-GAS-MODEL (EES stored Z = 0.99988 ideal; CoolSolve real-fluid Z = 1.067 at 14 MPa, 1.00074 at 1 bar). Against TM-0401's stored solution: 17 common, 4 differ, max 9.50e-01 on Vol_ballon (EES placeholder 1: part b never solved there); part a values identical. No .initials, square (18/18), 2 iterations; no variant."
+  },
+  "missing_features": [],
+  "related": ["CSL-0241", "CSL-0176"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-23", "action": "added", "by": "opencode agent for S. Quoilin"}
+  ]
+}

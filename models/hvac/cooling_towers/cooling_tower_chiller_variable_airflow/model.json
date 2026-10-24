@@ -1,0 +1,72 @@
+{
+ "id": "CSL-0287",
+ "name": "cooling_tower_chiller_variable_airflow",
+ "title": "Cooling tower of a chiller plant with variable air flow (revision exercise)",
+ "summary": "Steady cooling-tower model coupled to a water chiller: counter-flow effectiveness-NTU tower with saturated outlet air, fan laws scaling pressure rise and dry UA with the air mass flow, chiller COP as a function of the condenser water temperature, and the plant global COP; the air flow is the operating input.",
+ "kind": "steady",
+ "level": 3,
+ "status": "verified",
+ "main_file": "cooling_tower_chiller_variable_airflow.eescode",
+ "fluids": [
+  "AirH2O"
+ ],
+ "tags": [
+  "cooling tower",
+  "chiller",
+  "psychrometrics",
+  "fan laws",
+  "epsilon-NTU",
+  "part load",
+  "exercise"
+ ],
+ "language_features": [
+  "humid-air properties",
+  "property functions",
+  "min/max"
+ ],
+ "stats": {
+  "n_equations": 42,
+  "largest_block": 16
+ },
+ "origin": {
+  "type": "teaching",
+  "source": "thermo_models",
+  "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 10/Revision JL051223-05.EES",
+  "candidate_id": "TM-0162",
+  "authors": [
+   "Jean Lebrun"
+  ],
+  "url": "",
+  "license": "MIT",
+  "ees_version": "X7.458",
+  "language": "fr",
+  "course": "ULiege MSTh revision session, repetition TP 10 (JL051223, 2005-12-23, series 04-06)"
+ },
+ "verification": {
+  "summary": "Compared with the solution stored in Revision JL051223-05.EES (42 valued variables) at its stored operating point M_dot_a = 30 kg/s: compare_solution.py reports 42 common variables, 0 differ (rtol=0.001); max relative difference 3.84e-04 (v_a, humid-air backend). The nominal point of the file's stored comment block (M_dot_a = 10.51) is reproduced within its 4-digit rounding.",
+  "checks": [
+   "ees-stored-solution"
+  ],
+  "reference": "EES stored solution of ~/Nextcloud/thermo_models/.../TP 10/Revision JL051223-05.EES (candidate TM-0162, 42/47 stored variables valued)",
+  "date": "2026-10-23",
+  "coolsolve_version": "0.4.0@9768373",
+  "max_rel_diff": 0.0003839591348284134,
+  "notes": "Stored reference is the last run of parametric Table 1 (W_dot_fan sweep, 120 rows), i.e. M_dot_a = 30 kg/s through the fan law. Solved unmodified first: 41 equations / 42 unknowns (System square: No); the input equation M_dot_a = 30 completes what the EES parametric table supplied. Excluded (no stored value, commented equations): a, b, c, d, AU_dry_ct. Largest differences: v_a 3.84e-04 (EES 0.8461153457 vs CoolSolve 0.84579047 m^3/kg, humid-air backend), propagating to V_dot_a and W_dot_fan (116314.328 vs 116269.668 W). Solver: 3 iterations with the stored guesses; without .initials the 16-variable block fails SingularJacobian. Secondary check at M_dot_a = 10.51 against the file's stored comment block: W_dot_fan 4999.3 vs 5000 W (1.4e-04), t_w_ex_ct 29.7156 vs 29.72 C, COP_global 3.6803 vs 3.68. Units were already SI MASS DEG PA C J. .sol labels v_a as kg/m^3 (CS-BUG-UNIT-VOLUME, values unaffected)."
+ },
+ "missing_features": [],
+ "related": [
+  "CSL-0232",
+  "CSL-0215",
+  "CSL-0065"
+ ],
+ "related_external": [],
+ "supersedes": [],
+ "previous_paths": [],
+ "history": [
+  {
+   "date": "2026-10-23",
+   "action": "added",
+   "by": "opencode worker for S. Quoilin"
+  }
+ ]
+}

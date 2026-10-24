@@ -1,0 +1,408 @@
+{=============================================================================
+  Gas turbine with a chiller on the compressor inlet air
+  CoolSolve Library model CSL-0294
+ -----------------------------------------------------------------------------
+  Open-cycle Brayton plant (compressor, adiabatic combustor, expander, methane
+  in air, mean specific heats from the ULiege combustion library) whose inlet
+  air at 30 C is cooled to 20 C by an R134a refrigeration machine (suction
+  evaporator on the air line, condenser at 45 C). The reduced flow and reduced
+  speed link the air mass flow to the nominal point; the evaporator UA and the
+  chiller compressor displacement come out of the sizing. The cpbar calls in
+  function position of the original are transcribed as CALL (valid EES, no
+  equation change); the (h,x) VOLUME call is rewritten with the (P,h) pair
+  of the same state (decision D12, see README). The original's comment
+  "sans chiller: T_c_su=T_chiller_su" is kept as a comment.
+
+  Inputs : T_chiller_su, T_cd, T_ev, P_c_su, P_c_ex, T_e_su, efficiencies,
+           LHV_f, N (chiller compressor speed), N_rot, nominal MR_c_n, NR_n
+  Outputs: W_dot_sh, W_dot_el, eta, eta_global, COP_chiller, AU_ev, V_s,
+           M_dot_a, MR_c, MR_e, NR
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiege MSTh repetition R12, exercise 7, Stephane Bertagnolio
+           - see README.md
+============================================================================}
+
+{--- PROCEDURE cpbar and FUNCTION gamma ---
+  The equation window calls cpbar and gamma and does not define them.
+  Copied from CSL-0293 (same MSTh collection), same origin: the ULiege
+  combustion library published as CSL-0005. cpbar is a five-output
+  procedure; the original calls it in function position, transcribed here
+  as CALL. That form is valid EES, so this is not a variant for that reason.
+  gamma stays a function call.}
+
+PROCEDURE cpbar(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)
+
+{CPBAR procedure returns cp_bar (J/kg.K) of the combustion products of a CmHn
+hydrocarbon between two temperatures. The inputs are : the type of fuel (m and n),
+the fuel-air ratio (f) and  the two temperatures (T_p1 and T_p2) in °C.
+
+In the case of incomplete combustion (negative excess air value), the procedure
+returns also : the energy losses by CO (Q_4 in J/kg of fuel), the fraction (x) of
+C atoms oxidized into CO2 and the mininum excess air (e_min) to get x>0.
+
+Simplified air is used. In the case of incomplete combustion, it is also assumed that
+there is no O2 in the combustion products.
+
+Moreover, the procedure returns the specific heat for pure air if f=0 (whatever m and n).
+
+When using this procedure, don't forget to set mass basis calculation in the unit system
+settings.}
+
+"Check of the units setting"
+IF (unitsystem('K')=1)  THEN CALL error('Please, set °C for temperature units!')
+If (unitsystem('Molar')=1)  then CALL error('Please, set Mass basis!')
+
+"Default values (in the case of complete combustion)"
+Q_4 = 0
+x = 1
+e_min = 0
+e = 0
+
+"Removable singularity: for T_p1 = T_p2 the mean specific heat is 0/0 (its limit is cp(T)).
+Below 0.01 K the mean is taken over a 0.01 K window centred on the mean temperature."
+IF (ABS(T_p1-T_p2)<0.01) THEN
+  T_hi = (T_p1+T_p2)/2+0.005
+  T_lo = (T_p1+T_p2)/2-0.005
+ELSE
+  T_hi = T_p1
+  T_lo = T_p2
+ENDIF
+
+"Composition of simplified air"
+x_air_N2 = 0.79 ; x_air_O2= 0.21
+
+"Universal gas constant"
+R_u = 8314 "J/kmol.K"
+
+"Molar masses of the species"
+MM_CO = molarmass(CO) ; MM_N2 = molarmass(N2) ; MM_O2 = molarmass(O2)
+MM_CO2 = molarmass(CO2) ; MM_H2O = molarmass(H2O)
+
+IF (f>0) Then "combustion products (not pure air)"
+
+"f  stoichiometric, excess air and f"
+parfuel = m+n/4
+MM_f = 12*m+1*n
+f_st = MM_f/(parfuel*(MM_O2+(x_air_N2/x_air_O2)*MM_N2))
+e = (f_st/f)-1
+
+IF (f>f_st) Then "air deficiency"
+
+"Stoichiometric combustion : CmHn+(m+n/4)*(O2+(79/21)*N2"
+e_min = -m/(2*parfuel) "to ensure x>0"
+f_max = f_st/(1+e_min)
+
+"Assumption : enough air to oxidize H to H2O and no O2 in the flue gases"
+"Hence : CmHn+(m+n/4)*(O2+(79/21)*N2)*(1+e) = a*CO2+b*CO+c*H2O+g*N2"
+g = parfuel*(1+e)*(79/21)
+c = n/2
+x=2*(e*parfuel+m/2)/m
+a = m*x "x is the fraction of the C atoms oxidized into CO2"
+b = m*(1-x)
+"Molar fractions of the constituents"
+nkmoltot = a+ b + c +g
+x_CO2 = a/nkmoltot
+x_CO = b/nkmoltot
+x_H2O = c/nkmoltot
+x_N2 = g/nkmoltot
+mmprod = x_CO2*MM_CO2+x_CO*MM_CO+x_H2O*MM_H2O+x_N2*MM_N2
+"!Mean c_p of combustion products"
+h_CO2 = (enthalpy(CO2,T=T_hi)-enthalpy(CO2,T=T_lo))*MM_CO2
+h_CO = (enthalpy(CO,T=T_hi)-enthalpy(CO,T=T_lo))*MM_CO
+h_H2O =(enthalpy(H2O,T=T_hi)-enthalpy(H2O,T=T_lo))*MM_H2O
+h_N2 = (enthalpy(N2,T=T_hi)-enthalpy(N2,T=T_lo))*MM_N2
+c_bar_p = ((x_CO2*h_CO2+x_CO*h_CO+x_H2O*h_H2O+x_N2*h_N2)/mmprod)/(T_hi-T_lo)
+
+"Unburned-CO losses per kmol of fuel"
+T_ref = 25
+LHV_CO_mol = enthalpy(CO,T=T_ref)*MM_CO+0.5*enthalpy(O2,T=T_ref)*MM_O2-ENTHALPY(CO2,T=T_ref)*MM_CO2
+LHV_CO_mas = LHV_CO_mol/MM_CO
+Q_4 = LHV_CO_mol*b
+
+ELSE
+
+"Molar fractions of the constituents"
+nkmoltot = m+ n/2 + parfuel*(e+(1+e)*(x_air_N2/x_air_O2))
+x_CO2 = m/nkmoltot
+x_H2O = (n/2)/nkmoltot
+x_O2 = parfuel*e/nkmoltot
+x_N2 = parfuel*(1+e)*(x_air_N2/x_air_O2)/nkmoltot
+
+"Molar mass of combustion products"
+MM_prod = x_CO2*MM_CO2+x_H2O*MM_H2O+x_O2*MM_O2+x_N2*MM_N2
+
+"Enthalpy and mean specific heat of combustion products [per kg of products]"
+hp_1 = (enthalpy(CO2,T=T_hi)-enthalpy(CO2, T=T_lo))*MM_CO2
+hp_2 = (enthalpy(H2O,T=T_hi)-enthalpy(H2O, T=T_lo))*MM_H2O
+hp_3 = (enthalpy(O2,T=T_hi)-enthalpy(O2, T=T_lo))*MM_O2
+hp_4 = (enthalpy(N2,T=T_hi)-enthalpy(N2, T=T_lo))*MM_N2
+hp = (x_CO2*hp_1+x_H2O*hp_2+x_O2*hp_3+x_N2*hp_4)/MM_prod
+c_bar_p  = hp/(T_hi-T_lo)
+
+ENDIF
+
+ELSE
+
+"Pure air case"
+MM_a = x_air_O2*MM_O2+x_air_N2*MM_N2
+ha_1 = (enthalpy(O2,T=T_hi)-enthalpy(O2, T=T_lo))*MM_O2
+ha_2 = (enthalpy(N2,T=T_hi)-enthalpy(N2, T=T_lo))*MM_N2
+ha = (x_air_O2*ha_1+x_air_N2*ha_2)/MM_a
+c_bar_p  = ha/(T_hi-T_lo)
+ENDIF
+
+END
+
+
+FUNCTION gamma (m,n,f,T_p1,T_p2)
+
+{GAMMA  function returns the specific heats ratio of the combustion products of a CmHn
+hydrocarbon between two temperatures. The inputs are : the type of
+fuel (m and n), the fuel-air ratio (f) and  the two temperatures (T_p1 and T_p2)
+in °C.
+
+Simplified air is used. In the case of incomplete combustion, it is also assumed that
+there is no O2 in the combustion products.
+
+Moreover, the function returns the specific heats for pure air if f=0 (whatever m and n).
+
+When using this function, don't forget to set mass basis calculation in the unit system
+settings.}
+
+"Check of the units setting"
+If (unitsystem('K')=1)  THEN CALL error('Please, set °C for temperature units!')
+IF (unitsystem('Molar')=1)  then CALL error('Please, set Mass basis!')
+
+"Removable singularity: for T_p1 = T_p2 the mean specific heat is 0/0 (its limit is cp(T)).
+Below 0.01 K the mean is taken over a 0.01 K window centred on the mean temperature."
+IF (ABS(T_p1-T_p2)<0.01) THEN
+  T_hi = (T_p1+T_p2)/2+0.005
+  T_lo = (T_p1+T_p2)/2-0.005
+ELSE
+  T_hi = T_p1
+  T_lo = T_p2
+ENDIF
+
+"Composition of simplified air"
+x_air_N2 = 0.79 ; x_air_O2= 0.21
+
+"Universal gas constant"
+R_u = 8314 "J/kmol.K"
+
+"Molar masses of the species"
+MM_CO = molarmass(CO) ; MM_N2 = molarmass(N2); MM_O2 = molarmass(O2)
+MM_CO2 = molarmass(CO2) ; MM_H2O = molarmass(H2O)
+
+
+IF (f>0) Then
+
+"Stoichiometric combustion : CmHn+(m+n/4)*(O2+(79/21)*N2"
+parfuel = m+n/4
+MM_f = 12*m+1*n
+f_st = MM_f/(parfuel*(MM_O2+(x_air_N2/x_air_O2)*MM_N2))
+e = (f_st/f)-1
+
+IF (f>f_st) Then
+
+"Assumption : enough air to oxidize H to H2O and no O2 in the flue gases"
+"Hence : CmHn+(m+n/4)*(O2+(79/21)*N2)*(1+e) = a*CO2+b*CO+c*H2O+g*N2"
+g = parfuel*(1+e)*(79/21)
+c = n/2
+x=2*(e*parfuel+m/2)/m
+a = m*x "x is the fraction of the C atoms oxidized into CO2"
+b = m*(1-x)
+"Molar fractions of the constituents"
+nkmoltot = a+ b + c +g
+x_CO2 = a/nkmoltot
+x_CO = b/nkmoltot
+x_H2O = c/nkmoltot
+x_N2 = g/nkmoltot
+MM_prod = x_CO2*MM_CO2+x_CO*MM_CO+x_H2O*MM_H2O+x_N2*MM_N2
+"!Mean c_p of combustion products"
+h_CO2 = (enthalpy(CO2,T=T_hi)-enthalpy(CO2,T=T_lo))*MM_CO2
+h_CO = (enthalpy(CO,T=T_hi)-enthalpy(CO,T=T_lo))*MM_CO
+h_H2O =(enthalpy(H2O,T=T_hi)-enthalpy(H2O,T=T_lo))*MM_H2O
+h_N2 = (enthalpy(N2,T=T_hi)-enthalpy(N2,T=T_lo))*MM_N2
+c_bar_p = ((x_CO2*h_CO2+x_CO*h_CO+x_H2O*h_H2O+x_N2*h_N2)/MM_prod)/(T_hi-T_lo)
+gamma = c_bar_p/(c_bar_p-R_u/MM_prod)
+
+ELSE
+
+"Molar fractions of the constituents"
+nkmoltot = m+ n/2 + parfuel*(e+(1+e)*(x_air_N2/x_air_O2))
+x_CO2 = m/nkmoltot
+x_H2O = (n/2)/nkmoltot
+x_O2 = parfuel*e/nkmoltot
+x_N2 = parfuel*(1+e)*(x_air_N2/x_air_O2)/nkmoltot
+
+"Molar mass of combustion products"
+MM_prod = x_CO2*MM_CO2+x_H2O*MM_H2O+x_O2*MM_O2+x_N2*MM_N2
+
+"Enthalpy, specific heat and gamma of combustion products [per kg of products]"
+hp_1 = (enthalpy(CO2,T=T_hi)-enthalpy(CO2, T=T_lo))*MM_CO2
+hp_2 = (enthalpy(H2O,T=T_hi)-enthalpy(H2O, T=T_lo))*MM_H2O
+hp_3 = (enthalpy(O2,T=T_hi)-enthalpy(O2, T=T_lo))*MM_O2
+hp_4 = (enthalpy(N2,T=T_hi)-enthalpy(N2, T=T_lo))*MM_N2
+hp = (x_CO2*hp_1+x_H2O*hp_2+x_O2*hp_3+x_N2*hp_4)/MM_prod
+cpbar  = hp/(T_hi-T_lo)
+gamma = cpbar/(cpbar-R_u/MM_prod)
+ENDIF
+
+ELSE
+
+"Pure air case"
+MM_a = x_air_O2*MM_O2+x_air_N2*MM_N2
+ha_1 = (enthalpy(O2,T=T_hi)-enthalpy(O2, T=T_lo))*MM_O2
+ha_2 = (enthalpy(N2,T=T_hi)-enthalpy(N2, T=T_lo))*MM_N2
+ha = (x_air_O2*ha_1+x_air_N2*ha_2)/MM_a
+cpbar  = ha/(T_hi-T_lo)
+gamma = cpbar/(cpbar-R_u/MM_a)
+ENDIF
+
+END
+
+"MSTh - SB - R12 - Exercice 7"
+
+"!Brayton cycle data"
+T_chiller_su=30          "inlet air temperature with the chiller [C]"
+P_chiller_su=1E5         "as in the original [Pa]"
+"With chiller:"
+T_c_su=20                "compressor inlet temperature, cooled by the chiller [C]"
+"Without chiller:"
+"T_c_su=T_chiller_su"
+P_c_su=1E5               "compressor inlet pressure [Pa]"
+P_c_ex=10E5              "compressor exit pressure [Pa]"
+T_e_su=1000              "expander inlet temperature [C]"
+epsilon_c_s=0.85         "compressor isentropic efficiency [-]"
+epsilon_e_s=0.85         "expander isentropic efficiency [-]"
+eta_em=0.9               "electromechanical efficiency [-]"
+P_e_su=P_c_ex            "expander inlet pressure [Pa]"
+P_e_ex=P_c_su            "expander exit pressure [Pa]"
+
+"!Refrigeration machine data"
+T_cd=45                  "condenser temperature [C]"
+T_ev=10                  "evaporator temperature [C]"
+epsilon_chiller_s=0.65   "chiller compressor isentropic efficiency [-]"
+
+"!Working in relative terms (to estimate the reduced quantities):"
+"M_dot_a=1"
+"!Refrigeration cycle:"
+COP_chiller=Q_dot_ev/W_dot_cp_chiller   "coefficient of performance of the chiller [-]"
+"balance"
+Q_dot_cd=Q_dot_ev+W_dot_cp_chiller      "condenser duty [W]"
+
+P_ev=PRESSURE(R134a,T=T_ev,x=0.5)       "evaporating pressure [Pa]"
+P_cd=PRESSURE(R134a,T=T_cd,x=0.5)       "condensing pressure [Pa]"
+
+"!Evaporator (on the air line):"
+Q_dot_ev=M_dot_r*(h_1-h_4)              "evaporator duty from the refrigerant side [W]"
+h_1=ENTHALPY(R134a,T=T_ev,x=1)          "saturated vapour at the evaporator exit [J/kg]"
+"isenthalpic expansion"
+h_4=h_3                                 "as in the original [J/kg]"
+h_3=ENTHALPY(R134a,T=T_cd,x=0)          "saturated liquid at the condenser exit [J/kg]"
+"!Compressor:"
+epsilon_chiller_s=w_cp_chiller_s/w_cp_chiller  "isentropic efficiency [-]"
+w_cp_chiller_s=h_2_s-h_1                "isentropic specific work [J/kg]"
+h_2_s=ENTHALPY(R134a,s=s_1,P=P_cd)      "isentropic exit enthalpy [J/kg]"
+s_1=ENTROPY(R134a,T=T_ev,x=1)           "compressor inlet entropy [J/kg-K]"
+w_cp_chiller=h_2-h_1                    "specific work [J/kg]"
+W_dot_cp_chiller=M_dot_r*w_cp_chiller   "compressor power [W]"
+V_dot_1=M_dot_r*v_1                     "swept volume flow at the compressor inlet [m3/s]"
+v_1=VOLUME(R134a,P=P_ev,h=h_1)           "specific volume at the compressor inlet [m3/kg]; original (h,x) pair rewritten as (P,h), same state (decision D12)"
+V_dot_1=V_dot_s                         "as in the original [m3/s]"
+V_dot_s=N*V_s                           "displacement flow at speed N [m3/s]"
+N=50                                    "chiller compressor speed [rev/s]"
+
+"!Cooling of the inlet air"
+Q_dot_ev=M_dot_a*cp_a_chiller*(T_chiller_su-T_c_su)         "duty from the air side [W]"
+cp_a_chiller=CP(Air,T=25)                "specific heat of air [J/kg-K]"
+Q_dot_ev=epsilon_ev*M_dot_a*cp_a_chiller*(T_chiller_su-T_ev)  "epsilon-NTU relation [W]"
+epsilon_ev=1-exp(-NTU_ev)                "evaporator effectiveness for M_dot_cold=M_dot_hot [-]"
+NTU_ev=AU_ev/(M_dot_a*cp_a_chiller)      "number of transfer units [-]"
+
+"!Brayton cycle"
+f=M_dot_f/M_dot_a                        "fuel-air ratio [-]"
+M_dot_p=M_dot_a+M_dot_f                  "product mass flow rate [kg/s]"
+"![A] turbo-compressor:"
+(T_c_ex_s+273)/(T_c_su+273)=(P_c_ex/P_c_su)^((gamma_c-1)/gamma_c)  "isentropic compression; +273 as in the original [-]"
+"provisional value:"
+"gamma_c=1.4"
+gamma_c=gamma(m_f,n_f,0,T_c_su,T_c_ex)   "ratio of specific heats of air (f = 0) [-]"
+m_f=1                                    "carbon atoms in CmHn [-]"
+n_f=4                                    "hydrogen atoms in CmHn [-]"
+epsilon_c_s=(T_c_ex_s-T_c_su)/(T_c_ex-T_c_su)  "compressor isentropic efficiency [-]"
+w_c=cp_a*(T_c_ex-T_c_su)                "compressor specific work [J/kg-air]"
+"provisional value:"
+"cp_a=1005"
+cp_a=CP(Air,T=(T_c_ex+T_c_su)/2)         "specific heat of air [J/kg-K]"
+
+"![B] combustion chamber"
+q_1+q_2+q_3+q_4+q_5=0                    "combustor energy balance [J/kg of air]"
+q_1=cp_a*(T_ref-T_c_ex)                  "air brought to the reference [J/kg of air]"
+q_2=f*cp_f*(T_ref-T_f_su)                "fuel brought to the reference [J/kg of air]"
+T_ref=25                                 "reference temperature [C]"
+T_f_su=20                                "fuel inlet temperature [C]"
+cp_f=CP(CH4,T=(T_ref+T_f_su)/2)          "specific heat of methane [J/kg-K]"
+q_3=-f*LHV_f                             "fuel heating value [J/kg of air]"
+LHV_f=5E7                                "fuel lower heating value [J/kg]"
+q_4=0                                    "complete combustion, as in the original [J/kg of air]"
+q_5=(1+f)*cp_p_1*(T_e_su-T_ref)          "products from the reference to T_e_su [J/kg of air]"
+CALL cpbar(m_f,n_f,f,T_e_su,T_ref:cp_p_1,Q_4_1,x_1,e_min_1,e_1)  "mean specific heat of the products [J/kg-K]"
+"provisional value:"
+"cp_p_1=1200"
+
+"![C] expander:"
+(T_e_ex_s+273)/(T_e_su+273)=(P_e_ex/P_e_su)^((gamma_e-1)/gamma_e)  "isentropic expansion; +273 as in the original [-]"
+"provisional value:"
+"gamma_e=1.4"
+gamma_e=gamma(m_f,n_f,f,T_e_su,T_e_ex)   "ratio of specific heats of the products [-]"
+
+epsilon_e_s=(T_e_su-T_e_ex)/(T_e_su-T_e_ex_s)  "expander isentropic efficiency [-]"
+w_e=cp_p_2*(T_e_su-T_e_ex)               "expander specific work [J/kg of products]"
+"provisional value:"
+"cp_p_2=1200"
+CALL cpbar(m_f,n_f,f,T_e_su,T_e_ex:cp_p_2,Q_4_2,x_2,e_min_2,e_2)  "mean specific heat over the expansion [J/kg-K]"
+
+W_dot_sh=W_dot_e-W_dot_c                 "shaft power [W]"
+W_dot_e=M_dot_a*w_e                      "as in the original [W]"
+W_dot_c=M_dot_p*w_c                      "as in the original [W]"
+W_dot_el=eta_em*W_dot_sh                 "electrical power [W]"
+eta=W_dot_sh/Q_dot_c                     "efficiency [-]"
+Q_dot_c=M_dot_f*LHV_f                    "thermal input [W]"
+eta_global=W_dot_sh/(Q_dot_c+W_dot_cp_chiller)  "efficiency including the chiller power [-]"
+
+"!Reduced quantities:"
+N_rot=10000/60  "(hypothesis)"           "rotational speed of the gas turbine [rev/s]"
+NR=N_rot/(sqrt(T_c_su+273))              "reduced speed [1/(s-K^0.5)]; +273 as in the original"
+
+MR_c=M_dot_a*(sqrt(T_c_su+273)/(P_c_su/1E5))  "compressor reduced mass flow [kg-K^0.5/s]"
+
+MR_e=M_dot_p*(sqrt(T_e_su+273)/(P_e_su/1E5))  "expander reduced mass flow [kg-K^0.5/s]"
+
+"We find (for the nominal regime with M_dot_a=1 and without chiller):"
+MR_c_n=17.41 [-]                         "nominal compressor reduced mass flow [-]"
+MR_e_n=3.625 [-]                         "nominal expander reduced mass flow [-]"
+NR_n=9.575 [-]                           "nominal reduced speed [-]"
+
+"After adding the chiller:"
+MR_c=MR_c_n*NR/NR_n  "MR_c stays constant since the compressor is always choked and the turbine speed is not varied"
+
+"!State points of the R134a chiller (for the thermodynamic diagrams)"
+T_2=TEMPERATURE(R134a,h=h_2,P=P_cd)      "compressor exit temperature [C]"
+T_4=TEMPERATURE(R134a,h=h_4,P=P_ev)      "expansion valve exit temperature [C]"
+P_ch[1]=P_ev                             "evaporating pressure [Pa]"
+P_ch[2]=P_cd                             "condensing pressure [Pa]"
+P_ch[3]=P_cd                             "condensing pressure [Pa]"
+P_ch[4]=P_ev                             "evaporating pressure [Pa]"
+h_ch[1]=h_1                              "compressor inlet enthalpy [J/kg]"
+h_ch[2]=h_2                              "compressor exit enthalpy [J/kg]"
+h_ch[3]=h_3                              "condenser exit enthalpy [J/kg]"
+h_ch[4]=h_4                              "evaporator inlet enthalpy [J/kg]"
+T_ch[1]=T_ev                             "compressor inlet temperature [C]"
+T_ch[2]=T_2                              "compressor exit temperature [C]"
+T_ch[3]=T_cd                             "condenser exit temperature [C]"
+T_ch[4]=T_4                              "evaporator inlet temperature [C]"
+s_ch[1]=s_1                              "compressor inlet entropy [J/kg-K]"
+s_ch[2]=ENTROPY(R134a,h=h_2,P=P_cd)      "compressor exit entropy [J/kg-K]"
+s_ch[3]=ENTROPY(R134a,h=h_3,P=P_cd)      "condenser exit entropy [J/kg-K]"
+s_ch[4]=ENTROPY(R134a,h=h_4,P=P_ev)      "evaporator inlet entropy [J/kg-K]"

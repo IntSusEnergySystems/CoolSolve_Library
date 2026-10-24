@@ -227,3 +227,4 @@ solution of 186 variables, no tables).
   small closed ORC demo, with the expander and pump performance from maps.
 
 - `CSL-0153` *orc_whr_refprop_cost*: simple R245fa ORC with imposed component performance.
+- `CSL-0252` *orc_double_stage_kirchstockach*: two-stage series ORC on R245fa (geothermal brine), design point translated from a TESPy notebook.

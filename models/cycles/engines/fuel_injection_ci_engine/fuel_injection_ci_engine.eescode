@@ -1,0 +1,60 @@
+{=============================================================================
+  Fuel injection in an atmospheric compression-ignition engine
+  CoolSolve Library model CSL-0277
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège MCI, TP6, exercise 3, after Pulkrabek problems
+  5-9 and 5-10). A 5-cylinder naturally aspirated diesel engine captures a
+  given air mass per cycle (volumetric efficiency on the ambient density).
+  The fuel mass per cycle follows from an equivalence ratio of 0.80 with
+  dodecane (C12H26) as fuel, and the injector area and diameter follow from
+  the incompressible orifice equation over an injection window of 25
+  crank-angle degrees.
+
+  Inputs : V_tot, n_c, epsilon_v, p_atm, T_amb, Theta_d, Theta_f, RPM,
+           C_d, rho_f, DELTAp_f, phi
+  Outputs: m_a, f, f_st, m_f, m_dot_f, DELTATau, A, diam
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : P. Ngendakumana, ULiège MCI TP6 - see README.md
+  Status : verified (converted from K to °C; see README.md)
+=============================================================================}
+
+"!Data"
+
+n_c = 5                          "number of cylinders [-]"
+V_tot = 3.2e-3                   "engine displacement [m^3]"
+epsilon_v = 0.8                  "volumetric efficiency [-]"
+p_atm = 1e5                      "atmospheric pressure [Pa]"
+T_amb = 25                       "ambient temperature, 298.15 K in the original [°C]"
+Theta_d = -20                    "start of injection, crank angle [°]"
+Theta_f = 5                      "end of injection, crank angle [°]"
+RPM = 2400                       "rotational speed [1/min]"
+C_d = 0.80                       "discharge coefficient of the injector [-]"
+rho_f = 850                      "fuel density [kg/m^3]"
+DELTAp_f = 110e6                 "injection pressure differential [Pa]"
+
+"!Calculations, as in the original"
+
+"Volume swept by one cylinder"
+V_s = V_tot/n_c                  "swept volume per cylinder [m^3]"
+"Air mass captured in each cylinder"
+m_a = epsilon_v*(rho_a*V_s)      "air mass captured per cylinder [kg]"
+rho_a = density(Air,T=T_su,P=P_su)  "ambient air density [kg/m^3]"
+T_su = T_amb                     "supply temperature [°C]"
+P_su = p_atm                     "supply pressure [Pa]"
+"Fuel mass for the given equivalence ratio"
+m = 12                           "number of carbon atoms of the fuel, dodecane C12H26 [-]"
+n = 26                           "number of hydrogen atoms of the fuel [-]"
+phi = 0.80                       "fuel-air equivalence ratio [-]"
+f_st = (m*Molarmass(C)+n*Molarmass(H))/((m+n/4)*(Molarmass(O2)+79/21*Molarmass(N2)))  "stoichiometric fuel-air ratio [kg fuel/kg air]"
+phi = f/f_st                     "fuel-air ratio f [-]"
+f*m_a = m_f                      "fuel mass injected per cycle [kg]"
+"Duration of the injection"
+Theta = Theta_f-Theta_d          "injection duration in crank-angle degrees [°]"
+conv = 1/(360*NT)                "seconds per crank-angle degree [s/°]"
+NT = RPM/60                      "rotational speed [1/s]"
+DELTATau = Theta*conv            "injection duration [s]"
+"Injected flow rate"
+m_f = m_dot_f*DELTATau           "fuel mass per cycle [kg]"
+"Injector outlet diameter"
+m_dot_f = C_d*A*(2*rho_f*DELTAp_f)^0.5  "incompressible fluid through the orifice [kg/s]"
+A = pi*diam^2/4                  "injector outlet area [m^2]"

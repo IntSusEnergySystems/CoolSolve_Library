@@ -186,3 +186,4 @@ model and also stays `todo`.
 - `CSL-0073` *cooling_coil_with_control_simplified*: the same
   contact-factor closure in a simplified coil model with a control law on the
   exhaust air temperature (ULiège model bank).
+- `CSL-0292` *room_air_conditioning_coil_reheat*: room conditioning exercise whose cooling coil is closed by a saturated outlet state with the condensate enthalpy in the first law; the contact-factor counterpart of the same exercise is `CSL-0028`.

@@ -1,0 +1,53 @@
+{
+  "id": "CSL-0278",
+  "name": "vehicle_exhaust_emissions",
+  "title": "Vehicle exhaust emissions from fuel flow and gas fractions (MCI TP7 exercise 1)",
+  "summary": "Teaching exercise: CO, NO2 and HC emissions of a vehicle in g/kg fuel, g/km and g/kWh of brake work, from the fuel mass flow, the excess-air factor and the wet-gas mole fractions, converted to mass fractions with the molar masses and the exhaust-gas molar mass.",
+  "kind": "steady",
+  "level": 1,
+  "status": "blocked",
+  "main_file": "vehicle_exhaust_emissions.eescode",
+  "fluids": ["CO", "NO2", "C3H8"],
+  "tags": [
+    "exercise",
+    "emissions",
+    "exhaust gas",
+    "CO",
+    "NO2",
+    "HC",
+    "internal combustion engine",
+    "emission index",
+    "g/km"
+  ],
+  "language_features": ["molarmass"],
+  "stats": {"n_equations": 30, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP7/EX_1_PNG_2019.EES",
+    "candidate_id": "TM-0248",
+    "authors": ["P. Ngendakumana"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.589",
+    "language": "fr",
+    "course": "ULiège MCI, TP séance 7, exercise 1 (vehicle exhaust emissions)."
+  },
+  "verification": {
+    "summary": "The runnable variant was compared with the stored solution of EX_1_PNG_2019.EES (compare_solution.py): 30 common variables, 0 differ (rtol=0.001), largest relative difference 3.13e-05 on MM_HC (CoolProp C3H8 vs EES molar mass). The 9 emission-index records dropped by the extractor (CS-BUG-EXTRACT-FMT-BYTE) were recovered by hand. Native file fails on molarmass(NO2).",
+    "checks": ["ees-stored-solution", "analytical"],
+    "reference": "EES stored solution of EX_1_PNG_2019.EES (54 records; 45 decoded by ees_extract.py, 9 recovered by hand decoding)",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 3.13e-05,
+    "notes": "Comparison concerns the variant (the native file is blocked by CS-GAP-FLUIDS-NASA-SPECIES, molarmass(NO2)). The 24 EES-only variables belong to the commented-out CO2 combustion block of the source and carry default guesses, except f_st (0.06702) and AFR_st_bis (14.92), consistent with the diesel formula C12H26 assumed there. Variant MM_NO2 = molarmass(N)+2*molarmass(O) = 46.0055 vs stored 46.006 kg/kmol (1.1e-05). Max rel. diff 3.13e-05 on MM_HC."
+  },
+  "missing_features": ["CS-GAP-FLUIDS-NASA-SPECIES"],
+  "related": ["CSL-0188", "CSL-0058", "CSL-0266", "CSL-0279"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-22", "action": "added", "by": "glm-5.3-flash for S. Quoilin"}
+  ]
+}

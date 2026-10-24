@@ -213,4 +213,6 @@ The original comment numbers the nozzle as station 6; the equations use index
 
 ## Related models
 
-None.
+- `CSL-0295` *turbojet_afterburner*: exercise 6 of the same ULiège series —
+  this cycle with an afterburner section behind the turbine, polytropic
+  component efficiencies and the study of the afterburner exit temperature.

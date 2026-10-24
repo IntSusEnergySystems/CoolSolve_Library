@@ -179,3 +179,8 @@ published here under the library license (MIT).
 
 - `CSL-0153` (waste-heat-recovery ORC with an equipment cost model): the cost
   model that gives this economic evaluation its investment figures.
+- `CSL-0262` (*Economic evaluation of an investment: net present value and
+  internal rate of return*): the extended February 2008 version of the same
+  file — cash flows in a `PROCEDURE` written to a lookup table, tax, loan
+  annuity and depreciation added, and the internal rate of return solved by a
+  second procedure.

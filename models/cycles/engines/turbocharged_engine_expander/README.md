@@ -287,4 +287,6 @@ licence (MIT).
 
 ## Related models
 
-None.
+- `CSL-0273` *engine_data_coherence_derating*: worked example with a
+  charge-air-cooled turbocharged engine (compressor isentropic efficiency,
+  ISO 3046-type site derating, CO2 emissions).

@@ -227,4 +227,6 @@ the stored solution.
 
 ## Related models
 
-None.
+`CSL-0282` (steam turbine driving a nitrogen compressor): the same course and
+the same first law on an adiabatic steam turbine, coupled to a nitrogen
+compressor and a generator, with a real-fluid vs ideal-gas comparison.

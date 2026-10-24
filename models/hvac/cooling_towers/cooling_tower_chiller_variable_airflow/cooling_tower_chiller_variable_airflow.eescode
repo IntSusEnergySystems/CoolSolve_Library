@@ -1,0 +1,73 @@
+{=============================================================================
+  Cooling tower of a chiller plant with variable air flow (CSL-0287)
+  CoolSolve Library model CSL-0287
+ -----------------------------------------------------------------------------
+  Revision exercise JL051223-05: a cooling tower rejects the condenser heat
+  of a water chiller; the air flow is varied through the fan laws (pressure
+  rise and dry UA scale with the air mass flow). Chiller COP depends on the
+  condenser water temperature; the tower is a counter-flow effectiveness-NTU
+  model with saturated outlet air and a fictitious air-side specific heat.
+  Inputs : M_dot_a (air mass flow, fixed to the stored EES operating point)
+  Outputs: t_w_ex_ct, W_dot_fan, COP_global, Q_dot_ct, ...
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ~/Nextcloud/thermo_models/.../TP 10/Revision JL051223-05.EES
+           (J. Lebrun, 2005-12-23) - see README.md
+  Status : verified against the EES stored solution - see README.md
+=============================================================================}
+
+"!Tower and chiller plant"
+"Let's vary the air flow:"
+"M_dot_a=10.51  [kg/s]  nominal air flow (commented in the original)"
+M_dot_a = 30 [kg/s]  "operating point: air flow of the stored EES solution (parametric table, last row)"
+AU_dry=AU_dry_n*M_dot_a/M_dot_a_n  "dry-side overall UA scaled with the air flow [W/K]"
+DELTAp=DELTAp_n*(M_dot_a/M_dot_a_n)^2  "fan pressure rise, fan law [Pa]"
+COP_chiller=COP_chiller_n*(1-0.025*(t_w_ex_cd-t_w_ex_cd_n))  "chiller COP vs condenser water temperature [-]"
+
+M_dot_a_n=10.51  "nominal air mass flow [kg/s]"
+DELTAp_n=281.2  "nominal fan pressure rise [Pa]"
+AU_dry_n=7453  "nominal dry-side UA [W/K]"
+Q_dot_ev=230E3  "chiller evaporator duty [W]"
+p=101325  "atmospheric pressure [Pa]"
+t_a_su=20  "inlet air temperature [°C]"
+RH_su=0.8  "inlet air relative humidity [-]"
+t_w_ex_cd_n=35  "nominal condenser water exit temperature [°C]"
+t_w_su_cd=t_w_ex_ct  "condenser water supply = tower exit [°C]"
+M_dot_w_cd=13  "condenser water mass flow [kg/s]"
+COP_chiller_n=4  "nominal chiller COP [-]"
+eta_fan=0.5  "fan efficiency [-]"
+COP_global=Q_dot_ev/(W_dot_chiller+W_dot_fan)  "global COP of chiller + tower fan [-]"
+"default data for a centrifugal-fan tower: see notes page 96"
+"M_dot_a=a*Q_dot_ct+b   a=0.0000275   b=2.6"
+Q_dot_ct=Q_dot_ev+W_dot_chiller  "condenser (tower) heat duty [W]"
+"(approximate balance)"
+W_dot_chiller=Q_dot_ev/COP_chiller  "chiller compressor power [W]"
+"AU_dry_ct=c*Q_dot_ct+d   c=0.07   d=-10600"
+"(note: this datum is to be verified)"
+"Additional data: fan power:"
+"W_dot_fan=5E3  [W]"
+W_dot_fan=V_dot_a*DELTAp/eta_fan  "fan power from volume flow and pressure rise [W]"
+V_dot_a=M_dot_a*v_a  "air volume flow [m3/s]"
+v_a=VOLUME(AirH2O,T=T_a_su,P=P,R=RH_su)  "inlet air specific volume [m3/kg]"
+t_w_ex_ct=t_w_su_ct-Q_dot_ct/C_dot_w_ct  "tower outlet water temperature [°C]"
+Q_dot_ct=C_dot_min*epsilon*(t_w_su_ct-t_wb_su)  "tower duty from effectiveness [W]"
+t_w_su_ct=t_w_ex_cd  "tower water inlet = condenser water exit [°C]"
+t_wb_su=WETBULB(AirH2O,T=T_a_su,P=P,R=RH_su)  "inlet wet-bulb temperature [°C]"
+C_dot_w_ct=M_dot_w_ct*c_w  "water capacity rate [W/K]"
+c_w=4187  "water specific heat [J/(kg.K)]"
+M_dot_w_ct=M_dot_w_cd  "tower water mass flow [kg/s]"
+C_dot_min=min(C_dot_f,C_dot_w_ct)  "smaller capacity rate [W/K]"
+C_dot_f=M_dot_a*c_p_f  "fictitious air-side capacity rate [W/K]"
+"c_p_f=3000  [J/(kg.K)]  provisional comment"
+c_p_f=(h_a_ex-h_a_su)/(t_wb_ex-t_wb_su)  "fictitious air specific heat from the wet-bulb rise [J/(kg.K)]"
+h_a_su=ENTHALPY(AirH2O,T=T_a_su,P=P,R=RH_su)  "inlet air enthalpy [J/kg]"
+Q_dot_ct=M_dot_a*(h_a_ex-h_a_su)  "tower duty from the air-side enthalpy rise [W]"
+"assumption: air saturated at the tower outlet"
+t_wb_ex=t_a_ex  "outlet wet-bulb = outlet air temperature (saturated outlet) [°C]"
+"t_a_ex=TEMPERATURE(AirH2O,h=h_a_ex,P=P,R=1)"
+h_a_ex=ENTHALPY(AirH2O,T=T_a_ex,P=P,R=1)  "outlet air enthalpy, saturated [J/kg]"
+epsilon=(1-exp(-NTU*(1-omega)))/(1-omega*exp(-NTU*(1-omega)))  "counter-flow effectiveness [-]"
+NTU=AU_f/C_dot_f  "number of transfer units [-]"
+AU_f=AU_dry*(c_p_f/c_p)  "wet-side UA from the dry-side UA [W/K]"
+c_p=SPECHEAT(AirH2O,T=T_a_su,P=P,R=RH_su)  "inlet air specific heat [J/(kg.K)]"
+omega=C_dot_min/C_dot_max  "capacity-rate ratio [-]"
+C_dot_max=max(C_dot_f, C_dot_w_ct)  "larger capacity rate [W/K]"

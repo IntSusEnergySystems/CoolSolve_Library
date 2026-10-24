@@ -1,0 +1,91 @@
+{=============================================================================
+  Turbojet with afterburner (exercise)
+  CoolSolve Library model CSL-0295
+ -----------------------------------------------------------------------------
+  Teaching example (ULiège MECA0002, exercise 6). Station-by-station
+  ideal-gas turbojet with an afterburner (post-combustion) section added
+  behind the turbine. Polytropic efficiencies for compressor and turbine,
+  combustor and afterburner efficiencies, constant cold-side and hot-side
+  specific heats. The afterburner exit total temperature T_pc is the
+  parameter of the original study; specific thrust and specific fuel
+  consumption follow from the nozzle-exit velocity.
+  Temperatures stay in kelvin (T_amb = -40+273, T_pc = 1600+273).
+  Units  : SI - temperatures in K, pressures in Pa, energies in J
+  Source : ULiège MECA0002, S. Quoilin - see README.md
+=============================================================================}
+
+"!Data"
+fluid$ = 'Air' "working fluid = air treated as a perfect gas, as in the original"
+p_amb = 23e3 [Pa] "23 kPa in the original"
+T_amb = -40+273 "ambient static temperature [K]"
+c_0 = 800/3.6 "flight speed, 800 km/h as in the original [m/s]"
+
+T0[4] = 1200+273 "turbine inlet total temperature [K]"
+eta_t = 0.85 "turbine POLYTROPIC efficiency, as in the original [-]"
+pi_b = 0.97 "pressure ratio across the combustion chamber [-]"
+eta_b = 0.97 "combustion efficiency [-]"
+eta_m = 0.99 "as in the original [-]"
+
+pi_c = 12 "compressor pressure ratio [-]"
+eta_c = 0.85 "compressor polytropic efficiency [-]"
+
+T_pc = 1600+273 "total temperature of the gases at the afterburner exit [K]"
+eta_pc = 0.97 "afterburner efficiency [-]"
+pi_pc = 0.95 "total pressure ratio across the afterburner [-]"
+
+C_p_c = 1005 [J/kg-K] "cold-side specific heat, before the combustor (1.005 kJ/kg-K in the original)"
+C_p_t = 1140 [J/kg-K] "hot-side specific heat, after the combustor (1.140 kJ/kg-K in the original)"
+gamma_c = 1.4 "cold-side ratio of specific heats [-]"
+gamma_t = 1.333 "hot-side ratio of specific heats [-]"
+R = 287 [J/kg-K] "perfect-gas constant of air (0.287 kJ/kg-K in the original)"
+PCI = 43.1e6 [J/kg] "kerosene lower heating value (43.1e3 kJ/kg in the original)"
+
+"!Solution"
+"The original reuses the code written for exercise 5 and adds the afterburner section behind the turbine."
+
+"!Total conditions at the diffuser inlet: station 1"
+T[1] = T_amb "static temperature [K]"
+T0[1] = T[1] + c_0^2/(2*C_p_c) "total temperature [K]; c_0^2/2000/C_p_c in the original (Cp in kJ/kg-K)"
+p[1] = p_amb "static pressure [Pa]"
+p0[1] = p[1] * (T0[1]/T[1])^(gamma_c/(gamma_c-1)) "total pressure [Pa]"
+
+"!Diffuser exit / compressor inlet: station 2"
+T0[2] = T0[1] "first law, as in the original [K]"
+p0[2] = p0[1] "isentropic diffuser: with the total temperatures equal, the total pressure is conserved [Pa]"
+
+"!Compressor exit: station 3"
+p0[3] = p0[2]*pi_c "total pressure [Pa]"
+eta_c * ln(T0[3]/T0[2]) = (gamma_c-1)/gamma_c * ln(pi_c) "compressor polytropic efficiency [-]"
+
+w_c = C_p_c * (T0[3]-T0[2]) "compressor specific work [J/kg]"
+
+"!Combustor exit: station 4"
+p0[4] = p0[3]*pi_b "total pressure [Pa]"
+(1+f) * C_p_t*T0[4] = C_p_c * T0[3] + eta_b * q_b "first law on the combustor, per unit air mass flow [J/kg]"
+q_b = PCI * f "f is the fuel-air mass ratio [-]; q_b [J/kg of air]"
+
+"!Turbine exit: station 5"
+eta_m * w_t + w_c = 0 "shaft balance: the turbine provides just enough power to drive the compressor [J/kg]"
+w_t = C_p_t * (T0[5]-T0[4]) "turbine specific work [J/kg]"
+eta_t * ln(p0[5]/p0[4]) = gamma_t/(gamma_t-1) * ln(T0[5]/T0[4]) "the polytropic efficiency gives the turbine exit total pressure [Pa]"
+
+"!Afterburner exit: station 6"
+T0[6] = T_pc "the total temperature at the afterburner exit is imposed [K]"
+p0[6] = p0[5]*pi_pc "total pressure [Pa]"
+(1+f_pc) * C_p_t*T0[6] = C_p_t * T0[5] + eta_pc * q_pc "first law on the afterburner, per unit air mass flow [J/kg]"
+q_pc = PCI * f_pc "f_pc is the afterburner fuel-air mass ratio [-]; q_pc [J/kg of air]"
+
+"!Nozzle exit: station 7"
+T0[7] = T0[6] "first principle [K]"
+p0[7] = p0[6] "isentropic nozzle: with the total temperatures equal, the total pressure is conserved [Pa]"
+"The nozzle converts gas enthalpy into kinetic energy. The original assumes a complete expansion, so the static pressure at the nozzle exit equals the ambient pressure."
+p[7] = p_amb "static pressure [Pa]"
+T[7]/T0[7] = (p[7]/p0[7])^((gamma_t-1)/gamma_t) "isentropic static temperature at the nozzle exit [-]"
+T0[7] = T[7] + c_7^2/(2*C_p_t) "total temperature [K]; c_7^2/2000/C_p_t in the original (Cp in kJ/kg-K)"
+
+"!Specific thrust from a momentum balance between stations 0 and 7, per unit air mass flow."
+Fs = (1+f_tot) * c_7 - c_0 "specific thrust [m/s]"
+f_tot = f + f_pc "total fuel-air mass ratio [-]"
+
+"!Specific fuel consumption: fuel mass flow over thrust, which is f_tot/Fs per unit air mass flow."
+Cs = f_tot/Fs "specific fuel consumption [kg/(N-s)]"

@@ -1,0 +1,79 @@
+{
+  "id": "CSL-0272",
+  "name": "gas_engine_identified_nominal_point",
+  "title": "Identified full-load point of a 5 L four-stroke gas engine",
+  "summary": "Steady-state model of the natural-gas engine of the ULiège MSTh course at its maximum-power point (2400 rpm), recomputed from the engine characteristics identified in exercise 1 (valve area, jacket and water-to-environment conductance products, indicated efficiency, friction torque): carburettor, intake pressure drop through the valve, adiabatic combustion with the cpbar mean specific heat, expansion, jacket (eps-NTU) and ambient losses; shaft power and fuel flow are outputs (exercise 2, second part).",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "gas_engine_identified_nominal_point.eescode",
+  "fluids": [
+    "Air",
+    "CH4"
+  ],
+  "tags": [
+    "gas engine",
+    "four-stroke",
+    "nominal point",
+    "carburettor",
+    "combustion chamber",
+    "cooling circuit",
+    "mean specific heat",
+    "eps-NTU",
+    "exercise"
+  ],
+  "language_features": [
+    "user-library routine cpbar (implicit library, copied; function-position calls in the native file, CALL form in the variant)",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 89,
+    "largest_block": 14
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 08/SB/MSTh - R8 - Ex 2 SB.EES",
+    "candidate_id": "TM-0133",
+    "authors": [
+      "ULiège MSTh course (J. Lebrun, V. Lemort, S. Bertagnolio)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "Machines et systèmes thermiques (ULiège), repetition TP 08, exercise 2 (SB solution)"
+  },
+  "verification": {
+    "summary": "Variant checked (native file blocked, CS-GAP-INCLUDE): the 31 variables of the EES stored solution of TM-0133 agree at rtol=0.001; vs the full stored solution of TM-0132 (same engine point) 72 common variables, 11 differ - the air entropy reference offset, 9.4e-3 on cp_f (ideal-gas vs CoolProp) and 2.6e-3 max from the rounded identified inputs. Nominal data reproduced: 90 kW, 22 kg/h, 90 kW, 8 kW.",
+    "checks": [
+      "ees-stored-solution",
+      "cross-model",
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of TM-0133 (31 of 76 variables) and full stored solution of TM-0132 'MSTh - R8 - Ex 1 SB.EES' (72 of 74, same engine point with the measured inputs), compared with tools/compare_solution.py",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.00941,
+    "notes": "compare_solution.py vs TM-0132 prints '72 common variables, 11 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 18'. The largest is s_2 (3.19e-01, a constant EES-vs-CoolProp entropy reference offset of 1814.9 J/kg-K); the next, cp_f 9.41e-03 and Q_dot_2 9.09e-03, are the ideal-gas CH4 vs CoolProp heat capacity (same deviation as CSL-0034/CSL-0149); the remaining 8 (2.3e-3 to 2.6e-3) are the rounding of the identified characteristics passed as inputs (AU_gw 83.8 vs 83.7955, A_f_soupapes 0.002072 vs 0.002072256, W_dot_m = 2*pi*N*T_m 10000.3 W vs the 10 kW imposed in Ex 1). vs TM-0133: '31 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 59'."
+  },
+  "missing_features": [
+    "CS-GAP-INCLUDE"
+  ],
+  "related": [
+    "CSL-0034",
+    "CSL-0149",
+    "CSL-0005"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added (roadmap card C-312, duplicate group DG-0028: TM-0133 representative); one source correction: the ambient temperature T_a_su = 20 C, commented out in the source, is restored (without it the system is 74 unknowns / 73 equations)",
+      "by": "mimo worker for S. Quoilin"
+    }
+  ]
+}

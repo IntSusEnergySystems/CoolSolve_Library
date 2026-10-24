@@ -1,0 +1,164 @@
+{=============================================================================
+  Economic evaluation of an investment: NPV and IRR procedures (CSL-0262)
+ -----------------------------------------------------------------------------
+  Year-by-year cash-flow evaluation of an energy-saving investment over its
+  lifetime: the PROCEDUREs NPV (benefit/cost escalation, tax, annuity,
+  discounting, lookup table 'data') and procIRR (internal rate of return,
+  k_IRR solved from NPV_IRR = 0) give the net present value NPV, the payback
+  year DDP and the IRR k_IRR. Inputs: INV, inflow_1, outflow_1, salvage,
+  T_lifetime, j_fuel, j_el, k, tax, r. No thermodynamics; currencies in euro.
+
+  Source : ~/Nextcloud/thermo_models/modeles/Economical_evaluation_of_investment/
+           INVESTISSEMENT_RENTABILITE_SB080108SQ080206.EES - S. Bertagnolio and
+           S. Quoilin (2008), ULiège Thermodynamics Laboratory - MIT - README.md
+  Variant: runnable variant of the blocked native file (CS-BUG-LOOKUP-WRITE):
+           procIRR takes the cash-flow parameters as inputs and recomputes CF[i]
+           with the formulas of NPV instead of reading lookup('data',ii,5);
+           nothing else changed, no CoolSolve-only syntax - see README.md
+=============================================================================}
+
+"!*************************************************** MODEL ***************************************************"
+
+procedure NPV(j_fuel,j_el,annuite,inflow_1,outflow_1,tax,amortissement,k,T_lifetime,INV:DDP_bis,NPVvalue)
+
+DDP = 0
+DDP_bis=0
+
+"initial values"
+year[0]=0
+
+B_bis[0]=0
+C_bis[0]=0
+B_net[0] = 0
+CF_bis[0] = 0
+DPV_1_bis[0] = CF_bis[0]
+NPV_1_bis[0] = -INV + DPV_1_bis[0]
+
+B[0]=0
+C[0]=0
+CF[0]=B[0]-C[0]
+DPV_1[0]=CF[0]
+NPV_1[0]=-INV+DPV_1[0]
+
+SRD[0]=0
+interet[0] = 0
+
+"1st year"
+year[1]=1
+C_bis[1]=outflow_1 + annuite
+B_bis[1]=inflow_1
+B_net[1] = (B_bis[1] -C_bis[1]) * (1 - tax)
+CF_bis[1] = B_net[1] + amortissement
+DPV_1_bis[1]=DPV_1_bis[0]+(CF_bis[1])*1/(1+k)
+NPV_1_bis[1]=-INV+DPV_1_bis[1]
+
+C[1]=outflow_1
+B[1]=inflow_1
+CF[1]=B[1]-C[1]
+DPV_1[1]=DPV_1[0]+(CF[1])*1/(1+k)
+NPV_1[1]=-INV+DPV_1[1]
+
+SRD[1] = INV
+interet[1] = INV * k
+
+i=2
+repeat 
+	year[i]=i
+	B_bis[i]=inflow_1*(1+j_fuel)^(i-1)
+	C_bis[i]=outflow_1*(1+j_el)^(i-1) + annuite
+	B_net[i] = (B_bis[i] -C_bis[i]) * (1 - tax)
+	CF_bis[i] = B_net[i] + amortissement
+	DPV_1_bis[i]=DPV_1_bis[i-1]+(CF_bis[i])*1/(1+k)^i
+	NPV_1_bis[i]=-INV+DPV_1_bis[i]
+	
+	B[i]=B[1]*(1+j_fuel)^(i-1)
+	C[i]=C[1]*(1+j_el)^(i-1) 
+	CF[i]=B[i]-C[i]
+	DPV_1[i]=DPV_1[i-1]+(CF[i])*1/(1+k)^i
+	NPV_1[i]=-INV+DPV_1[i]
+	
+	interet[i] = k*SRD[i-1]
+	SRD[i] = SRD[i-1] - annuite + interet[i]
+	i=i+1
+until i>T_lifetime
+
+i=0
+repeat 
+	ii = i +1
+	lookup('data',ii,1) = year[i]
+	lookup('data',ii,2) = B_bis[i]
+	lookup('data',ii,3) = C_bis[i]
+	lookup('data',ii,4) = B_net[i]
+	lookup('data',ii,5) = CF_bis[i]
+	lookup('data',ii,6) = DPV_1_bis[i]
+	lookup('data',ii,7) = NPV_1_bis[i]
+	lookup('data',ii,8) = B[i]
+	lookup('data',ii,9) = C[i]
+	lookup('data',ii,10) = CF[i]
+	lookup('data',ii,11) = DPV_1[i]
+	lookup('data',ii,12) = NPV_1[i]
+	lookup('data',ii,13) = interet[i]
+	lookup('data',ii,14) = SRD[i]
+
+
+	if (NPV_1_bis[i] >=0) and (DDP_bis = 0) then DDP_bis = i
+	i = ii
+
+until i>T_lifetime
+
+DDP=0
+NPVvalue = NPV_1_bis[T_lifetime]
+end
+
+
+procedure procIRR(T_lifetime,INV,k_IRR,inflow_1,outflow_1,j_fuel,j_el,tax,annuite,amortissement:NPV_IRR)
+DPV[0] = 0
+i = 1
+repeat
+	ii = i+1
+	B_bis_i = inflow_1*(1+j_fuel)^(i-1)
+	C_bis_i = outflow_1*(1+j_el)^(i-1) + annuite
+	CF[i] = (B_bis_i - C_bis_i) * (1 - tax) + amortissement
+	DPV[i]=DPV[i-1]+(CF[i])*1/(1+k_IRR)^i
+	NPV[i]=-INV+DPV[i]
+	i = ii
+until i>T_lifetime
+NPV_IRR = NPV[T_lifetime]
+end
+
+
+"!1. INPUTS"
+"Investment"
+INV=100 [€]
+inflow_1=40 [€]
+outflow_1=22 [€]
+
+"Salvage value :"
+salvage = 20 [€]
+
+"!2. PARAMETERS"
+"Economical Rentability Period"
+T_lifetime=10 [year]
+"mean values"
+j_fuel=0{.045} [-]"usually included between 3 and 6% per year for fossil fuel and between 5 and 10% per year for biomass fuel"
+j_el=0{.03} [-]"usually included between 1 and 3% per year"
+r=0.00001 [-]	"Interest rate"
+k=0.12[-] 	"Discount rate"
+tax = 0		"Taxation"
+
+"!3. EQUATIONS"
+
+annuite =INV*r/(1-1/(1+r)^T_lifetime)
+amortissement = INV/T_lifetime
+
+"!3.1. Discounted Cash Flow method"
+
+ call NPV(j_fuel,j_el,annuite,inflow_1,outflow_1,tax,amortissement,k,T_lifetime,INV:DDP,NPV_part)
+NPV = NPV_part + salvage/(1+k)^T_lifetime
+
+"!3.2. Internal rate of return method"
+{k_IRR = 0.2}
+call procIRR(T_lifetime,INV,k_IRR,inflow_1,outflow_1,j_fuel,j_el,tax,annuite,amortissement:NPV_IRR)
+NPV_IRR = 0
+
+"!*************************************************** END ***************************************************"

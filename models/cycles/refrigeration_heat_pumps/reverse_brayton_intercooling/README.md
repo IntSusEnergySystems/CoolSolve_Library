@@ -206,4 +206,5 @@ ideal-gas diagram yet.
 
 ## Related models
 
-None. The equation window is not the same calculation as another model in the library.
+The equation window is not the same calculation as another model in the library; the cycle skeleton is shared with:
+- `CSL-0254` *recuperated_brayton_hthp*: the same turbomachinery + recuperator skeleton on air run as a high-temperature heat pump (DTU case study, translated from TESPy).

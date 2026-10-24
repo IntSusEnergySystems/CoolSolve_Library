@@ -167,4 +167,6 @@ No CoolSolve gap.
 
 ## Related models
 
-None.
+- `CSL-0283` *helium_bottle_lox_displacement*: same constant-pressure
+  closed-system process, other fluid (ideal-gas helium instead of two-phase
+  water) and other question (pressurant work and bottle sizing).

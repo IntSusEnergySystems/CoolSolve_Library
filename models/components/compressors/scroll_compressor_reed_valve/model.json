@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0260",
+  "name": "scroll_compressor_reed_valve",
+  "title": "Scroll compressor with discharge (reed) valve - reference model",
+  "summary": "Semi-empirical hermetic scroll compressor extending Winandy et al. (2002) with a discharge (reed) valve and a clearance volume: choked leakage and discharge-valve flows fix the mass flow rate; parameters identified on a Copeland ZH15K4E-TFD catalogue (R407C); reduced evaporator/condenser close the cycle.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "scroll_compressor_reed_valve.eescode",
+  "fluids": [
+    "R407C"
+  ],
+  "tags": [
+    "scroll compressor",
+    "semi-empirical",
+    "reference model",
+    "discharge valve",
+    "reed valve",
+    "internal leakage",
+    "clearance volume",
+    "refrigeration",
+    "parameter identification"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "max() builtin",
+    "IF() builtin (5-argument)"
+  ],
+  "stats": {
+    "n_equations": 162,
+    "largest_block": 66
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/Compressors/SCROLLCOMPRESSORWITHREEDVALVE_REFSIM_MODEL_VL080229.zip!/scrollCompressorWithReedValve_RefSim_EES_Model_VL080229.EES",
+    "candidate_id": "TM-0482",
+    "authors": [
+      "Vincent Lemort (ULiège Thermodynamics Laboratory); model of Winandy, Saavedra & Lebrun (2002)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of the source file (121 common variables): derived results agree within 1.1e-3 (isentropic efficiency), 1.8e-2 (pressures), 3.1e-2 (mass flow) and 5.3e-2 (duties); absolute h/s/u differ by the EES/CoolProp R407C reference-state offset (about 143 kJ/kg and 763 J/kg-K).",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution of the source file (last run: t_ev = 10 °C, t_cd = 50 °C, R407C)",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.525,
+    "notes": "Maximum rel. diff 5.25e-1 on absolute enthalpies (reference-state offset between the two R407C property backends, does not affect the physics); derived quantities within 5.3e-2, worst small-difference quantities (mixture c_p, heating-up ΔT) 12-13 %. Same property-backend behaviour as CSL-0078."
+  },
+  "missing_features": [],
+  "related": ["CSL-0007", "CSL-0078", "CSL-0068"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added (T-IMPORT TM-0482, batch B-15)",
+      "by": "worker agent for S. Quoilin"
+    }
+  ]
+}

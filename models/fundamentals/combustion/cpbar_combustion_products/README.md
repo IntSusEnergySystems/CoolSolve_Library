@@ -235,6 +235,8 @@ Source file (plain-text EES library, comments in French):
   translation) whose flue-gas composition is species-resolved rather than
   `cpbar`-based.
 - Engine models of the collection also call `cpbar`/`gamma`.
+- `CSL-0293` *two_shaft_gas_turbine_expander_map*: calls `cpbar` and `gamma`
+  (copied in its file, from `CSL-0220`).
 - `CSL-0050` *gas_turbine_two_shaft_intercooled_regenerative*: gas turbine of the
   same course, combustion chamber of the air assumed unchanged (no `cpbar`).
 - `CSL-0058` *diesel_engine_excess_air_exhaust_analysis*: exhaust-gas analysis
@@ -247,3 +249,7 @@ Source file (plain-text EES library, comments in French):
   CH4 or fuel oil with chemical-equilibrium dissociation (EES built-in
   `Chem_Equil`, native file blocked), same combustion-course material.
 - `CSL-0166` *boiler_modulating_burner_refsim*: its cpbar procedure is copied into this model (modulating-burner RefSim model, 2008 model bank).
+- `CSL-0263` *fuel_oil_boiler_onoff_setpoint*: fuel-oil boiler of the MSTh
+  R7 series, `cpbar` procedure copied in the same marked block.
+- `CSL-0261` *gas_engine_rankine_bottoming*: gasoline engine with a Rankine
+  bottoming cycle, `cpbar` procedure copied in the same marked block.

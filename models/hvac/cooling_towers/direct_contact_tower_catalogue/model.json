@@ -1,0 +1,73 @@
+{
+  "id": "CSL-0290",
+  "name": "direct_contact_tower_catalogue",
+  "title": "Direct-contact cooling tower with catalogue data and nominal checks",
+  "summary": "Direct-contact (open) cooling tower of the Laborelec 2002 toolkit: counter-flow exchanger between the water and the saturated exhaust air (fictitious fluid at the wet-bulb temperature), catalogue parameters and nominal values read from a B.A.C. lookup table, check procedures for the fooling factor, water flow and fan speed.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "direct_contact_tower_catalogue.eescode",
+  "fluids": [
+    "AirH2O",
+    "Water"
+  ],
+  "tags": [
+    "cooling tower",
+    "direct contact",
+    "evaporative cooling",
+    "catalogue",
+    "nominal values",
+    "wet bulb",
+    "fictitious fluid",
+    "counter-flow",
+    "checks",
+    "Laborelec toolkit"
+  ],
+  "language_features": [
+    "humid-air properties",
+    "string variables",
+    "procedures",
+    "lookup tables"
+  ],
+  "stats": {
+    "n_equations": 63,
+    "largest_block": 11
+  },
+  "origin": {
+    "type": "industry",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/2_Evaporative Equipments/2_2_Simulation Models - Diagram Window/Direct Contact Cooling Tower/Direct Contact Cooling Tower.EES",
+    "candidate_id": "TM-0297",
+    "authors": [
+      "Felipe Trebilcock (ULiege Thermodynamics Lab, Dec 2002, for Laborelec)",
+      "J. Lebrun (reviewer)",
+      "E. Winandy (reviewer)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X6.596",
+    "language": "en",
+    "course": "Laborelec toolkit 2002 (evaporative equipment), EES Diagram-Window simulation model; catalogue table directcontactdata.LKT (candidate TM-0298)"
+  },
+  "verification": {
+    "summary": "Compared with the solution stored in the EES source file (60 records; the 15 kJ/kPa reference values converted x1000 by hand): 56 common variables, 16 differ above rtol = 0.001, maximum relative difference 3.97e-03 (omega_f_ct), all downstream of the humid-air property differences EES 6.596 vs CoolProp, as in CSL-0076 (4.51e-03).",
+    "checks": ["ees-stored-solution", "order-of-magnitude"],
+    "reference": "EES stored solution of Direct Contact Cooling Tower.EES (ees_variables.csv; 4 stale variables of inactive Diagram-window modes and 7 string variables excluded)",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.00397,
+    "notes": "16 differences (max 3.97e-03 on omega_f_ct) all follow the humid-air property differences (h_a 2.3e-03, c_p_af 3.6e-03, c_w 4.3e-04); 40 algebraic results below 1e-03. Excluded: DELTAp_ct, rpm_fan, V_dot_a_ct_fan, V_dot_a_ct_rpm (inactive modes) and the 7 strings."
+  },
+  "missing_features": [],
+  "related": ["CSL-0076", "CSL-0227", "CSL-0303", "CSL-0286"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added (T-IMPORT TM-0297/TM-0298, batch B-11/B-15)",
+      "by": "opencode worker (t216) for S. Quoilin"
+    }
+  ]
+}

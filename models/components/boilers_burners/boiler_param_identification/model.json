@@ -1,0 +1,86 @@
+{
+  "id": "CSL-0265",
+  "name": "boiler_param_identification",
+  "title": "Classical fuel-oil boiler: parameter identification from the nominal point",
+  "summary": "Companion of the classical ON/OFF fuel-oil boiler reference model: the three boiler parameters (gas-water conductance AU_gw, envelope conductance AU_wenv, fuel mass flow M_dot_f) are identified from nominal-point data (efficiency, useful power, water flow, supply temperature) and one stand-by heat-loss measurement; combustion products via the mean specific heat procedure cpbar, both exchangers epsilon-NTU.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "boiler_param_identification.eescode",
+  "fluids": [
+    "Air",
+    "CO2",
+    "H2O",
+    "N2",
+    "O2"
+  ],
+  "tags": [
+    "boiler",
+    "fuel oil",
+    "combustion",
+    "flue gas",
+    "parameter identification",
+    "eps-NTU",
+    "on/off control",
+    "mean specific heat",
+    "reference model"
+  ],
+  "language_features": [
+    "procedures",
+    "CALL with several outputs",
+    "IF/THEN/ELSE (in cpbar)",
+    "property calls",
+    "min",
+    "max",
+    "unit annotations",
+    "subscript notation in names (V_dot_w_l\\h)"
+  ],
+  "stats": {
+    "n_equations": 68,
+    "largest_block": 7
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/Heat_and_Cool_Production_Systems/Heat_Production_by_Combustion/CLASSICALBOILER_PARAM_IDENTIFICATION_MODEL_SBJL080212.zip!/BOILER_PARAM_IDENTIFICATION_EES_MODEL_SBJL080212.EES",
+    "candidate_id": "TM-0493",
+    "authors": [
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory)",
+      "Jean Lebrun (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of TM-0493 (66 numeric values, EES X7.888): compare_solution.py reports 66 common variables, 2 differ (rtol=0.001): t_g_ex 1.84e-3, AU_gw 1.36e-3; at rtol=1e-2 all agree. The deviations trace to the ideal-gas mean c_p of cpbar (0.06-0.08 % between EES 7.888 and CoolProp).",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance"
+    ],
+    "reference": "EES stored solution of BOILER_PARAM_IDENTIFICATION_EES_MODEL_SBJL080212.EES (66 numeric values, EES X7.888)",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.00184,
+    "notes": "Identification chain recomputed by hand: M_dot_f = Q_dot_u_n_ON/(eta_N*LHV) = 1.29200e-3 kg/s; epsilon_wenv = Q_dot_wenv_n_OFF/(C_dot_w*(t_w_su-t_env)) = 0.0073012, AU_wenv = -C_dot_w*ln(1-epsilon_wenv) = 18.324 W/K - both match the EES stored values exactly. cpbar mean c_p differs 0.075 % (c_p_p) / 0.06% (c_p_g) between backends and propagates to t_adiab (1929.06 vs 1930.49 C), t_g_ex and AU_gw. 'only in CoolSolve: 2' are the subscript names V_dot_w_l\\h and V_dot_w_l\\h_n (absent from the extracted EES variable records; M_dot_w confirms V_dot = 2150 l/h)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0005",
+    "CSL-0006",
+    "CSL-0166",
+    "CSL-0263"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added (card C-305, T-IMPORT TM-0493)",
+      "by": "opencode free worker for S. Quoilin"
+    }
+  ]
+}

@@ -150,4 +150,7 @@ Source file (EES X7.458, French comments):
 
 ## Related models
 
-`related` is empty. No other library model is linked from this file.
+- `CSL-0263` *fuel_oil_boiler_onoff_setpoint*: the previous exercise of the
+  same MSTh R7 series (exercise 3, suite): same copied `cpbar`, a gas-water
+  eps-NTU exchanger with assigned gas-side specific heat and its own `theta`
+  blend of the ON and OFF water outlets.

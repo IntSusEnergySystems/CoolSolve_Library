@@ -1,0 +1,63 @@
+{
+  "id": "CSL-0311",
+  "name": "return_duct_paramid",
+  "title": "Return duct reference model for parameter identification",
+  "summary": "Reference return-duct model in three connected components (Colebrook pressure drop, leakage with infiltration/exfiltration and water/energy balances, epsilon-NTU heat gain) plus the normalized ratios of the parametric study from which the simplified model CSL-0170 was fitted.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "return_duct_paramid.eescode",
+  "fluids": ["AirH2O"],
+  "tags": [
+    "return duct",
+    "duct",
+    "pressure drop",
+    "leakage",
+    "heat gain",
+    "parameter identification",
+    "reference model"
+  ],
+  "language_features": [
+    "backslash variable names",
+    "EES 5-argument IF"
+  ],
+  "stats": {
+    "n_equations": 114,
+    "largest_block": 16
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/Model data bank/Distribution_Systems/Ducts/Return_Duct_Simplified_ParamID_Model_JL080317.zip!/Return_Duct_ParamID_EES_Model_JL080317.EES",
+    "candidate_id": "TM-0484",
+    "authors": [
+      "Jean Lebrun (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.888",
+    "language": "en",
+    "course": "ULiège model bank, return duct reference model for the parametric study of the simplified duct model, 2008-03-17"
+  },
+  "verification": {
+    "summary": "Against the stored solution of Return_Duct_ParamID_EES_Model_JL080317.EES (107 decoded records plus 7 backslash-named ones decoded by hand from the binary): 114 common variables, 19 differ (rtol=0.001), only in EES: 0, only in CoolSolve: 0. Maximum relative difference 7.29e-03 on Re_leakage_duct_02.",
+    "checks": ["ees-stored-solution", "order-of-magnitude"],
+    "reference": "EES stored solution in Return_Duct_ParamID_EES_Model_JL080317.EES (ees_variables.csv + 7 hand-decoded backslash records)",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.00729,
+    "notes": "All 19 differences above rtol=1e-3 trace to the humid-air viscosity of EES 7.888 differing from CoolProp by 0.60% (mu_duct_01 1.8229e-05 vs 1.8120e-05 Pa.s; specific volume 3.75e-04), propagated through Re -> zeta_leakage -> C_leakage -> M_dot_leakage (1.31e-03) -> DELTAp_duct (1.41e-03). Thermal results agree: t_ex_duct 1.5e-04, W_ex_duct 1.4e-04, Q_dot_duct_03 5e-04 relative. Pressure falls along the duct, ambient air infiltrates (M_dot_leakage_duct negative), outlet state between supply and ambient. 18 Diagram-window inputs/parameters restored as equations with the values of the stored run; no equation of the original changed."
+  },
+  "missing_features": [],
+  "related": ["CSL-0170"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added",
+      "by": "glm-5.3-flash agent for S. Quoilin"
+    }
+  ]
+}

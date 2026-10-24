@@ -225,3 +225,5 @@ ULiège course MCI, TP5, exercise 1. Published under the library licence (MIT).
 - `CSL-0185` (*diesel_injection_sizing*): TP5 exercise 4, diesel
   injection duration and mixture richness. This model is exercise 1, the
   intake valve.
+- `CSL-0275` (*square_v6_engine_exercise*): MCI TP3 exercises 1-3 on a
+  square V6 engine (bore/stroke from the displacement, mean piston speed).

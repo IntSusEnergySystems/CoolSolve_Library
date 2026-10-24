@@ -258,3 +258,6 @@ Published under the library licence (MIT).
   (MECA0002), with specific heats that vary from one process to the next.
   This model holds `c_p` and `c_v` at the intake temperature and solves
   Cengel exercise 9-37 (compression ratio 9.5).
+- `CSL-0280` (*diesel_cycle_air_standard*): the Diesel air-standard cycle
+  (isobaric heat addition) with `c_p`/`c_v` taken at the mean temperature of
+  each process, and the thermal efficiency imposed instead of the heat added.

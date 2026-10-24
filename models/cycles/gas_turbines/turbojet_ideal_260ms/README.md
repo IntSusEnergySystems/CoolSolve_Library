@@ -168,3 +168,5 @@ for this exercise in the collection.
 - `CSL-0011` *two_shaft_gas_turbine_compressor_map*: two-shaft gas turbine
   with a compressor map (land-based, non-ideal) — same `cycles/gas_turbines`
   family; the ideal turbojet here is fully explicit and verified.
+- `CSL-0295` *turbojet_afterburner*: turbojet of the same course with
+  polytropic component efficiencies and an afterburner behind the turbine.

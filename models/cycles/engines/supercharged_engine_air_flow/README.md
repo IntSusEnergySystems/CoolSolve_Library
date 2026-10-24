@@ -263,4 +263,6 @@ licence (MIT).
 
 ## Related models
 
-None.
+- CSL-0279 (*engine_bsfc_bore_stroke_afr*): same volumetric-efficiency
+  definition of the air flow, applied to a naturally aspirated engine with
+  bore, stroke and specific fuel consumptions.

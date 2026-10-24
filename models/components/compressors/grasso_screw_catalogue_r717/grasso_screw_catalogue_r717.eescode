@@ -1,0 +1,103 @@
+{=============================================================================
+  Screw compressor from catalogue data (Grasso C-52, R717)
+  CoolSolve Library model CSL-0269
+ -----------------------------------------------------------------------------
+  Isentropic and volumetric effectiveness of an R717 (ammonia) Grasso C-52
+  screw compressor computed directly from manufacturer (catalogue) data: the
+  24 catalogue rows (condensing/evaporating temperature, capacity, electrical
+  power) are read from a lookup table and turned into epsilon_s and epsilon_v
+  versus pressure ratio, plus part-load effectiveness at PLF = 0.42.
+  Inputs : lookup table (24 rows), fluid$, V_s_cp, rpm_cp, DELTAT_oh,
+           DELTAT_sc, PLF, mm; Outputs: epsilon_s_cp_mes[i],
+           epsilon_v_cp_mes[i], R_p_cp[i], epsilon_s_pl[i], epsilon_v_pl[i],
+           M_dot_cp[i], Q_dot_ev[i]
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Laborelec compressor toolkit 2002, F. Trebilcock (ULiège) - README.md
+============================================================================}
+
+"!MODEL"
+"The model obtains the curves of the isentropic and volumetric effectiveness
+ directly from the manufacturer information. The catalogue data (compressor
+ selection software) go into the lookup table of the model; given the swept
+ volume of the compressor, its rotational speed and the superheating at which
+ the data were taken, the effectiveness can be plotted versus the pressure
+ ratio. As in the original."
+
+n = 24                          "number of rows in the lookup table [-]"
+DUPLICATE i = 1, n
+
+"Measured effectiveness"
+w_mes[i] = W_dot_cp_mes[i]/M_dot_cp[i]               "measured specific work [J/kg]"
+epsilon_s_cp_mes[i] = w_s[i]/w_mes[i]                "global isentropic effectiveness [-]"
+V_dot_su_cp_mes[i] = M_dot_cp[i]*v_su_cp[i]          "suction volume flow rate [m^3/s]"
+epsilon_v_cp_mes[i] = V_dot_su_cp_mes[i]/V_dot_sw_cp[i]  "global volumetric effectiveness [-]"
+w_s[i] = h_exs_cp[i] - h_su_cp[i]                    "isentropic specific work [J/kg]"
+" where "
+V_dot_sw_cp[i] = V_s_cp*N_cp[i]                      "volume flow rate displaced by the compressor [m^3/s]"
+"V_s = swept volume "
+N_cp[i] = rpm_cp/60                                  "rotation speed in round per second [1/s]"
+
+R_p_cp[i] = p_ex_cp[i]/p_su_cp[i]                    "pressure ratio [-]"
+
+"Fluid definition:"
+h_exs_cp[i] = enthalpy(fluid$, p=p_ex_cp[i], s=s_su_cp[i])  "isentropic exhaust enthalpy [J/kg]"
+h_su_cp[i] = enthalpy(fluid$, t=t_su_cp[i], p=p_su_cp[i])   "supply enthalpy [J/kg]"
+s_su_cp[i] = entropy(fluid$, t=t_su_cp[i], p=p_su_cp[i])    "supply entropy [J/kg-K]"
+v_su_cp[i] = volume(fluid$, t=t_su_cp[i], p=p_su_cp[i])     "supply specific volume [m^3/kg]"
+
+"Outputs measures (manufacturer data)"
+W_dot_cp_mes[i] = lookup(i, 4)                       "electrical power [W]"
+Q_dot_ev[i] = lookup(i, 3)                           "evaporator capacity [W]"
+
+" Condenser "
+h_ex_cd[i] = enthalpy(fluid$, T=T_ex_cd[i], P=P_cd[i])  "condenser outlet enthalpy [J/kg]"
+T_ex_cd[i] = T_cd[i] - DELTAT_sc                     "condenser outlet temperature [°C]"
+
+" Evaporator "
+h_su_ev[i] = h_ex_cd[i]                              "evaporator inlet enthalpy [J/kg]"
+h_ex_ev[i] = h_su_cp[i]                              "evaporator outlet enthalpy [J/kg]"
+Q_dot_ev[i] = M_dot_cp[i]*(h_ex_ev[i]-h_su_ev[i])    "evaporator capacity from the cycle balance [W]"
+
+" Properties"
+P_cd[i] = PRESSURE(fluid$, T=T_cd[i], X=1)           "condensation pressure [Pa]"
+P_ev[i] = PRESSURE(fluid$, T=T_ev[i], X=1)           "evaporation pressure [Pa]"
+t_su_cp[i] = T_ev[i] + DELTAT_oh                     "supply temperature [°C]"
+p_su_cp[i] = P_ev[i]                                 "supply pressure [Pa]"
+p_ex_cp[i] = P_cd[i]                                 "exhaust pressure [Pa]"
+
+"!INPUTS"
+"Variable inputs"
+T_cd[i] = lookup(i, 1)                               "condensing temperature [°C]"
+T_ev[i] = lookup(i, 2)                               "evaporating temperature [°C]"
+
+epsilon_s_pl[i] = epsilon_s_cp_mes[i]*(0.463+1.5255*PLF-1.607*PLF^2+0.62*PLF^3)  "part-load isentropic effectiveness [-]"
+epsilon_v_pl[i] = epsilon_v_cp_mes[i]*(PLF^mm)      "part-load volumetric effectiveness [-]"
+
+END
+
+"Constant inputs"
+fluid$ = 'R717'                 "refrigerant"
+V_s_cp = 0.0013095              "swept volume [m^3] (recommended: use the manufacturer swept volume)"
+rpm_cp = 2940                   "rotation speed [rpm] (as in the original; the file name says 2490 rpm)"
+DELTAT_oh = 5.001               "superheating [K]"
+DELTAT_sc = 0.001               "subcooling [K]"
+PLF = 0.42                      "part load factor [-]"
+nn = 0.15                       "as in the original (not used in the active equations)"
+mm = 1                          "exponent of the part-load volumetric effectiveness [-]"
+
+"Inactive in the active model (as in the original, comments only): the
+ commented read of the catalogue mass flow {M_dot_cp_mes[i]=lookup(i,5)} and
+ the commented condenser block {h_su_cd[i]=h_ex_cp[i]; Q_dot_cd[i]=...} (an
+ alternative condenser balance of an earlier version of the file; it refers to
+ h_ex_cp, which no active equation defines). The manufacturer mass flow is an
+ output of the active model: M_dot_cp[i] follows from the catalogue capacity
+ Q_dot_ev[i] = lookup(i,3) and the evaporator balance.
+ Curve-fitting expressions noted in the original (the polynomials it lists for
+ this machine at 100 % down to 10 % of the load; the model itself reads the
+ catalogue rows from the lookup table):
+  100% - epsilon_s_cp_mes[i] = 0.908801447+0.0162294137*(R_p_cp[i]-6.57616267)^2-0.949659513/(R_p_cp[i]-0.317276836)
+  ...
+  100% - epsilon_v_cp_mes[i] = 0.865229152 - 0.011508488*R_p_cp[i]
+  ...
+  10%  - epsilon_v_cp_mes[i] = 0.0865478394 - 0.00113186141*R_p_cp[i]
+ The full list of the ten polynomial pairs is in README.md."

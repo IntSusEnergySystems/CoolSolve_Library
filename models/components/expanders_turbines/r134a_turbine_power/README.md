@@ -240,3 +240,9 @@ the electrical split and the R134a compressor.
 `CSL-0182` (geothermal steam turbine) expands saturated vapour to a
 prescribed exit quality, with a flash vessel upstream. The related entry
 for the isentropic-efficiency closure is `CSL-0174`.
+
+`CSL-0282` (steam turbine driving a nitrogen compressor) is the same
+exercise family on two fluids: a steam turbine feeding a nitrogen
+compressor plus a generator, with a perfect-gas comparison for the
+nitrogen instead of isentropic efficiencies.
+

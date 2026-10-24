@@ -293,3 +293,4 @@ N. Paulus).
 - `CSL-0066` *adiabatic_saturation_wet_bulb*: same session, exercise 5:
   specific humidity, relative humidity and enthalpy from the dry-bulb and
   wet-bulb temperatures (adiabatic-saturation formula of the course).
+- `CSL-0292` *room_air_conditioning_coil_reheat*: exercise 3 of the same 2010 repetition (archive `THD10_R10.zip`), an air handling unit with cooling-dehumidifying coil and reheat serving a room held at 25 °C / 50 %.

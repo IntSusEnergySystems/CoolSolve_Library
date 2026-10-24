@@ -1,0 +1,63 @@
+{
+  "id": "CSL-0251",
+  "name": "high_temp_heat_pump_r245fa",
+  "title": "Simple R245fa high-temperature heat pump (T_ev 80 C / T_cd 145 C)",
+  "summary": "Subcritical vapour-compression high-temperature heat pump on R245fa lifting water from 95 C to 120 C: imposed cycle conditions (evaporation at 80 C, condensation at 145 C, 5 K superheat/subcooling, isentropic efficiency 0.6) with recomputed 10-node water-side temperature profiles and a pinch check on both exchangers.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "high_temp_heat_pump_r245fa.eescode",
+  "fluids": [
+    "R245fa",
+    "Water"
+  ],
+  "tags": [
+    "heat pump",
+    "high-temperature",
+    "R245fa",
+    "pinch",
+    "discretised heat exchanger",
+    "water",
+    "design"
+  ],
+  "language_features": [
+    "property functions",
+    "DUPLICATE arrays",
+    "array aggregates (MIN)"
+  ],
+  "stats": {
+    "n_equations": 163,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "research",
+    "source": "ext_leads",
+    "source_path": "github.com/squoilin/NextGenerationHeatPumps/nghp/simple HTHP model.py",
+    "candidate_id": "LDS-009",
+    "authors": [
+      "Sylvain Quoilin"
+    ],
+    "url": "https://github.com/squoilin/NextGenerationHeatPumps/blob/6db23af4dbad2098043a74d1871dbcc6f8eee468/nghp/simple%20HTHP%20model.py",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "The source script nghp/simple HTHP model.py (S. Quoilin, MIT) and its hx() function were re-run in a venv (CoolProp 8.0.0) and 127 of its values (8 state points, 3 mass flows, 2 pinches, water end temperatures, 10-node profiles, duties) compared with the CoolSolve .sol: max rel diff 2.3e-09 (CoolProp backend version only).",
+    "checks": ["source-rerun"],
+    "reference": "Re-run of nghp/simple HTHP model.py @ 6db23af in a Python 3.12 venv with CoolProp 8.0.0 (IPython reset line removed from a copy, MPLBACKEND=Agg)",
+    "date": "2026-10-21",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 2.32e-09,
+    "notes": "The venv pip CoolProp 8.0.0 vs the pinned CoolProp 8.1.0dev of the CoolSolve build; no variable excluded from the comparison."
+  },
+  "missing_features": [],
+  "related": ["CSL-0014", "CSL-0039", "CSL-0133", "CSL-0138"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-21", "action": "added (T-TRANSLATE from the Python script of the maintainer's repository, card C-278)", "by": "opencode worker t195"}
+  ]
+}

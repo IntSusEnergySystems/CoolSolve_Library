@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0295",
+  "name": "turbojet_afterburner",
+  "title": "Turbojet with afterburner (exercise)",
+  "summary": "Station-by-station ideal-gas turbojet with an afterburner (post-combustion) section behind the turbine: polytropic component efficiencies, combustor and afterburner efficiencies, constant cold-side and hot-side specific heats. Returns the specific thrust, the fuel-air ratios and the specific fuel consumption, and reproduces the original study of the afterburner exit temperature on thrust and consumption.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "turbojet_afterburner.eescode",
+  "fluids": ["Air"],
+  "tags": ["exercise", "turbojet", "afterburner", "reheat", "gas turbine", "air standard", "ideal gas", "constant specific heat"],
+  "language_features": ["arrays", "string variables"],
+  "stats": {"n_equations": 47, "largest_block": 2},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R6/autres exo/THD10_R07_E6.EES",
+    "candidate_id": "TM-0437",
+    "authors": ["S. Quoilin"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.423",
+    "language": "fr",
+    "course": "ULiège MECA0002"
+  },
+  "verification": {
+    "summary": "Compared with the stored solution of THD10_R07_E6.EES after hand conversion of kPa/kJ (compare_solution.py --ees-units): 45 common variables, 11 differ (rtol=0.001), all temperatures kept in kelvin, each difference exactly 273.15; in kelvin they agree within 3.8e-09, largest relative difference on the other variables 7.607708e-09 (p0[5]).",
+    "checks": ["ees-stored-solution", "energy-balance", "order-of-magnitude"],
+    "reference": "EES stored solution of thermodynamique appliquee/2022-2023/R6/autres exo/THD10_R07_E6.EES (EES X8.423)",
+    "date": "2026-10-24",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 1.172318,
+    "notes": "compare_solution.py --ees-units: 45 common variables, 11 differ (rtol=0.001); only in EES: 15; only in CoolSolve: 2. The 11 differences are T[1], T_amb, T0[1..7] and T_pc: the model keeps kelvin (T_amb = -40+273) and --ees-units subtracts 273.15 from a unit of K when the name starts with T; maximum relative difference 1.172318 = 273.15/233 on T[1] and T_amb. Compared in kelvin the temperatures agree within 3.8e-09; the largest relative difference on the other common variables is 7.607708e-09 on p0[5]. Only in EES: m, n, p[2], p[3], p[4], p[6], q_m_e, s[1..4], T[2], T[3], T[4], T[6] (variable-window entries absent from the equation window). Only in CoolSolve: Cs (not stored by EES) and fluid$. All 47 equations satisfied (max relative error 2.0e-16)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0226", "CSL-0051"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-24", "action": "added", "by": "GLM (opencode) agent for S. Quoilin"}
+  ]
+}

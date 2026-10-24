@@ -236,3 +236,4 @@ Source file (Python, comments in English), local snapshot of S. Quoilin:
 - `CSL-0142` *district_heating_loop*: the district-heating tutorial of the
   same source library (`SimpleHeatExchanger`, `Pump`, `Valve`, `Pipe`), a
   network rather than a cycle.
+- `CSL-0250` *cascade_heat_pump_geothermal_dh*: two-loop cascade TESPy translation (pinch-sized sectioned exchangers, geothermal to district heating).

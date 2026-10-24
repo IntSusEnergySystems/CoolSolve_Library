@@ -1,0 +1,92 @@
+{=============================================================================
+  Air conditioning of a room: cooling-dehumidifying coil and reheat
+  CoolSolve Library model CSL-0292
+ -----------------------------------------------------------------------------
+  An AHU conditions 40 m3/h of outdoor air (30 C, 60 % RH) for a room held
+  at 25 C and 50 % saturation (1 bar), where one occupant releases 130 W
+  and 80 g/h of water. The room balances give the required supply state;
+  the cooling coil dehumidifies the outdoor air to a saturated state at the
+  supply humidity ratio, the reheat coil brings it to the supply
+  temperature. Computed: supply state, coil duty (with condensate
+  enthalpy), reheat duty, condensate flow and inter-coil temperature.
+  Inputs : p, q_v_a, T_in, phi_in, q_m_w, Q_dot, T_ext, phi_ext, fluid$
+  Outputs: q_m_a, T_su, w_su, phi_su, Q_dot_bf, T_int, Q_dot_pc, q_v_cond
+  Units  : SI - temperatures in deg C, pressures in Pa, energies in J
+  Source : ULiège, MECA0002 "Thermodynamique appliquée", repetition 10
+           (29 Apr 2010), exercise 3 (EES file THD10_R10_E3.EES) - README.md
+  Status : verified vs the EES stored solution; kPa/kJ converted by hand
+=============================================================================}
+
+fluid$ = 'AirH2O'                      "humid air, as in the original"
+
+"!Data"
+p = 100E3 [Pa]                         "room pressure [Pa] (100 kPa in the original)"
+q_v_a = 40/3600                        "fresh-air volume flow [m^3/s] (40 m^3/h)"
+
+T_in = 25                              "room air temperature [C]"
+phi_in = 0.50                          "room air degree of saturation [-]"
+
+q_m_w = 80e-3/3600                     "moisture release of the occupant [kg/s] (80 g/h)"
+Q_dot = 130 [W]                        "total heat released by the occupant [W] (0.130 kW in the original)"
+
+T_ext = 30                             "outdoor air temperature [C]"
+phi_ext = 0.6                          "outdoor air relative humidity [-]"
+
+"!Supply state, from the room balances"
+"As in the original: an initial guess close to the room state helps the solver
+(T_su = T_in and w_su = w_in)."
+
+"Energy balance of the room -> supply enthalpy"
+Q_dot = q_m_a*(h_in - h_su)            "the supply air (index SU) offsets the heat released by the occupant"
+h_in = enthalpy(fluid$,T=T_in,p=p,r=phi_in)   "specific enthalpy held in the room (index IN)"
+
+q_m_a = q_v_a/v_a_su                   "mass flow / volume flow relation"
+v_a_su = volume(fluid$,T=T_su,p=p,w=w_su)     "specific volume of the humid supply air"
+T_su = temperature(fluid$,h=h_su,p=p,w=w_su)  "supply temperature"
+phi_su = relhum(fluid$,h=h_su,p=p,w=w_su)     "supply relative humidity"
+
+"Water mass balance of the room -> supply humidity ratio"
+q_m_a*w_su + q_m_w = q_m_a*w_in        "the water vapour of the room air (IN) comes from the supply air (SU)
+plus the water released by the occupant"
+w_in = humrat(fluid$,T=T_in,p=p,r=phi_in)
+
+"!Air handling unit"
+"Cooling coil: dehumidification by cooling (as in the original, cf. the course
+slides); the air leaves the coil saturated at the supply humidity ratio."
+
+"Coil duty, from the first law.
+NB   : the last term of the right-hand side is the contribution of the
+condensate.
+NB2 : the condensate flow is < 1 % of the air flow -> very small contribution"
+Q_dot_bf = q_m_a*(h_int - h_ext) + q_m_cond*h_cond
+h_int = enthalpy(fluid$,p=p,r=1,w=w_int)      "coil outlet, saturated (index INT)"
+w_int = w_su                           "the humidity ratio is unchanged through the reheat coil"
+h_ext = enthalpy(fluid$,p=p,T=T_ext,r=phi_ext)       "outdoor air (index EXT)"
+h_cond = enthalpy('water',T=T_int,x=0) "the condensate is saturated liquid at T_int, as in the original"
+
+"Condensate flow, from the water balance"
+w_ext = humrat(fluid$,p=p,T=T_ext,r=phi_ext)
+q_m_a*w_ext = q_m_a*w_int + q_m_cond   "the water of the outdoor air (EXT) leaves as coil-outlet air (INT)
+plus condensate"
+q_v_cond = q_m_cond*3600*v_cond*1000   "condensate flow [L/h]"
+v_cond = volume(water,T=T_int,x=0)
+
+"Inter-coil temperature"
+T_int = temperature(fluid$,p=p,h=h_int,w=w_int)
+T_r_ext = dewpoint(fluid$,p=p,T=T_ext,r=phi_ext)
+"The coil outlet temperature is below the dew point of the humid inlet air
+-> part of the water vapour condenses, as in the original"
+
+"Reheat coil: isobaric heating, the humidity ratio is conserved (as in the
+original, cf. the course slides)"
+Q_dot_pc = q_m_a*(h_su - h_int)        "reheat power"
+
+"States for the psychrometric chart, as in the original"
+T[1] = T_ext
+w[1] = w_ext
+T[2] = T_int
+w[2] = w_int
+T[3] = T_su
+w[3] = w_su
+T[4] = T_in
+w[4] = w_in

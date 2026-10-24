@@ -1,0 +1,52 @@
+{=============================================================================
+  Helium bottle pushing liquid oxygen at constant pressure (rocket exercise)
+  CoolSolve Library model CSL-0283
+ -----------------------------------------------------------------------------
+  In a rocket, a helium bottle pushes liquid oxygen (LOX) towards the engine
+  pump at a constant pressure of 100 kPa. The LOX tank (5000 kg, 1142 kg/m^3)
+  empties; the isobaric boundary work of the helium is -p*DeltaV. At the end
+  the helium at -75 C and 100 kPa fills the bottle and the empty LOX tank;
+  together with the initial state (20 C, 14 MPa) this gives the bottle volume.
+  He is an ideal-gas substance in EES and in CoolSolve; with (T, P) inputs
+  CoolSolve returns the real-fluid state (CS-GAP-IDEAL-GAS-MODEL, see README).
+  Teaching exercise (ULiège course); the file names no author.
+
+  Inputs : rho_LOX, m_LOX, p_LOX (p_alim), p_he_i, T_he_i, p_he_f, T_he_f
+  Outputs: W, Vol_tank, Vol_ballon, m_he
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège course, file R2_E5_2022.EES (inventory TM-0401) - see README.md
+  Licence: MIT. Status: verified against the EES stored solution (CS-GAP-IDEAL-GAS-MODEL on v_he_i).
+============================================================================}
+
+"!Data"
+rho_LOX = 1142        "LOX density [kg/m^3], as in the original"
+p_alim = 100E3        "supply pressure [Pa]; 100 kPa in the original; unused, as in the original"
+p_he_i = 14E6         "initial helium pressure [Pa]; 14000 kPa in the original"
+T_he_i = 20           "initial helium temperature [°C]; 20[K]+273.15 K in the original"
+m_LOX = 5000          "LOX mass [kg], as in the original"
+p_LOX = 100E3         "LOX delivery pressure [Pa]; 100 kPa in the original"
+p_he_f = 100E3        "final helium pressure [Pa]; 100 kPa in the original"
+T_he_f = -75          "final helium temperature [°C]; -75[K]+273.15 K in the original"
+
+"!a) Work done by the helium"
+"Volume of the LOX tank"
+Vol_tank = m_LOX/rho_LOX   "LOX tank volume [m^3]"
+"The helium pushes the LOX at constant pressure towards the pump: the process is
+isobaric and the work is the (constant) pressure times the volume change. That
+volume change is, in absolute value, the LOX tank volume, the tank going from
+completely full to completely empty (as in the original)."
+Vol_i = 0                  "initial volume of the helium [m^3], as in the original"
+Vol_f = Vol_tank           "final volume of the helium [m^3], as in the original"
+DELTAV = Vol_f - Vol_i     "volume change of the helium [m^3]"
+W = -p_LOX * DELTAV        "boundary work [J]; negative because it is done by the system and not supplied to it"
+
+"!b) Volume of the helium bottle"
+"At the final state the helium fills the bottle and the empty LOX tank at
+-75 °C and 100 kPa; the helium mass is computed first."
+Vol_total = Vol_ballon + Vol_tank   "total final volume of the helium [m^3]"
+m_he = Vol_total / v_he_f           "helium mass [kg]"
+v_he_f = Volume(He,T=T_he_f,P=p_he_f)  "final specific volume of the helium [m^3/kg]"
+"At the initial state all the helium is concentrated in the bottle at
+20 °C and 14 MPa."
+v_he_i = Volume(He,T=T_he_i,P=p_he_i)  "initial specific volume of the helium [m^3/kg]"
+Vol_ballon = m_he*v_he_i           "volume of the helium bottle [m^3]"

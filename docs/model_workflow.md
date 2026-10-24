@@ -87,6 +87,20 @@ decide for each of them with this decision tree:
    - **Yes, but a different level of detail** (constant-efficiency vs
      semi-empirical vs discretised) → `added` as a separate model, linked in
      both `related` fields.
+   **Novelty rule (maintainer, 2026-10-22).** A model enters the library only if it
+   brings something new and specific: another system or topology, other
+   correlations, another level of detail, another fluid behaviour, another
+   verification reference. A candidate that only changes the *source* of the same
+   physics — e.g. an EES file calling FluidProp or REFPROP where CoolProp gives the
+   same cycle (the benzene–toluene ORC `CSL-0297` was imported, then dropped, as a
+   copy of `CSL-0019`), other numerical values, the continuation of an exercise on
+   the same equations, or one sub-question of an exam already published as an
+   example — is `duplicate`, `merged` or `discarded`. Before importing, find the two
+   or three nearest library models (the dashboard, and `audit.py --cand` for the
+   equation overlap of the extracted source with every library model) and state in
+   the README, section *Niche*, what the new model adds. Periodic audits
+   (`audit.py --lib`; `drop_model.py` removes a model, its links and turns its
+   inventory rows into `merged`) keep the library free of near-copies.
 5. Pick the **representative** of the group (best documented, most correct,
    newest EES version) as the file to import; skim the others for better
    comments, data, corrections or author names.

@@ -1,0 +1,76 @@
+{
+  "id": "CSL-0273",
+  "name": "engine_data_coherence_derating",
+  "title": "Engine data-sheet coherence check and ISO 3046-type derating (worked example)",
+  "summary": "Worked example (MCI instructor solution): checks the internal coherence of a 5-cylinder diesel data sheet (swept volume, piston speed, shaft power, charge-air cooler duty, exhaust flow), computes thermal efficiency, excess air, volumetric and compressor isentropic efficiencies, then derates the power to the site conditions (ISO 3046-type law) and estimates the CO2 emissions per distance.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "engine_data_coherence_derating.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "internal combustion engine",
+    "data coherence",
+    "volumetric efficiency",
+    "isentropic efficiency",
+    "ISO 3046",
+    "derating",
+    "CO2 emissions",
+    "example"
+  ],
+  "language_features": [
+    "property functions",
+    "unquoted fluid names"
+  ],
+  "stats": {
+    "n_equations": 72,
+    "largest_block": 3
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/Examen/resolultion_RD.EES",
+    "candidate_id": "TM-0223",
+    "authors": [
+      "Rémi Dickes",
+      "Ph. Ngendakumana"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X9.721",
+    "language": "fr",
+    "course": "Moteurs à combustion interne (MCI, ULiège), June 2019 exam, instructor solution (tag RD); published as an example"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of resolultion_RD.EES: 72 common variables, 5 differ (rtol=0.001), the absolute air h and s (reference-state offset, cancels in epsilon_s_cp); excluding them the maximum relative difference is 9.82e-4 on Q_dot_air (cp of air, CoolProp vs EES tables).",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of ~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/Examen/resolultion_RD.EES (72 names decoded by ees_extract.py; EES X9.721)",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.000982,
+    "notes": "Excluded from the maximum (named in the README): h_su_cp, h_ex_cp, h_ex_cp_s, s_su_cp, s_ex_cp_s (absolute enthalpy/entropy of ideal-gas Air, reference-state offset of CoolProp vs the EES air tables). The model solves square (72 equations, largest block 3) also from the default guesses; with the EES stored solution as .initials it takes 2 iterations."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0151",
+    "CSL-0244",
+    "CSL-0223",
+    "CSL-0274"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added (card C-313, batch B-11 remainder); verified against the EES stored solution",
+      "by": "opencode worker (mimo-v2.6-flash) for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,313 @@
+{=============================================================================
+  Gas engine with Rankine bottoming cycle (positive-displacement expander)
+  CoolSolve Library model CSL-0261
+ -----------------------------------------------------------------------------
+  Spark-ignition engine whose exhaust gas feeds a recovery boiler and a
+  bottoming Rankine cycle on Water, as in the original exercise (ULiege MSTh
+  repetition TP 12, exercise 8). Engine: intake throttle (pressure loss 0)
+  and intake-valve loss to P_3 = 98 kPa (kinetic-energy balance, valve flow
+  area solved), admission fixed by the displaced volume flow, adiabatic
+  combustion of gasoline CH1.95 with the products described by their mean
+  specific heat cpbar (ULiege library, copied from CSL-0005), expansion
+  closed by eta_sh = W_dot_sh/Q_dot_c = 0.35. Rankine cycle: boiler of
+  effectiveness 0.8 (no pressure loss), positive-displacement expander and
+  pump, condenser at 80 C; the steam flow and the machine displacements
+  follow. Units: SI - temperatures in °C, pressures in Pa, energies in J.
+  Source : ULiege MSTh repetition TP 12, exercise 8 (S. Bertagnolio) -
+           ~/Nextcloud/thermo_models/machines et systemes thermiques/
+           MSTh - Repetitions/TP 12/MSTH-SB-R12-EX8.EES - see README.md
+  Status : verified against the stored EES solution of the original.
+ =============================================================================}
+{--- Library functions copied from CSL-0005 (cpbar_combustion_products) ---
+  Copied as in CSL-0005 (P. Ngendakumana, ULiege 2003; 0/0 guard included) until
+  $INCLUDE library:cpbar_combustion_products is available (CS-FEAT-IMPORT).
+  Only the cpbar PROCEDURE is needed by this model.}
+
+PROCEDURE cpbar(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)
+
+{CPBAR procedure returns cp_bar (J/kg.K) of the combustion products of a CmHn
+hydrocarbon between two temperatures. The inputs are : the type of fuel (m and n),
+the fuel-air ratio (f) and  the two temperatures (T_p1 and T_p2) in °C.
+
+In the case of incomplete combustion (negative excess air value), the procedure
+returns also : the energy losses by CO (Q_4 in J/kg of fuel), the fraction (x) of C
+atoms oxidized into CO2 and the mininum excess air (e_min) to get x>0.
+
+Simplified air is used. In the case of incomplete combustion, it is also assumed that
+there is no O2 in the combustion products.
+
+Moreover, the procedure returns the specific heat for pure air if f=0 (whatever m and n).
+
+When using this procedure, don't forget to set mass basis calculation in the unit system
+settings.}
+
+"Check of the units setting"
+IF (unitsystem('K')=1)  THEN CALL error('Please, set °C for temperature units!')
+If (unitsystem('Molar')=1)  then CALL error('Please, set Mass basis!')
+
+"Default values (in the case of complete combustion)"
+Q_4 = 0
+x = 1
+e_min = 0
+e = 0
+
+"Removable singularity: for T_p1 = T_p2 the mean specific heat is 0/0 (its limit is cp(T)).
+Below 0.01 K the mean is taken over a 0.01 K window centred on the mean temperature."
+IF (ABS(T_p1-T_p2)<0.01) THEN
+  T_hi = (T_p1+T_p2)/2+0.005
+  T_lo = (T_p1+T_p2)/2-0.005
+ELSE
+  T_hi = T_p1
+  T_lo = T_p2
+ENDIF
+
+"Composition of simplified air"
+x_air_N2 = 0.79 ; x_air_O2= 0.21
+
+"Universal gas constant"
+R_u = 8314 "J/kmol.K"
+
+"Molar masses of the species"
+MM_CO = molarmass(CO) ; MM_N2 = molarmass(N2) ; MM_O2 = molarmass(O2)
+MM_CO2 = molarmass(CO2) ; MM_H2O = molarmass(H2O)
+
+IF (f>0) Then "combustion products (not pure air)"
+
+"f  stoichiometric, excess air and f"
+parfuel = m+n/4
+MM_f = 12*m+1*n
+f_st = MM_f/(parfuel*(MM_O2+(x_air_N2/x_air_O2)*MM_N2))
+e = (f_st/f)-1
+
+IF (f>f_st) Then "air deficiency"
+
+"Stoichiometric combustion : CmHn+(m+n/4)*(O2+(79/21)*N2"
+e_min = -m/(2*parfuel) "to ensure x>0"
+f_max = f_st/(1+e_min)
+
+"Assumption : enough air to oxidize H to H2O and no O2 in the flue gases"
+"Hence : CmHn+(m+n/4)*(O2+(79/21)*N2)*(1+e) = a*CO2+b*CO+c*H2O+g*N2"
+g = parfuel*(1+e)*(79/21)
+c = n/2
+x=2*(e*parfuel+m/2)/m
+a = m*x "x is the fraction of the C atoms oxidized into CO2"
+b = m*(1-x)
+"Molar fractions of the constituents"
+nkmoltot = a+ b + c +g
+x_CO2 = a/nkmoltot
+x_CO = b/nkmoltot
+x_H2O = c/nkmoltot
+x_N2 = g/nkmoltot
+mmprod = x_CO2*MM_CO2+x_CO*MM_CO+x_H2O*MM_H2O+x_N2*MM_N2
+"!Mean c_p of combustion products"
+h_CO2 = (enthalpy(CO2,T=T_hi)-enthalpy(CO2,T=T_lo))*MM_CO2
+h_CO = (enthalpy(CO,T=T_hi)-enthalpy(CO,T=T_lo))*MM_CO
+h_H2O =(enthalpy(H2O,T=T_hi)-enthalpy(H2O,T=T_lo))*MM_H2O
+h_N2 = (enthalpy(N2,T=T_hi)-enthalpy(N2,T=T_lo))*MM_N2
+c_bar_p = ((x_CO2*h_CO2+x_CO*h_CO+x_H2O*h_H2O+x_N2*h_N2)/mmprod)/(T_hi-T_lo)
+
+"Unburned-CO losses per kmol of fuel"
+T_ref = 25
+LHV_CO_mol = enthalpy(CO,T=T_ref)*MM_CO+0.5*enthalpy(O2,T=T_ref)*MM_O2-ENTHALPY(CO2,T=T_ref)*MM_CO2
+LHV_CO_mas = LHV_CO_mol/MM_CO
+Q_4 = LHV_CO_mol*b
+
+ELSE
+
+"Molar fractions of the constituents"
+nkmoltot = m+ n/2 + parfuel*(e+(1+e)*(x_air_N2/x_air_O2))
+x_CO2 = m/nkmoltot
+x_H2O = (n/2)/nkmoltot
+x_O2 = parfuel*e/nkmoltot
+x_N2 = parfuel*(1+e)*(x_air_N2/x_air_O2)/nkmoltot
+
+"Molar mass of combustion products"
+MM_prod = x_CO2*MM_CO2+x_H2O*MM_H2O+x_O2*MM_O2+x_N2*MM_N2
+
+"Enthalpy and mean specific heat of combustion products [per kg of products]"
+hp_1 = (enthalpy(CO2,T=T_hi)-enthalpy(CO2, T=T_lo))*MM_CO2
+hp_2 = (enthalpy(H2O,T=T_hi)-enthalpy(H2O, T=T_lo))*MM_H2O
+hp_3 = (enthalpy(O2,T=T_hi)-enthalpy(O2, T=T_lo))*MM_O2
+hp_4 = (enthalpy(N2,T=T_hi)-enthalpy(N2, T=T_lo))*MM_N2
+hp = (x_CO2*hp_1+x_H2O*hp_2+x_O2*hp_3+x_N2*hp_4)/MM_prod
+c_bar_p  = hp/(T_hi-T_lo)
+
+ENDIF
+
+ELSE
+
+"Pure air case"
+MM_a = x_air_O2*MM_O2+x_air_N2*MM_N2
+ha_1 = (enthalpy(O2,T=T_hi)-enthalpy(O2, T=T_lo))*MM_O2
+ha_2 = (enthalpy(N2,T=T_hi)-enthalpy(N2, T=T_lo))*MM_N2
+ha = (x_air_O2*ha_1+x_air_N2*ha_2)/MM_a
+c_bar_p  = ha/(T_hi-T_lo)
+ENDIF
+
+END
+
+{--- End of the library functions copied from CSL-0005 ---}
+
+
+"!Engine and cycle data (as in the original exercise)"
+
+T_amb=20 "ambient temperature [C]"
+P_amb=101325 "ambient pressure [Pa]"
+
+"Spark-ignition engine (essence = gasoline):"
+i=0.5 "working cycles per revolution [-]"
+V_s=1.3E-3 "engine displacement [m3]"
+rpm=3000 "engine speed [rev/min]"
+N=rpm/60 "engine speed [rev/s]"
+eta_sh=0.35 "shaft efficiency [-]"
+eta_m=0.9 "mechanical efficiency [-]"
+LHV_f=44E6 "fuel lower heating value [J/kg]"
+cp_f=2400 "fuel specific heat [J/kg-K]"
+h_fg=305000 "fuel latent heat of vaporisation [J/kg]"
+HV_CO=1.011E7 "heating value of CO [J/kg] (not used by the exercise)"
+m_f=1 "number of C atoms of the fuel CmHn [-]"
+n_f=1.95 "number of H atoms of the fuel CmHn [-]"
+
+"Rankine cycle:"
+Q_dot_gw=0.3*Q_dot_c "heat given by the exhaust gas to the recovery boiler [W]"
+
+"Boiler"
+P_boiler_ex=7E5 "boiler pressure [Pa]"
+T_boiler_ex=250 "boiler outlet temperature [C]"
+epsilon_gw=0.8 "boiler effectiveness [-]"
+
+"Positive-displacement expander"
+epsilon_exp_s=0.6 "expander isentropic efficiency [-]"
+epsilon_exp_v=1 "expander volumetric efficiency [-]"
+rpm_exp=6000 "expander speed [rev/min]"
+N_exp=rpm_exp/60 "expander speed [rev/s]"
+
+"Condenser:"
+T_cd=80 "condenser temperature [C]"
+
+"Positive-displacement pump:"
+epsilon_p_s=0.5 "pump isentropic efficiency [-]"
+epsilon_p_v=1 "pump volumetric efficiency [-]"
+rpm_p=3000 "pump speed [rev/min]"
+N_p=rpm_p/60 "pump speed [rev/s]"
+
+"Hypothesis on the pressure loss across the (intake) valves (equivalent to assuming A_soupapes):"
+P_3=98000 "pressure after the intake valves [Pa]"
+
+"!Internal combustion engine:"
+f=M_dot_f/M_dot_a "fuel-air ratio [-]"
+M_dot_p=M_dot_f+M_dot_a "products mass flow = fuel + air [kg/s]"
+
+"Throttle valve:"
+P_1=P_amb
+T_1=T_amb
+P_2=P_1-DELTAP_throttling
+DELTAP_throttling=0 "throttle pressure loss [Pa]"
+T_2=T_1
+
+"Intake valves - pressure loss"
+cp_23*(T_2-T_3)=C_3^2/2
+cp_23=CP(Air,T=(T_2+T_3)/2)
+T_3=TEMPERATURE(Air,s=s_2,P=P_3)
+s_2=ENTROPY(Air,T=T_2,P=P_2)
+V_dot_3=M_dot_p*v_3
+v_3=VOLUME(Air,T=T_3,P=P_3)
+V_dot_3=C_3*A_soupapes
+
+"Admission in the cylinders:"
+P_4=P_3
+T_4=T_2
+V_dot_4=M_dot_p*v_4
+v_4=VOLUME(Air,T=T_4,P=P_4)
+V_dot_4=V_dot_s
+V_dot_s=i*N*V_s
+
+"Adiabatic combustion chamber:"
+T_5=T_4
+T_ref=25 "reference temperature of the combustion balance [C]"
+Q_dot_1+Q_dot_2+Q_dot_3+Q_dot_4+Q_dot_5=0
+Q_dot_1=M_dot_a*cp_a_56*(T_ref-T_5)
+cp_a_56=CP(Air,T=(T_5+T_ref)/2)
+Q_dot_2=M_dot_f*(cp_f*(T_ref-T_5)+h_fg)
+Q_dot_3=-M_dot_f*LHV_f
+Q_dot_4=0 "(combustion assumed complete as a first approximation)"
+Q_dot_5=M_dot_p*cp_p_56*(T_6-T_ref)
+CALL cpbar(m_f,n_f,f,T_ref,T_6:cp_p_56,Q_4_56,x_56,e_min_56,e_56) "mean cp of the products between T_ref and T_6 [J/kg-K]"
+
+"Energy converter:"
+W_dot_sh=eta_m*M_dot_p*cp_p_67*(T_6-T_7)
+CALL cpbar(m_f,n_f,f,T_6,T_7:cp_p_67,Q_4_67,x_67,e_min_67,e_67) "mean cp of the products between T_6 and T_7 [J/kg-K]"
+W_dot_pumping=V_dot_s*(P_1-P_4)
+
+"Shaft efficiency:"
+eta_sh=W_dot_sh/Q_dot_c
+Q_dot_c=M_dot_f*LHV_f "fuel power [W]"
+
+"!Rankine cycle"
+
+"Condenser outlet: state (a)"
+h_a=ENTHALPY(Water,T=T_cd,x=0)
+P_a=P_cd
+P_cd=PRESSURE(Water,T=T_cd,x=0)
+
+"Pump outlet: state (b)"
+epsilon_p_s=(h_b_s-h_a)/(h_b-h_a)
+h_b_s=ENTHALPY(Water,s=s_a,P=P_b)
+s_a=ENTROPY(Water,h=h_a,P=P_a)
+P_b=P_c "no pressure loss in the boiler"
+epsilon_p_v=V_dot_a/V_dot_s_p
+V_dot_a=M_dot_steam*v_a
+v_a=VOLUME(Water,h=h_a,P=P_a)
+V_dot_s_p=i*N_p*V_s_p
+W_dot_p=M_dot_steam*(h_b-h_a)
+
+"Recovery boiler outlet: state (c)"
+Q_dot_gw=M_dot_steam*(h_c-h_b)
+h_c=ENTHALPY(Water,T=T_c,P=P_c)
+T_c=T_boiler_ex
+P_c=P_boiler_ex
+Q_dot_gw=M_dot_p*cp_p_78*(T_7-T_8)
+CALL cpbar(m_f,n_f,f,T_7,T_8:cp_p_78,Q_4_78,x_78,e_min_78,e_78) "mean cp of the products between T_7 and T_8 [J/kg-K]"
+Q_dot_gw=epsilon_gw*C_dot_min_gw*(T_7-T_b)
+T_b=TEMPERATURE(Water,h=h_b,P=P_b)
+C_dot_min_gw=min(C_dot_p_gw,C_dot_w_gw)
+C_dot_p_gw=M_dot_p*cp_p_78
+C_dot_w_gw=M_dot_steam*cp_w
+cp_w=4187 "water specific heat [J/kg-K]"
+
+"Expander outlet: state (d)"
+epsilon_exp_s=(h_d-h_c)/(h_d_s-h_c)
+h_d_s=ENTHALPY(Water,s=s_c,P=P_d)
+s_c=ENTROPY(Water,h=h_c,P=P_c)
+P_d=P_a "no pressure loss in the condenser"
+epsilon_exp_v=V_dot_c/V_dot_s_exp
+V_dot_c=M_dot_steam*v_c
+v_c=VOLUME(Water,h=h_c,P=P_c)
+V_dot_s_exp=i*N_exp*V_s_exp
+W_dot_exp=M_dot_steam*(h_c-h_d)
+W_dot_u=W_dot_exp
+eta_rankine=W_dot_u/(Q_dot_gw+W_dot_p)
+
+"!Global performance of the system:"
+eta_global=(W_dot_u+W_dot_sh)/(Q_dot_c+W_dot_p)
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{Water Rankine cycle: a = condenser outlet, b = pump outlet, c = boiler
+ outlet, d = expander outlet. Use the arrays h[i]/P[i] or s[i]/T[i] with the
+ "Overlay array path" option of the CoolSolve Diagram tab.}
+P[1]=P_a
+h[1]=h_a
+T[1]=T_cd
+s[1]=s_a
+P[2]=P_b
+h[2]=h_b
+T[2]=T_b
+s[2]=entropy(Water,h=h[2],P=P[2])
+P[3]=P_c
+h[3]=h_c
+T[3]=T_c
+s[3]=s_c
+P[4]=P_d
+h[4]=h_d
+T[4]=temperature(Water,h=h[4],P=P[4])
+s[4]=entropy(Water,h=h[4],P=P[4])

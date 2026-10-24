@@ -1,0 +1,72 @@
+{
+  "id": "CSL-0303",
+  "name": "evaporative_condenser_catalogue",
+  "title": "Evaporative condenser with catalogue data (BAC VXC) and operating checks",
+  "summary": "Evaporative condenser of the Laborelec 2002 toolkit: heat flow from the condensing ammonia to the air/spray water computed with the fictitious-fluid theory on the air side and a condensing resistance on the refrigerant side; nominal parameters from a BAC VXC catalogue lookup table, check procedures for effectiveness, manufacturer limits, fooling factor and subcooling.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "evaporative_condenser_catalogue.eescode",
+  "fluids": [
+    "R717",
+    "AirH2O"
+  ],
+  "tags": [
+    "evaporative condenser",
+    "ammonia",
+    "condenser",
+    "catalogue",
+    "fictitious fluid",
+    "wet bulb",
+    "off-design",
+    "checks",
+    "Laborelec toolkit"
+  ],
+  "language_features": [
+    "humid-air properties",
+    "string variables",
+    "procedures",
+    "lookup tables"
+  ],
+  "stats": {
+    "n_equations": 75,
+    "largest_block": 11
+  },
+  "origin": {
+    "type": "industry",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/2_Evaporative Equipments/2_2_Simulation Models - Diagram Window/Evaporative Condenser/Evaporative_condenser_simulation.EES",
+    "candidate_id": "TM-0300",
+    "authors": [
+      "Felipe Trebilcock (ULiege Thermodynamics Lab, Dec 2002, for Laborelec)",
+      "J. Lebrun (reviewer)",
+      "E. Winandy (reviewer)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X6.596",
+    "language": "en",
+    "course": "Laborelec toolkit 2002 (evaporative equipment), EES Diagram-Window simulation model; catalogue table condenserdata.LKT (candidate TM-0299)"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution (67 records): 67 common variables, 21 differ above rtol = 0.001: 6 by the constant ammonia reference-state offset (derived differences 6.9e-04), 15 downstream of the humid-air property differences EES 6.596 vs CoolProp, max 4.27e-03 (W_su_cd), as in CSL-0290.",
+    "checks": ["ees-stored-solution", "order-of-magnitude"],
+    "reference": "EES stored solution of Evaporative_condenser_simulation.EES (ees_variables.csv; M_dot_r, computed here but absent from the EES storage, and the 7 string variables excluded)",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.00427,
+    "notes": "max_rel_diff excludes the 6 absolute-state variables carrying the ammonia reference-state offset (absolute h_r_ex_cd 2.96e-01, s_r_su_cp 7.76e-02); max over the 15 remaining differences 4.27e-03 (W_su_cd). 40+ algebraic results below 1e-03. Strings checked by eye in the .sol (messages empty)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0290", "CSL-0227"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added (T-IMPORT TM-0300/TM-0299, batch B-11/B-15)",
+      "by": "glm worker (t218) for S. Quoilin"
+    }
+  ]
+}

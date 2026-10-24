@@ -227,3 +227,8 @@ ULiège course MCI, TP5, exercise 4. Published under the library licence (MIT).
   exercise 1. Same course session, a different exercise.
 - `CSL-0188` — CO2 emissions in g/km from a fuel consumption, ULiège MCI
   TP7 exercise 3. The fuel there is a chemical formula, not an injected mass.
+- `CSL-0277` — fuel injection in an atmospheric CI engine, ULiège MCI TP6
+  exercise 3 (after Pulkrabek 5-9/5-10). Same engine/injection skeleton with
+  other inputs; it computes the stoichiometric fuel-air ratio from the C12H26
+  composition and adds the injector sizing (discharge coefficient, injection
+  pressure differential, outlet diameter).

@@ -1,0 +1,83 @@
+{
+  "id": "CSL-0293",
+  "name": "two_shaft_gas_turbine_expander_map",
+  "title": "Two-shaft gas turbine from compressor and expander data",
+  "summary": "Steady exercise of a two-shaft gas turbine on air burning methane: a gas-generator shaft (compressor, adiabatic combustor, turbine 1 closed by a mechanical efficiency of 0.98) and a power turbine on a second shaft at the fixed reduced mass flow 188. The compressor reduced flow and isentropic efficiency are interpolated from a map versus the pressure ratio; the expander reduced flow and isentropic efficiency from a second map versus its pressure ratio; the products use the mean specific heats of the ULiège combustion library.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "two_shaft_gas_turbine_expander_map.eescode",
+  "fluids": [
+    "Air",
+    "CH4",
+    "N2",
+    "O2",
+    "CO2",
+    "H2O"
+  ],
+  "tags": [
+    "gas turbine",
+    "two-shaft",
+    "power turbine",
+    "compressor map",
+    "expander map",
+    "lookup table",
+    "reduced mass flow",
+    "methane",
+    "exercise"
+  ],
+  "language_features": [
+    "INTERPOLATE (native EES keyword form with a named argument)",
+    "user-library routines cpbar and gamma (implicit library, copied in from CSL-0005)",
+    "CALL with several outputs",
+    "property functions (Air, CH4 and ideal-gas species)"
+  ],
+  "stats": {
+    "n_equations": 49,
+    "largest_block": 37
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 09/MSTH-SB-R9-EX3.EES",
+    "candidate_id": "TM-0146",
+    "authors": [
+      "Stéphane Bertagnolio"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "MECA0006 Machines et systèmes thermiques (ULiège), repetition R9, exercise 3"
+  },
+  "verification": {
+    "summary": "Stored solution of MSTH-SB-R9-EX3.EES (EES X7.458). compare_solution.py: 41 common variables, 5 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 8 unused cpbar outputs. Largest deviations are the cp(CH4)-driven q_2 (1.16e-2) and cp_g (1.08e-2); all other variables within 1.91e-3.",
+    "checks": [
+      "ees-stored-solution",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of MSTH-SB-R9-EX3.EES (41 numeric values of 42 names, EES X7.458), compared with tools/compare_solution.py",
+    "date": "2026-10-24",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.0116,
+    "notes": "q_2 and cp_g share the cp(CH4) difference between EES and CoolProp (~1 %, same as CSL-0220); cp_a and the dependent T_2 and T_2_s differ by at most 1.91e-3 (CoolProp air). Flows, works, pressures, map reads, f and eta_m agree within 1e-3. The 8 CoolSolve-only names are unused outputs of the two cpbar CALLs. The .initials file (EES stored solution) is required: without it the 37-variable block does not converge."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0005",
+    "CSL-0011",
+    "CSL-0220",
+    "CSL-0296",
+    "CSL-0294"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-24",
+      "action": "added (roadmap card C-333, T-IMPORT TM-0146): native EES transcription with the cpbar function-position calls written as CALL and the cpbar/gamma routines of CSL-0005 copied in; verified against the EES stored solution",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

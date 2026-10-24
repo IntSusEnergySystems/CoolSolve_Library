@@ -1,0 +1,257 @@
+{=============================================================================
+  Scroll compressor with discharge (reed) valve - reference model
+  CoolSolve Library model CSL-0260
+ -----------------------------------------------------------------------------
+  Semi-empirical hermetic scroll compressor extending the model of Winandy,
+  Saavedra & Lebrun (2002) with a discharge (reed) valve and a clearance
+  volume: supply heating-up against the fictitious wall, mixing with the
+  internal leakage (choked isentropic throat flow), isentropic compression
+  to the adapted pressure, isochoric compression to the exhaust pressure
+  (with the "star" correction when the adapted pressure is lower), exhaust
+  cooling-down, then choked flow through the discharge valve, which fixes
+  the mass flow rate. Electromechanical losses and a fictitious-wall heat
+  balance with the ambient close the energy budget. Parameters identified
+  from the Copeland ZH15K4E-TFD catalogue (R407C); a reduced evaporator and
+  condenser at imposed saturation temperatures close the cycle. The inputs
+  live in the diagram window of the original; the default operating point
+  (t_ev = 10 °C, t_cd = 50 °C) is its last EES run.
+  Source : V. Lemort, ULiège, 2008-02-19 - see README.md
+  Status : verified (EES stored solution of the source file)
+=============================================================================}
+
+"!1. Inputs (diagram-window values of the original; default = last EES run)"
+t_amb = 25                     "ambient temperature [°C]"
+fluid$ = 'R407C'               "refrigerant"
+t_ev = 10                      "evaporating temperature [°C] (original commented value -25)"
+t_cd = 50                      "condensing temperature [°C] (original commented value 20)"
+DELTAt_oh_ev = 5               "superheating at the evaporator outlet [K]"
+DELTAt_sc_cd = 5               "subcooling at the condenser outlet [K]"
+
+"!2. Parameters (identified on the Copeland ZH15K4E-TFD catalogue)"
+AU_amb_cp = 5.382              "envelope-to-ambient heat-transfer coefficient [W/K]"
+AU_ex_cp_n = 13.47             "exhaust cooling-down UA at the nominal flow [W/K]"
+AU_su_cp_n = 24.16             "supply heating-up UA at the nominal flow [W/K]"
+A_leak_cp = 3.888e-7           "leakage area [m^2]"
+W_dot_loss0_cp = 118           "constant electromechanical losses [W]"
+alpha_cp = 0.2152              "loss factor proportional to the internal power [-]"
+d_ex = 0.0052                  "discharge (reed) valve diameter [m]"
+C = 0.292                      "clearance volume factor [-]"
+corr = 0.04                    "correction factor for the swept volume [-]"
+r_v_in_cp = 2.85               "internal built-in volume ratio [-]"
+M_dot_r_cp_n = 0.091           "nominal refrigerant mass flow rate [kg/s]"
+N_rot = 3000                   "rotational speed [1/min]"
+
+"!3. Outputs"
+{M_dot_r (mass flow rate, fixed by the discharge-valve flow capacity),
+ W_dot_cp (electrical power), T_r_ex_cp (exhaust temperature)}
+
+"!*************************************************** MODEL ***************************************************"
+
+"!4.1. Scroll compressor [1]"
+
+"4.1.1. Status supply: su"
+DELTAt_oh_su_cp=DELTAt_oh_ev
+t_sat_su_cp=temperature(fluid$,P=P_su_cp,x=1) "was P=P_ev (P_su_cp = P_ev), so that the mid-quality inversion below owns P_ev"
+t_su_cp=t_sat_su_cp+DELTAt_oh_su_cp
+P_su_cp=P_ev
+h_su_cp=ENTHALPY(fluid$,t=t_su_cp,P=P_su_cp)
+s_su_cp=ENTROPY(fluid$,t=t_su_cp,P=P_su_cp)
+v_su_cp=VOLUME(fluid$,t=t_su_cp,P=P_su_cp)
+
+"4.1.2. Heating-up: su => su1"
+c_p_su_cp = specheat(fluid$,t=t_su_cp,P=p_su_cp)
+C_dot_su_cp = M_dot_r * c_p_su_cp
+AU_su_cp=AU_su_cp_n*(M_dot_r/M_dot_r_cp_n)^0.8
+NTU_su_cp = AU_su_cp / C_dot_su_cp
+epsilon_su_cp = 1 - exp(-NTU_su_cp)
+Q_dot_su_cp = epsilon_su_cp*C_dot_su_cp*( t_w_cp - t_su_cp )
+h_su1_cp =h_su_cp+ Q_dot_su_cp / M_dot_r
+p_su1_cp=p_su_cp "no pressure drop"
+t_su1_cp = temperature( fluid$, h=h_su1_cp, p=p_su1_cp )
+DELTAt_su_cp=t_su1_cp-t_su_cp
+v_su1_cp = volume( fluid$, t = t_su1_cp , p = p_su1_cp )
+s_su1_cp= entropy( fluid$, t = t_su1_cp , p = p_su1_cp )
+
+"4.1.3. Mixing with internal leakage : su1 => su2"
+M_dot_s_cp=M_dot_r+M_dot_leak_cp
+M_dot_s_cp*h_su2_cp=M_dot_r*h_su1_cp+M_dot_leak_cp*h_ex2_cp
+p_su2_cp=p_su1_cp
+
+"4.1.4. Flow rate calculation: su2"
+M_dot_s_cp=V_dot_s_cp*(1+corr)/v_su2_cp
+v_su2_cp=volume(fluid$,P=p_su2_cp,h=h_su2_cp)
+s_su2_cp=entropy(fluid$,P=p_su2_cp,h=h_su2_cp)
+V_dot_s_cp_m3h=V_dot_s_cp*3600
+V_dot_s_cp=V_s_cp*N_rot/60
+
+"4.1.5. Isentropic compression from supply pressure up to the adapted pressure: su2 => in "
+"the first compression is adiabatic-reversible and so isentropic, up to the adapted pressure"
+s_in_cp=s_su2_cp "isentropic compression"
+v_in_cp=v_su2_cp/r_v_in_cp "definition of internal built-in volume ratio"
+h_in_cp = enthalpy(fluid$,s=s_in_cp,v=v_in_cp)
+w_in1_cp= h_in_cp-h_su2_cp
+p_in_cp=PRESSURE(fluid$,s=s_in_cp,v=v_in_cp) "adapted pressure"
+u_in_cp="intenergy(fluid$,p=p_in_cp,v=v_in_cp)"h_in_cp-p_in_cp*v_in_cp
+
+"4.1.5. Isochoric compression from adapted pressure up to exhaust pressure: in=>ex2 "
+"the second compression is also adiabatic, but not reversible and at constant absolute volume (this second part corresponds to the opening of the compression chamber to the discharge plenum)."
+
+w_in2_cp_v= v_in_cp * (p_ex2_cp-p_in_cp)
+w_in2_cp_s=h_ex2_cp_s-h_in_cp
+h_ex2_cp_s = enthalpy(fluid$,s=s_in_cp,p=p_ex2_cp)
+{w_in2_cp=w_in2_cp_v} "Winandy's model"
+w_in2_cp=if(p_in_cp,p_ex2_cp,w_in2_cp|star,w_in2_cp|star,w_in2_cp_v)
+
+
+v_in_cp|star=(1/r_v_in_cp+C)/(1/v_su2_cp+C/v_ex2_cp)
+C/v_ex2_cp*u_ex2_cp+u_in_cp/v_su2_cp=(C/v_ex2_cp+1/v_su2_cp)*u_in_cp|star
+"the (v,u) property calls of the original, rewritten: CoolProp cannot invert the (U,V) pair for R407C.
+ u|star and v|star are known; the auxiliary unknown t_in_cp|star gives (p,t) by inversion of u and v,
+ h|star follows from the identity h = u + p*v and s|star from the (P,H) pair"
+u_in_cp|star=intenergy(fluid$,P=p_in_cp|star,T=t_in_cp|star)
+v_in_cp|star=volume(fluid$,P=p_in_cp|star,T=t_in_cp|star)
+h_in_cp|star=u_in_cp|star+p_in_cp|star*v_in_cp|star
+s_in_cp|star=entropy(fluid$,P=p_in_cp|star,h=h_in_cp|star)
+w_in2_cp_v|star= v_in_cp * (p_in_cp|star-p_in_cp)
+w_in2_cp_s|star=h_ex2_cp_s|star-h_in_cp|star
+h_ex2_cp_s|star = enthalpy(fluid$,s=s_in_cp|star,p=p_ex2_cp)
+w_in2_cp|star=w_in2_cp_v|star+w_in2_cp_s|star
+
+
+"4.1.6. total compression work and power"
+w_in_cp=w_in1_cp+w_in2_cp
+W_dot_in_cp=M_dot_s_cp * w_in_cp
+h_ex2_cp=h_su2_cp+w_in_cp "Both compression steps are considered as adiabatic, from su2 to ex1"
+v_ex2_cp=volume(fluid$,P=P_ex2_cp,h=h_ex2_cp)
+u_ex2_cp=intenergy(fluid$,P=P_ex2_cp,h=h_ex2_cp)
+
+"4.1.7. Electrical consumption"
+W_dot_cp=W_dot_in_cp+W_dot_loss_cp "the compressor elctrical power can be split into two term"
+W_dot_loss_cp=W_dot_loss0_cp+alpha_cp*W_dot_in_cp "Constant electro-mechanical losses + losses proportional to internal power"
+
+"4.1.8. Internal leakage: ex2 => su1"
+s_ex2_cp=entropy(fluid$,P=P_ex2_cp,h=h_ex2_cp)
+s_thr_cp=s_ex2_cp "isentropic flow to the throat"
+V_dot_leak_cp=A_leak_cp*C_thr_cp
+h_ex2_cp=h_thr_cp+1/2*C_thr_cp^2 "conservation of total enthalpy"
+h_thr_cp=enthalpy(fluid$,P=P_thr_cp,s=s_thr_cp)
+M_dot_leak_cp=V_dot_leak_cp/v_thr_cp
+v_thr_cp=volume(fluid$,P=P_thr_cp,s=s_thr_cp)
+P_thr_cp=max(P_thr_crit,P_su2_cp)
+P_thr_crit=P_ex1_cp*(2/(gamma_leak_cp+1))^(gamma_leak_cp/(gamma_leak_cp-1))
+{gamma_leak_cp=1.03}
+P_ex2_cp*v_ex2_cp^gamma_leak_cp{_bis}=P_thr_cp*v_thr_cp^gamma_leak_cp{_bis}
+
+"4.1.9. Exhaust cooling-down: ex2 => ex1:"
+p_ex2_cp=p_ex1_cp "no pressure drop"
+t_ex2_cp=temperature(fluid$,h=h_ex2_cp,p=p_ex2_cp)
+AU_ex_cp=AU_ex_cp_n*(M_dot_r/M_dot_r_cp_n)^0.8
+c_p_ex2_cp = specheat(fluid$,t=t_ex2_cp,P =p_ex2_cp)
+C_dot_ex_cp = M_dot_r * c_p_ex2_cp
+NTU_ex_cp = AU_ex_cp / C_dot_ex_cp
+epsilon_ex_cp = 1 - exp(-NTU_ex_cp)
+Q_dot_ex_cp = epsilon_ex_cp*C_dot_ex_cp*( t_w_cp - t_ex2_cp )
+h_ex1_cp  =  h_ex2_cp+Q_dot_ex_cp / M_dot_r
+t_ex1_cp=temperature(fluid$,h=h_ex1_cp,p=p_ex1_cp)
+DELTAt_ex_cp=t_ex1_cp-t_ex2_cp
+
+"4.1.10. exhaust pressure drop: ex1=>ex"
+v_ex1_cp=volume(fluid$,h=h_ex1_cp,p=p_ex1_cp)
+s_ex1_cp=entropy(fluid$,h=h_ex1_cp,p=p_ex1_cp)
+h_ex1_cp=h_thr_ex_cp+C_thr_ex_cp^2/2
+h_thr_ex_cp=enthalpy(fluid$,P=P_thr_ex_cp,s=s_ex1_cp)
+v_thr_ex_cp=volume(fluid$,P=P_thr_ex_cp,s=s_ex1_cp)
+V_dot_ex_cp=C_thr_ex_cp*A_ex
+P_thr_ex_cp=max(P_thr_ex_crit,p_ex_cp)
+P_thr_ex_crit=p_ex1_cp*(2/(gamma_ex_cp+1))^(gamma_ex_cp/(gamma_ex_cp-1))
+P_ex1_cp*v_ex1_cp^gamma_ex_cp=P_thr_ex_cp*v_thr_ex_cp^gamma_ex_cp
+M_dot_r=V_dot_ex_cp/v_thr_ex_cp "compressible flow"
+"(M_dot_r/A_ex)^2/2*v_ex1_cp=(P_ex1_cp-P_ex_cp)" "Incompressible flow. This equation can be used instead of the previous one in order to make the model more robust."
+A_ex=pi*d_ex^2/4
+t_ex_cp=temperature(fluid$,h=h_ex_cp,p=p_ex_cp)
+r_p_ex=p_ex_cp/p_ex1_cp
+p_ex_cp=PRESSURE(fluid$,t=t_sat_ex_cp,x=1) "with P_ex_cp = P_cd (below), this determines t_sat_ex_cp = T_sat(P_ex_cp, x=1)"
+t_sat_ex_cp = t_sat_su_cd "structural equation of the import: both temperatures are the dew temperature at the same condensing pressure P_ex_cp = P_cd, equal by construction within one property backend (see README)"
+h_ex_cp=h_ex1_cp
+P_ex_cp=P_cd
+
+"4.1.10. Fictitious enveloppe heat balance:"
+W_dot_loss_cp = Q_dot_su_cp + Q_dot_ex_cp + Q_dot_amb_cp "fictitious envelope heat balance (as in the original)"
+{t_w_cp=50}
+Q_dot_amb_cp = AU_amb_cp * (  t_w_cp-t_amb ) "heat exchange with the ambient"
+
+"4.1.11. Volumetric effectiveness:"
+epsilon_v_cp=v_su_cp/v_su1_cp
+
+"4.1.12. Global isentropic effectiveness:"
+h_exs_cp = enthalpy( fluid$ , p = p_ex_cp , s = s_su_cp )
+w_s_cp=h_exs_cp-h_su_cp
+w_cp=W_dot_cp / M_dot_r
+epsilon_s_cp= w_s_cp / w_cp
+
+"4.1.13.  Pressure ratio"
+r_p_cp=P_ex_cp/P_su_cp
+
+"! 4.3. Brine evaporator"
+h_su_ev=h_ex_cd "isenthalpic expansion"
+h_ex_ev=h_su_cp
+t_sat_ex_ev=TEMPERATURE(fluid$,P=P_su_cp,x=1) "was P=P_ev (= P_su_cp)"
+t_su_ev=TEMPERATURE(fluid$,P=P_su_cp,h=h_su_ev) "was P=P_ev (= P_su_cp)"
+"p_ev is the pressure of the state at quality x=0.5 and temperature t_ev (manufacturer convention).
+ The original writes p_ev=pressure(fluid$,t=t_ev,x=0.5); the (T,x) pair returns NaN in CoolProp
+ for the zeotropic R407C (mid-quality inversion), so the supported (P,x) pair is used and the
+ equation is written implicitly in p_ev"
+t_ev_x=t_ev
+t_ev_x=TEMPERATURE(fluid$,P=P_ev,x=0.5) "rewrite of the original p_ev=pressure(fluid$,t=t_ev,x=0.5): the (T,x) pair returns NaN in CoolProp for the zeotropic R407C (mid-quality inversion), so the supported (P,x) pair is used and the equation is written implicitly in P_ev"
+Q_dot_ev=M_dot_r*(h_ex_ev-h_su_ev)
+
+"! 4.3. Water condenser"
+
+DELTAt_oh_su_cd=t_ex_cp-t_sat_su_cd
+t_sat_su_cd=temperature(fluid$,P=P_cd,x=1)
+t_sat_ex_cd=temperature(fluid$,P=P_cd,x=0)
+"p_cd: same inversion as p_ev, for the condensing pressure"
+t_cd_x=t_cd
+t_cd_x=TEMPERATURE(fluid$,P=P_ex_cp,x=0.5) "rewrite of the original p_cd=pressure(fluid$,t=t_cd,x=0.5), same (P,x) inversion as for P_ev; P_cd = P_ex_cp"
+h_su_cd=h_ex_cp
+t_ex_cd=t_sat_ex_cd-DELTAt_sc_cd
+h_ex_cd=enthalpy(fluid$,t=t_ex_cd,p=P_cd)
+Q_dot_cd=M_dot_r*(h_su_cd-h_ex_cd)
+
+"!6. State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+{1: compressor supply (evaporator outlet); 2: after heating-up and leakage
+ mixing; 3: adapted state (end of the isentropic compression); 4: end of the
+ isochoric compression; 5: after exhaust cooling-down (before the exhaust
+ pressure drop); 6: compressor exhaust (condenser inlet); 7: condenser outlet
+ (evaporator inlet). Use h[i]/P[i] or s[i]/T[i] with the "Overlay array path"
+ option of the CoolSolve Diagram tab.}
+P[1] = P_su_cp
+h[1] = h_su_cp
+T[1] = t_su_cp
+s[1] = s_su_cp
+P[2] = p_su2_cp
+h[2] = h_su2_cp
+T[2] = temperature(fluid$,h=h_su2_cp,p=p_su2_cp)
+s[2] = s_su2_cp
+P[3] = p_in_cp
+h[3] = h_in_cp
+"state point 3 is at the adapted pressure p_in_cp; the (s,v) pair of the original (CS-GAP-PROP-SV)
+ is not evaluated by CoolProp for R407C, the (P,s) pair of the same state is used"
+T[3] = temperature(fluid$,P=p_in_cp,s=s_in_cp)
+s[3] = s_in_cp
+P[4] = p_ex2_cp
+h[4] = h_ex2_cp
+T[4] = t_ex2_cp
+s[4] = s_ex2_cp
+P[5] = p_ex1_cp
+h[5] = h_ex1_cp
+T[5] = t_ex1_cp
+s[5] = s_ex1_cp
+P[6] = p_ex_cp
+h[6] = h_ex_cp
+T[6] = t_ex_cp
+s[6] = entropy(fluid$,h=h_ex_cp,p=p_ex_cp)
+P[7] = P_ex_cp
+h[7] = h_ex_cd
+T[7] = t_ex_cd
+s[7] = ENTROPY(fluid$,t=t_ex_cd,p=P_ex_cp) "was p=P_cd (= P_ex_cp)"

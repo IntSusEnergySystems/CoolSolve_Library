@@ -1,0 +1,83 @@
+{
+  "id": "CSL-0294",
+  "name": "gas_turbine_inlet_air_chiller",
+  "title": "Gas turbine with a chiller on the compressor inlet air",
+  "summary": "Open-cycle Brayton plant (compressor, adiabatic combustor, expander, methane in air) whose inlet air at 30 C is cooled to 20 C by an R134a refrigeration machine sized against the compressor reduced-flow constraint: the evaporator UA and the chiller compressor displacement come out of the model, and the global efficiency includes the chiller power.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "gas_turbine_inlet_air_chiller.eescode",
+  "fluids": [
+    "Air",
+    "CH4",
+    "R134a",
+    "N2",
+    "O2",
+    "CO2",
+    "H2O"
+  ],
+  "tags": [
+    "gas turbine",
+    "Brayton cycle",
+    "inlet air cooling",
+    "chiller",
+    "R134a",
+    "reduced mass flow",
+    "reduced speed",
+    "sizing",
+    "evaporator",
+    "methane",
+    "exercise"
+  ],
+  "language_features": [
+    "user-library routines cpbar and gamma (implicit library, copied in from CSL-0005)",
+    "CALL with several outputs",
+    "property functions (Air, CH4, R134a and ideal-gas species)"
+  ],
+  "stats": {
+    "n_equations": 104,
+    "largest_block": 9
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 12/MSTH-SB-R12-EX7.EES",
+    "candidate_id": "TM-0171",
+    "authors": [
+      "Stéphane Bertagnolio"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "MECA0006 Machines et systèmes thermiques (ULiège), repetition R12, exercise 7"
+  },
+  "verification": {
+    "summary": "Stored solution of MSTH-SB-R12-EX7.EES (EES X7.458). compare_solution.py: 78 common variables, 20 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 26. The R134a h/s reference offsets (h_1..h_4, s_1) and the cp(CH4)/cp(Air) backend differences (largest cp_f 8.77e-3) explain the flagged variables; everything else within 1e-3, including AU_ev 3.67e-4, V_s 6.80e-4, eta 9.43e-4.",
+    "checks": [
+      "ees-stored-solution",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of MSTH-SB-R12-EX7.EES (78 numeric values, EES X7.458), compared with tools/compare_solution.py",
+    "date": "2026-10-24",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.561,
+    "notes": "The tool prints a maximum of 5.61e-01 (h_3 and h_4) over all common variables: the six flagged R134a absolute h/s variables (h_1..h_4, s_1) carry the constant CoolProp-vs-EES reference offsets (+148.1 kJ/kg, +0.796 kJ/kg-K; all uses in the model are differences). The remaining 14 flagged variables are CoolProp-vs-EES Air/CH4 cp differences (cp_f 8.77e-3 largest, q_2 9.84e-3, cp_a 2.45e-3, W_dot_sh/W_dot_el 2.02e-3); everything else within 1e-3. The 26 CoolSolve-only names are the 8 unused cpbar CALL outputs and the 18 state-point post-processing variables. Converges from default guesses (61 iterations); .initials supplied for convenience."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0005",
+    "CSL-0200",
+    "CSL-0293"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-24",
+      "action": "added (roadmap card C-334, T-IMPORT TM-0171): native EES transcription with the cpbar function-position calls written as CALL, the cpbar/gamma routines of CSL-0005 copied in, and the (h,x) VOLUME call rewritten with the (P,h) pair of the same state (decision D12); verified against the EES stored solution",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

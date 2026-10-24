@@ -155,4 +155,6 @@ No CoolSolve gap is listed. There is no variant.
 
 ## Related models
 
-None.
+- `CSL-0283` *helium_bottle_lox_displacement*: same substance (helium) in a
+  level-1 exercise of this category — buoyancy of a balloon here, an isobaric
+  gas-pressurization sizing exercise there.

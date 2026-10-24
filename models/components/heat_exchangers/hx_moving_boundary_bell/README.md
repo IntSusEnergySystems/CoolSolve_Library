@@ -184,3 +184,4 @@ pressure drop", Applied Thermal Engineering 79 (2015) — the oracle of
 - CSL-0112 (three_zone_hx_procedures): three-zone/eps-NTU function library.
 - CSL-0127 (hx_constant_effectiveness_discretised): discretised HX with
   pinch logic, same fixed-regime spirit.
+- `CSL-0250` *cascade_heat_pump_geothermal_dh*: two-zone sectioned evaporators/condensers of a cascade heat pump (design-point pinch view of the same discretised physics).

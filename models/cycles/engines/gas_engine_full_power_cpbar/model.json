@@ -58,7 +58,10 @@
   },
   "verification": {
     "summary": "Compared with the stored EES solution of the original (69 variables): 66 agree within rtol = 0.001; the three others are `c_f` (0.94 %, ideal-gas CH4 vs CoolProp), `Q_dot_2` which follows it, and an entropy reference-state offset. The charge mass balance closes and the combustor energy balance is satisfied.",
-    "checks": ["ees-stored-solution", "energy-balance"],
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance"
+    ],
     "reference": "EES stored solution of the original (69 variables, EES X7.458, parametric run with W_dot_sh = 0 and P_2 = 17945.38 Pa)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
@@ -71,7 +74,9 @@
     "CSL-0006",
     "CSL-0024",
     "CSL-0049",
-    "CSL-0149"
+    "CSL-0149",
+    "CSL-0272",
+    "CSL-0261"
   ],
   "related_external": [
     "CoolSolve examples/internal_combustion_engine_cpbar.eescode (CSX-026: this model is its curated version; the example stays in the CoolSolve repository)",

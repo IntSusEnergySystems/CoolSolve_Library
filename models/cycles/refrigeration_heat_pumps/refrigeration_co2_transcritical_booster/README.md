@@ -169,6 +169,9 @@ guesses needed (0) = score 3 → level 2.
 - `CSL-0013` `heat_pump_basic_tespy` — other TESPy translation (single-stage
   heat pump).
 - `CSL-0014` `hx_constant_pinch` — constant-pinch heat-exchanger component.
+- `CSL-0253` `high_temp_heat_pump_zeotropic_transcritical` — another
+  transcritical heat pump on imposed pressures (R1336mzz(Z), water loops
+  recalculated from the pinches).
 
 ![placeholder: P-h or T-s diagram of the cycle, to be made by the maintainer](figures/)
 
@@ -181,3 +184,4 @@ guesses needed (0) = score 3 → level 2.
 - The notebook's sensitivity sweep and pymoo optimisation of the gas-cooler
   and receiver pressures are solver plumbing, not translated: run CoolSolve
   parametric studies on `p_c10` and `p_c3` instead.
+- `CSL-0250` *cascade_heat_pump_geothermal_dh*: two-loop cascade on the heating side (LT/HT heat pumps between geothermal water and district heating, pinch-imposed sectioned exchangers).

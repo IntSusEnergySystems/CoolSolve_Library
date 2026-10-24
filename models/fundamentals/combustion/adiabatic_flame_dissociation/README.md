@@ -199,3 +199,6 @@ S. Quoilin:
 - Inventory neighbours of the same TP series (not yet imported): TM-0230
   (T&P effects on dissociation, `Chem_Equil`), TM-0232 (NASA properties of
   CO2), TM-0234/TM-0235 (RD solution variants of exercises 1-3).
+- `CSL-0264` *temperature_pressure_effects_dissociation*: TP1 exercise 2 of
+  the same series (imported from TM-0230), the same `CHEM_EQUIL` call used
+  for the equilibrium composition only — no flame-temperature balance.

@@ -342,3 +342,9 @@ reference of the *Verification* section).
   (`R05_E02_2022.EES`, inventory `TM-0430`/`TM-0433`, cut-off ratio 2,
   1.9 L engine), solved by the same method; it is a different exercise and is
   not in the library.
+- `CSL-0280` (*diesel_cycle_air_standard*): the **Diesel** air-standard cycle
+  of the same course family (THD10 R08, 2010, exercise 4) with the same
+  mean-temperature `c_p`/`c_v` closure — isobaric heat addition instead of
+  constant volume, and the inverse question (efficiency imposed at 60 %,
+  peak temperature solved). It comes from another session than the
+  `TM-0430`/`TM-0433` exercise named above, which is still not imported.

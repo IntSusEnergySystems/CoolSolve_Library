@@ -174,3 +174,6 @@ Source file (EES 8.423, comments in French), collection of S. Quoilin:
   intercooled + regenerative two-shaft architecture, without reheat.
 - `CSL-0011` *two_shaft_gas_turbine_compressor_map*: two-shaft gas turbine with
   a compressor map (off-design instead of design point).
+- `CSL-0296` *regenerative_two_shaft_gas_turbine*: the minimal regenerative
+  two-shaft machine of the same course family (single compression stage, one
+  combustion chamber, no intercooler, no reheat).

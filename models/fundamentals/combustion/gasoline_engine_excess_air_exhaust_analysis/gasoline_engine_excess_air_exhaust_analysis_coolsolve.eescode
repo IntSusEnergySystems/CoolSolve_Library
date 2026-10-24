@@ -1,0 +1,101 @@
+{=============================================================================
+  Gasoline engine: excess air and useful power from exhaust-gas analysis
+  CoolSolve Library model CSL-0266 (runnable variant)
+ -----------------------------------------------------------------------------
+  Combustion of gasoline (assimilated to CH1.95) with excess air in an engine,
+  analysed from the dry exhaust-gas composition (CO mole fraction). The
+  excess air follows from the fuel-air ratio; the "useful power" from the
+  five-box energy balance of the course, with the fuel vaporised at the
+  reference state (its LHV is defined for gaseous fuel) and the products
+  brought to the exhaust temperature.
+
+  Inputs : fuel/air mass flows (m_dot_e, m_dot_a), temperatures, x_CO, LHV_e
+  Outputs: excess air e, air coefficient lambda (%), useful power Q_dot_utile
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège THD course (2010), repetition 11, exercise 2 - see README.md
+  Variant: runnable variant of the native file blocked by CS-GAP-FLUIDS-ALIAS
+           (real-fluid CarbonMonoxide unknown); only its molarmass call uses
+           ideal-gas CO (valid EES throughout), logged in the README
+=============================================================================}
+
+"!Data"
+n = 1.95 [-]           "H/C mole ratio of the fuel CH1.95, given (as in the original)"
+T_su = 20 [C]          "supply temperature of the air and of the fuel (dry air)"
+T_ex = 700 [C]         "exhaust-gas temperature"
+x_CO = 0.02 [-]        "mole fraction of CO in the dry exhaust gas"
+m_dot_a = 46e-3 [kg/s] "air mass flow rate"
+m_dot_e = 3e-3 [kg/s]  "fuel mass flow rate"
+LHV_e = 44e6 [J/kg]    "lower heating value of the gasoline (44e3 kJ/kg in the original)"
+c_e = 2400 [J/kg-K]    "specific heat of the liquid gasoline (2.4 kJ/kg-K in the original); its comment and h_fg_e's are swapped in the original"
+h_fg_e = 305e3 [J/kg]  "latent heat of vaporisation of the gasoline (305 kJ/kg in the original); its comment and c_e's are swapped in the original"
+T_ref = 25 [C]         "reference temperature"
+HV_CO = 10.11e6 [J/kg] "heating value of CO (10.11e3 kJ/kg in the original)"
+
+"!Solution"
+
+"Combustion balance (five-box model, as in the original)"
+Q_dot_1 + Q_dot_2 + Q_dot_3 + Q_dot_4 + Q_dot_5 = Q_dot_utile
+
+"Q_dot_1: bring the air to the reference conditions"
+Q_dot_1 = m_dot_a * (h_a_ref - h_a_su)
+h_a_ref = enthalpy(air,T=T_ref)
+h_a_su = enthalpy(air,T=T_su)
+
+"Q_dot_2: bring the fuel to the reference conditions AND in vapour form
+(as the LHV is defined for gaseous fuel)"
+Q_dot_2 = m_dot_e * (c_e * (T_ref - T_su) + h_fg_e)
+
+"Q_dot_3: heat RELEASED (hence the minus sign) by the combustion reaction at reference conditions"
+Q_dot_3 = -m_dot_e * LHV_e
+
+"Q_dot_4: heat lost in the unburned fuel (CO); the CO concentration characterises the incompleteness of the combustion"
+Q_dot_4 = m_dot_CO * HV_CO
+m_dot_CO = fm_CO * m_dot_e "CO mass flow rate"
+fm_CO = (1-y) * MM_CO/MM_e "mass fraction of CO (kg of CO per kg of fuel)"
+MM_CO = molarmass(CO) "molar mass of CO: ideal-gas CO replaces the EES real-fluid CarbonMonoxide of the native file (CS-GAP-FLUIDS-ALIAS); the only change of this variant"
+MM_e = MM_C + n*MM_H "molar mass of the fuel"
+MM_C = 12
+MM_H = 1
+
+"y follows from the CO concentration in the DRY exhaust gas (numerator: moles of CO in the products; denominator: total moles of the DRY products, i.e. everything except water)"
+x_CO = (1-y) / ( y + (1-y) + (1-y)/2 + e*(1+n/4) + 3.76 * (1+e)*(1+n/4) )
+
+"The excess air e follows from the relation between the fuel-air ratio and the excess air"
+far = m_dot_e/m_dot_a
+far*(1+e) = far_st
+far_st = MM_e / ((1+n/4)*(1*MM_O2+3.76*MM_N2)) "stoichiometric fuel-air ratio"
+MM_a = molarmass(air) "molar mass of air, as in the original (declared, unused by the equations)"
+
+"Q_dot_5: bring all the products from the reference temperature to the exhaust temperature"
+Q_dot_5 = m_dot_e * (q_CO2 + q_CO + q_H2O + q_N2 + q_O2)
+
+q_CO2 = fm_CO2 * (h_CO2_ex - h_CO2_ref)
+fm_CO2 = y * MM_CO2/MM_e "mass fraction of CO2 (kg per kg of fuel)"
+MM_CO2 = molarmass(co2)
+h_CO2_ex = enthalpy(co2,T=T_ex)
+h_CO2_ref = enthalpy(co2,T=T_ref)
+
+q_CO = fm_CO * (h_CO_ex - h_CO_ref)
+h_CO_ex = enthalpy(co,T=T_ex)
+h_CO_ref = enthalpy(co,T=T_ref)
+
+q_H2O = fm_H2O * (h_H2O_ex - h_H2O_ref)
+fm_H2O = n/2 * MM_H2O/MM_e "mass fraction of H2O (kg per kg of fuel)"
+MM_H2O = molarmass(H2o)
+h_H2O_ex = enthalpy(H2o,T=T_ex)
+h_H2O_ref = enthalpy(H2o,T=T_ref)
+
+q_N2 = fm_N2 * (h_N2_ex - h_N2_ref)
+fm_N2 = 3.76*(1+e)*(1+n/4) * MM_N2/MM_e "mass fraction of N2 (kg per kg of fuel)"
+MM_N2 = molarmass(N2)
+h_N2_ex = enthalpy(N2,T=T_ex)
+h_N2_ref = enthalpy(N2,T=T_ref)
+
+q_O2 = fm_O2 * (h_O2_ex - h_O2_ref)
+fm_O2 = ( (1-y)/2 + e*(1+n/4)) * MM_O2/MM_e "mass fraction of O2 (kg per kg of fuel)"
+MM_O2 = molarmass(O2)
+h_O2_ex = enthalpy(O2,T=T_ex)
+h_O2_ref = enthalpy(O2,T=T_ref)
+
+"stoichiometric air coefficient (in %, as in the original)"
+lambda = (1+e)*100

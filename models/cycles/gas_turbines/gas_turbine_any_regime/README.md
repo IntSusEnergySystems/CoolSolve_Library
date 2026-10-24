@@ -153,4 +153,4 @@ The native keyword form of `INTERPOLATE` solves. `missing_features` is empty. A 
 
 ## Related models
 
-No other library model is linked (`related` is empty). TM-0147 and TM-0148 are similar exercises and are not in a duplicate group with TM-0145; those inventory rows were left unchanged.
+No other library model was linked at import time (`related` was empty). TM-0147 and TM-0148 are similar exercises and are not in a duplicate group with TM-0145; those inventory rows were left unchanged. Later link: `CSL-0293` (*two_shaft_gas_turbine_expander_map*), the two-shaft exercise 3 of the same R9 series, from whose file this model's library routines were copied.

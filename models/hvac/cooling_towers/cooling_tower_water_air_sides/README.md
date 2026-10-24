@@ -175,4 +175,6 @@ to force a closer root.
 
 ## Related models
 
-`related` is empty.
+- `CSL-0287` *cooling_tower_chiller_variable_airflow*: the same tower core
+  (counter-flow effectiveness, fictitious air side, saturated outlet) coupled to a
+  chiller and to a variable-flow fan.

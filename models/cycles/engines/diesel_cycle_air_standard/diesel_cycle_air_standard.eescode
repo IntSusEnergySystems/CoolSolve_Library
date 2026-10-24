@@ -1,0 +1,75 @@
+{=============================================================================
+  Air-standard Diesel cycle (60 % efficiency -> maximum temperature)
+  CoolSolve Library model CSL-0280
+ -----------------------------------------------------------------------------
+  Theoretical (air-standard) Diesel cycle as in the original exercise: air as
+  an ideal gas with temperature-dependent specific heats, c_v taken constant
+  over each transformation and gamma = c_p/c_v evaluated at its mean
+  temperature. Isentropic compression 1-2, isobaric heat addition 2-3,
+  isentropic expansion 3-4 and isochoric heat rejection 4-1 (first law of the
+  closed system on each step). The exercise imposes the thermal efficiency
+  (60 %) and asks for the maximum temperature T_MAX the cycle must reach; the
+  mean effective pressure follows from its definition.
+
+  Inputs : fluid$, eta_diesel, R, r_v, p[1], T[1]
+  Outputs: T_MAX, p[2..4], T[2..4], v[1..4], q_c, w_net, pme
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège, course "Thermodynamique appliquée", session R8 (2010),
+           exercise 4 (EES file THD10_R08_E4.EES) - see README.md
+  Status : verified against the EES stored solution (no CoolSolve gap).
+=============================================================================}
+
+"!Data"
+fluid$ = 'Air'                    "working fluid, air as an ideal gas (as in the original)"
+eta_diesel = 0.6                  "required thermal efficiency [-] (60 % in the original)"
+R = 287 [J/(kg-K)]                "specific gas constant of air (0.287 kJ/(kg-K) in the original)"
+r_v = 18                          "volumetric ratio v[1]/v[2] [-] ('rapport volumetrique' in the original)"
+p[1] = 100E3 [Pa]                 "pressure before the compression (100 kPa in the original)"
+T[1] = 26.85 [C]                  "temperature before the compression (300 K in the original)"
+
+"!Solution"
+
+"Isentropic compression 1-2 : p*v^gamma = cste"
+v[1] = R*(T[1]+273.15)/p[1]       "v[1] from the ideal-gas law, absolute temperature [m^3/kg]"
+
+v[2] = v[1]/r_v                   "v[2] from the volumetric ratio [m^3/kg]"
+p[2] = p[1]*r_v^gamma12           "p[2] from the isentropic model [Pa]"
+T[2] = p[2]*v[2]/R-273.15         "T[2] from the ideal-gas law: kelvin converted back to °C [°C]"
+
+q_12 = 0                          "no heat exchanged: reversible adiabatic [J/kg]"
+w_12 = cv12*(T[2]-T[1])           "work, from minus the integral of p dv [J/kg]"
+cp12 = cp(fluid$,T=(T[1]+T[2])/2) "c_p at the mean temperature of 1-2 [J/kg-K]"
+cv12 = cv(fluid$,T=(T[1]+T[2])/2) "c_v at the mean temperature of 1-2 [J/kg-K]"
+gamma12 = cp12/cv12               "ratio of the specific heats of 1-2 [-]"
+
+"Isobaric heating 2-3 : p = cste"
+p[3] = p[2]                       "isobaric evolution [Pa]"
+w_23 = -p[2]*(v[3]-v[2])          "work, from minus the integral of p dv [J/kg]"
+w_23 + q_23 = cv23*(T[3]-T[2])    "heat exchanged from the first principle: q + w = delta_u [J/kg]"
+q_23 = q_c                        "heat received during the heating at p = cste [J/kg]"
+v[3] = R*(T[3]+273.15)/p[3]       "specific volume from the ideal-gas law [m^3/kg]"
+cv23 = cv(fluid$,T=(T[2]+T[3])/2) "c_v at the mean temperature of 2-3 [J/kg-K]"
+
+"Isentropic expansion 3-4 : p*v^gamma = cste"
+p[4] = p[3]*(v[3]/v[4])^gamma34   "p[4] from the isentropic model: v[4] is known (see below) [Pa]"
+T[4] = p[4]*v[4]/R-273.15         "T[4] from the ideal-gas law: kelvin converted back to °C [°C]"
+q_34 = 0                          "no heat exchanged: reversible adiabatic [J/kg]"
+w_34 = cv34*(T[4]-T[3])           "work, from minus the integral of p dv [J/kg]"
+cp34 = cp(fluid$,T=(T[3]+T[4])/2) "c_p at the mean temperature of 3-4 [J/kg-K]"
+cv34 = cv(fluid$,T=(T[3]+T[4])/2) "c_v at the mean temperature of 3-4 [J/kg-K]"
+gamma34 = cp34/cv34               "ratio of the specific heats of 3-4 [-]"
+
+"Isochoric cooling 4-1 : v = cste"
+v[4] = v[1]                       "isochoric evolution [m^3/kg]"
+w_41 = 0                          "no work exchanged: isochoric evolution [J/kg]"
+w_41 + q_41 = cv41*(T[1]-T[4])    "heat exchanged from the first principle: q + w = delta_u [J/kg]"
+cv41 = cv(fluid$,T=(T[1]+T[4])/2) "c_v at the mean temperature of 4-1 [J/kg-K]"
+
+"Thermal efficiency"
+eta_diesel = w_net/q_c             "definition of the thermal efficiency [-]"
+w_net = -(w_12 + w_23 + w_34 + w_41)  "net work of the cycle [J/kg]"
+
+"Mean effective pressure (definition)"
+pme = w_net/(v[1]-v[2])            "mean effective pressure [Pa]"
+
+T_MAX = T[3]                       "maximum temperature of the cycle, at the end of the heating [°C]"

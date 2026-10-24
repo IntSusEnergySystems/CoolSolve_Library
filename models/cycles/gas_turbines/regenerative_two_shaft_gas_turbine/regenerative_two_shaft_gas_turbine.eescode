@@ -1,0 +1,90 @@
+{=============================================================================
+  Regenerative two-shaft gas turbine (THD10 R05 exercise 4)
+  CoolSolve Library model CSL-0296
+ -----------------------------------------------------------------------------
+  Gas turbine plant on ideal-gas air: a compressor, a regenerator, a
+  combustion chamber, a high-pressure turbine that only drives the
+  compressor and a low-pressure (power) turbine expanding to ambient
+  pressure. All seven stations are solved simultaneously: isentropic
+  efficiency 95 % for the compressor and both turbines, regenerator
+  effectiveness 90 %, isobaric heat exchangers, combustion products treated
+  as air. The exercise asks for the enthalpies at the stations, the T-s
+  diagram, the LP shaft power, the regenerator heat rate and the heat rate
+  of the combustion chamber.
+
+  Inputs : p[1], T[1], p[2], T[4], q_m, eta_is_c, eta_is_t, eta_regen
+  Outputs: h[i], T[i] (i = 1..7), W_dot_tbp, Q_dot_regen_reel_air, Q_dot_cc
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège course "Thermodynamique appliquée" (THD10, repetition 5,
+           exercise 4, 2010), authors not named in the file - see README.md
+=============================================================================}
+
+"!Data"
+fluid$ = 'air'
+p[1] = 100E3             "compressor inlet pressure [Pa] (100 kPa in the original)"
+T[1] = 25                "compressor inlet temperature [°C]"
+p[2] = 400E3             "compressor outlet pressure [Pa] (400 kPa in the original)"
+T[4] = 1150 - 273        "HP turbine inlet temperature [°C] (1150 K in the original, which subtracts 273)"
+q_m = 1                  "air mass flow rate [kg/s]"
+eta_is_c = 0.95          "isentropic efficiency of the compressor [-]"
+eta_is_t = 0.95          "isentropic efficiency of the two turbines [-]"
+eta_regen = 0.9          "effectiveness of the regenerator [-]"
+
+"!Resolution"
+"The points a) to e) are solved simultaneously by computing the complete
+cycle of the air in the machine (station 1 to station 7)."
+
+"Station 1: compressor inlet; the temperature is enough to fix the state (ideal gas)"
+h[1] = enthalpy(fluid$,T=T[1])
+s[1] = entropy(fluid$,T=T[1],p=p[1])
+
+"Station 2: compressor outlet; the discharge pressure and the isentropic
+efficiency are enough to fix the state"
+eta_is_c = (h_2_is - h[1]) / (h[2] - h[1])
+h_2_is = enthalpy(fluid$,s=s[1],p=p[2])
+s[2] = entropy(fluid$,h=h[2],p=p[2])
+T[2] = temperature(fluid$,h=h[2])
+W_dot_cmp = q_m*(h[2] - h[1])   "power required to drive the compressor [W]"
+
+"Station 3: regenerator air-side outlet; the isobaric regenerator
+effectiveness couples this station to station 6 (downstream), so the cycle
+has to be closed to compute it"
+p[3] = p[2]
+eta_regen = Q_dot_regen_reel_air/Q_dot_regen_max
+Q_dot_regen_reel_air = q_m*(h[3]-h[2])   "heat rate actually exchanged in the regenerator, air side [W]"
+Q_dot_regen_max = q_m*(h[6]-h[2])        "maximum exchangeable heat rate of the regenerator [W]"
+T[3] = temperature(fluid$,h=h[3])
+s[3] = entropy(fluid$,h=h[3],p=p[3])
+
+"Station 4: combustion chamber outlet; temperature and pressure are known"
+p[4] = p[3]
+h[4] = enthalpy(fluid$,T=T[4])
+s[4] = entropy(fluid$,h=h[4],p=p[4])
+Q_dot_cc = q_m*(h[4]-h[3])   "heat rate injected in the combustion chamber [W]"
+
+"Station 5: HP turbine outlet; its isentropic efficiency is known and it
+only drives the compressor"
+eta_is_t = (h[5] - h[4]) / (h_5_is - h[4])
+h_5_is = enthalpy(fluid$,s=s[4],p=p[5])
+s[5] = entropy(fluid$,h=h[5],p=p[5])
+T[5] = temperature(fluid$,h=h[5])
+W_dot_thp = q_m * (h[5] - h[4])   "power delivered by the HP turbine [W]"
+W_dot_thp + W_dot_cmp = 0         "power balance on the HP shaft"
+
+"Station 6: LP turbine outlet; the isentropic efficiency is known and, the
+regenerator being isobaric, the fluid returns to the ambient pressure at
+the cycle outlet (station 7): p[7] = p[1] and p[6] = p[7] = p[1]"
+p[6] = p[1]
+eta_is_t = (h[6] - h[5]) / (h_6_is - h[5])
+h_6_is = enthalpy(fluid$,s=s[5],p=p[6])
+s[6] = entropy(fluid$,h=h[6],p=p[6])
+T[6] = temperature(fluid$,h=h[6])
+W_dot_tbp = q_m * (h[6] - h[5])   "power delivered by the LP turbine [W]"
+
+"Station 7: regenerator gas-side outlet; the heat rate extracted from the
+combustion gases is transferred to the fresh air leaving the compressor"
+p[7] = p[1]
+Q_dot_regen_reel_gaz = q_m*(h[7]-h[6])   "heat rate released by the combustion gases in the regenerator [W]"
+Q_dot_regen_reel_gaz + Q_dot_regen_reel_air = 0   "balance between the hot (combustion gases) and cold (fresh air) streams of the regenerator"
+s[7] = entropy(fluid$,h=h[7],p=p[7])
+T[7] = temperature(fluid$,h=h[7])

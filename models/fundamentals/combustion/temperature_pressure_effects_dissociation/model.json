@@ -1,0 +1,62 @@
+{
+  "id": "CSL-0264",
+  "name": "temperature_pressure_effects_dissociation",
+  "title": "Temperature and pressure effects on dissociation of combustion products",
+  "summary": "Equilibrium dissociation of the products of octane (C8H18) combustion with 20 % excess dry air: the 14-species equilibrium mole fractions from the EES built-in Chem_Equil procedure at given pressure and temperature, the pressure/temperature trends of the exercise kept as two $IF parametric-sweep blocks.",
+  "kind": "steady",
+  "level": 1,
+  "status": "blocked",
+  "main_file": "temperature_pressure_effects_dissociation.eescode",
+  "fluids": [],
+  "tags": [
+    "combustion",
+    "chemical equilibrium",
+    "dissociation",
+    "octane",
+    "excess air",
+    "exercise"
+  ],
+  "language_features": [
+    "$IF directives",
+    "CALL CHEM_EQUIL (EES built-in)",
+    "sum"
+  ],
+  "stats": {"n_equations": 21, "largest_block": 14},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP1_Ex_1-5/Ex_2_T&P effects on dissociation.EES",
+    "candidate_id": "TM-0230",
+    "authors": ["P. Ngendakumana", "R. Dickes"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.589",
+    "language": "en",
+    "course": "MCI (ULiège), TP1 exercise 2"
+  },
+  "verification": {
+    "summary": "Not verified: the native file is blocked (CS-GAP-CHEM-EQUIL) and no runnable variant is shipped (no faithful substitute for the 14-species equilibrium), so the EES stored solution (5 of 10 variables carry values) was not reproduced. The run reports a square system (21 equations, largest block 14) and fails only on the unknown CHEM_EQUIL procedure.",
+    "checks": [],
+    "reference": "EES stored solution of the source file (last row of its temperature sweep): P = 10000 kPa, T = 3000 K (2726.85 degC), x_CH4 = 0, x_Ar = 0, sumx = 0.9999999992; 5 of the 10 stored names carry no value. Re-check with tools/compare_solution.py <model>.sol reference/ees_variables.csv --ees-units when a CoolSolve CHEM_EQUIL closes CS-GAP-CHEM-EQUIL (T-RECHECK).",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": null,
+    "notes": "Run in the model folder (2026-10-22, CoolSolve 0.4.0@9768373): 'Equations: 21, Variables: 21, System square: Yes, Total blocks: 8, Largest block: 14', then 'warning (line 42): Unknown function CHEM_EQUIL' and 'Block 6 (size 14, vars: x_OH, x_O2, x_O, ...) failed: EvaluationError - [Newton] Unknown procedure: CHEM_EQUIL'. No .sol and no comparison (compare_solution.py needs a solved file)."
+  },
+  "missing_features": [
+    "CS-GAP-CHEM-EQUIL"
+  ],
+  "related": [
+    "CSL-0150"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added (card C-304, batch B-15); native file blocked by CS-GAP-CHEM-EQUIL, no runnable variant (no faithful substitute for the 14-species equilibrium, decision as CSL-0150)",
+      "by": "opencode worker (mimo-v2.6-flash) for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{=============================================================================
+  Engine bsfc from bore, stroke and air-fuel ratio (MCI TP7 Ex2)
+  CoolSolve Library model CSL-0279
+ -----------------------------------------------------------------------------
+  Teaching exercise: a 12-cylinder four-stroke engine is described
+  by its bore and stroke (total displacement), its speed, the air-fuel
+  ratio and the volumetric, mechanical and combustion efficiencies. The
+  volumetric efficiency gives the air mass flow, the AFR the fuel mass
+  flow, hence the brake and indicated specific fuel consumptions (g/kWh)
+  and the unburnt-hydrocarbon flow in g/kWh.
+  Inputs : n_c, i, W_dot_sh, RPM, AFR, D, L, epsilon_v, eta_m, epsilon_c,
+           p_su, T_su
+  Outputs: V_s, M_dot_a, M_dot_f, bsfc, isfc, isfc_bis, M_dot_f_unb_W
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : P. Ngendakumana and R. Dickes, ULiège MCI, TP séance 7,
+           exercise 2 (2019) - see README.md
+  Status : verified - converted by hand from the kPa/kJ unit system of
+           the original (ees_import.md §6); compared with the EES stored
+           solution (README).
+=============================================================================}
+
+"!Data"
+
+n_c = 12                      "number of cylinders [-]"
+i = 1/2                       "intermittency factor of a four-stroke engine [-]"
+W_dot_sh = 2440e3             "shaft power [W] (2440 kW in the original)"
+RPM = 550                     "engine speed [rev/min]"
+AFR = 14.5                    "air-fuel mass ratio [-]"
+D = 24e-2                     "bore [m]"
+L = 32e-2                     "piston stroke [m]"
+epsilon_v = 0.97              "volumetric efficiency [-]"
+eta_m = 0.88                  "mechanical efficiency [-]"
+epsilon_c = 0.98              "combustion efficiency [-]"
+p_su = 98e3                   "intake pressure [Pa] (98 kPa in the original)"
+T_su = 25                     "intake temperature [°C]"
+
+"!Engine displacement"
+
+V_s = n_c*pi*D^2/4*L          "total displacement [m^3]"
+
+"!Air and fuel mass flows [kg/s]"
+
+epsilon_v = M_dot_a/(rho_su*V_s*N*i)   "definition of epsilon_v, hence M_dot_a"
+N = RPM/60                             "engine speed [rev/s]"
+rho_su = density(Air,T=T_su,P=p_su)    "intake air density [kg/m^3]"
+M_dot_f = f*M_dot_a                    "fuel mass flow [kg/s]"
+f = 1/AFR                              "fuel-air mass ratio [-]"
+
+"!Specific fuel consumptions [g/kWh]"
+
+bsfc = M_dot_f*3600*1e6/W_dot_sh       "at the shaft [g/kWh]; 3600*1000 with W_dot_sh in kW in the original"
+bsfc = isfc/eta_m                      "indicated [g/kWh], as in the original"
+W_dot_sh = eta_m*W_dot_i               "shaft and indicated power [W]"
+isfc_bis = M_dot_f*3600*1e6/W_dot_i    "check of isfc [g/kWh]"
+
+"!Unburnt hydrocarbons [g/kWh]"
+
+M_dot_f_unb = (1-epsilon_c)*M_dot_f*1000        "unburnt fuel flow [g/s]"
+M_dot_f_unb_W = M_dot_f_unb*3600*1e3/W_dot_sh   "referred to the shaft power [g/kWh]; 3600 with W_dot_sh in kW in the original"

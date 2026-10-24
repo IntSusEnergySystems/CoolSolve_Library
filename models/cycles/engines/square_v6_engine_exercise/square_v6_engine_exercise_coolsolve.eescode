@@ -1,0 +1,170 @@
+{=============================================================================
+  Square V6 four-stroke engine (MCI TP3 exercises 1-3) - runnable variant
+  CoolSolve Library model CSL-0275 (variant, tested as CSL-0275:coolsolve)
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiege MCI, TP3) on one square V6 four-stroke engine:
+  exercise 1 piston geometry and kinematics, exercise 2 shaft/indicated power
+  and bmep, exercise 3 (default) mixture mass, mass flows, volumetric
+  efficiency, specific consumption and thermal efficiency (README.md).
+
+  Variant: identical to the native file except that the equation
+  MM_mixt = x_f*MM_f + x_a*MM_a is removed: with x_f = y_f*MM_mixt/MM_f,
+  x_a = y_air*MM_mixt/MM_a, x_f + x_a = 1 and y_f + y_air = 1 it is an exact
+  identity, and CoolSolve (unlike EES, which drops it as redundant) rejects
+  the over-determined system. Valid EES, no CoolSolve-only syntax.
+
+  Inputs : n_c, i, V_s_tot, N|star, r_v, B, theta, Exercice$, C_fr, P_in,
+           T_in, eta_m, AFR, LHV_f, epsilon_c
+  Outputs: exercise-dependent - see README.md
+  Units  : SI - temperatures in degC, pressures in Pa, energies in J
+  Source : P. Ngendakumana, R. Dickes (ULiege MCI TP3) - see README.md
+============================================================================}
+
+"!Initial data: see exercise 1"
+
+n_c = 6                          "number of cylinders [-]; a V6"
+i = 0.5                          "intermittency factor of a 4-stroke engine [-]"
+V_s_tot = 3e-3                   "engine displacement [m^3]"
+N|star = 3600                    "engine rotational speed [1/min]"
+r_v = 9.5                        "volumetric compression ratio [-]"
+B = 0.166                        "connecting-rod length [m]"
+L = D                            "square engine: stroke equals bore [m]"
+theta = 20                       "angle of the end of the combustion: 0 at TDC [deg]"
+
+"!Choice of the exercise to solve: 1, 2 or 3"
+
+{Exercice$ = '1'}                "switched by commenting, as in the original"
+{Exercice$ = '2'}
+Exercice$ = '3'                  "default of the file: kept as the regression case"
+
+
+$If Exercice$ = '1'
+
+"!Exercise 1"
+
+"Stroke L and bore D of the cylinder"
+
+V_s=V_s_tot/n_c                  "volume displaced by one cylinder [m^3]"
+V_s=pi*(D^2/4)*L
+
+"Mean piston speed C_m"
+
+N = N|star/60                    "rotational speed [1/s]"
+C_m=2*L*N                        "mean piston speed [m/s]"
+
+"Clearance volume of a cylinder V_c (and share of the total volume: rapV_c)"
+
+r_v = V_bdc/V_tdc                "definition of the volumetric compression ratio [-]"
+V_bdc = V_c+V_s                  "cylinder volume at BDC [m^3]"
+V_c = V_tdc                      "cylinder volume at TDC, clearance volume [m^3]"
+rapV_c = 100*(V_c/V_bdc)         "clearance volume share [%]"
+
+"Instantaneous piston speed C and cylinder volume V at the end of the combustion"
+
+L = 2*R                          "crank radius [m]"
+C=C_m*pi/2*sin(theta)*(1+cos(theta)/sqrt((B/R)^2-(sin(theta))^2))  "instantaneous piston speed at angle theta [m/s]"
+y=B+R-((sqrt(B^2-(R*sin(theta))^2))+R*cos(theta))  "piston displacement from TDC at theta [m]"
+V=V_c+pi*(D^2/4)*y               "cylinder volume at the end of the combustion [m^3]"
+
+$Endif
+
+$If Exercice$ = '2'
+
+"!Exercise 2"
+
+"Exercise 2 data"
+
+C_fr = 205                       "torque measured at the dynamometer brake [N.m]"
+P_in = 85e+3                     "pressure of the air-gasoline mixture at the end of the intake (at BDC for lack of other information) [Pa]"
+T_in = 60                        "temperature of the mixture at the end of the intake [degC] (333.15 K in the original)"
+eta_m = 0.85                     "mechanical efficiency of the engine [-]"
+
+"Exercise 1 results"
+
+V_s=V_s_tot/n_c                  "volume displaced by one cylinder [m^3]"
+V_s=pi*(D^2/4)*L
+N = N|star/60                    "rotational speed [1/s]"
+
+
+
+"Shaft power calculation"
+
+W_dot_sh = -C_fr*omega           "shaft power [W]"
+omega = 2*pi*N                   "angular speed [rad/s]"
+W_dot_sh_hp = W_dot_sh/745.7     "shaft power converted to hp [hp]"
+//W_dot_sh_hp_bis = W_dot_sh*convert(W,hp)  "same conversion with the convert function, commented out in the original"
+
+"Indicated power calculation"
+
+W_dot_in = W_dot_sh/eta_m        "indicated power [W]"
+//W_dot_in_hp = W_dot_in*convert(W,hp)      "as in the original (commented out there)"
+
+"Brake mean effective pressure calculation"
+
+bmep = (-W_dot_sh/V_dot_th)*1e-5 "units: [bar]"
+V_dot_th = V_s*N*n_c*i           "theoretical volume flow [m^3/s]"
+
+"Friction power loss calculation"
+
+W_dot_loss=W_dot_in-W_dot_sh     "friction power [W]"
+
+$Endif
+
+$IF Exercice$ = '3'
+
+"!Exercise 3"
+
+"Exercise 3 data"
+
+AFR = 15                         "air-fuel ratio [-]"
+f = 1/AFR                        "fuel-air ratio [-]"
+LHV_f = 50e+6                    "lower heating value of the fuel (CH4) [J/kg]"
+epsilon_c = 0.97                 "combustion efficiency [-]"
+
+"Exercise 2 data and results"
+
+N = N|star/60                    "rotational speed [1/s]"
+V_s=V_s_tot/n_c                  "volume displaced by one cylinder [m^3]"
+V_s=pi*(D^2/4)*L
+r_v = V_bdc/V_tdc                "definition of the volumetric compression ratio [-]"
+V_bdc = V_c+V_s                  "cylinder volume at BDC [m^3]"
+V_c = V_tdc                      "cylinder volume at TDC, clearance volume [m^3]"
+P_in = 85e+3                     "pressure of the air-gasoline mixture at the end of the intake (at BDC for lack of other information) [Pa]"
+T_in = 60                        "temperature of the mixture at the end of the intake [degC] (333.15 K in the original)"
+C_fr = 205                       "torque measured at the dynamometer brake [N.m]"
+W_dot_sh = -C_fr*omega           "shaft power [W]"
+omega = 2*pi*N                   "angular speed [rad/s]"
+
+"Mixture gas constant and mass of the air-fuel mixture in the cylinder per cycle"
+
+Masse = P_in*V_bdc/(r_mixt*(T_in+273.15))  "mass of the mixture per cycle [kg] (volume at BDC for lack of other information); (T_in+273.15) because T_in is in degC"
+r_mixt = R_u/MM_mixt             "specific gas constant of the mixture [J/(kg.K)]"
+R_u = R#                         "universal gas constant [J/(kmol.K)]; the original comments 8314 J/(kmol.K)"
+M_f/epsilon_c = f*M_a            "mass balance with the combustion efficiency [-]"
+Masse = M_f+M_a                  "mixture mass balance [kg]"
+y_air = M_a/(M_a+M_f)            "mass fraction of air [-]"
+y_f = M_f/(M_a+M_f)              "mass fraction of fuel [-]"
+MM_f = MolarMass(CH4)            "fuel assimilated to CH4: molar mass [kg/kmol]"
+MM_a = MolarMass(Air)            "molar mass of air [kg/kmol]"
+"removed here: MM_mixt = x_f*MM_f+x_a*MM_a (exact identity, see header) [molar mass of the air-CH4 mixture kg/kmol]"
+x_f = y_f*MM_mixt/MM_f           "molar fraction of fuel [-]"
+x_a= y_air*MM_mixt/MM_a          "molar fraction of air [-]"
+x_f+x_a = 1
+
+"Fuel mass flow and volumetric efficiency"
+
+epsilon_v=M_dot_a/(rho_a*V_s*N*n_c*i)  "volumetric efficiency [-]"
+T_amb = 24.85                    "standard temperature [degC] (298 K in the original)"
+P_amb = 1.01325e5                "standard pressure [Pa]"
+rho_a = Density(Air,T=T_amb,P=P_amb)  "density of air [kg/m^3] (order-of-magnitude check of rho_mixt, as in the original)"
+M_dot_tr = (M_f/epsilon_c+M_a)*N*n_c*i  "total (mixture) mass flow [kg/s]"
+M_dot_tr= (M_dot_f/epsilon_c+M_dot_a)   "total (mixture) mass flow [kg/s]"
+M_dot_f/epsilon_c = f*M_dot_a    "fuel-air ratio on the mass flows [-]"
+
+"Specific fuel consumption and thermal efficiency of the engine"
+
+M_dot_f_cons = M_dot_f/epsilon_c "fuel mass flow effectively consumed [kg/s]"
+csp=(M_dot_f_cons*1e+3)/(-W_dot_sh*1e-3/3600)  "units: [g/kWh]"
+eta_therm = 100*(-W_dot_sh)/(M_dot_f_cons*LHV_f)  "thermal efficiency [%]"
+
+$Endif

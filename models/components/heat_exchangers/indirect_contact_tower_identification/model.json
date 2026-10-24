@@ -1,0 +1,79 @@
+{
+  "id": "CSL-0286",
+  "name": "indirect_contact_tower_identification",
+  "title": "Fluid cooler (indirect-contact cooling tower): catalogue identification",
+  "summary": "Identification of a closed-loop (indirect-contact) cooling tower from B.A.C. VXI catalogue data: equivalent counterflow exchanger between the cooled fluid and a fictitious air at the wet-bulb temperature, air/fluid resistance split with mass-flow exponents, percentage error against the catalogue over 205 operating points.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "indirect_contact_tower_identification.eescode",
+  "fluids": [
+    "AirH2O",
+    "Water"
+  ],
+  "tags": [
+    "fluid cooler",
+    "indirect contact",
+    "cooling tower",
+    "evaporative cooling",
+    "catalogue",
+    "parameter identification",
+    "wet bulb",
+    "fictitious fluid",
+    "counter-flow",
+    "Laborelec toolkit"
+  ],
+  "language_features": [
+    "humid-air properties",
+    "lookup tables"
+  ],
+  "stats": {
+    "n_equations": 40,
+    "largest_block": 13
+  },
+  "origin": {
+    "type": "industry",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/LABORELEC_2002/2_Evaporative Equipments/2_1_Toolkit Models/2_1_2_Cooling_towers/Indirect_contact_identification.EES",
+    "candidate_id": "TM-0295",
+    "authors": [
+      "Felipe Trebilcock (ULiege Thermodynamics Lab, Dec 2002, for Laborelec)",
+      "J. Lebrun (reviewer)",
+      "E. Winandy (reviewer)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X6.350",
+    "language": "en",
+    "course": "Laborelec toolkit 2002 (evaporative equipment), fluid-cooler identification model; duplicate group DG-0070 (TM-0296 simulation variant)"
+  },
+  "verification": {
+    "summary": "Compared the runnable variant with the EES stored solution (kJ/kW values converted by hand, resistances K/kW /1000): 40 common variables, max relative difference 8.08e-02 on ERQ_dot_ct/ERRQ_dot_ct (the 2.97e-03 deviation of Q_dot_ct amplified on the small error term), all other deviations below 4.2e-03 (EES vs CoolProp humid-air properties). Native file fails only on the HX call (CS-GAP-HX).",
+    "checks": [
+      "ees-stored-solution",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of Indirect_contact_identification.EES (ees_variables.csv); catalogue table checked at rows 100 (file's worked example) and 205 (stored point)",
+    "date": "2026-10-23",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.0808,
+    "notes": "Concerns the variant indirect_contact_tower_identification_coolsolve.eescode (regression target CSL-0286:coolsolve). Deviations: Q_dot_ct 2.97e-03, h_a 2.6e-03, c_p_af 4.0e-03, epsilon_ct 1.3e-03; ERQ/ERRQ 8.08e-02 by amplification. Stale variables of an earlier program excluded (C_dot, R, epsilon, V_dot, rho, R_a, w, COP)."
+  },
+  "missing_features": [
+    "CS-GAP-HX"
+  ],
+  "related": [
+    "CSL-0076",
+    "CSL-0290"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-23",
+      "action": "added (T-IMPORT TM-0295, batch B-11)",
+      "by": "opencode worker (t227) for S. Quoilin"
+    }
+  ]
+}

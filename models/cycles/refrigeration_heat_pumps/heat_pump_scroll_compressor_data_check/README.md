@@ -320,3 +320,4 @@ statement with the values of the manufacturer and the equations that check them.
 - `CSL-0148` *scroll_volume_ratio_cycle_r134a*: same compressor question on
   R134a — which built-in volume ratio to choose for given evaporation and
   condensation temperatures (same definition of the isentropic efficiency).
+- `CSL-0260` *scroll_compressor_reed_valve*: the full scroll compressor reference model with a discharge reed valve (R407C).

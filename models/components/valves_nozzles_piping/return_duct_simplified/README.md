@@ -122,4 +122,7 @@ No CoolSolve gap. The file uses assignments, `abs` and powers, including names t
 
 ## Related models
 
-None. No other model in the library is this return duct.
+- `CSL-0311` (*return_duct_paramid*): the reference duct model (pressure drop,
+  leakage, heat gain) that generated the parametric study whose curve fits are
+  the equations of this simplified model; its normalized ratios carry the same
+  names with the `\n` suffix.

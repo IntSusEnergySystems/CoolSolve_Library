@@ -249,4 +249,6 @@ Source (not copied into the library):
 
 ## Related models
 
-None.
+- `CSL-0287` *cooling_tower_chiller_variable_airflow*: continuous air-flow
+  variation with the fan laws (instead of two discrete regimes) and the plant
+  `COP_global` of a chiller coupled to the tower.

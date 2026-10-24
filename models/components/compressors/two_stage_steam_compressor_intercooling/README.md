@@ -197,3 +197,7 @@ compressor) covers single-stage compressor laws on refrigerants.
 - `CSL-0047` *nonideal_gas_isothermal_work*: another `INTEGRAL` model of the
   same course (definite integral of P(v), symbolic limits, factor in front of
   the call), verified on its native file.
+- `CSL-0270` *air_compressor_staging_comparison*: the same staging question
+  (two stages, intermediate pressure, 60 % efficiencies) on air as an ideal
+  gas — but with no intercooling heat rejection between the stages, so that
+  the two-stage path costs more work than the single-stage one.

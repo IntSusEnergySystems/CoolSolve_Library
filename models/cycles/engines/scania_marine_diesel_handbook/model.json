@@ -1,0 +1,75 @@
+{
+  "id": "CSL-0274",
+  "name": "scania_marine_diesel_handbook",
+  "title": "Scania DI09/DI16 marine diesel engines - data-handbook analysis",
+  "summary": "Coherence check and full analysis of one of four Scania marine diesel engines selected from its 2013 data handbook ($IF branches): swept volume, compression ratio, mean effective pressure, torque, fuel flow, thermal efficiency, excess air (C12H26), exhaust flow, thermal balance, volumetric and compressor isentropic efficiencies, ISO 3046/1-type derating to Lake Victoria and CO2 emissions per km.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "scania_marine_diesel_handbook.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "diesel engine",
+    "marine",
+    "data handbook",
+    "coherence check",
+    "derating",
+    "ISO 3046",
+    "turbocharging",
+    "CO2 emissions",
+    "exercise",
+    "example"
+  ],
+  "language_features": [
+    "$IF conditional compilation"
+  ],
+  "stats": {
+    "n_equations": 88,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/Examen/RESOLUTION_NGEN.EES",
+    "candidate_id": "TM-0224",
+    "authors": [
+      "Ph. Ngendakumana",
+      "Rémi Dickes"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.589",
+    "language": "fr",
+    "course": "Moteurs à combustion interne (MCI, ULiège), June 2017 exam, instructor solution (NGEN unit); published as an example"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of RESOLUTION_NGEN.EES (compare_solution.py): '74 common variables, 10 differ (rtol=0.001)'. 6 differences are the absolute Air h/s reference-state offsets (+125.9 kJ/kg, +1815 J/kg-K), 3 are derived differences (w_cp, w_s_cp, epsilon_s_cp, max 2.2e-3), and v_bateau/Em_CO2 differ by the documented x3600 correction of a genuine unit error of the original.",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of RESOLUTION_NGEN.EES (79 variables), via CoolSolve tools/compare_solution.py",
+    "date": "2026-10-22",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.318,
+    "notes": "max_rel_diff = 3.18e-01 as printed, on the absolute s_a_su_cp (Air reference-state offset); all derived results within 8.3e-4; thermal balance closes at 1.52 %."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0273",
+    "CSL-0151"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-22",
+      "action": "added",
+      "by": "worker (import TM-0224)"
+    }
+  ]
+}

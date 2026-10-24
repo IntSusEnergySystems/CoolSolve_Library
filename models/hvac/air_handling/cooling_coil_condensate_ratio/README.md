@@ -197,3 +197,4 @@ Word file `R12 - Révisions.docx`), collection of S. Quoilin:
   enthalpy term of the same kind appears here in the energy balance.
 - `CSL-0066` *adiabatic_saturation_wet_bulb*: humid-air property calls
   cross-checked with the course relations (same pattern as here).
+- `CSL-0292` *room_air_conditioning_coil_reheat*: room conditioning exercise whose cooling-coil first law includes the condensate enthalpy, the condensate flow being reported in L/h.

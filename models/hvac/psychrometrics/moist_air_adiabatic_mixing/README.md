@@ -169,3 +169,4 @@ Source file (EES 10.836, comments in French), collection of S. Quoilin:
   coil and post-heating steps (blocked by a humid-air saturation gap).
 - `CSL-0066` *adiabatic_saturation_wet_bulb*: same session, exercise 5:
   moist-air state from the dry-bulb and wet-bulb temperatures.
+- `CSL-0292` *room_air_conditioning_coil_reheat*: exercise 3 of the same 2010 repetition (archive `THD10_R10.zip`), outdoor air conditioned by a cooling-dehumidifying coil and a reheat coil for the same kind of room.

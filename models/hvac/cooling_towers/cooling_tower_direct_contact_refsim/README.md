@@ -262,9 +262,13 @@ for their own triage.
   coil.
 - `CSL-0030` *two_speed_cooling_tower*: same category; cooling tower with a
   nominal and a half-speed fan regime, two equations blocks with an index.
-- `CSL-0179` *cooling_tower_counterflow_outlet*: MSTh counterflow rating at
-  one operating point (AU = 90 kW/K).
 - `CSL-0065` *cooling_tower_condenser_water*: same category; cooling tower
   sized from a power-plant condenser duty.- `CSL-0077` *aircooled_chiller_refsim*: another model of the same ULiège
   model bank (IEA A43 PR2 A15), the air-cooled condenser air side of a water
   chiller.
+- `CSL-0290` *direct_contact_tower_catalogue*: the same component and
+  fictitious-fluid theory in the 2002 Laborelec toolkit version, with its
+  B.A.C. catalogue lookup table and check procedures.
+- `CSL-0286` *indirect_contact_tower_identification*: the fluid-cooler
+  (indirect-contact, closed fluid loop) identification model of the same
+  toolkit, same fictitious-fluid theory with an air/fluid resistance split.
