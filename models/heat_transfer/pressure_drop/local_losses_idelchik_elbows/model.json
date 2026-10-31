@@ -1,0 +1,83 @@
+{
+  "id": "CSL-0316",
+  "name": "local_losses_idelchik_elbows",
+  "title": "Local pressure loss of curved bends: Idelchik coefficients, single-phase and two-phase (function library)",
+  "summary": "EES FUNCTION library of the loss coefficient of circular pipe bends (Idelchik coefficients as in LaboThapPy): angle coefficient A1, radius coefficients A2 and B1, laminar/intermediate/high-Reynolds branches blended with a cubic step, roughness correction from the friction of the bend arc, total coefficient zeta_tot and pressure drop zeta_tot*rho*v^2/2, with a homogeneous two-phase extension; a mode argument gives the blending as written in the source (whose stepsmoother calls look argument-swapped) or with the arguments reordered.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "local_losses_idelchik_elbows.eescode",
+  "fluids": [
+    "Water",
+    "R410A"
+  ],
+  "tags": [
+    "pressure drop",
+    "local loss",
+    "elbow",
+    "bend",
+    "Idelchik",
+    "loss coefficient",
+    "Reynolds number",
+    "roughness",
+    "two-phase flow",
+    "function library",
+    "translation"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "MAX / MIN / EXP / LOG10 / SIN",
+    "DUPLICATE",
+    "property functions",
+    "string variables"
+  ],
+  "stats": {
+    "n_equations": 146,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/correlations/pressure_drop/local_losses/curved_elbow.py",
+    "candidate_id": "LTP-029",
+    "authors": [
+      "Elise Neven (LaboThapPy, curved_elbow.py)",
+      "I. E. Idelchik (Handbook of Hydraulic Resistance, 1986)",
+      "P. K. Swamee and A. K. Jain (Swamee-Jain friction factor, 1976)"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy/blob/f03f7f47/labothappy/correlations/pressure_drop/local_losses/curved_elbow.py",
+    "license": "Apache-2.0 (LICENSE.txt of the original) / model published under the library MIT licence",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "LaboThapPy commit f03f7f47 (local clone ~/git/LaboThapPy): curved_elbow.py (compute_re_lam_transition, compute_idelchik_coefficients, compute_reynolds_correction_turbulent, compute_zeta_LOC, compute_cf_fri, compute_zeta_tot, pressure_drop_curved_elbow), helpers toolbox/helper_function/step_smoother.py and correlations/pressure_drop/pipe_DP.py (friction_factor_swamee_jain). The source is a port of the Modelica Dissipation library CurvedBend_LDP (Idelchik; Miller; VDI-Waermeatlas Lac 6). Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "summary": "95 output values were compared with the LaboThapPy source (commit f03f7f47) re-run in Python with CoolProp 6.6.0: 0 differ at rtol=1e-6, largest relative deviation 4.4e-13. The source has no example or test; its docstring example has the (P, T) arguments swapped. Idelchik values not consulted.",
+    "checks": [
+      "source-rerun"
+    ],
+    "reference": "labothappy curved_elbow.py (compute_zeta_LOC, compute_cf_fri, compute_zeta_tot, compute_idelchik_coefficients, pressure_drop_curved_elbow) recomputed in a throw-away virtual environment under work/elbow (script ref_elbow.py, clone used through PYTHONPATH); mode 2 compared with a copy of the source with the three stepsmoother calls reordered",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 4.38e-13,
+    "notes": "compare_solution.py --rtol 1e-6: 95 common variables, 0 differ; largest relative deviation 4.4e-13 (zt_g3_m2[1]), round-off. Mode 2 is this model's reading of the intended step order, not taken from the source or checked against the handbook."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0130",
+    "CSL-0158",
+    "CSL-0018"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-31",
+      "action": "added (T-FUNC card C-364, inventory row LTP-029)",
+      "by": "sonnet worker for S. Quoilin"
+    }
+  ]
+}

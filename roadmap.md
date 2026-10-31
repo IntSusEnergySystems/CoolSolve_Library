@@ -971,7 +971,7 @@ Worker notes: `~/llm/scripts/csl/b11_extra.txt` (imports from the ULiège collec
 [x] C-313 T-IMPORT TM-0223 → cycles/engines/<name> — [std] Engine exam solution: data coherence (swept volume, piston speed, shaft power) and derating (resolution RD); verification: EES stored solution (72/72) — CSL-0273
 [x] C-314 T-IMPORT TM-0224 → cycles/engines/<name> — [hard] Scania DI09/DI16 marine diesel engines: full data-handbook analysis (exam solution, NGEN); verification: EES stored solution (79/79) — CSL-0274
 [x] C-315 T-IMPORT TM-0239 (DG-0058) → cycles/engines/<name> — [std] V6 four-stroke engine: displacement, piston speed, power, efficiencies and crank-angle quantities (MCI TP3 Ex1-3); verification: EES stored solution (45/45) — CSL-0275
-[ ] C-316 T-IMPORT TM-0242 → cycles/engines/<name> — [std] Valve overlap from crank-angle valve timing (MCI TP5 Ex2); verification: EES stored solution (14/14) — CSL-0276
+[x] C-316 T-IMPORT TM-0242 → cycles/engines/<name> — [std] Valve overlap from crank-angle valve timing (MCI TP5 Ex2); verification: EES stored solution (14/14) — CSL-0276
 [x] C-317 T-IMPORT TM-0247 → cycles/engines/<name> — [std] Fuel injection in an atmospheric compression-ignition engine (MCI TP6 Ex3, Pulkrabek 5-9/5-10); verification: EES stored solution (21/21) — CSL-0277
 [x] C-318 T-IMPORT TM-0248 → cycles/engines/<name> — [std] Vehicle exhaust emissions from fuel flow and gas fractions (MCI TP7 Ex1); verification: EES stored solution (45/45) — CSL-0278
 [x] C-319 T-IMPORT TM-0249 → cycles/engines/<name> — [std] Engine efficiencies from bore, stroke and AFR (MCI TP7 Ex2); verification: EES stored solution (20/20) — CSL-0279
@@ -996,7 +996,7 @@ Worker notes: `~/llm/scripts/csl/b11_extra.txt` (imports from the ULiège collec
 [x] C-338 T-IMPORT TM-0463 → cycles/steam_power/<name> — [std] Aug 2022 exam Q7: relative variation of specific heat cp; verification: EES stored solution (8/8) — not imported (novelty pre-screen of 2026-10-22): merged into CSL-0248: Aug 2022 exam Q7: 8-line sub-question of the same exam example (CSL-0228/0229/0248)
 [x] C-339 T-IMPORT TM-0465 → cycles/steam_power/<name> — [std] Aug 2022 exam Q9: sensible heat ratio at the ORC evaporator; verification: EES stored solution (9/9) — not imported (novelty pre-screen of 2026-10-22): merged into CSL-0248: Aug 2022 exam Q9: 9-line sub-question of the same exam example (CSL-0228/0229/0248)
 [x] C-340 T-IMPORT TM-0517 → cycles/steam_power/<name> — [std] Steam turbine power plant (Rankine cycle) with turbine analysis; verification: EES stored solution (31/31) — CSL-0300
-[ ] C-341 T-IMPORT TM-0486 → components/pumps_fans/<name> — [std] Centrifugal brine pump and network parameter-identification model; verification: EES stored solution (100/100) — CSL-0301
+[x] C-341 T-IMPORT TM-0486 → components/pumps_fans/<name> — [std] Centrifugal brine pump and network parameter-identification model; verification: EES stored solution (100/100) — CSL-0301
 [x] C-342 T-IMPORT TM-0290 (DG-0068) → cycles/refrigeration_heat_pumps/<name> — [std] Evaporative condenser model: identification of resistances from catalogue data (R717); verification: EES stored solution (66/66) — not imported (novelty pre-screen of 2026-10-22): merged into CSL-0303: identification of the same R717 evaporative condenser: 77 % of its equation lines are in CSL-0303 (simulation), same physics and catalogue
 [x] C-343 T-IMPORT TM-0300 → cycles/refrigeration_heat_pumps/<name> — [hard] Evaporative condenser simulation model with Diagram Window (R717/air); verification: EES stored solution (67/67) — CSL-0303
 [x] C-344 T-IMPORT TM-0419 (DG-0087) → cycles/refrigeration_heat_pumps/<name> — [std] Freon-12 refrigeration cycle: heat lost by compressor, condenser and gained in evaporator (exercise 5.60); verification: EES stored solution (22/22) — not imported (novelty pre-screen of 2026-10-24): discarded, textbook R12 cycle with heat losses, same physics as the library refrigeration cycles
@@ -1004,15 +1004,39 @@ Worker notes: `~/llm/scripts/csl/b11_extra.txt` (imports from the ULiège collec
 [x] C-346 T-IMPORT TM-0456 → cycles/refrigeration_heat_pumps/<name> — [std] Aug 2022 exam Q10: compressor isentropic efficiency of the heat pump (R113); verification: EES stored solution (12/12) — not imported (novelty pre-screen of 2026-10-22): merged into CSL-0229: Aug 2022 exam Q10: 50 % of its lines are in CSL-0228/CSL-0229, same exam example
 [x] C-347 T-IMPORT TM-0459 → cycles/refrigeration_heat_pumps/<name> — [std] Aug 2022 exam Q3: glycol-water flow rate in the heat pump condenser (83% effectiveness); verification: EES stored solution (18/18) — not imported (novelty pre-screen of 2026-10-22): merged into CSL-0228: Aug 2022 exam Q3: 18-line sub-question of the same exam example
 [x] C-348 T-IMPORT TM-0460 → cycles/refrigeration_heat_pumps/<name> — [std] Aug 2022 exam Q4: total COP of the combined ORC/heat-pump system (R113); verification: EES stored solution (12/12) — not imported (novelty pre-screen of 2026-10-22): merged into CSL-0229: Aug 2022 exam Q4: 12-line sub-question of the same exam example
-[ ] C-349 T-IMPORT TM-0462 → cycles/refrigeration_heat_pumps/<name> — [std] Aug 2022 exam Q6: thermal losses of a heat pump with humid outdoor air (R113); verification: EES stored solution (32/32) — CSL-0309
-[ ] C-350 T-IMPORT TM-0002 → components/valves_nozzles_piping/<name> — [std] Isentropic nozzle model with critical pressure (MSTh R1); verification: EES stored solution (4/16) — CSL-0310
+[x] C-349 T-IMPORT TM-0462 → cycles/refrigeration_heat_pumps/<name> — [std] Aug 2022 exam Q6: thermal losses of a heat pump with humid outdoor air (R113); verification: EES stored solution (32/32) — CSL-0309
+[x] C-350 T-IMPORT TM-0002 → components/valves_nozzles_piping/<name> — [std] Isentropic nozzle model with critical pressure (MSTh R1); verification: EES stored solution (4/16) — CSL-0310
 [x] C-351 T-IMPORT TM-0484 → components/valves_nozzles_piping/<name> — [hard] Return duct parameter-identification model (parametric study and curve fits); verification: EES stored solution (107/107) — CSL-0311
 ```
 
-### B-16 — LaboThapPy and TESPy: `medium` candidates after the novelty pre-screen (Phase 3D/3E) ☐
+### B-16 — LaboThapPy and TESPy: `medium` candidates after the novelty pre-screen (Phase 3D/3E) 🔄
 
 ```
-[ ] C-352 T-PLAN LaboThapPy + TESPy medium (≈ 30 rows todo) → sources/labothappy/, sources/tespy/ — [std] novelty triage against the library (notes `~/llm/scripts/csl/b16_plan.txt`), then translation cards from C-360
+[x] C-352 T-PLAN LaboThapPy + TESPy medium (≈ 30 rows todo) → sources/labothappy/, sources/tespy/ — [std] novelty triage against the library (notes `~/llm/scripts/csl/b16_plan.txt`), then translation cards from C-360
+[ ] C-360 T-TRANSLATE LTP-057 → cycles/organic_rankine/orc_offdesign_scroll_expander — [hard] first off-design ORC (semi-empirical scroll expander + moving-boundary plate HX); verify: re-run LaboThapPy machine/examples/ORC/fpi_orc_example.py — CSL-0312
+[x] C-361 T-TRANSLATE TSP-052 → cycles/refrigeration_heat_pumps/heat_pump_nh3_two_stage_flooded — [hard] two-stage NH3 heat pump with flooded evaporator (drum + circulation pump), Ebsilon COP matrix; verify: re-run tespy tests/test_models/test_heat_pump_model.py — CSL-0313
+[x] C-362 T-TRANSLATE TSP-004 → components/expanders_turbines/steam_turbine_baumann — [std] wet-expansion Baumann efficiency correction (CSL-0135 is dry-only); verify: TESPy SteamTurbine doctest + test_SteamTurbine — CSL-0314
+[x] C-363 T-FUNC TSP-032 → components/heat_exchangers/ua_cecchinato_partload — [std] Cecchinato (2010) UA part-load scaling law; verify: TESPy UA_char tests + paper values — CSL-0315
+[x] C-364 T-FUNC LTP-029 → heat_transfer/pressure_drop/local_losses_idelchik_elbows — [std] Idelchik single/two-phase local-loss coefficients of bends; verify: re-run correlations/pressure_drop/local_losses/curved_elbow.py — CSL-0316
+[x] C-365 T-FUNC LTP-049 → fundamentals/properties/pseudo_critical_properties — [std] pseudo-critical temperature and pseudo-boiling bounds of supercritical fluids (utility for CSL-0144); verify: re-run correlations/properties/supercritical.py — CSL-0317
+[x] C-366 T-FUNC LTP-053 → components/pumps_fans/cordier_specific_speed — [std] Cordier specific-speed line and 0D efficiency pre-design; verify: re-run correlations/turbomachinery/correlations_0D.py — CSL-0318
+```
+
+### B-17 — ULiège collection: novelty triage of the last `low`/`medium` rows (Phase 3B) 🔄
+
+The 152 remaining `todo` rows of `thermo_models` (150 `low`, `TM-0430`, `TM-0473`; `TM-0236` stays with C-237), triaged in three chunks against the
+library with the novelty rule; equation-overlap pre-screen in `~/llm/scripts/csl/b17_audit.txt` (`audit.py --cand`). Notes: `~/llm/scripts/csl/b17_plan.txt`.
+The proposed import cards are numbered from C-380 (chunk 1), C-400 (chunk 2) and C-420 (chunk 3).
+
+```
+[x] C-370 T-PLAN thermo_models todo rows TM-0001 … TM-0121 (51 rows) → sources/thermo_models/ — [std] novelty triage, import cards from C-380
+[x] C-371 T-PLAN thermo_models todo rows TM-0125 … TM-0337 (51 rows) → sources/thermo_models/ — [std] novelty triage, import cards from C-400
+[x] C-372 T-PLAN thermo_models todo rows TM-0341 … TM-0529 (50 rows) → sources/thermo_models/ — [std] novelty triage, import cards from C-420
+[ ] C-380 T-MERGE TM-0034 → CSL-0202 (cycles/…, failing) — [std] runnable no-inlet-drop version of the exercise (EES stored solution 34/34) as a verified variant of the failing CSL-0202; TM-0037 same exercise — CSL-0202
+[ ] C-400 T-IMPORT TM-0157 → cycles/refrigeration_heat_pumps/<name> — [std] R22 chiller (900 kW) whose condenser heat is upgraded 20→80 °C by an R407C heat pump, global COP and part-load factors (ELF/CLF); new vs CSL-0033/CSL-0001 (no heat-pump stage); TM-0153/0155/0156 are subsets (cite them); verification: EES stored solution (74/74) — CSL-0319
+[ ] C-401 T-MERGE TM-0309 → CSL-0158 — [std] liquid-line R717 variant (same fittings and pipe-data procedures, flashing check instead of condensation check), variant file + .sol in CSL-0158 — CSL-0158
+[ ] C-402 T-MERGE TM-0278 → CSL-0007 — [std] 66-row R22 test table of the scroll compressor as an experimental comparison section/variant of CSL-0007 — CSL-0007
+[ ] C-420 T-IMPORT TM-0369 → fundamentals/processes/<name> — [std] R12 tank discharge with heat supply and nozzle kinetic energy: unsteady uniform-state first law (CSL-0048 has mass/volume balances only); kPa/kJ converted by hand; verification: EES stored solution (21/21) — CSL-0320
 ```
 
 ## 7. Dispatching a batch to agents
@@ -1442,3 +1466,17 @@ and adds the log line in §8.
 | 2026-10-24 | T-IMPORT TM-0518 → `CSL-0296` gas_turbines/regenerative_two_shaft_gas_turbine | Added the regenerative two-shaft gas turbine (THD10 R05 ex. 4): the minimal machine without intercooler or reheat, a simpler level of CSL-0050 (borderline, listed for the maintainer); verified vs the EES stored solution (42 variables; absolute air h/s offsets only, 25 derived ≤ 9.3e-4); worker: glm-5.3-flash (11 min) |
 | 2026-10-24 | T-IMPORT TM-0171 → `CSL-0294` gas_turbines/gas_turbine_inlet_air_chiller | Added the Brayton cycle with an R134a chiller on the inlet air (MSTh R12 Ex7, SB); verified vs the EES stored solution (78 common variables; the flagged ones are R134a h/s offsets and cp backend differences ≤ 8.8e-3, the rest ≤ 1e-3); the lane was complete when the free quota ran out (task aborted, merged by the orchestrator); worker: mimo |
 | 2026-10-24 | T-IMPORT TM-0517 → not imported (novelty rule) | Ideal supercritical Rankine cycle (25 MPa / 700 °C, ideal turbine and pump): the worker built a verified level-1 model (EES 29/29, max 9.4e-4) but it is the same physics as CSL-0191/CSL-0004 with other numbers → `merged` into CSL-0191, lane result discarded (`CSL-0300` unused); worker: glm-5.3-flash |
+| 2026-10-31 | C-316 `CSL-0276` | valve_overlap_timing imported, verified (EES 14/14 exact), glm 7 min |
+| 2026-10-31 | C-341 merged → `CSL-0072` | TM-0486 merged into CSL-0072 as verified ParamID variant (EES 88/88); CSL-0301 unused; glm 14 min |
+| 2026-10-31 | C-349 merged → `CSL-0062` | TM-0462 merged into CSL-0062 (same condensation calculation, same course); CSL-0309 unused; glm 6 min |
+| 2026-10-31 | C-350 `CSL-0310` | isentropic_nozzle_critical imported, verified (EES stored 5/16 + guesses, max 4.3e-03 from the air model; choked run sonic); borderline with the nozzle blocks of CSL-0199/0207/0234 (standalone component kept); glm 14 min |
+| 2026-10-31 | C-352 T-PLAN | 32 LaboThapPy/TESPy medium rows triaged: 7 todo → C-360…C-366, 18 merged, 3 duplicate, 4 discarded (glm 23 min) |
+| 2026-10-31 | C-362 `CSL-0314` | steam_turbine_baumann translated (TESPy SteamTurbine, Baumann wet-expansion rule), verified vs TESPy re-run: 44 variables over 7 cases, max 1.7e-09; docstring P = −7 009 682 W reproduced (Claude Sonnet sub-agent, 5 min) |
+| 2026-10-31 | C-363 `CSL-0315` | ua_cecchinato_partload (function library: Cecchinato UA part-load law, series resistance, sectioned LMTD) verified vs TESPy doctest + MovingBoundary tests re-run (26 variables, max 1.35e-05); paper values not checked (Claude Sonnet sub-agent, 8 min) |
+| 2026-10-31 | C-364 `CSL-0316` | local_losses_idelchik_elbows (14 functions) verified vs LaboThapPy re-run (95 values, max 4.4e-13); two source bugs documented (stepsmoother argument order, two-phase density) with a mode switch; handbook values not checked (Claude Sonnet sub-agent, 7 min) |
+| 2026-10-31 | C-365 `CSL-0317` | pseudo_critical_properties (cp-max T_pc search, Banuti pseudo-boiling bounds, Yang CO2 polynomial) verified vs LaboThapPy re-run (36 values, max 9.5e-08); papers not checked (Claude Sonnet sub-agent, 5 min) |
+| 2026-10-31 | C-366 `CSL-0318` | cordier_specific_speed (Cordier line, 0D pump/turbine/compressor pre-design efficiency) verified vs LaboThapPy re-run (112 values, max 4.3e-09); source inconsistencies documented (Claude Sonnet sub-agent, 10 min) |
+| 2026-10-31 | C-361 `CSL-0313` | heat_pump_nh3_two_stage_flooded (two-stage NH3, flooded evaporator with drum + circulation pump, design + off-design) verified vs TESPy re-run (157 variables, max 4e-07; 20/20 matrix points COP ≤ 2e-09) and Ebsilon COP matrix (−5.6 … +6.3 %, test bound 7 %) (Claude Sonnet sub-agent, 14 min) |
+| 2026-10-31 | C-370 T-PLAN | 51 rows: 23 duplicate, 27 merged, 1 discarded, 0 todo (no new model); suggestion: runnable variant of CSL-0202 from TM-0034 → C-380 (Claude Sonnet sub-agent, 5 min) |
+| 2026-10-31 | C-371 T-PLAN | 51 rows: 23 duplicate, 15 merged, 12 discarded, 1 todo → C-400 (TM-0157 R22 chiller + R407C heat-pump heat recovery); T-MERGE suggestions C-401/C-402 (Claude Sonnet sub-agent, 4 min) |
+| 2026-10-31 | C-372 T-PLAN | 50 rows: 24 duplicate, 16 merged, 8 discarded, 2 todo → C-420 (TM-0369 R12 tank discharge with energy balance); TM-0376 (Carnot ice-maker) merged into CSL-0186 by the orchestrator (only new element: EES Ice substance); 4 T-MERGE suggestions in the inventory notes (Claude Sonnet sub-agent, 4 min) |

@@ -135,4 +135,5 @@ Source file (EES X7.458, comments in French), collection of S. Quoilin:
 
 ## Related models
 
-No other library model is linked (`related` is empty).
+No other library model was linked before `CSL-0318`.
+- `CSL-0318` *cordier_specific_speed*: Cordier line giving the specific diameter from the specific speed, as a pre-design alternative to the given flow and enthalpy factors.

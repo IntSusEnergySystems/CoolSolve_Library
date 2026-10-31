@@ -1,0 +1,87 @@
+{
+  "id": "CSL-0318",
+  "name": "cordier_specific_speed",
+  "title": "Cordier specific-speed line and 0D efficiency pre-design of turbomachines (function library)",
+  "summary": "Five EES FUNCTION/PROCEDURE blocks of the LaboThapPy 0D turbomachinery sizing: specific speed omega_s, specific diameter from the tabulated Cordier line (clamped or linearly extended), rotor diameter, machine-type zone from 2733*omega_s, the pump head, and a bilinear pump-efficiency estimate on a (volume flow, omega_s) chart with band limits. The demonstration program re-runs the pump, compressor and turbine sizing cases and the radial-pump design example of LaboThapPy (cyclopentane and CO2).",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "cordier_specific_speed.eescode",
+  "fluids": [
+    "Cyclopentane",
+    "R744"
+  ],
+  "tags": [
+    "Cordier line",
+    "specific speed",
+    "specific diameter",
+    "0D design",
+    "pre-design",
+    "pump",
+    "turbine",
+    "compressor",
+    "efficiency chart",
+    "bilinear interpolation",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "procedures",
+    "lookup tables",
+    "REPEAT/UNTIL",
+    "IF/THEN/ELSE",
+    "DUPLICATE",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 234,
+    "largest_block": 5
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/correlations/turbomachinery/correlations_0D.py; ~/git/LaboThapPy/labothappy/sizing/turbomachinery/{pump,turbine,compressor}/sizing_0D/{pump,turbine,compressor}_0D_design.py; ~/git/LaboThapPy/labothappy/sizing/turbomachinery/pump/radial/radial_pump_0D_design.py",
+    "candidate_id": "LTP-053, LTP-065",
+    "authors": [
+      "Basile Chaudoir (LaboThapPy, ULiege; author of all five translated files in the repository history)"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy/tree/f03f7f473b190d0c0b5e296132b50565e89e4421/labothappy",
+    "license": "Apache-2.0 (original, LICENSE.txt of LaboThapPy); translation published under the CoolSolve_Library MIT licence (decision D3)",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "LaboThapPy commit f03f7f47 (files above, last commits c81a2f14 and 9c8498ff, 2025-2026). The Cordier line (specific diameter versus specific speed) is the classical diagram of O. Cordier (1955); the 19 tabulated points and the 8 x 17 efficiency chart are those embedded in the LaboThapPy code, whose own source is not stated there (not checked against Cordier's diagram or any chart). Inventory rows LTP-053 (kept) and LTP-065 (duplicate of LTP-053)."
+  },
+  "verification": {
+    "summary": "The LaboThapPy functions and the radial-pump design example were re-run (CoolProp 8.0.0) with the same inputs: 112 common variables (specific speeds, diameters, zones, densities, efficiencies, powers) agree, 0 differ at rtol=0.001, max 4.27e-09. The three data tables were checked against the source functions at all nodes.",
+    "checks": [
+      "source-rerun"
+    ],
+    "reference": "LaboThapPy commit f03f7f47 re-run in a throw-away virtual environment under work/: pump_0D_design, turbine_0D_design and compressor_0D_design (their function bodies, case inputs of the scripts), pump_efficiency_0D_estimation (13 argument sets) and RadialPumpODDesign.Omega_system on four cells of the main example (R744, 500 kg/s)",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 4.27e-09,
+    "notes": "compare_solution.py --all: 112 common variables, 0 differ (rtol=0.001), max 4.27e-09 (W_dot_rp and W_dot_shaft_rp, differences of enthalpies); only in EES: 0; only in CoolSolve: 123 (inputs, intermediate and unit-converted values). Reference CoolProp 8.0.0, CoolSolve CoolProp 8.1.0dev (revision 75af781): same HEOS fluid models, agreement at round-off. The Python NaN of the efficiency estimate is -1 in both. No published value was checked: the Cordier line and the efficiency chart are taken from the source code."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0125",
+    "CSL-0183",
+    "CSL-0203",
+    "CSL-0069",
+    "CSL-0235",
+    "CSL-0207"
+  ],
+  "related_external": [
+    "LaboThapPy radial_pump_0D_design.py, pump_0D_design.py, turbine_0D_design.py, compressor_0D_design.py (github.com/PyLaboThap/LaboThapPy, commit f03f7f47)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-31",
+      "action": "added (T-FUNC card C-366, batch B-12/B-16: LaboThapPy LTP-053 and LTP-065)",
+      "by": "worker for S. Quoilin"
+    }
+  ]
+}

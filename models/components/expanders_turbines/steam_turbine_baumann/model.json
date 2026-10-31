@@ -1,0 +1,73 @@
+{
+  "id": "CSL-0314",
+  "name": "steam_turbine_baumann",
+  "title": "Steam turbine with Baumann wet-expansion efficiency correction",
+  "summary": "Isentropic efficiency of a steam turbine expanding into the vapour dome: the dry efficiency holds until the saturated-vapour line, the wet part is penalised by the Baumann rule eta_s = eta_s_dry*(1 - alpha*y_m); the saturation crossing is solved by two equations. Seven cases of the TESPy docstring and tests.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "steam_turbine_baumann.eescode",
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "turbine",
+    "steam",
+    "wet expansion",
+    "Baumann rule",
+    "isentropic efficiency",
+    "wetness",
+    "saturation crossing",
+    "translation"
+  ],
+  "language_features": [
+    "property functions",
+    "DUPLICATE",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 140,
+    "largest_block": 4
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/src/tespy/components/turbomachinery/steam_turbine.py",
+    "candidate_id": "TSP-004",
+    "authors": [
+      "Francesco Witte (TESPy lead developer)",
+      "tlmerbecks (GitHub handle of the contributor of the first version)"
+    ],
+    "url": "https://github.com/oemof/tespy/blob/19425523ff7ecd67b36e7b90efe04a9480a9ebe3/src/tespy/components/turbomachinery/steam_turbine.py",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "Re-run of the TESPy docstring example and of test_SteamTurbine / test_SteamTurbine_outlet_near_saturation (tespy 0.11.3.dev0, CoolProp 8.0.0): 44 common variables over 7 cases, 0 differ at rtol=0.001, max relative deviation 1.71e-09. Docstring values reproduced (P = 7009682 W, x = 0.84).",
+    "checks": [
+      "source-rerun"
+    ],
+    "reference": "TESPy SteamTurbine class docstring (eta_s_dry = 0.9, alpha = 1: P = -7009682 W, x = 0.84) and tests/test_components/test_turbomachinery.py, commit 19425523, re-run in a throw-away virtual environment",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 1.71e-09,
+    "notes": "44 common variables (eta_s, x_out, W_dot, h_in, h_out, s_in, P_out of the cases), 0 differ at rtol=1e-3; largest deviation P_out_6 1.71e-09."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0135",
+    "CSL-0174"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-31",
+      "action": "added (translation of the TESPy SteamTurbine Baumann correction, roadmap C-362)",
+      "by": "Claude (Sonnet 5.5) for S. Quoilin"
+    }
+  ]
+}

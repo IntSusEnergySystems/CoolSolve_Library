@@ -1,0 +1,261 @@
+{=============================================================================
+  Cordier specific-speed line and 0D pre-design of pumps, compressors and turbines
+  CoolSolve Library model CSL-0318 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Functions of the LaboThapPy 0D turbomachinery sizing: specific speed of a
+  machine from speed, volume flow and specific work gH, specific diameter from
+  the tabulated Cordier line, rotor diameter and machine-type zone (radial,
+  Francis, mixed, axial, thresholds on 2733*omega_s as in the original); a
+  bilinear pump-efficiency estimate on a (volume flow, omega_s) chart with the
+  optional band limits. The demonstration program re-runs the pump, compressor
+  and turbine sizing cases and the radial-pump design example of LaboThapPy.
+  Inputs : Omega [rad/s], Q [m3/s], gH [J/kg], omega_s, Q_h [m3/h]
+  Outputs: omega_s, D_s, D [m], Zone [-], eta [%] (-1 stands for the NaN of the original)
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : B. Chaudoir et al., LaboThapPy (ULiege), commit f03f7f47,
+           https://github.com/PyLaboThap/LaboThapPy - see README.md
+  Tables : cordier_specific_speed-{cordier,eta_pump,eta_limits}.csv
+  Status : VERIFIED against a re-run of the Python code (README.md)
+=============================================================================}
+
+"!--------------------------- Library functions ---------------------------"
+
+FUNCTION Cordier_Ds(omega_s)
+{Specific diameter D_s of the Cordier line [-] by piecewise-linear interpolation of the 19
+points of table 'cordier'; beyond the first/last point the end segment is extended linearly
+(scipy interp1d with fill_value='extrapolate', as in the turbine and compressor sizing
+scripts of LaboThapPy: turbine_0D_design.py, compressor_0D_design.py).}
+n = NLOOKUPROWS('cordier')
+k = 1
+REPEAT
+  k = k + 1
+UNTIL ((k >= n) OR (omega_s < LOOKUP('cordier', k, 1)))
+x1 = LOOKUP('cordier', k-1, 1)
+x2 = LOOKUP('cordier', k, 1)
+y1 = LOOKUP('cordier', k-1, 2)
+y2 = LOOKUP('cordier', k, 2)
+Cordier_Ds = y1 + (y2 - y1)*(omega_s - x1)/(x2 - x1)
+END
+
+FUNCTION Cordier_Ds_clamped(omega_s)
+{Same line, but the value of the end point is kept beyond the table (numpy.interp, used by
+cordier_line() of correlations_0D.py and by pump_0D_design.py of LaboThapPy).}
+n = NLOOKUPROWS('cordier')
+w = MAX(LOOKUP('cordier', 1, 1), MIN(LOOKUP('cordier', n, 1), omega_s))
+Cordier_Ds_clamped = Cordier_Ds(w)
+END
+
+FUNCTION Head_pump(P_1, P_2, rho_1, z_1, z_2, v_1, v_2)
+{Specific work gH [J/kg] of the pump and compressor sizing scripts: g*DH with
+DH = (P_2 - P_1)/(rho_1*g) + (z_2 - z_1) + (v_2^2 - v_1^2)/(2*g), g = 9.81 m/s2 as in the
+original; rho_1 is the inlet density [kg/m3], z the heights [m], v the velocities [m/s].}
+g = 9.81
+Head_pump = (P_2 - P_1)/rho_1 + g*(z_2 - z_1) + (v_2^2 - v_1^2)/2
+END
+
+PROCEDURE Cordier_design(Omega, Q, gH, extrap : Omega_s, Omega_s_imp, D_s, D, Zone)
+{0D design of a turbomachine (pump_0D_design, compressor_0D_design, turbine_0D_design of
+LaboThapPy). Omega [rad/s], Q [m3/s] (inlet volume flow), gH [J/kg] (pump/compressor:
+Head_pump; turbine: h_1 - h_2). extrap = 1: Cordier line extended linearly (turbine and
+compressor scripts); extrap = 0: end values kept (pump script).
+  omega_s = Omega*SQRT(Q)/gH^0.75 ; D = D_s*SQRT(Q)/gH^0.25 [m] ; omega_s_imp = 2733*omega_s
+  Zone from omega_s_imp: < 1500 radial-vane (1), < 4000 Francis-vane (2), < 7500 mixed-flow (3),
+  else axial (4); the strings of the original are the rows of table 'zones'.}
+Omega_s = Omega*SQRT(Q)/gH^0.75
+Omega_s_imp = 2733*Omega_s
+IF (Omega_s_imp < 1500) THEN
+  Zone = 1
+ELSE
+  IF (Omega_s_imp < 4000) THEN
+    Zone = 2
+  ELSE
+    IF (Omega_s_imp < 7500) THEN
+      Zone = 3
+    ELSE
+      Zone = 4
+    ENDIF
+  ENDIF
+ENDIF
+IF (extrap > 0.5) THEN
+  D_s = Cordier_Ds(Omega_s)
+ELSE
+  D_s = Cordier_Ds_clamped(Omega_s)
+ENDIF
+D = D_s*SQRT(Q)/gH^0.25
+END
+
+FUNCTION Pump_eta_0D(omega_s, Q_h, enforce_limits, allow_extrap)
+{Pump efficiency estimate [%] of pump_efficiency_0D_estimation(omega_s, Q_pp) of LaboThapPy
+(correlations_0D.py): bilinear interpolation of table 'eta_pump' (8 flows Q_h = 18...18000
+m3/h in rows, 17 values of omega_s = 10, 15, ..., 90 in columns; origin of the chart data not
+stated in the source). Q_h is the volume flow in m3/h.
+  enforce_limits = 1: -1 outside the band [omega_low, omega_high](Q_h) of table 'eta_limits'
+                      (interpolated in Q_h, end values kept), as the NaN of the original.
+  allow_extrap = 1: outside the grid the end cell is extended linearly (the original
+                    docstring says "snapped to the edge"; its code extrapolates, see README);
+  allow_extrap = 0: -1 outside the grid (NaN of the original).}
+nq = NLOOKUPROWS('eta_pump')
+no = 17
+Q_1 = LOOKUP('eta_pump', 1, 1)
+Q_n = LOOKUP('eta_pump', nq, 1)
+o_1 = 10
+o_n = 90
+{cell of the grid: iq = row index with Q_grid(iq) <= Q_h < Q_grid(iq+1) (end cells outside)}
+iq = 0
+REPEAT
+  iq = iq + 1
+UNTIL ((iq >= nq - 1) OR (Q_h < LOOKUP('eta_pump', iq+1, 1)))
+io = 0
+REPEAT
+  io = io + 1
+UNTIL ((io >= no - 1) OR (omega_s < o_1 + 5*io))
+q0 = LOOKUP('eta_pump', iq, 1)
+q1 = LOOKUP('eta_pump', iq+1, 1)
+o0 = o_1 + 5*(io - 1)
+o1 = o0 + 5
+tq = (Q_h - q0)/(q1 - q0)
+to = (omega_s - o0)/(o1 - o0)
+e00 = LOOKUP('eta_pump', iq,   io+1)
+e01 = LOOKUP('eta_pump', iq,   io+2)
+e10 = LOOKUP('eta_pump', iq+1, io+1)
+e11 = LOOKUP('eta_pump', iq+1, io+2)
+eta0 = e00*(1 - to) + e01*to
+eta1 = e10*(1 - to) + e11*to
+res = eta0*(1 - tq) + eta1*tq
+oob = 0
+IF ((Q_h < Q_1) OR (Q_h > Q_n) OR (omega_s < o_1) OR (omega_s > o_n)) THEN
+  oob = 1
+ENDIF
+IF ((oob > 0.5) AND (allow_extrap < 0.5)) THEN
+  res = -1
+ENDIF
+IF (enforce_limits > 0.5) THEN
+  Qc = MAX(Q_1, MIN(Q_n, Q_h))
+  ib = 0
+  REPEAT
+    ib = ib + 1
+  UNTIL ((ib >= nq - 1) OR (Qc < LOOKUP('eta_limits', ib+1, 1)))
+  qb0 = LOOKUP('eta_limits', ib, 1)
+  qb1 = LOOKUP('eta_limits', ib+1, 1)
+  tb = (Qc - qb0)/(qb1 - qb0)
+  low = LOOKUP('eta_limits', ib, 2)*(1 - tb) + LOOKUP('eta_limits', ib+1, 2)*tb
+  high = LOOKUP('eta_limits', ib, 3)*(1 - tb) + LOOKUP('eta_limits', ib+1, 3)*tb
+  IF ((omega_s < low) OR (omega_s > high)) THEN
+    res = -1
+  ENDIF
+ENDIF
+Pump_eta_0D = res
+END
+
+"!--------------------------- Demonstration program ---------------------------"
+"Constants converted from the Python scripts; temperatures in K there, in C here (value - 273.15)"
+
+"!1. Pump sizing: pump_0D_design.py, cyclopentane ORC pumps (clamped Cordier line)"
+"Cuerva: 3000 rpm, 53.2 kPa/30 C to 1330 kPa, 46.18 kg/s"
+Omega_pCu = 3000/60*2*pi
+P_1_pCu = 53.2E3 [Pa]
+P_2_pCu = 1330E3 [Pa]
+M_dot_pCu = 46.18 [kg/s]
+rho_1_pCu = density(Cyclopentane, T=30, P=P_1_pCu)
+Q_pCu = M_dot_pCu/rho_1_pCu
+gH_pCu = Head_pump(P_1_pCu, P_2_pCu, rho_1_pCu, 0, 0, 0, 0)
+CALL Cordier_design(Omega_pCu, Q_pCu, gH_pCu, 0 : Omega_s_pCu, Omega_s_imp_pCu, D_s_pCu, D_pCu, Zone_pCu)
+"Zorlu: 3000 rpm, 56.82 kPa/31.7 C to 917.8 kPa, 34.51 kg/s"
+Omega_pZo = 3000/60*2*pi
+P_1_pZo = 56.82E3 [Pa]
+P_2_pZo = 917.8E3 [Pa]
+M_dot_pZo = 34.51 [kg/s]
+rho_1_pZo = density(Cyclopentane, T=31.7, P=P_1_pZo)
+Q_pZo = M_dot_pZo/rho_1_pZo
+gH_pZo = Head_pump(P_1_pZo, P_2_pZo, rho_1_pZo, 0, 0, 0, 0)
+CALL Cordier_design(Omega_pZo, Q_pZo, gH_pZo, 0 : Omega_s_pZo, Omega_s_imp_pZo, D_s_pZo, D_pZo, Zone_pZo)
+"Torrecid: 3000 rpm, 53.63 kPa/30.8 C to 3390 kPa, 3.58 kg/s"
+Omega_pTo = 3000/60*2*pi
+P_1_pTo = 53.63E3 [Pa]
+P_2_pTo = 3390E3 [Pa]
+M_dot_pTo = 3.58 [kg/s]
+rho_1_pTo = density(Cyclopentane, T=30.8, P=P_1_pTo)
+Q_pTo = M_dot_pTo/rho_1_pTo
+gH_pTo = Head_pump(P_1_pTo, P_2_pTo, rho_1_pTo, 0, 0, 0, 0)
+CALL Cordier_design(Omega_pTo, Q_pTo, gH_pTo, 0 : Omega_s_pTo, Omega_s_imp_pTo, D_s_pTo, D_pTo, Zone_pTo)
+
+"!2. Pump sizing, transcritical CO2 pump (R744), speed sweep of the original (3000 ... 30000 rpm)"
+P_1_pCO = 57.4E5 [Pa]
+P_2_pCO = 140E5 [Pa]
+M_dot_pCO = 100 [kg/s]
+rho_1_pCO = density(R744, T=20, P=P_1_pCO)
+Q_pCO = M_dot_pCO/rho_1_pCO
+gH_pCO = Head_pump(P_1_pCO, P_2_pCO, rho_1_pCO, 0, 0, 0, 0)
+DUPLICATE j = 1, 4
+  rpm_pCO[j] = 3000 + 9000*(j - 1)   "rpm: 3000, 12000, 21000, 30000"
+  Omega_pCO[j] = rpm_pCO[j]/60*2*pi
+  CALL Cordier_design(Omega_pCO[j], Q_pCO, gH_pCO, 0 : Omega_s_pCO[j], Omega_s_imp_pCO[j], D_s_pCO[j], D_pCO[j], Zone_pCO[j])
+END
+
+"!3. Turbine sizing: turbine_0D_design.py, CO2 turbine 140 bar/121 C to 40 bar/40 C, 500 kg/s, 1500 rpm"
+Omega_tCO = 1500/60*2*pi
+P_1_tCO = 140E5 [Pa]
+P_2_tCO = 40E5 [Pa]
+M_dot_tCO = 500 [kg/s]
+rho_1_tCO = density(R744, T=121, P=P_1_tCO)
+h_1_tCO = enthalpy(R744, T=121, P=P_1_tCO)
+h_2_tCO = enthalpy(R744, T=40, P=P_2_tCO)
+Q_tCO = M_dot_tCO/rho_1_tCO
+gH_tCO = h_1_tCO - h_2_tCO
+CALL Cordier_design(Omega_tCO, Q_tCO, gH_tCO, 1 : Omega_s_tCO, Omega_s_imp_tCO, D_s_tCO, D_tCO, Zone_tCO)
+
+"!4. Compressor sizing: compressor_0D_design.py (same pump head formula, extended Cordier line)"
+"Cuerva: cyclopentane vapour 12000 rpm, 806.8 kPa/168 C to 1978 kPa, 51.03 kg/s"
+Omega_cCu = 12000/60*2*pi
+P_1_cCu = 806.8E3 [Pa]
+P_2_cCu = 1978E3 [Pa]
+M_dot_cCu = 51.03 [kg/s]
+rho_1_cCu = density(Cyclopentane, T=168, P=P_1_cCu)
+Q_cCu = M_dot_cCu/rho_1_cCu
+gH_cCu = Head_pump(P_1_cCu, P_2_cCu, rho_1_cCu, 0, 0, 0, 0)
+CALL Cordier_design(Omega_cCu, Q_cCu, gH_cCu, 1 : Omega_s_cCu, Omega_s_imp_cCu, D_s_cCu, D_cCu, Zone_cCu)
+"CO2: 3000 rpm, 45 bar/26.4 C to 160 bar, 100 kg/s"
+Omega_cCO = 3000/60*2*pi
+P_1_cCO = 45E5 [Pa]
+P_2_cCO = 160E5 [Pa]
+M_dot_cCO = 100 [kg/s]
+rho_1_cCO = density(R744, T=26.4, P=P_1_cCO)
+Q_cCO = M_dot_cCO/rho_1_cCO
+gH_cCO = Head_pump(P_1_cCO, P_2_cCO, rho_1_cCO, 0, 0, 0, 0)
+CALL Cordier_design(Omega_cCO, Q_cCO, gH_cCO, 1 : Omega_s_cCO, Omega_s_imp_cCO, D_s_cCO, D_cCO, Zone_cCO)
+
+"!5. Radial pump stack: main example of radial_pump_0D_design.py (R744, 40 bar/5.15 C to 160 bar, 500 kg/s)"
+"n_parallel identical pumps share the flow; efficiency estimate called with 2733*omega_s as in the original"
+P_1_rp = 40E5 [Pa]
+P_2_rp = 160E5 [Pa]
+M_dot_rp = 500 [kg/s]
+T_1_rp = 5.15 [C]
+rho_1_rp = density(R744, T=T_1_rp, P=P_1_rp)
+h_1_rp = enthalpy(R744, T=T_1_rp, P=P_1_rp)
+s_1_rp = entropy(R744, T=T_1_rp, P=P_1_rp)
+h_is_rp = enthalpy(R744, P=P_2_rp, s=s_1_rp)
+gH_rp = Head_pump(P_1_rp, P_2_rp, rho_1_rp, 0, 0, 0, 0)
+DUPLICATE j = 1, 4
+  n_rp[j] = LOOKUP('rp_cases', j, 1)    "number of pumps in parallel (cells of the efficiency matrix of the original)"
+  rpm_rp[j] = LOOKUP('rp_cases', j, 2)    "speed [rpm]"
+  Omega_rp[j] = rpm_rp[j]/60*2*pi
+  Q_rp[j] = M_dot_rp/rho_1_rp/n_rp[j]
+  CALL Cordier_design(Omega_rp[j], Q_rp[j], gH_rp, 0 : Omega_s_rp[j], Omega_s_imp_rp[j], D_s_rp[j], D_rp[j], Zone_rp[j])
+  eta_rp_pc[j] = Pump_eta_0D(Omega_s_imp_rp[j], Q_rp[j]*3600, 0, 0)    "[%], -1 stands for the NaN of the original"
+END
+"Cells with an efficiency inside the chart (rows 2 to 4): outlet enthalpy and W_dot as in the original"
+DUPLICATE j = 2, 4
+  eta_rp[j] = eta_rp_pc[j]/100
+  h_ex_rp[j] = h_1_rp + (h_is_rp - h_1_rp)/eta_rp[j]
+  W_dot_rp[j] = M_dot_rp*(h_ex_rp[j] - h_is_rp)/n_rp[j]     "W_dot_pp of the original [W per pump]"
+  W_dot_shaft_rp[j] = M_dot_rp*(h_ex_rp[j] - h_1_rp)/n_rp[j]   "[W per pump]"
+END
+
+"!6. Pump_eta_0D checks: argument sets exercising the interior, the band limits and the extrapolation"
+DUPLICATE j = 1, 13
+  om_t[j] = LOOKUP('eta_cases', j, 1)
+  Qh_t[j] = LOOKUP('eta_cases', j, 2)
+  enf_t[j] = LOOKUP('eta_cases', j, 3)
+  ext_t[j] = LOOKUP('eta_cases', j, 4)
+  eta_t[j] = Pump_eta_0D(om_t[j], Qh_t[j], enf_t[j], ext_t[j])
+END

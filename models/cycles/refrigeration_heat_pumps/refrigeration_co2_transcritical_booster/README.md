@@ -172,6 +172,7 @@ guesses needed (0) = score 3 → level 2.
 - `CSL-0253` `high_temp_heat_pump_zeotropic_transcritical` — another
   transcritical heat pump on imposed pressures (R1336mzz(Z), water loops
   recalculated from the pinches).
+- `CSL-0313` *heat_pump_nh3_two_stage_flooded*: two-stage NH3 heat pump with a drum-based flooded evaporator (TESPy test suite), heating water to 105 °C.
 
 ![placeholder: P-h or T-s diagram of the cycle, to be made by the maintainer](figures/)
 

@@ -302,3 +302,4 @@ No student names or personal data involved.
   dimensionless factors, i.e. the affinity laws applied to a fan.
 - `CSL-0183` (*pump_polynomial_identification*): Laborelec catalogue
   polynomials for one pump point, also in dimensionless form.
+- `CSL-0318` *cordier_specific_speed*: the 0D pre-design counterpart (specific speed, Cordier diameter, efficiency chart) of the same LaboThapPy pump family.

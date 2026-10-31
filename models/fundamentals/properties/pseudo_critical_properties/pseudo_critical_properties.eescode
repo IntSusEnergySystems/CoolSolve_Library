@@ -1,0 +1,114 @@
+{=============================================================================
+  Pseudo-critical temperature and pseudo-boiling bounds of supercritical fluids
+  CoolSolve Library model CSL-0317 (function library, kind = function)
+ -----------------------------------------------------------------------------
+  Three routines translated from LaboThapPy correlations/properties/supercritical.py:
+  T_pc_cpmax (pseudo-critical temperature = temperature of maximum cp on an
+  isobar, 500-point scan from 0.9 to 1.3 T_crit, any CoolProp fluid),
+  PseudoBoilingBounds (T_minus, T_plus of Banuti's linear pseudo-boiling model,
+  from a given T_pc) and T_pc_CO2_Yang (CO2 polynomial of T_pc against pressure,
+  7.5-14 MPa, Yang & Yang 2012). The main program calls them for CO2, water,
+  R134a and propane.
+  Inputs : fluid$, P [Pa]; for the bounds also T_pc [C] and T_max [C]
+  Outputs: T_pc, T_minus, T_plus [C]
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : E. Neven et al., LaboThapPy (ULiège), Apache-2.0, commit f03f7f47
+           https://github.com/PyLaboThap/LaboThapPy - see README.md
+  Status : verified against a re-run of the Python source; no gap.
+=============================================================================}
+
+FUNCTION T_pc_cpmax(fluid$, P)
+  "Pseudo-critical temperature [C] of fluid$ at P [Pa]: temperature of maximum cp
+   along the isobar, first maximum of a 500-point grid from 0.9 to 1.3 T_crit [K]"
+  Tc_K = T_crit(fluid$) + 273.15
+  n = 500
+  i := 1
+  cp_best := -1
+  T_best := 0
+  REPEAT
+    T_K = 0.9*Tc_K + (i-1)*0.4*Tc_K/(n-1)
+    cp_i = cp(fluid$, T=T_K-273.15, P=P)
+    IF (cp_i > cp_best) THEN
+      cp_best := cp_i
+      T_best := T_K
+    ENDIF
+    i := i + 1
+  UNTIL (i > n)
+  T_pc_cpmax = T_best - 273.15
+END
+
+PROCEDURE PseudoBoilingBounds(fluid$, P, T_pc, T_max : T_minus, T_plus)
+  "Banuti's linear pseudo-boiling model (Banuti 2019, Period. Polytech. Chem. Eng. 63(2) 270):
+   T_pc [C] is given (T_pc_cpmax or a correlation), T_max [C] is the upper temperature
+   at which cp is read as the ideal-gas value; T_minus and T_plus are returned in C"
+  T_pc_K = T_pc + 273.15
+  cp_pc = cp(fluid$, T=T_pc, P=P)
+  h_0_pc = enthalpy(fluid$, T=T_pc, P=P)
+  "liquid-like reference at P_L = 0.1 P_crit (or 1.05 P_triple if lower)"
+  P_L = 0.1*P_crit(fluid$)
+  IF (P_L < P_triple(fluid$)) THEN
+    P_L = 1.05*P_triple(fluid$)
+  ENDIF
+  T_L = T_sat(fluid$, P=P_L)
+  SC = 0.01                                  "subcooling offset [K] to stay on the liquid branch"
+  cp_L = cp(fluid$, T=T_L-SC, P=P_L)
+  h_L = enthalpy(fluid$, T=T_L-SC, P=P_L)
+  h_L_0 = h_L - cp_L*(T_L + 273.15)
+  cp_IG = cp(fluid$, T=T_max, P=P)
+  T_plus_K = (h_0_pc - cp_pc*T_pc_K)/(cp_IG - cp_pc)
+  T_minus_K = (h_L_0 - h_0_pc + cp_pc*T_pc_K)/(cp_pc - cp_L)
+  T_plus = T_plus_K - 273.15
+  T_minus = T_minus_K - 273.15
+END
+
+FUNCTION T_pc_CO2_Yang(P)
+  "Pseudo-critical temperature [C] of CO2 for P = 7.5 to 14 MPa (Yang & Yang 2012),
+   polynomial in p = P in MPa"
+  p = P*1E-6
+  T_pc_CO2_Yang = -31.40 + 12.15*p - 0.6927*p^2 + 0.03160*p^3 - 0.0007521*p^4
+END
+
+"!Demonstration cases (upper temperature T_max = CoolProp T_max of each fluid, read from CoolProp 8.0.0)"
+P_1 = 75E5        "pressure of case 1 [Pa] (CO2)"
+P_2 = 80E5
+P_3 = 100E5
+P_4 = 140E5
+P_5 = 200E5
+P_6 = 250E5       "pressure of case 6 [Pa] (water)"
+P_7 = 300E5
+P_8 = 50E5        "pressure of case 8 [Pa] (R134a)"
+P_9 = 60E5        "pressure of case 9 [Pa] (propane)"
+"!Pseudo-critical temperatures by the cp maximum"
+T_pc_1 = T_pc_cpmax('R744', P_1)
+T_pc_2 = T_pc_cpmax('R744', P_2)
+T_pc_3 = T_pc_cpmax('R744', P_3)
+T_pc_4 = T_pc_cpmax('R744', P_4)
+T_pc_5 = T_pc_cpmax('R744', P_5)
+T_pc_6 = T_pc_cpmax('Water', P_6)
+T_pc_7 = T_pc_cpmax('Water', P_7)
+T_pc_8 = T_pc_cpmax('R134a', P_8)
+T_pc_9 = T_pc_cpmax('Propane', P_9)
+"!Pseudo-boiling bounds"
+CALL PseudoBoilingBounds('R744', P_1, T_pc_1, T_max_CO2 : T_minus_1, T_plus_1)
+CALL PseudoBoilingBounds('R744', P_2, T_pc_2, T_max_CO2 : T_minus_2, T_plus_2)
+CALL PseudoBoilingBounds('R744', P_3, T_pc_3, T_max_CO2 : T_minus_3, T_plus_3)
+CALL PseudoBoilingBounds('R744', P_4, T_pc_4, T_max_CO2 : T_minus_4, T_plus_4)
+CALL PseudoBoilingBounds('R744', P_5, T_pc_5, T_max_CO2 : T_minus_5, T_plus_5)
+CALL PseudoBoilingBounds('Water', P_6, T_pc_6, T_max_H2O : T_minus_6, T_plus_6)
+CALL PseudoBoilingBounds('Water', P_7, T_pc_7, T_max_H2O : T_minus_7, T_plus_7)
+CALL PseudoBoilingBounds('R134a', P_8, T_pc_8, T_max_R134a : T_minus_8, T_plus_8)
+CALL PseudoBoilingBounds('Propane', P_9, T_pc_9, T_max_C3H8 : T_minus_9, T_plus_9)
+T_max_CO2 = 2000 - 273.15     "CoolProp T_max of CO2 [C]"
+T_max_H2O = 2000 - 273.15     "CoolProp T_max of water [C]"
+T_max_R134a = 455 - 273.15    "CoolProp T_max of R134a [C]"
+T_max_C3H8 = 650 - 273.15     "CoolProp T_max of propane [C]"
+"!CO2 correlation and the bounds computed from it"
+P_c1 = 75E5
+P_c2 = 100E5
+P_c3 = 140E5
+T_pcc_1 = T_pc_CO2_Yang(P_c1)
+T_pcc_2 = T_pc_CO2_Yang(P_c2)
+T_pcc_3 = T_pc_CO2_Yang(P_c3)
+CALL PseudoBoilingBounds('R744', P_c1, T_pcc_1, T_max_CO2 : T_minusc_1, T_plusc_1)
+CALL PseudoBoilingBounds('R744', P_c2, T_pcc_2, T_max_CO2 : T_minusc_2, T_plusc_2)
+CALL PseudoBoilingBounds('R744', P_c3, T_pcc_3, T_max_CO2 : T_minusc_3, T_plusc_3)

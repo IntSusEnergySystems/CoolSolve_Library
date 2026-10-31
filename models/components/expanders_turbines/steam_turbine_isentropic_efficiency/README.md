@@ -194,3 +194,5 @@ and `T_1` matches the stored solution. `T_2` is 69.1 °C, which is not within
 - `CSL-0189` (*r134a_turbine_power*): an R134a turbine with the same
   isentropic-efficiency closure, driving a compressor. This model is a
   steam turbine.
+- `CSL-0314` (*steam_turbine_baumann*): a steam turbine whose isentropic efficiency is corrected for the
+  wetness of the outlet (Baumann rule) instead of being a given constant.

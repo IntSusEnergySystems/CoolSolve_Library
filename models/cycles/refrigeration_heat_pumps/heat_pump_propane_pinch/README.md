@@ -275,3 +275,4 @@ involved.
 - `CSL-0250` *cascade_heat_pump_geothermal_dh*: cascade heat pump sized by imposed pinches in sectioned exchangers; uses the same MIN-of-zone-boundary-differences pinch pattern, split into an imposed boundary plus a check (see its conversion log).
 - `CSL-0252` *orc_double_stage_kirchstockach*: double-stage ORC with the same pinch-designed condensers; its pinch condition is written at the binding dew-point boundary instead of a `MIN` over the zone candidates.
 - `CSL-0254` *recuperated_brayton_hthp*: another 1 MW-class high-temperature heat pump design model of the same category, on an air Brayton cycle with molten-salt heat sink instead of a vapour-compression cycle on propane.
+- `CSL-0313` *heat_pump_nh3_two_stage_flooded*: two-stage ammonia heat pump with flooded evaporator and an off-design machine description, versus the single-stage pinch-sized design here.

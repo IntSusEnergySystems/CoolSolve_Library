@@ -232,3 +232,5 @@ ULiège course MCI, TP5, exercise 4. Published under the library licence (MIT).
   other inputs; it computes the stoichiometric fuel-air ratio from the C12H26
   composition and adds the injector sizing (discharge coefficient, injection
   pressure differential, outlet diameter).
+- `CSL-0276` — valve overlap from the crank-angle valve timing, ULiège MCI
+  TP5 exercise 2. Same course session, a different exercise.

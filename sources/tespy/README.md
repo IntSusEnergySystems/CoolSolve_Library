@@ -113,3 +113,31 @@ Practical notes: (i) TESPy units are converted at the `Network` level (bar, degC
 * **Gaps filled (vs a classic EES teaching collection):** validated benchmark models (CGAM, SEGS, sCO2 recompression, two-stage NH3 heat pump) with stored reference data; off-design formalism (Stodola cone law, characteristic lines, UA scaling, design-to-off-design workflow); wet-steam Baumann correction; EN12900 polynomial compressors; CHP gas engine with load-dependent characteristics; generic fuel/air combustion with lambda; electrolyzer and fuel cell; district-heating pipes with heat loss and Hazen-Williams; solar collector with IAM (Quaschning/Janotte); combined cycle with district heat extraction; CO2 booster refrigeration; exergy post-processing (reference-state physical exergy).
 * **Not translatable / out of scope:** pymoo optimisation, ModelTemplate plumbing, Thermopack/REFPROP-specific zeotropic mixture studies (low priority), plotting.
 * **Authorship link:** the smoothed LMTD (`smoothed_lmtd`, from S. Quoilin's PhD thesis 2011), the discretised Sectioned HX (after the NextGenerationHeatPumps repository) and Bell et al. 2015 (co-authored by S. Quoilin and V. Lemort) are cited directly in TESPy - cross-checks against the original EES versions are possible.
+
+## 2026-10-24 triage
+
+Card C-352 (T-PLAN, novelty triage of the 19 remaining `todo` rows with priority
+wave1/high/medium against library.json, 282 models): 3 kept `todo` (translation
+cards C-360...C-366 in roadmap.md §6), 11 `merged`, 1 `duplicate`, 4 `discarded`.
+
+| ID | Decision | Target / nearest model | Reason |
+|---|---|---|---|
+| TSP-001 | discarded | CSL-0135 / CSL-0136 / CSL-0125 | const-eta compressor block trivial; off-design characteristic lines already translated (turbine char lines, EN12900 polynomials, pump curves) |
+| TSP-004 | todo | nearest: CSL-0135 (dry Stodola turbine) | Baumann wet-expansion correction absent from the library; doctest + test_SteamTurbine as reference (card C-362) |
+| TSP-005 | merged | CSL-0125 | pump curves + similarity laws already translated; TSP-005 adds only the const-eta_s/head-flow basic form |
+| TSP-012 | merged | CSL-0128 | eps-NTU HX component already translated (with geometry); the 7-arrangement relations are CSL-0090 (TSP-030 merged there) |
+| TSP-013 | merged | CSL-0127 | discretised counterflow HX with pinch/effectiveness limits already translated; 51 equal-duty sections with UA bands are the same discretisation approach |
+| TSP-015 | discarded | CSL-0137 / CSL-0142 | trivial Q/UA energy-balance block present in every HX model; ambient heat loss already in the DH pipes of CSL-0142 |
+| TSP-016 | merged | CSL-0142 | district-heating feed/return pipes with pressure drop + heat loss already translated; buried-pipe ground resistance would be a variant there |
+| TSP-017 | discarded | CSL-0083 / CSL-0129 | one-equation quadratic-loss collector balance, trivial; collector physics already in CSL-0082/0083/0129 and SEGS CSL-0147 |
+| TSP-018 | merged | CSL-0083 | PT collector efficiency with incidence-angle modifier already covered (IAM in CSL-0083, collector model CSL-0129, receiver CSL-0082) |
+| TSP-023 | merged | CSL-0149 | complete gas engine with cooling circuit + recovery exchanger already translated; part-load characteristic lines would be a variant (load dependence also in CSL-0273) |
+| TSP-031 | merged | CSL-0135 | DEFAULT and Traupel characteristic lines already shipped with CSL-0135; compressor/pump off-design maps covered by CSL-0136/CSL-0125 |
+| TSP-032 | todo | none (new function family) | Cecchinato (2010) UA part-load scaling absent from the library (card C-363) |
+| TSP-038 | duplicate | TSP-052 | same two-stage NH3 HP physics; the test model TSP-052 carries the Ebsilon COP matrix reference, the stepwise tutorial has none |
+| TSP-041 | merged | CSL-0081 | borefield ground-coupled heat pump already translated (g-function, Remund, MLAA); exergy post-processing would be a variant there |
+| TSP-043 | merged | CSL-0052 | combined Brayton+Rankine cycle already in the library (HRSG drum also in CSL-0146); district-heat extraction would be a documented variant |
+| TSP-045 | merged | CSL-0136 | EN12900 compressor map already translated; water-to-water HP covered by CSL-0078; IHX + part-load integration would be a variant of CSL-0136 |
+| TSP-046 | merged | CSL-0134 | recuperated + preheated ORC already translated (cyclopentane); isopentane and air-cooled condenser are other fluid/values only |
+| TSP-047 | discarded | CSL-0137 / CSL-0127 / CSL-0138 | comparison notebook of HeatExchanger/Sectioned/MovingBoundary, all three already in the library; no new physics |
+| TSP-052 | todo | none (new system) | two-stage NH3 heat pump with flooded evaporator (drum + circulation pump) absent from the library; Ebsilon COP matrix as reference (card C-361) |

@@ -1,10 +1,10 @@
 {
  "snapshot": {
-  "content_hash": "sha256:101b4924f02e10bc",
-  "files": 1420,
-  "bytes": 9892722,
-  "models": 280,
-  "functions": 468,
+  "content_hash": "sha256:c0ab5196b185b5ff",
+  "files": 1469,
+  "bytes": 10194145,
+  "models": 288,
+  "functions": 495,
   "taxonomy_version": "0.2"
  },
  "models": [
@@ -1056,7 +1056,8 @@
    "related": [
     "CSL-0023",
     "CSL-0035",
-    "CSL-0177"
+    "CSL-0177",
+    "CSL-0318"
    ],
    "coolsolve_version": "0.3.0@4798e2b",
    "verified_on": "2026-10-18",
@@ -1649,7 +1650,9 @@
    "license": "MIT",
    "url": "",
    "missing_features": [],
-   "related": [],
+   "related": [
+    "CSL-0318"
+   ],
    "coolsolve_version": "0.3.0@332d95a",
    "verified_on": "2026-10-15",
    "verification_summary": "Compared with the EES stored solution of MSTh-SB-R4-Ex6.EES using compare_solution.py without --ees-units: 17 common variables, 3 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Those three are h_1, h_3_s and s_su. Maximum relative difference 3.19e-01 on s_su. D_opt, rpm_opt and DELTAh_s stay within rtol=0.001. All 17 equations are satisfied.",
@@ -2086,7 +2089,9 @@
     "CSL-0136",
     "CSL-0140",
     "CSL-0141",
-    "CSL-0147"
+    "CSL-0147",
+    "CSL-0314",
+    "CSL-0313"
    ],
    "coolsolve_version": "0.3.0@4c80b25",
    "verified_on": "2026-10-13",
@@ -2128,7 +2133,8 @@
    "url": "",
    "missing_features": [],
    "related": [
-    "CSL-0189"
+    "CSL-0189",
+    "CSL-0314"
    ],
    "coolsolve_version": "0.3.0@96e4c95",
    "verified_on": "2026-10-15",
@@ -2255,7 +2261,9 @@
    "license": "MIT",
    "url": "",
    "missing_features": [],
-   "related": [],
+   "related": [
+    "CSL-0310"
+   ],
    "coolsolve_version": "0.3.0@f5b79cd",
    "verified_on": "2026-10-15",
    "verification_summary": "Compared with the stored solution of MSTh-SB-R4-Ex1.EES. compare_solution.py: 27 common variables, 9 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Maximum relative difference 2.75e-01 on s_su (Air entropy reference, CoolSolve - EES = -1814 J/kg-K). Wheel power 106631 W versus 106362 W.",
@@ -2296,7 +2304,10 @@
    "license": "MIT",
    "url": "",
    "missing_features": [],
-   "related": [],
+   "related": [
+    "CSL-0310",
+    "CSL-0318"
+   ],
    "coolsolve_version": "0.3.0@5a522f7",
    "verified_on": "2026-10-15",
    "verification_summary": "Compared with the stored solution of MSTh-SB-R4-Ex2-2.EES. compare_solution.py: 30 common variables, 8 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Maximum relative difference 2.80e-01 on s_su (Air entropy reference, CoolSolve - EES = -1814 J/kg-K). A_thr and d_laval match. Shaft power 4370935 W versus 4378606 W.",
@@ -2380,7 +2391,9 @@
    "license": "MIT",
    "url": "",
    "missing_features": [],
-   "related": [],
+   "related": [
+    "CSL-0310"
+   ],
    "coolsolve_version": "0.3.0@332d95a",
    "verified_on": "2026-10-15",
    "verification_summary": "Compared with the stored solution of R4-Ex2.EES. compare_solution.py: 28 common variables, 17 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 1. Maximum relative difference 2.85e-01 on s_su. The 28 equations are satisfied. eta_laval is 0.8673469388 in both. M_dot is 10.260 kg/s against 9.238; D is 0.71839 m against 0.70601. Inlet enthalpy is 126553 J/kg above EES.",
@@ -2436,6 +2449,54 @@
    ],
    "path": "models/components/expanders_turbines/steam_turbine_n2_compressor",
    "main_file": "steam_turbine_n2_compressor.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0314",
+   "name": "steam_turbine_baumann",
+   "title": "Steam turbine with Baumann wet-expansion efficiency correction",
+   "category": "components/expanders_turbines",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Isentropic efficiency of a steam turbine expanding into the vapour dome: the dry efficiency holds until the saturated-vapour line, the wet part is penalised by the Baumann rule eta_s = eta_s_dry*(1 - alpha*y_m); the saturation crossing is solved by two equations. Seven cases of the TESPy docstring and tests.",
+   "fluids": [
+    "Water"
+   ],
+   "tags": [
+    "turbine",
+    "steam",
+    "wet expansion",
+    "Baumann rule",
+    "isentropic efficiency",
+    "wetness",
+    "saturation crossing",
+    "translation"
+   ],
+   "n_equations": 140,
+   "largest_block": 4,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/src/tespy/components/turbomachinery/steam_turbine.py",
+   "authors": [
+    "Francesco Witte (TESPy lead developer)",
+    "tlmerbecks (GitHub handle of the contributor of the first version)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy/blob/19425523ff7ecd67b36e7b90efe04a9480a9ebe3/src/tespy/components/turbomachinery/steam_turbine.py",
+   "missing_features": [],
+   "related": [
+    "CSL-0135",
+    "CSL-0174"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Re-run of the TESPy docstring example and of test_SteamTurbine / test_SteamTurbine_outlet_near_saturation (tespy 0.11.3.dev0, CoolProp 8.0.0): 44 common variables over 7 cases, 0 differ at rtol=0.001, max relative deviation 1.71e-09. Docstring values reproduced (P = 7009682 W, x = 0.84).",
+   "verification_checks": [
+    "source-rerun"
+   ],
+   "path": "models/components/expanders_turbines/steam_turbine_baumann",
+   "main_file": "steam_turbine_baumann.eescode",
    "figures": 0
   },
   {
@@ -2597,7 +2658,8 @@
     "CSL-0253",
     "CSL-0252",
     "CSL-0133",
-    "CSL-0134"
+    "CSL-0134",
+    "CSL-0315"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -3521,7 +3583,8 @@
     "CSL-0014",
     "CSL-0090",
     "CSL-0115",
-    "CSL-0138"
+    "CSL-0138",
+    "CSL-0315"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
@@ -3633,7 +3696,9 @@
     "CSL-0014",
     "CSL-0013",
     "CSL-0140",
-    "CSL-0142"
+    "CSL-0142",
+    "CSL-0315",
+    "CSL-0313"
    ],
    "coolsolve_version": "0.3.0@4c80b25",
    "verified_on": "2026-10-13",
@@ -3692,7 +3757,8 @@
     "CSL-0112",
     "CSL-0127",
     "CSL-0250",
-    "CSL-0251"
+    "CSL-0251",
+    "CSL-0315"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
@@ -3853,6 +3919,60 @@
    "variants": [
     "indirect_contact_tower_identification_coolsolve.eescode"
    ]
+  },
+  {
+   "id": "CSL-0315",
+   "name": "ua_cecchinato_partload",
+   "title": "UA part-load scaling after Cecchinato et al. (function library, TESPy)",
+   "category": "components/heat_exchangers",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Function library for the part-load scaling of the overall conductance UA of a heat exchanger: the Cecchinato et al. (2010) law UA/UA_ref = (1+x)/(m_cold^-Re_cold + x*m_hot^-Re_hot), x = (alpha_cold/alpha_hot)*(A_cold/A_hot), with the two-resistance series conductance it is derived from and the building blocks of a sectioned UA. The main program evaluates the factor at the off-design points of the TESPy SectionedHeatExchanger doctest and of the MovingBoundaryHeatExchanger tests, and applies it to a steam condenser cooled by air (design with an imposed pinch, then off design with UA = UA_ref*f_UA).",
+   "fluids": [
+    "Water",
+    "Air"
+   ],
+   "tags": [
+    "heat exchanger",
+    "UA",
+    "part load",
+    "off-design",
+    "Reynolds exponent",
+    "condenser",
+    "sectioned heat exchanger",
+    "pinch",
+    "function library"
+   ],
+   "n_equations": 230,
+   "largest_block": 93,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/src/tespy/components/heat_exchangers/sectioned.py (UA_cecchinato_func, _UA_cecchinato_residual); tests/test_components/test_heat_exchangers.py (test_MovingBoundaryHeatExchanger_offdesign_cecchinato_*)",
+   "authors": [
+    "Francesco Witte (TESPy lead developer)",
+    "Luca Cecchinato, Manuel Chiarello and Marco Corradi (Cecchinato et al. 2010)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy/blob/19425523ff7ecd67b36e7b90efe04a9480a9ebe3/src/tespy/components/heat_exchangers/sectioned.py",
+   "missing_features": [],
+   "related": [
+    "CSL-0137",
+    "CSL-0138",
+    "CSL-0014",
+    "CSL-0127",
+    "CSL-0013"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Compared with a re-run of the TESPy SectionedHeatExchanger doctest (design, off design m = 0.8 and three more flows) and of the three MovingBoundaryHeatExchanger Cecchinato tests with CoolProp R410A instead of REFPROP: 26 common variables, 0 differ at rtol=0.001, max 1.35e-05 (UA). Two-resistance derivation checked to 2e-16.",
+   "verification_checks": [
+    "source-rerun",
+    "analytical"
+   ],
+   "path": "models/components/heat_exchangers/ua_cecchinato_partload",
+   "main_file": "ua_cecchinato_partload.eescode",
+   "figures": 0
   },
   {
    "id": "CSL-0075",
@@ -4024,6 +4144,7 @@
     "secondary refrigerant",
     "hydraulic network",
     "reference model",
+    "parameter identification",
     "model bank"
    ],
    "n_equations": 34,
@@ -4052,7 +4173,10 @@
    ],
    "path": "models/components/pumps_fans/centrifugal_brine_pump_refsim",
    "main_file": "centrifugal_brine_pump_refsim.eescode",
-   "figures": 0
+   "figures": 0,
+   "variants": [
+    "centrifugal_brine_pump_refsim_paramid.eescode"
+   ]
   },
   {
    "id": "CSL-0125",
@@ -4091,7 +4215,8 @@
     "CSL-0084",
     "CSL-0072",
     "CSL-0071",
-    "CSL-0183"
+    "CSL-0183",
+    "CSL-0318"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
@@ -4188,7 +4313,8 @@
    "related": [
     "CSL-0203",
     "CSL-0125",
-    "CSL-0187"
+    "CSL-0187",
+    "CSL-0318"
    ],
    "coolsolve_version": "0.3.0@96e4c95",
    "verified_on": "2026-10-15",
@@ -4274,7 +4400,8 @@
    "url": "",
    "missing_features": [],
    "related": [
-    "CSL-0183"
+    "CSL-0183",
+    "CSL-0318"
    ],
    "coolsolve_version": "0.3.0@ae7946e",
    "verified_on": "2026-10-15",
@@ -4366,6 +4493,61 @@
    ],
    "path": "models/components/pumps_fans/sihi_pump_simulation",
    "main_file": "sihi_pump_simulation.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0318",
+   "name": "cordier_specific_speed",
+   "title": "Cordier specific-speed line and 0D efficiency pre-design of turbomachines (function library)",
+   "category": "components/pumps_fans",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Five EES FUNCTION/PROCEDURE blocks of the LaboThapPy 0D turbomachinery sizing: specific speed omega_s, specific diameter from the tabulated Cordier line (clamped or linearly extended), rotor diameter, machine-type zone from 2733*omega_s, the pump head, and a bilinear pump-efficiency estimate on a (volume flow, omega_s) chart with band limits. The demonstration program re-runs the pump, compressor and turbine sizing cases and the radial-pump design example of LaboThapPy (cyclopentane and CO2).",
+   "fluids": [
+    "Cyclopentane",
+    "R744"
+   ],
+   "tags": [
+    "Cordier line",
+    "specific speed",
+    "specific diameter",
+    "0D design",
+    "pre-design",
+    "pump",
+    "turbine",
+    "compressor",
+    "efficiency chart",
+    "bilinear interpolation",
+    "function library"
+   ],
+   "n_equations": 234,
+   "largest_block": 5,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/correlations/turbomachinery/correlations_0D.py; ~/git/LaboThapPy/labothappy/sizing/turbomachinery/{pump,turbine,compressor}/sizing_0D/{pump,turbine,compressor}_0D_design.py; ~/git/LaboThapPy/labothappy/sizing/turbomachinery/pump/radial/radial_pump_0D_design.py",
+   "authors": [
+    "Basile Chaudoir (LaboThapPy, ULiege; author of all five translated files in the repository history)"
+   ],
+   "license": "Apache-2.0 (original, LICENSE.txt of LaboThapPy); translation published under the CoolSolve_Library MIT licence (decision D3)",
+   "url": "https://github.com/PyLaboThap/LaboThapPy/tree/f03f7f473b190d0c0b5e296132b50565e89e4421/labothappy",
+   "missing_features": [],
+   "related": [
+    "CSL-0125",
+    "CSL-0183",
+    "CSL-0203",
+    "CSL-0069",
+    "CSL-0235",
+    "CSL-0207"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "The LaboThapPy functions and the radial-pump design example were re-run (CoolProp 8.0.0) with the same inputs: 112 common variables (specific speeds, diameters, zones, densities, efficiencies, powers) agree, 0 differ at rtol=0.001, max 4.27e-09. The three data tables were checked against the source functions at all nodes.",
+   "verification_checks": [
+    "source-rerun"
+   ],
+   "path": "models/components/pumps_fans/cordier_specific_speed",
+   "main_file": "cordier_specific_speed.eescode",
    "figures": 0
   },
   {
@@ -4503,7 +4685,8 @@
    "url": "",
    "missing_features": [],
    "related": [
-    "CSL-0122"
+    "CSL-0122",
+    "CSL-0310"
    ],
    "coolsolve_version": "0.3.0@47bb416",
    "verified_on": "2026-10-11",
@@ -4668,7 +4851,9 @@
    "license": "MIT",
    "url": "",
    "missing_features": [],
-   "related": [],
+   "related": [
+    "CSL-0310"
+   ],
    "coolsolve_version": "0.3.0@3e9c1b6",
    "verified_on": "2026-10-15",
    "verification_summary": "Against the stored solution of R3_E1_2022.EES, compare_solution.py --ees-units: 21 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 8. Maximum relative difference 4.01e-10 on c_in. T_out is 349.710 °C and the enthalpies agree; water has no reference-state offset.",
@@ -4721,6 +4906,56 @@
    ],
    "path": "models/components/valves_nozzles_piping/reference_pipe",
    "main_file": "reference_pipe.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0310",
+   "name": "isentropic_nozzle_critical",
+   "title": "Isentropic nozzle with critical pressure (choked / unchoked flow)",
+   "category": "components/valves_nozzles_piping",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Steady isentropic nozzle on air, sized from a given mass flow: total-enthalpy conservation, isentropic throat state, throat pressure max(back pressure, critical pressure) so the model switches between unchoked and choked regimes; real-gas gamma solved from the isentropic relation.",
+   "fluids": [
+    "Air"
+   ],
+   "tags": [
+    "nozzle",
+    "choked flow",
+    "critical pressure",
+    "isentropic flow",
+    "compressible flow",
+    "throat sizing",
+    "exercise"
+   ],
+   "n_equations": 16,
+   "largest_block": 4,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 01/Isentropic Noozle.EES",
+   "authors": [
+    "TBD (ULiège MSTh course team: J. Lebrun, V. Lemort, S. Bertagnolio)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [
+    "CSL-0118",
+    "CSL-0190",
+    "CSL-0199",
+    "CSL-0207",
+    "CSL-0234"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "EES stored values (5/16 vars; M_dot, P_su, T_su exact; h_su/s_su only the documented Air reference offsets) and the self-consistent last-solution set kept in the EES guess column agree: max rel diff 4.3e-03 on T_thr (EES 7.458 vs CoolProp air), all physics variables within rtol 0.001. Choked run: throat velocity within 0.02 % of the local speed of sound.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
+   "path": "models/components/valves_nozzles_piping/isentropic_nozzle_critical",
+   "main_file": "isentropic_nozzle_critical.eescode",
    "figures": 0
   },
   {
@@ -5225,7 +5460,8 @@
    "missing_features": [],
    "related": [
     "CSL-0185",
-    "CSL-0275"
+    "CSL-0275",
+    "CSL-0276"
    ],
    "coolsolve_version": "0.3.0@96e4c95",
    "verified_on": "2026-10-15",
@@ -5273,7 +5509,8 @@
    "related": [
     "CSL-0178",
     "CSL-0188",
-    "CSL-0277"
+    "CSL-0277",
+    "CSL-0276"
    ],
    "coolsolve_version": "0.3.0@96e4c95",
    "verified_on": "2026-10-15",
@@ -5458,7 +5695,9 @@
    "license": "MIT",
    "url": "",
    "missing_features": [],
-   "related": [],
+   "related": [
+    "CSL-0276"
+   ],
    "coolsolve_version": "0.3.0@6730bcf",
    "verified_on": "2026-10-15",
    "verification_summary": "Compared with the EES stored solution of Ex_3_Deux injections moteur essence_PNG.EES (20 variables decoded by ees_extract.py). compare_solution.py: 20 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 6. Largest relative difference 3.24e-04 on rho_a and M_dot_a (CoolProp vs EES density of Air at 25 °C, 101325 Pa).",
@@ -5827,6 +6066,51 @@
    "variants": [
     "square_v6_engine_exercise_coolsolve.eescode"
    ]
+  },
+  {
+   "id": "CSL-0276",
+   "name": "valve_overlap_timing",
+   "title": "Valve overlap from crank-angle valve timing (TP5 exercise 2)",
+   "category": "cycles/engines",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Teaching exercise: inlet and exhaust valve opening/closing crank angles (TDC at 0 deg CA) of a four-stroke engine at rated regime and at idle. The valve overlap is the angle between exhaust valve closing and inlet valve opening around the exhaust TDC, also converted to a duration through the engine speed.",
+   "fluids": [],
+   "tags": [
+    "exercise",
+    "valve timing",
+    "valve overlap",
+    "internal combustion engine",
+    "crank angle",
+    "four-stroke"
+   ],
+   "n_equations": 16,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP5/Ex_2_Croisement des soupapes_PNG.EES",
+   "authors": [
+    "Philippe Ngendakumana (ULiège Thermotechnics)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [
+    "CSL-0178",
+    "CSL-0185",
+    "CSL-0206"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Compared with the EES stored solution of Ex_2_Croisement des soupapes_PNG.EES (14 variables decoded). compare_solution.py: 14 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 2 (DELTAt_1, DELTAt_2 not stored by EES; recomputed by hand). Pure explicit algebra, exact agreement.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
+   "path": "models/cycles/engines/valve_overlap_timing",
+   "main_file": "valve_overlap_timing.eescode",
+   "figures": 0
   },
   {
    "id": "CSL-0277",
@@ -6388,7 +6672,8 @@
    "related": [
     "CSL-0013",
     "CSL-0014",
-    "CSL-0038"
+    "CSL-0038",
+    "CSL-0317"
    ],
    "coolsolve_version": "0.3.0@e635c85",
    "verified_on": "2026-10-14",
@@ -7468,7 +7753,9 @@
     "CSL-0142",
     "CSL-0143",
     "CSL-0145",
-    "CSL-0250"
+    "CSL-0250",
+    "CSL-0315",
+    "CSL-0313"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -8063,7 +8350,8 @@
     "CSL-0250",
     "CSL-0251",
     "CSL-0252",
-    "CSL-0253"
+    "CSL-0253",
+    "CSL-0313"
    ],
    "coolsolve_version": "0.3.0@4c80b25",
    "verified_on": "2026-10-12",
@@ -8115,7 +8403,8 @@
     "CSL-0013",
     "CSL-0014",
     "CSL-0250",
-    "CSL-0253"
+    "CSL-0253",
+    "CSL-0313"
    ],
    "coolsolve_version": "0.3.0@e635c85",
    "verified_on": "2026-10-15",
@@ -8602,7 +8891,8 @@
     "CSL-0014",
     "CSL-0145",
     "CSL-0138",
-    "CSL-0013"
+    "CSL-0013",
+    "CSL-0313"
    ],
    "coolsolve_version": "0.4.0@9768373",
    "verified_on": "2026-10-21",
@@ -8820,6 +9110,63 @@
    ],
    "path": "models/cycles/refrigeration_heat_pumps/evaporative_condenser_catalogue",
    "main_file": "evaporative_condenser_catalogue.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0313",
+   "name": "heat_pump_nh3_two_stage_flooded",
+   "title": "Two-stage NH3 heat pump with flooded evaporator (TESPy benchmark vs Ebsilon)",
+   "category": "cycles/refrigeration_heat_pumps",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Two-stage ammonia heat pump (condenser, valve, drum with circulation pump and flooded evaporator, vapour superheater, two compressors with intercooler) heating water from 60 to 105 C: design point plus an off-design point with characteristic lines, after the TESPy heat-pump benchmark with an Ebsilon COP matrix.",
+   "fluids": [
+    "Ammonia",
+    "Water"
+   ],
+   "tags": [
+    "heat pump",
+    "ammonia",
+    "two-stage compression",
+    "intercooler",
+    "flooded evaporator",
+    "drum",
+    "circulation pump",
+    "off-design",
+    "characteristic lines",
+    "COP matrix",
+    "Ebsilon reference",
+    "high-temperature heat pump"
+   ],
+   "n_equations": 291,
+   "largest_block": 69,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/tests/test_models/test_heat_pump_model.py",
+   "authors": [
+    "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy/blob/19425523ff7ecd67b36e7b90efe04a9480a9ebe3/tests/test_models/test_heat_pump_model.py",
+   "missing_features": [],
+   "related": [
+    "CSL-0013",
+    "CSL-0133",
+    "CSL-0135",
+    "CSL-0137",
+    "CSL-0145",
+    "CSL-0250"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "The TESPy test was re-run (CoolProp 8.0.0): CoolSolve agrees with all stored states, powers, duties, UA and COP at the design and 90 C/25 kg/s points (157 variables, max 4.0e-7, pumps) and with the COP of all 20 off-design points to 2.0e-9. Versus the Ebsilon COP matrix: -5.6 % to +6.3 %.",
+   "verification_checks": [
+    "source-rerun",
+    "other-tool"
+   ],
+   "path": "models/cycles/refrigeration_heat_pumps/heat_pump_nh3_two_stage_flooded",
+   "main_file": "heat_pump_nh3_two_stage_flooded.eescode",
    "figures": 0
   },
   {
@@ -11179,6 +11526,56 @@
    "figures": 0
   },
   {
+   "id": "CSL-0317",
+   "name": "pseudo_critical_properties",
+   "title": "Pseudo-critical temperature and pseudo-boiling bounds of supercritical fluids (function library)",
+   "category": "fundamentals/properties",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Three EES routines for the pseudo-critical point above the critical pressure: the pseudo-critical temperature as the temperature of maximum cp (500-point scan, any CoolProp fluid), the pseudo-boiling transition bounds T_minus and T_plus of Banuti's linear model, and the Yang and Yang CO2 polynomial of the pseudo-critical temperature against pressure.",
+   "fluids": [
+    "R744",
+    "Water",
+    "R134a",
+    "Propane"
+   ],
+   "tags": [
+    "pseudo-critical",
+    "supercritical",
+    "Widom line",
+    "pseudo-boiling",
+    "cp maximum",
+    "CO2",
+    "property utility",
+    "function library"
+   ],
+   "n_equations": 52,
+   "largest_block": 2,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/correlations/properties/supercritical.py",
+   "authors": [
+    "Elise Neven"
+   ],
+   "license": "Apache-2.0 (LaboThapPy LICENSE.txt); translation published under the library licence",
+   "url": "https://github.com/PyLaboThap/LaboThapPy/blob/f03f7f473b190d0c0b5e296132b50565e89e4421/labothappy/correlations/properties/supercritical.py",
+   "missing_features": [],
+   "related": [
+    "CSL-0104",
+    "CSL-0144"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Re-run of the LaboThapPy functions (commit f03f7f47, CoolProp 8.0.0) on the 9 pressure/fluid demonstration cases plus 3 CO2-correlation cases: compare_solution.py, 36 common variables, 0 differ at rtol=1e-06 (largest 9.47e-08 relative, 3.1e-06 K absolute). A further ten fluid/pressure cases agree within 1.2e-05 K.",
+   "verification_checks": [
+    "source-rerun"
+   ],
+   "path": "models/fundamentals/properties/pseudo_critical_properties",
+   "main_file": "pseudo_critical_properties.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0106",
    "name": "conduction_resistances_and_shapes",
    "title": "Conduction: thermal resistances, shape factors and R-value conversions (function library)",
@@ -12119,7 +12516,8 @@
    "related": [
     "CSL-0038",
     "CSL-0087",
-    "CSL-0091"
+    "CSL-0091",
+    "CSL-0317"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
@@ -12332,7 +12730,8 @@
     "CSL-0103",
     "CSL-0158",
     "CSL-0130",
-    "CSL-0142"
+    "CSL-0142",
+    "CSL-0316"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -12506,7 +12905,8 @@
     "CSL-0158",
     "CSL-0131",
     "CSL-0132",
-    "CSL-0142"
+    "CSL-0142",
+    "CSL-0316"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
@@ -12562,7 +12962,8 @@
    ],
    "related": [
     "CSL-0018",
-    "CSL-0130"
+    "CSL-0130",
+    "CSL-0316"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
@@ -12576,6 +12977,60 @@
    "variants": [
     "gas_pipe_insulated_pressure_drop_coolsolve.eescode"
    ]
+  },
+  {
+   "id": "CSL-0316",
+   "name": "local_losses_idelchik_elbows",
+   "title": "Local pressure loss of curved bends: Idelchik coefficients, single-phase and two-phase (function library)",
+   "category": "heat_transfer/pressure_drop",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "EES FUNCTION library of the loss coefficient of circular pipe bends (Idelchik coefficients as in LaboThapPy): angle coefficient A1, radius coefficients A2 and B1, laminar/intermediate/high-Reynolds branches blended with a cubic step, roughness correction from the friction of the bend arc, total coefficient zeta_tot and pressure drop zeta_tot*rho*v^2/2, with a homogeneous two-phase extension; a mode argument gives the blending as written in the source (whose stepsmoother calls look argument-swapped) or with the arguments reordered.",
+   "fluids": [
+    "Water",
+    "R410A"
+   ],
+   "tags": [
+    "pressure drop",
+    "local loss",
+    "elbow",
+    "bend",
+    "Idelchik",
+    "loss coefficient",
+    "Reynolds number",
+    "roughness",
+    "two-phase flow",
+    "function library",
+    "translation"
+   ],
+   "n_equations": 146,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/correlations/pressure_drop/local_losses/curved_elbow.py",
+   "authors": [
+    "Elise Neven (LaboThapPy, curved_elbow.py)",
+    "I. E. Idelchik (Handbook of Hydraulic Resistance, 1986)",
+    "P. K. Swamee and A. K. Jain (Swamee-Jain friction factor, 1976)"
+   ],
+   "license": "Apache-2.0 (LICENSE.txt of the original) / model published under the library MIT licence",
+   "url": "https://github.com/PyLaboThap/LaboThapPy/blob/f03f7f47/labothappy/correlations/pressure_drop/local_losses/curved_elbow.py",
+   "missing_features": [],
+   "related": [
+    "CSL-0130",
+    "CSL-0158",
+    "CSL-0018"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "95 output values were compared with the LaboThapPy source (commit f03f7f47) re-run in Python with CoolProp 6.6.0: 0 differ at rtol=1e-6, largest relative deviation 4.4e-13. The source has no example or test; its docstring example has the (P, T) arguments swapped. Idelchik values not consulted.",
+   "verification_checks": [
+    "source-rerun"
+   ],
+   "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows",
+   "main_file": "local_losses_idelchik_elbows.eescode",
+   "figures": 0
   },
   {
    "id": "CSL-0107",
@@ -14111,6 +14566,20 @@
  ],
  "functions": [
   {
+   "function": "A1_elbow",
+   "type": "FUNCTION",
+   "signature": "(delta)",
+   "model_id": "CSL-0316",
+   "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows/local_losses_idelchik_elbows.eescode"
+  },
+  {
+   "function": "A2_elbow",
+   "type": "FUNCTION",
+   "signature": "(R0_d)",
+   "model_id": "CSL-0316",
+   "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows/local_losses_idelchik_elbows.eescode"
+  },
+  {
    "function": "AdairSwirlVelocity",
    "type": "FUNCTION",
    "signature": "(omega_c, theta)",
@@ -14151,6 +14620,13 @@
    "signature": "(rho_l, rho_v, x)",
    "model_id": "CSL-0130",
    "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
+  },
+  {
+   "function": "B1_elbow",
+   "type": "FUNCTION",
+   "signature": "(R0_d)",
+   "model_id": "CSL-0316",
+   "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows/local_losses_idelchik_elbows.eescode"
   },
   {
    "function": "baffle_thickness",
@@ -14272,6 +14748,13 @@
    "path": "models/components/heat_exchangers/three_zone_hx_procedures/three_zone_hx_procedures.eescode"
   },
   {
+   "function": "CF_fri_elbow",
+   "type": "FUNCTION",
+   "signature": "(zeta_LOC, d_hyd, R0, delta, K, rho, mu, m_dot, mode)",
+   "model_id": "CSL-0316",
+   "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows/local_losses_idelchik_elbows.eescode"
+  },
+  {
    "function": "change$",
    "type": "FUNCTION",
    "signature": "(t_out,Operating_mode$)",
@@ -14361,6 +14844,27 @@
    "signature": "(table$, coef$, T_ev, T_cd)",
    "model_id": "CSL-0123",
    "path": "models/components/compressors/copeland_catalogue_correlation/copeland_catalogue_correlation.eescode"
+  },
+  {
+   "function": "Cordier_design",
+   "type": "PROCEDURE",
+   "signature": "(Omega, Q, gH, extrap : Omega_s, Omega_s_imp, D_s, D, Zone)",
+   "model_id": "CSL-0318",
+   "path": "models/components/pumps_fans/cordier_specific_speed/cordier_specific_speed.eescode"
+  },
+  {
+   "function": "Cordier_Ds",
+   "type": "FUNCTION",
+   "signature": "(omega_s)",
+   "model_id": "CSL-0318",
+   "path": "models/components/pumps_fans/cordier_specific_speed/cordier_specific_speed.eescode"
+  },
+  {
+   "function": "Cordier_Ds_clamped",
+   "type": "FUNCTION",
+   "signature": "(omega_s)",
+   "model_id": "CSL-0318",
+   "path": "models/components/pumps_fans/cordier_specific_speed/cordier_specific_speed.eescode"
   },
   {
    "function": "CorrectionFanSpeed",
@@ -14629,6 +15133,20 @@
    "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
   },
   {
+   "function": "dP_elbow",
+   "type": "FUNCTION",
+   "signature": "(d_hyd, R0, delta, K, rho, mu, m_dot, mode)",
+   "model_id": "CSL-0316",
+   "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows/local_losses_idelchik_elbows.eescode"
+  },
+  {
+   "function": "dP_elbow_two_phase",
+   "type": "FUNCTION",
+   "signature": "(d_hyd, R0, delta, K, x, rho_l, rho_v, mu_l, m_dot, mode)",
+   "model_id": "CSL-0316",
+   "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows/local_losses_idelchik_elbows.eescode"
+  },
+  {
    "function": "dP_ESDU_high_fin",
    "type": "FUNCTION",
    "signature": "(m, A_min, A_increase, flow_area_contraction_ratio, tube_diameter, pitch_parallel, pitch_normal, tube_rows, rho, mu)",
@@ -14888,6 +15406,13 @@
    "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
   },
   {
+   "function": "f_Swamee_Jain_elbow",
+   "type": "FUNCTION",
+   "signature": "(K, d_hyd, Re)",
+   "model_id": "CSL-0316",
+   "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows/local_losses_idelchik_elbows.eescode"
+  },
+  {
    "function": "fd_Martin_1999",
    "type": "FUNCTION",
    "signature": "(Re, chevron_angle)",
@@ -14970,6 +15495,13 @@
    "signature": "(Thi, Tho, Tci, Tco, Ntp, rows)",
    "model_id": "CSL-0105",
    "path": "models/components/heat_exchangers/lmtd_and_f_correction/lmtd_and_f_correction.eescode"
+  },
+  {
+   "function": "fUA_Cecchinato",
+   "type": "FUNCTION",
+   "signature": "(m_ratio_hot, m_ratio_cold, re_exp_hot, re_exp_cold, alpha_ratio, area_ratio)",
+   "model_id": "CSL-0315",
+   "path": "models/components/heat_exchangers/ua_cecchinato_partload/ua_cecchinato_partload.eescode"
   },
   {
    "function": "G",
@@ -15189,6 +15721,13 @@
    "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
   },
   {
+   "function": "h_grid",
+   "type": "FUNCTION",
+   "signature": "(j, h_ex, h_f, h_g, h_su, n3, n2, n1)",
+   "model_id": "CSL-0315",
+   "path": "models/components/heat_exchangers/ua_cecchinato_partload/ua_cecchinato_partload.eescode"
+  },
+  {
    "function": "h_Groothuis_Hendal",
    "type": "FUNCTION",
    "signature": "(m, x, D, rhol, rhog, Cpl, kl, mug, mu_b, mu_w, water)",
@@ -15399,6 +15938,13 @@
    "path": "models/components/heat_exchangers/plate_hx_correlations/plate_hx_correlations.eescode"
   },
   {
+   "function": "Head_pump",
+   "type": "FUNCTION",
+   "signature": "(P_1, P_2, rho_1, z_1, z_2, v_1, v_2)",
+   "model_id": "CSL-0318",
+   "path": "models/components/pumps_fans/cordier_specific_speed/cordier_specific_speed.eescode"
+  },
+  {
    "function": "heat_loss_ptr70",
    "type": "FUNCTION",
    "signature": "(T_fluid, T_amb, DNI, v_wind, Theta, A0, A1, A2, A3, A4, A5, A6)",
@@ -15581,6 +16127,13 @@
    "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode"
   },
   {
+   "function": "k_Re_elbow",
+   "type": "FUNCTION",
+   "signature": "(Re, R0_d)",
+   "model_id": "CSL-0316",
+   "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows/local_losses_idelchik_elbows.eescode"
+  },
+  {
    "function": "k_to_R",
    "type": "FUNCTION",
    "signature": "(k, t, A)",
@@ -15721,6 +16274,13 @@
    "path": "models/energy_systems/district_heating/district_heating_loop/district_heating_loop.eescode"
   },
   {
+   "function": "LMTD_section",
+   "type": "FUNCTION",
+   "signature": "(td_a, td_b)",
+   "model_id": "CSL-0315",
+   "path": "models/components/heat_exchangers/ua_cecchinato_partload/ua_cecchinato_partload.eescode"
+  },
+  {
    "function": "LMTD_sm",
    "type": "FUNCTION",
    "signature": "(DT_a, DT_b)",
@@ -15733,6 +16293,13 @@
    "signature": "(td_a, td_b)",
    "model_id": "CSL-0137",
    "path": "models/components/heat_exchangers/hx_lmtd_ua/hx_lmtd_ua.eescode"
+  },
+  {
+   "function": "LMTD_smoothed",
+   "type": "FUNCTION",
+   "signature": "(td_a, td_b)",
+   "model_id": "CSL-0313",
+   "path": "models/cycles/refrigeration_heat_pumps/heat_pump_nh3_two_stage_flooded/heat_pump_nh3_two_stage_flooded.eescode"
   },
   {
    "function": "LMTD_smoothed",
@@ -16785,11 +17352,25 @@
    "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
   },
   {
+   "function": "PseudoBoilingBounds",
+   "type": "PROCEDURE",
+   "signature": "(fluid$, P, T_pc, T_max : T_minus, T_plus)",
+   "model_id": "CSL-0317",
+   "path": "models/fundamentals/properties/pseudo_critical_properties/pseudo_critical_properties.eescode"
+  },
+  {
    "function": "pump",
    "type": "PROCEDURE",
    "signature": "(fluid$,epsilon_pp,h_r_su_pp,t_r_su_pp,p_r_su_pp,p_r_ex_pp,M_dot_r_pp:W_dot_pp,T_r_ex_pp,h_r_ex_pp)",
    "model_id": "CSL-0040",
    "path": "models/cycles/organic_rankine/orc_biomass_chp/orc_biomass_chp.eescode"
+  },
+  {
+   "function": "Pump_eta_0D",
+   "type": "FUNCTION",
+   "signature": "(omega_s, Q_h, enforce_limits, allow_extrap)",
+   "model_id": "CSL-0318",
+   "path": "models/components/pumps_fans/cordier_specific_speed/cordier_specific_speed.eescode"
   },
   {
    "function": "q_CHF_HEDH_Montinsky",
@@ -16869,6 +17450,20 @@
    "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode"
   },
   {
+   "function": "Re_elbow",
+   "type": "FUNCTION",
+   "signature": "(m_dot, d_hyd, rho, mu)",
+   "model_id": "CSL-0316",
+   "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows/local_losses_idelchik_elbows.eescode"
+  },
+  {
+   "function": "Re_lam_limit_elbow",
+   "type": "FUNCTION",
+   "signature": "(K, d_hyd)",
+   "model_id": "CSL-0316",
+   "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows/local_losses_idelchik_elbows.eescode"
+  },
+  {
    "function": "Re_pipe",
    "type": "FUNCTION",
    "signature": "(G, d_hyd, mu)",
@@ -16902,6 +17497,13 @@
    "signature": "(T)",
    "model_id": "CSL-0147",
    "path": "models/cycles/steam_power/segs_solar_power_plant/segs_solar_power_plant.eescode"
+  },
+  {
+   "function": "rho_mix_elbow",
+   "type": "FUNCTION",
+   "signature": "(x, rho_l, rho_v)",
+   "model_id": "CSL-0316",
+   "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows/local_losses_idelchik_elbows.eescode"
   },
   {
    "function": "rho_two_phase_homogeneous",
@@ -17016,6 +17618,13 @@
    "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
   },
   {
+   "function": "step_smoother",
+   "type": "FUNCTION",
+   "signature": "(x0, x1, x)",
+   "model_id": "CSL-0316",
+   "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows/local_losses_idelchik_elbows.eescode"
+  },
+  {
    "function": "SUBCOOLINGCHECK",
    "type": "PROCEDURE",
    "signature": "(DELTAt_sc,T_r_ex_cd,t_a_su_cd:NOTE4$,NOTE5$)",
@@ -17035,6 +17644,20 @@
    "signature": "(q,h,d,w,m,t,DELTAtau,Fo_p,time:sum)",
    "model_id": "CSL-0081",
    "path": "models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode"
+  },
+  {
+   "function": "T_pc_CO2_Yang",
+   "type": "FUNCTION",
+   "signature": "(P)",
+   "model_id": "CSL-0317",
+   "path": "models/fundamentals/properties/pseudo_critical_properties/pseudo_critical_properties.eescode"
+  },
+  {
+   "function": "T_pc_cpmax",
+   "type": "FUNCTION",
+   "signature": "(fluid$, P)",
+   "model_id": "CSL-0317",
+   "path": "models/fundamentals/properties/pseudo_critical_properties/pseudo_critical_properties.eescode"
   },
   {
    "function": "T_pseudo_critical_CO2",
@@ -17175,6 +17798,13 @@
    "signature": "(NTU, Cmin)",
    "model_id": "CSL-0090",
    "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
+  },
+  {
+   "function": "UA_series_resistance",
+   "type": "FUNCTION",
+   "signature": "(alpha_hot, area_hot, alpha_cold, area_cold)",
+   "model_id": "CSL-0315",
+   "path": "models/components/heat_exchangers/ua_cecchinato_partload/ua_cecchinato_partload.eescode"
   },
   {
    "function": "velo",
@@ -17378,6 +18008,20 @@
    "signature": "(fluid$,P,M_dot,q,N_p,b,W,L:h,DELTAp)",
    "model_id": "CSL-0111",
    "path": "models/components/heat_exchangers/plate_hx_correlations/plate_hx_correlations.eescode"
+  },
+  {
+   "function": "zeta_LOC_elbow",
+   "type": "FUNCTION",
+   "signature": "(d_hyd, R0, delta, K, rho, mu, m_dot, mode)",
+   "model_id": "CSL-0316",
+   "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows/local_losses_idelchik_elbows.eescode"
+  },
+  {
+   "function": "zeta_tot_elbow",
+   "type": "FUNCTION",
+   "signature": "(d_hyd, R0, delta, K, rho, mu, m_dot, mode)",
+   "model_id": "CSL-0316",
+   "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows/local_losses_idelchik_elbows.eescode"
   },
   {
    "function": "Zukauskas_tube_row_correction",

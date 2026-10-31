@@ -1,0 +1,40 @@
+{=============================================================================
+  Valve overlap from crank-angle valve timing
+  CoolSolve Library model CSL-0276
+ -----------------------------------------------------------------------------
+  Teaching exercise (ULiège MCI, TP5, exercise 2). Inlet and exhaust valve
+  opening/closing crank angles of a four-stroke engine, with TDC at 0 deg of
+  crank angle and counterclockwise rotation, as in the original. The valve
+  overlap VO = EVC - IVO is the crank angle around the exhaust TDC during
+  which both valves are open, as in the original; the same angle is converted
+  to a duration through the engine speed, at rated regime (index 1) and at
+  idle (index 2).
+
+  Inputs : Rpm_1, Rpm_2 and the valve events IVO, IVC, EVO, EVC of both regimes
+  Outputs: VO_1, VO_2 (overlap angles), DELTAt_1, DELTAt_2 (durations)
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MCI TP5 exercise 2 (P. Ngendakumana) - see README.md
+=============================================================================}
+
+"!Data: TDC is 0 deg of crank angle, rotation is counterclockwise, as in the original"
+
+Rpm_1 = 3500                       "engine speed, rated regime [1/min]"
+IVO_1 = -32                        "inlet valve opening, before TDC [deg CA]"
+IVC_1 = 57+180                     "inlet valve closing, as in the original [deg CA]"
+EVO_1 = -52+180                    "exhaust valve opening, as in the original [deg CA]"
+EVC_1 = 21                         "exhaust valve closing, after TDC [deg CA]"
+
+Rpm_2 = 900                        "engine speed, idle [1/min]"
+IVO_2 = -12                        "inlet valve opening, before TDC [deg CA]"
+IVC_2 = 18+180                     "inlet valve closing, as in the original [deg CA]"
+EVO_2 = -21+180                    "exhaust valve opening, as in the original [deg CA]"
+EVC_2 = 8                          "exhaust valve closing, after TDC [deg CA]"
+
+"!Valve overlap"
+
+N_1 = Rpm_1/60                     "engine speed, rated regime [1/s]"
+N_2 = Rpm_2/60                     "engine speed, idle [1/s]"
+VO_1 = EVC_1-IVO_1                 "valve overlap angle, rated regime [deg CA]"
+VO_2 = EVC_2-IVO_2                 "valve overlap angle, idle [deg CA]"
+DELTAt_1 = VO_1/(360*N_1)          "valve overlap duration, rated regime [s]"
+DELTAt_2 = VO_2/(360*N_2)          "valve overlap duration, idle [s]"

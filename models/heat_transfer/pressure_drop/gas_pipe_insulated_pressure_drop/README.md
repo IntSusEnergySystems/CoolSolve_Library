@@ -208,3 +208,6 @@ the nozzle equation identifies `A` rather than predicting a flow.
 - `CSL-0130` `pipe_pressure_drop_correlations` (six explicit single-phase
   friction factors and the two-phase pipe pressure drops; the Colebrook-White
   factor of this file could be replaced by any of them).
+- `CSL-0316` *local_losses_idelchik_elbows* (function library): Reynolds- and
+  geometry-dependent loss coefficient of a bend, instead of the fixed `K` of the
+  fittings table used here.

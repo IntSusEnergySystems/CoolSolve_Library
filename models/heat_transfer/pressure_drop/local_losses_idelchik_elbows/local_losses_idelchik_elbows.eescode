@@ -1,0 +1,397 @@
+{=============================================================================
+  Local pressure loss of curved pipe bends (elbows): Idelchik coefficients,
+  single-phase and two-phase (homogeneous)
+  CoolSolve Library model CSL-0316 (function library, kind = function)
+ -----------------------------------------------------------------------------
+  Loss coefficient zeta of a circular bend of angle delta, bend radius R0 and
+  diameter d_hyd as a function of the Reynolds number: laminar, intermediate and
+  high-Re branches blended with a cubic step (zeta_LOC), roughness correction
+  factor CF_fri from an equivalent straight arc (Swamee-Jain), zeta_tot, and
+  dP = zeta_tot*rho*v^2/2; two-phase through a mixture density. One FUNCTION
+  per element; the argument "mode" selects the blending as written in the
+  original (1) or with the step arguments reordered (2, see README).
+  Units  : SI (m, kg/s, kg/m^3, Pa.s, deg, Pa)
+  Source : LaboThapPy, labothappy/correlations/pressure_drop/local_losses/
+           curved_elbow.py, commit f03f7f47, Elise Neven (ULiege), Apache-2.0
+           (port of the Modelica Dissipation library CurvedBend_LDP; Idelchik,
+           Handbook of Hydraulic Resistance) - see README.md
+  Status : verified against the Python source (re-run); mode 1 reproduces the
+           source, whose step_smoother calls look argument-swapped (README)
+=============================================================================}
+
+"!--- Cubic smoothing step"
+
+FUNCTION step_smoother(x0, x1, x)
+{STEP_SMOOTHER - cubic Hermite step: 0 for x <= x0, 1 for x >= x1,
+  t^2*(3 - 2*t) with t = (x - x0)/(x1 - x0) between (as the stepsmoother
+  helper of the original, labothappy/toolbox/helper_function/step_smoother.py).
+ x0, x1, x [-] (same unit) -> weight [-]}
+
+  IF x <= x0 THEN
+    step_smoother = 0
+  ELSE
+    IF x >= x1 THEN
+      step_smoother = 1
+    ELSE
+      t = (x - x0)/(x1 - x0)
+      step_smoother = t^2*(3 - 2*t)
+    ENDIF
+  ENDIF
+END
+
+"!--- Idelchik coefficients of a curved bend"
+
+FUNCTION Re_lam_limit_elbow(K, d_hyd)
+{RE_LAM_LIMIT_ELBOW - Reynolds number at the laminar/transition boundary of a
+ bend, falling with the relative roughness (as the original, "based on
+ Idelchik"):
+  Re = MIN(6500, MAX(100, 754*EXP(0.0065/MAX(K/d_hyd, 0.007))))
+ K [m] absolute roughness, d_hyd [m] -> Re [-]
+Taken from: LaboThapPy commit f03f7f47, curved_elbow.py,
+ compute_re_lam_transition, Apache-2.0}
+
+  k_rel = K/MAX(1E-12, d_hyd)
+  Re_lam_limit_elbow = MIN(6500, MAX(100, 754*EXP(0.0065/MAX(k_rel, 0.007))))
+END
+
+FUNCTION A1_elbow(delta)
+{A1_ELBOW - angle coefficient A1 of the bend (as the original):
+  A1 = 0.95*SIN(delta/2)^2 + 2.05*SIN(delta/2)^4
+ delta [deg] deflection angle -> A1 [-]
+Original: Idelchik, I. E., Handbook of Hydraulic Resistance (1986).
+Taken from: LaboThapPy commit f03f7f47, curved_elbow.py,
+ compute_idelchik_coefficients, Apache-2.0}
+
+  s = SIN(ABS(delta)/2)
+  A1_elbow = MAX(1E-12, 0.95*s^2 + 2.05*s^4)
+END
+
+FUNCTION A2_elbow(R0_d)
+{A2_ELBOW - laminar coefficient A2 of the bend, piecewise constant in the
+ radius ratio R0/d_hyd (as the original): 600 for R0/d > 2, 1000 for > 1,
+ 3000 for > 0.7, 6000 for > 0.55, 4000 below.
+ R0_d [-] -> A2 [-]
+Taken from: LaboThapPy commit f03f7f47, curved_elbow.py,
+ compute_idelchik_coefficients, Apache-2.0}
+
+  IF R0_d > 2 THEN
+    A2_elbow = 600
+  ELSE
+    IF R0_d > 1 THEN
+      A2_elbow = 1000
+    ELSE
+      IF R0_d > 0.7 THEN
+        A2_elbow = 3000
+      ELSE
+        IF R0_d > 0.55 THEN
+          A2_elbow = 6000
+        ELSE
+          A2_elbow = 4000
+        ENDIF
+      ENDIF
+    ENDIF
+  ENDIF
+END
+
+FUNCTION B1_elbow(R0_d)
+{B1_ELBOW - radius coefficient B1 of the bend (as the original):
+  B1 = 0.21*(R0/d)^(-0.5) for R0/d >= 1, 0.21*(R0/d)^(-2.5) below
+ R0_d [-] -> B1 [-]
+Taken from: LaboThapPy commit f03f7f47, curved_elbow.py,
+ compute_idelchik_coefficients, Apache-2.0}
+
+  IF R0_d >= 1 THEN
+    B1 = 0.21*R0_d^(-0.5)
+  ELSE
+    B1 = 0.21*R0_d^(-2.5)
+  ENDIF
+  B1_elbow = MAX(1E-12, B1)
+END
+
+FUNCTION k_Re_elbow(Re, R0_d)
+{K_RE_ELBOW - Reynolds correction of the intermediate regime (as the original,
+ "Idelchik"): 11.5/Re^0.19 for R0/d > 0.7, 5.45/Re^0.131 for 0.55 <= R0/d <= 0.7,
+ 1 + 4400/Re below.
+ Re [-], R0_d [-] -> k_Re [-]
+Taken from: LaboThapPy commit f03f7f47, curved_elbow.py,
+ compute_reynolds_correction_turbulent, Apache-2.0}
+
+  IF R0_d > 0.7 THEN
+    k_Re_elbow = 11.5/MAX(1E-12, Re)^0.19
+  ELSE
+    IF R0_d >= 0.55 THEN
+      k_Re_elbow = 5.45/MAX(1E-12, Re)^0.131
+    ELSE
+      k_Re_elbow = 1 + 4400/MAX(1E-12, Re)
+    ENDIF
+  ENDIF
+END
+
+"!--- Reynolds number, friction factor of the equivalent straight pipe"
+
+FUNCTION Re_elbow(m_dot, d_hyd, rho, mu)
+{RE_ELBOW - Reynolds number of the flow in the bend, as compute_reynolds of the
+ original (G = rho*v = |m_dot|/A, floor of 1):
+  Re = MAX(1, |m_dot|/A*d_hyd/mu),  A = PI*d_hyd^2/4
+ m_dot [kg/s], d_hyd [m], rho [kg/m^3], mu [Pa.s] -> Re [-]}
+
+  v = ABS(m_dot)/MAX(1E-12, rho*PI*d_hyd^2/4)
+  Re_elbow = MAX(1, rho*v*d_hyd/MAX(1E-12, mu))
+END
+
+FUNCTION f_Swamee_Jain_elbow(K, d_hyd, Re)
+{F_SWAMEE_JAIN_ELBOW - Darcy friction factor of the straight pipe used for the
+ roughness correction: Swamee and Jain (1976), the same formula as f_Swamee_Jain
+ of CSL-0130 (copied under another name: function names are unique in the
+ library and $INCLUDE is not available).
+  f = 0.25/(LOG10(K/(3.7*d_hyd) + 5.74/Re^0.9))^2
+ K [m], d_hyd [m], Re [-] -> f [-]
+Original: Swamee, P. K. and A. K. Jain, J. Hydraulics Div. ASCE 102(HY5), 1976.
+Taken from: LaboThapPy commit f03f7f47, pipe_DP.py, friction_factor_swamee_jain}
+
+  f_Swamee_Jain_elbow = 0.25/(LOG10(K/(3.7*d_hyd) + 5.74/Re^0.9))^2
+END
+
+"!--- Local resistance coefficient, roughness correction, total coefficient"
+
+FUNCTION zeta_LOC_elbow(d_hyd, R0, delta, K, rho, mu, m_dot, mode)
+{ZETA_LOC_ELBOW - local resistance coefficient of a curved bend, without the
+ roughness correction (as compute_zeta_LOC of the original).
+  zeta_base = A1*B1*C1 (C1 = 1);  zeta_lam = A2/Re + zeta_base
+  zeta_inter = k_Re*zeta_base;    zeta_high = zeta_base
+  zeta_mid = (1 - s_lam)*zeta_lam + s_lam*zeta_inter
+  zeta_LOC = (1 - s_turb)*zeta_mid + s_turb*zeta_high
+ Blending weights (Re_lam = Re_lam_limit_elbow, 4E4 and 3E5 are the limits of
+ the original):
+  mode = 1: s_lam = step_smoother(Re, Re_lam, 4E4),
+            s_turb = step_smoother(Re, 4E4, 3E5)   (argument order of the original)
+  mode = 2: s_lam = step_smoother(Re_lam, 4E4, Re),
+            s_turb = step_smoother(4E4, 3E5, Re)   (reordered, see README)
+ d_hyd, R0 [m], delta [deg], K [m], rho [kg/m^3], mu [Pa.s], m_dot [kg/s],
+ mode [-] -> zeta_LOC [-]
+Original: Idelchik, Handbook of Hydraulic Resistance; Modelica Dissipation
+ library, CurvedBend_LDP.
+Taken from: LaboThapPy commit f03f7f47, curved_elbow.py, compute_zeta_LOC,
+ Apache-2.0}
+
+  Re = Re_elbow(m_dot, d_hyd, rho, mu)
+  R0_d = R0/MAX(1E-12, d_hyd)
+  zeta_base = A1_elbow(delta)*B1_elbow(R0_d)*1
+  Re_lam = Re_lam_limit_elbow(K, d_hyd)
+  zeta_lam = A2_elbow(R0_d)/MAX(1E-12, Re) + zeta_base
+  zeta_inter = MAX(1E-12, k_Re_elbow(Re, R0_d)*zeta_base)
+  IF mode = 1 THEN
+    s_lam = step_smoother(Re, Re_lam, 4E4)
+    s_turb = step_smoother(Re, 4E4, 3E5)
+  ELSE
+    s_lam = step_smoother(Re_lam, 4E4, Re)
+    s_turb = step_smoother(4E4, 3E5, Re)
+  ENDIF
+  zeta_mid = (1 - s_lam)*zeta_lam + s_lam*zeta_inter
+  zeta_LOC_elbow = (1 - s_turb)*zeta_mid + s_turb*zeta_base
+END
+
+FUNCTION CF_fri_elbow(zeta_LOC, d_hyd, R0, delta, K, rho, mu, m_dot, mode)
+{CF_FRI_ELBOW - roughness correction factor of the bend (as compute_cf_fri of
+ the original):
+  L_arc = |delta|*PI/180*R0,  f = Swamee-Jain factor at Re
+  raw = MIN(1.4, (f*L_arc/d_hyd)/zeta_LOC)
+  CF_fri = 1 + s*raw
+ Weight s, with Re_lam = Re_lam_limit_elbow and 6500 the laminar limit of the
+ original:
+  mode = 1: s = step_smoother(Re, 6500, Re_lam)    (argument order of the original)
+  mode = 2: s = step_smoother(Re_lam, 6500, Re)    (reordered, see README)
+ zeta_LOC [-], d_hyd, R0 [m], delta [deg], K [m], rho [kg/m^3], mu [Pa.s],
+ m_dot [kg/s], mode [-] -> CF_fri [-]
+Taken from: LaboThapPy commit f03f7f47, curved_elbow.py, compute_cf_fri,
+ Apache-2.0}
+
+  Re = Re_elbow(m_dot, d_hyd, rho, mu)
+  L_arc = ABS(delta)*PI/180*R0
+  f_fri = f_Swamee_Jain_elbow(K, d_hyd, Re)
+  raw_effect = MIN(1.4, (f_fri*L_arc/MAX(1E-12, d_hyd))/MAX(1E-12, zeta_LOC))
+  Re_lam = Re_lam_limit_elbow(K, d_hyd)
+  IF mode = 1 THEN
+    s = step_smoother(Re, 6500, Re_lam)
+  ELSE
+    s = step_smoother(Re_lam, 6500, Re)
+  ENDIF
+  CF_fri_elbow = 1 + s*raw_effect
+END
+
+FUNCTION zeta_tot_elbow(d_hyd, R0, delta, K, rho, mu, m_dot, mode)
+{ZETA_TOT_ELBOW - total loss coefficient of a curved bend, zeta_tot =
+ MAX(1E-12, CF_fri)*zeta_LOC (as compute_zeta_tot of the original).
+ d_hyd, R0 [m], delta [deg], K [m], rho [kg/m^3], mu [Pa.s], m_dot [kg/s],
+ mode [-] (1 as in the original, 2 reordered steps) -> zeta_tot [-]
+Taken from: LaboThapPy commit f03f7f47, curved_elbow.py, compute_zeta_tot,
+ Apache-2.0}
+
+  zeta_LOC = zeta_LOC_elbow(d_hyd, R0, delta, K, rho, mu, m_dot, mode)
+  CF_fri = CF_fri_elbow(zeta_LOC, d_hyd, R0, delta, K, rho, mu, m_dot, mode)
+  zeta_tot_elbow = MAX(1E-12, CF_fri)*zeta_LOC
+END
+
+"!--- Pressure drop, single-phase and two-phase"
+
+FUNCTION dP_elbow(d_hyd, R0, delta, K, rho, mu, m_dot, mode)
+{DP_ELBOW - pressure drop of a curved bend in single-phase flow (as
+ pressure_drop_curved_elbow of the original):
+  dP = zeta_tot*rho*v^2/2,  v = |m_dot|/(rho*PI*d_hyd^2/4)
+ Adiabatic, constant diameter, no elevation change. For a two-phase inlet give
+ the mixture density and viscosity of dP_elbow_two_phase.
+ d_hyd, R0 [m], delta [deg], K [m], rho [kg/m^3], mu [Pa.s], m_dot [kg/s],
+ mode [-] -> dP [Pa]
+Original: Idelchik (1986); Modelica Dissipation library, CurvedBend_LDP.
+Taken from: LaboThapPy commit f03f7f47, curved_elbow.py,
+ pressure_drop_curved_elbow, Apache-2.0}
+
+  v = ABS(m_dot)/MAX(1E-12, rho*PI*d_hyd^2/4)
+  zeta = zeta_tot_elbow(d_hyd, R0, delta, K, rho, mu, m_dot, mode)
+  dP_elbow = zeta*0.5*rho*v^2
+END
+
+FUNCTION rho_mix_elbow(x, rho_l, rho_v)
+{RHO_MIX_ELBOW - mixture density used by the original for a two-phase inlet:
+  alpha = 1/(1 + (rho_v/rho_l)*(1 - x)/x)    (homogeneous void fraction)
+  rho = 1/(alpha/rho_v + (1 - alpha)/rho_l)  (formula as in the original; it
+  is not the homogeneous density 1/(x/rho_v + (1 - x)/rho_l), see README)
+ x [-], rho_l, rho_v [kg/m^3] -> rho [kg/m^3]
+Taken from: LaboThapPy commit f03f7f47, curved_elbow.py,
+ pressure_drop_curved_elbow (and void_fraction_homogeneous), Apache-2.0}
+
+  alpha = 1/(1 + (rho_v/rho_l)*(1 - x)/x)
+  rho_mix_elbow = 1/(alpha/rho_v + (1 - alpha)/rho_l)
+END
+
+FUNCTION dP_elbow_two_phase(d_hyd, R0, delta, K, x, rho_l, rho_v, mu_l, m_dot, mode)
+{DP_ELBOW_TWO_PHASE - pressure drop of a curved bend with a saturated two-phase
+ inlet (0 < x < 1), as the two-phase branch of pressure_drop_curved_elbow of the
+ original: density rho_mix_elbow, viscosity of the saturated liquid.
+ d_hyd, R0 [m], delta [deg], K [m], x [-], rho_l, rho_v [kg/m^3], mu_l [Pa.s],
+ m_dot [kg/s], mode [-] -> dP [Pa]
+Taken from: LaboThapPy commit f03f7f47, curved_elbow.py,
+ pressure_drop_curved_elbow, Apache-2.0}
+
+  rho = rho_mix_elbow(x, rho_l, rho_v)
+  dP_elbow_two_phase = dP_elbow(d_hyd, R0, delta, K, rho, mu_l, m_dot, mode)
+END
+
+"!--- Demonstration program"
+
+"Case A - water 26.85 degC (300 K), 3 bar, 90-degree bend, R0/D = 1, K = 45 um, 0.1 kg/s
+ (the docstring example of the original, with the correct (P, T) argument order)"
+fluidA$ = 'Water'
+P_A = 3E5
+T_A = 26.85
+D_A = 0.01
+R0_A = 0.01
+delta_A = 90
+K_A = 45E-6
+M_dot_A = 0.1
+rho_A = density(fluidA$, P=P_A, T=T_A)
+mu_A = viscosity(fluidA$, P=P_A, T=T_A)
+Re_A = Re_elbow(M_dot_A, D_A, rho_A, mu_A)
+zeta_LOC_A1 = zeta_LOC_elbow(D_A, R0_A, delta_A, K_A, rho_A, mu_A, M_dot_A, 1)
+CF_A1 = CF_fri_elbow(zeta_LOC_A1, D_A, R0_A, delta_A, K_A, rho_A, mu_A, M_dot_A, 1)
+zeta_A1 = zeta_tot_elbow(D_A, R0_A, delta_A, K_A, rho_A, mu_A, M_dot_A, 1)
+dP_A1 = dP_elbow(D_A, R0_A, delta_A, K_A, rho_A, mu_A, M_dot_A, 1)
+zeta_LOC_A2 = zeta_LOC_elbow(D_A, R0_A, delta_A, K_A, rho_A, mu_A, M_dot_A, 2)
+CF_A2 = CF_fri_elbow(zeta_LOC_A2, D_A, R0_A, delta_A, K_A, rho_A, mu_A, M_dot_A, 2)
+zeta_A2 = zeta_tot_elbow(D_A, R0_A, delta_A, K_A, rho_A, mu_A, M_dot_A, 2)
+dP_A2 = dP_elbow(D_A, R0_A, delta_A, K_A, rho_A, mu_A, M_dot_A, 2)
+
+"Case B - water at 101325 Pa and h = 1E5 J/kg, 10 mm pipe, 90-degree bend R0 = 0.5 m, smooth, 0.5 kg/s
+ (the elbow of labothappy/component/Examples/pipe/pipe_example.py)"
+P_B = 101325
+h_B = 1E5
+D_B = 0.01
+R0_B = 0.5
+delta_B = 90
+K_B = 0
+M_dot_B = 0.5
+rho_B = density(fluidA$, P=P_B, h=h_B)
+mu_B = viscosity(fluidA$, P=P_B, h=h_B)
+Re_B = Re_elbow(M_dot_B, D_B, rho_B, mu_B)
+zeta_B1 = zeta_tot_elbow(D_B, R0_B, delta_B, K_B, rho_B, mu_B, M_dot_B, 1)
+dP_B1 = dP_elbow(D_B, R0_B, delta_B, K_B, rho_B, mu_B, M_dot_B, 1)
+zeta_B2 = zeta_tot_elbow(D_B, R0_B, delta_B, K_B, rho_B, mu_B, M_dot_B, 2)
+dP_B2 = dP_elbow(D_B, R0_B, delta_B, K_B, rho_B, mu_B, M_dot_B, 2)
+
+"Case C - R410A at 400 kPa, x = 0.9, 10 mm pipe, 90-degree bend R0 = 0.5 m, smooth, 0.05 kg/s
+ (the two-phase conditions of pipe_example.py; two-phase homogeneous branch)"
+fluidC$ = 'R410A'
+P_C = 4E5
+x_C = 0.9
+D_C = 0.01
+R0_C = 0.5
+delta_C = 90
+K_C = 0
+M_dot_C = 0.05
+rho_l_C = density(fluidC$, P=P_C, x=0)
+rho_v_C = density(fluidC$, P=P_C, x=1)
+mu_l_C = viscosity(fluidC$, P=P_C, x=0)
+rho_mix_C = rho_mix_elbow(x_C, rho_l_C, rho_v_C)
+Re_C = Re_elbow(M_dot_C, D_C, rho_mix_C, mu_l_C)
+dP_C1 = dP_elbow_two_phase(D_C, R0_C, delta_C, K_C, x_C, rho_l_C, rho_v_C, mu_l_C, M_dot_C, 1)
+dP_C2 = dP_elbow_two_phase(D_C, R0_C, delta_C, K_C, x_C, rho_l_C, rho_v_C, mu_l_C, M_dot_C, 2)
+rho_hom_C = 1/(x_C/rho_v_C + (1 - x_C)/rho_l_C)   "homogeneous density 1/(x/rho_v + (1 - x)/rho_l) for comparison [kg/m^3]"
+
+"Case D - angle and radius coefficients (A1, A2, B1) of the bend"
+A1_30 = A1_elbow(30)
+A1_45 = A1_elbow(45)
+A1_90 = A1_elbow(90)
+A1_180 = A1_elbow(180)
+A2_R3 = A2_elbow(3)
+A2_R15 = A2_elbow(1.5)
+A2_R085 = A2_elbow(0.85)
+A2_R06 = A2_elbow(0.6)
+A2_R04 = A2_elbow(0.4)
+B1_R3 = B1_elbow(3)
+B1_R04 = B1_elbow(0.4)
+Re_lam_K0 = Re_lam_limit_elbow(0, 0.02)
+Re_lam_K1e4 = Re_lam_limit_elbow(1E-4, 0.02)
+Re_lam_K1e3 = Re_lam_limit_elbow(1E-3, 0.02)
+
+"Case E - zeta_tot against the Reynolds number: 20 mm bend, 90 degrees, K = 0.1 mm, rho = 1000 kg/m^3,
+ mu = 1E-3 Pa-s, radius ratios R0/D = 3, 1.5, 0.85, 0.6, 0.4; mode 1 (as in the original) and 2"
+rho_E = 1000
+mu_E = 1E-3
+D_E = 0.02
+K_E = 1E-4
+delta_E = 90
+A_E = PI*D_E^2/4
+Re_S[1] = 300
+Re_S[2] = 1E3
+Re_S[3] = 3E3
+Re_S[4] = 1E4
+Re_S[5] = 1E5
+Re_S[6] = 5E5
+DUPLICATE j = 1, 6
+  M_dot_S[j] = Re_S[j]*mu_E*A_E/D_E
+END
+R0_E1 = 3*D_E
+DUPLICATE j = 1, 6
+  zt_g1_m1[j] = zeta_tot_elbow(D_E, R0_E1, delta_E, K_E, rho_E, mu_E, M_dot_S[j], 1)
+  zt_g1_m2[j] = zeta_tot_elbow(D_E, R0_E1, delta_E, K_E, rho_E, mu_E, M_dot_S[j], 2)
+END
+R0_E2 = 1.5*D_E
+DUPLICATE j = 1, 6
+  zt_g2_m1[j] = zeta_tot_elbow(D_E, R0_E2, delta_E, K_E, rho_E, mu_E, M_dot_S[j], 1)
+  zt_g2_m2[j] = zeta_tot_elbow(D_E, R0_E2, delta_E, K_E, rho_E, mu_E, M_dot_S[j], 2)
+END
+R0_E3 = 0.85*D_E
+DUPLICATE j = 1, 6
+  zt_g3_m1[j] = zeta_tot_elbow(D_E, R0_E3, delta_E, K_E, rho_E, mu_E, M_dot_S[j], 1)
+  zt_g3_m2[j] = zeta_tot_elbow(D_E, R0_E3, delta_E, K_E, rho_E, mu_E, M_dot_S[j], 2)
+END
+R0_E4 = 0.6*D_E
+DUPLICATE j = 1, 6
+  zt_g4_m1[j] = zeta_tot_elbow(D_E, R0_E4, delta_E, K_E, rho_E, mu_E, M_dot_S[j], 1)
+  zt_g4_m2[j] = zeta_tot_elbow(D_E, R0_E4, delta_E, K_E, rho_E, mu_E, M_dot_S[j], 2)
+END
+R0_E5 = 0.4*D_E
+DUPLICATE j = 1, 6
+  zt_g5_m1[j] = zeta_tot_elbow(D_E, R0_E5, delta_E, K_E, rho_E, mu_E, M_dot_S[j], 1)
+  zt_g5_m2[j] = zeta_tot_elbow(D_E, R0_E5, delta_E, K_E, rho_E, mu_E, M_dot_S[j], 2)
+END

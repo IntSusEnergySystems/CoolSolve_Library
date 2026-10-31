@@ -1,0 +1,44 @@
+{
+  "id": "CSL-0317",
+  "name": "pseudo_critical_properties",
+  "title": "Pseudo-critical temperature and pseudo-boiling bounds of supercritical fluids (function library)",
+  "summary": "Three EES routines for the pseudo-critical point above the critical pressure: the pseudo-critical temperature as the temperature of maximum cp (500-point scan, any CoolProp fluid), the pseudo-boiling transition bounds T_minus and T_plus of Banuti's linear model, and the Yang and Yang CO2 polynomial of the pseudo-critical temperature against pressure.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "pseudo_critical_properties.eescode",
+  "fluids": ["R744", "Water", "R134a", "Propane"],
+  "tags": ["pseudo-critical", "supercritical", "Widom line", "pseudo-boiling", "cp maximum", "CO2", "property utility", "function library"],
+  "language_features": ["functions", "procedures", "REPEAT/UNTIL", "property functions", "string arguments"],
+  "stats": {"n_equations": 52, "largest_block": 2},
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/correlations/properties/supercritical.py",
+    "candidate_id": "LTP-049",
+    "authors": ["Elise Neven"],
+    "url": "https://github.com/PyLaboThap/LaboThapPy/blob/f03f7f473b190d0c0b5e296132b50565e89e4421/labothappy/correlations/properties/supercritical.py",
+    "license": "Apache-2.0 (LaboThapPy LICENSE.txt); translation published under the library licence",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "LaboThapPy commit f03f7f47 (ULiège Thermodynamics Laboratory). References cited by the original: D. Banuti, The Latent Heat of Supercritical Fluids, Period. Polytech. Chem. Eng. 63(2), 2019, 270-275; Z. Yang and J. Yang, Investigation on the Properties of Supercritical CO2 Fluid and its Heat Transfer Characteristics (2012). Neither paper was consulted."
+  },
+  "verification": {
+    "summary": "Re-run of the LaboThapPy functions (commit f03f7f47, CoolProp 8.0.0) on the 9 pressure/fluid demonstration cases plus 3 CO2-correlation cases: compare_solution.py, 36 common variables, 0 differ at rtol=1e-06 (largest 9.47e-08 relative, 3.1e-06 K absolute). A further ten fluid/pressure cases agree within 1.2e-05 K.",
+    "checks": ["source-rerun"],
+    "reference": "LaboThapPy supercritical.py (pseudo_critical_temperature, pseudo_boiling_bounds, pseudo_critical_temperature_CO2) run in a throw-away virtualenv; values converted from K to degC",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 9.47e-08,
+    "notes": "compare_solution.py --rtol 1e-6: 36 common variables, 0 differ; --rtol 1e-9: T_minus_2 (9.47e-08) and T_plus_2 (8.32e-08) differ, 3.05e-06 K and 3.08e-06 K absolute (8 MPa, near the critical pressure, not investigated). The 16 CoolSolve-only variables are inputs and T_max constants. No published values were compared."
+  },
+  "missing_features": [],
+  "related": ["CSL-0104", "CSL-0144"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-10-31", "action": "added (T-FUNC card C-365, LTP-049)", "by": "Claude (Sonnet 5.5) for S. Quoilin"}
+  ]
+}

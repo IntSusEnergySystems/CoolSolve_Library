@@ -213,3 +213,4 @@ No student names or personal data involved.
 - CSL-0144 (`sco2_recompression_brayton`): sCO2 cycle whose recuperators are specified by a terminal temperature difference, like this model.
 - `CSL-0250` *cascade_heat_pump_geothermal_dh*: cycle model whose four sectioned exchangers reuse the pinch-imposed three-zone balance idea of this component.
 - `CSL-0252` *orc_double_stage_kirchstockach*: double-stage ORC whose air-cooled condensers use the same three-zone pinch balance, written at its binding section boundary.
+- `CSL-0315` *ua_cecchinato_partload*: the Cecchinato et al. (2010) UA part-load scaling law (function library, TESPy).

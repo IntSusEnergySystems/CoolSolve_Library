@@ -1,0 +1,85 @@
+{
+  "id": "CSL-0315",
+  "name": "ua_cecchinato_partload",
+  "title": "UA part-load scaling after Cecchinato et al. (function library, TESPy)",
+  "summary": "Function library for the part-load scaling of the overall conductance UA of a heat exchanger: the Cecchinato et al. (2010) law UA/UA_ref = (1+x)/(m_cold^-Re_cold + x*m_hot^-Re_hot), x = (alpha_cold/alpha_hot)*(A_cold/A_hot), with the two-resistance series conductance it is derived from and the building blocks of a sectioned UA. The main program evaluates the factor at the off-design points of the TESPy SectionedHeatExchanger doctest and of the MovingBoundaryHeatExchanger tests, and applies it to a steam condenser cooled by air (design with an imposed pinch, then off design with UA = UA_ref*f_UA).",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "ua_cecchinato_partload.eescode",
+  "fluids": [
+    "Water",
+    "Air"
+  ],
+  "tags": [
+    "heat exchanger",
+    "UA",
+    "part load",
+    "off-design",
+    "Reynolds exponent",
+    "condenser",
+    "sectioned heat exchanger",
+    "pinch",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE (block form)",
+    "DUPLICATE arrays",
+    "SUM / MIN over array ranges",
+    "property functions",
+    "initials file"
+  ],
+  "stats": {
+    "n_equations": 230,
+    "largest_block": 93
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/src/tespy/components/heat_exchangers/sectioned.py (UA_cecchinato_func, _UA_cecchinato_residual); tests/test_components/test_heat_exchangers.py (test_MovingBoundaryHeatExchanger_offdesign_cecchinato_*)",
+    "candidate_id": "TSP-032",
+    "authors": [
+      "Francesco Witte (TESPy lead developer)",
+      "Luca Cecchinato, Manuel Chiarello and Marco Corradi (Cecchinato et al. 2010)"
+    ],
+    "url": "https://github.com/oemof/tespy/blob/19425523ff7ecd67b36e7b90efe04a9480a9ebe3/src/tespy/components/heat_exchangers/sectioned.py",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "TESPy commit 19425523 (MIT, Witte & Tuschy). Scientific reference: L. Cecchinato, M. Chiarello, M. Corradi, 'A simplified method to evaluate the seasonal energy performance of water chillers', Int. J. Thermal Sci. 49 (2010) 1776-1786, doi 10.1016/j.ijthermalsci.2010.04.010 (paper itself not consulted; formula taken from the TESPy source and docstring). Translation published under the CoolSolve_Library MIT licence (decision D3)."
+  },
+  "verification": {
+    "summary": "Compared with a re-run of the TESPy SectionedHeatExchanger doctest (design, off design m = 0.8 and three more flows) and of the three MovingBoundaryHeatExchanger Cecchinato tests with CoolProp R410A instead of REFPROP: 26 common variables, 0 differ at rtol=0.001, max 1.35e-05 (UA). Two-resistance derivation checked to 2e-16.",
+    "checks": [
+      "source-rerun",
+      "analytical"
+    ],
+    "reference": "TESPy 0.11.3.dev0 commit 19425523 re-run in a throw-away venv (CoolProp 8.0.0): SectionedHeatExchanger class doctest (design, UA_cecchinato_hc off design at m = 0.5, 0.6, 0.8, 1.2) and the three MovingBoundary Cecchinato tests (REFPROP replaced by HEOS R410A); 26 values compared with tools/compare_solution.py. The paper values were not checked.",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 1.35e-05,
+    "notes": "compare_solution.py --all: 26 common variables, 0 differ (rtol=0.001), max 1.35e-05 (UA_1 and UA_sum_2: sectioned UA 273452 vs 273456 W/K, 6+1+6 sections instead of the 52 of TESPy). f_UA values agree to <= 2.9e-11 (same formula, mass-flow ratios from the TESPy run). The REFPROP-based test asserts td_pinch 7.61134 / 4.662423 were not run (REFPROP missing); the HEOS re-run gives 7.611332 / 4.662363."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0137",
+    "CSL-0138",
+    "CSL-0014",
+    "CSL-0127",
+    "CSL-0013"
+  ],
+  "related_external": [
+    "TESPy SectionedHeatExchanger and MovingBoundaryHeatExchanger, parameter group UA_cecchinato_hc (github.com/oemof/tespy, commit 19425523)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-31",
+      "action": "added (T-FUNC card C-363, batch B-12/B-16: TESPy TSP-032, Cecchinato UA part-load law)",
+      "by": "Claude worker for S. Quoilin"
+    }
+  ]
+}

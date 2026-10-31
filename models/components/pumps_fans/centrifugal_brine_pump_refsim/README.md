@@ -12,9 +12,10 @@ from the BrineProp library procedure `BRINEPROP` (18-coefficient polynomials
 in temperature and antifreeze concentration, coefficient tables `Brine1` /
 `Brine2`), so the temperature rise across the pump follows from the shaft
 power. This model comes from the ULiège model bank (Laborelec toolkit
-lineage); a sibling parameter-identification (ParamID) model of the same
-pump exists in the collection (inventory `TM-0486`, a separate, more
-detailed model).
+lineage); its sibling parameter-identification (ParamID) model from the same
+collection is shipped in this folder as the variant
+`centrifugal_brine_pump_refsim_paramid.eescode` (inventory `TM-0486`, merged
+here — see *ParamID variant* below).
 
 | | |
 |---|---|
@@ -81,6 +82,51 @@ Default run (see table above): the pump raises the pressure by 0.498 bar
 15.4 % and the brine leaves 0.081 K warmer — the low flow factor
 $\phi$ = 0.0022 (1 m³/h against a 0.133 m impeller at 1300 rpm) sits on the
 far left of the characteristics, hence the low efficiency.
+
+## ParamID variant
+
+`centrifugal_brine_pump_refsim_paramid.eescode` (inventory candidate
+`TM-0486`, same authors, same date, `Centrifugal_Brine_Pump_ParamID_EES_Model_VTJLVL080219.EES`)
+is the parameter-identification sibling of the reference simulation model:
+four measured operating points
+
+| Point | V̇ [m³/h] | Δp [Pa] | εs [-] |
+|---|---:|---:|---:|
+| 0 (nominal) | 2 | 87 000 | 0.22 |
+| 1 | 6 | 82 000 | 0.47 |
+| 2 | 10 | 72 000 | 0.54 |
+| 3 | 16 | 46 000 | 0.50 |
+
+at 1750 rev/min and 20 °C, pure water (`X_brine` = 0 %, `brine$` = 'EG' at
+zero concentration — identified from the stored density 998.4234397 kg/m³;
+the next BrineProp fluid is 8·10⁻⁵ away) identify the 8 characteristic
+coefficients from the same per-point equations as the main file (square
+system: 4 points × 2 characteristic polynomials = 8 equations, 8 unknown
+coefficients). The identified values are exactly the parameters of the main
+file, which carries them rounded: 1.179665, −1.466436, −613.9620, −6002.251;
+0.0158468, 0.243631, 69.4246, −2097.963 against 1.18, −1.466, −614, −6002;
+0.01585, 0.2436, 69.42, −2098.
+
+Verification (`compare_solution.py` against the EES stored solution of the
+ParamID file): **88 common variables, 0 differ (rtol=0.001)**, maximum
+relative deviation 9.99·10⁻¹¹ (`V_dot_pump3`); only in EES: 12 dead leftovers
+of the variable-information table (11 fan variables `A, b, Phi, V_dot, U, D,
+N, psi, rpm, v, M_dot` and `D_loop_equ`), absent from the equations; only in
+CoolSolve: `brine$` and `pi`, as for the main file. The variant has its own
+companion tables (`centrifugal_brine_pump_refsim_paramid-Brine1/Brine2/Units.csv`,
+same content as the main file's) and is regression-tested as
+`CSL-0072:paramid`.
+
+Two notes on the original: (1) the stored inputs differ from the input
+comments of the file (`rpm_pump` = 1750 stored vs "1300" in the comment;
+`t_brine` = 20 vs "25"; `X_brine` = 0 vs "0" agreeing; the stored values are
+used); (2) the short description and the outputs list of the original
+announce a *network* equivalent diameter `D_loop_equ` ("the first given point
+is used to identify the water network equivalent section"), but the equations
+of the file contain no network equation. The stored value 0.00731998 m is
+consistent with Δp = ρV̇²/(2A_loop²) at the nominal point (A_loop = πD²/4:
+86 999.997 Pa against the stored 87 000 Pa, rel −3.4·10⁻⁸) — a leftover of an
+earlier version of the equations; the variant carries no network equation.
 
 <!-- FIGURE (added by the maintainer, docs/model_workflow.md §7): pump characteristics
       psi(phi) and epsilon_s(phi) with the operating point, or a Parametric sweep of
@@ -163,6 +209,30 @@ folder.
   inside the procedure, not from model depth. Moved down to **1** as
   pre-assigned by the roadmap card: a small, fully explicit single-component
   model.
+- **2026-10-31 — ParamID variant added** (roadmap card C-341, T-IMPORT of
+  `TM-0486`, merged here per the card decision instead of a new folder; the
+  pre-assigned ID CSL-0301 stays unused): `Centrifugal_Brine_Pump_ParamID_EES_Model_VTJLVL080219.EES`
+  extracted with `tools/ees_extract.py` (EES 7.888, unit system already
+  SI-C-Pa-J, no tables, only warning none). The equations are the per-point
+  pump equations of the main file repeated for 4 measured points, with the 8
+  characteristic coefficients as unknowns; the diagram-window inputs
+  (`rpm_pump`=1750, `t_brine`=20, `X_brine`=0, `D_pump`=0.1333, `brine$` and
+  the 12 measured values `DELTAP_pump*`, `V_dot_pump_mh*`, `epsilon_s_pump*`)
+  were completed from the stored solution (the input comments of the
+  original say 1300 rev/min, 25 °C, 25 % — the stored run differs, noted in
+  the README); `brine$='EG'` identified from the stored density as for the
+  main file. `BRINEPROP` copied as in the main file; own companion tables
+  (copies with the `_paramid` stem, same content). The 12 dead variables of
+  the stored solution (11 fan variables + `D_loop_equ`) are not carried
+  over; the commented-out coefficient values of the original's PARAMETERS
+  section were dropped (they are the identified outputs, quoted in the
+  README). One quoted comment of the transcription that opened with `"{`
+  made CoolSolve drop everything after it (parser treats the quote comment
+  as unclosed); rewritten as a brace comment — the construct was introduced
+  by the transcription, not present in the original, so no gap was
+  registered (unverified suggestion only). Verified: 88 common variables,
+  0 differ (rtol=0.001), max 9.99·10⁻¹¹; solves in 244 iterations, largest
+  block 4 (the coefficient identification).
 
 ## Limitations
 
@@ -182,8 +252,10 @@ The model has no figure yet (maintainer, workflow §7).
   and the affinity laws (catalogue data, three operating modes); no catalogue
   curves in this reference model.
 - `TM-0486` (inventory): sibling **ParamID** model of the same pump in the
-  source collection (parameter identification from measurements, level 2) —
-  a separate model if imported; not in the library yet.
+  source collection (parameter identification from measurements) — merged
+  into this folder as the variant `centrifugal_brine_pump_refsim_paramid.eescode`
+  (card C-341, see *ParamID variant* above); the pre-assigned ID CSL-0301
+  stays unused.
 
 No library model of this component existed yet (the folder
 `components/pumps_fans/` was empty).

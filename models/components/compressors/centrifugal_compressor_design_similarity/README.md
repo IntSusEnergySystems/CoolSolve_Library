@@ -244,3 +244,4 @@ CoolSolve repository as a test case.
   laws for another compressor of the same session. TM-0060 is the continuation.
 - CoolSolve example `simple_centrifugal_compressor.eescode` (`CSX-043`):
   same exercise, kept in CoolSolve as a test case.
+- `CSL-0318` *cordier_specific_speed*: Cordier line giving the specific diameter from the specific speed, as a pre-design alternative to the given flow and enthalpy factors.

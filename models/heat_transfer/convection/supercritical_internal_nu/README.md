@@ -380,3 +380,4 @@ each function and in `model.json` (`origin.authors`).
   kind of model that calls the functions of this file for the near-supercritical
   branches of its heat exchangers.
 - `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.
+- `CSL-0317` *pseudo_critical_properties*: computes the pseudo-critical temperature `T_pc` (maximum of cp, and the Yang & Yang CO2 correlation) that the correlations of this file take as an argument.

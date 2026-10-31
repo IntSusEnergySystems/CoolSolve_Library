@@ -182,3 +182,6 @@ stored solution is the verification reference).
 - `CSL-0142` *district_heating_loop*: a district-heating loop whose two
   pipes drop pressure with the Darcy-Weisbach equation and the same built-in
   `Colebrook` procedure (liquid water).
+
+- `CSL-0316` *local_losses_idelchik_elbows*: local loss coefficient of curved
+  bends, to add to the straight-pipe friction computed here.

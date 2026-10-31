@@ -1,0 +1,180 @@
+{=============================================================================
+  UA part-load scaling after Cecchinato et al. (2010) - function library
+ -----------------------------------------------------------------------------
+  FUNCTION fUA_Cecchinato returns f_UA = UA/UA_ref of a heat exchanger from the
+  mass-flow ratios of its two sides, the two Reynolds exponents and the product
+  of the heat-transfer-coefficient ratio and the area ratio; UA_series_resistance
+  gives the two-resistance sum the law is derived from. The main program applies
+  both: five off-design factors vs the TESPy doctest and the MovingBoundary
+  tests, and the TESPy SectionedHeatExchanger doctest (steam condenser cooled by
+  air) with a sectioned UA that is scaled between a design and an off-design case.
+  Source : TESPy (Witte & Tuschy, MIT, commit 19425523), sectioned.py,
+           UA_cecchinato_func; L. Cecchinato, M. Chiarello, M. Corradi,
+           Int. J. Therm. Sci. 49 (2010) 1776-1786, doi 10.1016/j.ijthermalsci.2010.04.010
+  Authors: Francesco Witte and the TESPy contributors (code); Cecchinato et al. (law)
+  License: MIT (TESPy and this library)
+  Status : verified vs the TESPy re-run, see README.md
+=============================================================================}
+
+FUNCTION fUA_Cecchinato(m_ratio_hot, m_ratio_cold, re_exp_hot, re_exp_cold, alpha_ratio, area_ratio)
+{----------------------------------------------------------------------------
+  Part-load factor f_UA = UA/UA_ref of a heat exchanger, as in TESPy
+  SectionedHeatExchanger.UA_cecchinato_func (_UA_cecchinato_residual):
+    f_UA = (1 + x)/(m_ratio_cold^(-re_exp_cold) + x*m_ratio_hot^(-re_exp_hot))
+    x    = alpha_ratio*area_ratio, with alpha_ratio = alpha_cold/alpha_hot
+           and area_ratio = A_cold/A_hot at the reference point
+  m_ratio_hot, m_ratio_cold : mass flow / reference mass flow of the side [-]
+  re_exp_hot, re_exp_cold   : exponent of the side heat-transfer coefficient
+                              alpha ~ m^re_exp [-]
+  Ratios are bounded below by 1E-6, as in the original.
+  Reference: Cecchinato et al. (2010); TESPy sectioned.py, commit 19425523.
+----------------------------------------------------------------------------}
+  mh = MAX(m_ratio_hot, 1E-6)
+  mc = MAX(m_ratio_cold, 1E-6)
+  x = alpha_ratio*area_ratio
+  fUA_Cecchinato = (1 + x)/(mc^(-re_exp_cold) + x*mh^(-re_exp_hot))
+END
+
+FUNCTION UA_series_resistance(alpha_hot, area_hot, alpha_cold, area_cold)
+{----------------------------------------------------------------------------
+  Overall conductance of two convective resistances in series, wall resistance
+  neglected: UA = 1/(1/(alpha_hot*A_hot) + 1/(alpha_cold*A_cold)) [W/K].
+  Basis of the Cecchinato law (derivation in README.md); not a function of TESPy.
+----------------------------------------------------------------------------}
+  UA_series_resistance = 1/(1/(alpha_hot*area_hot) + 1/(alpha_cold*area_cold))
+END
+
+FUNCTION LMTD_section(td_a, td_b)
+{----------------------------------------------------------------------------
+  Logarithmic mean of two temperature differences [K] (both > 0); the
+  arithmetic mean when they are equal, as the rounding branch of TESPy
+  base.py _calc_lmtd_per_section.
+----------------------------------------------------------------------------}
+  IF (ABS(td_a - td_b) <= 1E-6) THEN
+    LMTD_section = (td_a + td_b)/2
+  ELSE
+    LMTD_section = (td_a - td_b)/LN(td_a/td_b)
+  ENDIF
+END
+
+FUNCTION h_grid(j, h_ex, h_f, h_g, h_su, n3, n2, n1)
+{----------------------------------------------------------------------------
+  Hot-side enthalpy [J/kg] at section boundary j = 0..n3+n2+n1 counted from the
+  hot outlet: n3 equal sections from h_ex to saturated liquid h_f, n2 from h_f
+  to saturated vapour h_g, n1 from h_g to the inlet h_su. Replaces the 50 equal
+  heat steps + phase boundaries of TESPy _assign_steps (see README.md).
+----------------------------------------------------------------------------}
+  IF (j <= n3) THEN
+    h_grid = h_ex + (h_f - h_ex)*j/n3
+  ELSE
+    IF (j <= n3 + n2) THEN
+      h_grid = h_f + (h_g - h_f)*(j - n3)/n2
+    ELSE
+      h_grid = h_g + (h_su - h_g)*(j - n3 - n2)/n1
+    ENDIF
+  ENDIF
+END
+
+"!Part A - the factor f_UA at the off-design points of the TESPy SectionedHeatExchanger doctest"
+{Parameters of the doctest: area_ratio = 20, alpha_ratio = 1E-2, re_exp_hot = 0.8, re_exp_cold = 0.55.
+ The mass-flow ratios are those of the TESPy re-run (hot: set, cold: solved, README.md).}
+re_h_A = 0.8          "hot-side Reynolds exponent [-] (doctest re_exp_hot)"
+re_c_A = 0.55         "cold-side Reynolds exponent [-] (doctest re_exp_cold)"
+al_A = 1E-2           "cold to hot heat-transfer-coefficient ratio [-] (doctest alpha_ratio)"
+ar_A = 20             "cold to hot area ratio [-] (doctest area_ratio)"
+mh_A1 = 0.5           "hot mass-flow ratio, run m = 0.5 [-]"
+mc_A1 = 0.5009250976240787   "cold mass-flow ratio solved by TESPy [-]"
+mh_A2 = 0.6           "hot mass-flow ratio, run m = 0.6 [-]"
+mc_A2 = 0.6008566643687842   "cold mass-flow ratio solved by TESPy [-]"
+mh_A3 = 0.8           "hot mass-flow ratio, run m = 0.8 (the doctest) [-]"
+mc_A3 = 0.8005365671463283   "cold mass-flow ratio solved by TESPy [-]"
+mh_A4 = 1.2           "hot mass-flow ratio, run m = 1.2 [-]"
+mc_A4 = 1.1992713039501037   "cold mass-flow ratio solved by TESPy [-]"
+f_A0 = fUA_Cecchinato(1, 1, re_h_A, re_c_A, al_A, ar_A)   "design point: f_UA must be 1 [-]"
+f_A1 = fUA_Cecchinato(mh_A1, mc_A1, re_h_A, re_c_A, al_A, ar_A)   "f_UA at m_hot = 0.5 [-]"
+f_A2 = fUA_Cecchinato(mh_A2, mc_A2, re_h_A, re_c_A, al_A, ar_A)   "f_UA at m_hot = 0.6 [-]"
+f_A3 = fUA_Cecchinato(mh_A3, mc_A3, re_h_A, re_c_A, al_A, ar_A)   "f_UA at m_hot = 0.8 [-]"
+f_A4 = fUA_Cecchinato(mh_A4, mc_A4, re_h_A, re_c_A, al_A, ar_A)   "f_UA at m_hot = 1.2 [-]"
+
+"!Part B - the two MovingBoundaryHeatExchanger tests (R410A condenser with air, water-cooled R410A evaporator)"
+{Mass-flow ratios from the TESPy re-run of the tests with CoolProp R410A instead of REFPROP (README.md).
+ Condenser: hot = refrigerant, area_ratio 21.64, alpha_ratio 8.4E-3, re_exp 0.8 / 0.55, run Q = 35 kW.
+ Evaporator: hot = water, cold = refrigerant, area_ratio 1, alpha_ratio 1.013, re_exp 0.5 / 0.5, run Q = 25 kW.}
+mh_B1 = 0.9202149648   "condenser: refrigerant (hot) mass-flow ratio [-]"
+mc_B1 = 0.8699975143   "condenser: air (cold) mass-flow ratio [-]"
+f_B1 = fUA_Cecchinato(mh_B1, mc_B1, 0.8, 0.55, 8.4E-3, 21.64)   "condenser f_UA [-]"
+mh_B2 = 0.8110654282   "evaporator: water (hot) mass-flow ratio [-]"
+mc_B2 = 0.8802816901   "evaporator: refrigerant (cold) mass-flow ratio [-]"
+f_B2 = fUA_Cecchinato(mh_B2, mc_B2, 0.5, 0.5, 1.013, 1)   "evaporator f_UA [-]"
+
+"!Part C - the law from its two resistances: alpha = alpha_ref*m_ratio^re_exp on each side (derived, not from the original)"
+alpha_h_ref = 2000    "hot-side reference heat-transfer coefficient [W/m2-K] (illustrative value)"
+A_h_ref = 5           "hot-side area [m2] (illustrative value)"
+alpha_c_ref = al_A*alpha_h_ref   "cold-side reference heat-transfer coefficient [W/m2-K]"
+A_c_ref = ar_A*A_h_ref           "cold-side area [m2]"
+UA_ref_C = UA_series_resistance(alpha_h_ref, A_h_ref, alpha_c_ref, A_c_ref)   "reference conductance [W/K]"
+UA_C = UA_series_resistance(alpha_h_ref*mh_A3^re_h_A, A_h_ref, alpha_c_ref*mc_A3^re_c_A, A_c_ref)   "conductance at the part-load flows of run m = 0.8 [W/K]"
+f_C = UA_C/UA_ref_C   "ratio of the two series conductances [-]"
+f_C_diff = f_C - f_A3   "difference to fUA_Cecchinato, must be zero [-]"
+
+"!Part D - TESPy SectionedHeatExchanger doctest: steam condenser cooled by air, design (1) and off design (2)"
+{Hot side water, 1 kg/s, superheated 15 K above the dew line at the inlet, subcooled 5 K at the outlet, no pressure drop;
+ cold side air 15 C to 25 C at 1 bar. Q_dot [W] is the heat released by the hot side (TESPy sign: negative).
+ Section boundaries j = 0..13 from the hot outlet: 6 sections of subcooling, 1 of condensation, 6 of desuperheating.}
+M_dot_h_1 = 1        "hot (water) mass flow rate [kg/s]"
+dT_dew_su = 15       "superheating of the inlet above the dew line [K] (doctest td_dew)"
+dT_bub_ex = 5        "subcooling of the outlet below the bubble line [K] (doctest td_bubble)"
+T_c_su = 15          "air inlet temperature [C]"
+T_c_ex = 25          "air outlet temperature [C]"
+P_c = 1E5            "air pressure [Pa]"
+DT_pinch_1 = 5       "pinch specified for the design [K] (doctest td_pinch)"
+h_c_su = ENTHALPY(Air, T=T_c_su, P=P_c)   "air inlet enthalpy [J/kg]"
+h_c_ex = ENTHALPY(Air, T=T_c_ex, P=P_c)   "air outlet enthalpy [J/kg]"
+
+"!Design: the pinch sets the condensing pressure"
+T_sat_1 = TEMPERATURE(Water, P=P_h_1, x=1)   "saturation temperature [C]"
+h_f_1 = ENTHALPY(Water, P=P_h_1, x=0)        "saturated liquid enthalpy [J/kg]"
+h_g_1 = ENTHALPY(Water, P=P_h_1, x=1)        "saturated vapour enthalpy [J/kg]"
+h_su_1 = ENTHALPY(Water, P=P_h_1, T=T_sat_1 + dT_dew_su)   "hot inlet enthalpy [J/kg]"
+h_ex_1 = ENTHALPY(Water, P=P_h_1, T=T_sat_1 - dT_bub_ex)   "hot outlet enthalpy [J/kg]"
+Q_dot_1 = M_dot_h_1*(h_su_1 - h_ex_1)        "heat released by the hot side [W]"
+M_dot_c_1 = Q_dot_1/(h_c_ex - h_c_su)        "air mass flow rate [kg/s]"
+DUPLICATE j=0,13
+  hh_1[j] = h_grid(j, h_ex_1, h_f_1, h_g_1, h_su_1, 6, 1, 6)   "hot enthalpy at the boundary [J/kg]"
+  Qc_1[j] = M_dot_h_1*(hh_1[j] - h_ex_1)       "heat transferred below the boundary [W]"
+  Th_1[j] = TEMPERATURE(Water, P=P_h_1, h=hh_1[j])   "hot temperature at the boundary [C]"
+  Tc_1[j] = TEMPERATURE(Air, P=P_c, h=h_c_su + Qc_1[j]/M_dot_c_1)   "air temperature at the boundary [C]"
+  dT_1[j] = Th_1[j] - Tc_1[j]                  "temperature difference at the boundary [K]"
+END
+DUPLICATE j=1,13
+  UA_s_1[j] = (Qc_1[j] - Qc_1[j-1])/LMTD_section(dT_1[j-1], dT_1[j])   "UA of section j [W/K]"
+END
+DT_pinch_1 = dT_1[7]    "pinch at the dew-line boundary (j = 7), the minimum of dT_1 [K]"
+UA_1 = SUM(UA_s_1[1..13])    "design UA, sum over the sections [W/K]"
+DT_min_1 = MIN(dT_1[0..13])   "minimum temperature difference over all boundaries, check [K]"
+
+"!Off design: UA = UA_1*f_UA with the Cecchinato law, the condensing pressure is the unknown"
+M_dot_h_2 = 0.8      "hot (water) mass flow rate [kg/s] (doctest: c1 m = 0.8)"
+T_sat_2 = TEMPERATURE(Water, P=P_h_2, x=1)   "saturation temperature [C]"
+h_f_2 = ENTHALPY(Water, P=P_h_2, x=0)        "saturated liquid enthalpy [J/kg]"
+h_g_2 = ENTHALPY(Water, P=P_h_2, x=1)        "saturated vapour enthalpy [J/kg]"
+h_su_2 = ENTHALPY(Water, P=P_h_2, T=T_sat_2 + dT_dew_su)   "hot inlet enthalpy [J/kg]"
+h_ex_2 = ENTHALPY(Water, P=P_h_2, T=T_sat_2 - dT_bub_ex)   "hot outlet enthalpy [J/kg]"
+Q_dot_2 = M_dot_h_2*(h_su_2 - h_ex_2)        "heat released by the hot side [W]"
+M_dot_c_2 = Q_dot_2/(h_c_ex - h_c_su)        "air mass flow rate [kg/s]"
+DUPLICATE j=0,13
+  hh_2[j] = h_grid(j, h_ex_2, h_f_2, h_g_2, h_su_2, 6, 1, 6)   "hot enthalpy at the boundary [J/kg]"
+  Qc_2[j] = M_dot_h_2*(hh_2[j] - h_ex_2)       "heat transferred below the boundary [W]"
+  Th_2[j] = TEMPERATURE(Water, P=P_h_2, h=hh_2[j])   "hot temperature at the boundary [C]"
+  Tc_2[j] = TEMPERATURE(Air, P=P_c, h=h_c_su + Qc_2[j]/M_dot_c_2)   "air temperature at the boundary [C]"
+  dT_2[j] = Th_2[j] - Tc_2[j]                  "temperature difference at the boundary [K]"
+END
+DUPLICATE j=1,13
+  UA_s_2[j] = (Qc_2[j] - Qc_2[j-1])/LMTD_section(dT_2[j-1], dT_2[j])   "UA of section j [W/K]"
+END
+UA_sum_2 = SUM(UA_s_2[1..13])    "sum of the section UA values [W/K]"
+f_UA_2 = fUA_Cecchinato(M_dot_h_2/M_dot_h_1, M_dot_c_2/M_dot_c_1, re_h_A, re_c_A, al_A, ar_A)   "part-load factor [-]"
+UA_sum_2 = UA_1*f_UA_2          "off-design equation 0 = UA_ref*f_UA - sum(UA_i) of TESPy [W/K]"
+DT_min_2 = MIN(dT_2[0..13])      "pinch of the off-design run [K]"
+Q_ratio_2 = Q_dot_2/Q_dot_1      "duty ratio [-]"
+UA_ratio_2 = UA_sum_2/UA_1       "UA ratio [-]"

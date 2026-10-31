@@ -1,0 +1,68 @@
+{
+  "id": "CSL-0310",
+  "name": "isentropic_nozzle_critical",
+  "title": "Isentropic nozzle with critical pressure (choked / unchoked flow)",
+  "summary": "Steady isentropic nozzle on air, sized from a given mass flow: total-enthalpy conservation, isentropic throat state, throat pressure max(back pressure, critical pressure) so the model switches between unchoked and choked regimes; real-gas gamma solved from the isentropic relation.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "isentropic_nozzle_critical.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "nozzle",
+    "choked flow",
+    "critical pressure",
+    "isentropic flow",
+    "compressible flow",
+    "throat sizing",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "max function"
+  ],
+  "stats": {
+    "n_equations": 16,
+    "largest_block": 4
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 01/Isentropic Noozle.EES",
+    "candidate_id": "TM-0002",
+    "authors": [
+      "TBD (ULiège MSTh course team: J. Lebrun, V. Lemort, S. Bertagnolio)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "Machines et systèmes thermiques (ULiège), repetition 1, TP 01"
+  },
+  "verification": {
+    "summary": "EES stored values (5/16 vars; M_dot, P_su, T_su exact; h_su/s_su only the documented Air reference offsets) and the self-consistent last-solution set kept in the EES guess column agree: max rel diff 4.3e-03 on T_thr (EES 7.458 vs CoolProp air), all physics variables within rtol 0.001. Choked run: throat velocity within 0.02 % of the local speed of sound.",
+    "checks": [
+      "ees-stored-solution",
+      "analytical"
+    ],
+    "reference": "EES stored values and last-solution guesses of Isentropic Noozle.EES (comparison via tools/compare_solution.py); analytical speed of sound at the choked throat",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.0043,
+    "notes": "vs stored values: '4 common variables, 2 differ (rtol=0.001)' (Air reference offsets on h_su, s_su). vs last-solution guesses: '16 common variables, 5 differ (rtol=0.001)' (3 Air offsets, stale DELTAP guess of 1 in EES, T_thr 4.3e-03). Choked run: no EES reference, sonic-throat check 0.02 %."
+  },
+  "missing_features": [],
+  "related": ["CSL-0118", "CSL-0190", "CSL-0199", "CSL-0207", "CSL-0234"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-31",
+      "action": "added",
+      "by": "glm-5.3-flash agent for S. Quoilin"
+    }
+  ]
+}

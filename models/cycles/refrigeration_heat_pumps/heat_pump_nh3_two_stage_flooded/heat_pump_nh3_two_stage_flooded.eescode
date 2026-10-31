@@ -1,0 +1,391 @@
+{=============================================================================
+  Two-stage NH3 heat pump with flooded evaporator (drum + circulation pump)
+  CoolSolve Library model CSL-0313
+ -----------------------------------------------------------------------------
+  Ammonia heat pump heating a pressurised-water loop (60 -> 105 C): condenser,
+  valve, drum with a circulation pump feeding a flooded evaporator and a vapour
+  superheater on the same 12 C water source, two compressors with an intercooler.
+  Case d is the design point of the TESPy test (pinch, superheat and outlet
+  states specified); case o is an off-design point of the same machine (UA from
+  characteristic lines, zeta/D^4 pressure drops, eta_s lines). Both are solved
+  together; T_sink_o and M_dot_11_o select the point (COP matrix: see README).
+  Outputs: COP_d, COP_o, Q_dot_cd, W_dot_cp1, W_dot_cp2, all states (suffix _d/_o)
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : Francesco Witte, TESPy tests/test_models/test_heat_pump_model.py,
+           https://github.com/oemof/tespy (commit 19425523), MIT - see README.md
+  Status : verified against a re-run of the TESPy test (design + 20 off-design points)
+=============================================================================}
+
+
+FUNCTION LMTD_smoothed(td_a, td_b)
+{ Smoothed logarithmic mean temperature difference, as in TESPy
+  tespy.components.heat_exchangers.base.smoothed_lmtd (commit 19425523); same
+  function as in CSL-0137 (hx_lmtd_ua). Arguments: terminal differences [K].}
+  eps = 0.001        "threshold of the smoothing [K]"
+  xi = 5             "slope of the extrapolation [1/K]"
+  IF (td_a > eps AND td_b > eps) THEN
+    IF (ABS(td_a - td_b) <= 1E-6) THEN
+      LMTD_smoothed = (td_a + td_b)/2
+    ELSE
+      LMTD_smoothed = (td_a - td_b)/LN(td_a/td_b)
+    ENDIF
+  ELSE
+    IF (td_a > eps) THEN
+      LMTD_smoothed = (td_a - eps)/(LN(td_a/eps)*(1 - xi*(td_b - eps)))
+    ELSE
+      IF (td_b > eps) THEN
+        LMTD_smoothed = (td_b - eps)/(LN(td_b/eps)*(1 - xi*(td_a - eps)))
+      ELSE
+        LMTD_smoothed = eps/((1 - xi*(td_a - eps))*(1 - xi*(td_b - eps)))
+      ENDIF
+    ENDIF
+  ENDIF
+END
+
+
+"!Fluids"
+ref$ = 'Ammonia'               "refrigerant (CoolProp name; NH3 in the original)"
+wat$ = 'Water'                 "water on the source, intercooler and sink sides"
+
+"!Design data (TESPy setup_method of the test)"
+p_4 = 60E5                     "compressor 2 outlet = condenser refrigerant inlet pressure [Pa]"
+dp_5 = 0.01E5                  "condenser refrigerant-side pressure drop, Ref(c_in_cd, 1, -0.01) [Pa]"
+dTsc_d = 5                     "condenser outlet subcooling td_bubble (design) [K]"
+T_10 = 5                       "drum temperature = saturated-vapour outlet to the superheater [C]"
+circ = 10                      "circulation ratio m_pump/m_vapour, Ref(dr_su, 10, 0) [-]"
+dp_1_d = 0.05E5                "superheater refrigerant-side pressure drop, Ref(dr_su, 1, -0.05) (design) [Pa]"
+dTsh_d = 5                     "superheater outlet superheating td_dew (design) [K]"
+p_2 = 15E5                     "compressor 1 outlet (intercooler inlet) pressure [Pa]"
+dp_3_d = 0.01E5                "intercooler refrigerant-side pressure drop, Ref(cp1_he, 1, -0.01) (design) [Pa]"
+T_3_set = 40                   "intercooler refrigerant outlet temperature (design) [C]"
+eta_s_d = 0.8                  "design isentropic efficiency of both compressors and both pumps [-]"
+pr_ev1 = 1                     "evaporator water-side pressure ratio [-]"
+pr_ev2 = 0.999                 "evaporator refrigerant-side pressure ratio [-]"
+ttd_l_ev_set = 5                "evaporator lower terminal temperature difference (design) [K]"
+T_11 = 12                      "heat-source water supply temperature [C]"
+p_11 = 1E5                     "heat-source water supply pressure [Pa]"
+dp_12_d = 0.001E5              "superheater water-side pressure drop, Ref(amb_in_su, 1, -0.001) (design) [Pa]"
+M_dot_14 = 5                   "intercooler water mass flow rate [kg/s]"
+T_14 = 20                      "intercooler water supply temperature [C]"
+p_14 = 1E5                     "intercooler water supply pressure [Pa]"
+dp_15_d = 0.002E5              "intercooler water-side pressure drop, Ref(ic_in_he, 1, -0.002) (design) [Pa]"
+T_17 = 60                      "heat-sink water supply temperature = recirculation pump outlet [C]"
+p_17 = 10E5                    "recirculation pump outlet = condenser water inlet pressure [Pa]"
+pr_cd2_d = 0.9998              "condenser water-side pressure ratio (design) [-]"
+
+"!Operating points"
+M_dot_11_d = 20                "design heat-source water mass flow rate [kg/s]"
+T_sink_d = 105                   "design heat-sink water outlet temperature [C]"
+T_sink_o = 90.0                  "off-design heat-sink water outlet temperature [C]"
+M_dot_11_o = 25.0                "off-design heat-source water mass flow rate [kg/s]"
+
+"!=========== Case d: design point ==========="
+"!Drum, valve and refrigerant states of the evaporator system (states 6-10)"
+p_dr_d = PRESSURE(ref$, T=T_10, x=1)          "drum pressure, saturated vapour at T_10 [Pa]"
+p_6_d = p_dr_d                                  "valve outlet = drum inlet 1 [Pa]"
+p_7_d = p_dr_d                                  "drum liquid outlet = circulation pump inlet [Pa]"
+p_9_d = p_dr_d                                  "evaporator outlet = drum inlet 2 [Pa]"
+p_10_d = p_dr_d                                 "drum vapour outlet [Pa]"
+h_7_d = ENTHALPY(ref$, P=p_dr_d, x=0)           "saturated liquid leaving the drum [J/kg]"
+h_10_d = ENTHALPY(ref$, P=p_dr_d, x=1)          "saturated vapour leaving the drum [J/kg]"
+h_6_d = h_5_d                                   "isenthalpic valve [J/kg]"
+m_cir_d = circ*m_nh3_d                          "circulation pump flow rate [kg/s]"
+m_nh3_d*h_6_d + m_cir_d*h_9_d = m_cir_d*h_7_d + m_nh3_d*h_10_d   "drum energy balance [W]"
+
+"!Circulation pump (TESPy Pump 'pump evaporator')"
+p_8_d = p_9_d/pr_ev2                            "pump outlet from the evaporator pr2 [Pa]"
+s_7_d = ENTROPY(ref$, h=h_7_d, P=p_7_d)          "pump inlet entropy [J/kg-K]"
+h_8s_d = ENTHALPY(ref$, s=s_7_d, P=p_8_d)        "isentropic pump outlet enthalpy [J/kg]"
+(h_8_d - h_7_d)*eta_s_d = h_8s_d - h_7_d          "isentropic efficiency (design) [J/kg]"
+W_dot_pu_d = m_cir_d*(h_8_d - h_7_d)              "pump power [W]"
+
+"!Flooded evaporator (TESPy HeatExchanger 'evaporator': refrigerant on side 2, water on side 1)"
+m_12_d = m_11_d                                 "water flow through the superheater and the evaporator [kg/s]"
+p_13_d = pr_ev1*p_12_d                          "evaporator water outlet pressure [Pa]"
+Q_dot_ev_d = m_cir_d*(h_9_d - h_8_d)              "evaporator duty, refrigerant side [W]"
+Q_dot_ev_d = m_12_d*(h_12_d - h_13_d)             "evaporator energy balance, water side [W]"
+T_13_d = T_8_d + ttd_l_ev_set                     "lower terminal temperature difference ttd_l = T_out1 - T_in2 [C]"
+h_13_d = ENTHALPY(wat$, T=T_13_d, P=p_13_d)      "water outlet enthalpy [J/kg]"
+UA_ev_d = Q_dot_ev_d/lmtd_ev_d                "design UA of the evaporator [W/K]"
+T_8_d = TEMPERATURE(ref$, h=h_8_d, P=p_8_d)      "evaporator refrigerant inlet temperature [C]"
+T_9_d = TEMPERATURE(ref$, h=h_9_d, P=p_9_d)      "evaporator refrigerant outlet temperature, two-phase [C]"
+x_9_d = QUALITY(ref$, h=h_9_d, P=p_9_d)          "evaporator outlet vapour quality [-]"
+ttd_u_ev_d = T_12_d - T_9_d                      "upper terminal temperature difference [K]"
+ttd_l_ev_d = T_13_d - T_8_d                      "lower terminal temperature difference [K]"
+lmtd_ev_d = LMTD_smoothed(ttd_u_ev_d, ttd_l_ev_d) "smoothed LMTD [K]"
+
+"!Heat source water and superheater (TESPy HeatExchanger 'superheater': water on side 1, refrigerant vapour on side 2)"
+m_11_d = M_dot_11_d                            "heat-source water mass flow rate [kg/s]"
+h_11_d = ENTHALPY(wat$, T=T_11, P=p_11)        "water supply enthalpy [J/kg]"
+m_nh3_d*(h_1_d - h_10_d) = m_11_d*(h_11_d - h_12_d) "superheater energy balance [W]"
+Q_dot_su_d = m_nh3_d*(h_1_d - h_10_d)             "superheater duty [W]"
+p_12_d = p_11 - dp_12_d                        "water outlet pressure, design [Pa]"
+p_1_d = p_10_d - dp_1_d                         "refrigerant outlet pressure, design [Pa]"
+T_1_d = TEMPERATURE(ref$, P=p_1_d, x=1) + dTsh_d  "superheating td_dew above the dew point [C]"
+h_1_d = ENTHALPY(ref$, T=T_1_d, P=p_1_d)         "compressor 1 inlet enthalpy [J/kg]"
+T_12_d = TEMPERATURE(wat$, h=h_12_d, P=p_12_d)   "water outlet temperature [C]"
+UA_su_d = Q_dot_su_d/lmtd_su_d                "design UA of the superheater [W/K]"
+zeta1_su_d = (p_11 - p_12_d)*pi^2/(8*m_11_d^2*(v_11_d + v_12_d)/2)  "design zeta/D^4, water side [1/m^4]"
+zeta2_su_d = (p_10_d - p_1_d)*pi^2/(8*m_nh3_d^2*(v_10_d + v_1_d)/2) "design zeta/D^4, refrigerant side [1/m^4]"
+v_10_d = VOLUME(ref$, h=h_10_d, P=p_10_d)        "specific volume at the superheater refrigerant inlet [m^3/kg]"
+v_1_d = VOLUME(ref$, h=h_1_d, P=p_1_d)           "specific volume at the superheater refrigerant outlet [m^3/kg]"
+v_11_d = VOLUME(wat$, h=h_11_d, P=p_11)         "water specific volume, inlet [m^3/kg]"
+v_12_d = VOLUME(wat$, h=h_12_d, P=p_12_d)        "water specific volume, outlet [m^3/kg]"
+ttd_u_su_d = T_11 - T_1_d                       "upper terminal temperature difference [K]"
+ttd_l_su_d = T_12_d - T_10                      "lower terminal temperature difference [K]"
+lmtd_su_d = LMTD_smoothed(ttd_u_su_d, ttd_l_su_d) "smoothed LMTD [K]"
+
+"!Compressor 1 (TESPy Compressor 'compressor 1', states 1 -> 2)"
+p_2_d = p_2                                    "outlet pressure [Pa]"
+s_1_d = ENTROPY(ref$, h=h_1_d, P=p_1_d)          "inlet entropy [J/kg-K]"
+h_2s_d = ENTHALPY(ref$, s=s_1_d, P=p_2_d)        "isentropic outlet enthalpy [J/kg]"
+(h_2_d - h_1_d)*eta_s_d = h_2s_d - h_1_d          "isentropic efficiency (design) [J/kg]"
+W_dot_cp1_d = m_nh3_d*(h_2_d - h_1_d)             "compressor 1 power [W]"
+T_2_d = TEMPERATURE(ref$, h=h_2_d, P=p_2_d)      "outlet temperature [C]"
+
+"!Intercooler (TESPy HeatExchanger 'intercooler': refrigerant on side 1, water on side 2, states 2 -> 3)"
+p_14_d = p_14                                  "water supply pressure [Pa]"
+h_14_d = ENTHALPY(wat$, T=T_14, P=p_14_d)       "water supply enthalpy [J/kg]"
+m_nh3_d*(h_2_d - h_3_d) = M_dot_14*(h_15_d - h_14_d)  "intercooler energy balance [W]"
+Q_dot_ic_d = m_nh3_d*(h_2_d - h_3_d)              "intercooler duty [W]"
+p_3_d = p_2_d - dp_3_d                          "refrigerant outlet pressure, design [Pa]"
+T_3_d = T_3_set                                "refrigerant outlet temperature, design [C]"
+h_3_d = ENTHALPY(ref$, T=T_3_d, P=p_3_d)         "compressor 2 inlet enthalpy [J/kg]"
+p_15_d = p_14_d - dp_15_d                       "water outlet pressure, design [Pa]"
+UA_ic_d = Q_dot_ic_d/lmtd_ic_d                "design UA of the intercooler [W/K]"
+zeta1_ic_d = (p_2_d - p_3_d)*pi^2/(8*m_nh3_d^2*(v_2_d + v_3_d)/2)   "design zeta/D^4, refrigerant side [1/m^4]"
+zeta2_ic_d = (p_14_d - p_15_d)*pi^2/(8*M_dot_14^2*(v_14_d + v_15_d)/2) "design zeta/D^4, water side [1/m^4]"
+T_15_d = TEMPERATURE(wat$, h=h_15_d, P=p_15_d)   "water outlet temperature [C]"
+v_2_d = VOLUME(ref$, h=h_2_d, P=p_2_d)           "refrigerant specific volume, inlet [m^3/kg]"
+v_3_d = VOLUME(ref$, h=h_3_d, P=p_3_d)           "refrigerant specific volume, outlet [m^3/kg]"
+v_14_d = VOLUME(wat$, h=h_14_d, P=p_14_d)        "water specific volume, inlet [m^3/kg]"
+v_15_d = VOLUME(wat$, h=h_15_d, P=p_15_d)        "water specific volume, outlet [m^3/kg]"
+ttd_u_ic_d = T_2_d - T_15_d                      "upper terminal temperature difference [K]"
+ttd_l_ic_d = T_3_d - T_14                       "lower terminal temperature difference [K]"
+lmtd_ic_d = LMTD_smoothed(ttd_u_ic_d, ttd_l_ic_d) "smoothed LMTD [K]"
+
+"!Compressor 2 (TESPy Compressor 'compressor 2', states 3 -> 4)"
+p_4_d = p_4                                    "outlet pressure [Pa]"
+s_3_d = ENTROPY(ref$, h=h_3_d, P=p_3_d)          "inlet entropy [J/kg-K]"
+h_4s_d = ENTHALPY(ref$, s=s_3_d, P=p_4_d)        "isentropic outlet enthalpy [J/kg]"
+(h_4_d - h_3_d)*eta_s_d = h_4s_d - h_3_d          "isentropic efficiency (design) [J/kg]"
+W_dot_cp2_d = m_nh3_d*(h_4_d - h_3_d)             "compressor 2 power [W]"
+T_4_d = TEMPERATURE(ref$, h=h_4_d, P=p_4_d)      "outlet temperature [C]"
+
+"!Condenser (TESPy HeatExchanger 'condenser': refrigerant on side 1, water on side 2, states 4 -> 5)"
+p_5_d = p_4_d - dp_5                            "refrigerant outlet pressure [Pa]"
+T_17_d = T_17                                  "water supply temperature [C]"
+p_17_d = p_17                                  "water supply pressure [Pa]"
+h_17_d = ENTHALPY(wat$, T=T_17_d, P=p_17_d)      "water supply enthalpy = recirculation pump outlet [J/kg]"
+T_18_d = T_sink_d                                "water outlet temperature (heat-sink specification) [C]"
+h_18_d = ENTHALPY(wat$, T=T_18_d, P=p_18_d)      "water outlet enthalpy [J/kg]"
+m_nh3_d*(h_4_d - h_5_d) = m_17_d*(h_18_d - h_17_d)  "condenser energy balance [W]"
+Q_dot_cd_d = m_nh3_d*(h_4_d - h_5_d)              "condenser duty (heat delivered) [W]"
+T_5_d = TEMPERATURE(ref$, P=p_5_d, x=0) - dTsc_d  "subcooling td_bubble below the bubble point [C]"
+h_5_d = ENTHALPY(ref$, T=T_5_d, P=p_5_d)         "valve inlet enthalpy [J/kg]"
+p_18_d = pr_cd2_d*p_17_d                        "water outlet pressure, design [Pa]"
+UA_cd_d = Q_dot_cd_d/lmtd_cd_d                "design UA of the condenser [W/K]"
+zeta2_cd_d = (p_17_d - p_18_d)*pi^2/(8*m_17_d^2*(v_17_d + v_18_d)/2)  "design zeta/D^4, water side [1/m^4]"
+v_17_d = VOLUME(wat$, h=h_17_d, P=p_17_d)        "water specific volume, inlet [m^3/kg]"
+v_18_d = VOLUME(wat$, h=h_18_d, P=p_18_d)        "water specific volume, outlet [m^3/kg]"
+ttd_u_cd_d = T_4_d - T_18_d                      "upper terminal temperature difference [K]"
+ttd_l_cd_d = T_5_d - T_17_d                      "lower terminal temperature difference [K]"
+lmtd_cd_d = LMTD_smoothed(ttd_u_cd_d, ttd_l_cd_d) "smoothed LMTD [K]"
+
+"!Consumer and recirculation pump (TESPy SimpleHeatExchanger 'consumer' pr=1, Pump 'recirculation pump')"
+m_16_d = m_17_d                                 "water loop flow rate [kg/s]"
+p_16_d = p_18_d                                 "consumer without pressure drop, cycle closer [Pa]"
+s_16_d = ENTROPY(wat$, h=h_16_d, P=p_16_d)       "pump inlet entropy [J/kg-K]"
+h_17s_d = ENTHALPY(wat$, s=s_16_d, P=p_17_d)     "isentropic pump outlet enthalpy [J/kg]"
+(h_17_d - h_16_d)*eta_s_d = h_17s_d - h_16_d      "isentropic efficiency (design) [J/kg]"
+W_dot_rp_d = m_17_d*(h_17_d - h_16_d)             "recirculation pump power [W]"
+Q_dot_cons_d = m_17_d*(h_18_d - h_16_d)           "heat delivered to the consumer (consumer closes the loop) [W]"
+T_16_d = TEMPERATURE(wat$, h=h_16_d, P=p_16_d)   "consumer outlet = pump inlet temperature [C]"
+
+"!Performance"
+W_dot_el_d = W_dot_cp1_d + W_dot_cp2_d           "compressor electric power, grid power connection of the original [W]"
+COP_d = Q_dot_cd_d/W_dot_el_d                    "COP = condenser duty / compressor power, as in the test [-]"
+"!Remaining state-point temperatures (no effect on the results)"
+T_6_d = TEMPERATURE(ref$, h=h_6_d, P=p_6_d)      "valve outlet temperature, two-phase [C]"
+x_6_d = QUALITY(ref$, h=h_6_d, P=p_6_d)          "valve outlet vapour quality [-]"
+T_7_d = TEMPERATURE(ref$, h=h_7_d, P=p_7_d)      "drum liquid outlet temperature [C]"
+T_10_d = TEMPERATURE(ref$, h=h_10_d, P=p_10_d)   "drum vapour outlet temperature [C]"
+p_11_d = p_11                                  "heat-source water supply pressure [Pa]"
+T_11_d = T_11                                  "heat-source water supply temperature [C]"
+T_14_d = T_14                                  "intercooler water supply temperature [C]"
+
+"!=========== Case o: off-design point ==========="
+"!Drum, valve and refrigerant states of the evaporator system (states 6-10)"
+p_dr_o = PRESSURE(ref$, T=T_10, x=1)          "drum pressure, saturated vapour at T_10 [Pa]"
+p_6_o = p_dr_o                                  "valve outlet = drum inlet 1 [Pa]"
+p_7_o = p_dr_o                                  "drum liquid outlet = circulation pump inlet [Pa]"
+p_9_o = p_dr_o                                  "evaporator outlet = drum inlet 2 [Pa]"
+p_10_o = p_dr_o                                 "drum vapour outlet [Pa]"
+h_7_o = ENTHALPY(ref$, P=p_dr_o, x=0)           "saturated liquid leaving the drum [J/kg]"
+h_10_o = ENTHALPY(ref$, P=p_dr_o, x=1)          "saturated vapour leaving the drum [J/kg]"
+h_6_o = h_5_o                                   "isenthalpic valve [J/kg]"
+m_cir_o = circ*m_nh3_o                          "circulation pump flow rate [kg/s]"
+m_nh3_o*h_6_o + m_cir_o*h_9_o = m_cir_o*h_7_o + m_nh3_o*h_10_o   "drum energy balance [W]"
+
+"!Circulation pump (TESPy Pump 'pump evaporator')"
+p_8_o = p_9_o/pr_ev2                            "pump outlet from the evaporator pr2 [Pa]"
+s_7_o = ENTROPY(ref$, h=h_7_o, P=p_7_o)          "pump inlet entropy [J/kg-K]"
+h_8s_o = ENTHALPY(ref$, s=s_7_o, P=p_8_o)        "isentropic pump outlet enthalpy [J/kg]"
+f_pu_o = INTERPOLATE('char', 'x_pump', 'f_pump', MIN(m_cir_o/m_cir_d, 1.25))  "efficiency factor eta_s_char, argument m/m_design [-]"
+(h_8_o - h_7_o)*eta_s_d*f_pu_o = h_8s_o - h_7_o    "isentropic efficiency characteristic [J/kg]"
+W_dot_pu_o = m_cir_o*(h_8_o - h_7_o)              "pump power [W]"
+
+"!Flooded evaporator (TESPy HeatExchanger 'evaporator': refrigerant on side 2, water on side 1)"
+m_12_o = m_11_o                                 "water flow through the superheater and the evaporator [kg/s]"
+p_13_o = pr_ev1*p_12_o                          "evaporator water outlet pressure [Pa]"
+Q_dot_ev_o = m_cir_o*(h_9_o - h_8_o)              "evaporator duty, refrigerant side [W]"
+Q_dot_ev_o = m_12_o*(h_12_o - h_13_o)             "evaporator energy balance, water side [W]"
+T_13_o = TEMPERATURE(wat$, h=h_13_o, P=p_13_o)   "water outlet temperature [C]"
+f_ev1_o = INTERPOLATE('char', 'x_ua', 'f_B', MIN(m_12_o/m_12_d, 2.5))   "UA factor, water side (UA_char1) [-]"
+f_ev2_o = INTERPOLATE('char', 'x_C', 'f_C', MIN(m_cir_o/m_cir_d, 2))   "UA factor, refrigerant side (UA_char2) [-]"
+fUA_ev_o = 2/(1/f_ev1_o + 1/f_ev2_o)             "combined UA factor [-]"
+Q_dot_ev_o = UA_ev_d*fUA_ev_o*lmtd_ev_o          "heat transfer from UA_char: Q = UA_design*f_UA*lmtd [W]"
+T_8_o = TEMPERATURE(ref$, h=h_8_o, P=p_8_o)      "evaporator refrigerant inlet temperature [C]"
+T_9_o = TEMPERATURE(ref$, h=h_9_o, P=p_9_o)      "evaporator refrigerant outlet temperature, two-phase [C]"
+x_9_o = QUALITY(ref$, h=h_9_o, P=p_9_o)          "evaporator outlet vapour quality [-]"
+ttd_u_ev_o = T_12_o - T_9_o                      "upper terminal temperature difference [K]"
+ttd_l_ev_o = T_13_o - T_8_o                      "lower terminal temperature difference [K]"
+lmtd_ev_o = LMTD_smoothed(ttd_u_ev_o, ttd_l_ev_o) "smoothed LMTD [K]"
+
+"!Heat source water and superheater (TESPy HeatExchanger 'superheater': water on side 1, refrigerant vapour on side 2)"
+m_11_o = M_dot_11_o                            "heat-source water mass flow rate [kg/s]"
+h_11_o = ENTHALPY(wat$, T=T_11, P=p_11)        "water supply enthalpy [J/kg]"
+m_nh3_o*(h_1_o - h_10_o) = m_11_o*(h_11_o - h_12_o) "superheater energy balance [W]"
+Q_dot_su_o = m_nh3_o*(h_1_o - h_10_o)             "superheater duty [W]"
+f_su1_o = 1                                    "UA factor, water side: flat line (UA_char1 = 1) [-]"
+f_su2_o = INTERPOLATE('char', 'x_D', 'f_D', MIN(m_nh3_o/m_nh3_d, 1.2))   "UA factor, refrigerant side (UA_char2) [-]"
+fUA_su_o = 2/(1/f_su1_o + 1/f_su2_o)             "combined UA factor [-]"
+Q_dot_su_o = UA_su_d*fUA_su_o*lmtd_su_o          "heat transfer from UA_char [W]"
+p_11 - p_12_o = zeta1_su_d*8*m_11_o^2*(v_11_o + v_12_o)/2/pi^2        "pressure drop, water side (zeta1_d4) [Pa]"
+p_10_o - p_1_o = zeta2_su_d*8*m_nh3_o^2*(v_10_o + v_1_o)/2/pi^2        "pressure drop, refrigerant side (zeta2_d4) [Pa]"
+T_1_o = TEMPERATURE(ref$, h=h_1_o, P=p_1_o)      "compressor 1 inlet temperature [C]"
+T_12_o = TEMPERATURE(wat$, h=h_12_o, P=p_12_o)   "water outlet temperature [C]"
+v_10_o = VOLUME(ref$, h=h_10_o, P=p_10_o)        "specific volume at the superheater refrigerant inlet [m^3/kg]"
+v_1_o = VOLUME(ref$, h=h_1_o, P=p_1_o)           "specific volume at the superheater refrigerant outlet [m^3/kg]"
+v_11_o = VOLUME(wat$, h=h_11_o, P=p_11)         "water specific volume, inlet [m^3/kg]"
+v_12_o = VOLUME(wat$, h=h_12_o, P=p_12_o)        "water specific volume, outlet [m^3/kg]"
+ttd_u_su_o = T_11 - T_1_o                       "upper terminal temperature difference [K]"
+ttd_l_su_o = T_12_o - T_10                      "lower terminal temperature difference [K]"
+lmtd_su_o = LMTD_smoothed(ttd_u_su_o, ttd_l_su_o) "smoothed LMTD [K]"
+
+"!Compressor 1 (TESPy Compressor 'compressor 1', states 1 -> 2)"
+p_2_o = p_2                                    "outlet pressure [Pa]"
+s_1_o = ENTROPY(ref$, h=h_1_o, P=p_1_o)          "inlet entropy [J/kg-K]"
+h_2s_o = ENTHALPY(ref$, s=s_1_o, P=p_2_o)        "isentropic outlet enthalpy [J/kg]"
+f_cp1_o = INTERPOLATE('char', 'x_cp', 'f_cp', MIN(m_nh3_o/m_nh3_d, 1.2))  "efficiency factor eta_s_char, argument m/m_design [-]"
+(h_2_o - h_1_o)*eta_s_d*f_cp1_o = h_2s_o - h_1_o   "isentropic efficiency characteristic [J/kg]"
+W_dot_cp1_o = m_nh3_o*(h_2_o - h_1_o)             "compressor 1 power [W]"
+T_2_o = TEMPERATURE(ref$, h=h_2_o, P=p_2_o)      "outlet temperature [C]"
+
+"!Intercooler (TESPy HeatExchanger 'intercooler': refrigerant on side 1, water on side 2, states 2 -> 3)"
+p_14_o = p_14                                  "water supply pressure [Pa]"
+h_14_o = ENTHALPY(wat$, T=T_14, P=p_14_o)       "water supply enthalpy [J/kg]"
+m_nh3_o*(h_2_o - h_3_o) = M_dot_14*(h_15_o - h_14_o)  "intercooler energy balance [W]"
+Q_dot_ic_o = m_nh3_o*(h_2_o - h_3_o)              "intercooler duty [W]"
+f_ic1_o = INTERPOLATE('char', 'x_ua', 'f_A', MIN(m_nh3_o/m_nh3_d, 2.5))  "UA factor, refrigerant side (UA_char1) [-]"
+f_ic2_o = INTERPOLATE('char', 'x_ua', 'f_B', 1)  "UA factor, water side (UA_char2), water flow at its design value [-]"
+fUA_ic_o = 2/(1/f_ic1_o + 1/f_ic2_o)             "combined UA factor [-]"
+Q_dot_ic_o = UA_ic_d*fUA_ic_o*lmtd_ic_o          "heat transfer from UA_char [W]"
+p_2_o - p_3_o = zeta1_ic_d*8*m_nh3_o^2*(v_2_o + v_3_o)/2/pi^2           "pressure drop, refrigerant side (zeta1_d4) [Pa]"
+p_14_o - p_15_o = zeta2_ic_d*8*M_dot_14^2*(v_14_o + v_15_o)/2/pi^2     "pressure drop, water side (zeta2_d4) [Pa]"
+T_3_o = TEMPERATURE(ref$, h=h_3_o, P=p_3_o)      "compressor 2 inlet temperature [C]"
+T_15_o = TEMPERATURE(wat$, h=h_15_o, P=p_15_o)   "water outlet temperature [C]"
+v_2_o = VOLUME(ref$, h=h_2_o, P=p_2_o)           "refrigerant specific volume, inlet [m^3/kg]"
+v_3_o = VOLUME(ref$, h=h_3_o, P=p_3_o)           "refrigerant specific volume, outlet [m^3/kg]"
+v_14_o = VOLUME(wat$, h=h_14_o, P=p_14_o)        "water specific volume, inlet [m^3/kg]"
+v_15_o = VOLUME(wat$, h=h_15_o, P=p_15_o)        "water specific volume, outlet [m^3/kg]"
+ttd_u_ic_o = T_2_o - T_15_o                      "upper terminal temperature difference [K]"
+ttd_l_ic_o = T_3_o - T_14                       "lower terminal temperature difference [K]"
+lmtd_ic_o = LMTD_smoothed(ttd_u_ic_o, ttd_l_ic_o) "smoothed LMTD [K]"
+
+"!Compressor 2 (TESPy Compressor 'compressor 2', states 3 -> 4)"
+p_4_o = p_4                                    "outlet pressure [Pa]"
+s_3_o = ENTROPY(ref$, h=h_3_o, P=p_3_o)          "inlet entropy [J/kg-K]"
+h_4s_o = ENTHALPY(ref$, s=s_3_o, P=p_4_o)        "isentropic outlet enthalpy [J/kg]"
+f_cp2_o = INTERPOLATE('char', 'x_cp', 'f_cp', MIN(m_nh3_o/m_nh3_d, 1.2))  "efficiency factor eta_s_char, argument m/m_design [-]"
+(h_4_o - h_3_o)*eta_s_d*f_cp2_o = h_4s_o - h_3_o   "isentropic efficiency characteristic [J/kg]"
+W_dot_cp2_o = m_nh3_o*(h_4_o - h_3_o)             "compressor 2 power [W]"
+T_4_o = TEMPERATURE(ref$, h=h_4_o, P=p_4_o)      "outlet temperature [C]"
+
+"!Condenser (TESPy HeatExchanger 'condenser': refrigerant on side 1, water on side 2, states 4 -> 5)"
+p_5_o = p_4_o - dp_5                            "refrigerant outlet pressure [Pa]"
+T_17_o = T_17                                  "water supply temperature [C]"
+p_17_o = p_17                                  "water supply pressure [Pa]"
+h_17_o = ENTHALPY(wat$, T=T_17_o, P=p_17_o)      "water supply enthalpy = recirculation pump outlet [J/kg]"
+T_18_o = T_sink_o                                "water outlet temperature (heat-sink specification) [C]"
+h_18_o = ENTHALPY(wat$, T=T_18_o, P=p_18_o)      "water outlet enthalpy [J/kg]"
+m_nh3_o*(h_4_o - h_5_o) = m_17_o*(h_18_o - h_17_o)  "condenser energy balance [W]"
+Q_dot_cd_o = m_nh3_o*(h_4_o - h_5_o)              "condenser duty (heat delivered) [W]"
+f_cd1_o = INTERPOLATE('char', 'x_ua', 'f_A', MIN(m_nh3_o/m_nh3_d, 2.5))  "UA factor, refrigerant side (UA_char1) [-]"
+f_cd2_o = INTERPOLATE('char', 'x_ua', 'f_B', MIN(m_17_o/m_17_d, 2.5))   "UA factor, water side (UA_char2), water flow at its design value [-]"
+fUA_cd_o = 2/(1/f_cd1_o + 1/f_cd2_o)             "combined UA factor [-]"
+Q_dot_cd_o = UA_cd_d*fUA_cd_o*lmtd_cd_o          "heat transfer from UA_char [W]"
+p_17_o - p_18_o = zeta2_cd_d*8*m_17_o^2*(v_17_o + v_18_o)/2/pi^2        "pressure drop, water side (zeta2_d4) [Pa]"
+T_5_o = TEMPERATURE(ref$, h=h_5_o, P=p_5_o)      "valve inlet temperature [C]"
+v_17_o = VOLUME(wat$, h=h_17_o, P=p_17_o)        "water specific volume, inlet [m^3/kg]"
+v_18_o = VOLUME(wat$, h=h_18_o, P=p_18_o)        "water specific volume, outlet [m^3/kg]"
+ttd_u_cd_o = T_4_o - T_18_o                      "upper terminal temperature difference [K]"
+ttd_l_cd_o = T_5_o - T_17_o                      "lower terminal temperature difference [K]"
+lmtd_cd_o = LMTD_smoothed(ttd_u_cd_o, ttd_l_cd_o) "smoothed LMTD [K]"
+
+"!Consumer and recirculation pump (TESPy SimpleHeatExchanger 'consumer' pr=1, Pump 'recirculation pump')"
+m_16_o = m_17_o                                 "water loop flow rate [kg/s]"
+p_16_o = p_18_o                                 "consumer without pressure drop, cycle closer [Pa]"
+s_16_o = ENTROPY(wat$, h=h_16_o, P=p_16_o)       "pump inlet entropy [J/kg-K]"
+h_17s_o = ENTHALPY(wat$, s=s_16_o, P=p_17_o)     "isentropic pump outlet enthalpy [J/kg]"
+f_rp_o = INTERPOLATE('char', 'x_pump', 'f_pump', MIN(m_16_o/m_16_d, 1.25))  "efficiency factor eta_s_char, argument m/m_design [-]"
+(h_17_o - h_16_o)*eta_s_d*f_rp_o = h_17s_o - h_16_o  "isentropic efficiency characteristic [J/kg]"
+W_dot_rp_o = m_17_o*(h_17_o - h_16_o)             "recirculation pump power [W]"
+Q_dot_cons_o = m_17_o*(h_18_o - h_16_o)           "heat delivered to the consumer (consumer closes the loop) [W]"
+T_16_o = TEMPERATURE(wat$, h=h_16_o, P=p_16_o)   "consumer outlet = pump inlet temperature [C]"
+
+"!Performance"
+W_dot_el_o = W_dot_cp1_o + W_dot_cp2_o           "compressor electric power, grid power connection of the original [W]"
+COP_o = Q_dot_cd_o/W_dot_el_o                    "COP = condenser duty / compressor power, as in the test [-]"
+"!Remaining state-point temperatures (no effect on the results)"
+T_6_o = TEMPERATURE(ref$, h=h_6_o, P=p_6_o)      "valve outlet temperature, two-phase [C]"
+x_6_o = QUALITY(ref$, h=h_6_o, P=p_6_o)          "valve outlet vapour quality [-]"
+T_7_o = TEMPERATURE(ref$, h=h_7_o, P=p_7_o)      "drum liquid outlet temperature [C]"
+T_10_o = TEMPERATURE(ref$, h=h_10_o, P=p_10_o)   "drum vapour outlet temperature [C]"
+p_11_o = p_11                                  "heat-source water supply pressure [Pa]"
+T_11_o = T_11                                  "heat-source water supply temperature [C]"
+T_14_o = T_14                                  "intercooler water supply temperature [C]"
+
+
+"!State points of the refrigerant main loop (design case) for the thermodynamic diagrams (no effect on the results)"
+{1: compressor 1 inlet, 2: compressor 1 outlet, 3: compressor 2 inlet (after the intercooler),
+ 4: compressor 2 outlet, 5: condenser outlet, 6: valve outlet (drum inlet), 7: drum vapour outlet
+ (= state 10 of the model). Use h[i]/P[i] or s[i]/T[i] with "Overlay array path" and "Close cycle".}
+P[1] = p_1_d
+h[1] = h_1_d
+T[1] = T_1_d
+s[1] = s_1_d
+P[2] = p_2_d
+h[2] = h_2_d
+T[2] = T_2_d
+s[2] = ENTROPY(ref$, h=h_2_d, P=p_2_d)
+P[3] = p_3_d
+h[3] = h_3_d
+T[3] = T_3_d
+s[3] = s_3_d
+P[4] = p_4_d
+h[4] = h_4_d
+T[4] = T_4_d
+s[4] = ENTROPY(ref$, h=h_4_d, P=p_4_d)
+P[5] = p_5_d
+h[5] = h_5_d
+T[5] = T_5_d
+s[5] = ENTROPY(ref$, h=h_5_d, P=p_5_d)
+P[6] = p_6_d
+h[6] = h_6_d
+T[6] = T_6_d
+s[6] = ENTROPY(ref$, h=h_6_d, P=p_6_d)
+P[7] = p_10_d
+h[7] = h_10_d
+T[7] = T_10_d
+s[7] = ENTROPY(ref$, h=h_10_d, P=p_10_d)

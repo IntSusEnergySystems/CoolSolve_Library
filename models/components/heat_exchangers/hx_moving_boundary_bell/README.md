@@ -185,3 +185,4 @@ pressure drop", Applied Thermal Engineering 79 (2015) — the oracle of
 - CSL-0127 (hx_constant_effectiveness_discretised): discretised HX with
   pinch logic, same fixed-regime spirit.
 - `CSL-0250` *cascade_heat_pump_geothermal_dh*: two-zone sectioned evaporators/condensers of a cascade heat pump (design-point pinch view of the same discretised physics).
+- `CSL-0315` *ua_cecchinato_partload*: the Cecchinato et al. (2010) UA part-load law (`UA_cecchinato_hc` of the TESPy moving-boundary and sectioned exchangers), with the factor evaluated at the points of the TESPy tests.

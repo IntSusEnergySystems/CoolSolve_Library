@@ -91,3 +91,26 @@ Not recommended now: mean-line turbomachinery, PSO sizing/optimisation scripts, 
 * **Already in CoolSolve examples (marginal value = cross-validation):** semi-empirical scroll compressor (`scroll_compressor`), expander (`expander_module`), Zorlu heat pump with PCM storage (`zorlu_heat_pump`), ORC/refrigeration/Rankine cycles, eps-NTU exchangers (`exchangers1-3`), three-zone condenser (`condenser_3zones`), Colebrook pressure drop (`pressuredrop`), CO2 ORC (`orc_co2`).
 * **Gaps this library fills versus a classic EES teaching collection:** pinch-point design components for phase-changing HX; two-phase pressure-drop and void-fraction correlation families; plate/shell&tube/PCHE/fin-tube HTC sets and Bell-Delaware; sCO2 HTC correlations; pump curves with similarity laws; parabolic-trough semi-empirical collector; moving-boundary HX with refrigerant charge; transcritical/recompression CO2 cycle architectures; turbomachinery meanline loss models and Cordier sizing; heat-pipe/thermosyphon HX; cost correlations.
 * **Not translatable without an optimiser:** everything under `machine/optimization` and `sizing/*PSO*`; use parametric studies of the underlying models instead.
+
+## 2026-10-24 triage
+
+Card C-352 (T-PLAN, novelty triage of the 13 remaining `todo` rows with priority
+wave1/high/medium against library.json, 282 models): 4 kept `todo` (translation
+cards C-360...C-366 in roadmap.md §6), 7 `merged`, 2 `duplicate` (both of
+inventory rows kept `todo`), 0 `discarded`.
+
+| ID | Decision | Target / nearest model | Reason |
+|---|---|---|---|
+| LTP-015 | merged | CSL-0115 | discretised finite-volume evaporator already translated; fin-tube air-side HTC/DP correlations already in CSL-0099 and CSL-0109 |
+| LTP-016 | merged | CSL-0138 | moving-boundary HX (Bell 2015) already translated; the charge-sensitive geometry version (3000-line class) is not recommended now, variant note only |
+| LTP-018 | merged | CSL-0130 | single/two-phase pipe friction families already translated; refrigerant charge is trivial post-processing on the CSL-0131 void fraction |
+| LTP-019 | duplicate | LTP-029 | same Idelchik elbow coefficients; the function-family row LTP-029 is kept for the T-FUNC card C-364 |
+| LTP-021 | merged | CSL-0041 | latent/isothermal phase-change storage with HX already translated (ice-tank discharge; PCM storage in a HP: CSL-0039); the constant-pinch coupling would be a variant |
+| LTP-029 | todo | none (new function family) | Idelchik local-loss coefficients for bends (single/two-phase) absent from the library (card C-364) |
+| LTP-031 | merged | CSL-0111 | chevron plate HX pressure-drop correlations already in CSL-0111 (incl. Han-Lee-Kim two-phase) and CSL-0124; Han et al. chevron DP is the same family |
+| LTP-049 | todo | none (new function family) | pseudo-critical temperature / pseudo-boiling bounds absent from the library (sCO2 utility, e.g. for CSL-0144) (card C-365) |
+| LTP-053 | todo | none (new function family) | Cordier specific-speed line and 0D efficiency estimation absent from the library (card C-366) |
+| LTP-057 | todo | nearest: CSL-0134 / CSL-0153 (design-point ORCs) | off-design ORC with semi-empirical scroll expander + moving-boundary plate HX absent from the library (card C-360) |
+| LTP-058 | merged | CSL-0144 | sCO2 recompression Brayton already translated (Penkuhn & Tsatsaronis reference); the basic/recuperated architectures are simpler subsets |
+| LTP-059 | merged | CSL-0145 | transcritical CO2 cycle physics already translated (booster: receiver, flash-gas by-pass, gas cooler); expander/IHX architectures would be variants there |
+| LTP-065 | duplicate | LTP-053 | same Cordier/specific-speed physics in a sizing script; the correlations row LTP-053 is kept |

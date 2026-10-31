@@ -273,3 +273,4 @@ No CoolSolve gap. `missing_features` is empty.
 (geothermal steam turbine) and `CSL-0189` (R134a turbine power) were read.
 They are steam or R134a turbines closed by an isentropic efficiency. They
 do not use this nozzle-plus-Laval-wheel calculation, so `related` is empty.
+- `CSL-0310` *isentropic_nozzle_critical*: the standalone nozzle component (same nozzle equations, gamma here solved instead of fixed at 1.4).

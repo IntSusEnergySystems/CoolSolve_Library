@@ -237,3 +237,5 @@ Source file (Python, comments in English), local snapshot of S. Quoilin:
   same source library (`SimpleHeatExchanger`, `Pump`, `Valve`, `Pipe`), a
   network rather than a cycle.
 - `CSL-0250` *cascade_heat_pump_geothermal_dh*: two-loop cascade TESPy translation (pinch-sized sectioned exchangers, geothermal to district heating).
+- `CSL-0315` *ua_cecchinato_partload*: the Cecchinato et al. (2010) UA part-load scaling law (function library, TESPy).
+- `CSL-0313` *heat_pump_nh3_two_stage_flooded*: the two-stage ammonia heat pump of the TESPy test suite (flooded evaporator with drum and circulation pump, intercooler, off-design with characteristic lines; Ebsilon COP matrix).

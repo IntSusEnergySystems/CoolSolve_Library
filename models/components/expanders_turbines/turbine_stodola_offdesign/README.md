@@ -309,3 +309,6 @@ inventory candidate `TSP-003`).
   turbine (without the off-design cone law).
 - `CSL-0147` *segs_solar_power_plant*: 7-stage steam turbine train at the design point (fixed
   stage efficiencies), the plant this off-design turbine model could close in part load.
+- `CSL-0314` *steam_turbine_baumann*: the `SteamTurbine` subclass of the same TESPy snapshot, whose
+  efficiency depends on the outlet wetness (Baumann rule) instead of the mass flow.
+- `CSL-0313` *heat_pump_nh3_two_stage_flooded*: the same TESPy `eta_s_char` pattern for the compressors and pumps of a two-stage NH3 heat pump (design and off-design solved together).

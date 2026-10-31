@@ -1,0 +1,66 @@
+{
+  "id": "CSL-0276",
+  "name": "valve_overlap_timing",
+  "title": "Valve overlap from crank-angle valve timing (TP5 exercise 2)",
+  "summary": "Teaching exercise: inlet and exhaust valve opening/closing crank angles (TDC at 0 deg CA) of a four-stroke engine at rated regime and at idle. The valve overlap is the angle between exhaust valve closing and inlet valve opening around the exhaust TDC, also converted to a duration through the engine speed.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "valve_overlap_timing.eescode",
+  "fluids": [],
+  "tags": [
+    "exercise",
+    "valve timing",
+    "valve overlap",
+    "internal combustion engine",
+    "crank angle",
+    "four-stroke"
+  ],
+  "language_features": [],
+  "stats": {
+    "n_equations": 16,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP5/Ex_2_Croisement des soupapes_PNG.EES",
+    "candidate_id": "TM-0242",
+    "authors": [
+      "Philippe Ngendakumana (ULiège Thermotechnics)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.393",
+    "language": "fr",
+    "course": "ULiège MCI, TP5, exercise 2 (valve overlap). The source inventory also lists R. Dickes as collector of the MCI file set."
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of Ex_2_Croisement des soupapes_PNG.EES (14 variables decoded). compare_solution.py: 14 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 2 (DELTAt_1, DELTAt_2 not stored by EES; recomputed by hand). Pure explicit algebra, exact agreement.",
+    "checks": [
+      "ees-stored-solution",
+      "analytical"
+    ],
+    "reference": "EES stored solution of Ex_2_Croisement des soupapes_PNG.EES (14 variables decoded by ees_extract.py)",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.0,
+    "notes": "Explicit algebra: all 14 common variables agree exactly. DELTAt_1 = 53/21000 = 2.5238e-03 s and DELTAt_2 = 20/5400 = 3.7037e-03 s verified by hand."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0178",
+    "CSL-0185",
+    "CSL-0206"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-31",
+      "action": "added",
+      "by": "GLM agent for S. Quoilin"
+    }
+  ]
+}

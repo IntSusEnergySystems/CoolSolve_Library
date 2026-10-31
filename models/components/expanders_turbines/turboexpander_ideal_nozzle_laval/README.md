@@ -263,3 +263,4 @@ No CoolSolve gap. The equation window has no `$Export` directive.
 ## Related models
 
 No other library model is linked. `related` is empty.
+- `CSL-0310` *isentropic_nozzle_critical*: the same nozzle equations as a standalone component, sizing the throat area from a given mass flow.

@@ -294,4 +294,6 @@ No CoolSolve gap. `missing_features` is empty.
 
 ## Related models
 
-`related` is empty.
+`related` listed only `CSL-0310` before `CSL-0318`.
+- `CSL-0310` *isentropic_nozzle_critical*: the standalone nozzle component with the same choked/unchoked throat, where the throat area is a design result instead of an identified parameter.
+- `CSL-0318` *cordier_specific_speed*: 0D pre-design of a turbine (specific speed, Cordier diameter) from the duty, before any identified parameter exists.

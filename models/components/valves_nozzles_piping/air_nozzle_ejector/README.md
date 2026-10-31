@@ -263,3 +263,4 @@ SUBPROGRAM) was superseded partly by this model (triage card C-121).
 `CSL-0122` *nozzle_discharge_coefficients* ships the near-identical
 six-input `warning_error` range checker of the same lab toolkit (with the
 TM-0581 ranges) as a function library.
+- `CSL-0310` *isentropic_nozzle_critical*: the standalone isentropic nozzle with critical pressure and choking, of which the ejector primary nozzle is the unchoked orifice form.

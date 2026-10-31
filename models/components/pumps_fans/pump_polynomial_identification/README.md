@@ -208,3 +208,4 @@ No CoolSolve gap. `$Export` and `concat$` do not occur.
   are the dimensionless coefficients at one water point.
 - `CSL-0187` *fan_polynomial_identification*: the fan counterpart in the
   same Laborelec toolkit, one catalogue point at a fixed air density.
+- `CSL-0318` *cordier_specific_speed*: 0D pre-design from the duty (specific speed, Cordier diameter, efficiency chart), before a pump is selected from a catalogue.

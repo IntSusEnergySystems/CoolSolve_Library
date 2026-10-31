@@ -1,0 +1,378 @@
+{=============================================================================
+  Centrifugal brine pump - parameter identification of the pump
+  characteristics (ParamID variant of CSL-0072)
+ -----------------------------------------------------------------------------
+  Same centrifugal brine pump and same dimensionless characteristics
+  psi(phi), Lambda(phi) as the reference simulation model (main file of
+  CSL-0072), here identified from four measured operating points (pressure
+  head, volume flow and isentropic effectiveness at each point; point 0 is
+  the nominal point). The 8 identified coefficients are the parameters used
+  by the CSL-0072 file. Brine density from the BrineProp library procedure
+  BRINEPROP (copied below, tables Brine1/Brine2).
+  Status: verified against the EES stored solution (README, Verification).
+
+  Source : ULiège model bank "Model data bank", 2008-02-18, author
+           Vincent Lemort (with V. Teodorese, J. Lebrun) - see README.md
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Companion tables: centrifugal_brine_pump_refsim_paramid-Brine1.csv /
+           -Brine2.csv (BrineProp coefficients) and -Units.csv (the unit
+           labels of BRINEPROP, read with LOOKUP$)
+ =============================================================================}
+
+{--- Library procedure copied from the BrineProp library (Brineprop.lib of
+      the ULiège model bank, inventory candidate TM-0479): EES loads it
+      implicitly from the USERLIB folder. Copied unchanged except for the
+      removal of the dead code after END and of the unit labels, which are
+      the rows of the lookup table Units read with LOOKUP$ (as in the main
+      file of CSL-0072). ---}
+
+Procedure BRINEPROP(Pr$,Fl$,Conc,Temp:output)
+
+IF (Fl$='EG') AND (Conc<0) THEN
+	Call ERROR('Concentration must be equal to or larger than 0.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='EG') AND (Conc>56.1) THEN
+	Call ERROR('Concentration must be equal to or smaller than 56.1%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='PG') AND (Conc<15.2) THEN
+	Call ERROR('Concentration must be equal to or larger than 15.2%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='PG') AND (Conc>57.0) THEN
+	Call ERROR('Concentration must be equal to or smaller than 57.0%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='EA') AND (Conc<11.1) THEN
+	Call ERROR('Concentration must be equal to or larger than 11.1%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='EA') AND (Conc>60.1) THEN
+	Call ERROR('Concentration must be equal or smaller than 60.1%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='MA') AND (Conc<7.8) THEN
+	Call ERROR('Concentration must be equal to or larger than 7.8%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='MA') AND (Conc>44.3) THEN
+	Call ERROR('Concentration must be equal to or smaller than 44.3%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='GL') AND (Conc<19.5) THEN
+	Call ERROR('Concentration must be equal to or larger than 19.5%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='GL') AND (Conc>63.0) THEN
+	Call ERROR('Concentration must be equal to or smaller than 63.0%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='NH3') AND (Conc<7.8) THEN
+	Call ERROR('Concentration must be equal to or larger than 7.8%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='NH3') AND (Conc>23.6) THEN
+	Call ERROR('Concentration must be equal to or smaller than 23.6%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='K2CO3') AND (Conc<13.3) THEN
+	Call ERROR('Concentration must be equal to or larger than 13.3%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='K2CO3') AND (Conc>39.0) THEN
+	Call ERROR('Concentration must be equal to or smaller than 39.0%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='CaCl2') AND (Conc<9.0) THEN
+	Call ERROR('Concentration must be equal to or larger than 9.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='CaCl2') AND (Conc>29.4) THEN
+	Call ERROR('Concentration must be equal to or smaller than 29.4%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='MgCl2') AND (Conc<7.2) THEN
+	Call ERROR('Concentration must be equal to or larger than 7.2%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='MgCl2') AND (Conc>20.5) THEN
+	Call ERROR('Concentration must be equal to or smaller than 20.5%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='NaCl') AND (Conc<7.9) THEN
+	Call ERROR('Concentration must be equal to or larger than 7.9%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='NaCl') AND (Conc>22.6) THEN
+	Call ERROR('Concentration must be equal to or smaller than 22.6%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+IF (Fl$='KAc') AND (Conc<11.0) THEN
+	Call ERROR('Concentration must be equal to or larger than 11.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
+	ELSE
+	IF (Fl$='KAc') AND (Conc>41.0) THEN
+	Call ERROR('Concentration must be equal to or smaller than 41.0%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
+ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF
+
+"Sets property parameter"
+Pro=0
+Freeze=1;Density=2;SpecHeat=3;ThermalC=4;DynVisc=5
+"Unit labels (C, kg/m^3, kJ/kg-K, W/m-K, milliPa-s): rows Freeze ... DynVisc of the lookup table Units"
+Pr$=Uppercase$(Pr$)
+IF (Pr$='FREEZE') THEN Pro:=Freeze ELSE
+	IF (Pr$='DENSITY') THEN Pro:=Density ELSE
+		IF (Pr$='SPECHEAT') THEN Pro:=SpecHeat ELSE
+			IF (Pr$='THERMALC') THEN Pro:=ThermalC ELSE
+				IF (Pr$='DYNVISC') THEN Pro:=DynVisc
+ENDIF;ENDIF;ENDIF;ENDIF;ENDIF
+
+UO$=''
+{IF (Pro=Freeze) THEN UO$='C' ELSE
+	IF (Pro=Density) THEN UO$='kg/m^3' ELSE
+		IF (Pro=SpecHeat) THEN UO$='kJ/kg-K' ELSE
+			IF (Pro=ThermalC) THEN UO$='W/m-K' ELSE
+				IF (Pro=DynVisc) THEN UO$='milliPa-s'
+ENDIF;ENDIF;ENDIF;ENDIF;ENDIF}
+
+
+if (Pro=0) then Call ERROR('Unrecognized property indicator:  note that the first parameter must be Freeze, Density, SpecHeat, ThermalC or DynVisc and it must be surrounded with single quotes.' )
+Pr:=Pro
+UO$=LOOKUP$('Units',Pro,1)
+
+"Sets fluid parameter"
+EG=1;PG=2;EA=3;MA=4;GL=5;NH3=6;K2CO3=7;CaCl2=8;MgCl2=9;NaCl=10;KAc=11
+IF (Fl$='EG') THEN Flu:=EG ELSE
+	IF (Fl$='PG') THEN Flu:=PG ELSE
+		IF (Fl$='EA') THEN Flu:=EA ELSE
+			IF (Fl$='MA') THEN Flu:=MA ELSE
+				IF (Fl$='GL') THEN Flu:=GL ELSE
+					IF (Fl$='NH3') THEN Flu:=NH3 ELSE
+						IF (Fl$='K2CO3') THEN Flu:=K2CO3 ELSE
+							 IF (Fl$='CaCl2') THEN Flu:=CaCl2 ELSE
+								IF (Fl$='MgCl2') THEN Flu:=MgCl2 ELSE
+									IF (Fl$='NaCl') THEN Flu:=NaCl ELSE
+										IF (Fl$='KAc') THEN Flu:=KAc
+ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF
+Fl:=Flu
+
+"Coefficients"
+k=0
+repeat
+k=k+1
+Row[k]=k+(Fl-1)*18
+c[k]=lookup('Brine1',Row[k],Pr)
+until (k>=18)
+
+"Mean values"
+xm=lookup('Brine2',Fl,1)
+ym=lookup('Brine2',Fl,2)
+x=Conc-xm
+y=Temp-ym
+
+"Equation, f(temp,conc)"
+Funkt=c[1]+(c[2]*y)+(c[3]*y^2)+(c[4]*y^3)+(c[5]*x)+(c[6]*x*y)+(c[7]*x*y^2)+(c[8]*x*y^3)+(c[9]*x^2)+(c[10]*x^2*y)+(c[11]*x^2*y^2)+(c[12]*x^2*y^3)+(c[13]*x^3)+(c[14]*x^3*y)+(c[15]*x^3*y^2)+(c[16]*x^4)+(c[17]*x^4*y)+(c[18]*x^5)
+
+"Conditions
+Mode=mu   =>  output = exp(f)
+Mode<>mu =>  output = f
+"
+IF (Pr=5) THEN
+output=exp(Funkt)
+ELSE
+IF (Pr=3) THEN
+output=Funkt/1000
+ELSE
+output=Funkt
+ENDIF;ENDIF;ENDIF
+END
+
+{--- End of the library procedure copied from Brineprop.lib (TM-0479) ---}
+
+"!Title: CENTRIFUGAL PUMP AND NETWORK PARAMETERS IDENTIFICATION MODEL (ParamID)"
+
+"Date : 2008 February 18"
+"Authors: Vincent Lemort"
+"!Short description (as in the original): this model identifies the parameters of the reference
+pump model and the network model. Four operating points must be specified in terms of pressure
+head, volumetric flow rate and isentropic effectiveness of the pump. The first given point
+(nominal point) is used to identify the water network equivalent section."
+{Note: the equations of this file version identify the 8 characteristic coefficients only; the
+network equivalent section (D_loop_equ, listed under outputs in the original) has no equation
+in the file - see README.}
+
+"!Nomenclature :"
+"A						Cross section area, m^2"
+"D						Impeller diameter, m"
+"M_dot				Mass flow rate	, kg/s"
+"N						Rotational speed, Hz"
+"P						Pressure, Pa"
+"rpm					Rotational speed, rpm"
+"t						Temperature, C"
+"U						Peripheral speed, m/s"
+"v						Specific volume, m^3/kg"
+"V_dot				Volume flow rate, m^3/s"
+"W_dot				Power (isentropic, shaft), W"
+"X_brine				Percentage of antifreeze in the brine, %"
+
+"Greek symbols"
+"alpha			Coefficient,-"
+"beta				Coefficient,-"
+"DELTAP		Pressure increase, Pa"
+"epsilon			Efficiency,-"
+"Lambda			Power factor,-"
+"phi				Flow factor,-"
+"psi				Pressure factor,-"
+
+"Subscripts"
+"brine			Brine"
+"dynam			Dynamic"
+"equ				Equivalent"
+"loop				Network"
+"m3h				Cubic meters per hour"
+"s					Isentropic"
+"su				Supply"
+
+"!Disclaimer: as in the original - this model is freely distributed and may not be sold or
+distributed for commercial purpose; the user is asked to cite the origin of this model."
+
+
+"!*** 1. INPUTS (diagram-window inputs of the original; values of the stored reference run) ***"
+rpm_pump=1750 "[rev/min] (the input comment of the original says 1300; the stored run used 1750)"
+t_brine=20 "[C] (the input comment of the original says 25; the stored run used 20)"
+X_brine=0 "[%]"
+brine$='EG'  "not in the extracted equations - identified from the stored solution (see README)"
+D_pump=0.1333 "[m] (impeller diameter)"
+"Measured operating points (pressure head, volume flow, isentropic effectiveness):"
+DELTAP_pump=87000 "[Pa]"
+V_dot_pump_mh=2 "[m^3/h]"
+epsilon_s_pump=0.22 "[-]"
+DELTAP_pump1=82000 "[Pa]"
+V_dot_pump_mh1=6 "[m^3/h]"
+epsilon_s_pump1=0.47 "[-]"
+DELTAP_pump2=72000 "[Pa]"
+V_dot_pump_mh2=10 "[m^3/h]"
+epsilon_s_pump2=0.54 "[-]"
+DELTAP_pump3=46000 "[Pa]"
+V_dot_pump_mh3=16 "[m^3/h]"
+epsilon_s_pump3=0.5 "[-]"
+
+"!*** 2. PARAMETERS ***"
+"none: the 8 characteristic coefficients alpha_0..3_pump and beta_0..3_pump are identified (outputs)"
+
+"!*** 3. OUTPUTS ***"
+"alpha_0_pump, alpha_1_pump, alpha_2_pump, alpha_3_pump, beta_0_pump, beta_1_pump, beta_2_pump, beta_3_pump"
+"(the original also lists the network equivalent diameter D_loop_equ, absent from the equations)"
+
+"!*** 4. EQUATIONS ***"
+
+"4.1. Point 0 (Nominal point)"
+	"Flow factor:"
+phi_pump=V_dot_pump/(A_pump*U_pump)
+	"Reference area:"
+A_pump=pi*D_pump^2/4
+	"Peripheral speed:"
+U_pump=pi*D_pump*N_pump
+	"rotation speed:"
+N_pump=rpm_pump/60
+	"Pressure factor:"
+psi_pump=(DELTAP_pump)/P_dynam_periph_pump
+	"Peripheral dynamic pressure:"
+P_dynam_periph_pump=U_pump^2/(2*v_brine)
+	"Brine specific volume:"
+v_brine=1/rho_brine
+CALL BRINEPROP('Density',brine$,X_brine,t_brine:rho_brine)
+	"Mass flow rate:"
+M_dot_pump=V_dot_pump/v_brine
+V_dot_pump_mh=V_dot_pump*3600
+	"Isentropic power:"
+W_dot_s_pump=V_dot_pump*DELTAP_pump
+	"Isentropic effectiveness:"
+epsilon_s_pump=W_dot_s_pump/W_dot_shaft_pump
+	"Power factor:"
+lambda_pump =(phi_pump*psi_pump)/epsilon_s_pump
+	"Pump characteristics:"
+psi_pump=alpha_0_pump + alpha_1_pump*phi_pump +alpha_2_pump*phi_pump^2 + alpha_3_pump*phi_pump^3
+Lambda_pump=beta_0_pump + beta_1_pump*phi_pump + beta_2_pump*phi_pump^2 + beta_3_pump*phi_pump^3
+
+"4.2. Point 1"
+	"Data (as in the original; spelled Dataa there)"
+D_pump1=D_pump
+rpm_pump1=rpm_pump
+X_brine1=X_brine
+T_brine1=T_brine
+	"Flow factor:"
+phi_pump1=V_dot_pump1/(A_pump1*U_pump1)
+	"Reference area:"
+A_pump1=pi*D_pump1^2/4
+	"Peripheral speed:"
+U_pump1=pi*D_pump1*N_pump1
+	"rotation speed:"
+N_pump1=rpm_pump1/60
+	"Pressure factor:"
+psi_pump1=(DELTAP_pump1)/P_dynam_periph_pump1
+	"Peripheral dynamic pressure:"
+P_dynam_periph_pump1=U_pump1^2/(2*v_brine1)
+	"Brine specific volume:"
+v_brine1=1/rho_brine1
+CALL BRINEPROP('Density',brine$,X_brine1,t_brine1:rho_brine1)
+	"Mass flow rate:"
+M_dot_pump1=V_dot_pump1/v_brine1
+V_dot_pump_mh1=V_dot_pump1*3600
+	"Isentropic power:"
+W_dot_s_pump1=V_dot_pump1*DELTAP_pump1
+	"Isentropic effectiveness:"
+epsilon_s_pump1=W_dot_s_pump1/W_dot_shaft_pump1
+	"Power factor:"
+lambda_pump1 =(phi_pump1*psi_pump1)/epsilon_s_pump1
+	"Pump characteristics:"
+psi_pump1=alpha_0_pump + alpha_1_pump*phi_pump1 +alpha_2_pump*phi_pump1^2 + alpha_3_pump*phi_pump1^3
+Lambda_pump1=beta_0_pump + beta_1_pump*phi_pump1 + beta_2_pump*phi_pump1^2 + beta_3_pump*phi_pump1^3
+
+"4.3. Point 2"
+	"Data"
+D_pump2=D_pump
+rpm_pump2=rpm_pump
+X_brine2=X_brine
+T_brine2=T_brine
+	"Flow factor:"
+phi_pump2=V_dot_pump2/(A_pump2*U_pump2)
+	"Reference area:"
+A_pump2=pi*D_pump2^2/4
+	"Peripheral speed:"
+U_pump2=pi*D_pump2*N_pump2
+	"rotation speed:"
+N_pump2=rpm_pump2/60
+	"Pressure factor:"
+psi_pump2=(DELTAP_pump2)/P_dynam_periph_pump2
+	"Peripheral dynamic pressure:"
+P_dynam_periph_pump2=U_pump2^2/(2*v_brine2)
+	"Brine specific volume:"
+v_brine2=1/rho_brine2
+CALL BRINEPROP('Density',brine$,X_brine2,t_brine2:rho_brine2)
+	"Mass flow rate:"
+M_dot_pump2=V_dot_pump2/v_brine2
+V_dot_pump_mh2=V_dot_pump2*3600
+	"Isentropic power:"
+W_dot_s_pump2=V_dot_pump2*DELTAP_pump2
+	"Isentropic effectiveness:"
+epsilon_s_pump2=W_dot_s_pump2/W_dot_shaft_pump2
+	"Power factor:"
+lambda_pump2 =(phi_pump2*psi_pump2)/epsilon_s_pump2
+	"Pump characteristics:"
+psi_pump2=alpha_0_pump + alpha_1_pump*phi_pump2 +alpha_2_pump*phi_pump2^2 + alpha_3_pump*phi_pump2^3
+Lambda_pump2=beta_0_pump + beta_1_pump*phi_pump2 + beta_2_pump*phi_pump2^2 + beta_3_pump*phi_pump2^3
+
+"4.4. Point 3"
+	"Data:"
+D_pump3=D_pump
+rpm_pump3=rpm_pump
+X_brine3=X_brine
+T_brine3=T_brine
+	"Flow factor:"
+phi_pump3=V_dot_pump3/(A_pump3*U_pump3)
+	"Reference area:"
+A_pump3=pi*D_pump3^2/4
+	"Peripheral speed:"
+U_pump3=pi*D_pump3*N_pump3
+	"rotation speed:"
+N_pump3=rpm_pump3/60
+	"Pressure factor:"
+psi_pump3=(DELTAP_pump3)/P_dynam_periph_pump3
+	"Peripheral dynamic pressure:"
+P_dynam_periph_pump3=U_pump3^2/(2*v_brine3)
+	"Brine specific volume:"
+v_brine3=1/rho_brine3
+CALL BRINEPROP('Density',brine$,X_brine3,t_brine3:rho_brine3)
+	"Mass flow rate:"
+M_dot_pump3=V_dot_pump3/v_brine3
+V_dot_pump_mh3=V_dot_pump3*3600
+	"Isentropic power:"
+W_dot_s_pump3=V_dot_pump3*DELTAP_pump3
+	"Isentropic effectiveness:"
+epsilon_s_pump3=W_dot_s_pump3/W_dot_shaft_pump3
+	"Power factor:"
+lambda_pump3 =(phi_pump3*psi_pump3)/epsilon_s_pump3
+	"Pump characteristics:"
+psi_pump3=alpha_0_pump + alpha_1_pump*phi_pump3 +alpha_2_pump*phi_pump3^2 + alpha_3_pump*phi_pump3^3
+Lambda_pump3=beta_0_pump + beta_1_pump*phi_pump3 + beta_2_pump*phi_pump3^2 + beta_3_pump*phi_pump3^3

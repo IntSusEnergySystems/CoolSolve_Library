@@ -201,3 +201,4 @@ reference of `Water`, which here agrees with the EES steam table to
 ## Related models
 
 None.
+- `CSL-0310` *isentropic_nozzle_critical*: air nozzle with the critical-pressure (choked/unchoked) test that this steam exercise does not make.

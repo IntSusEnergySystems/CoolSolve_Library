@@ -409,3 +409,7 @@ Kedzierski & Domanski (2001, 1999), Wallis (1969), Collier & Thome (1994).
   pipes use the Darcy-Weisbach pressure drop with the built-in `Colebrook`
   friction factor (the alternative to the `dP_pipe_single_phase` function
   of this file).
+
+- `CSL-0316` *local_losses_idelchik_elbows*: loss coefficient of curved bends
+  (angle, radius ratio, Reynolds number, roughness) from the same library;
+  its roughness correction uses the Swamee-Jain factor of this file.

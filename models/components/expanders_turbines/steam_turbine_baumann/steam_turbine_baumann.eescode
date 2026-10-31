@@ -1,0 +1,110 @@
+{=============================================================================
+  Steam turbine with Baumann wet-expansion efficiency correction
+  CoolSolve Library model CSL-0314
+ -----------------------------------------------------------------------------
+  Translation of the TESPy class `SteamTurbine` (method eta_s_wet_func). The dry
+  isentropic efficiency eta_s_dry holds as long as the steam is superheated;
+  once the expansion enters the vapour dome the efficiency of the wet part is
+  reduced by the Baumann rule eta_s = eta_s_dry*(1 - alpha*y_m), y_m = mean
+  wetness. For a superheated inlet the saturation crossing (an inner root search
+  in TESPy) is two simultaneous equations. Seven cases are solved: the TESPy
+  docstring state (alpha = 0.4, 1, 1.5), two outlets close to saturation, a given
+  outlet quality (unknown outlet pressure), a wet inlet.
+  Inputs : P_in, T_in (or x_in), m_dot, eta_s_dry, alpha, P_out (or x_out)
+  Outputs: P_x (saturation crossing), eta_s, x_out, power W_dot
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : Francesco Witte, tlmerbecks (TESPy, github.com/oemof/tespy, commit
+           19425523), MIT; Baumann rule after Tanuma (2017) - see README.md
+  Status : verified against a re-run of TESPy (docstring + test_SteamTurbine)
+           Valid only while the dry expansion crosses saturation above P_out (P_x > P_out).
+=============================================================================}
+
+"!Cases 1-5 : superheated inlet, outlet pressure given (DUPLICATE over the cases)"
+fluid$ = 'Water'
+m_dot = 10                      "mass flow rate, 36 t/h in the TESPy docstring [kg/s]"
+eta_s_dry = 0.9                 "isentropic efficiency of the dry expansion [-]"
+{case:                1: alpha=0.4 (smallest value allowed in TESPy), 2: Baumann alpha=1 (doctest 2),
+                      3: alpha=1.5, 4/5: inlet 191.5 / 191.55 C close to saturation (TESPy test near saturation)}
+alpha[1] = 0.4                  "Baumann influence factor of the wetness [-]"
+alpha[2] = 1
+alpha[3] = 1.5
+alpha[4] = 1
+alpha[5] = 1
+P_in[1] = 20E5                  "inlet pressure, cases 1-3: 20 bar [Pa]"
+P_in[2] = 20E5
+P_in[3] = 20E5
+P_in[4] = 8.763839E5            "inlet pressure, cases 4-5 [Pa]"
+P_in[5] = 8.763839E5
+T_in[1] = 250                   "inlet temperature, cases 1-3 [C]"
+T_in[2] = 250
+T_in[3] = 250
+T_in[4] = 191.5                 "inlet temperature, cases 4-5 [C]"
+T_in[5] = 191.55
+P_out[1] = 0.1E5                "outlet pressure, cases 1-3: 0.1 bar [Pa]"
+P_out[2] = 0.1E5
+P_out[3] = 0.1E5
+P_out[4] = 6.307527E5           "outlet pressure, cases 4-5 [Pa]"
+P_out[5] = 6.307527E5
+M[1] = m_dot                    "mass flow rate of the case [kg/s]"
+M[2] = m_dot
+M[3] = m_dot
+M[4] = 1
+M[5] = 1
+
+duplicate i=1,5
+ h_in[i] = enthalpy(fluid$,T=T_in[i],P=P_in[i])         "inlet enthalpy [J/kg]"
+ s_in[i] = entropy(fluid$,T=T_in[i],P=P_in[i])          "inlet entropy [J/(kg-K)]"
+ "Saturation crossing of the dry expansion (TESPy find_sat): the dry expansion to P_x ends on the saturated-vapour line"
+ h_xs[i] = enthalpy(fluid$,P=P_x[i],s=s_in[i])          "isentropic enthalpy at P_x [J/kg]"
+ h_x[i] = h_in[i] - eta_s_dry*(h_in[i] - h_xs[i])       "enthalpy after the dry expansion to P_x [J/kg]"
+ h_x[i] = enthalpy(fluid$,P=P_x[i],x=1)                 "saturated-vapour enthalpy at P_x [J/kg]"
+ "Wet part from the crossing point to the outlet (TESPy eta_s_wet_func)"
+ s_x[i] = entropy(fluid$,P=P_x[i],x=1)                  "saturated-vapour entropy at P_x [J/(kg-K)]"
+ h_out_s[i] = enthalpy(fluid$,P=P_out[i],s=s_x[i])      "isentropic enthalpy of the wet part [J/kg]"
+ y_m[i] = 1 - (1 + x_out[i])/2                          "mean wetness of the wet part, inlet of the wet part is saturated vapour [-]"
+ eta_wet[i] = eta_s_dry*(1 - alpha[i]*y_m[i])           "Baumann isentropic efficiency of the wet part [-]"
+ h_out[i] = h_x[i] - eta_wet[i]*(h_x[i] - h_out_s[i])   "outlet enthalpy [J/kg]"
+ x_out[i] = quality(fluid$,h=h_out[i],P=P_out[i])       "outlet vapour quality [-]"
+ "Overall results"
+ h_out_is[i] = enthalpy(fluid$,P=P_out[i],s=s_in[i])    "isentropic outlet enthalpy of the whole expansion [J/kg]"
+ eta_s[i] = (h_in[i] - h_out[i])/(h_in[i] - h_out_is[i]) "overall isentropic efficiency, as TESPy calc_eta_s [-]"
+ W_dot[i] = M[i]*(h_in[i] - h_out[i])                   "shaft power output [W]"
+ T_out[i] = temperature(fluid$,h=h_out[i],P=P_out[i])   "outlet temperature [C]"
+ margin[i] = P_x[i] - P_out[i]                          "check, must be positive for a wet outlet [Pa]"
+end
+
+"!Case 6 : TESPy test_SteamTurbine, outlet quality given, outlet pressure unknown"
+P_in_6 = 100E5                  "inlet pressure, 100 bar [Pa]"
+T_in_6 = 500                    "inlet temperature [C]"
+M_6 = 15                        "mass flow rate [kg/s]"
+alpha_6 = 1                     "Baumann influence factor [-]"
+x_out_6 = 0.9                   "outlet vapour quality [-]"
+h_in_6 = enthalpy(fluid$,T=T_in_6,P=P_in_6)             "inlet enthalpy [J/kg]"
+s_in_6 = entropy(fluid$,T=T_in_6,P=P_in_6)              "inlet entropy [J/(kg-K)]"
+h_xs_6 = enthalpy(fluid$,P=P_x_6,s=s_in_6)              "isentropic enthalpy at P_x [J/kg]"
+h_x_6 = h_in_6 - eta_s_dry*(h_in_6 - h_xs_6)            "enthalpy after the dry expansion to P_x [J/kg]"
+h_x_6 = enthalpy(fluid$,P=P_x_6,x=1)                    "saturated-vapour enthalpy at P_x [J/kg]"
+s_x_6 = entropy(fluid$,P=P_x_6,x=1)                     "saturated-vapour entropy at P_x [J/(kg-K)]"
+h_out_s_6 = enthalpy(fluid$,P=P_out_6,s=s_x_6)          "isentropic enthalpy of the wet part [J/kg]"
+y_m_6 = 1 - (1 + x_out_6)/2                             "mean wetness of the wet part [-]"
+eta_wet_6 = eta_s_dry*(1 - alpha_6*y_m_6)               "Baumann isentropic efficiency of the wet part [-]"
+h_out_6 = h_x_6 - eta_wet_6*(h_x_6 - h_out_s_6)         "outlet enthalpy [J/kg]"
+h_out_6 = enthalpy(fluid$,P=P_out_6,x=x_out_6)          "outlet enthalpy from the given quality, fixes P_out [J/kg]"
+h_out_is_6 = enthalpy(fluid$,P=P_out_6,s=s_in_6)        "isentropic outlet enthalpy of the whole expansion [J/kg]"
+eta_s_6 = (h_in_6 - h_out_6)/(h_in_6 - h_out_is_6)      "overall isentropic efficiency [-]"
+W_dot_6 = M_6*(h_in_6 - h_out_6)                        "shaft power output [W]"
+
+"!Case 7 : TESPy test_SteamTurbine, wet inlet (x_in = 0.99): Baumann rule on the whole expansion"
+P_in_7 = 100E5                  "inlet pressure [Pa]"
+x_in_7 = 0.99                   "inlet vapour quality [-]"
+M_7 = 15                        "mass flow rate [kg/s]"
+alpha_7 = 1                     "Baumann influence factor [-]"
+x_out_7 = 0.9                   "outlet vapour quality [-]"
+h_in_7 = enthalpy(fluid$,P=P_in_7,x=x_in_7)             "inlet enthalpy [J/kg]"
+s_in_7 = entropy(fluid$,P=P_in_7,x=x_in_7)              "inlet entropy [J/(kg-K)]"
+y_m_7 = ((1 - x_in_7) + (1 - x_out_7))/2                "mean wetness of the expansion [-]"
+eta_s_7 = eta_s_dry*(1 - alpha_7*y_m_7)                 "Baumann isentropic efficiency [-]"
+h_out_s_7 = enthalpy(fluid$,P=P_out_7,s=s_in_7)         "isentropic outlet enthalpy [J/kg]"
+h_out_7 = h_in_7 - eta_s_7*(h_in_7 - h_out_s_7)         "outlet enthalpy [J/kg]"
+h_out_7 = enthalpy(fluid$,P=P_out_7,x=x_out_7)          "outlet enthalpy from the given quality, fixes P_out [J/kg]"
+W_dot_7 = M_7*(h_in_7 - h_out_7)                        "shaft power output [W]"

@@ -284,3 +284,4 @@ Python", J. Open Source Softw. 5(49), 2178 (2020), doi:10.21105/joss.02178.
   physics.
 - `CSL-0013` *heat_pump_basic_tespy*: basic TESPy heat-pump translation
   (same source library, simplest cycle).
+- `CSL-0313` *heat_pump_nh3_two_stage_flooded*: another ammonia TESPy heat pump, two-stage with intercooler and a flooded evaporator (drum + circulation pump), with the off-design description (characteristic lines) of the TESPy test.

@@ -207,3 +207,4 @@ comes from its reference-state choice, not from the cycle model.
   temperature difference, as here.
 - CSL-0038 (`orc_co2_polynomial_maps`): the other CO2 power cycle of the
   library (transcritical ORC with polynomial compressor/turbine maps).
+- CSL-0317 (`pseudo_critical_properties`): pseudo-critical temperature and pseudo-boiling bounds of R744 against pressure (the main compressor inlet of this cycle, 35 C at 75 bar, lies 3.2 K above the pseudo-critical temperature of 31.77 C computed there at 75 bar).

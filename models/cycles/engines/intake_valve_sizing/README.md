@@ -227,3 +227,5 @@ ULiège course MCI, TP5, exercise 1. Published under the library licence (MIT).
   intake valve.
 - `CSL-0275` (*square_v6_engine_exercise*): MCI TP3 exercises 1-3 on a
   square V6 engine (bore/stroke from the displacement, mean piston speed).
+- `CSL-0276` (*valve_overlap_timing*): MCI TP5 exercise 2, valve overlap
+  from the crank-angle valve timing of the same course session.

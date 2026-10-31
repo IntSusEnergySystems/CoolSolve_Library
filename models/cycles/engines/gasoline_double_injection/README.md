@@ -236,5 +236,8 @@ licence (MIT).
 
 ## Related models
 
-`related` is empty. This equation window is the double-injection calculation
+- `CSL-0276` (*valve_overlap_timing*): MCI TP5 exercise 2, valve overlap
+  from the crank-angle valve timing of the same course session.
+
+This equation window is the double-injection calculation
 of TP5 exercise 3.

@@ -1,0 +1,89 @@
+{
+  "id": "CSL-0313",
+  "name": "heat_pump_nh3_two_stage_flooded",
+  "title": "Two-stage NH3 heat pump with flooded evaporator (TESPy benchmark vs Ebsilon)",
+  "summary": "Two-stage ammonia heat pump (condenser, valve, drum with circulation pump and flooded evaporator, vapour superheater, two compressors with intercooler) heating water from 60 to 105 C: design point plus an off-design point with characteristic lines, after the TESPy heat-pump benchmark with an Ebsilon COP matrix.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "heat_pump_nh3_two_stage_flooded.eescode",
+  "fluids": [
+    "Ammonia",
+    "Water"
+  ],
+  "tags": [
+    "heat pump",
+    "ammonia",
+    "two-stage compression",
+    "intercooler",
+    "flooded evaporator",
+    "drum",
+    "circulation pump",
+    "off-design",
+    "characteristic lines",
+    "COP matrix",
+    "Ebsilon reference",
+    "high-temperature heat pump"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE (block form)",
+    "INTERPOLATE (lookup table)",
+    "MIN / ABS / LN",
+    "property functions",
+    "string variables",
+    "arrays for the diagram state points"
+  ],
+  "stats": {
+    "n_equations": 291,
+    "largest_block": 69
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/tests/test_models/test_heat_pump_model.py",
+    "candidate_id": "TSP-052",
+    "authors": [
+      "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+    ],
+    "url": "https://github.com/oemof/tespy/blob/19425523ff7ecd67b36e7b90efe04a9480a9ebe3/tests/test_models/test_heat_pump_model.py",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "TESPy test_models/test_heat_pump_model.py (commit 19425523)",
+    "notes": "COP reference values of an Ebsilon model are the arrays of the test file; the Ebsilon model itself is not available. TSP-038 (stepwise NH3 tutorial) is a duplicate of this physics. Translation published under the CoolSolve_Library MIT licence (decision D3)."
+  },
+  "verification": {
+    "summary": "The TESPy test was re-run (CoolProp 8.0.0): CoolSolve agrees with all stored states, powers, duties, UA and COP at the design and 90 C/25 kg/s points (157 variables, max 4.0e-7, pumps) and with the COP of all 20 off-design points to 2.0e-9. Versus the Ebsilon COP matrix: -5.6 % to +6.3 %.",
+    "checks": [
+      "source-rerun",
+      "other-tool"
+    ],
+    "reference": "TESPy tests/test_models/test_heat_pump_model.py (commit 19425523) re-run in a throw-away venv (TESPy 0.11.3.dev0, CoolProp 8.0.0): design point and 20 off-design points; Ebsilon COP matrix of the test (4 sink temperatures x 5 source flows)",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 4.0e-07,
+    "notes": "compare_solution.py --rtol 1e-6 on design + baseline (157 common variables, 0 differ, max 4.03e-07 W_dot_pu_o; states and COP <= 2.7e-9). 20-point sweep: COP <= 2.0e-9 vs TESPy; vs Ebsilon max |deviation| 6.25 % at 90 C / 10 kg/s (test tolerance 7 %)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0013",
+    "CSL-0133",
+    "CSL-0135",
+    "CSL-0137",
+    "CSL-0145",
+    "CSL-0250"
+  ],
+  "related_external": [
+    "TESPy tests/test_models/test_heat_pump_model.py (github.com/oemof/tespy, commit 19425523)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-31",
+      "action": "added (T-TRANSLATE card C-361, batch B-16: TESPy TSP-052 two-stage NH3 heat pump with flooded evaporator)",
+      "by": "Claude (Sonnet 5.5) for S. Quoilin"
+    }
+  ]
+}

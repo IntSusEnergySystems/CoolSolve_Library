@@ -211,3 +211,4 @@ No CoolSolve gap. `$Export`, `concat$` and `EESFILEDIR$` do not occur.
   (`psi` linear term −0.44025). `CSL-0183` states a more precise cubic
   labelled RZR 800 (`psi` linear term −0.43544). The back-link is left for
   the orchestrator.
+- `CSL-0318` *cordier_specific_speed*: 0D pre-design from the duty (specific speed, Cordier diameter, efficiency chart), before a pump is selected from a catalogue.

@@ -254,6 +254,11 @@ D3), with credit to the authors of the original model.
   (LaboThapPy).
 * `CSL-0013` *heat_pump_basic_tespy* — the TESPy tutorial cycle (same source
   library).
+* `CSL-0315` *ua_cecchinato_partload* — the other TESPy off-design UA law, the
+  Cecchinato et al. (2010) scaling by mass-flow ratios and Reynolds exponents
+  (this model uses characteristic lines).
+* `CSL-0313` *heat_pump_nh3_two_stage_flooded*: a complete two-stage NH3 heat pump whose four exchangers use this UA/characteristic-line
+  rating (design and off-design) with the `LMTD_smoothed` function copied from this model.
 
 ## How to run
 
