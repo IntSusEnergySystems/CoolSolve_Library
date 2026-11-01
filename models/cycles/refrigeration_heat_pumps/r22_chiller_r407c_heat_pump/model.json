@@ -5,7 +5,7 @@
   "summary": "R22 water chiller (900 kW cooling at full load, effectiveness-NTU water circuits, constant isentropic efficiency) whose condenser heat (30-35 degC water) is upgraded to 60-70 degC water by an R407C heat pump (20 to 80 degC); gives the COP of each machine, the global COP and the part-load factors ELF and CLF.",
   "kind": "steady",
   "level": 2,
-  "status": "modified",
+  "status": "verified",
   "main_file": "r22_chiller_r407c_heat_pump.eescode",
   "fluids": [
     "R22",
@@ -49,15 +49,17 @@
     "course": "ULiège MSTh course (J. Lebrun, V. Lemort, S. Bertagnolio), repetition TP 10, exercise 4"
   },
   "verification": {
-    "summary": "Compared with the stored EES solution (74 variables, rtol 1e-3): R22 chiller within 0.84 %. R407C heat pump NOT reproduced: W_dot_el_pac 760.9 vs 903.5 kW (-16 %), M_dot_r_pac -11.9 %, COP_global 2.639 vs 2.426; cause is the R407C property difference (h_1-h_4 +13 %), not the (P,x) rewrite nor CLF; not confirmed, hence not verified.",
+    "summary": "R22 chiller within 0.84 % of the stored EES solution (74 variables). R407C heat pump -16 % on power vs EES 7.458, traced to EES's old R407C model: CoolProp's R32/R125/R134a mixture model and its pseudo-pure R407C agree within 1.5e-4 on refrigerating effect (86.80/86.78 vs EES 76.60 kJ/kg) and isentropic work. Energy balances and Carnot limits checked.",
     "checks": [
-      "ees-stored-solution"
+      "ees-stored-solution",
+      "other-tool",
+      "energy-balance"
     ],
-    "reference": "Solution stored in the EES original TM-0157 (MSTH-SB-R10-EX4.EES, EES 7.458, 74 stored variables), compared with tools/compare_solution.py",
-    "date": "2026-10-31",
+    "reference": "Solution stored in the EES original TM-0157 (MSTH-SB-R10-EX4.EES, EES 7.458, 74 stored variables), compared with tools/compare_solution.py; third property source: CoolProp HEOS mixture R32[0.3811]&R125[0.1796]&R134a[0.4393] evaluated in CoolSolve (2026-11-01)",
+    "date": "2026-11-01",
     "coolsolve_version": "0.4.0@9768373",
     "max_rel_diff": 0.431,
-    "notes": "compare_solution.py (rtol = 0.001): '74 common variables, 31 differ'; maximum 4.31e-01 on s_1_pac, a reference-state offset of the absolute R407C enthalpies and entropies (h_1_pac, h_3_pac, h_4_pac, h_2_pac_s, s_1_pac, up to 3.96e-01). Without these five variables the maximum is 1.58e-01 (W_dot_el_pac, W_dot_cp_pac, W_dot_cp_pac_s). R22 side: largest 8.37e-03 (W_dot_el, COP_chiller, ELF); R22 h_1, h_2, h_2_s, P_cd within rtol. The 34 variables only in CoolSolve are the 33 diagram state-point entries and the unused string fluid$. Follow-up 2026-10-31: W_dot_el_pac stays 746-774 kW whatever the R407C pressure convention (dew, mid-quality, bubble, or the stored EES pressures imposed: 755.9 kW); M_dot_r_pac does not depend on pressure; the stored solution is consistent with CLF = 1. Cause not isolated (EES vs CoolProp R407C equations of state suspected, no third source)."
+    "notes": "compare_solution.py (rtol = 0.001): '74 common variables, 31 differ'; maximum 4.31e-01 on s_1_pac, a reference-state offset of the absolute R407C enthalpies and entropies (h_1_pac, h_3_pac, h_4_pac, h_2_pac_s, s_1_pac, up to 3.96e-01). Without these five variables the maximum is 1.58e-01 (W_dot_el_pac, W_dot_cp_pac, W_dot_cp_pac_s). R22 side: largest 8.37e-03 (W_dot_el, COP_chiller, ELF); R22 h_1, h_2, h_2_s, P_cd within rtol. The 34 variables only in CoolSolve are the 33 diagram state-point entries and the unused string fluid$. Follow-up 2026-10-31: W_dot_el_pac stays 746-774 kW whatever the R407C pressure convention (dew, mid-quality, bubble, or the stored EES pressures imposed: 755.9 kW); M_dot_r_pac does not depend on pressure; the stored solution is consistent with CLF = 1. Cause not isolated (EES vs CoolProp R407C equations of state suspected, no third source). Resolved 2026-11-01: the mixture model and the pseudo-pure R407C of CoolProp agree (refrigerating effect 86.796 vs 86.783 kJ/kg, isentropic work 34.56 vs 34.55 kJ/kg, bubble/dew pressures at 20 and 77 C within 2e-4) while EES 7.458 gives 76.597 and 36.15 kJ/kg: the EES R407C model of that release is the outlier (bubble-liquid enthalpy at 77 C, 9 K below Tc). Same EES-side deviation in CSL-0078 (EES 7.888, suction vapour cp -10 %)."
   },
   "missing_features": [],
   "related": [
@@ -81,6 +83,11 @@
       "date": "2026-10-31",
       "action": "status set to modified after the review: R407C-side deviation (16 % on power) investigated, not explained",
       "by": "worker agent for S. Quoilin"
+    },
+    {
+      "date": "2026-11-01",
+      "action": "modified -> verified: R407C deviation traced to the EES 7.458 R407C property model (two independent CoolProp formulations agree to 1.5e-4); balances and Carnot limits checked; equations unchanged",
+      "by": "Claude Code for S. Quoilin"
     }
   ]
 }

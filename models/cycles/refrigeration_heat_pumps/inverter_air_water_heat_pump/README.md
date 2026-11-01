@@ -1,6 +1,6 @@
 # Inverter air-to-water heat pump (Daikin Altherma type), heating mode
 
-🔴 **Level 4 · Research** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ❌ **Failing** &nbsp;|&nbsp; `CSL-0155`
+🔴 **Level 4 · Research** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ❌ **Failing** (solver convergence; review of 2026-11-01) &nbsp;|&nbsp; `CSL-0155`
 
 Detailed steady-state model of an inverter-driven reversible air-to-water heat
 pump of the Daikin Altherma type (2007): inverter compressor modelled as an
@@ -130,6 +130,54 @@ point the largest residuals are the wet-coil cooling power
 A decomposition by hand (cutting the loop at `h_r_ex_cd`, or fixing the evaporating and condensing pressures) was
 not tried.
 
+### Review of 2026-11-01
+
+Classification: **failing, solver convergence** (no missing CoolSolve
+feature: every construct parses and evaluates). Findings:
+
+- **First-law error in the original, corrected.** The wet-coil balance wrote
+  `Q_dot_ev_wet = M_a·((h_su − h_ex) − (w_su − w_ex)·c_w·t_c) − M_dot_ice·H_ice`.
+  When the condensate freezes (contact temperature below 0.001 °C, the frost
+  case of this −15 °C operating point) it releases its latent heat, which the
+  refrigerant has to remove: with the condensate leaving as ice
+  (`h = c_w·t_c − H_fus`), the balance is `… + M_dot_ice·H_ice`. The sign is
+  corrected in the file (the original line is kept as a comment); the term is
+  small at this point (outdoor air at −15 °C, RH 0.8, `w` ≈ 0.0008 kg/kg).
+- **Try Harder does not converge it.** CoolSolve 0.4.0@9768373, shipped
+  `.initials`: normal pipeline (`Newton, TrustRegion`, 300 iterations) stops
+  at residual 1.0·10⁴ (Newton line search fails at iteration 0, step norm
+  6.5·10⁵); Try Harder (all solvers, tearing, symbolic reduction, multi-start)
+  reaches 369 and ends with a singular Schur complement in the tearing. With
+  the CoolSolve branch `fix/ad-pow-negative-base` (AD derivative of `x^y` for
+  `x` < 0, see `CSL-0326`) Try Harder gets much closer — best residual 0.39
+  (0.37 with the sign correction) from 1.2·10⁶ — but still stops (tearing
+  singular Schur complement, LM at its iteration limit). The AD bug therefore
+  also affected this model: it evaluates integer powers of quantities that are
+  negative at this point or during the iterations (`t_out^2`, `t_out^3` with
+  `t_out` = −15 °C in the speed-correction functions, `r_p^2`, `psi_fan_ev^3`,
+  `phi_pump^3` …), whose derivatives were NaN on CoolSolve `main`.
+- **The dry/wet selection is not the only obstacle.** With the 13
+  `IF(Q_dot_ev_dry, Q_dot_ev_wet, …)` selectors replaced by their wet branch
+  (test file, not shipped), the block shrinks to 127 variables and still fails
+  (best residual 1.0·10⁴). The remaining difficulty sits in the wet-coil
+  contact model (fictitious specific heat `cp_f_a_ev`, a ratio of two
+  differences that both vanish when the coil is dry, as here) coupled with the
+  compressor (isentropic + isochoric stages through the `(s, v)` state) and
+  the water condenser.
+
+Hints for CoolSolve: (a) when a block of this size stalls near the solution
+(residual 0.4 out of 10⁶), a final polishing stage with exact Newton steps and
+a relaxed line search, or a restart of LM from the best iterate with a fresh
+damping, could finish it; (b) write the best iterate of a failed block to the
+debug folder (`best_iterate.initials`), so that a user can restart from it
+(today a failed solve only keeps the initial guesses); (c) the five-argument
+`IF` used as a regime selector has a zero derivative with respect to its
+condition: a smoothed selector (e.g. a logistic blend over a small band) as an
+option would let Newton cross the dry/wet boundary. Hints for the model: cut
+the loop as the debugging guide suggests (fix `p_ev` and `p_cd`, solve, then
+release them with the converged `.initials`); the stored EES solution cannot
+serve as a reference (see above).
+
 ## Source and attribution
 
 ULiège Thermodynamics Laboratory model bank (collection of S. Quoilin), file
@@ -173,6 +221,8 @@ the file, hence `TBD`. No student or personal data in the file.
 - **Block 106 does not converge** (151 variables, register §8, C-147): the model is *failing*, no `.sol`.
   See *Verification* for the tests of initial guesses and the stored-solution reference-state offset of the
   R410A enthalpies and entropies.
+- The frost latent-heat term of the wet-coil balance had the wrong sign in the
+  original; corrected on 2026-11-01 (see *Review of 2026-11-01*).
 - `CS-GAP-ENTHALPY-FUSION`: `Enthalpy_Fusion` missing —
   worked around by a stand-in FUNCTION.
 - The heating-mode branch only; the cooling branch of the original (identical

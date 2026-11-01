@@ -1,8 +1,8 @@
 {
  "snapshot": {
-  "content_hash": "sha256:db73608d8b943bf2",
-  "files": 1554,
-  "bytes": 10960453,
+  "content_hash": "sha256:77faa6ff54c3ac45",
+  "files": 1551,
+  "bytes": 10976762,
   "models": 300,
   "functions": 611,
   "taxonomy_version": "0.2"
@@ -1508,8 +1508,8 @@
    "category": "components/compressors",
    "kind": "steady",
    "level": 2,
-   "status": "failing",
-   "summary": "Teaching exercise for a 10 L Roots compressor tested at 1.4 bar discharge, with a volumetric efficiency of 85 % and a mechanical efficiency of 95 %. The equation window is that test point, with an inlet orifice and a leakage nozzle.",
+   "status": "verified",
+   "summary": "Teaching exercise for a 10 L Roots compressor tested at 1.4 bar discharge, with a volumetric efficiency of 85 % and a mechanical efficiency of 95 %. The equation window is that test point, with an inlet orifice and a leakage nozzle; adapted from the original (orifice area 0.004601 m², the author's commented value: the 5 cm orifice of the original chokes below the fresh-charge flow).",
    "fluids": [
     "Air"
    ],
@@ -1533,10 +1533,11 @@
    "missing_features": [],
    "related": [],
    "coolsolve_version": "0.4.0@9768373",
-   "verified_on": "2026-10-31",
-   "verification_summary": "Native file: no solution (5 cm inlet orifice cannot pass the fresh-charge flow). Variant roots_compressor_10l_no_inlet_drop (TM-0034, no orifice): 26/34 values of its EES stored solution agree; the 8 h/s differ by the Air reference offset, all 34 agree after that shift (max 3.22e-4).",
+   "verified_on": "2026-11-01",
+   "verification_summary": "Adapted main file (orifice area 0.004601 m², the author's commented value) vs the EES stored solution with the Air h/s reference offsets: 43/50 values agree (max 9.65e-4); the 7 others are the adapted area and the throat state, which in the store is not a solution (P_thr < 0). Variant no_inlet_drop: 34/34 after the same offsets (max 3.22e-4).",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "energy-balance"
    ],
    "path": "models/components/compressors/roots_compressor_10l",
    "main_file": "roots_compressor_10l.eescode",
@@ -4151,11 +4152,10 @@
     "CSL-0013"
    ],
    "coolsolve_version": "0.4.0@eb797fe",
-   "verified_on": "2026-10-31",
-   "verification_summary": "Not verified end-to-end: both files fail to converge in CoolSolve 0.4.0. The CS-BUG-PROC-NEG-POW check (integer powers rewritten as products, fractional bases guarded, all inlined variables initialised) did not change the outcome; the correlation procedures were solved standalone at the model operating points and the reference numbers come from re-running the source example (7 bisection iterations, residual 9.7e-4).",
+   "verified_on": "2026-11-01",
+   "verification_summary": "Not verified end-to-end (failing). Row companion, corrected (unit errors) and solved with CoolSolve branch fix/ad-pow-negative-base + Try Harder: single-phase rows 1 and 61 match an instrumented re-run of the LaboThapPy example within 0.6 % (tube heat, T_HP_h, HTCs); the two-phase row 31 does not converge (CHF-based boiling closure of the source).",
    "verification_checks": [
-    "source-rerun",
-    "other-tool"
+    "source-rerun"
    ],
    "path": "models/components/heat_exchangers/thermosyphon_hx",
    "main_file": "thermosyphon_hx.eescode",
@@ -6263,7 +6263,7 @@
    "category": "cycles/engines",
    "kind": "steady",
    "level": 1,
-   "status": "failing",
+   "status": "verified",
    "summary": "Teaching exercise on one square V6 four-stroke engine (bore = stroke): exercise 1 computes bore/stroke, clearance volume and piston kinematics at the end of the combustion; exercise 2 shaft and indicated power, brake mean effective pressure and friction losses; exercise 3 (default) mixture mass per cycle, fuel and air mass flows, volumetric efficiency, specific fuel consumption and thermal efficiency. The exercise is selected by the string Exercice$ ($IF).",
    "fluids": [
     "Air",
@@ -6298,17 +6298,14 @@
     "CSL-0178"
    ],
    "coolsolve_version": "0.4.0@9768373",
-   "verified_on": "2026-10-22",
-   "verification_summary": "Runnable variant _coolsolve (native over-determined by one redundant identity in the default branch) compared with the EES stored solution of MCI_TP3_EX-1-2-3.EES: compare_solution.py --ees-units, 31 common variables, 0 differ at rtol=0.001, max rel. diff 8.33e-04 (epsilon_v; EES vs CoolProp R#, molar masses, air density). Exercises 1 and 2 branches reproduce the stored values.",
+   "verified_on": "2026-11-01",
+   "verification_summary": "Main file (adapted: one redundant identity of the default branch commented out) vs the EES stored solution of MCI_TP3_EX-1-2-3.EES: compare_solution.py --ees-units, 31 common variables, 0 differ at rtol=0.001, max rel. diff 8.33e-04 (epsilon_v; EES vs CoolProp R#, molar masses, air density). Exercises 1 and 2 branches reproduce the stored values.",
    "verification_checks": [
     "ees-stored-solution"
    ],
    "path": "models/cycles/engines/square_v6_engine_exercise",
    "main_file": "square_v6_engine_exercise.eescode",
-   "figures": 0,
-   "variants": [
-    "square_v6_engine_exercise_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0276",
@@ -8497,7 +8494,7 @@
    "category": "cycles/refrigeration_heat_pumps",
    "kind": "steady",
    "level": 2,
-   "status": "failing",
+   "status": "verified",
    "summary": "Reference simulation model of a brine-to-water (ground-source) heat pump of the ULiège model bank: a scroll compressor described in five steps (suction heating-up, isentropic compression to an adapted pressure, isochoric compression to the discharge plenum, exhaust cooling-down and internal leakage through the scroll throat) with all its heat transfers referred to a fictitious envelope of uniform temperature, a brine evaporator and a water condenser, both described by three thermal resistances in series referred to their nominal flows; the brine properties come from the BrineProp library.",
    "fluids": [
     "R407C",
@@ -8520,8 +8517,8 @@
     "model bank",
     "brine"
    ],
-   "n_equations": 252,
-   "largest_block": 31,
+   "n_equations": 161,
+   "largest_block": 76,
    "origin_type": "research",
    "source": "thermo_models",
    "source_path": "~/Nextcloud/thermo_models/Model data bank/Heat_and_Cool_Production_Systems/Heat_Production_by_Vapor_Compression/BrinetoWaterHeatPump_RefSim_Model_VL080108.zip!/BrinetoWaterHeatPump_RefSim_EES_Model_VL080108.EES",
@@ -8542,18 +8539,17 @@
     "CSL-0155",
     "CSL-0260"
    ],
-   "coolsolve_version": "0.3.0@536d427",
-   "verified_on": "2026-10-05",
-   "verification_summary": "Concerns the runnable variant (the native file is over-determined by three equations as the original stands, status failing). Against the EES stored solution: 142 common variables, 73 differ above rtol = 0.001, maximum 5.54e-01 (reference-state offset on absolute enthalpies). Derived results agree to 0.4–3.3 %, above the expected tolerance (R407C properties) and not investigated further.",
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-11-01",
+   "verification_summary": "Adapted model (P_ev, P_cd, M_dot_r unknowns as in the original; internal power on the swept flow, closing a 124 W compressor energy-balance gap) vs the EES 7.888 stored solution: COP 4.021 vs 4.112, W 3984 vs 3760 W, Q_cd 16017 vs 15463 W. Rest of the gap: EES 7.888 R407C (suction cp -10 %) vs two CoolProp formulations that agree. Balances closed.",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "energy-balance",
+    "other-tool"
    ],
    "path": "models/cycles/refrigeration_heat_pumps/brine_to_water_heat_pump_refsim",
    "main_file": "brine_to_water_heat_pump_refsim.eescode",
-   "figures": 0,
-   "variants": [
-    "brine_to_water_heat_pump_refsim_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0116",
@@ -9487,7 +9483,7 @@
    "category": "cycles/refrigeration_heat_pumps",
    "kind": "steady",
    "level": 2,
-   "status": "modified",
+   "status": "verified",
    "summary": "R22 water chiller (900 kW cooling at full load, effectiveness-NTU water circuits, constant isentropic efficiency) whose condenser heat (30-35 degC water) is upgraded to 60-70 degC water by an R407C heat pump (20 to 80 degC); gives the COP of each machine, the global COP and the part-load factors ELF and CLF.",
    "fluids": [
     "R22",
@@ -9525,10 +9521,12 @@
     "CSL-0260"
    ],
    "coolsolve_version": "0.4.0@9768373",
-   "verified_on": "2026-10-31",
-   "verification_summary": "Compared with the stored EES solution (74 variables, rtol 1e-3): R22 chiller within 0.84 %. R407C heat pump NOT reproduced: W_dot_el_pac 760.9 vs 903.5 kW (-16 %), M_dot_r_pac -11.9 %, COP_global 2.639 vs 2.426; cause is the R407C property difference (h_1-h_4 +13 %), not the (P,x) rewrite nor CLF; not confirmed, hence not verified.",
+   "verified_on": "2026-11-01",
+   "verification_summary": "R22 chiller within 0.84 % of the stored EES solution (74 variables). R407C heat pump -16 % on power vs EES 7.458, traced to EES's old R407C model: CoolProp's R32/R125/R134a mixture model and its pseudo-pure R407C agree within 1.5e-4 on refrigerating effect (86.80/86.78 vs EES 76.60 kJ/kg) and isentropic work. Energy balances and Carnot limits checked.",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool",
+    "energy-balance"
    ],
    "path": "models/cycles/refrigeration_heat_pumps/r22_chiller_r407c_heat_pump",
    "main_file": "r22_chiller_r407c_heat_pump.eescode",
@@ -20028,8 +20026,26 @@
   "CS-BUG-UNIT-VOLUME": {
    "kind": "bug",
    "state": "open",
-   "priority": "P3",
+   "priority": "P2",
    "text": "Unit inference labels specific volumes from `VOLUME(...)` as `kg/m^3` in the `.sol` file (should be `m^3/kg`).",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-GUESS-INFER": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P2",
+   "text": "**Default guesses: the type of a variable is recognised in two syntactic patterns only**, everything else gets 1.0.",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-NONFINITE-START": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P2",
+   "text": "**A block whose residual is non-finite at the start keeps iterating.** Newton stops at once (*SingularJacobian*), but TrustRegion, LM, Homotopy… of the pipeline (Try Harder) then iterate with ‖F‖ = inf/NaN, without progress and without saying so: the full …",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"

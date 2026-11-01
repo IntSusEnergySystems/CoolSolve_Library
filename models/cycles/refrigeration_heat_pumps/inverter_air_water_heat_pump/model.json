@@ -54,7 +54,7 @@
     "date": "2026-10-10",
     "coolsolve_version": "0.3.0@59b2862",
     "max_rel_diff": null,
-    "notes": "Not verified: the native file (CS-GAP-IF5 closed, all 14 five-argument IF evaluate) solves 180 of 181 blocks but the 151-variable block 106 (dry/wet evaporator selection + compressor + condenser coupling) does not converge (Newton SingularJacobian/LineSearchFailed, TrustRegion MaxIterations, residual about 1e4 from a CoolProp-consistent initial point; register section 8, C-147). The stored EES R410A enthalpies/entropies are in EES's reference state (offset 142244.6 J/kg for h, to be added for CoolProp) and 118 of the 151 block variables are not stored; the shipped .initials is the stored solution with the reference-state offset applied and a consistent cycle point for the unstored variables. No .sol. The _coolsolve variant was removed (it never solved)."
+    "notes": "Not verified: the native file (CS-GAP-IF5 closed, all 14 five-argument IF evaluate) solves 180 of 181 blocks but the 151-variable block 106 (dry/wet evaporator selection + compressor + condenser coupling) does not converge (Newton SingularJacobian/LineSearchFailed, TrustRegion MaxIterations, residual about 1e4 from a CoolProp-consistent initial point; register section 8, C-147). The stored EES R410A enthalpies/entropies are in EES's reference state (offset 142244.6 J/kg for h, to be added for CoolProp) and 118 of the 151 block variables are not stored; the shipped .initials is the stored solution with the reference-state offset applied and a consistent cycle point for the unstored variables. No .sol. The _coolsolve variant was removed (it never solved). 2026-11-01: wet-coil frost term sign corrected (+M_dot_ice*H_ice); Try Harder results and hints in README (Review of 2026-11-01)."
   },
   "missing_features": [],
   "related": [
@@ -74,6 +74,12 @@
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @59b2862 (T-RECHECK, CS-GAP-IF5 closed): blocked -> failing, block 106 does not converge (initial-guess tests: README Verification); missing_features emptied (status failing: no registered gap left), _coolsolve variant removed, .initials rebuilt (R410A reference-state offset, consistent cycle point)",
       "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-11-01",
+      "action": "review of the failing models: stays failing (solver convergence, Try Harder fails; much closer with CoolSolve branch fix/ad-pow-negative-base); frost latent-heat sign of the wet-coil balance corrected (first law); diagnosis and CoolSolve hints in README",
+      "by": "Claude Code for S. Quoilin"
     }
-  ]
+  ],
+  "diagnosis": "Review 2026-11-01: block 106 (151 var.) does not converge even with Try Harder: residual 369 on CoolSolve 0.4.0, 0.37 with branch fix/ad-pow-negative-base (NaN AD derivative of x^y for x<0, t_out^2/t_out^3 at t_out=-15 C). Forcing the wet regime (IF selectors removed) still fails (127-var block, 1e4): wet-coil contact model + compressor/condenser coupling. Frost latent-heat sign corrected (first law)."
 }

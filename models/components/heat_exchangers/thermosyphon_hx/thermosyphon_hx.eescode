@@ -14,8 +14,9 @@
   Units  : SI - °C for property calls; *_K correlation variables in K.
   Source : Basile Chaudoir, Elise Neven - LaboThapPy (ULiège), commit f03f7f47;
            Apache-2.0; see README.md.
-  Status : failing - the system does not converge in CoolSolve 0.4.0
-           (diagnosis in README.md); procedures verified piecewise.
+  Status : failing - see README "Why the model fails" (review of 2026-11-01:
+           CS-BUG-PROC-NEG-POW, unit errors corrected, two-phase rows);
+           procedures verified piecewise.
 =============================================================================}
 
 FUNCTION Step(x)
@@ -270,7 +271,7 @@ rho_H_in = density(fluid_H$, T=T_su_H, P=P_su_H)
 cp_H_in = cp(fluid_H$, P=P_su_H, h=h_su_H)
 V_dot_h = m_dot_H/rho_H_in  "hot volumetric flow rate [m^3/s]"
 u_h_chimney = V_dot_h/A_chimney  "hot velocity in the chimney [m/s]"
-rho_wf_in = density(fluid_C$, P=P_su_C, h=h_c[62])  "cold density at the tube-bank outlet [kg/m^3]"
+rho_wf_in = density(fluid_C$, P=P_su_C, h=h_c[1])  "cold density at the tube-bank outlet (row 1), as the source's h_wf_out_guess [kg/m^3]"
 V_dot_wf = m_dot_C/rho_wf_in  "cold volumetric flow rate [m^3/s]"
 u_wf_in = V_dot_wf/A_casing_cold  "cold velocity in the condenser casing [m/s]"
 
@@ -285,10 +286,10 @@ A_r_in = A_casing_evap/A_crit_n  "area ratio A/A* of the inlet nozzle [-]"
 P_h[1] = P_tot_n*interpolate('nozzle','AAstar','PP0',AAstar=A_r_in)
 T_h[1] = T_tot_n*interpolate('nozzle','AAstar','TT0',AAstar=A_r_in)
 u_h = interpolate('nozzle','AAstar','M',AAstar=A_r_in)*sqrt(1.4*285.71429*T_h[1])
-rho_h_out = density(fluid_H$, P=P_h[62], T=T_h[62])
+rho_h_out = density(fluid_H$, P=P_h[62], T=T_h[62]-273.15)
 V_dot_h_out = m_dot_H/rho_h_out
 u_h_out = V_dot_h_out/A_casing_cold
-cp_h_exit = cp(fluid_H$, P=P_h[61], T=T_h[61])  "cp held from the last loop iteration of the original [J/(kg*K)]"
+cp_h_exit = cp(fluid_H$, P=P_h[61], T=T_h[61]-273.15)  "cp held from the last loop iteration of the original [J/(kg*K)]"
 rho_in_e = P_h[62]/T_h[62]/285.71429  "exhaust nozzle inlet ideal-air density [kg/m^3]"
 a_in_e = sqrt(1.4*285.71429*T_h[62])  "[m/s]"
 T_tot_e = T_h[62]+u_h_out^2/(2*cp_h_exit)  "[K]"
@@ -306,9 +307,9 @@ h_c[62] = h_su_C
 "!Per-row thermosyphon equations (source equ_syst, transcribed as simultaneous equations)"
 Tsat_C = temperature(fluid_C$, P=P_su_C, x=0)
 DUPLICATE i=1,61
-  in2ph[i] = 1-Step(abs(T_c[i]-Tsat_C)-1e-6)  "1 when the cold fluid sits on the saturation plateau (the try/except of the original)"
+  in2ph[i] = 1-Step(abs(T_c[i]-273.15-Tsat_C)-1e-6)  "1 when the cold fluid sits on the saturation plateau (the try/except of the original); T_c in K, Tsat_C in °C"
   CALL BankHTC(fluid_C$, T_c_o_su[i], T_c[i], T_wc_o[i], P_su_C, u_wf_in, N_col, D_o, S_T, S_L : h_c_o[i], DP_cond[i], Nu_cond[i], Re_cond[i], V_max_oil[i], a_gc[i])
-  CALL ExtConvBoil(D_o, fluid_C$, min(T_c[i], Tsat_C), T_wc_o[i], u_wf_in : h_cb[i])  "T_sat clamped below Tsat: off the plateau the original never evaluates this branch (try/except)"
+  CALL ExtConvBoil(D_o, fluid_C$, min(T_c[i]-273.15, Tsat_C), T_wc_o[i]-273.15, u_wf_in : h_cb[i])  "T_sat clamped below Tsat: off the plateau the original never evaluates this branch (try/except)"
   h_c_o_eff[i] = (1-in2ph[i])*h_c_o[i]+in2ph[i]*h_cb[i]  "cold-side HTC of the branch selected by the original flag"
   R_c_o_foul[i] = (1+foul)/(A_c_o*h_c_o_eff[i])  "condenser external resistance with fouling [K/W]"
   CALL RadHTC_FG(p_CO2, p_H2O, (T_h[i]+T_e_o_ex[i])/2, T_we_o[i], L_M : h_r_e_o[i])
@@ -329,9 +330,9 @@ DUPLICATE i=1,61
   T_we[i] = (T_we_i[i]+T_we_o[i])/2  "mean evaporator wall temperature [K]"
   T_wc[i] = (T_wc_i[i]+T_wc_o[i])/2  "mean condenser wall temperature [K]"
   (T_we[i]-T_wc[i])/R_axial = Q_dot_axial[i]  "axial wall conduction [W]"
-  cp_wf[i] = cp(fluid_C$, P=P_su_C, T=T_c_o_su[i])  "[J/(kg*K)]"
+  cp_wf[i] = cp(fluid_C$, P=P_su_C, T=T_c_o_su[i]-273.15)  "[J/(kg*K)]"
   T_c_o_su[i] = T_c[i]-(Q_dot_axial[i]+Q_dot_radial[i])/(m_dot_C*cp_wf[i])  "cold temperature upstream of the row (f14)"
-  cp_H[i] = cp(fluid_H$, P=P_h[i], T=(T_h[i]+T_e_o_ex[i])/2)  "[J/(kg*K)]"
+  cp_H[i] = cp(fluid_H$, P=P_h[i], T=(T_h[i]+T_e_o_ex[i])/2-273.15)  "[J/(kg*K)]"
   T_e_o_ex[i] = T_h[i]-(Q_dot_axial[i]+Q_dot_radial[i])/(m_dot_H*cp_H[i])  "hot temperature at the row exhaust (f15)"
   P_evap_ex[i] = P_h[i]-DP_evap[i]  "hot-side pressure at the row exhaust [Pa]"
   R_DP[i] = abs((T_HP_h[i]-T_HP_c[i])/Q_dot_radial[i])  "vapour-flow resistance [K/W]"
@@ -341,7 +342,7 @@ END
 "!Row marching (source System(), loop over the columns)"
 DUPLICATE i=1,61
   Q_dot_row[i] = (Q_dot_axial[i]+Q_dot_radial[i])*N_tubes_row  "heat of one full row [W]"
-  cp_h_m[i] = cp(fluid_H$, P=P_h[i], T=T_h[i])  "[J/(kg*K)]"
+  cp_h_m[i] = cp(fluid_H$, P=P_h[i], T=T_h[i]-273.15)  "[J/(kg*K)]"
   T_h[i+1] = T_h[i]-Q_dot_row[i]/(cp_h_m[i]*m_dot_H)  "hot temperature after the row [K]"
   P_h[i+1] = P_evap_ex[i]  "hot pressure after the row [Pa]"
   h_c[i+1] = h_c[i]-Q_dot_row[i]/m_dot_C  "cold enthalpy after the row [J/kg]"

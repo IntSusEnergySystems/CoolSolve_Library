@@ -13,7 +13,8 @@
   source only (see README.md). Units SI, degC, Pa, J (unchanged from original).
   Source: ULiege Thermodynamics Laboratory (V. Lemort collab., file initials VLD),
   ~/Nextcloud/thermo_models/modeles/HP_INVERTER_REV_VLD05092007_DAIKIN-ALTHERMA3.EES
-  Licence MIT. Status: failing (block 106 does not converge in CoolSolve) - see README.md.
+  Licence MIT. Status: failing (block 106 does not converge in CoolSolve, even with
+  Try Harder) - see README.md; frost-term sign corrected on 2026-11-01.
 =============================================================================}
 
 "!Functioning and reversibility functions (FUNCTIONs of the original, kept as they are)"
@@ -327,7 +328,10 @@ cp_a_su_ev =SPECHEAT(AirH2O,T=t_a_su_ev,P=P_atm,w=w_a_su_ev) "air specific heat 
 
 "Cooling power:"
 
-Q_dot_ev_wet=M_dot_a_ev*((h_a_su_ev-h_a_ex_ev_wet)-(w_a_su_ev - w_a_ex_ev_wet) * c_w_ev * t_c_ev_wet)-M_dot_ice*H_ice
+{ADAPTED 2026-11-01 (first law): the original writes ... -M_dot_ice*H_ice. Freezing the condensate releases its
+ latent heat, which the refrigerant must also remove: with the condensate leaving as ice at t_c (h = c_w*t_c - H_fus),
+ Q_ev = M_a*((h_su - h_ex) - (w_su - w_ex)*c_w*t_c) + M_ice*H_ice. Sign corrected (README, Limitations).}
+Q_dot_ev_wet=M_dot_a_ev*((h_a_su_ev-h_a_ex_ev_wet)-(w_a_su_ev - w_a_ex_ev_wet) * c_w_ev * t_c_ev_wet)+M_dot_ice*H_ice
  "air side cooling power" "W"
 M_dot_ice=IF(T_c_ev_wet,0.001,M_dot_w_condens_wet,0,0) "ice flow rate" "kg/s"
 

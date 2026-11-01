@@ -5,7 +5,7 @@
   "summary": "Reference simulation model of a brine-to-water (ground-source) heat pump of the ULiège model bank: a scroll compressor described in five steps (suction heating-up, isentropic compression to an adapted pressure, isochoric compression to the discharge plenum, exhaust cooling-down and internal leakage through the scroll throat) with all its heat transfers referred to a fictitious envelope of uniform temperature, a brine evaporator and a water condenser, both described by three thermal resistances in series referred to their nominal flows; the brine properties come from the BrineProp library.",
   "kind": "steady",
   "level": 2,
-  "status": "failing",
+  "status": "verified",
   "main_file": "brine_to_water_heat_pump_refsim.eescode",
   "fluids": [
     "R407C",
@@ -42,8 +42,8 @@
     "expression as CALL output argument"
   ],
   "stats": {
-    "n_equations": 252,
-    "largest_block": 31
+    "n_equations": 161,
+    "largest_block": 76
   },
   "origin": {
     "type": "research",
@@ -60,13 +60,17 @@
     "course": "ULiège model bank (Laborelec toolkit lineage), heat production by vapour compression, reference simulation model, 8 January 2008"
   },
   "verification": {
-    "summary": "Concerns the runnable variant (the native file is over-determined by three equations as the original stands, status failing). Against the EES stored solution: 142 common variables, 73 differ above rtol = 0.001, maximum 5.54e-01 (reference-state offset on absolute enthalpies). Derived results agree to 0.4–3.3 %, above the expected tolerance (R407C properties) and not investigated further.",
-    "checks": ["ees-stored-solution"],
-    "reference": "EES stored solution of the source file (142 of its 146 variable records hold a value; the reference point is the operating point stored by EES); the comparison concerns the runnable variant brine_to_water_heat_pump_refsim_coolsolve.eescode",
-    "date": "2026-10-05",
-    "coolsolve_version": "0.3.0@536d427",
-    "max_rel_diff": 0.554,
-    "notes": "142 common variables, 73 differ above rtol=0.001, maximum relative difference 5.54e-01 (h_ex_cd). The largest differences are the absolute enthalpies and entropies of R407C, offset by +143405 J/kg and +763.4 J/kg-K between EES 7.888 and CoolProp (reference state); the derived results agree to 0.4-3.3 % (COP_heating 4.112 / 4.254, Q_dot_ev 11933 / 12232 W, Q_dot_cd 15463 / 15708 W, W_dot_cp 3760 / 3693 W) and the remaining differences follow the specific heat of R407C vapour at the suction (+10 %) and the R407C saturation line near 0 and 42 °C (t_ev -3.544 / -3.808 °C), where the zeotropic blend is described differently by EES and CoolProp. gamma_leak_cp is fixed at the default value 1.03 of the commented line of the original instead of being solved by the bisection relation (see the conversion log), which accounts for 1.40e-02 on that variable. No reference variable excluded from the comparison; the 110 CoolSolve-only variables are the state points of the diagrams, the internal variables of the two flattened BRINEPROP blocks, the six consistency checks and the string variable fluid$."
+    "summary": "Adapted model (P_ev, P_cd, M_dot_r unknowns as in the original; internal power on the swept flow, closing a 124 W compressor energy-balance gap) vs the EES 7.888 stored solution: COP 4.021 vs 4.112, W 3984 vs 3760 W, Q_cd 16017 vs 15463 W. Rest of the gap: EES 7.888 R407C (suction cp -10 %) vs two CoolProp formulations that agree. Balances closed.",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance",
+      "other-tool"
+    ],
+    "reference": "EES stored solution of BrinetoWaterHeatPump_RefSim_EES_Model_VL080108.EES (142 of 146 records); R407C cross-check: CoolProp pseudo-pure R407C vs HEOS mixture R32[0.3811]&R125[0.1796]&R134a[0.4393] in CoolSolve",
+    "date": "2026-11-01",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": null,
+    "notes": "compare_solution.py: 142 common, 95 differ at rtol 1e-3 (absolute R407C h/s offsets +143.4 kJ/kg, +763 J/kg-K included). Without the power correction the same model is within 0.3-3.8 % of EES (COP 4.1815, W 3827 W): the correction adds 124 W internal / 155 W electrical power. R407C: suction cp 833.7 (EES) vs 930.8 (CoolProp pseudo-pure) / 929.3 (CoolProp mixture model); dew T at 436.2 kPa -1.248 vs -1.554 / -1.554 C. Energy balances of the .sol: compressor W = M_dot_r*(h_ex-h_su) + Q_amb to round-off, envelope, water, brine. Converges from the shipped .initials; from the EES stored values only Try Harder (96 it.); from default guesses SingularJacobian even with Try Harder. The _coolsolve variant (EES operating point, closures as checks) was removed."
   },
   "missing_features": [],
   "related": [
@@ -110,6 +114,12 @@
       "date": "2026-10-18",
       "action": "re-checked with CoolSolve 0.3.0@a77efaa (T-RECHECK, CS-GAP-ELSEIF-CHAIN and CS-GAP-UPPERCASE closed): the native file parses and its BRINEPROP procedure runs (a hybrid of the variant with the native procedure solves and agrees with the variant to 1.1e-10 on cp_glw); missing_features emptied; the native file stays over-determined as the original stands (164 equations, 161 unknowns: P_ev, P_cd and M_dot_r fixed at the stored EES values) and, with the three assignments removed, square (161/161) but its 76-variable block 42 does not converge (MaxIterations, residual 4.7e5); status failing; variant kept with its .sol, .initials and companion tables",
       "by": "opencode worker (GLM) for S. Quoilin"
+    },
+    {
+      "date": "2026-11-01",
+      "action": "failing -> verified: adapted from the original (assignments of P_ev, P_cd, M_dot_r added by the import removed; W_dot_in_cp = M_dot_s_cp*w_in_cp closes the compressor energy balance); 76-variable block converges from CoolProp-consistent initials; .initials/.sol added; _coolsolve variant and its tables removed",
+      "by": "Claude Code for S. Quoilin"
     }
-  ]
+  ],
+  "diagnosis": null
 }

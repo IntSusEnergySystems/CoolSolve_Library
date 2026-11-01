@@ -113,6 +113,13 @@ are the model's substance.
 - Row 1 of the cold side is superheated vapour, rows ~15–37 sit exactly on the
   saturation plateau (two-phase), the rest is compressed liquid — the source
   model handles all three; the translation keeps that (the `in2ph` branch).
+- **2026-11-01 — review of the failing models** (see *Why the model fails*):
+  temperature-unit errors corrected (main file: `in2ph`, `ExtConvBoil` wall
+  temperature, `cp_wf`, `cp_H`, `cp_h_m`, `rho_h_out`, `cp_h_exit`; row
+  companion: cold-side `BankHTC` inputs, `ExtConvBoil`, `cp_H`), `rho_wf_in`
+  at the cold outlet `h_c[1]` as in the source, row-companion `u_h` set to the
+  source run's 6.718 m/s, row-companion `.initials` replaced by the source's
+  converged row states (instrumented re-run). No other equation changed.
 
 ## Reference results (re-run of the source example)
 
@@ -136,6 +143,119 @@ relative residual 9.7e-4 ≤ its `res_tol` 1e-3 — the source itself stops at
 | exhaust nozzle T_h_out / P_h_out | 543.458 K / 101153.0 Pa |
 
 ## Why the model fails
+
+### Review of 2026-11-01 (supersedes the diagnosis below)
+
+The failure has three distinct causes; the first two are fixed.
+
+1. **CoolSolve bug `CS-BUG-PROC-NEG-POW` — root cause found and fixed on a
+   CoolSolve branch.** `RadHTC_FG` evaluates `log10(pL)^2` and `log10(pL)^3`
+   with `pL` < 1 (a negative base). CoolSolve's forward-mode AD wrote the
+   derivative of `x^y` as `x^y·(y'·ln x + y·x'/x)`: with `x` < 0, `ln x` is NaN
+   and `0·NaN = NaN`, so the whole Jacobian row of the CALL output became NaN,
+   and so did the row of `h_e_o = h_r_e_o + h_c_e_o` (a CALL output keeps the
+   procedure's AD value inside its block). Newton/KINSOL then stop with
+   *SingularJacobian* at iteration 0 and tearing reports a singular Schur
+   complement, exactly the symptoms seen since the import. The fix (power rule
+   for `d/dx`, the `ln x` term only where the exponent varies) is on the
+   CoolSolve branch **`fix/ad-pow-negative-base`** (not merged; regression
+   tests `[neg-pow]`, `[autodiff]`), which also fixes the
+   `solver_singular_diagnostics.md` dump: it printed a garbled Jacobian
+   (`J.row(r).data()` on a column-major matrix), which had led to the wrong
+   reading "the singular equation is the unused output `a_g`".
+2. **Unit errors of the first translation — corrected in both files.** In the
+   main file: `in2ph[i]` compared `T_c` (K) with `Tsat_C` (°C), so the boiling
+   branch was never selected; `ExtConvBoil` received `T_wc_o` in K for a °C
+   argument; `cp_wf`, `cp_H`, `cp_h_m`, `rho_h_out` and `cp_h_exit` passed
+   temperatures in K to property calls that take °C; `rho_wf_in` was evaluated
+   at the cold *inlet* `h_c[62]` instead of the outlet `h_c[1]`
+   (the source's `h_wf_out_guess`). In the row companion: the cold-side
+   `BankHTC` received °C temperatures for K arguments (Cyclopentane evaluated
+   at −29 °C as a liquid: 1091 instead of 228 W/(m²·K)), `ExtConvBoil` and
+   `cp_H` had the same K/°C slips, and `u_h` was hard-coded to 10.663 m/s
+   while the source run uses 6.718 m/s.
+3. **The two-phase rows of the source are numerically degenerate (open).**
+   On the saturation plateau (rows ≈ 15–37) the source uses `ext_conv_boil`,
+   i.e. `h = q_max/(T_wall − T_sat)` with `q_max` the Lienhard–Eichhorn
+   *critical* heat flux. With the cold fluid at `T_sat`, the condenser-side
+   heat flow `A·h·(T_wall − T_cold)/(1+foul)` collapses to the constant
+   `A·q_max/(1+foul)`: the equation loses its dependence on the wall
+   temperature (the source's own row-31 solution has a wall superheat of
+   0.063 K and `h` = 4.7·10⁵ W/(m²·K)). Physically the critical heat flux is
+   imposed as the operating flux. scipy's `fsolve` (MINPACK hybrd) tolerates
+   the resulting near-singular Jacobian; CoolSolve's pipeline does not: the
+   row-31 block of the companion fails even when started from the source's
+   solution (Try Harder: tearing singular Schur complement).
+
+**Verification of the corrected translation (row companion, patched CoolSolve,
+Try Harder).** With row 31 replaced by row 61 to test the single-phase rows
+alone, the block converges in 29 iterations and reproduces the re-run of the
+source (LaboThapPy `f03f7f47`, CoolProp 8.0.0, rows 0 and 60 of the final
+bisection iteration, recorded by instrumenting `thermosyphon_model`):
+
+| Row | Quantity | CoolSolve | LaboThapPy | diff |
+|---|---|---:|---:|---:|
+| 1 | heat per tube | 1259.91 W | 1261.36 W | −0.12 % |
+| 1 | `T_HP_h` | 626.10 K | 626.19 K | −0.01 % |
+| 1 | `P_HP_h` | 17.137 MPa | 17.155 MPa | −0.11 % |
+| 1 | hot / cold HTC | 113.22 / 227.85 W/(m²·K) | 113.22 / 227.85 | < 1e-5 |
+| 1 | radiative HTC | 7.880 W/(m²·K) | 7.878 | +0.02 % |
+| 61 | heat per tube | 938.89 W | 944.03 W | −0.55 % |
+| 61 | `T_HP_h` | 464.67 K | 464.80 K | −0.03 % |
+| 61 | hot / cold HTC | 122.20 / 700.30 W/(m²·K) | 122.20 / 700.32 | < 3e-5 |
+
+The remaining 0.1–0.6 % is the order of the source's own tolerance (its
+`fsolve` and bisection stop at a relative residual of about 1e-3) and of the
+CoolProp 8.0.0 vs 8.1.0-dev Water/Cyclopentane property differences.
+
+**Source issues noticed (LaboThapPy `f03f7f47`, to report upstream):**
+`nozzle()` computes the critical area as `m/(ρ_in·a_in)` (without the
+critical-flow factor 0.5787 = (2/(γ+1))^((γ+1)/(2(γ−1)))) and interpolates
+the Mach table linearly, so the casing velocity it returns (6.72 m/s) violates
+continuity (`m/(ρ·A)` ≈ 10.7 m/s); in `equ_syst`, `cp_H` is read from `AS_H`
+after updating `AS_C` (it returns the air `c_p` at the wall temperature of the
+last bank call); the per-tube balances `f14`/`f15` use the heat of one tube
+with the flow of the whole bank (the internal `T_e_o_ex`, `T_c_o_su` barely
+move; the row marching itself uses `Q_dot_row`). The translation keeps these
+as in the source.
+
+**Hints for CoolSolve** (beyond the merged-or-not fix above): (a) a
+MINPACK-hybrd-like dogleg that keeps progressing on rank-deficient blocks
+(the source solves the same rows with scipy `fsolve`); (b) when a Jacobian
+contains NaN/Inf, report the offending equation and variable in the error
+message (the new diagnostics section of the branch does it in debug mode);
+(c) the full file has one 2923-variable block (the 61 rows are coupled through
+the marching of both streams): a block-sequential strategy that solves the
+rows one after the other inside an outer iteration on the cold-side boundary
+(the source's own strategy) would replace one huge Newton system by 61 small
+ones.
+
+**Full file.** Without `.initials`, CoolSolve's default-guess inference
+does not recognise the temperatures held in K (they enter the property calls
+as `T-273.15`, procedure arguments or linear relations), so they all start at
+**1 K**: 488 residuals of the 2926-variable block are NaN/inf at iteration 0
+(`ThResESDU`, `DeltaPV_HP`, `ExtConvBoil`: Water properties at −272 °C, a
+division by zero in the boiling HTC), and Try Harder then iterated on ‖F‖ = inf
+for 33 min without reporting it (stopped). Registered in the CoolSolve
+register as `CS-BUG-GUESS-INFER` (type inference limited to two syntactic
+patterns; improvement: propagate types through affine relations, CALL
+arguments and procedure bodies) and `CS-BUG-NONFINITE-START` (fail fast and
+list the non-finite equations). A `thermosyphon_hx.initials` built from the
+instrumented source run (all 61 rows: wall, heat-pipe and stream states,
+1409 values) is now shipped: with it the residual is finite (4.7·10⁵), but
+Newton stalls at ‖F‖∞ = 4.72·10⁵ (line search failed after 17 iterations,
+patched CoolSolve, Try Harder), a value of the order of the boiling HTC of the
+two-phase rows (4.7·10⁵ W/(m²·K) in the source), consistent with cause 3.
+
+**Status: failing** (kept). To make the model run, the maintainer can either
+(i) keep the source physics and wait for a solver that copes with the
+degenerate boiling rows, or (ii) adapt the model: replace the CHF-based
+`ext_conv_boil` by a flow-boiling HTC that depends on the wall superheat
+(e.g. a Cooper/Gorenflo nucleate-boiling term) — a change of the source
+physics, which would make the model `modified`.
+
+### Diagnosis of the import (2026-10-31, superseded)
+
 
 CoolSolve 0.4.0 (`coolsolve --version`: 0.4.0, CoolProp 8.1.0-dev
 `75af78166`) cannot solve either file; the failure was reproduced on a
@@ -165,7 +285,12 @@ CoolSolve's `max(..., i=1, N)` indexed form is not implemented (SUM is).
 
 ## Verification status
 
-Not verified end-to-end: no `.sol` could be produced. What *was* checked:
+Not verified end-to-end: no `.sol` could be produced (status `failing`). The
+single-phase rows of the corrected row companion agree with the source within
+0.6 % with the CoolSolve fix of branch `fix/ad-pow-negative-base` (see *Why the
+model fails*). Earlier checks (2026-10-31; note that the standalone cold-side
+value 59.1 W/(m²·K) below is not the source's row-1 value, 227.85, which the
+corrected translation reproduces):
 every correlation procedure was solved standalone at the model's own operating
 points and agrees with CoolProp values (e.g. cold-side bank at row 1:
 h = 59.1 W/m²K, Re = 1399; ESDU resistances R_cond = 3.44e-3 K/W,
@@ -177,7 +302,7 @@ above come from re-running the source example.
 
 ## Files
 
-- `thermosyphon_hx.eescode` — full model (failing).
+- `thermosyphon_hx.eescode` + `.initials` — full model (failing); the `.initials` are the 61 converged rows of the source example (2026-11-01).
 - `thermosyphon_hx_row.eescode` + `.initials` — single-row configuration (failing).
 - `thermosyphon_hx-{fg_a0..fg_a3,nozzle,c2}.csv` and the
   `thermosyphon_hx_row-*` copies — correlation and nozzle tables extracted

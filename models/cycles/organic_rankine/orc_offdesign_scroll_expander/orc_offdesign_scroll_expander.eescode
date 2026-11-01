@@ -279,23 +279,23 @@ T_w_n2_ev = Temperature(Water, P=p_w, h=h_w_n2_ev)
 T_w_n1_ev = Temperature(Water, P=p_w, h=h_w_n1_ev)
 DTA_l_ev = Max(T_w_n1_ev - T_sat_ev, 1E-6)
 DTB_l_ev = Max(T_wo_ev - T_2t, 1E-6)
-"log-mean temperature difference, limited to DTA at DTA = DTB; the plain form holds for DTA < DTB as well"
+"log-mean temperature difference; DTA when DTA/DTB is within 1E-6 of 1 (guard corrected 2026-11-01: the 5th IF argument was the 0/0 form); the plain form holds for DTA < DTB as well"
 E_lmtd_l_ev = Abs(DTA_l_ev/DTB_l_ev - 1)
-LMTD_l_ev = IF(-E_lmtd_l_ev, -1E-6, (DTA_l_ev - DTB_l_ev)/ln(DTA_l_ev/DTB_l_ev), DTA_l_ev, (DTA_l_ev - DTB_l_ev)/ln(DTA_l_ev/DTB_l_ev))
+LMTD_l_ev = IF(-E_lmtd_l_ev, -1E-6, (DTA_l_ev - DTB_l_ev)/ln(DTA_l_ev/DTB_l_ev), DTA_l_ev, DTA_l_ev)
 CALL MartinHTC(FL$, Pm_l_ev, (T_2t + T_sat_ev)/2, m_dot, Nch_c_ev, Dh_c_ev, L_ev, W_ev, b_ev, beta_ev: al_c_l_ev, DPu_l_ev)
 CALL WaterHTC('Water', p_w, (T_w_n1_ev + T_wo_ev)/2, m_w_ev/(Nch_h_ev*CS_h_ev), Dh_h_ev: al_h_l_ev)
 DTA_2p_ev = Max(T_w_n2_ev - T_sat_ev, 1E-6)
 DTB_2p_ev = Max(T_w_n1_ev - T_sat_ev, 1E-6)
-"log-mean temperature difference, limited to DTA at DTA = DTB; the plain form holds for DTA < DTB as well"
+"log-mean temperature difference; DTA when DTA/DTB is within 1E-6 of 1 (guard corrected 2026-11-01: the 5th IF argument was the 0/0 form); the plain form holds for DTA < DTB as well"
 E_lmtd_2p_ev = Abs(DTA_2p_ev/DTB_2p_ev - 1)
-LMTD_2p_ev = IF(-E_lmtd_2p_ev, -1E-6, (DTA_2p_ev - DTB_2p_ev)/ln(DTA_2p_ev/DTB_2p_ev), DTA_2p_ev, (DTA_2p_ev - DTB_2p_ev)/ln(DTA_2p_ev/DTB_2p_ev))
+LMTD_2p_ev = IF(-E_lmtd_2p_ev, -1E-6, (DTA_2p_ev - DTB_2p_ev)/ln(DTA_2p_ev/DTB_2p_ev), DTA_2p_ev, DTA_2p_ev)
 CALL Amalfi2P(FL$, Pm_2p_ev, 0.55, m_dot, Nch_c_ev, Dh_c_ev, L_ev, W_ev, b_ev, beta_ev, A_ev: al_c_2p_ev, DPu_2p_ev)
 CALL WaterHTC('Water', p_w, (T_w_n1_ev + T_w_n2_ev)/2, m_w_ev/(Nch_h_ev*CS_h_ev), Dh_h_ev: al_h_2p_ev)
 DTA_sh_ev = Max(T_wi_ev - T_4, 1E-6)
 DTB_sh_ev = Max(T_w_n2_ev - T_sat_ev, 1E-6)
-"log-mean temperature difference, limited to DTA at DTA = DTB; the plain form holds for DTA < DTB as well"
+"log-mean temperature difference; DTA when DTA/DTB is within 1E-6 of 1 (guard corrected 2026-11-01: the 5th IF argument was the 0/0 form); the plain form holds for DTA < DTB as well"
 E_lmtd_sh_ev = Abs(DTA_sh_ev/DTB_sh_ev - 1)
-LMTD_sh_ev = IF(-E_lmtd_sh_ev, -1E-6, (DTA_sh_ev - DTB_sh_ev)/ln(DTA_sh_ev/DTB_sh_ev), DTA_sh_ev, (DTA_sh_ev - DTB_sh_ev)/ln(DTA_sh_ev/DTB_sh_ev))
+LMTD_sh_ev = IF(-E_lmtd_sh_ev, -1E-6, (DTA_sh_ev - DTB_sh_ev)/ln(DTA_sh_ev/DTB_sh_ev), DTA_sh_ev, DTA_sh_ev)
 CALL MartinHTC(FL$, Pm_v_ev, (T_sat_ev + T_4)/2, m_dot, Nch_c_ev, Dh_c_ev, L_ev, W_ev, b_ev, beta_ev: al_c_sh_ev, DPu_sh_ev)
 CALL WaterHTC('Water', p_w, (T_w_n2_ev + T_wi_ev)/2, m_w_ev/(Nch_h_ev*CS_h_ev), Dh_h_ev: al_h_sh_ev)
 DP_ev_C = DPu_l_ev*w_l_ev + DPu_2p_ev*w_2p_ev + DPu_sh_ev*w_sh_ev   "zone drops weighted by the utilisation w, as DP*w[k]/sum(w) in the source"
@@ -405,23 +405,23 @@ T_w_n2_cd = Temperature(Water, P=p_w, h=h_w_n2_cd)
 T_w_n1_cd = Temperature(Water, P=p_w, h=h_w_n1_cd)
 DTA_sh_cd = Max(T_x_ex - T_w_n1_cd, 1E-6)
 DTB_sh_cd = Max(T_sat_cd - T_w_n2_cd, 1E-6)
-"log-mean temperature difference, limited to DTA at DTA = DTB; the plain form holds for DTA < DTB as well"
+"log-mean temperature difference; DTA when DTA/DTB is within 1E-6 of 1 (guard corrected 2026-11-01: the 5th IF argument was the 0/0 form); the plain form holds for DTA < DTB as well"
 E_lmtd_sh_cd = Abs(DTA_sh_cd/DTB_sh_cd - 1)
-LMTD_sh_cd = IF(-E_lmtd_sh_cd, -1E-6, (DTA_sh_cd - DTB_sh_cd)/ln(DTA_sh_cd/DTB_sh_cd), DTA_sh_cd, (DTA_sh_cd - DTB_sh_cd)/ln(DTA_sh_cd/DTB_sh_cd))
+LMTD_sh_cd = IF(-E_lmtd_sh_cd, -1E-6, (DTA_sh_cd - DTB_sh_cd)/ln(DTA_sh_cd/DTB_sh_cd), DTA_sh_cd, DTA_sh_cd)
 CALL MartinHTC(FL$, Pm_sh_cd, (T_x_ex + T_sat_cd)/2, m_dot, Nch_h_cd, Dh_h_cd, L_cd, W_cd, b_cd, beta_cd: al_h_sh_cd, DPu_sh_cd)
 CALL WaterHTC('Water', p_w, (T_w_n1_cd + T_w_n2_cd)/2, m_w_cd/(Nch_c_cd*CS_c_cd), Dh_c_cd: al_c_sh_cd)
 DTA_2p_cd = Max(T_sat_cd - T_w_n2_cd, 1E-6)
 DTB_2p_cd = Max(T_sat_cd - T_wi_cd, 1E-6)
-"log-mean temperature difference, limited to DTA at DTA = DTB; the plain form holds for DTA < DTB as well"
+"log-mean temperature difference; DTA when DTA/DTB is within 1E-6 of 1 (guard corrected 2026-11-01: the 5th IF argument was the 0/0 form); the plain form holds for DTA < DTB as well"
 E_lmtd_2p_cd = Abs(DTA_2p_cd/DTB_2p_cd - 1)
-LMTD_2p_cd = IF(-E_lmtd_2p_cd, -1E-6, (DTA_2p_cd - DTB_2p_cd)/ln(DTA_2p_cd/DTB_2p_cd), DTA_2p_cd, (DTA_2p_cd - DTB_2p_cd)/ln(DTA_2p_cd/DTB_2p_cd))
+LMTD_2p_cd = IF(-E_lmtd_2p_cd, -1E-6, (DTA_2p_cd - DTB_2p_cd)/ln(DTA_2p_cd/DTB_2p_cd), DTA_2p_cd, DTA_2p_cd)
 CALL Shah2P(FL$, Pm_2p_cd, 0.495, m_dot, Nch_h_cd, Dh_h_cd, L_cd, W_cd, b_cd, phi_cd: al_h_2p_cd, DPu_2p_cd)
 CALL WaterHTC('Water', p_w, (T_w_n2_cd + T_wi_cd)/2, m_w_cd/(Nch_c_cd*CS_c_cd), Dh_c_cd: al_c_2p_cd)
 DTA_sc_cd = Max(T_sat_cd - T_w_n2_cd, 1E-6)
 DTB_sc_cd = Max(T_1 - T_wi_cd, 1E-6)
-"log-mean temperature difference, limited to DTA at DTA = DTB; the plain form holds for DTA < DTB as well"
+"log-mean temperature difference; DTA when DTA/DTB is within 1E-6 of 1 (guard corrected 2026-11-01: the 5th IF argument was the 0/0 form); the plain form holds for DTA < DTB as well"
 E_lmtd_sc_cd = Abs(DTA_sc_cd/DTB_sc_cd - 1)
-LMTD_sc_cd = IF(-E_lmtd_sc_cd, -1E-6, (DTA_sc_cd - DTB_sc_cd)/ln(DTA_sc_cd/DTB_sc_cd), DTA_sc_cd, (DTA_sc_cd - DTB_sc_cd)/ln(DTA_sc_cd/DTB_sc_cd))
+LMTD_sc_cd = IF(-E_lmtd_sc_cd, -1E-6, (DTA_sc_cd - DTB_sc_cd)/ln(DTA_sc_cd/DTB_sc_cd), DTA_sc_cd, DTA_sc_cd)
 CALL MartinHTC(FL$, Pm_sc_cd, (T_sat_cd + T_1)/2, m_dot, Nch_h_cd, Dh_h_cd, L_cd, W_cd, b_cd, beta_cd: al_h_sc_cd, DPu_sc_cd)
 CALL WaterHTC('Water', p_w, (T_w_n2_cd + T_wi_cd)/2, m_w_cd/(Nch_c_cd*CS_c_cd), Dh_c_cd: al_c_sc_cd)
 DP_cd_H = DPu_sh_cd*w_sh_cd + DPu_2p_cd*w_2p_cd + DPu_sc_cd*w_sc_cd

@@ -1,6 +1,6 @@
 # Brine-to-water heat pump reference model (RefSim)
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ❌ **Failing** (runnable variant shipped) &nbsp;|&nbsp; `CSL-0078`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** (adapted from the original) &nbsp;|&nbsp; `CSL-0078`
 
 Reference simulation model of a brine-to-water (ground-source) heat pump of the
 ULiège model bank: a rotary (scroll) compressor described step by step between
@@ -15,18 +15,18 @@ closes the model.
 |---|---|
 | **Category** | Cycles and machines › Refrigeration and heat pumps |
 | **Fluids** | R407C (refrigerant, default), Water (constant `cp_w` = 4187 J/kg·K), PG 25 % brine (BrineProp library) |
-| **Size** | 161 equations in the main program (the model with its 12 restored inputs and 19 restored parameters, the `(s, v)` rewrite and the 16 state points of the diagrams) plus the 115-line `BRINEPROP` procedure; the runnable variant has 252 equations, largest block 31 |
+| **Size** | 161 equations in the main program (the model with its 12 inputs and 19 parameters restored from the stored run, the `(s, v)` rewrite and the 16 state points of the diagrams) plus the 115-line `BRINEPROP` procedure; 86 blocks, largest block 76 |
 | **Source** | ULiège model bank (Laborelec toolkit lineage), heat production by vapour compression, reference simulation model, 8 January 2008 (`BrinetoWaterHeatPump_RefSim_EES_Model_VL080108.EES`, EES 7.888) |
 | **Authors** | Vincent Lemort (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | native file **failing** (over-determined by three equations as the original stands, see *Limitations*); runnable variant `brine_to_water_heat_pump_refsim_coolsolve.eescode` compared with the solution stored by EES (see *Verification*) |
+| **CoolSolve** | 0.4.0@9768373 — **verified** after two documented adaptations (see *Conversion log*, 2026-11-01): `P_ev`, `P_cd`, `M_dot_r` are unknowns again (as in the original) and the internal compressor power counts the leakage flow (energy balance closed); needs the shipped `.initials` |
 
 ## Problem statement
 
 A ground-source heat pump heats 0.389 kg/s of water entering the condenser at
 25.5 °C (400 kPa) with a brine flow rate of 1.11 kg/s entering the evaporator at
 0 °C, in a 25 % propylene glycol solution. The refrigerant is R407C, evaporating
-at 436 kPa and condensing at 1.73 MPa, with 5 K of superheating at the
+at about 438 kPa and condensing at about 1.77 MPa (results of the model), with 5 K of superheating at the
 evaporator exhaust and 5 K of subcooling at the condenser exhaust. The scroll
 compressor runs at 3000 tr/min with a reference swept volume of 9.478·10⁻⁵ m³
 and runs at full load (`X_cp` = 1). Determine the heating power, the
@@ -78,9 +78,12 @@ the evaporator computes `Q_dot_ev = epsilon_ev·C_dot_glw_ev·(t_glw_su_ev −
 t_ev)` and the refrigerant side `Q_dot_ev = M_dot_r_ev·(h_ex_ev − h_su_ev)` with
 the isenthalpic expansion `h_su_ev = h_ex_cd`; the condenser likewise computes
 the condensing power from the refrigerant side and from the water temperature
-rise. The model **repeats each of these heat rates and two compressor
-relations a second time** (four duplicated definitions in total): it is the
-consistency-check structure of the RefSim models of the bank.
+rise. The model **writes each of these heat rates and two compressor
+relations twice** (four pairs): they are not duplicates but the closures of
+the unknowns `P_ev`, `P_cd`, `M_dot_r` and `gamma_leak_cp` (effectiveness
+form against refrigerant balance for the two exchangers, swept-volume flow
+against the mixing relation, and the isentropic relation across the leakage
+orifice).
 
 | Inputs | Value | Parameters | Value |
 |---|---|---|---|
@@ -93,66 +96,58 @@ consistency-check structure of the RefSim models of the bank.
 | `X_cp` compressor load | 1 [-] | `AU_amb_cp` envelope-ambient | 10 W/K |
 | `conc_glw` glycol concentration | 25 % | `V_s_cp_ref` reference swept volume | 9.478·10⁻⁵ m³ |
 | `n_cp` number of compressors | 1 | `N_rot` rotation speed | 3000 tr/min |
-| `P_ev` / `P_cd` evaporating/condensing | 436.2 kPa / 1.730 MPa | `R_m_ev` / `R_m_cd` metal resistance | 10⁻⁵ K/W |
-| `M_dot_r` refrigerant flow | 0.0756 kg/s | `R_glw_ev_n` / `R_r_ev_n` | 6·10⁻⁵ K/W |
-| `fluid$` refrigerant | `R407C` | `R_w_cd_n` / `R_r_cd_n` | 3·10⁻⁴ K/W |
+| `fluid$` refrigerant | `R407C` | `R_m_ev` / `R_m_cd` metal resistance | 10⁻⁵ K/W |
+| | | `R_glw_ev_n` / `R_r_ev_n` | 6·10⁻⁵ K/W |
+| | | `R_w_cd_n` / `R_r_cd_n` | 3·10⁻⁴ K/W |
+
+`P_ev`, `P_cd` and `M_dot_r` are **results** (they were wrongly listed as inputs by the first import).
 
 ## How to run
 
-The **native file** `brine_to_water_heat_pump_refsim.eescode` is valid EES;
-it parses in CoolSolve and its `BRINEPROP` procedure runs, but the model is
-**over-determined by three equations** as the original stands (the
-assignments of `P_ev`, `P_cd` and `M_dot_r`, see *Limitations*):
-164 equations, 161 unknowns.
-
-The **runnable variant** is `brine_to_water_heat_pump_refsim_coolsolve.eescode`
-(tested as `CSL-0078:coolsolve`, with its `.sol` baseline and its own companion
-tables):
-
 ```bash
-coolsolve ./brine_to_water_heat_pump_refsim_coolsolve.eescode
+coolsolve ./brine_to_water_heat_pump_refsim.eescode
 ```
 
-It needs the shipped `.initials` (the solution stored by EES, plus guesses for
-the variables the flattening introduces); without them the 30-variable
-compressor block does not converge. Every change of the variant is listed in its
-header and in the *Conversion log*.
+It converges from the shipped `.initials` (CoolProp-consistent values of the
+solution) in one Newton pass per block (84 iterations over 86 blocks). **Hard
+start otherwise:** the 76-variable block (compressor, both exchangers, the
+leakage orifice) fails from the default guesses (*SingularJacobian* at
+iteration 0, also with Try Harder) and, from the EES stored values (enthalpies
+in the EES reference of R407C), the normal solve stops at *MaxIterations*
+while the GUI **Try Harder** button converges it (96 iterations). Keep the
+`.initials` when changing an input, or use Try Harder.
 
 ## Results
 
 Default operating point (brine 1.11 kg/s from 0 °C, water 0.389 kg/s from
-25.5 °C, ambient 25 °C), runnable variant:
+25.5 °C, ambient 25 °C):
 
 | Variable | Value | | Variable | Value |
 |---|---:|---|---|---:|
-| `Q_dot_cd` heating power | 15.71 kW | | `M_dot_r` refrigerant flow | 0.0756 kg/s |
-| `W_dot_cp` compressor power | 3.693 kW | | `t_ev` / `P_ev` | −3.81 °C / 436 kPa |
-| `COP_heating` | 4.254 | | `t_cd` / `P_cd` | 42.02 °C / 1.730 MPa |
-| `Q_dot_ev` evaporating power | 12.23 kW | | `t_ex_cp` compressor exhaust | 72.45 °C |
-| `t_w_ex_cd` water exhaust | 35.15 °C | | `t_w_cp` fictitious envelope | 58.65 °C |
-| `t_glw_ex_ev` brine exhaust | −2.77 °C | | `epsilon_s_cp` / `epsilon_v_cp` | 0.7076 / 0.9405 |
-| `AU_cd` / `AU_ev` conductance | 1344 / 6357 W/K | | `epsilon_cd` / `epsilon_ev` | 0.5619 / 0.7634 |
-| `Q_dot_su_cp` suction heating | 0.846 kW | | `r_p_cp` pressure ratio | 3.967 |
-| `Q_dot_ex_cp` discharge cooling | −0.324 kW | | `P_thr_cp` throat pressure | 1.038 MPa |
-| `Q_dot_amb_cp` ambient gain | 0.337 kW | | `M_dot_leak_cp` leakage flow | 0.00319 kg/s |
+| `Q_dot_cd` heating power | 16.02 kW | | `M_dot_r` refrigerant flow | 0.07722 kg/s |
+| `W_dot_cp` compressor power | 3.984 kW | | `t_ev` / `P_ev` | −3.66 °C / 438.1 kPa |
+| `COP_heating` | 4.021 | | `t_cd` / `P_cd` | 42.90 °C / 1.769 MPa |
+| `Q_dot_ev` evaporating power | 12.39 kW | | `t_ex_cp` compressor exhaust | 73.95 °C |
+| `t_w_ex_cd` water exhaust | 35.34 °C | | `t_w_cp` fictitious envelope | 60.40 °C |
+| `t_glw_ex_ev` brine exhaust | −2.81 °C | | `epsilon_s_cp` / `epsilon_v_cp` | 0.6786 / 0.9391 |
+| `AU_cd` / `AU_ev` conductance | 1357 / 6417 W/K | | `epsilon_cd` / `epsilon_ev` | 0.5654 / 0.7665 |
+| `Q_dot_su_cp` suction heating | 0.886 kW | | `r_p_cp` pressure ratio | 4.037 |
+| `Q_dot_ex_cp` discharge cooling | −0.323 kW | | `P_thr_cp` throat pressure | 1.057 MPa |
+| `Q_dot_amb_cp` loss to the ambient | 0.354 kW | | `M_dot_leak_cp` leakage flow | 0.00325 kg/s |
+| `W_dot_in_cp` internal power | 3.067 kW | | `gamma_leak_cp` leakage exponent | 1.0386 |
 
-The heat pump delivers 15.7 kW to the water, which leaves it 9.647 K warmer
-(15 708 W/(0.3889 kg/s · 4187 J/kg·K)) than the 25.5 °C supply, and extracts
-12.2 kW from the brine, which leaves it 2.773 K colder
-(12 232 W/(1.11 kg/s · 3973.6 J/kg·K)). The compressor consumes 3.69 kW, of
-which 0.86 kW heats the suction gas and 0.34 kW is gained from the ambient
-through the casing; its envelope balance
-`t_w_cp = t_amb + (W_dot_loss_cp − Q_dot_su_cp − Q_dot_ex_cp)/AU_amb_cp` closes
-exactly at 58.65 °C. The cycle balance is *not* an identity of the model:
-`Q_dot_ev + W_dot_cp − Q_dot_cd` = 217 W (1.4 % of the heating power), the
-difference between the specific electrical power `w_cp = W_dot_cp/M_dot_r`
-(48 841 J/kg, which contains the 859 W of electromechanical losses) and the
-enthalpy rise `h_ex_cp − h_su_cp` of the refrigerant (45 970 J/kg). The
-consistency checks of the variant give
-`Q_dot_ev_chk` = 12.82 kW (+4.8 % against the refrigerant side),
-`Q_dot_cd_chk` = 15.11 kW (−3.8 %), `M_dot_s_cp_chk` = 0.08025 kg/s (+1.8 %
-against the mixing relation) — the duplicated relations of the original do not
-close exactly in CoolProp, see *Verification*.
+The heat pump delivers 16.0 kW to the water (+9.84 K on 0.3889 kg/s) and takes
+12.4 kW from the brine (−2.81 K on 1.11 kg/s, `cp_glw` = 3973.6 J/(kg·K)).
+**Energy balances** (checked on the `.sol`): the compressor balance
+`W_dot_cp = M_dot_r·(h_ex_cp − h_su_cp) + Q_dot_amb_cp` closes to round-off
+(3983.79 = 0.077219·46 997.2 + 353.96 W), hence the cycle balance
+`Q_dot_ev + W_dot_cp = Q_dot_cd + Q_dot_amb_cp`; the envelope balance
+`W_dot_loss_cp = Q_dot_su_cp + Q_dot_ex_cp + Q_dot_amb_cp` (916.8 = 885.9 −
+323.1 + 354.0 W) and the water and brine balances close as well. **Second law**:
+`epsilon_s_cp` = 0.68 < 1, the suction gas is heated by the 60.4 °C envelope
+(3.7 → 15.9 °C) and the 77.5 °C discharge gas is cooled by it, the brine
+(0 → −2.8 °C) stays above the mean evaporating temperature (−3.7 °C) and the
+water (25.5 → 35.3 °C) below the mean condensing temperature (42.9 °C).
 
 The arrays `P[i]`, `h[i]`, `T[i]`, `s[i]` (i = 1 evaporator exhaust, 2
 compressor exhaust, 3 condenser exhaust, 4 evaporator supply) give the cycle on
@@ -164,58 +159,53 @@ cycle*).
 
 ## Verification
 
-The equations were transcribed from the equations window of the source file (see
-*Conversion log*) and the model was solved as it stands in the runnable variant;
-the **stored solution of EES** in the source file (142 of its 146 variable
-records hold a value) is the reference. The extraction is **over-determined by
-three equations** as the original stands (`coolsolve -d` on the extraction with
-the inputs and the library procedure restored: *Equations: 162, Variables: 159,
-System square: No*), because the original defines `h_ex1_cp`, `M_dot_s_cp`,
-`Q_dot_ev` and `Q_dot_cd` twice each — see *Conversion log* (the cause of the
-over-determination is the assignment of `P_ev`, `P_cd` and `M_dot_r`, see
-*Limitations*). No equation was
-replaced by a stored value.
+Reference: the **stored solution of EES 7.888** in the source file (142 of its
+146 variable records hold a value). `compare_solution.py
+brine_to_water_heat_pump_refsim.sol reference/ees_variables.csv` (2026-11-01):
 
-`python3 tools/compare_solution.py brine_to_water_heat_pump_refsim_coolsolve.sol reference/ees_variables.csv`:
+```
+142 common variables, 95 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 19
+```
 
-| Variable | EES | CoolSolve | rel. diff |
-|---|---:|---:|---:|
-| `COP_heating` [-] | 4.11234 | 4.25351 | 3.3e-02 |
-| `Q_dot_cd` [W] | 15 462.9 | 15 708.3 | 1.6e-02 |
-| `Q_dot_ev` [W] | 11 933.2 | 12 232.3 | 2.5e-02 |
-| `W_dot_cp` [W] | 3 760.12 | 3 693.01 | 1.8e-02 |
-| `t_ex_cp` [°C] | 74.045 | 72.453 | 2.2e-02 |
-| `t_ev` [°C] | −3.5440 | −3.8081 | 6.9e-02 |
-| `c_p_su_cp` [J/kg·K] | 833.72 | 931.61 | 1.05e-01 |
-| `epsilon_s_cp` [-] | 0.708898 | 0.707633 | 1.8e-03 |
-| `cp_glw` [J/kg·K] | 3 973.62 | 3 973.62 | < 1e-09 |
-| `M_dot_leak_cp` [kg/s] | 3.16045e-03 | 3.18726e-03 | 8.4e-03 |
-| `h_ex_cd` [J/kg] | 112 094 | 251 542 | 5.54e-01 |
+| Variable | EES 7.888 | CoolSolve | rel. diff | Before the power fix |
+|---|---:|---:|---:|---:|
+| `COP_heating` [-] | 4.11234 | 4.02053 | 2.2e-02 | 4.18154 |
+| `W_dot_cp` [W] | 3 760.12 | 3 983.79 | 5.6e-02 | 3 827.38 |
+| `Q_dot_cd` [W] | 15 462.9 | 16 016.9 | 3.5e-02 | 16 004.3 |
+| `Q_dot_ev` [W] | 11 933.2 | 12 387.1 | 3.7e-02 | 12 399.1 |
+| `M_dot_r` [kg/s] | 0.0756131 | 0.0772188 | 2.1e-02 | 0.0772801 |
+| `P_ev` / `P_cd` [Pa] | 436 183 / 1.73033e6 | 438 119 / 1.76867e6 | 4.4e-03 / 2.2e-02 | |
+| `t_ex_cp` [°C] | 74.045 | 73.949 | 1.3e-03 | 73.623 |
+| `epsilon_s_cp` [-] | 0.708898 | 0.678605 | 4.3e-02 | 0.706717 |
+| `epsilon_v_cp` [-] | 0.941799 | 0.939053 | 2.9e-03 | 0.939848 |
+| `c_p_su_cp` [J/(kg·K)] | 833.72 | 932.24 | 1.06e-01 | 932.23 |
+| `cp_glw` [J/(kg·K)] | 3 973.62 | 3 973.62 | < 1e-9 | |
 
-**142 common variables, 73 differ above rtol = 0.001, maximum relative
-difference 5.54e-01 (`h_ex_cd`)**. The largest differences are the *absolute*
-enthalpies and entropies of R407C, offset by **+143 405 J/kg** and
-**+763.4 J/kg·K** between the reference states of EES 7.888 and CoolProp (the
-differences `h_ex_cp − h_ex_cd`, `h_su2_cp − h_ex_cd`, `w_in_cp` and `Q_dot_cd`
-agree, which is what the model uses). The derived results agree to 0.4–3.3 %
-(`epsilon_s_cp` to 0.2 %, `epsilon_v_cp` to 0.1 %); they follow two property
-differences: the specific heat of R407C vapour at the suction (+10 %, 833.7 vs
-931.6 J/kg·K, which enters `C_dot_su_cp`, `epsilon_su_cp` and
-`Q_dot_amb_cp`) and the R407C saturation line near 0 °C and 42 °C
-(`t_sat_su_cp` −1.248 vs −1.554 °C, `t_sat_su_cd` 44.973 vs 44.478 °C), where the
-zeotropic blend is described differently by EES and CoolProp — the model
-evaluates its mean evaporating and condensing temperatures on that line. These
-deviations are above the ≤ 0.5 % expected for two different equations of state;
-they were not investigated further. The brine properties (`cp_glw`,
-`rho_glw_su_ev`) are not affected: they come from the same decoded BrineProp
-tables as `CSL-0079` and agree to 1·10⁻⁹ (`cp_glw` 3973.619 J/kg·K,
-`rho_glw_su_ev` 1025.9635 kg/m³ in both). `gamma_leak_cp` differs by 1.4e-02
-because the variant fixes it at the default value of the commented line of the
-original instead of solving the bisection relation (see *Conversion log*).
-No variable was excluded from the comparison; the 110 variables that exist only
-in the CoolSolve solution are the state points of the diagrams (`P[i]`, `h[i]`,
-`T[i]`, `s[i]`, i = 1…4), the internal variables of the two flattened BRINEPROP
-blocks, the six consistency checks (`*_chk`) and the string variable `fluid$`.
+The differences have two causes, both identified:
+
+1. **The energy-balance correction** (adaptation 2 of the Conversion log): the
+   internal power now includes the recompressed leakage, +124 W of internal
+   power and +155 W of electrical power (with `alpha_cp` = 0.25); this lowers
+   `epsilon_s_cp` and `COP_heating` by about 4 % with respect to EES. The
+   column *Before the power fix* is the same model with the original
+   `M_dot_r·w_in_cp`: it is within 0.3–3.8 % of EES.
+2. **The R407C properties of EES 7.888**, which are not those of the current
+   reference equation of state: at the suction state (438 kPa, 3.6 °C) EES
+   stores `c_p` = 833.7 J/(kg·K), while CoolProp gives 930.8 with its pseudo-pure
+   R407C (Lemmon 2003) and 929.3 with its independent R32/R125/R134a mixture model
+   (fluid string `R32[0.3811]&R125[0.1796]&R134a[0.4393]`, the mixture formulation
+   REFPROP uses by default for R407C); the dew temperature at 436.2 kPa is
+   −1.248 °C in EES and −1.554 °C in both CoolProp formulations. These feed
+   `C_dot_su_cp`, the saturation temperatures of the exchangers and through
+   them the operating pressures. The same EES-side R407C deviation is found in
+   `CSL-0319` (EES 7.458). The absolute enthalpies and entropies of R407C are
+   offset by about +143.4 kJ/kg and +763 J/(kg·K) (reference states).
+
+The brine properties are not affected (`cp_glw`, `rho_glw_su_ev` agree to
+1·10⁻⁹, same BrineProp tables as `CSL-0079`). `gamma_leak_cp` is solved by
+the leakage relations (1.0386 against 1.0447 in EES). The 19 CoolSolve-only
+variables are the diagram state points (`P[i]`, `h[i]`, `T[i]`, `s[i]`), the
+added auxiliary `t_in_cp` of the `(s, v)` rewrite, and `fluid$`.
 
 ## Source and attribution
 
@@ -242,7 +232,7 @@ procedure is function model `CSL-0079` and its binary lookup files are shipped
 here as the companion tables `brine_to_water_heat_pump_refsim-Brine1.csv`
 (198 × 5 polynomial coefficients) and `-Brine2.csv` (11 × 2 mean concentration
 and temperature), decoded from `Brine1.lkt`/`Brine2.lkt` by `CSL-0079`
-(`CS-GAP-LKT`); the values are the same in the native files and in the variant.
+(`CS-GAP-LKT`).
 The candidate has **no `duplicate_group`** in the inventory: no ParamID
 (parameter-identification) or simplified version of this heat pump exists in the
 model bank, so nothing was merged into or split from this model.
@@ -330,6 +320,25 @@ model bank, so nothing was merged into or split from this model.
   companion tables (`brine_to_water_heat_pump_refsim_coolsolve-Brine1/Brine2.csv`,
   same decoded values) and its own `.initials` (EES stored solution plus guesses
   for the flattened variables).
+- **2026-11-01 — adaptation (failing → verified)**, review of the failing
+  models: (1) the three assignments `P_ev`, `P_cd`, `M_dot_r` added by the
+  first import are removed (they are unknowns of the original, closed by the
+  four "duplicated" relations, see *Model*); the system is square
+  (161/161). (2) First-law check of the solution: the compressor balance
+  `W_dot_cp = M_dot_r·(h_ex_cp − h_su_cp) + Q_dot_amb_cp` was open by 124 W
+  (in EES as well: 121 W, the "1.4 % cycle imbalance" noted earlier), exactly
+  `M_dot_leak_cp·w_in_cp`: the original computes the internal power with
+  `M_dot_r` while the chamber compresses `M_dot_s_cp = M_dot_r + M_dot_leak_cp`.
+  Corrected to `W_dot_in_cp = M_dot_s_cp·w_in_cp`, the form of the other scroll
+  models of the library (`CSL-0007`, `CSL-0116`, `CSL-0260`); the balance now
+  closes to round-off. (3) With a CoolProp-consistent starting point the
+  76-variable block converges (it had been reported as non-converging from the
+  EES-reference enthalpies); the `.initials` is that solution. (4) The
+  `_coolsolve` variant (evaluated at the EES operating point with the four
+  closures turned into checks) is superseded and removed with its two
+  companion tables; its `.sol` baseline is replaced by the main file's.
+  Status `verified` (EES stored solution, energy balances, R407C cross-check
+  with two CoolProp formulations).
 - **Level**: score 6 with [taxonomy.md §3](../docs/taxonomy.md) (166 equations
   → 1, largest block 30 → 2, a procedure but no discretisation array → 0,
   three coupled components → 1, semi-empirical calibration referred to nominal
@@ -341,36 +350,22 @@ model bank, so nothing was merged into or split from this model.
 
 ## Limitations and CoolSolve gaps
 
-- The native file **does not solve** (status `failing`): the model is
-  over-determined by three equations as the original stands — not a CoolSolve
-  gap, a property of this import (see the next bullet); the runnable variant
-  above is shipped next to it. The
-  companion tables of the native file are the ones EES expects for the
-  procedure's `LOOKUP` calls (decoded from the binary `.lkt` files, as in
-  `CSL-0072`).
-- **Over-determined by three equations as the original stands** (not a CoolSolve
-  gap, a property of this import). The three assignments `P_ev=436182.6219`,
-  `P_cd=1730328.509` and `M_dot_r=0.07561309079` of the *INPUTS* section are not
-  assigned anywhere in the equations window of the original (extracted with
-  `tools/ees_extract.py`): these names only appear on right-hand sides, and the
-  stored variable records give them a guess different from the value (435 607.8 /
-  1 936 113.9 Pa and 0.0784 kg/s, `M_dot_r` bounded to [0, 1]). They are the three
-  unknowns that three of the "duplicated" relations close: the evaporator
-  effectiveness relation against the refrigerant-side balance (`Q_dot_ev`), the
-  condenser (`Q_dot_cd`) and the swept-volume flow against the mixing relation
-  (`M_dot_s_cp`); the fourth pair (`h_ex1_cp`) is balanced by `gamma_leak_cp`, an
-  unknown in EES (the isentropic relation across the orifice). With the three
-  assignments commented out the model is square (161 equations,
-  161 unknowns, largest block 76), but CoolSolve does not converge the
-  76-variable block from the shipped `.initials` (EES stored solution:
-  `MaxIterations`, block 42, residual 4.7e5; without them `SingularJacobian`;
-  not investigated further). So the
-  *redundant check equations* of the import are not redundant in EES; the
-  variant's "checks" (`Q_dot_ev_chk` +4.8 %, `Q_dot_cd_chk` −3.8 %,
-  `M_dot_s_cp_chk` +1.8 %) are the relations that would move `P_ev`, `P_cd` and
-  `M_dot_r` to the CoolProp-consistent operating point; the variant evaluates the
-  model **at the EES operating point**. Native file and variant are left
-  unchanged.
+- **Adapted from the original** (2026-11-01, see *Conversion log*): the
+  internal compressor power counts the recompressed leakage
+  (`M_dot_s_cp·w_in_cp` instead of `M_dot_r·w_in_cp`), which closes the
+  compressor energy balance (open by 124 W in the original, in EES as well);
+  the results therefore differ from the stored EES run by up to 5.6 % on the
+  compressor power. `P_ev`, `P_cd` and `M_dot_r` are unknowns, as in the
+  original (an earlier version of this import assigned them).
+- **Hard model for the solver**: the 76-variable block needs the shipped
+  `.initials` (or **Try Harder** from the EES stored values); from the default
+  guesses it fails with *SingularJacobian* at iteration 0, even with Try Harder
+  (CoolSolve hint: the default guess of 1.0 for enthalpies and pressures gives
+  states outside the R407C domain; a thermodynamically consistent default
+  start, as the multi-start candidates build, already at the first attempt,
+  would help).
+- The companion tables are the ones EES expects for the procedure's `LOOKUP`
+  calls (decoded from the binary `.lkt` files, as in `CSL-0072`).
 - **`CS-GAP-PROP-SV`**: property calls with the
   **(s, v)** input pair, `enthalpy(fluid$,s=…,v=…)` and
   `pressure(fluid$,s=…,v=…)`. Valid EES (the source file writes both and stores
@@ -380,11 +375,6 @@ model bank, so nothing was merged into or split from this model.
   `M_dot_r`, `M_dot_leak_cp` and `M_dot_s_cp` to [0, 1] kg/s, `v_thr_cp` to
   [0, ∞), `gamma_leak_cp` to [0, 2] and the flow rates to [0, ∞); the equations
   keep the results in range at this operating point.
-- The four duplicated relations of the original do **not** close exactly in
-  CoolSolve (`Q_dot_ev_chk` +4.8 %, `Q_dot_cd_chk` −3.8 %,
-  `M_dot_s_cp_chk` +1.8 %), while they agree to about 1·10⁻⁴ in the stored EES
-  solution: the internal consistency of the RefSim models is limited by the
-  accuracy of the property model, not by the equations.
 - The compressor model is the scroll machine of the original, but the isochoric
   step is a single relation between the adapted pressure and the discharge
   pressure (no chamber volume or valve relation), and the leakage orifice is
@@ -396,9 +386,6 @@ model bank, so nothing was merged into or split from this model.
   no pressure drop; the brine and water pressure drops are neglected (the
   minimum flow rates of section 4.2.4 and 4.3.4 of the original are
   diagnostics, they feed no equation).
-- `X_cp` (the fraction of swept volume in use) and `M_dot_r` are **both**
-  inputs: the machine is over-specified, the two are consistent only at the
-  stored operating point. See `M_dot_s_cp` / `M_dot_s_cp_chk`.
 
 ## Related models
 

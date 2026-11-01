@@ -51,18 +51,17 @@
     "language": "en"
   },
   "verification": {
-    "summary": "Not verified end-to-end: both files fail to converge in CoolSolve 0.4.0. The CS-BUG-PROC-NEG-POW check (integer powers rewritten as products, fractional bases guarded, all inlined variables initialised) did not change the outcome; the correlation procedures were solved standalone at the model operating points and the reference numbers come from re-running the source example (7 bisection iterations, residual 9.7e-4).",
+    "summary": "Not verified end-to-end (failing). Row companion, corrected (unit errors) and solved with CoolSolve branch fix/ad-pow-negative-base + Try Harder: single-phase rows 1 and 61 match an instrumented re-run of the LaboThapPy example within 0.6 % (tube heat, T_HP_h, HTCs); the two-phase row 31 does not converge (CHF-based boiling closure of the source).",
     "checks": [
-      "source-rerun",
-      "other-tool"
+      "source-rerun"
     ],
     "reference": "hex_thermosyphon_example.py re-run in a throw-away venv (CoolProp 8.0.0): cold outlet 516.861 K, hot outlet 543.364 K, sum Q_dot_row 5.869 MW; standalone procedure checks against CoolProp 8.1.0-dev",
-    "date": "2026-10-31",
+    "date": "2026-11-01",
     "coolsolve_version": "0.4.0@eb797fe",
     "max_rel_diff": null,
-    "notes": "Status failing; no .sol baseline exists. neg-pow rewrite + procedure inlining + full initialisation do not make the coupled blocks converge; equations verified piecewise (standalone procedures vs CoolProp; constants-substituted variant of the row equations converges). Follow-up 2026-10-31 documented in README."
+    "notes": "Review 2026-11-01: (1) SingularJacobian at iteration 0 = CS-BUG-PROC-NEG-POW (NaN AD derivative of log10(pL)^2 in RadHTC_FG), fixed on CoolSolve branch fix/ad-pow-negative-base; the old 'singular equation a_g' reading came from a garbled Jacobian dump (also fixed there). (2) Unit errors corrected in both files (in2ph K vs C, ExtConvBoil wall temperature, cp_wf/cp_H/cp_h_m/rho_h_out/cp_h_exit, cold BankHTC inputs of the companion; rho_wf_in at the outlet; companion u_h = 6.718 m/s of the source run). (3) Two-phase rows: h = q_CHF/(T_w - T_sat) makes the cold-side heat flow independent of the wall temperature (degenerate Jacobian); fsolve copes, CoolSolve does not. Row 1: 1259.9 vs 1261.4 W/tube, T_HP_h 626.10 vs 626.19 K; row 61: 938.9 vs 944.0 W. Source quirks (nozzle continuity, cp_H from the wrong AbstractState) in README."
   },
-  "diagnosis": "CoolSolve 0.4.0: Newton/KINSOL stop with SingularJacobian at iteration 0 on the coupled blocks; tearing hits a singular Schur complement naming a pure CALL-output equation (a_g, sound speed, used by no other equation); Partitioned does not move from the initial residual. Same equations with the CALL outputs replaced by constants converge; each CALL converges standalone. Reported as an unverified suggestion, not registered as a gap (no minimal reproducer).",
+  "diagnosis": "Review 2026-11-01: CoolSolve bug CS-BUG-PROC-NEG-POW (fixed on branch fix/ad-pow-negative-base) + translation unit errors (corrected) + degenerate two-phase rows of the source (CHF used as the operating heat flux: cold-side equation loses its wall-temperature dependence). Single-phase rows reproduce the source within 0.6 %. Options: keep failing, or adapt the boiling HTC (would make the model 'modified').",
   "missing_features": [],
   "related": [
     "CSL-0099",
@@ -71,6 +70,7 @@
   ],
   "files": [
     "thermosyphon_hx.eescode",
+    "thermosyphon_hx.initials",
     "thermosyphon_hx_row.eescode",
     "thermosyphon_hx_row.initials",
     "thermosyphon_hx-fg_a0.csv",
@@ -85,5 +85,12 @@
     "thermosyphon_hx_row-fg_a3.csv",
     "thermosyphon_hx_row-nozzle.csv",
     "thermosyphon_hx_row-c2.csv"
+  ],
+  "history": [
+    {
+      "date": "2026-11-01",
+      "action": "review of the failing models: root cause of the iteration-0 SingularJacobian found (CS-BUG-PROC-NEG-POW, fixed on CoolSolve branch fix/ad-pow-negative-base); translation unit errors corrected in both files; row-companion inputs/initials from an instrumented source re-run; single-phase rows verified within 0.6 %; stays failing (two-phase rows)",
+      "by": "Claude Code for S. Quoilin"
+    }
   ]
 }

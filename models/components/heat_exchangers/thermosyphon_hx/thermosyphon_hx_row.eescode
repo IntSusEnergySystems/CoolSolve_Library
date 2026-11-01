@@ -5,10 +5,13 @@
   run) with the same per-row equations, correlations and ESDU operating limits
   as thermosyphon_hx.eescode, each fed with the row inlet states of the
   converged source example. Intended as the small verification configuration
-  of the model; it FAILS in CoolSolve 0.4.0 like the full file: the per-row
-  blocks containing the correlation CALLs stop with "SingularJacobian", while
-  each CALL converges standalone and the same equations converge with the
-  call outputs replaced by constants (see README.md, "Why the model fails").
+  of the model. Status (review of 2026-11-01, README "Why the model fails"):
+  CoolSolve 0.4.0 stops at iteration 0 (SingularJacobian) because of
+  CS-BUG-PROC-NEG-POW (NaN AD derivative of log10(pL)^2 in RadHTC_FG; fixed on
+  the CoolSolve branch fix/ad-pow-negative-base). With that fix and Try
+  Harder, the single-phase rows 1 and 61 reproduce the source within 0.6 %;
+  the two-phase row 31 does not converge (boiling closure of the source).
+  Unit errors of the first translation corrected on 2026-11-01.
   Units  : SI - temperatures in °C for property calls; *_K variables in K.
   Source : Basile Chaudoir, Elise Neven - LaboThapPy (ULiège), commit f03f7f47;
            Apache-2.0; see README.md.
@@ -265,14 +268,14 @@ rho_wf_in = density(fluid_C$, P=P_su_C, h=h_c_out_ref)
 A_casing_cold = (L_c+0.02)*W_core  "condenser casing cross-section [m^2]"
 V_dot_wf = m_dot_C/rho_wf_in  "cold volumetric flow rate [m^3/s]"
 u_wf_in = V_dot_wf/A_casing_cold  "cold velocity in the condenser casing [m/s]"
-u_h = 10.663  "hot velocity in the casing after the inlet nozzle [m/s]"
+u_h = 6.718403609065532  "hot velocity in the casing after the inlet nozzle of the source run (nozzle(), see README) [m/s]"
 
 "!Row equations (source equ_syst) for the three rows"
 Tsat_C = temperature(fluid_C$, P=P_su_C, x=0)
 DUPLICATE j=1,3
   in2ph[j] = 1-Step(abs(T_c_in[j]-Tsat_C)-1e-6)  "1 when the cold fluid sits on the saturation plateau (the try/except of the original)"
-  CALL BankHTC(fluid_C$, T_c_o_su[j], T_c_in[j], T_wc_o[j], P_su_C, u_wf_in, 61, D_o, S_T, S_L : h_c_o[j], DP_cond[j], Nu_cond[j], Re_cond[j], V_max_oil[j], a_gc[j])
-  CALL ExtConvBoil(D_o, fluid_C$, min(T_c_in[j], Tsat_C), T_wc_o[j], u_wf_in : h_cb[j])  "T_sat clamped below Tsat: off the plateau the original never evaluates this branch"
+  CALL BankHTC(fluid_C$, T_c_o_su[j]+273.15, T_c_in[j]+273.15, T_wc_o[j], P_su_C, u_wf_in, 61, D_o, S_T, S_L : h_c_o[j], DP_cond[j], Nu_cond[j], Re_cond[j], V_max_oil[j], a_gc[j])
+  CALL ExtConvBoil(D_o, fluid_C$, min(T_c_in[j], Tsat_C), T_wc_o[j]-273.15, u_wf_in : h_cb[j])  "T_sat clamped below Tsat: off the plateau the original never evaluates this branch"
   h_c_o_eff[j] = (1-in2ph[j])*h_c_o[j]+in2ph[j]*h_cb[j]
   R_c_o_foul[j] = (1+foul)/(A_c_o*h_c_o_eff[j])  "condenser external resistance with fouling [K/W]"
   R_c_o[j] = 1/(A_c_o*h_c_o_eff[j])  "condenser external resistance as returned by the source (no fouling) [K/W]"
@@ -298,9 +301,9 @@ P_HP_h[j] = pressure(Water, T=T_HP_h_g_C[j], x=1)  "saturation pressure at the e
   T_wc[j] = (T_wc_i[j]+T_wc_o[j])/2  "mean condenser wall temperature [K]"
   (T_we[j]-T_wc[j])/R_axial = Q_dot_axial[j]  "axial wall conduction [W]"
   cp_wf[j] = cp(fluid_C$, P=P_su_C, T=min(max(T_c_o_su[j], -20), 400))  "temperature guard for the solver exploration [°C]"  "[J/(kg*K)]"
-  T_c_o_su[j] = T_c_in[j]-(Q_dot_axial[j]+Q_dot_radial[j])/(m_dot_C*cp_wf[j])  "cold temperature upstream of the row, minus 273.15 for the °C property call [K]"
+  T_c_o_su[j] = T_c_in[j]-(Q_dot_axial[j]+Q_dot_radial[j])/(m_dot_C*cp_wf[j])  "cold temperature upstream of the row [°C]"
   T_g_mean[j] = ((T_h_in[j]+273.15)+T_e_o_ex[j])/2  "mean hot-gas temperature of the row [K]"
-  cp_H[j] = cp(fluid_H$, P=P_h_in[j], T=T_g_mean[j])  "[J/(kg*K)]"
+  cp_H[j] = cp(fluid_H$, P=P_h_in[j], T=T_g_mean[j]-273.15)  "[J/(kg*K)]"
   T_e_o_ex[j] = T_h_in[j]+273.15-(Q_dot_axial[j]+Q_dot_radial[j])/(m_dot_H*cp_H[j])  "hot temperature at the row exhaust [K]"
   R_DP[j] = abs((T_HP_h[j]-T_HP_c[j])/Q_dot_radial[j])  "vapour-flow resistance [K/W]"
   R_tube_tot[j] = 1/(1/(R_we+R_evap_i[j]+R_DP[j]+R_cond_i[j]+R_wc)+1/R_axial)  "total tube resistance [K/W]"

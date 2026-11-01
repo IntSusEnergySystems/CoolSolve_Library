@@ -5,7 +5,7 @@ expander, a pump on similarity laws with rated curves and two SWEP P200THx140
 brazed-plate heat exchangers in a moving-boundary formulation. Translation of
 LaboThapPy `machine/examples/ORC/fpi_orc_example.py`, study case `off_design`.
 
-> 🔵 **Level 4 · Research** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ❌ **Failing** &nbsp;|&nbsp; `CSL-0312`
+> 🔴 **Level 4 · Research** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ❌ **Failing** (solver convergence; review of 2026-11-01) &nbsp;|&nbsp; `CSL-0312`
 
 | | |
 |---|---|
@@ -164,6 +164,56 @@ solution) are in place. Status stays **failing**: a faithful model whose
 134-equation block does not converge in CoolSolve within a practical iteration
 budget. Next lever for a re-check: a split/teared solve of the block (HX by
 HX), or CoolSolve LM with a larger iteration budget on faster hardware.
+
+## Review of 2026-11-01 (failing models)
+
+Classification: **failing, solver convergence** — the system is square and
+a solution should exist (see below), but CoolSolve does not converge the
+134-equation coupled block, also with **Try Harder**. Findings:
+
+- **Bug of the translation, corrected.** The six LMTD guards were written
+  `IF(-E, -1E-6, f, DTA, f)` with `f = (DTA − DTB)/ln(DTA/DTB)`: for
+  `E = |DTA/DTB − 1| < 1e-6` the five-argument `IF` returns its *last*
+  argument, i.e. `f` again (0/0), so the guard never protected the
+  `DTA ≈ DTB` case. The last argument is now `DTA`.
+- **Solver behaviour** (CoolSolve 0.4.0, also with the AD fix of the CoolSolve
+  branch `fix/ad-pow-negative-base`; shipped `.initials`): Levenberg–Marquardt
+  brings the block residual from 2.18·10⁵ to 6.2·10³ in about 50 iterations
+  and then stalls: the damping saturates at 10⁸ and the step is zero for the
+  remaining iterations, i.e. a **local minimum of ‖F‖**, not slow
+  convergence (a 300-iteration LM run shows it in 24 s). With the shipped
+  coolsolve.conf (`LevenbergMarquardt, TrustRegion, Newton`,
+  `maxIterations = 20000`) the solver spends the whole budget after that
+  stall and runs past 20 min; Try Harder also runs past its 15–25 min test
+  timeouts. The most likely cause is the non-smooth clamps
+  `Max(ΔT, 1E-6)` on the zone temperature differences: when one is active its
+  derivative is zero and the residual surface is flat in that direction (a
+  temperature cross inside a zone during the iterations).
+- **Validity of the translation.** The physics of the source is sound, but
+  (i) the source example cannot be run at commit `f03f7f47` (three
+  independent errors, see *Verification*), so the cycle has no reference;
+  (ii) the translation departs from the source (3-zone moving boundary
+  instead of the source's cells, two-phase correlations at one mean quality,
+  pressure-drop feedback removed from the zone states, the `1.95*KEV*1000`
+  "kPa" factor kept as written); (iii) the expander and the pump are verified
+  against the source components. If the model converged it would be
+  `modified`, not `verified`.
+- Correction of a statement below: EES does **not** accept IF–THEN–ELSE blocks
+  in the main equations window either (only inside FUNCTION/PROCEDURE), so the
+  inline five-argument `IF` used for the guards is the right EES form; there
+  is no CoolSolve gap there.
+
+Hints for CoolSolve: (a) when LM saturates its damping with a non-zero
+residual, report it as a local minimum and restart from a perturbed point
+(the multi-start of Try Harder perturbs only thermodynamic blocks from
+reference states); (b) smooth `MAX`/`MIN` (soft-plus with a small width) as
+an option would remove the flat regions; (c) the coupled block contains both
+heat exchangers: tearing them apart (condenser at fixed `P_1`, evaporator at
+fixed `P_2`, then the closure on the subcooling, as the source's
+sequential-modular solver does) would give two smaller blocks. Hint for the
+model: use a smooth LMTD approximation (e.g. Chen's) instead of the clamped
+log form. The maintainer may also consider dropping the model (no reference
+for the cycle, heavily modified translation); it is kept as `failing` here.
 
 ## Continuation attempt (orchestrator review, 2026-10-31)
 

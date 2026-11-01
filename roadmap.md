@@ -7,17 +7,17 @@ each tested and marked done. *How* each step is executed is described in
 [docs/model_workflow.md](docs/model_workflow.md); the classification rules are
 in [docs/taxonomy.md](docs/taxonomy.md).
 
-*Last update: 2026-10-31 (handover at the top of §1).*
+*Last update: 2026-11-01 (review of the failing/modified models; handover at the top of §1).*
 
 ---
 
 ## 1. Status at a glance
 
-| Library (2026-10-31 19:00, CoolSolve 0.4.0@9768373) | Count |
+| Library (2026-11-01, CoolSolve 0.4.0@9768373) | Count |
 |---|---:|
 | Models (`library.json`) | 300 |
-| … verified / blocked / failing / modified (`runs` merged into `verified`, D15) | 270 / 23 / 6 / 1 |
-| … blocked with a runnable `_coolsolve` variant (with `.sol`) / not runnable at all | 19 / 5 (`CSL-0081`, `CSL-0040`, `CSL-0116`, `CSL-0150`, `CSL-0264`); failing: `CSL-0202`, `CSL-0275`, `CSL-0078`, `CSL-0155` |
+| … verified / blocked / failing / modified (`runs` merged into `verified`, D15) | 274 / 23 / 3 / 0 |
+| … blocked with a runnable `_coolsolve` variant (with `.sol`) / not runnable at all | 19 / 5 (`CSL-0081`, `CSL-0040`, `CSL-0116`, `CSL-0150`, `CSL-0264`); failing: `CSL-0326`, `CSL-0312`, `CSL-0155` |
 | … steady / function / dynamic / optimization | 249 / 45 / 5 / 1 |
 | Functions and procedures (`library.json`) | 611 |
 | Regression (`test_models.py`) | 285 targets (252 main files + 33 variants), 0 failure on 2026-10-24 with CoolSolve 0.4.0 (excluding the slow `CSL-0009:coolsolve`; `CSL-0162:coolsolve` has no `.sol`) |
@@ -53,6 +53,30 @@ TESPy 8 / 8 / 23 / 13 / 0.
 
 Refresh with `python3 tools/build_index.py` (models) and
 `python3 tools/backlog_stats.py` (candidates).
+
+### HANDOVER of 2026-11-01 — review of the failing and modified models (read this first)
+
+The 6 failing models and the modified one were reviewed one by one (decision rule of the maintainer: missing feature →
+blocked; no convergence even with Try Harder → failing + diagnosis + CoolSolve hints in the README; converges only with
+Try Harder → document it; original not right → adapt, mark as adapted, verified). Nothing committed in the library.
+
+| Model | Before → after | Finding |
+|---|---|---|
+| `CSL-0202` Roots compressor | failing → **verified (adapted)** | The 5 cm inlet orifice cannot pass the fresh-charge flow (choked at 0.463 < 0.505 kg/s): no solution. The author's commented area 0.004601 m² is used; 43/50 stored EES values within 1e-3 (the 7 others: area + non-physical stored throat state). Needs `.initials` (else Try Harder). |
+| `CSL-0275` V6 engine | failing → **verified (adapted)** | Exercise-3 branch over-determined by one identity (`MM_mixt = x_f*MM_f + x_a*MM_a`); commented out in the main file, `_coolsolve` variant removed (identical `.sol`). |
+| `CSL-0078` brine heat pump | failing → **verified (adapted)** | The import had assigned `P_ev`, `P_cd`, `M_dot_r` (unknowns of the original). Removed; the 76-var block converges from CoolProp-consistent initials (Try Harder from the EES values). First-law error of the original fixed: internal power on `M_dot_s_cp` (leakage recompressed), 124 W balance gap closed. Remaining 2–6 % vs EES = the EES 7.888 R407C model. `_coolsolve` variant removed. |
+| `CSL-0319` R22/R407C | modified → **verified** | The 16 % R407C gap is the EES 7.458 R407C model: CoolProp's pseudo-pure R407C and its R32/R125/R134a mixture model agree within 1.5e-4 (refrigerating effect 86.8 vs EES 76.6 kJ/kg). Balances and Carnot limits checked. |
+| `CSL-0326` thermosyphon | failing (kept) | Iteration-0 SingularJacobian = CoolSolve bug **CS-BUG-PROC-NEG-POW**, root cause found and fixed on the CoolSolve branch **`fix/ad-pow-negative-base`** (commit `b26946d`, not pushed, not merged: AD derivative of `x^y` for `x` < 0, plus the garbled singular-Jacobian dump). Translation errors corrected (7 K/°C slips and the cold-side density state in the main file; 3 K/°C slips and the casing velocity in the row companion). With the fix, the single-phase rows match the LaboThapPy source within 0.6 %; the two-phase rows stay degenerate (source uses the critical heat flux as operating flux). Full file: without `.initials` every temperature held in K started at 1 K (default-guess inference, new register row `CS-BUG-GUESS-INFER`) and Try Harder iterated 33 min on ‖F‖ = inf (`CS-BUG-NONFINITE-START`); a 61-row `.initials` from the source run is now shipped. |
+| `CSL-0312` off-design ORC | failing (kept) | LMTD guard bug fixed; LM stalls at a local minimum (6.2e3, damping saturated), Try Harder > 20 min. No reference (source example cannot run), heavily modified translation: maintainer may drop it. |
+| `CSL-0155` inverter heat pump | failing (kept) | Try Harder: residual 369 (main) / 0.37 (fix branch). Frost latent-heat sign of the wet-coil balance corrected (first law). Forcing the wet regime does not help. |
+
+**For the maintainer.** (1) Review and merge CoolSolve `fix/ad-pow-negative-base` (worktree in the session scratchpad, branch
+in `~/git/CoolSolve`; tests `[neg-pow]`, `[autodiff]`, `[library-gaps]` pass); then close `CS-BUG-PROC-NEG-POW` in the register and
+re-check `CSL-0326`, `CSL-0155`, `CSL-0327` (powers written as products because of this bug). (2) Decide on `CSL-0312` (keep
+failing or drop) and on adapting the boiling HTC of `CSL-0326`. (3) EES 7.4–7.8 R407C properties are off near the suction and
+near the critical point (`CSL-0078`, `CSL-0319`, `CSL-0260`): compare R407C models against CoolProp, not against old EES runs.
+(4) New register rows (CoolSolve working tree, uncommitted): `CS-BUG-GUESS-INFER` (default guesses: T/P/h types recognised only for bare property-call arguments and `X = Property(...)`; K temperatures, CALL arguments, linear relations get 1.0), `CS-BUG-NONFINITE-START` (pipeline keeps iterating on ‖F‖ = inf), root cause added to `CS-BUG-UNIT-VOLUME` (`volume` mapped to density: wrong label **and** wrong guess, ×10⁶ for liquids), fix note on `CS-BUG-PROC-NEG-POW`. (5) Source issues to report upstream (LaboThapPy `f03f7f47`): `nozzle()` critical area without the 0.5787 factor (casing
+velocity violates continuity), `cp_H` read from the wrong AbstractState in `equ_syst`, CHF-based `ext_conv_boil`.
 
 ### HANDOVER of 2026-10-31 (read this first; the 2026-10-24 handover below is history)
 
@@ -1554,3 +1578,10 @@ and adds the log line in §8.
 | 2026-10-31 | C-451 `CSL-0158` | T-RECHECK: blocked → verified; COLEBROOK, ARRAY-ARG, PI-FUNCTION, IMPLICIT-PROC closed on 0.4.0; StringPos rewritten per the register decision of 2026-10-12; native gas file vs EES stored 44/48 within 6.2e-04; gas _coolsolve variant deleted; liquid-line native still blocked by CS-GAP-PROP-HQ (Claude Sonnet sub-agent, 5 min) |
 | 2026-10-31 | C-452 → `CSL-0262`, `CSL-0131` | T-RECHECK: CSL-0131 blocked → verified (Hughmark implicit body rewritten as explicit bisection, as the source's Brent solve; 130 values vs LaboThapPy re-run, max 2.2e-05; variant deleted); CSL-0262 stays blocked (lookup cell writes remain unsupported by decision — the closed CS-BUG-LOOKUP-WRITE only added a warning; suggestion: an open CS-GAP-LOOKUP-WRITE row) (Claude Sonnet sub-agent, 4 min) |
 | 2026-10-31 | C-447 `CSL-0326` | thermosyphon_hx translated (LaboThapPy HexThermosyphon: 61-row bank, ESDU limits, 3421 eq. + 3-row companion): FAILING — CoolSolve does not converge the coupled CALL-in-DUPLICATE system (also after the CS-BUG-PROC-NEG-POW rewrite and full inlining); correlations checked standalone, source example values in the README; candidate for the maintainer (keep as failing or drop) (glm, 2 rounds) |
+| 2026-11-01 | Review `CSL-0202` | failing → verified (adapted): the 5 cm inlet orifice chokes below the fresh-charge flow (no solution); author's commented area 0.004601 m² used; 43/50 stored EES values within 1e-3 (max 9.65e-4), the 7 others are the area and the non-physical stored throat state; .sol added (Claude Code) |
+| 2026-11-01 | Review `CSL-0275` | failing → verified (adapted): redundant identity of exercise 3 commented out in the main file, `_coolsolve` variant removed (identical .sol); "EES drops redundant equations" claim corrected (Claude Code) |
+| 2026-11-01 | Review `CSL-0078` | failing → verified (adapted): import-added assignments of P_ev, P_cd, M_dot_r removed; internal power on the swept flow (first-law gap of 124 W in the original, also in EES); converges from CoolProp-consistent .initials (Try Harder from the EES values); vs EES 7.888 COP −2.2 %, W +5.6 % (power fix + EES R407C cp −10 %); `_coolsolve` variant and its tables removed (Claude Code) |
+| 2026-11-01 | Review `CSL-0319` | modified → verified: R407C gap traced to EES 7.458 (CoolProp pseudo-pure and R32/R125/R134a mixture model agree within 1.5e-4; EES refrigerating effect −12 %); balances and Carnot limits checked (Claude Code) |
+| 2026-11-01 | Review `CSL-0326` | stays failing: iteration-0 SingularJacobian = CS-BUG-PROC-NEG-POW, root cause (AD of x^y, x<0) fixed on CoolSolve branch `fix/ad-pow-negative-base` (b26946d, with the garbled singular-Jacobian dump fix and tests); translation unit errors corrected; single-phase rows match an instrumented LaboThapPy re-run within 0.6 %; two-phase rows degenerate (CHF used as operating flux) (Claude Code) |
+| 2026-11-01 | Review `CSL-0312` | stays failing: LMTD guard bug corrected; LM stalls at a local minimum (2.2e5 → 6.2e3, damping saturated), Try Harder > 20 min; no cycle reference; maintainer may drop (Claude Code) |
+| 2026-11-01 | Review `CSL-0155` | stays failing: Try Harder residual 369 (main) / 0.37 (fix branch); frost latent-heat sign corrected (first law); forcing the wet regime does not converge either; hints in README (Claude Code) |

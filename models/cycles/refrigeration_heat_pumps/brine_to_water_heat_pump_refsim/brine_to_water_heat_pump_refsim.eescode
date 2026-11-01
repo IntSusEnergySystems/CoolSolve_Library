@@ -12,9 +12,8 @@
   fictitious envelope of uniform temperature t_w_cp.
 
   Inputs : t_amb, t_w_su_cd, p_w_su_cd, t_glw_su_ev, DELTAt_oh_ev, DELTAt_sc_cd,
-           M_dot_w_cd, M_dot_glw_ev, X_cp, conc_glw, n_cp, P_ev, P_cd, M_dot_r,
-           fluid$
-  Outputs: Q_dot_ev, Q_dot_cd, W_dot_cp_tot, COP_heating, t_w_ex_cd,
+           M_dot_w_cd, M_dot_glw_ev, X_cp, conc_glw, n_cp, fluid$
+  Outputs: Q_dot_ev, Q_dot_cd, W_dot_cp_tot, COP_heating, P_ev, P_cd, M_dot_r, t_w_ex_cd,
            t_glw_ex_ev, t_ex_cp, epsilon_s_cp, epsilon_v_cp
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
   Source : ULiège model bank (Laborelec toolkit lineage), brine-to-water heat
@@ -27,13 +26,14 @@
            model CSL-0079); -Units.csv (5 x 1 unit labels of
            BRINEPROP, read with LOOKUP$).
 
-  Status: FAILING in CoolSolve: the model is over-determined by three
-   equations as the original stands (P_ev, P_cd and M_dot_r are assigned
-   inputs although three duplicated relations of the original determine
-   them); with those assignments removed the system is square but its
-   76-variable block does not converge. A faithful runnable variant is
-   shipped as brine_to_water_heat_pump_refsim_coolsolve.eescode; every
-   change is logged in its header and in the README.
+  Status: verified - ADAPTED from the original (README, Conversion log of
+   2026-11-01): (1) P_ev, P_cd and M_dot_r are unknowns, as in the original
+   (the first import had assigned them, which over-determined the model);
+   (2) the internal compressor power is M_dot_s_cp*w_in_cp (the swept flow,
+   leakage included): the original's M_dot_r*w_in_cp left the energy
+   balance of the compressor open by M_dot_leak_cp*w_in_cp (124 W). The
+   76-variable block needs the shipped .initials (from the default guesses,
+   or from the EES stored values, use Try Harder).
  =============================================================================}
 
 {--- Library procedure copied from the BrineProp library (Brineprop.lib of
@@ -245,9 +245,9 @@ M_dot_w_cd=0.3889                      "water flow rate at the condenser [kg/s]"
 M_dot_glw_ev=1.11                      "brine flow rate at the evaporator [kg/s]"
 X_cp=1                                 "fraction of the swept volume in use [-]"
 conc_glw=25                            "glycol concentration of the brine [%]"
-P_ev=436182.6219                       "evaporating pressure [Pa]"
-P_cd=1730328.509                       "condensing pressure [Pa]"
-M_dot_r=0.07561309079                  "refrigerant mass flow rate through the compressor [kg/s]"
+{P_ev, P_cd and M_dot_r are NOT inputs: in the original they are unknowns, closed by the effectiveness relations
+ of the evaporator and of the condenser and by the swept-volume flow. The first import had assigned them the stored
+ EES values (P_ev=436182.6219, P_cd=1730328.509, M_dot_r=0.07561309079), which over-determined the model by three.}
 
 "!2. PARAMETERS (panel of the original; the values below are those of the stored run)"
 "!2.1. Compressor"
@@ -333,7 +333,10 @@ w_in2_cp= v_in_cp*(p_ex1_cp-p_in_cp)                             "isochoric comp
 
 "4.1.7. Total compression work and power"
 w_in_cp=w_in1_cp+w_in2_cp                                        "total compression work [J/kg]"
-W_dot_in_cp=M_dot_r*w_in_cp                                      "internal power of the compressor [W]"
+{Original: W_dot_in_cp=M_dot_r*w_in_cp. The compression chamber processes M_dot_s_cp = M_dot_r + M_dot_leak_cp (the
+ leakage is recompressed); with M_dot_r the compressor energy balance W_dot_cp = M_dot_r*(h_ex_cp-h_su_cp) + Q_dot_amb_cp
+ was open by M_dot_leak_cp*w_in_cp (124 W, 3 % of W_dot_cp). Same form as in CSL-0007, CSL-0116 and CSL-0260.}
+W_dot_in_cp=M_dot_s_cp*w_in_cp                                   "ADAPTED: internal power of the compressor, swept flow incl. leakage [W]"
 h_ex1_cp=h_su2_cp+w_in_cp                                        "both compression steps are considered adiabatic, from su2 to ex1 [J/kg]"
 v_ex1_cp=volume(fluid$,P=P_ex1_cp,h=h_ex1_cp)                    "specific volume at the compressor exhaust [m^3/kg]"
 

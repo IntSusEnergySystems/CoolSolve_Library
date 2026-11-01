@@ -13,7 +13,10 @@
   Outputs: M_dot, W_dot, W_dot_in, epsilon_s, A_thr_l
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
   Source : ULiège MSTh, thermo_models, candidate TM-0036 - see README.md
-  Status : failing - the inlet orifice cannot pass the fresh-charge flow
+  Status : verified - ADAPTED from the original: the 5 cm inlet orifice of the
+           original cannot pass the fresh-charge flow (no solution, the throat
+           chokes at 0.463 kg/s < 0.505 kg/s); the orifice area is the author's
+           own commented value 0.004601 m^2 (README, Conversion log)
 =============================================================================}
 
 "!Statement"
@@ -36,7 +39,10 @@ eta_m = 0.95                                 "mechanical efficiency [-]"
 "!Inlet orifice"
 "Further hypothesis when the suction pressure drop is included, as in the original."
 "The original also comments M_dot_l = 0.1577*M_dot and M_dot_l = 0.1*M_dot; those lines are not equations."
-A_thr = 0.05^2/4*PI                          "inlet orifice area [m^2], diameter 5 cm as in the original"
+{Original: A_thr = 0.05^2/4*PI (5 cm orifice, 0.0019635 m^2). With it the window has no solution: the
+ isentropic throat chokes at about 0.463 kg/s while the volumetric efficiency imposes 0.505 kg/s of fresh
+ charge (the author notes that this orifice gives a problem in the definition of h_thr).}
+A_thr = 0.004601                             "ADAPTED: inlet orifice area [m^2] (d = 76.5 mm), the value the author commented as data for the P_ex and N sweeps; the stored EES solution is that operating point"
 
 "!Volume flow rates"
 M_dot_in = M_dot + M_dot_l                   "mass balance [kg/s]"

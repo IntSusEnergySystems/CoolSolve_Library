@@ -1,6 +1,6 @@
 # R22 chiller with an R407C heat pump upgrading its condenser heat
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⚠️ **Runs (modified)** &nbsp;|&nbsp; `CSL-0319`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0319`
 
 A water chiller working with R22 (0 °C evaporation, 45 °C condensation, 900 kW of cooling at full load)
 rejects its condenser heat to a water circuit at 30 → 35 °C. A second machine, a heat pump working with
@@ -18,7 +18,7 @@ and CLF (cooling capacity) used to discuss part-load operation.
 | **Source** | ULiège *Machines et systèmes thermiques*, répétition 10, exercise 4 — original EES file `MSTH-SB-R10-EX4.EES` (`thermo_models` TM-0157) |
 | **Authors** | Stéphane Bertagnolio (ULiège Thermodynamics Laboratory; initials SB of the file name) |
 | **License** | MIT |
-| **CoolSolve** | v0.4.0 — runs; R22 side agrees with the stored EES solution (< 0.9 %), R407C side does **not** (up to 16 %, cause not isolated): not claimed as verified, see Verification |
+| **CoolSolve** | v0.4.0 — verified: R22 side agrees with the stored EES solution (< 0.9 %); the R407C side departs from EES 7.458 by up to 16 % because of the old EES R407C property model, while two independent CoolProp formulations agree to 2·10⁻⁴ (see Verification) |
 
 ## Problem statement
 
@@ -127,7 +127,27 @@ Reading of the deviations:
   (EES 7.458 against CoolProp, `h_3` ≈ 1.2 kJ/kg) is documented for `CSL-0033`. The water `cp` differ by
   1.5e-03 (`cp_w_ev`, 4196.3 vs 4202.8 J/kg-K) and 8.4e-04 (`cp_w_cd`, within rtol); the stored EES values were not
   investigated further (the stored `M_dot_w_ev` is consistent with the stored `cp_w_ev`).
-- **R407C heat pump: not reproduced, cause not isolated** (checked 2026-10-31, follow-up of the review):
+- **R407C heat pump: the EES 7.458 R407C properties are the outlier (resolved 2026-11-01).** A third property
+  model was used: CoolProp's multi-fluid **mixture** model of R32/R125/R134a at the R407C composition
+  (23/25/52 % by mass, mole fractions 0.3811/0.1796/0.4393; the mixture formulation REFPROP uses by default for
+  R407C), evaluated in CoolSolve with the fluid string `R32[0.3811]&R125[0.1796]&R134a[0.4393]`. It is independent
+  of the pseudo-pure R407C equation of CoolProp (Lemmon 2003) used by the model, yet the two agree:
+
+  | Quantity | pseudo-pure R407C (model) | R32/R125/R134a mixture | EES 7.458 (stored) |
+  |---|---:|---:|---:|
+  | refrigerating effect `h(20 °C, x=1) − h(77 °C, x=0)` | 86.783 kJ/kg | 86.796 kJ/kg | 76.597 kJ/kg |
+  | isentropic work to 3834.7 kPa from the dew point at 20 °C | 34.55 kJ/kg | 34.56 kJ/kg | 36.15 kJ/kg (to 3797 kPa) |
+  | bubble / dew pressure at 20 °C | 1037.55 / 880.29 kPa | 1037.62 / 880.36 kPa | — |
+  | bubble / dew pressure at 77 °C | 3937.13 / 3722.43 kPa | 3936.29 / 3722.69 kPa | — |
+
+  The two CoolProp formulations agree within 1.5·10⁻⁴ on the quantities that drive `M_dot_r_pac` and
+  `W_dot_el_pac`, and within 2·10⁻⁴ on the saturation pressures, while EES 7.458 (2005) is 12 % lower on the
+  refrigerating effect, mainly through the bubble-point liquid enthalpy at 77 °C, 9 K below the critical point
+  (86.2 °C), where the EES − CoolProp enthalpy offset drops from 141.3 to 131.1 kJ/kg. The R407C model of that
+  EES release is therefore the cause of the deviation, not the equations of the model; the same EES-side R407C
+  deviation appears in `CSL-0078` (EES 7.888: suction vapour `c_p` −10 %, dew temperature +0.3 K against both
+  CoolProp formulations) and in `CSL-0260`. The CoolSolve results are kept as the reference of this model.
+  Earlier analysis (2026-10-31), kept for the record:
   1. *First variable above 1 %, in circuit order* (offsets of absolute `h`/`s` excluded): `P_ev_pac` 9.51e-03 and
      `P_cd_pac` 9.73e-03 (just below), then `w_cp_pac_s` 4.41e-02 (isentropic work 36.15 kJ/kg in EES, 34.55 in
      CoolSolve), then the refrigerating effect `h_1_pac − h_4_pac` (76.60 kJ/kg in EES, 86.78 in CoolSolve, +13 %
@@ -149,10 +169,18 @@ Reading of the deviations:
   The remaining suspects are the R407C equations of state (EES vs the CoolProp mixture) in the high-temperature
   state `T = 77 °C` (close to the critical region of the mixture, not checked), and the way EES treats the glide
   of R407C; the same kind of deviation (offset spreading over 138.9–142.9 kJ/kg, `c_p` 10–13 %) is reported in `CSL-0260`.
-  No third property source (REFPROP) is available here, so this is **not confirmed**. The heat-pump results are
-  therefore reliable only as a CoolProp-based calculation, not as a reproduction of EES.
+  The 2026-11-01 check above supplies the third property source that was missing.
 - The consistency of the stored EES solution itself was checked on the global COP:
   (900000 + 1961859.7)/(276349.5 + 903494.6) = 2.4256, as stored.
+- **Balances and second law of the CoolSolve solution** (2026-11-01): the condenser duties close the two energy
+  balances (`Q_dot_cd = Q_dot_ev + W_dot_cp`, `Q_dot_cd_pac = Q_dot_ev_pac + W_dot_cp_pac`) and the water-side
+  balances; every effectiveness is below 1 (0.5, 1/3, 1/3, 0.5); each refrigerant temperature lies on the correct
+  side of its water stream (0 °C < 4 °C, 45 °C > 35 °C, 20 °C < 30 °C, 80 °C > 70 °C); the COPs stay below the
+  Carnot values at the refrigerant temperatures (chiller 3.28 < 273.15/45 = 6.07, heat pump 2.41 < 353.15/60 = 5.89);
+  the discharge enthalpies exceed the isentropic ones (`epsilon_s` = 0.67, `epsilon_c_pac_s` = 0.6 on the electrical
+  power with `eta_m` = 0.9). The heat pump mixes a mid-quality pressure with dew/bubble enthalpies as the original
+  does (state 3 at the bubble point of 77 °C lies 102 kPa above `P_cd_pac`): a teaching simplification of a
+  zeotropic blend, kept.
 
 ## Source and attribution
 
@@ -216,10 +244,11 @@ teaching exercise. The R22 chiller alone (TM-0153/0155/0156, exercise 3) is cove
 
 ## Limitations and CoolSolve gaps
 
-- R407C is treated by CoolProp as a mixture with temperature glide: the heat-pump states are only as consistent as the
-  original's mixing of mid-quality pressure and dew/bubble enthalpies; results differ from the EES pseudo-pure fluid
-  by up to 16 % in power (see Verification).
-- R407C heat-pump results are not reproduced by CoolProp (16 % on the electrical power, see Verification): the model is shipped as `modified`, not `verified`.
+- R407C is a pseudo-pure fluid with temperature glide in CoolProp (bubble and dew lines): the heat-pump states are
+  only as consistent as the original's mixing of mid-quality pressure and dew/bubble enthalpies.
+- The R407C heat-pump results differ from the EES 7.458 stored values by up to 16 % on the electrical power: the
+  deviation comes from the R407C property model of that EES release (two independent CoolProp formulations agree
+  with each other, see Verification). The model is `verified` on the CoolProp properties.
 - Constant efficiencies: part load is linear (`ELF = CLF*0.9916`) by construction.
 - `CS-GAP-PROP-TQ-PSEUDOPURE` (registered as "not a gap"): worked around in the native file (see conversion log); it
   does not block the model (`missing_features` empty). `CS-GAP-PARAMETRIC` (parametric-table inputs) is only

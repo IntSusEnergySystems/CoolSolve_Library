@@ -81,6 +81,12 @@
       "date": "2026-10-31",
       "action": "source formulation implemented (orchestrator round 2): per-zone utilisation w = UA_req/UA_avail with the source closure sum(w)=1, w-weighted pressure drops and w-proportional charge; LM reaches residual 25.5 (from 2.2e5) but exceeds the iteration budget - still failing",
       "by": "glm"
+    },
+    {
+      "date": "2026-11-01",
+      "action": "review of the failing models: stays failing (solver convergence; Try Harder fails); LMTD guard bug of the translation corrected; diagnosis and CoolSolve hints in README; maintainer may consider dropping (no cycle reference, heavily modified translation)",
+      "by": "Claude Code for S. Quoilin"
     }
-  ]
+  ],
+  "diagnosis": "Review 2026-11-01: square, solution expected, but the 134-eq. HX block does not converge, also with Try Harder: LM goes 2.2e5 -> 6.2e3 in ~50 iterations then stalls (damping 1e8, zero step = local minimum, likely the flat regions of the Max(dT,1E-6) clamps); TrustRegion/Newton after it exceed 20 min. LMTD guards corrected (5th IF argument was the 0/0 form). No reference for the cycle (source example cannot run)."
 }

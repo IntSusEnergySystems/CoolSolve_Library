@@ -1,6 +1,6 @@
 # Square V6 four-stroke engine (MCI TP3 exercises 1-3)
 
-🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ❌ **Failing** (runnable variant verified) &nbsp;|&nbsp; `CSL-0275`
+🟢 **Level 1 · Introductory** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** (adapted from the original) &nbsp;|&nbsp; `CSL-0275`
 
 Teaching exercise (ULiège MCI, TP3, exercises 1-3 on one square V6 engine:
 bore = stroke, connecting-rod length, volumetric compression ratio). Exercise 1
@@ -22,7 +22,7 @@ exercise is selected by the string `Exercice$` (`$IF`, constant string).
 | **Source** | `~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP3_EX-1-2-3-4-5/MCI_TP3_EX-1-2-3.EES` (EES X10.589, stored as RTF) |
 | **Authors** | P. Ngendakumana, R. Dickes |
 | **License** | MIT |
-| **CoolSolve** | 0.4.0@9768373 — native file **failing** (over-determined by one redundant identity in the default branch); runnable variant `square_v6_engine_exercise_coolsolve` verified against the EES stored solution (max rel. diff 8.33e-04) |
+| **CoolSolve** | 0.4.0@9768373 — verified against the EES stored solution (max rel. diff 8.33e-04) after one adaptation: a redundant identity of the default branch is commented out (see *Conversion log*) |
 
 ## Problem statement
 
@@ -77,17 +77,13 @@ the specific consumption `csp` in g/kWh and the thermal efficiency
 
 ## How to run
 
-The **native file** `square_v6_engine_exercise.eescode` is valid EES; the
-default exercise-3 branch is **over-determined by one equation** (46 numeric
-equations, 45 unknowns, `coolsolve -d`: *System square: No*) — see
-*Limitations*. Exercises 1 and 2 of the native file are square.
-
-The **runnable variant** is `square_v6_engine_exercise_coolsolve.eescode`
-(tested as `CSL-0275:coolsolve`, with its `.sol` baseline):
-
 ```bash
-../../../../../CoolSolve/build/coolsolve ./square_v6_engine_exercise_coolsolve.eescode
+coolsolve ./square_v6_engine_exercise.eescode
 ```
+
+The exercise-3 branch of the original holds one equation too many (an
+identity, see *Conversion log*); it is commented out in the file, which is
+otherwise the original. Exercises 1 and 2 are unchanged and square.
 
 It solves from the default guesses (30 iterations). The shipped `.initials`
 holds the stored EES values of the equation-window names (temperatures
@@ -95,7 +91,7 @@ converted to °C); with it the solver takes 32 iterations. No `coolsolve.conf`.
 
 ## Results
 
-Default operating point (exercise 3), runnable variant:
+Default operating point (exercise 3):
 
 | Quantity | CoolSolve | EES stored |
 |---|---:|---:|
@@ -131,7 +127,7 @@ from the equation window (`rho_mixt`), left out silently only where named:
 `bmep`, `C`, `C_m`, `eta_m`, `R`, `rapV_c`, `rho_mixt`, `V_dot_th`, `W_dot_in`,
 `W_dot_in_hp`, `W_dot_loss`, `W_dot_sh_hp`, `W_dot_sh_hp_bis`, `y`.
 
-`compare_solution.py` of the runnable variant (exercise 3) against
+`compare_solution.py` of the model (exercise 3) against
 `reference/ees_variables.csv --ees-units`:
 
 > 31 common variables, 0 differ (rtol=0.001); only in EES: 14; only in CoolSolve: 17
@@ -153,7 +149,7 @@ The deviations come from the EES-vs-CoolProp backends: EES's stored `R#`
 and air density built on it (`MM_a` and `MM_mixt` agree to 3.5e-07 and
 1.6e-06). `W_dot_sh`, `omega`, `T_in` and the geometry agree to ≤ 1e-10.
 
-Branch checks (the variant, `Exercice$` switched in a scratch copy):
+Branch checks (`Exercice$` switched in a scratch copy):
 
 - exercise 1: 14 common variables, 0 differ (rtol=0.001), maximum 5.41e-08
   (`y`, the piston displacement);
@@ -162,7 +158,7 @@ Branch checks (the variant, `Exercice$` switched in a scratch copy):
   the reference before `--ees-units` — with `--ees-units` the tool also
   converts the stored `bmep` (bar) to Pa, which the equation reports in bar.
 
-The removed identity holds at the solution of the variant to 7.7e-16
+The removed identity holds at the solution to 7.7e-16
 (`x_f*MM_f + x_a*MM_a` against `MM_mixt`).
 
 ## Source and attribution
@@ -211,6 +207,22 @@ archive of the same folder: TM-0469 (not imported; separate card).
   the runnable variant removes this one equation (logged in its header and at
   the place of removal) and is verified above. Not a CoolSolve gap (the same
   treatment as `CSL-0078`); no register row added.
+- **2026-11-01 — adaptation (failing → verified)**: review of the failing
+  models. The identity is commented out in the main file itself (with the
+  reason at its place) and the `_coolsolve` variant, which differed only by
+  this line, is removed; the main file's `.sol` is identical to the variant's
+  baseline, so the verification above applies unchanged. The claim of the
+  import that "EES removed it as redundant" is not supported: EES, like
+  CoolSolve, solves only square systems (*Check/Format* reports the equation
+  and variable counts), so the stored solution most likely comes from an
+  earlier state of the window without one of these equations; it satisfies all
+  of them because the identity holds. Validity check of the exercise: the
+  mixture mass per cycle is split as `Masse = M_f + M_a` with
+  `M_f = epsilon_c*f*M_a` (the *burned* fuel), while the total flow uses
+  `M_f/epsilon_c + M_a` (all the fuel supplied); with consistent definitions
+  `M_a` would be 0.19 % lower (`epsilon_v`, `csp` and `eta_therm` by the same
+  order). Kept as in the original (teaching approximation, far below the
+  accuracy of the exercise data).
 - **Level**: equations 46 (< 50) → 0; largest block 9 (6–30) → 1; no user
   function, procedure, array or `DUPLICATE` → 0; one engine, no multi-zone
   discretisation and no set of three coupled components → 0; textbook
@@ -220,11 +232,13 @@ archive of the same folder: TM-0469 (not imported; separate card).
 
 ## Limitations and CoolSolve gaps
 
-- The native file **does not solve** (status `failing`): the exercise-3 branch
-  is over-determined by the redundant identity `MM_mixt = x_f*MM_f + x_a*MM_a`
-  as the original stands — a property of this file, not a CoolSolve gap
-  (EES drops the equation as redundant); the runnable variant above is
-  shipped next to it. Exercises 1 and 2 of the native file are square.
+- **Adapted from the original**: the redundant identity
+  `MM_mixt = x_f*MM_f + x_a*MM_a` of the exercise-3 branch is commented out
+  (the original is over-determined by one equation, 47 for 46 unknowns); not a
+  CoolSolve gap. Exercises 1 and 2 are unchanged.
+- The fuel in the cylinder is counted as the burned fraction `epsilon_c*f*M_a`
+  in `Masse` but as the supplied `f*M_a` in the flows (0.19 % on `M_a`, see
+  *Conversion log*), as in the original.
 - The hp conversions of exercise 2 keep the divisor 745.7 of the original.
 - `bmep` is in bar because of the factor `1e-5`, as written.
 - The stored EES solution also contains variables of the other exercise
