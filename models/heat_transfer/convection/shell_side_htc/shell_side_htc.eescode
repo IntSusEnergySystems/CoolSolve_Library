@@ -1,0 +1,475 @@
+{=============================================================================
+  Shell-side heat-transfer coefficient of a shell-and-tube exchanger:
+  Kern, Donohue and Bell-Delaware with its J corrections (function library)
+  CoolSolve Library model CSL-0321 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Shell crossflow areas and hydraulic diameter, the Kern and Donohue coefficients,
+  and the Bell-Delaware method: ideal-bank Colburn factor ji from the tabulated
+  coefficients (log10 Re interpolation), the factors Jc, Jl, Jb, Jr, Js computed
+  from the geometry, and h = h_id*Jc*Jl*Jb*Jr*Js. Properties are arguments. The demo
+  program solves the source example (water, 1 m shell), 12 Bell-Delaware cases
+  (3 layouts, Re 5-6400), a repaired Donohue call and a Kern textbook geometry.
+  Source : Basile Chaudoir (ULiege), LaboThapPy, labothappy/correlations/convection/
+           shell_and_tube_htc.py, commit f03f7f47, Apache-2.0,
+           https://github.com/PyLaboThap/LaboThapPy ; after Kern (1950), Bell (1963)
+  Units  : SI (m, m^2, kg/s, Pa-s, J/kg-K, W/m-K, W/m^2-K); temperatures deg C
+  Status : VERIFIED against the source re-run (README); Donohue repaired, 2 source
+           slips selectable (method 2), see README
+=============================================================================}
+
+FUNCTION Smax_Kern(Do, pratio, Ds, B)
+{SMAX_KERN - crossflow area of the shell, Kern: Ss = Ds*(pT - Do)*B/pT, pT = pratio*Do
+(s_max_kern, as in the original; cheguide.com heat_exchanger_rating). Do tube
+outside diameter [m], pratio pitch ratio pT/Do [-], Ds shell inside diameter [m], B
+baffle spacing [m]; result [m^2].}
+  pT = Do*pratio
+  Smax_Kern = (Ds/pT)*(pT - Do)*B
+END
+
+FUNCTION Dh_Kern(Do, pratio, layout)
+{DH_KERN - hydraulic (equivalent) diameter of the shell flow [m], as in the
+original (d_h): layout 0 or 45 (square pitch) De = 4*(pT^2 - pi*Do^2/4)/(pi*Do);
+otherwise (triangular) De = 2*sqrt(3)/pi*pT^2/Do - Do. layout is the tube-layout
+angle in degrees: 0, 45 or 60.}
+  pT = Do*pratio
+  IF (layout = 0) OR (layout = 45) THEN
+    Dh_Kern = 4*(pT^2 - pi*Do^2/4)/(pi*Do)
+  ELSE
+    Dh_Kern = 2*(sqrt(3)/pi)*pT^2/Do - Do
+  ENDIF
+END
+
+FUNCTION Pp_BD(Do, pratio, layout)
+{PP_BD - tube pitch relative to the flow, as in the original (shell_bell_delaware_htc):
+pT for layout 0, pT*sqrt(3)/2 for 60, pT/sqrt(2) for 45 [m].}
+  pT = Do*pratio
+  IF (layout = 0) THEN
+    Pp_BD = pT
+  ELSE
+    IF (layout = 60) THEN
+      Pp_BD = pT*sqrt(3)/2
+    ELSE
+      Pp_BD = pT/sqrt(2)
+    ENDIF
+  ENDIF
+END
+
+FUNCTION Smax_BD(Do, pratio, Ds, Dotl, B, layout, method)
+{SMAX_BD - minimum crossflow area of the bundle (s_max of the original). With
+pe = pT (layout 0), sqrt(2)*pT (45), 2/sqrt(3)*pT (60), pT = pratio*Do:
+ method 1 (as coded in the original): S = B*[(Ds - Dotl) + (Dotl - Do)*(pT - Do)]/pe
+ method 2 (division on the second term only, dimensionally consistent m + m*m/m):
+   S = B*[(Ds - Dotl) + (Dotl - Do)*(pT - Do)/pe]
+Dotl outer tube limit diameter [m]; result [m^2]. The original returns 0 for another
+layout angle; here pe is then 1E30.}
+  pT = Do*pratio
+  IF (layout = 0) THEN
+    pe = pT
+  ELSE
+    IF (layout = 45) THEN
+      pe = sqrt(2)*pT
+    ELSE
+      IF (layout = 60) THEN
+        pe = (2/sqrt(3))*pT
+      ELSE
+        pe = 1E30
+      ENDIF
+    ENDIF
+  ENDIF
+  IF (method = 1) THEN
+    Smax_BD = B*((Ds - Dotl) + (Dotl - Do)*(pT - Do))/pe
+  ELSE
+    Smax_BD = B*((Ds - Dotl) + (Dotl - Do)*(pT - Do)/pe)
+  ENDIF
+END
+
+FUNCTION SL_Donohue(Bc, Ds, nt, Do)
+{SL_DONOHUE - longitudinal (window) flow area of the Donohue method. In the original
+the function s_L is commented out; this is its formula with the shell area written
+pi*Ds^2/4 (the original comment has pi*Ds/4, dimensionally an error):
+S_L = (Bc/100)*(pi*Ds^2/4 - nt*pi*Do^2/4) [m^2]. Bc baffle cut [%], nt number of tubes [-].}
+  SL_Donohue = (Bc/100)*(pi*Ds^2/4 - nt*pi*Do^2/4)
+END
+
+FUNCTION h_Kern(m, rho, mu, mu_w, Pr, k, Do, pratio, Ds, B, layout)
+{H_KERN - shell-side coefficient of the Kern method as coded in the original
+(shell_htc_kern): Re = rho*V*De/mu with V = m/(Ss*rho) and De = Dh_Kern,
+Nu = 0.36*Pr^(1/3)*Re^0.55*(mu/mu_w)^0.14 (McAdams, as in the original), h = Nu*k/De.
+m [kg/s], rho [kg/m^3], mu and mu_w bulk and wall viscosity [Pa-s], Pr [-],
+k [W/m-K]; result h [W/m^2-K].
+Original: D. Q. Kern, Process Heat Transfer, McGraw-Hill, 1950.
+Taken from: LaboThapPy f03f7f47, shell_and_tube_htc.py, shell_htc_kern.}
+  Ss = Smax_Kern(Do, pratio, Ds, B)
+  De = Dh_Kern(Do, pratio, layout)
+  V = m/(Ss*rho)
+  Re = rho*V*De/mu
+  Nu = 0.36*Pr^(1/3)*Re^0.55*(mu/mu_w)^0.14
+  h_Kern = Nu*k/De
+END
+
+FUNCTION Re_Kern(m, rho, mu, Do, pratio, Ds, B, layout)
+{RE_KERN - Reynolds number of the Kern method, rho*V*De/mu [-] (as in h_Kern).}
+  Ss = Smax_Kern(Do, pratio, Ds, B)
+  De = Dh_Kern(Do, pratio, layout)
+  Re_Kern = rho*(m/(Ss*rho))*De/mu
+END
+
+FUNCTION h_Donohue(m, rho, mu, Pr, k, Do, pratio, Ds, Dotl, B, layout, Bc, nt, method)
+{H_DONOHUE - shell-side coefficient of the Donohue method as in the original
+(shell_htc_donohue): VT = m/(S_T*rho), VL = m/(S_L*rho), VR = sqrt(VL*VT),
+Re = rho*VR*Do/mu, Nu = 0.22*Re^0.6*Pr^0.33, h = Nu*k/Do (no viscosity ratio).
+S_T = Smax_BD and S_L = SL_Donohue (the original calls s_max with too few
+arguments and a commented-out s_L: it stops with a TypeError, see README).
+Result h [W/m^2-K].
+Original: D. Q. Kern, Process Heat Transfer, 1950 (as cited in the original).
+Taken from: LaboThapPy f03f7f47, shell_and_tube_htc.py, shell_htc_donohue.}
+  ST = Smax_BD(Do, pratio, Ds, Dotl, B, layout, method)
+  SL = SL_Donohue(Bc, Ds, nt, Do)
+  VT = m/(ST*rho)
+  VL = m/(SL*rho)
+  VR = sqrt(VL*VT)
+  Re = rho*VR*Do/mu
+  Nu = 0.22*Re^0.6*Pr^0.33
+  h_Donohue = Nu*k/Do
+END
+
+FUNCTION BD_coef(layout, Re, i)
+{BD_COEF - coefficient a_i (i = 1..4) of the Bell-Delaware ideal-bank Colburn factor,
+as tabulated in the original (bell_delaware_coefs; cheguide.com): a1 and a2 are
+given at Re = 1, 10, 1e2, 1e3, 1e4, 1e5 and interpolated linearly in log10(Re) (held
+constant outside [1, 1e5], as numpy interp); a3 and a4 depend on the layout only.
+layout 0, 45 or 60 [deg]; another angle gives 0. The b coefficients of the same
+table (pressure drop) are not used by the heat-transfer coefficient and are not
+translated (see CSL-0103 for the shell-side pressure drop).}
+  IF (layout = 0) THEN
+    c1[1] = 0.97
+    c2[1] = -0.667
+    c1[2] = 0.97
+    c2[2] = -0.667
+    c1[3] = 0.9
+    c2[3] = -0.631
+    c1[4] = 0.408
+    c2[4] = -0.46
+    c1[5] = 0.107
+    c2[5] = -0.266
+    c1[6] = 0.37
+    c2[6] = -0.395
+    c3 = 1.187
+    c4 = 0.37
+  ELSE
+    IF (layout = 45) THEN
+      c1[1] = 1.55
+      c2[1] = -0.667
+      c1[2] = 1.55
+      c2[2] = -0.667
+      c1[3] = 0.498
+      c2[3] = -0.656
+      c1[4] = 0.73
+      c2[4] = -0.5
+      c1[5] = 0.37
+      c2[5] = -0.396
+      c1[6] = 0.37
+      c2[6] = -0.396
+      c3 = 1.93
+      c4 = 0.5
+    ELSE
+      IF (layout = 60) THEN
+        c1[1] = 1.4
+        c2[1] = -0.667
+        c1[2] = 1.4
+        c2[2] = -0.667
+        c1[3] = 1.36
+        c2[3] = -0.657
+        c1[4] = 0.593
+        c2[4] = -0.477
+        c1[5] = 0.321
+        c2[5] = -0.388
+        c1[6] = 0.321
+        c2[6] = -0.388
+        c3 = 1.45
+        c4 = 0.519
+      ELSE
+        c1[1] = 0
+        c2[1] = 0
+        c1[2] = 0
+        c2[2] = 0
+        c1[3] = 0
+        c2[3] = 0
+        c1[4] = 0
+        c2[4] = 0
+        c1[5] = 0
+        c2[5] = 0
+        c1[6] = 0
+        c2[6] = 0
+        c3 = 0
+        c4 = 0
+      ENDIF
+    ENDIF
+  ENDIF
+  IF (i = 3) THEN
+    BD_coef = c3
+  ELSE
+    IF (i = 4) THEN
+      BD_coef = c4
+    ELSE
+      x = log10(Re)
+      IF (x < 0) THEN
+        x = 0
+      ENDIF
+      IF (x > 5) THEN
+        x = 5
+      ENDIF
+      kk = TRUNC(x)
+      IF (kk > 4) THEN
+        kk = 4
+      ENDIF
+      f = x - kk
+      IF (i = 1) THEN
+        BD_coef = c1[kk+1] + f*(c1[kk+2] - c1[kk+1])
+      ELSE
+        BD_coef = c2[kk+1] + f*(c2[kk+2] - c2[kk+1])
+      ENDIF
+    ENDIF
+  ENDIF
+END
+
+FUNCTION ji_BD(layout, Re, pratio)
+{JI_BD - ideal-bank Colburn j factor of the Bell-Delaware method, as in the original:
+a = a3/(1 + 0.14*Re^a4), ji = a1*(1.33/pratio)^a*Re^a2, with a1..a4 = BD_coef(layout, Re, 1..4).
+Re shell Reynolds number Do*G/mu [-], pratio pitch ratio [-]. Original: K. J. Bell,
+Delaware method (1963, 1988); coefficients as in cheguide.com heat_exchanger_rating.}
+  a = BD_coef(layout, Re, 3)/(1 + 0.14*Re^BD_coef(layout, Re, 4))
+  ji_BD = BD_coef(layout, Re, 1)*(1.33/pratio)^a*Re^BD_coef(layout, Re, 2)
+END
+
+FUNCTION Fw_BD(Ds, Dotl, Do, Bc)
+{FW_BD - fraction of the tubes in the baffle window, as in the original:
+theta = 2*arccos(Ds*(1 - 2*Bc/100)/(Dotl - Do)) [rad], Fw = (theta - sin(theta))/(2*pi).
+The caller takes Fc = 1 - 2*Fw (fraction in crossflow). Bc baffle cut [%].}
+  Dctl = Dotl - Do
+  th = 2*arccos(Ds*(1 - 2*Bc/100)/Dctl)*pi/180      "rad (arccos returns degrees in CoolSolve)"
+  Fw_BD = (th - sin(th*180/pi))/(2*pi)
+END
+
+FUNCTION Jc_BD(Ds, Dotl, Do, Bc)
+{JC_BD - baffle-window correction factor, as in the original: Jc = 0.55 + 0.72*Fc,
+Fc = 1 - 2*Fw (the linear form of the HEDH, as method 2 of Jc_Bell in CSL-0103) [-].}
+  Jc_BD = 0.55 + 0.72*(1 - 2*Fw_BD(Ds, Dotl, Do, Bc))
+END
+
+FUNCTION Stb_BD(Do, cTB, nt, Fw)
+{STB_BD - tube-to-baffle leakage area, as in the original:
+Stb = pi/4*((Do + cTB)^2 - Do^2)*nt*(1 - Fw) [m^2]; cTB diametral clearance [m].}
+  Stb_BD = (pi/4)*((Do + cTB)^2 - Do^2)*nt*(1 - Fw)
+END
+
+FUNCTION Ssb_BD(Ds, cBS, Bc)
+{SSB_BD - shell-to-baffle leakage area, as in the original:
+Ssb = 0.00436*Ds*cBS*(180/pi)*(2*pi - theta_ds) [m^2], theta_ds = 2*arccos(1 - 2*Bc/100)
+[rad]; cBS diametral clearance [m].}
+  tds = 2*arccos(1 - 2*Bc/100)*pi/180               "rad"
+  Ssb_BD = 0.00436*Ds*cBS*(180/pi)*(2*pi - tds)
+END
+
+FUNCTION Jl_BD(Ssb, Stb, Sm)
+{JL_BD - baffle-leakage correction factor, as in the original:
+Jl = 0.44*(1 - rS) + (1 - 0.44*(1 - rS))*exp(-2.2*rL), rS = Ssb/(Ssb + Stb),
+rL = (Ssb + Stb)/Sm (same closed form as Jl_Bell of CSL-0103) [-].}
+  rL = (Ssb + Stb)/Sm
+  rS = Ssb/(Ssb + Stb)
+  Jl_BD = 0.44*(1 - rS) + (1 - 0.44*(1 - rS))*exp(-2.2*rL)
+END
+
+FUNCTION Ntcc_BD(Ds, Pp, Bc)
+{NTCC_BD - number of tube rows crossed between baffle tips, as in the original:
+Ntcc = Ds/Pp*(1 - 2*Bc/100) [-].}
+  Ntcc_BD = (Ds/Pp)*(1 - 2*Bc/100)
+END
+
+FUNCTION Ntcw_BD(Ds, Dotl, Do, Pp, Bc)
+{NTCW_BD - number of tube rows in the window, as in the original:
+Ntcw = 0.8/Pp*(Ds*Bc/100 - (Ds - (Dotl - Do))/2) [-].}
+  Ntcw_BD = (0.8/Pp)*(Ds*Bc/100 - (Ds - (Dotl - Do))/2)
+END
+
+FUNCTION Jb_BD(Ds, Dotl, Do, B, Sm, Pp, Bc, Nss, Re)
+{JB_BD - bundle-bypass correction factor, as in the original: rss = Nss/Ntcc;
+Jb = 1 if rss > 0.5, otherwise Jb = exp(-Cj*(Sb/Sm)*(1 - (2*rss)^(1/3))) with
+Sb = B*(Ds - Dotl - Do/2) [m^2] and Cj = 1.35 for Re < 100, 1.25 otherwise (HEDH form
+of Jb_Bell in CSL-0103, with the area ratio built from the geometry) [-].}
+  rss = Nss/Ntcc_BD(Ds, Pp, Bc)
+  IF (rss > 0.5) THEN
+    Jb_BD = 1
+  ELSE
+    Sb = B*(Ds - Dotl - Do/2)
+    IF (Re < 100) THEN
+      Cj = 1.35
+    ELSE
+      Cj = 1.25
+    ENDIF
+    Jb_BD = exp(-Cj*(Sb/Sm)*(1 - (2*rss)^(1/3)))
+  ENDIF
+END
+
+FUNCTION NB_BD(Ltube, tst, Bin, Bout, B)
+{NB_BD - number of baffles, as in the original: 1 + int((L - t_sheet - Bin - Bout)/B) [-].
+Ltube tube length [m], tst tubesheet thickness [m], Bin and Bout inlet and outlet
+baffle spacings [m].}
+  NB_BD = 1 + TRUNC((Ltube - tst - Bin - Bout)/B)
+END
+
+FUNCTION Jr_BD(Re, Ds, Dotl, Do, Pp, Bc, NB, method)
+{JR_BD - laminar-flow correction factor. Jr = 1 for Re >= 100. Otherwise Nc =
+(Ntcw + Ntcc)*(1 + NB) and the laminar value Jrl is, as in the original (method 1),
+Jrl = (10/Nc)*0.18 (a product; see README); method 2 uses the usual form
+Jrl = (10/Nc)^0.18 (as Jr_Bell of CSL-0103, without its lower limit 0.4). Jr = Jrl for
+Re <= 20, Jr = Jrl + (20 - Re)*(Jrl - 1)/80 between 20 and 100 [-].}
+  IF (Re >= 100) THEN
+    Jr_BD = 1
+  ELSE
+    Nc = (Ntcw_BD(Ds, Dotl, Do, Pp, Bc) + Ntcc_BD(Ds, Pp, Bc))*(1 + NB)
+    IF (method = 1) THEN
+      Jrl = (10/Nc)*0.18
+    ELSE
+      Jrl = (10/Nc)^0.18
+    ENDIF
+    IF (Re <= 20) THEN
+      Jr_BD = Jrl
+    ELSE
+      Jr_BD = Jrl + (20 - Re)*(Jrl - 1)/80
+    ENDIF
+  ENDIF
+END
+
+FUNCTION Js_BD(NB, Bin, Bout, B, Re)
+{JS_BD - unequal-baffle-spacing correction factor, as in the original: n = 0.6 for
+Re >= 100, 1/3 otherwise; Js = {(NB - 1) + (Bin/B)^(1-n) + (Bout/B)^(1-n)} /
+{(NB - 1) + Bin/B + Bout/B} (same form as Js_Bell of CSL-0103) [-].}
+  IF (Re >= 100) THEN
+    n1 = 0.6
+  ELSE
+    n1 = 1/3
+  ENDIF
+  Js_BD = ((NB - 1) + (Bin/B)^(1 - n1) + (Bout/B)^(1 - n1))/((NB - 1) + Bin/B + Bout/B)
+END
+
+FUNCTION h_BD(m, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, layout, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, method)
+{H_BD - shell-side coefficient of the Bell-Delaware method as in the original
+(shell_bell_delaware_htc): Sm = Smax_BD, Re = Do*(m/Sm)/mu, ideal coefficient
+h_id = ji*cp*(m/Sm)*Pr^(-2/3)*(mu/mu_w)^0.14, h = h_id*Jc*Jl*Jb*Jr*Js [W/m^2-K].
+method is passed to Smax_BD and Jr_BD (1 = as in the original, 2 = textbook forms). Other arguments as in the
+sub-functions (Bc [%], clearances and lengths [m], Nss and nt counts [-]).
+Original: K. J. Bell (1963, 1988); source LaboThapPy f03f7f47,
+shell_and_tube_htc.py, shell_bell_delaware_htc.}
+  Sm = Smax_BD(Do, pratio, Ds, Dotl, B, layout, method)
+  Gs = m/Sm
+  Re = Gs*Do/mu
+  Pp = Pp_BD(Do, pratio, layout)
+  hid = ji_BD(layout, Re, pratio)*cp*Gs*Pr^(-2/3)*(mu/mu_w)^0.14
+  Fw = Fw_BD(Ds, Dotl, Do, Bc)
+  Jc = Jc_BD(Ds, Dotl, Do, Bc)
+  Stb = Stb_BD(Do, cTB, nt, Fw)
+  Ssb = Ssb_BD(Ds, cBS, Bc)
+  Jl = Jl_BD(Ssb, Stb, Sm)
+  Jb = Jb_BD(Ds, Dotl, Do, B, Sm, Pp, Bc, Nss, Re)
+  NB = NB_BD(Ltube, tst, Bin, Bout, B)
+  Jr = Jr_BD(Re, Ds, Dotl, Do, Pp, Bc, NB, method)
+  Js = Js_BD(NB, Bin, Bout, B, Re)
+  h_BD = hid*Jc*Jl*Jb*Jr*Js
+END
+
+{================= Demonstration program ==================================}
+{ Example of the source (__main__ of shell_and_tube_htc.py): water at 3 atm,
+  150 t/h, 1 m shell, 445 tubes of 27 mm in square pitch 1.5, 25 % baffle cut }
+
+"Geometry and operating point (source __main__)"
+mdot = 150000/3600     "kg/s"
+T_in = 327 - 273.15    "deg C (bulk)"
+T_w  = 487.56 - 273.15 "deg C (wall; steam state at this pressure, as in the source)"
+P_in = 3*101325        "Pa"
+Ds = 1                 "m"
+Bc = 25                "% baffle cut"
+B = 0.6*Ds             "m"
+cTB = 0.00622          "m"
+cBS = 0.01487          "m"
+Dotl = Ds - 0.02       "m"
+Bin = 0.6*Ds           "m"
+Bout = 0.6*Ds          "m"
+nt = 445
+Nss = 2
+pratio = 1.5
+Ltube = 3              "m"
+tst = 0.1*Ds           "m"
+Do = 0.027             "m"
+lay0 = 0
+lay45 = 45
+lay60 = 60
+
+"Water properties (CoolProp through CoolSolve)"
+rho = Density(Water, T=T_in, P=P_in)
+mu = Viscosity(Water, T=T_in, P=P_in)
+cp = Cp(Water, T=T_in, P=P_in)
+k = Conductivity(Water, T=T_in, P=P_in)
+Pr = Prandtl(Water, T=T_in, P=P_in)
+mu_w = Viscosity(Water, T=T_w, P=P_in)
+
+"--- Case A1: Kern (source shell_htc_kern) ---"
+S_T = Smax_Kern(Do, pratio, Ds, B)
+D_hydro = Dh_Kern(Do, pratio, lay0)
+Re_kern = Re_Kern(mdot, rho, mu, Do, pratio, Ds, B, lay0)
+h_kern = h_Kern(mdot, rho, mu, mu_w, Pr, k, Do, pratio, Ds, B, lay0)
+
+"--- Case A2: Bell-Delaware step by step (source shell_bell_delaware_htc) ---"
+S_m = Smax_BD(Do, pratio, Ds, Dotl, B, lay0, 1)
+G_s = mdot/S_m
+Re_BD = G_s*Do/mu
+a_coef = BD_coef(lay0, Re_BD, 3)/(1 + 0.14*Re_BD^BD_coef(lay0, Re_BD, 4))
+j_i = ji_BD(lay0, Re_BD, pratio)
+h_id = j_i*cp*G_s*Pr^(-2/3)*(mu/mu_w)^0.14
+F_w = Fw_BD(Ds, Dotl, Do, Bc)
+F_c = 1 - 2*F_w
+J_c = Jc_BD(Ds, Dotl, Do, Bc)
+S_tb = Stb_BD(Do, cTB, nt, F_w)
+S_sb = Ssb_BD(Ds, cBS, Bc)
+J_l = Jl_BD(S_sb, S_tb, S_m)
+P_p = Pp_BD(Do, pratio, lay0)
+N_tcc = Ntcc_BD(Ds, P_p, Bc)
+N_tcw = Ntcw_BD(Ds, Dotl, Do, P_p, Bc)
+J_b = Jb_BD(Ds, Dotl, Do, B, S_m, P_p, Bc, Nss, Re_BD)
+N_B = NB_BD(Ltube, tst, Bin, Bout, B)
+J_r = Jr_BD(Re_BD, Ds, Dotl, Do, P_p, Bc, N_B, 1)
+J_s = Js_BD(N_B, Bin, Bout, B, Re_BD)
+h_BD_A = h_id*J_c*J_l*J_b*J_r*J_s
+h_BD_A_fn = h_BD(mdot, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, lay0, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, 1)
+
+"--- 12 Bell-Delaware cases: 3 layouts x 4 mass flow rates (Re 6 to 4500) ---"
+m1 = mdot
+m2 = 5
+m3 = 0.3
+m4 = 0.05
+h_BD_0_1 = h_BD(m1, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, lay0, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, 1)
+h_BD_0_2 = h_BD(m2, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, lay0, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, 1)
+h_BD_0_3 = h_BD(m3, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, lay0, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, 1)
+h_BD_0_4 = h_BD(m4, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, lay0, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, 1)
+h_BD_45_1 = h_BD(m1, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, lay45, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, 1)
+h_BD_45_2 = h_BD(m2, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, lay45, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, 1)
+h_BD_45_3 = h_BD(m3, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, lay45, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, 1)
+h_BD_45_4 = h_BD(m4, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, lay45, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, 1)
+h_BD_60_1 = h_BD(m1, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, lay60, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, 1)
+h_BD_60_2 = h_BD(m2, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, lay60, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, 1)
+h_BD_60_3 = h_BD(m3, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, lay60, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, 1)
+h_BD_60_4 = h_BD(m4, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, lay60, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, 1)
+
+"--- Usual Jr form (method 2), laminar case of layout 0 ---"
+h_BD_0_4_Jr2 = h_BD(m4, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, lay0, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, 2)
+
+"--- Donohue (repaired call, no Python reference of the original: it stops with a TypeError) ---"
+h_Donohue_A = h_Donohue(mdot, rho, mu, Pr, k, Do, pratio, Ds, Dotl, B, lay0, Bc, nt, 1)
+
+"--- Kern textbook geometry (analytic check): 21.25 in shell, 3/4 in tubes on 1 in square pitch, 5 in baffle spacing ---"
+Ds_K = 21.25*0.0254     "m"
+Do_K = 0.75*0.0254      "m"
+pratio_K = 1/0.75
+B_K = 5*0.0254          "m"
+S_T_K = Smax_Kern(Do_K, pratio_K, Ds_K, B_K)
+D_hydro_K = Dh_Kern(Do_K, pratio_K, lay0)

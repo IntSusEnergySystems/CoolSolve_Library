@@ -104,3 +104,13 @@ What it does **not** contain: no void-fraction or two-phase pressure-drop correl
 * `Media/Incompressible/IncompressibleTables/Therminol66`: cp(20 degC) = 1008.4 is a density value; `FlueGas.mo`: density column is 1/1287... under a "kg/m3" comment (it is kg/L).
 * The polynomial maps of `Functions` have no documented validity range: the hermetic-scroll `epsilon_s` is -1.6 at rho = 10 kg/m3 and pressure ratio 2 before its clamp.
 * Licensing is not uniform (see section 1).
+
+## 2026-10-31 triage (C-373)
+
+Card C-373 (T-PLAN, novelty triage of the 2 remaining `todo` rows with priority
+low; against library.json, 291 models): 2 `merged`, 0 kept `todo`.
+
+| ID | Decision | Target / nearest model | Reason |
+|---|---|---|---|
+| THC-006 | merged | CSL-0136 | same EN12900 polynomial form (TESPy translation); the six Copeland ZH/ZRD coefficient sets (R134a/R407c; degF and lbm/h to convert) become data/variants; catalogue redistribution to check |
+| THC-007 | merged | CSL-0121 | MEG/Therminol VP-1/66 already there and CoolProp 8.0 has T66/TVP1/MEG; only Mobiltherm and Therminol SP would be new tables (cp and flue-gas unit issues to fix) |

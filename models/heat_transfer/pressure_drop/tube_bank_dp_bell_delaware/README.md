@@ -290,3 +290,4 @@ K. J. Bell (1963, 1988), E. U. Schlünder (1987), R. W. Serth (2014).
   correlations of the same batch; this file's two-phase shell-side hold-up and
   volume estimates would use one of them (the drift-flux or slip-ratio models
   for a vertical shell, the horizontal correlations otherwise).
+- `CSL-0321` *shell_side_htc*: the shell-side heat-transfer coefficient (Kern, Donohue, Bell-Delaware) that pairs with this file; it computes the J factors from the exchanger geometry and assembles `h`.

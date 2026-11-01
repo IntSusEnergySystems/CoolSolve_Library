@@ -190,3 +190,4 @@ the CoolSolve repository as a test case.
   course and repetition (MSTh TP 04, exercise 4), same compressor sized from
   the flow and enthalpy factors of its best-performance point instead of its
   off-design performance.
+- `CSL-0328` *radial_machine_loss_models*: rotor and stator loss breakdown (J/kg) of a centrifugal compressor from its geometry and velocity triangles.

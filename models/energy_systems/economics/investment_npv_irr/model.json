@@ -49,7 +49,7 @@
       "analytical"
     ],
     "reference": "EES stored solution of the source file (478 variables, the last EES calculation) and the lookup table 'data' hand-decoded from the same file (44x14 columns, rows 1-11 the default run); the parametric table1 (12502x2) is a phantom decode (CS-BUG-EXTRACT-TABLE-FP) and was not used.",
-    "date": "2026-10-21",
+    "date": "2026-10-31",
     "coolsolve_version": "0.4.0@9768373",
     "max_rel_diff": 4.54e-10,
     "notes": "Concerns the runnable variant investment_npv_irr_coolsolve.eescode: 17 common variables, 0 differ (rtol=0.001); at rtol=1e-12 the printed residuals are annuite 1.82e-10, k_IRR 4.54e-10, NPV 2.28e-11 (rounding of the stored 9-10 digit values). The 461 EES-only values are the locals of the two PROCEDUREs (341, absent from every .sol: CS-GAP-BODY-LOCALS-SOL) and leftovers of an earlier version of the file (120: a[], annuite[], D, D[], PBT, R[], TIR, YEAR, j); the stored locals are stale (B[2] = 6270 = 6000*1.045, the earlier parameter set of TM-0269, vs 40 from the current equations: CS-BUG-EXTRACT-STALE). A scratch run of the native file with only the 14 write lines removed reads EES's own table and agrees with the variant on all 17 variables (0 differ at rtol=1e-9, max 8.06e-12 on k_IRR); an independent Python hand calculation gives annuite 10.000550008180202, NPV 8.140371574323868, IRR 0.12414075355640218, DDP 10. Unit system of the source: SI MASS DEG PA C J (no conversion). The stats are those of the variant; the native file does not parse."
@@ -68,6 +68,11 @@
       "date": "2026-10-21",
       "action": "added (native file blocked by CS-BUG-LOOKUP-WRITE, runnable variant investment_npv_irr_coolsolve.eescode verified against the EES stored solution)",
       "by": "opencode (mimo-v2.6-flash-free) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-31",
+      "action": "re-checked (T-RECHECK card C-452) on 0.4.0@9768373: the native file still stops on the write+read of the lookup table 'data' (CS-BUG-LOOKUP-WRITE closes the silent drop of cell writes into warning P009; writing cells stays unsupported by decision); status blocked and runnable variant kept, variant re-verified against the EES stored solution (17 common variables, 0 differ at rtol=0.001)",
+      "by": "Claude Sonnet 5.5 for S. Quoilin"
     }
   ]
 }

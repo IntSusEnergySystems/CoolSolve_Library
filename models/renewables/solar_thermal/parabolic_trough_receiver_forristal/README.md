@@ -143,3 +143,4 @@ Original authors of the model: S. Quoilin and A. Desideri (see the git history o
   angle, sun position) of the same sub-category; provides the sun-position
   inputs such collector models need.
 - None yet otherwise. The complementary empirical receiver loss correlations of the same ThermoCycle family (Schott PTR70, Sopogy, Soltigua; inventory row `THC-002`) are not in the library; the comparison between them and this first-principles model is discussed in *Verification*.
+- `CSL-0329` *orc_solar_complex*: the same Forristall receiver balance (NREL EES version, 20 segments) embedded in a solar-driven ORC.

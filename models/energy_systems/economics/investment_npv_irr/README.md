@@ -246,6 +246,18 @@ published here under the library license (MIT).
   other line is identical to the native file; no CoolSolve-only syntax. The 14
   table writes of `NPV` stay (they warn and are dropped by `CS-BUG-LOOKUP-WRITE`
   but feed no equation).
+- **Re-check 2026-10-31 (card C-452, CoolSolve 0.4.0@9768373)**: the register
+  lists `CS-BUG-LOOKUP-WRITE` as closed, but the closed item only turns the
+  silent drop of the cell writes into warning `P009`. The native file still
+  stops with `Parse failed: Line 86: lookup table 'data' is written at line 86
+  and read at line 117: a lookup-table cell write is not supported …`, and a
+  short scratch file (a PROCEDURE writing `LOOKUP('tab',1,1)`, another
+  reading it) gives the same error, so the model stays `blocked` and the
+  variant is kept. The variant was re-run: *17 common variables, 0 differ
+  (rtol=0.001)* against the EES stored solution, residual 4.54e-10 (`k_IRR`)
+  at `--rtol 1e-12`; a native file with only the 14 write lines removed solves
+  (9 iterations) and agrees with the stored solution: *17 common variables,
+  0 differ (rtol=1e-09)*.
 - **Level**: taxonomy §3 — equations 17 (< 50) → 0; largest block 2 (≤ 5) → 0;
   procedures and arrays → 1; no multi-zone/discretisation → 0; no
   semi-empirical calibration or part-load → 0; no curated guesses needed (it
@@ -253,10 +265,14 @@ published here under the library license (MIT).
 
 ## Limitations and CoolSolve gaps
 
-- `CS-BUG-LOOKUP-WRITE` (registered): `NPV` writes the lookup table `data`
-  that `procIRR` reads — CoolSolve reports the write+read of one table as an
-  error, so the **native file does not parse**. This is the only gap in
-  `missing_features`; it is worked around by the runnable variant above.
+- `CS-BUG-LOOKUP-WRITE` (registered; the register row is closed): a write of a
+  lookup-table cell is reported with warning `P009` and left out of the
+  program (writing cells stays unsupported by decision), and a model that also
+  reads a table it writes is an error naming the table and both lines. `NPV`
+  writes the table `data` that `procIRR` reads, so the **native file does not
+  parse** (re-checked 2026-10-31 on 0.4.0@9768373, see the conversion log).
+  This is the only entry of `missing_features`; it is worked around by the
+  runnable variant above.
 - `CS-GAP-BODY-LOCALS-SOL` (registered, not blocking): the local variables of
   a `FUNCTION`/`PROCEDURE` are never written to the `.sol`, so the verification
   covers the 17 main-program variables only.

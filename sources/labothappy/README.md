@@ -114,3 +114,40 @@ inventory rows kept `todo`), 0 `discarded`.
 | LTP-058 | merged | CSL-0144 | sCO2 recompression Brayton already translated (Penkuhn & Tsatsaronis reference); the basic/recuperated architectures are simpler subsets |
 | LTP-059 | merged | CSL-0145 | transcritical CO2 cycle physics already translated (booster: receiver, flash-gas by-pass, gas cooler); expander/IHX architectures would be variants there |
 | LTP-065 | duplicate | LTP-053 | same Cordier/specific-speed physics in a sizing script; the correlations row LTP-053 is kept |
+
+## 2026-10-31 triage (C-373)
+
+Card C-373 (T-PLAN, novelty triage of the 26 remaining `todo` rows with priority
+low/medium; LTP-057 excluded - card C-360 in progress - against library.json,
+291 models): 6 kept `todo` (cards C-441, C-442, C-446, C-447, C-448, C-449),
+5 `merged`, 8 `duplicate` (4 of them of inventory rows kept `todo`),
+7 `discarded`.
+
+| ID | Decision | Target / nearest model | Reason |
+|---|---|---|---|
+| LTP-003 | duplicate | LTP-052 | same radial loss models; the component adds the mean-line station assembly and has no reference data |
+| LTP-007 | duplicate | LTP-051 | the Aungier loss correlations are the physics; the component adds map interpolation and PSO infrastructure |
+| LTP-022 | discarded | nearest: CSL-0009 | unfinished sketch (undefined attributes; min(0,.) in discharge; copy-pasted docstring) |
+| LTP-023 | discarded | CSL-0247 / CSL-0193 | textbook mixing balance present in every cycle model and as exercises |
+| LTP-024 | discarded | cycle splitter blocks (CSL-0144) | fixed-fraction split with unchanged state; no physics beyond a mass balance |
+| LTP-025 | discarded | CSL-0145 / CSL-0313 | saturated split already inside the booster (receiver/flash gas) and the flooded-evaporator drum |
+| LTP-026 | discarded | none | droplet-separation equipment sizing, not thermodynamics; empty docstrings; plotting-heavy |
+| LTP-030 | merged | CSL-0103 | Kern + Bell-Delaware shell-side DP already translated; only the Donohue variant would be added as a function |
+| LTP-032 | duplicate | CSL-0099 | air-side DP of finned bundles already translated (ESDU high/low-fin); Handbook variant of the same family |
+| LTP-038 | merged | CSL-0095 | same Zukauskas/HEDH plain-tube-bank Nu set; condensation/boiling in CSL-0089/CSL-0088; only the Euler-number bank DP is new |
+| LTP-039 | duplicate | CSL-0099 (+CSL-0109) | finned-bundle air-side HTC and fin efficiency already translated; Handbook variant of the same family |
+| LTP-043 | merged | CSL-0138 | same moving-boundary zone-boundary physics; the linear-dP helpers would be added as functions; Kim dry-out nearest CSL-0098 |
+| LTP-044 | merged | CSL-0153 | ORC equipment-cost block already totalises Hall-type CAPEX; Caputo cost and CPI updating would extend it |
+| LTP-045 | duplicate | CSL-0095 | tube-bank/boiling/condensation/radiation HTCs already in CSL-0095/0088/0089/0107; Van Long Le provenance to clear |
+| LTP-047 | discarded | nearest: CSL-0110 | ASME allowable-stress pressure rating is mechanical-design data, not thermodynamics |
+| LTP-060 | merged | CSL-0133 | same propane pinch HP; pipe pressure drops (CSL-0130/CSL-0316) and charge (CSL-0131) would be a variant there |
+| LTP-066 | duplicate | LTP-051 | same Aungier analysis core; PSO design loops infeasible without an optimiser |
+| LTP-067 | duplicate | LTP-052 | radial-turbine loss models are the analysis core; PSO design loops infeasible |
+| LTP-068 | duplicate | LTP-052 | radial/axial compressor loss models are the analysis core; PSO design loops infeasible |
+| LTP-072 | discarded | superseded by CSL-0138 | legacy scripts not runnable (missing BaseClases package); superseded by the moving-boundary model |
+
+Kept `todo`: LTP-006 (two-phase CO2 ejector, card C-446), LTP-017 (thermosyphon
+HX with operating limits, card C-447), LTP-037 (shell-side HTC correction
+factors, card C-441), LTP-040 (PCHE HTC, card C-442), LTP-051 (Aungier axial
+turbine loss models, card C-448), LTP-052 (radial machine loss models, card
+C-449).

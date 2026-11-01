@@ -295,3 +295,5 @@ four component modules above; reference: the URL above + those paths + commit
 - `CSL-0019` *orc_simple_r245fa*: a screening ORC with an imposed effectiveness,
   no pinch design, no preheater.
 - `CSL-0252` *orc_double_stage_kirchstockach*: two-stage series ORC on R245fa (geothermal brine), design point translated from a TESPy notebook.
+- `CSL-0312` *orc_offdesign_scroll_expander* — the off-design continuation of this design-point cycle: semi-empirical scroll expander, similarity-law pump, moving-boundary plate HX (translation of the LaboThapPy off_design ORC example).
+

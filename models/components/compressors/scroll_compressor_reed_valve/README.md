@@ -203,3 +203,5 @@ reference used here.
 - `CSL-0068` (*heat_pump_scroll_compressor_data_check*): R407C scroll-compressor data
   consistency check; documents the zeotropic behaviour of R407C saturation pressures in
   CoolProp (dew/bubble vs mid-quality).
+- `CSL-0319` *r22_chiller_r407c_heat_pump*: R407C mid-quality (T, x = 0.5) pressure calls rewritten with the same (P, x) inversion
+  (CS-GAP-PROP-TQ-PSEUDOPURE); EES-CoolProp R407C deviations documented there.

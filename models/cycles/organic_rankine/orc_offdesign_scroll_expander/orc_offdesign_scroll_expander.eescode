@@ -1,0 +1,457 @@
+{=============================================================================
+  Off-design ORC with semi-empirical scroll expander and plate heat exchangers
+  -----------------------------------------------------------------------------
+  Steady-state R1233zd(E) organic Rankine cycle solved off-design: Lemort
+  semi-empirical scroll expander (P_M mode), pump on similarity laws with
+  rated curves, and two SWEP P200THx140 brazed-plate heat exchangers in a
+  zone-wise moving-boundary formulation (SH/2P/SC zones, area split
+  proportional to the zone heat rates, as the source's heat-rate cell
+  weighting). The low pressure is the unknown closed by the imposed 7 K
+  subcooling at the pump suction (the source's iteration variable).
+  Translation of LaboThapPy machine/examples/ORC/fpi_orc_example.py, study
+  case "off_design" (B. Chaudoir, E. Neven, ULiège, commit f03f7f47,
+  Apache-2.0; this model: MIT). Physics: V. Lemort 2008 (expander),
+  I. Bell 2015 (moving-boundary HX), Martin/VDI, Amalfi, Shah, Longo.
+  Source: Basile Chaudoir & Elise Neven (ULiège Thermodynamics Laboratory),
+  https://github.com/PyLaboThap/LaboThapPy (commit f03f7f47).
+  Status: expander and pump VERIFIED against the re-run of the source
+  components; the heat exchangers are zone-wise (source: adaptive cells):
+  see README.md
+=============================================================================}
+
+FUNCTION H_curve(Vd)
+{Rated head curve of the pump, piecewise linear with linear extrapolation
+ through (20,57)(30,55)(40,52)(50,49)(60,45)(70,42)(80,36) m at 2900 rpm;
+ ReLU form, identical to a linear interpolation of the source curve
+ V_dot_curve / Delta_H_curve [m], Vd in m3/h}
+  H_curve = 61 - 0.2*Vd - 0.1*Max(0, Vd - 30) - 0.1*Max(0, Vd - 50) + 0.1*Max(0, Vd - 60) - 0.3*Max(0, Vd - 70)
+End
+
+FUNCTION Eta_curve(Vd)
+{Rated isentropic-efficiency curve, piecewise linear with linear
+ extrapolation through (20,0.45)(30,0.59)(40,0.69)(50,0.75)(60,0.79)(70,0.79)(80,0.75)
+ [-], Vd in m3/h; same ReLU form as H_curve}
+  Eta_curve = 0.17 + 0.014*Vd - 0.004*Max(0, Vd - 30) - 0.004*Max(0, Vd - 40) - 0.002*Max(0, Vd - 50) - 0.004*Max(0, Vd - 60) - 0.004*Max(0, Vd - 70)
+End
+
+FUNCTION NPSH_curve(Vd)
+{Rated NPSH-required curve, piecewise linear with linear extrapolation
+ through (20,1.1)(30,1.1)(40,1.4)(50,1.8)(60,2)(70,3)(80,4.7) m, Vd in m3/h;
+ same ReLU form as H_curve}
+  NPSH_curve = 1.1 + 0.03*Max(0, Vd - 30) + 0.01*Max(0, Vd - 40) - 0.02*Max(0, Vd - 50) + 0.08*Max(0, Vd - 60) + 0.07*Max(0, Vd - 70)
+End
+
+FUNCTION conductivity_R1233zd_LTP(T, P)
+{Thermal conductivity of R1233zd(E) [W/m-K] from T [C] and P [Pa]:
+ Perkins & Huber correlation as coded in the original (LaboThapPy
+ conducticity_R1233zd); copy of the FUNCTION of library model CSL-0132
+ (r1233zd_thermal_conductivity), renamed for uniqueness, verified there
+ against the original}
+  T_c = 382.52   "critical temperature used by the original [K]"
+  A_0 = -0.0103589
+  A_1 = 0.0308929
+  A_2 = 0.000230348
+  B_11 = -0.0428296
+  B_12 = 0.0434288
+  B_21 = 0.0927099
+  B_22 = -0.0605844
+  B_31 = -0.0702107
+  B_32 = 0.0440187
+  B_41 = 0.0249708
+  B_42 = -0.0155082
+  B_51 = -0.00301838
+  B_52 = 0.0021019
+  rho_c = 489.24   "critical density used by the original [kg/m^3]"
+  T_K = T + 273.15
+  Tr = T_K/T_c
+  rho = Density('R1233zd(E)', T = T, P = P)
+  rr = rho/rho_c
+  k_0 = A_0 + A_1*Tr + A_2*Tr^2
+  conductivity_R1233zd_LTP = k_0 + (B_11 + B_12*Tr)*rr + (B_21 + B_22*Tr)*rr^2 + (B_31 + B_32*Tr)*rr^3 + (B_41 + B_42*Tr)*rr^4 + (B_51 + B_52*Tr)*rr^5
+End
+
+PROCEDURE WaterHTC(FL$, P, Tm, G, Dh: alpha)
+{Single-phase water heat-transfer coefficient of the source plate
+ correlations: Nu = 0.277*Re^0.766*Pr^(1/3) (Longo & Gasparella, R134a
+ vaporisation in a small brazed plate heat exchanger), water_plate_HTC of
+ LaboThapPy, valid 5 <= Re <= 1e6 as in the original.
+ Inputs: FL$ fluid name (Water), P [Pa], Tm mean temperature [C],
+ G mass flux [kg/m2-s], Dh hydraulic diameter [m]; output alpha [W/m2-K]}
+  Tmc = Max(Min(Tm, 150), 2)   "trial guard, inactive at the solution"
+  mu = Viscosity(FL$, T=Tmc, P=P)
+  k = Conductivity(FL$, T=Tmc, P=P)
+  Pr = mu*Cp(FL$, T=Tmc, P=P)/k
+  Re = G*Dh/mu
+  alpha = 0.277*Re^0.766*Pr^(1/3)*k/Dh
+End
+
+PROCEDURE MartinHTC(FL$, Pm, Tm, Mdot, Nch, Dh, L, W, b, BetaDeg: alpha, DPu)
+{Single-phase refrigerant chevron-plate heat-transfer coefficient and
+ friction pressure drop per unit length, martin_holger_plate_HTC of
+ LaboThapPy: H. Martin, "A theoretical approach to predict the performance
+ of chevron-type plate heat exchangers", Chem. Eng. Process. 35 (1996)
+ 301-310 (VDI Heat Atlas); Nusselt fit of Heavner et al. as coded in the
+ original. Laminar below Re = 2000, turbulent above, as in the original.
+ Inputs: Pm [Pa], Tm [C], Mdot [kg/s], Nch channels, Dh [m], L [m] (plate
+ length, used by the drop), W [m] plate width, b [m] amplitude, BetaDeg
+ chevron angle [degree]; outputs alpha [W/m2-K], DPu friction drop over L
+ [Pa]. The conductivity is the R1233zd(E) correlation of the source (CSL-0132)}
+  Tmc = Max(Min(Tm, 150), 2)   "trial guard, inactive at the solution"
+  Pmc = Max(Pm, 1E4)
+  rho = Density(FL$, T=Tmc, P=Pmc)
+  mu = Viscosity(FL$, T=Tmc, P=Pmc)
+  k = conductivity_R1233zd_LTP(Tmc, Pmc)
+  Pr = mu*Cp(FL$, T=Tmc, P=Pmc)/k
+  Re = Mdot*Dh/(Nch*b*W*mu)
+  beta_r = (90 - BetaDeg)*pi()/180   "the source works with (90 deg - beta) in radians"
+  If (Re >= 2000) Then
+    xhi_0 = (1.8*ln(Re) - 1.5)^(-2)
+    xhi_1_0 = 39/Re^0.289
+  Else
+    xhi_0 = 64/Re
+    xhi_1_0 = 597/Re + 3.85
+  EndIf
+  xhi_1 = 3.8*xhi_1_0   "constant a of Martin"
+  f_fric = (cos(beta_r)/sqrt(0.18*tan(beta_r) + 0.36*sin(beta_r) + xhi_0/cos(beta_r)) + (1 - cos(beta_r))/sqrt(xhi_1))^(-2)   "constants b = 0.18, c = 0.36 of Martin"
+  Hg = f_fric*Re^2/2   "Hagen number [-]"
+  DPu = Hg*mu^2*L/(rho*Dh^3)   "friction pressure drop over the plate length [Pa]"
+  alpha = 0.122*Pr^(1/3)*(2*Hg*sin(2*beta_r))^0.374*k/Dh   "constants c_q = 0.122, q = 0.374"
+End
+
+PROCEDURE Amalfi2P(FL$, Pm, x, Mdot, Nch, Dh, L, W, b, BetaDeg, Atot: alpha, DPu)
+{Two-phase boiling heat-transfer coefficient and pressure drop of a
+ chevron plate channel, amalfi_plate_HTC of LaboThapPy: M. Amalfi, F.
+ Vakili-Farahani, J.R. Thome, "Applications of sustainable energy: a
+ review of heat transfer pumps", part of the High-Performance HX work;
+ boiling Nusselt of Amalfi & Thome for chevron plates (Bd < 4 and >= 4
+ regimes); pressure drop after Longo et al. (deceleration, gravity,
+ manifold, friction 1.95*KEV*1000 as coded in the original, a factor 1000
+ kept as written - see README). Inputs as MartinHTC plus x the quality at
+ which the correlation is evaluated (the source averages over
+ x = 0.1..1, this call uses the mean quality 0.55) and Atot the total
+ heat-transfer area used for the heat flux [m2]; outputs alpha [W/m2-K],
+ DPu drop over L [Pa]}
+  Pmc = Max(Pm, 1E4)   "trial guard, inactive at the solution"
+  rho_g = Density(FL$, P=Pmc, x=1)
+  rho_l = Density(FL$, P=Pmc, x=0)
+  h_g = Enthalpy(FL$, P=Pmc, x=1)
+  h_l = Enthalpy(FL$, P=Pmc, x=0)
+  T_sat = Temperature(FL$, P=Pmc, x=0)
+  mu_g = Viscosity(FL$, T=T_sat + 0.001, P=Pmc)
+  mu_l = Viscosity(FL$, T=T_sat - 0.001, P=Pmc)
+  rho_x = Density(FL$, P=Pmc, x=x)
+  sigma_x = surfacetension(FL$, T=T_sat, x=x)
+  k_x = (0.09513*(T_sat + 273.15) - 17.963)/1000   "conductivity of R1233zd(E) as coded in the original (T_sat in K)"
+  x_m = 0.5*x   "average quality of the original"
+  rho_m = 1/(x_m/rho_g + (1 - x_m)/rho_l)
+  G = Mdot/(2*b*W)   "mass velocity of the boiling side of the original [kg/m2-s]"
+  q_dot = (Mdot*(h_g - Enthalpy(FL$, P=Pm, x=x)))/Atot   "heat flux as in the original [W/m2]"
+  Bo = q_dot/(G*(h_g - h_l))   "boiling number [-]"
+  We = G^2*Dh/(rho_m*sigma_x)   "Weber number [-]"
+  Re_LT = G*Dh/mu_l   "all-liquid Reynolds number [-]"
+  Re_GS = G*x*Dh/mu_g   "gas-fraction Reynolds number [-]"
+  Bd = (rho_l - rho_x)*9.81*Dh^2/sigma_x   "Bond number [-]"
+  ratio_rho = rho_x/rho_l
+  ratio_beta = BetaDeg/70
+  If (Bd < 4) Then
+    Nu_TP = 982*ratio_beta^1.101*We^0.315*Bo^0.320*ratio_rho^(-0.224)
+  Else
+    Nu_TP = 18.495^(ratio_beta^0.248)*Re_GS^0.135*Re_LT^0.351*Bd^0.235*Bo^0.198*ratio_rho^(-0.223)
+  EndIf
+  alpha = Nu_TP*k_x/Dh
+  G_dp = Mdot/Nch/(W*b)   "mass velocity per channel of the pressure-drop part [kg/m2-s]"
+  rho_m_dp = 1/(0.5/rho_g + 0.5/rho_l)
+  DP_a = G_dp^2*(1/rho_g - 1/rho_l)   "deceleration drop [Pa]"
+  DP_g = 9.81*rho_m_dp*L   "gravity drop over the plate length [Pa]"
+  DP_c = 1.5*G_dp^2/(2*rho_m_dp)   "manifold and ports drop (Shah & Focke 1988) [Pa]"
+  KEV = G_dp^2/(2*rho_m_dp)
+  DP_f = 1.95*KEV*1000   "friction drop (Longo), factor 1000 as coded in the original"
+  DPu = DP_a + DP_g + DP_c + DP_f
+End
+
+PROCEDURE Shah2P(FL$, Pm, x, Mdot, Nch, Dh, L, W, b, Phi: alpha, DPu)
+{Condensation heat-transfer coefficient and pressure drop of a chevron
+ plate channel, shah_condensation_plate_HTC of LaboThapPy: M.M. Shah
+ (2021) correlation for condensation in plate heat exchangers, improvement
+ of Longo et al. 2015, forced-convection and gravity regimes as coded in
+ the original; pressure drop after Longo et al. as in Amalfi2P (factor
+ 1000 kept as written). Inputs: Pm [Pa], x quality of the evaluation (the
+ source averages over x = 0..0.99, this call uses 0.495), Mdot [kg/s],
+ Nch channels, Dh [m], L [m], W [m] plate width, b [m] corrugation height,
+ Phi plate enlargement factor [-]; outputs alpha [W/m2-K], DPu [Pa]}
+  Pmc = Max(Pm, 1E4)   "trial guard, inactive at the solution"
+  rho_g = Density(FL$, P=Pmc, x=1)
+  rho_l = Density(FL$, P=Pmc, x=0)
+  cp_l = Cp(FL$, P=Pmc, x=0)
+  T_sat = Temperature(FL$, P=Pmc, x=0)
+  mu_l = Viscosity(FL$, T=T_sat - 0.001, P=Pmc)
+  k_l = (-0.2614*(T_sat + 273.15) + 159.19)/1000   "conductivity of R1233zd(E) as coded in the original (T_sat in K)"
+  Pr_l = cp_l*mu_l/k_l
+  G = Mdot/Nch/(W*b)
+  Re_LS = G*(1 - x)*Dh/mu_l   "liquid-only Reynolds number [-]"
+  G_eq = G*((1 - x) + x*sqrt(rho_l/rho_g))   "equivalent mass velocity [kg/m2-s]"
+  Re_eq = G_eq*Dh/mu_l   "equivalent Reynolds number [-]"
+  h_fc = 1.875*(k_l/Dh)*Phi*Re_eq^0.445*Pr_l^(1/3)   "forced-convection regime (Longo 2015)"
+  h_grav = 1.32*Phi*Re_LS^(-1/3)*((rho_l*(rho_l - rho_g)*9.81*k_l^3)/mu_l^2)^(1/3)   "gravity regime (Shah 2021)"
+  If (Re_eq >= 1600) Then
+    alpha = h_fc
+  Else
+    alpha = Max(h_grav, h_fc)
+  EndIf
+  rho_m_dp = 1/(0.5/rho_g + 0.5/rho_l)
+  DP_a = G^2*(1/rho_g - 1/rho_l)
+  DP_g = 9.81*rho_m_dp*L
+  DP_c = 1.5*G^2/(2*rho_m_dp)
+  KEV = G^2/(2*rho_m_dp)
+  DP_f = 1.95*KEV*1000   "friction drop, factor 1000 as coded in the original"
+  DPu = DP_a + DP_g + DP_c + DP_f
+End
+
+"!1 Fluid and given data"
+FL$ = 'R1233zd(E)'
+m_dot = 0.45 [kg/s]   "refrigerant mass flow rate, inputs['m_dot_ref']"
+m_w_ev = 3 [kg/s]   "hot-water (source) mass flow rate"
+m_w_cd = 2 [kg/s]   "cooling-water (sink) mass flow rate"
+T_wi_ev = 70 [C]   "hot-water inlet temperature"
+T_wi_cd = 10 [C]   "cooling-water inlet temperature"
+p_w = 2E5 [Pa]   "water-side pressure of both sources"
+T_amb = 20 [C]   "ambient temperature (293 K in the source)"
+SC_cd = 7 [K]   "imposed subcooling at the pump suction (iteration target of the source)"
+P_2 = Pressure(FL$, T=60, x=1)   "high pressure: source guess Psat(T_source-10 K), kept fixed as in the circuit"
+g = 9.81 [m/s^2]
+
+"!2 Pump, similarity laws on the rated curves (PumpCurveSimilarity, mode P_M)"
+N_rot_rated = 2900 [rpm]
+V_dot_pu = m_dot/density(FL$, P=P_1, T=T_1)*3600   "pump volumetric flow [m3/h]"
+H_req = (P_2 - P_1)/(g*density(FL$, P=P_1, T=T_1))   "required head [m]"
+H_sim = H_curve(V_dot_pu*2900/N_pu)*(N_pu/2900)^2   "head developed at speed N_pu [m]"
+H_sim = H_req   "similarity-law speed equation (root_scalar head_error of the source)"
+eta_pu = Eta_curve(V_dot_pu*2900/N_pu)   "isentropic efficiency from the rated curve [-]"
+NPSH_r = NPSH_curve(V_dot_pu*2900/N_pu)*g*density(FL$, P=P_1, T=T_1)   "required NPSH [Pa], information only"
+T_1sat = Temperature(FL$, P=P_1, x=0)
+T_1 = T_1sat - SC_cd   "imposed subcooling closes the low pressure P_1"
+h_1 = Enthalpy(FL$, P=P_1, T=T_1)
+s_1 = Entropy(FL$, P=P_1, T=T_1)
+h_2s = Enthalpy(FL$, P=P_2, s=s_1)
+h_2 = h_1 + (h_2s - h_1)/eta_pu   "pump outlet enthalpy"
+W_dot_pu = m_dot*(h_2 - h_1)   "pump shaft power [W]"
+
+"!3 Evaporator, moving-boundary zones (HexMBChargeSensitive, Plate, water hot side)"
+A_ev = 17.8 [m^2]   "heat transfer area per side, PlateGeomSWEP P200THx140/1P_Evaporator"
+foul_ev = 0.00111   "fooling (fouling factor of the source) [-]"
+L_ev = 0.525 [m]   "plate length between ports"
+W_ev = 0.243 [m]   "plate width"
+b_ev = 0.00015 [m]   "corrugation amplitude (refrigerant side)"
+beta_ev = 30 [degree]   "chevron angle"
+Dh_c_ev = 0.00428934223204838 [m]   "refrigerant-side hydraulic diameter (C_Dh)"
+Nch_c_ev = 69   "refrigerant channels (C_n_canals)"
+CS_c_ev = 0.0005214681159420291 [m^2]   "refrigerant channel cross-section (C_CS)"
+Dh_h_ev = 0.00422859906872658 [m]   "water-side hydraulic diameter (H_Dh)"
+Nch_h_ev = 70   "water channels (H_n_canals)"
+CS_h_ev = 0.0005140185714285714 [m^2]   "water channel cross-section (H_CS)"
+V_c_ev = 0.01687 [m^3]   "refrigerant-side volume (C_V_tot), for the charge"
+h_wi_ev = Enthalpy(Water, T=T_wi_ev, P=p_w)
+h_4 = h_2 + Q_ev/m_dot   "evaporator outlet = expander suction"
+h_wo_ev = h_wi_ev - Q_ev/m_w_ev
+h_wo_ev = Enthalpy(Water, T=T_wo_ev, P=p_w)
+T_2t = Temperature(FL$, P=P_2, h=h_2)   "evaporator inlet temperature"
+P_4 = P_2 - DP_ev_C   "refrigerant outlet pressure after the total pressure drop"
+T_4 = Temperature(FL$, P=P_4, h=h_4)
+Pm_l_ev = P_2   "zone thermal states evaluated at the inlet pressure: the drop DP_ev_C is post-processed (modified: the source feeds it back through the zone pressures)"
+Pm_2p_ev = P_2
+Pm_v_ev = P_2
+h_l_ev = Enthalpy(FL$, P=Pm_2p_ev, x=0)   "saturation states at the evaporating pressure"
+h_v_ev = Enthalpy(FL$, P=Pm_2p_ev, x=1)
+T_sat_ev = Temperature(FL$, P=Pm_2p_ev, x=0)
+Q_liq_ev = m_dot*(h_l_ev - h_2)   "zone heat rates on the refrigerant side"
+Q_2p_ev = m_dot*(h_v_ev - h_l_ev)
+Q_sh_ev = m_dot*(h_4 - h_v_ev)   "the total Q_ev is fixed by the UA-LMTD balance below (as the single root-find variable of the source)"
+k_l_ev = 1/((1 + foul_ev)/al_h_l_ev + 1/al_c_l_ev)   "per-area conductance of the zone, source UA_avail[k]/A"
+k_2p_ev = 1/((1 + foul_ev)/al_h_2p_ev + 1/al_c_2p_ev)
+k_sh_ev = 1/((1 + foul_ev)/al_h_sh_ev + 1/al_c_sh_ev)
+w_l_ev = Q_liq_ev/(k_l_ev*A_ev*LMTD_l_ev)   "utilisation = required/available conductance of the source (area fraction)"
+w_2p_ev = Q_2p_ev/(k_2p_ev*A_ev*LMTD_2p_ev)
+w_sh_ev = Q_sh_ev/(k_sh_ev*A_ev*LMTD_sh_ev)
+w_l_ev + w_2p_ev + w_sh_ev = 1   "closure of the source: objective 1 - sum(w) = 0 (the zones share the whole plate area)"
+h_w_n2_ev = h_wi_ev + Q_sh_ev/m_w_ev   "water nodes, counterflow: water inlet at the refrigerant outlet end"
+h_w_n1_ev = h_w_n2_ev + Q_2p_ev/m_w_ev
+T_w_n2_ev = Temperature(Water, P=p_w, h=h_w_n2_ev)
+T_w_n1_ev = Temperature(Water, P=p_w, h=h_w_n1_ev)
+DTA_l_ev = Max(T_w_n1_ev - T_sat_ev, 1E-6)
+DTB_l_ev = Max(T_wo_ev - T_2t, 1E-6)
+"log-mean temperature difference, limited to DTA at DTA = DTB; the plain form holds for DTA < DTB as well"
+E_lmtd_l_ev = Abs(DTA_l_ev/DTB_l_ev - 1)
+LMTD_l_ev = IF(-E_lmtd_l_ev, -1E-6, (DTA_l_ev - DTB_l_ev)/ln(DTA_l_ev/DTB_l_ev), DTA_l_ev, (DTA_l_ev - DTB_l_ev)/ln(DTA_l_ev/DTB_l_ev))
+CALL MartinHTC(FL$, Pm_l_ev, (T_2t + T_sat_ev)/2, m_dot, Nch_c_ev, Dh_c_ev, L_ev, W_ev, b_ev, beta_ev: al_c_l_ev, DPu_l_ev)
+CALL WaterHTC('Water', p_w, (T_w_n1_ev + T_wo_ev)/2, m_w_ev/(Nch_h_ev*CS_h_ev), Dh_h_ev: al_h_l_ev)
+DTA_2p_ev = Max(T_w_n2_ev - T_sat_ev, 1E-6)
+DTB_2p_ev = Max(T_w_n1_ev - T_sat_ev, 1E-6)
+"log-mean temperature difference, limited to DTA at DTA = DTB; the plain form holds for DTA < DTB as well"
+E_lmtd_2p_ev = Abs(DTA_2p_ev/DTB_2p_ev - 1)
+LMTD_2p_ev = IF(-E_lmtd_2p_ev, -1E-6, (DTA_2p_ev - DTB_2p_ev)/ln(DTA_2p_ev/DTB_2p_ev), DTA_2p_ev, (DTA_2p_ev - DTB_2p_ev)/ln(DTA_2p_ev/DTB_2p_ev))
+CALL Amalfi2P(FL$, Pm_2p_ev, 0.55, m_dot, Nch_c_ev, Dh_c_ev, L_ev, W_ev, b_ev, beta_ev, A_ev: al_c_2p_ev, DPu_2p_ev)
+CALL WaterHTC('Water', p_w, (T_w_n1_ev + T_w_n2_ev)/2, m_w_ev/(Nch_h_ev*CS_h_ev), Dh_h_ev: al_h_2p_ev)
+DTA_sh_ev = Max(T_wi_ev - T_4, 1E-6)
+DTB_sh_ev = Max(T_w_n2_ev - T_sat_ev, 1E-6)
+"log-mean temperature difference, limited to DTA at DTA = DTB; the plain form holds for DTA < DTB as well"
+E_lmtd_sh_ev = Abs(DTA_sh_ev/DTB_sh_ev - 1)
+LMTD_sh_ev = IF(-E_lmtd_sh_ev, -1E-6, (DTA_sh_ev - DTB_sh_ev)/ln(DTA_sh_ev/DTB_sh_ev), DTA_sh_ev, (DTA_sh_ev - DTB_sh_ev)/ln(DTA_sh_ev/DTB_sh_ev))
+CALL MartinHTC(FL$, Pm_v_ev, (T_sat_ev + T_4)/2, m_dot, Nch_c_ev, Dh_c_ev, L_ev, W_ev, b_ev, beta_ev: al_c_sh_ev, DPu_sh_ev)
+CALL WaterHTC('Water', p_w, (T_w_n2_ev + T_wi_ev)/2, m_w_ev/(Nch_h_ev*CS_h_ev), Dh_h_ev: al_h_sh_ev)
+DP_ev_C = DPu_l_ev*w_l_ev + DPu_2p_ev*w_2p_ev + DPu_sh_ev*w_sh_ev   "zone drops weighted by the utilisation w, as DP*w[k]/sum(w) in the source"
+"the water-side pressure drop is neglected: the source pipe-DP path has no plate
+ correlation at this commit (README)"
+
+"!4 Expander, Lemort semi-empirical model (ExpanderSE, mode P_M)"
+AU_amb_x = 9.3 [W/K]
+AU_su_n_x = 4.75 [W/K]
+AU_ex_n_x = 17.7 [W/K]
+d_su1_x = 6.48E-3 [m]
+m_dot_n_x = 0.1 [kg/s]
+A_leak_x = 9.99E-6 [m^2]
+W_dot_loss_0_x = 23.7 [W]
+alpha_x = 0.116   "proportionality rate of the mechanical losses [-]"
+C_loss_x = 1.13 [N m]
+rv_in_x = 1.7   "built-in volume ratio [-]"
+V_s_x = 2*0.0000712 [m^3]   "swept volume"
+P_x_ex = P_cd_in   "expander exhaust feeds the condenser"
+s_x_su = Entropy(FL$, P=P_4, h=h_4)
+rho_x_su = Density(FL$, P=P_4, h=h_4)
+h_x_ex_s = Enthalpy(FL$, P=P_x_ex, s=s_x_su)   "isentropic exhaust enthalpy"
+A_su_x = pi()*d_su1_x^2/4   "suction pressure drop su->su1 (nozzle diameter d_su1)"
+C_su_x = m_dot/(rho_x_su*A_su_x)   "suction velocity [m/s]"
+h_su_thr1_x = h_4 - C_su_x^2/2
+h_su_thr_x = Max(h_su_thr1_x, h_x_ex_s)
+P_su_thr_x = Pressure(FL$, h=h_su_thr_x, s=s_x_su)
+P_su1_x = Max(P_su_thr_x, P_x_ex + 1)
+T_su1_x = Temperature(FL$, h=h_4, P=P_su1_x)
+cp_su1_x = Cp(FL$, h=h_4, P=P_su1_x)
+AU_su_x = AU_su_n_x*(m_dot/m_dot_n_x)^0.8
+NTU_su_x = AU_su_x/(m_dot*cp_su1_x)
+eps_su_x = Max(0, 1 - exp(-NTU_su_x))
+Q_dot_x_su = Max(0, eps_su_x*m_dot*cp_su1_x*(T_su1_x - T_w_x))   "suction heat transfer su1->su2; the state su2 is overridden to su in the source, only Q_dot_su enters the balance"
+cv_su1_x = Cv(FL$, h=h_4, P=P_su1_x)
+gamma_x = Max(0.01, cp_su1_x/cv_su1_x)
+P_crit_x = P_su1_x*(2/(gamma_x + 1))^(gamma_x/(gamma_x - 1))
+P_thr_leak_x = Max(P_x_ex, P_crit_x)
+rho_thr_leak_x = Density(FL$, P=P_thr_leak_x, s=s_x_su)
+h_thr_leak_x = Enthalpy(FL$, P=P_thr_leak_x, s=s_x_su)
+C_thr_leak_x = sqrt(2*(h_4 - h_thr_leak_x))   "leakage throat velocity [m/s]"
+m_dot_leak_x = A_leak_x*C_thr_leak_x*rho_thr_leak_x
+m_dot_in_x = m_dot - m_dot_leak_x   "flow through the expansion volume"
+N_x_rot = (m_dot_in_x/(V_s_x*rho_x_su))*60   "rotational speed [rpm], P_M mode"
+rho_in_x = rho_x_su/rv_in_x   "internal expansion: isentropic to the built-in volume then constant-volume"
+P_in_x = Pressure(FL$, d=rho_in_x, s=s_x_su)
+h_in_x = Enthalpy(FL$, d=rho_in_x, P=P_in_x)
+w_in_s_x = h_4 - h_in_x   "specific isentropic expansion work [J/kg]"
+w_in_v_x = (P_in_x - P_x_ex)/rho_in_x   "specific constant-volume work [J/kg]"
+h_ex2_x = h_in_x - w_in_v_x
+W_dot_in_x = m_dot_in_x*(w_in_s_x + w_in_v_x)   "internal power [W]"
+h_ex1_x = Max(Min((m_dot_in_x*h_ex2_x + m_dot_leak_x*h_4)/m_dot, h_4), h_ex2_x)   "adiabatic mixing with the leakage"
+T_ex1_x = Temperature(FL$, h=h_ex1_x, P=P_x_ex)
+cp_ex2_x = Cp(FL$, h=h_ex1_x, P=P_x_ex)
+AU_ex_x = AU_ex_n_x*(m_dot/m_dot_n_x)^0.8
+eps_ex_x = Max(0, 1 - exp(-AU_ex_x/(m_dot*cp_ex2_x)))
+Q_dot_x_ex = Max(0, eps_ex_x*m_dot*cp_ex2_x*(T_w_x - T_ex1_x))   "exhaust heat transfer"
+h_x_ex = h_ex1_x + Q_dot_x_ex/m_dot   "expander outlet enthalpy"
+T_x_ex = Temperature(FL$, h=h_x_ex, P=P_x_ex)
+Q_dot_x_amb = AU_amb_x*(T_w_x - T_amb)
+W_dot_x_loss = alpha_x*W_dot_in_x + W_dot_loss_0_x + C_loss_x*(N_x_rot/60)*2*pi()
+Q_dot_x_su + W_dot_x_loss = Q_dot_x_ex + Q_dot_x_amb   "wall energy balance: residual of the source, single unknown T_w in P_M mode"
+W_dot_x = W_dot_in_x - W_dot_x_loss   "expander shaft power [W]"
+eta_x_is = W_dot_x/(m_dot*(h_4 - h_x_ex_s))   "isentropic efficiency [-]"
+m_dot_x_th = (N_x_rot/60)*V_s_x*rho_x_su
+eps_x_v = m_dot/m_dot_x_th   "volumetric efficiency [-]"
+
+"!5 Condenser, moving-boundary zones (HexMBChargeSensitive, Plate, refrigerant hot side)"
+A_cd = 17.8 [m^2]   "heat transfer area per side, PlateGeomSWEP P200THx140/1P_Condenser"
+foul_cd = 0.00258   "fooling [-]"
+L_cd = 0.525 [m]
+W_cd = 0.243 [m]
+b_cd = 0.002 [m]   "corrugation amplitude (refrigerant side)"
+beta_cd = 60 [degree]
+phi_cd = 1.2806248474865698   "plate enlargement factor of the condenser geometry [-]"
+Dh_h_cd = 0.0047502140853388445 [m]   "refrigerant-side hydraulic diameter (H_Dh)"
+Nch_h_cd = 69   "refrigerant channels (H_n_canals)"
+CS_h_cd = 0.0005804492753623187 [m^2]   "refrigerant channel cross-section (H_CS)"
+Dh_c_cd = 0.004683007772699485 [m]   "water-side hydraulic diameter (C_Dh)"
+Nch_c_cd = 70   "water channels (C_n_canals)"
+CS_c_cd = 0.0005721571428571428 [m^2]   "water channel cross-section (C_CS)"
+V_h_cd = 0.01663 [m^3]   "refrigerant-side volume (H_V_tot), for the charge"
+P_cd_in = P_1 + DP_cd_H   "condenser refrigerant inlet pressure"
+h_1 = h_x_ex - Q_cd/m_dot
+h_wi_cd = Enthalpy(Water, T=T_wi_cd, P=p_w)
+h_wo_cd = h_wi_cd + Q_cd/m_w_cd
+h_wo_cd = Enthalpy(Water, T=T_wo_cd, P=p_w)
+Pm_sh_cd = P_cd_in   "zone thermal states at the inlet pressure, drop post-processed (modified, as the evaporator)"
+Pm_2p_cd = P_cd_in
+Pm_sc_cd = P_cd_in
+h_v_cd = Enthalpy(FL$, P=Pm_2p_cd, x=1)
+h_l_cd = Enthalpy(FL$, P=Pm_2p_cd, x=0)
+T_sat_cd = Temperature(FL$, P=Pm_2p_cd, x=0)
+Q_sh_cd = m_dot*(h_x_ex - h_v_cd)   "zone heat rates released by the refrigerant (positive)"
+Q_2p_cd = m_dot*(h_v_cd - h_l_cd)
+Q_sc_cd = m_dot*(h_l_cd - h_1)   "the total Q_cd is fixed by the UA-LMTD balance; the zone sum equals it identically through the condenser energy balance"
+k_sh_cd = 1/((1 + foul_cd)/al_h_sh_cd + 1/al_c_sh_cd)
+k_2p_cd = 1/((1 + foul_cd)/al_h_2p_cd + 1/al_c_2p_cd)
+k_sc_cd = 1/((1 + foul_cd)/al_h_sc_cd + 1/al_c_sc_cd)
+w_sh_cd = Q_sh_cd/(k_sh_cd*A_cd*LMTD_sh_cd)
+w_2p_cd = Q_2p_cd/(k_2p_cd*A_cd*LMTD_2p_cd)
+w_sc_cd = Q_sc_cd/(k_sc_cd*A_cd*LMTD_sc_cd)
+w_sh_cd + w_2p_cd + w_sc_cd = 1   "closure of the source: objective 1 - sum(w) = 0"
+h_w_n2_cd = h_wi_cd + Q_sc_cd/m_w_cd   "water nodes, counterflow: water inlet at the refrigerant outlet end"
+h_w_n1_cd = h_w_n2_cd + Q_2p_cd/m_w_cd
+T_w_n2_cd = Temperature(Water, P=p_w, h=h_w_n2_cd)
+T_w_n1_cd = Temperature(Water, P=p_w, h=h_w_n1_cd)
+DTA_sh_cd = Max(T_x_ex - T_w_n1_cd, 1E-6)
+DTB_sh_cd = Max(T_sat_cd - T_w_n2_cd, 1E-6)
+"log-mean temperature difference, limited to DTA at DTA = DTB; the plain form holds for DTA < DTB as well"
+E_lmtd_sh_cd = Abs(DTA_sh_cd/DTB_sh_cd - 1)
+LMTD_sh_cd = IF(-E_lmtd_sh_cd, -1E-6, (DTA_sh_cd - DTB_sh_cd)/ln(DTA_sh_cd/DTB_sh_cd), DTA_sh_cd, (DTA_sh_cd - DTB_sh_cd)/ln(DTA_sh_cd/DTB_sh_cd))
+CALL MartinHTC(FL$, Pm_sh_cd, (T_x_ex + T_sat_cd)/2, m_dot, Nch_h_cd, Dh_h_cd, L_cd, W_cd, b_cd, beta_cd: al_h_sh_cd, DPu_sh_cd)
+CALL WaterHTC('Water', p_w, (T_w_n1_cd + T_w_n2_cd)/2, m_w_cd/(Nch_c_cd*CS_c_cd), Dh_c_cd: al_c_sh_cd)
+DTA_2p_cd = Max(T_sat_cd - T_w_n2_cd, 1E-6)
+DTB_2p_cd = Max(T_sat_cd - T_wi_cd, 1E-6)
+"log-mean temperature difference, limited to DTA at DTA = DTB; the plain form holds for DTA < DTB as well"
+E_lmtd_2p_cd = Abs(DTA_2p_cd/DTB_2p_cd - 1)
+LMTD_2p_cd = IF(-E_lmtd_2p_cd, -1E-6, (DTA_2p_cd - DTB_2p_cd)/ln(DTA_2p_cd/DTB_2p_cd), DTA_2p_cd, (DTA_2p_cd - DTB_2p_cd)/ln(DTA_2p_cd/DTB_2p_cd))
+CALL Shah2P(FL$, Pm_2p_cd, 0.495, m_dot, Nch_h_cd, Dh_h_cd, L_cd, W_cd, b_cd, phi_cd: al_h_2p_cd, DPu_2p_cd)
+CALL WaterHTC('Water', p_w, (T_w_n2_cd + T_wi_cd)/2, m_w_cd/(Nch_c_cd*CS_c_cd), Dh_c_cd: al_c_2p_cd)
+DTA_sc_cd = Max(T_sat_cd - T_w_n2_cd, 1E-6)
+DTB_sc_cd = Max(T_1 - T_wi_cd, 1E-6)
+"log-mean temperature difference, limited to DTA at DTA = DTB; the plain form holds for DTA < DTB as well"
+E_lmtd_sc_cd = Abs(DTA_sc_cd/DTB_sc_cd - 1)
+LMTD_sc_cd = IF(-E_lmtd_sc_cd, -1E-6, (DTA_sc_cd - DTB_sc_cd)/ln(DTA_sc_cd/DTB_sc_cd), DTA_sc_cd, (DTA_sc_cd - DTB_sc_cd)/ln(DTA_sc_cd/DTB_sc_cd))
+CALL MartinHTC(FL$, Pm_sc_cd, (T_sat_cd + T_1)/2, m_dot, Nch_h_cd, Dh_h_cd, L_cd, W_cd, b_cd, beta_cd: al_h_sc_cd, DPu_sc_cd)
+CALL WaterHTC('Water', p_w, (T_w_n2_cd + T_wi_cd)/2, m_w_cd/(Nch_c_cd*CS_c_cd), Dh_c_cd: al_c_sc_cd)
+DP_cd_H = DPu_sh_cd*w_sh_cd + DPu_2p_cd*w_2p_cd + DPu_sc_cd*w_sc_cd
+
+"!6 Refrigerant charge (Zivi void fraction, volume proportional to the area share as in the source)"
+eps_zivi_ev = 1/(1 + (1 - 0.5)/0.5*(Density(FL$, P=Pm_2p_ev, x=1)/Density(FL$, P=Pm_2p_ev, x=0))^(2/3))
+rho_tp_ev = eps_zivi_ev*Density(FL$, P=Pm_2p_ev, x=1) + (1 - eps_zivi_ev)*Density(FL$, P=Pm_2p_ev, x=0)
+M_H_ev = V_c_ev*(w_l_ev*Density(FL$, P=Pm_l_ev, T=(T_2t + T_sat_ev)/2) + w_2p_ev*rho_tp_ev + w_sh_ev*Density(FL$, P=Pm_v_ev, T=(T_sat_ev + T_4)/2))
+eps_zivi_cd = 1/(1 + (1 - 0.495)/0.495*(Density(FL$, P=Pm_2p_cd, x=1)/Density(FL$, P=Pm_2p_cd, x=0))^(2/3))
+rho_tp_cd = eps_zivi_cd*Density(FL$, P=Pm_2p_cd, x=1) + (1 - eps_zivi_cd)*Density(FL$, P=Pm_2p_cd, x=0)
+M_H_cd = V_h_cd*(w_sh_cd*Density(FL$, P=Pm_sh_cd, T=(T_x_ex + T_sat_cd)/2) + w_2p_cd*rho_tp_cd + w_sc_cd*Density(FL$, P=Pm_sc_cd, T=(T_sat_cd + T_1)/2))
+
+"!7 Cycle performance"
+W_dot_net = W_dot_x - W_dot_pu   "net power of the off-design cycle [W]"
+eta_th = W_dot_net/Q_ev   "net thermal efficiency [-]"
+
+"!8 State points for the thermodynamic diagrams"
+P[1] = P_1
+P[2] = P_2
+P[3] = P_4
+P[4] = P_cd_in
+T[1] = T_1
+T[2] = T_2t
+T[3] = T_4
+T[4] = T_x_ex
+h[1] = h_1
+h[2] = h_2
+h[3] = h_4
+h[4] = h_x_ex
+s[1] = s_1
+s[2] = Entropy(FL$, P=P_2, h=h_2)
+s[3] = s_x_su
+s[4] = Entropy(FL$, P=P_cd_in, h=h_x_ex)

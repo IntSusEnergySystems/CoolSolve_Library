@@ -319,3 +319,4 @@ of them come from in `ht` is Bergman, Lavine, Incropera & DeWitt,
   `HexeNTU` component; its laminar pipe branch is the entrance-region
   Nusselt number that tends to the 3.657 constant of
   `Nu_laminar_T_const` of this file.
+- `CSL-0322` *pche_htc*: heat-transfer coefficient of the semicircular channels of a printed-circuit heat exchanger (LaboThapPy); a channel geometry that is neither a round pipe nor a rectangular duct.

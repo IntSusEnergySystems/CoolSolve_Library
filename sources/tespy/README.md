@@ -141,3 +141,25 @@ cards C-360...C-366 in roadmap.md §6), 11 `merged`, 1 `duplicate`, 4 `discarded
 | TSP-046 | merged | CSL-0134 | recuperated + preheated ORC already translated (cyclopentane); isopentane and air-cooled condenser are other fluid/values only |
 | TSP-047 | discarded | CSL-0137 / CSL-0127 / CSL-0138 | comparison notebook of HeatExchanger/Sectioned/MovingBoundary, all three already in the library; no new physics |
 | TSP-052 | todo | none (new system) | two-stage NH3 heat pump with flooded evaporator (drum + circulation pump) absent from the library; Ebsilon COP matrix as reference (card C-361) |
+
+## 2026-10-31 triage (C-373)
+
+Card C-373 (T-PLAN, novelty triage of the 13 remaining `todo` rows with priority
+low; against library.json, 291 models): 4 kept `todo` (cards C-440, C-443,
+C-444, C-445), 3 `merged`, 1 `duplicate`, 5 `discarded`.
+
+| ID | Decision | Target / nearest model | Reason |
+|---|---|---|---|
+| TSP-002 | duplicate | CSL-0035 / CSL-0023 | compressor map approach already translated; 2D (m, N) maps + igva would be a documented variant there |
+| TSP-007 | merged | CSL-0136 | EN12900 polynomials already translated; adds one cooling-stream energy balance recovering eta_recovery of the dissipated heat |
+| TSP-010 | merged | CSL-0137 | the _condenser variant already fixes the dew state and ttd_u vs the dew line; a desuperheater run is that variant at saturation |
+| TSP-011 | merged | CSL-0137 | same UA + smoothed-LMTD equations; parallel flow only swaps the terminal differences (LMTD itself in CSL-0105) |
+| TSP-021 | discarded | CSL-0247 / CSL-0193 | trivial mixing/splitting balances present in every cycle model; mixing also published as exercises |
+| TSP-026 | discarded | CSL-0140 / CSL-0147 | motor/generator/bus efficiency one-liners already inside the library power chains |
+| TSP-027 | discarded | CSL-0017 / CSL-0028 | infrastructure wrapper around CoolProp HumidAir; psychrometrics built into CoolSolve; no reference data |
+| TSP-039 | discarded | CSL-0013 / CSL-0078 | solver starting-value tutorial, not a new model; same basic-HP+IHX physics; no reference data |
+| TSP-048 | discarded | CSL-0017 | same cooling-coil physics via the built-in humid-air functions; notebook stores no reference outputs |
+
+Kept `todo`: TSP-033 (physical-exergy function, card C-440), TSP-024 (water
+electrolyzer, card C-443), TSP-025 (fuel cell, card C-444), TSP-049 (zeotropic
+mixture heat pump, card C-445).

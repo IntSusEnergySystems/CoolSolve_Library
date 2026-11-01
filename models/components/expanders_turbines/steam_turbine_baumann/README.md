@@ -197,3 +197,4 @@ property provider. `grep` for `Baumann` and `wetness` finds nothing else in the 
 - `CSL-0135` (*turbine_stodola_offdesign*): the TESPy `Turbine` class, parent of `SteamTurbine`; a dry
   efficiency characteristic and cone law instead of wetness.
 - `CSL-0174` (*steam_turbine_isentropic_efficiency*): steam turbine with a given isentropic efficiency.
+- `CSL-0327` *axial_turbine_loss_models*: blade-row loss coefficients of an axial turbine from the blade geometry (Aungier, Balje-Binsley, Kacker-Okapuu), the detailed counterpart of an efficiency given as a number.

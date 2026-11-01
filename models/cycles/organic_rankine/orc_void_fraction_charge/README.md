@@ -189,3 +189,5 @@ Source file (EES 8.139), collection of S. Quoilin:
   (the detailed expander here is a custom volumetric/leakage model).
 - `CSL-0084` *orc_expander_pump_empirical_maps*: ORC with empirical expander
   and pump maps.
+- `CSL-0312` *orc_offdesign_scroll_expander* — off-design ORC with the same Zivi void-fraction charge computation on plate heat exchangers.
+

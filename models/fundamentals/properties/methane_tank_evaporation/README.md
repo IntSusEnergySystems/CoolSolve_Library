@@ -147,3 +147,4 @@ exercise).
 - `CSL-0057` *two_tanks_max_work_air*: rigid vessels and ideal-gas air in the
   same course (*Thermodynamique appliquée*, MECA0002), maximum work from two
   tanks coupled by a heat engine.
+- `CSL-0320` (*R12 tank discharge with heat supply*): tank discharge with the unsteady uniform-state first law (heat supply, outflow enthalpy and kinetic energy).

@@ -215,3 +215,6 @@ CoolProp `HEOS` back end per the library decision D12). Candidate
   in CoolSolve (CO2).
 - `CSL-0014` (hx_constant_pinch): imposed-pinch exchanger formulation
   (`MIN` of candidate differences).
+- `CSL-0324` (zeotropic_hp_propane_isobutane): a heat pump on a real zeotropic
+  mixture (propane/isobutane), internal pinch on 51-point section profiles and
+  a composition sweep; the mixture string in `fluid$` runs there (TESPy source).

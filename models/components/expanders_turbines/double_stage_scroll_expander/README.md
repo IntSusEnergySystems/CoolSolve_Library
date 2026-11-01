@@ -198,3 +198,4 @@ Source file (EES 8.652, comments in English), collection of S. Quoilin:
 - `CSL-0084` *orc_expander_pump_empirical_maps*: the same hermetic-scroll
   filling-factor and isentropic-effectiveness correlations in their
   ThermoCycle/Modelica form (R245fa ORC demonstration).
+- `CSL-0329` *orc_solar_complex*: the same `doubleexpander` module flattened inside a solar-driven ORC (R245fa).

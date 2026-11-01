@@ -381,3 +381,4 @@ the electrical output added.
 - See also the CoolSolve example `examples/orc_complex.eescode` (kept in
   CoolSolve as a parser test case).
 - `CSL-0252` *orc_double_stage_kirchstockach*: two-stage series ORC on R245fa (geothermal brine), design point translated from a TESPy notebook.
+- `CSL-0329` *orc_solar_complex*: solar-driven R245fa ORC of the same family (MODULE flattening, D10), with a discretised trough collector and a two-stage scroll expander.

@@ -1,0 +1,230 @@
+{=============================================================================
+  Printed-circuit heat exchanger (PCHE): channel heat-transfer correlations
+  CoolSolve Library model CSL-0322 (function library, kind = function)
+ -----------------------------------------------------------------------------
+  Heat-transfer coefficient of the semicircular PCHE channels (sCO2 recuperators):
+  straight channel (Stephan-Preusser / Gnielinski on Dh = pi*D_c/(2+pi)) and the
+  zigzag bending-angle fits of PCHE_Lee (recommended; alpha <= 40 deg for Re <=
+  2000). The zigzag formula of PCHE_conv is not physical (returns -1); wavy and
+  airfoil channels are not implemented in the original.
+  Inputs : D_c [m], G [kg/m^2-s], k [W/m-K], L_c [m], mu [Pa-s], Pr [-],
+           alpha [deg], T [C]
+  Outputs: h_conv [W/m^2-K] (one FUNCTION per correlation)
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : B. Chaudoir, LaboThapPy (ULiege), https://github.com/PyLaboThap/
+           LaboThapPy, commit f03f7f47, correlations/convection/
+           printed_circuit_htc.py (Apache-2.0) - see README.md
+  Status : verified against a re-run of the original (27 values), README.
+=============================================================================}
+
+FUNCTION Dh_PCHE(D_c)
+{DH_PCHE - hydraulic diameter of the semicircular PCHE channel of diameter D_c.
+
+  Dh = pi*D_c/(2+pi)
+
+D_c [m] diameter of the semicircle, Dh [m]. As in the original (PCHE_conv and
+PCHE_Lee, LaboThapPy, correlations/convection/printed_circuit_htc.py).}
+  Dh_PCHE = pi*D_c/(2 + pi)
+END
+
+FUNCTION Nu_StephanPreusser_PCHE(Re, Pr, Dh, L_c)
+{NU_STEPHANPREUSSER_PCHE - laminar Nusselt number of the straight channel
+(branch Re < 2300 of PCHE_conv, type_channel = "Straight").
+
+  Nu = 3.657 + 0.0677*Re*Pr*(Dh/L_c)^1.33/(1 + 0.1*Pr*(Re*Dh/L_c)^0.3)
+
+Re [-] on Dh [m], Pr [-], L_c [m] channel length. As in the original (the power
+1.33 applies to Dh/L_c only, as written in printed_circuit_htc.py; same
+equation as Nu_Stephan_Preusser_HX of CSL-0128, from
+pipe_htc.py). Range checked by the original: Pr >= 0.6.}
+  Nu_StephanPreusser_PCHE = 3.657 + 0.0677*Re*Pr*(Dh/L_c)^1.33/(1 + 0.1*Pr*(Re*Dh/L_c)^0.3)
+END
+
+FUNCTION Nu_GnielinskiTransition_PCHE(Re, Pr, Dh, L_c)
+{NU_GNIELINSKITRANSITION_PCHE - Nusselt number of the straight channel for
+Re >= 2300 (transition branch of PCHE_conv, "gnielinski_transition").
+
+  f  = (1.82*LOG10(Re) - 1.64)^(-2)
+  Nu = (f/8)*(Re-1000)*Pr/(1 + 12.7*(f/8)^0.5*(Pr^(2/3)-1))*(1 + (Dh/L_c)^(2/3))
+
+Re [-], Pr [-], Dh [m], L_c [m]. The (Pr/Pr_w)^0.11 factor is commented out in
+the original and is not applied; the original's fully turbulent Sieder-Tate
+branch (Re > 10000) is commented out too, so this branch also serves Re > 10000.
+Original: Gnielinski (1976), as given in the Handbook of Heat Transfer;
+as in the original (the same equation as Nu_Gnielinski_transition_HX of CSL-0128).}
+  f_Gn = (1.82*LOG10(Re) - 1.64)^(-2)
+  Nu_GnielinskiTransition_PCHE = (f_Gn/8)*(Re - 1000)*Pr/(1 + 12.7*(f_Gn/8)^0.5*(Pr^(2/3) - 1))*(1 + (Dh/L_c)^(2/3))
+END
+
+FUNCTION h_PCHE_straight(D_c, G, k, L_c, mu, Pr)
+{H_PCHE_STRAIGHT - heat-transfer coefficient of a straight PCHE channel
+(PCHE_conv, type_channel = "Straight").
+
+  Dh = pi*D_c/(2+pi),  Re = G*Dh/mu
+  Re < 2300: Nu_StephanPreusser_PCHE, otherwise Nu_GnielinskiTransition_PCHE
+  h  = Nu*k/Dh
+
+D_c [m], G [kg/m^2-s] mass flux, k [W/m-K], L_c [m], mu [Pa-s], Pr [-];
+h in W/m^2-K. The original also takes the wall viscosity mu_w [Pa-s] but only
+uses it in a commented-out branch, so it is not an argument here.}
+  Dh = Dh_PCHE(D_c)
+  Re = G*Dh/mu
+  IF (Re < 2300) THEN
+    Nu = Nu_StephanPreusser_PCHE(Re, Pr, Dh, L_c)
+  ELSE
+    Nu = Nu_GnielinskiTransition_PCHE(Re, Pr, Dh, L_c)
+  ENDIF
+  h_PCHE_straight = Nu*k/Dh
+END
+
+FUNCTION h_PCHE_zigzag(alpha, D_c, G, k, L_c, mu, T)
+{H_PCHE_ZIGZAG - NOT AVAILABLE: always returns -1 (error flag). Use h_PCHE_Lee.
+
+The zigzag branch of PCHE_conv in the source (LaboThapPy, printed_circuit_htc.py,
+commit f03f7f47) is not physical as coded: one expression multiplies two fit
+prefactors (2.2631E6 and 2.2967E6) and raises Re to 1.0515**1E-3 = 1.00005 (a
+power, not the product 1.0515E-3), giving h of the order of 1E13 W/m^2-K. It is
+therefore not shipped as a result; the source expression and its values are
+documented in the README (section Limitations). The arguments keep the signature
+of the source: alpha [deg], D_c [m], G [kg/m^2-s], k [W/m-K], L_c [m],
+mu [Pa-s], T [C].}
+  h_PCHE_zigzag = -1
+END
+
+FUNCTION Nu_PCHE_Lee(alpha, Re, Pr)
+{NU_PCHE_LEE - Nusselt number of the zigzag PCHE channel (PCHE_Lee).
+
+  Re <= 2000: Nu = 0.0479*Re^0.7089*Pr^(1/3)*(h_z/p_z)^0.3, with the pitch p_z
+              and amplitude h_z [m] of the channel by bending angle alpha [deg]:
+              alpha <= 10: 12.93E-3 / 1.14E-3 ; <= 20: 12.09E-3 / 2.2E-3 ;
+              <= 30: 10.95E-3 / 3.16E-3 ; <= 40: 9.53E-3 / 4E-3
+  Re >  2000: Nu = 0.0845*Re^0.721*Pr^0.33
+
+Re [-], Pr [-]. For Re <= 2000 and alpha > 40 deg the original raises an error
+(variables unbound); the function returns -1 there as an out-of-range flag.
+References as quoted in the original: Y. Jiang, E. Liese, S. E. Zitney,
+D. Bhattacharyya, Design and Dynamic Modeling of Printed Circuit Heat
+Exchangers for Supercritical Carbon Dioxide Brayton Power Cycles (2018);
+Y. Lee, S. Lee, H. B. Park, K. W. Seo, D. Lee, Thermal-hydraulic performance
+analysis of zigzag channel PCHE according to bending angle (2024).}
+  IF (Re <= 2000) THEN
+    IF (alpha <= 10) THEN
+      p_z = 12.93E-3
+      h_z = 1.14E-3
+    ELSE
+      IF (alpha <= 20) THEN
+        p_z = 12.09E-3
+        h_z = 2.2E-3
+      ELSE
+        IF (alpha <= 30) THEN
+          p_z = 10.95E-3
+          h_z = 3.16E-3
+        ELSE
+          p_z = 9.53E-3
+          h_z = 4E-3
+        ENDIF
+      ENDIF
+    ENDIF
+    Nu_PCHE_Lee = 0.0479*Re^0.7089*Pr^(1/3)*(h_z/p_z)^0.3
+    IF (alpha > 40) THEN
+      Nu_PCHE_Lee = -1
+    ENDIF
+  ELSE
+    Nu_PCHE_Lee = 0.0845*Re^0.721*Pr^0.33
+  ENDIF
+END
+
+FUNCTION f_PCHE_Lee(alpha, Re)
+{F_PCHE_LEE - friction factor fit of the zigzag channel (PCHE_Lee, computed
+there but not returned: its pressure-drop line is commented out).
+
+  f = 29.1955*Re^(-0.5223)*(h_z/p_z)^0.864   (Re <= 2000, h_z and p_z as in Nu_PCHE_Lee)
+
+alpha [deg], Re [-]. Not defined by the original for Re > 2000: -1 is returned.}
+  IF (Re <= 2000) THEN
+    IF (alpha <= 10) THEN
+      p_z = 12.93E-3
+      h_z = 1.14E-3
+    ELSE
+      IF (alpha <= 20) THEN
+        p_z = 12.09E-3
+        h_z = 2.2E-3
+      ELSE
+        IF (alpha <= 30) THEN
+          p_z = 10.95E-3
+          h_z = 3.16E-3
+        ELSE
+          p_z = 9.53E-3
+          h_z = 4E-3
+        ENDIF
+      ENDIF
+    ENDIF
+    f_PCHE_Lee = 29.1955*Re^(-0.5223)*(h_z/p_z)^0.864
+    IF (alpha > 40) THEN
+      f_PCHE_Lee = -1
+    ENDIF
+  ELSE
+    f_PCHE_Lee = -1
+  ENDIF
+END
+
+FUNCTION h_PCHE_Lee(alpha, D_c, G, k, mu, Pr)
+{H_PCHE_LEE - heat-transfer coefficient of a zigzag PCHE channel (PCHE_Lee).
+
+  Dh = pi*D_c/(2+pi),  Re = G*Dh/mu,  h = Nu_PCHE_Lee(alpha, Re, Pr)*k/Dh
+
+alpha [deg], D_c [m], G [kg/m^2-s], k [W/m-K], mu [Pa-s], Pr [-]; h in
+W/m^2-K. The original also takes L_c and rho but does not use them.}
+  Dh = Dh_PCHE(D_c)
+  Re = G*Dh/mu
+  h_PCHE_Lee = Nu_PCHE_Lee(alpha, Re, Pr)*k/Dh
+END
+
+"Demonstration inputs (the same as the Python re-run of the README)"
+D_c = 2.0E-3       "diameter of the semicircular channel [m]"
+k_f = 0.04         "fluid conductivity [W/m-K]"
+mu_f = 2.0E-5      "fluid viscosity [Pa-s]"
+Pr_f = 1.5         "Prandtl number [-]"
+L_c = 0.5          "channel length [m]"
+Dh = Dh_PCHE(D_c)  "hydraulic diameter [m]"
+
+"Straight channel, three mass fluxes (laminar, turbulent, just above Re = 2300)"
+G_S1 = 20          "mass flux [kg/m^2-s]"
+G_S2 = 150
+G_S3 = 1E-3 + 2300*mu_f/Dh
+Re_S1 = G_S1*Dh/mu_f
+Re_S2 = G_S2*Dh/mu_f
+Re_S3 = G_S3*Dh/mu_f
+h_S1 = h_PCHE_straight(D_c, G_S1, k_f, L_c, mu_f, Pr_f)   "[W/m^2-K]"
+h_S2 = h_PCHE_straight(D_c, G_S2, k_f, L_c, mu_f, Pr_f)
+h_S3 = h_PCHE_straight(D_c, G_S3, k_f, L_c, mu_f, Pr_f)
+
+"Zigzag channel, PCHE_conv: not available in the library, returns the flag -1"
+h_Z1 = h_PCHE_zigzag(15, D_c, 100, k_f, L_c, mu_f, 126.85)  "[W/m^2-K], -1 = not available"
+
+"Zigzag channel (recommended): PCHE_Lee fits, valid for alpha <= 40 deg when Re <= 2000: bending angles alpha [deg] and mass fluxes G [kg/m^2-s]"
+alpha_L[1] = 5      "[deg]"
+alpha_L[2] = 15
+alpha_L[3] = 25
+alpha_L[4] = 35
+alpha_L[5] = 25
+alpha_L[6] = 10     "angle class boundary"
+alpha_L[7] = 40     "angle class boundary"
+alpha_L[8] = 15
+alpha_L[9] = 20     "angle class boundary"
+alpha_L[10] = 30    "angle class boundary"
+G_L[1] = 20
+G_L[2] = 20
+G_L[3] = 20
+G_L[4] = 20
+G_L[5] = 40         "Re > 2000"
+G_L[6] = 20
+G_L[7] = 20
+G_L[8] = 50         "Re > 2000"
+G_L[9] = 20
+G_L[10] = 20
+DUPLICATE i = 1, 10
+  Re_L[i] = G_L[i]*Dh/mu_f
+  h_L[i] = h_PCHE_Lee(alpha_L[i], D_c, G_L[i], k_f, mu_f, Pr_f)   "[W/m^2-K]"
+  f_L[i] = f_PCHE_Lee(alpha_L[i], Re_L[i])                         "friction factor [-]"
+END

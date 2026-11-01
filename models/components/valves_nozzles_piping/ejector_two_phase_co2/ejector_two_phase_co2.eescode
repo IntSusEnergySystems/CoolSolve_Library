@@ -1,0 +1,120 @@
+{=============================================================================
+  Two-phase CO2 ejector, constant-efficiency sections, HEM-choked motive flow
+  CoolSolve Library model CSL-0325
+ -----------------------------------------------------------------------------
+  Transcritical CO2 ejector of Liu & Groll type: the motive flow expands
+  through a nozzle to its choking condition (sonic velocity, two-phase
+  branch given by the homogeneous-equilibrium speed of sound of Kornhauser),
+  entrains a suction flow expanded in a second nozzle, both streams mix at
+  constant area with a mixing efficiency and the diffuser recovers a
+  fraction of the kinetic energy (Owen et al. C_t correlation). Given both
+  inlet states and mass flows (entrainment ratio w), the model returns the
+  choking, suction and mixing pressures, the exhaust state (h_ex, P_ex,
+  T_ex, x_ex) and the section areas A_mb, A_sb, A_mix, A_d.
+  Source : B. Chaudoir, LaboThapPy component/expander/ejector_csteff.py,
+           commit f03f7f47 (PyLaboThap, Apache-2.0/MIT) - physics of
+           Liu & Groll (2008), "Analysis of a two phase flow ejector for
+           transcritical CO2 cycle". Translated to simultaneous equations.
+  Status : verified (source example re-run compared, see README.md)
+  Units  : SI - temperatures in degC, pressures in Pa, energies in J
+=============================================================================}
+
+"Inputs (LaboThapPy example ejector_csteff_example.py)"
+T_su_1 = 40                 "motive inlet temperature [C] (40 + 273.15 K in the source)"
+P_su_1 = 100E5              "motive inlet pressure (gas-cooler outlet) [Pa]"
+M_dot_su_1 = 0.18           "motive mass flow rate [kg/s]"
+T_su_2 = 15                 "suction inlet temperature [C] (15 + 273.15 K in the source)"
+P_su_2 = 39E5               "suction inlet pressure (evaporator outlet) [Pa]"
+M_dot_su_2 = 0.07           "suction mass flow rate [kg/s]"
+fluid$ = 'R744'             "CoolProp 'CO2' of the source: real fluid R744 in EES"
+
+"Parameters (constant efficiencies, as in the source)"
+eta_m = 0.9                 "motive nozzle isentropic efficiency [-]"
+eta_s = 0.8                 "suction nozzle isentropic efficiency [-]"
+eta_mix = 0.8               "mixing section efficiency [-]"
+eta_d = 0.85                "diffuser efficiency [-]"
+C_t = 0.7                   "diffuser pressure-recovery coefficient (Owen et al.) [-]"
+
+"Entrainment ratio and inlet states"
+w = M_dot_su_2/M_dot_su_1   "entrainment ratio [-]"
+h_su_1 = ENTHALPY(fluid$, T=T_su_1, P=P_su_1)
+s_su_1 = ENTROPY(fluid$, T=T_su_1, P=P_su_1)
+h_su_2 = ENTHALPY(fluid$, T=T_su_2, P=P_su_2)
+s_su_2 = ENTROPY(fluid$, T=T_su_2, P=P_su_2)
+
+"!1) Motive nozzle - exit at pressure P_b_sonic"
+h_mb_is = ENTHALPY(fluid$, P=P_b_sonic, s=s_su_1)  "isentropic expansion to the exit pressure [J/kg]"
+h_mb = h_su_1 - eta_m*(h_su_1 - h_mb_is)           "nozzle exit enthalpy [J/kg]"
+v_mb = SQRT(2*(h_su_1 - h_mb))                     "nozzle exit velocity [m/s]"
+rho_mb = DENSITY(fluid$, H=h_mb, P=P_b_sonic)      "nozzle exit density [kg/m3]"
+A_mb = M_dot_su_1/(rho_mb*v_mb)                    "motive nozzle exit area [m2] (m_dot/(rho*v); the source's first assignment 1/(rho*v*m_dot) is overwritten before use)"
+
+"HEM speed of sound at the nozzle exit (Kornhauser 1990, source _kornhauser)"
+h_f = ENTHALPY(fluid$, P=P_b_sonic, x=0)   "saturated liquid enthalpy at the exit pressure [J/kg]"
+h_g = ENTHALPY(fluid$, P=P_b_sonic, x=1)   "saturated vapour enthalpy at the exit pressure [J/kg]"
+s_f = ENTROPY(fluid$, P=P_b_sonic, x=0)
+s_g = ENTROPY(fluid$, P=P_b_sonic, x=1)
+v_f = VOLUME(fluid$, P=P_b_sonic, x=0)     "saturated liquid specific volume [m3/kg]"
+v_g = VOLUME(fluid$, P=P_b_sonic, x=1)
+h_mb = h_f                                 "exit state at saturation (x_mb = 0): the source's brentq converges to the switch of its sound-speed branch (two-phase Kornhauser vs single-phase CoolProp), which lies exactly on the saturated-liquid boundary; the smooth relation v_mb = a_sound_mb has no root there (v_mb - a_sound_mb = 11.7 m/s at the solution), see README"
+x_mb = (h_mb - h_f)/(h_g - h_f)            "nozzle exit quality [-] (0 at the solution; clipped to [0;1] in the source)"
+DELTA_P_sat = 500                          "pressure step of the saturation derivatives [Pa]"
+DH_f = ENTHALPY(fluid$, P=P_b_sonic+DELTA_P_sat, x=0) - ENTHALPY(fluid$, P=P_b_sonic-DELTA_P_sat, x=0)  "central difference of h_f, x DELTA_P_sat [J/kg]"
+DH_g = ENTHALPY(fluid$, P=P_b_sonic+DELTA_P_sat, x=1) - ENTHALPY(fluid$, P=P_b_sonic-DELTA_P_sat, x=1)
+DS_f = ENTROPY(fluid$, P=P_b_sonic+DELTA_P_sat, x=0) - ENTROPY(fluid$, P=P_b_sonic-DELTA_P_sat, x=0)
+DS_g = ENTROPY(fluid$, P=P_b_sonic+DELTA_P_sat, x=1) - ENTROPY(fluid$, P=P_b_sonic-DELTA_P_sat, x=1)
+DV_f = VOLUME(fluid$, P=P_b_sonic+DELTA_P_sat, x=0) - VOLUME(fluid$, P=P_b_sonic-DELTA_P_sat, x=0)
+DV_g = VOLUME(fluid$, P=P_b_sonic+DELTA_P_sat, x=1) - VOLUME(fluid$, P=P_b_sonic-DELTA_P_sat, x=1)
+dx_dP_s = -(x_mb*DS_g + (1 - x_mb)*DS_f)/(2*DELTA_P_sat)/(s_g - s_f)   "isentropic derivative of the quality [1/Pa]"
+h_prime = (x_mb*DH_g + (1 - x_mb)*DH_f)/(2*DELTA_P_sat) + (h_g - h_f)*dx_dP_s   "(dh/dP)_s of the two-phase mixture [J/(kg Pa)]"
+v_prime = (x_mb*DV_g + (1 - x_mb)*DV_f)/(2*DELTA_P_sat) + (v_g - v_f)*dx_dP_s   "(dv/dP)_s of the two-phase mixture [m3/(kg Pa)]"
+nu_mb = 1/rho_mb                           "nozzle exit specific volume [m3/kg]"
+a_sound_mb = SQRT(nu_mb^2*(h_g - h_f)/((v_g - v_f)*h_prime - v_prime*(h_g - h_f)))   "HEM speed of sound at the exit state [m/s] (post-processing: 78.3 m/s at the solution, v_mb = 90.0 m/s)"
+
+"!2) Suction nozzle - exit at pressure P_b_suction"
+h_sb_is = ENTHALPY(fluid$, P=P_b_suction, s=s_su_2)  "isentropic expansion to the suction exit pressure [J/kg]"
+h_sb = h_su_2 - eta_s*(h_su_2 - h_sb_is)             "suction nozzle exit enthalpy [J/kg]"
+v_sb = SQRT(2*(h_su_2 - h_sb))                       "suction nozzle exit velocity [m/s]"
+rho_sb = DENSITY(fluid$, H=h_sb, P=P_b_suction)      "suction nozzle exit density [kg/m3]"
+A_sb = M_dot_su_2/(rho_sb*v_sb)                      "suction nozzle exit area [m2]"
+
+"Area balance of the suction chamber (residual of the source's suction_chamber)"
+V_mix_pred = (v_mb + w*v_sb)/(1 + w)                 "momentum-based mixed velocity [m/s]"
+h0_mix = (h_su_1 + w*h_su_2)/(1 + w)                 "mixed stagnation enthalpy [J/kg]"
+h_mix_pred = h0_mix - V_mix_pred^2/2                 "mixed enthalpy estimate [J/kg]"
+rho_mix_pred = DENSITY(fluid$, H=h_mix_pred, P=P_b_suction)
+A_mix_mom = (1 + w)*M_dot_su_1/(rho_mix_pred*V_mix_pred)   "mixed-flow area from the momentum balance [m2]"
+A_mix = A_mb + A_sb                                  "geometric mixing-section area [m2]"
+A_mix_mom = A_mix                                    "area balance closing P_b_suction"
+
+"!3) Mixing section (mass + momentum + energy closure, as in the source's mixing_section)"
+M_dot_t = M_dot_su_1 + M_dot_su_2            "total mass flow rate [kg/s]"
+rho_mix = M_dot_t/(A_mix*v_mix)              "mixed density from mass conservation [kg/m3]"
+P_mix = (P_b_sonic*A_mb + eta_mix*rho_mb*A_mb*v_mb^2 + P_b_suction*A_sb + eta_mix*rho_sb*A_sb*v_sb^2)/A_mix - rho_mix*v_mix^2   "mixing pressure from the momentum balance [Pa]"
+h_mix = h0_mix - v_mix^2/2                   "mixed enthalpy from energy conservation [J/kg]"
+rho_mix = DENSITY(fluid$, H=h_mix, P=P_mix)  "property consistency closing v_mix"
+
+"!4) Diffuser"
+h_ex_is = h_mix + 0.5*v_mix^2                "isentropic recovery of the full mixing kinetic energy [J/kg]"
+h_ex = h_mix + (h_ex_is - h_mix)/eta_d       "diffuser exit enthalpy, definition as in the source [J/kg]"
+P_ex = C_t*0.5*rho_mix*v_mix^2 + P_mix       "diffuser exit pressure [Pa]"
+M_dot_ex = M_dot_t                           "exhaust mass flow rate [kg/s]"
+
+"Void fraction at the mixing state (homogeneous model, fixed import of the source)"
+h_f_mix = ENTHALPY(fluid$, P=P_mix, x=0)
+h_g_mix = ENTHALPY(fluid$, P=P_mix, x=1)
+x_mix = (h_mix - h_f_mix)/(h_g_mix - h_f_mix)          "mixing-state quality [-]"
+rho_l_mix = DENSITY(fluid$, P=P_mix, x=0)              "saturated liquid density at P_mix [kg/m3]"
+rho_g_mix = DENSITY(fluid$, P=P_mix, x=1)              "saturated vapour density at P_mix [kg/m3]"
+eps = 1/(1 + (rho_g_mix/rho_l_mix)*(1 - x_mix)/x_mix)  "homogeneous void fraction [-]"
+
+"Diffuser exit area (two-phase C_t correlation of Owen et al.) and exit velocity"
+C_t = 2*(A_mix/A_d)*rho_mix*(1 - A_mix/A_d)/(rho_l_mix*(1 - eps)^2)   "pressure-recovery correlation closing A_d"
+rho_ex = DENSITY(fluid$, H=h_ex, P=P_ex)     "exhaust density [kg/m3]"
+v_ex = rho_mix*v_mix*A_mix/(rho_ex*A_d)      "exhaust velocity [m/s]"
+
+"Post-processing"
+T_ex = TEMPERATURE(fluid$, H=h_ex, P=P_ex)   "exhaust temperature [C]"
+h_f_ex = ENTHALPY(fluid$, P=P_ex, x=0)
+h_g_ex = ENTHALPY(fluid$, P=P_ex, x=1)
+x_ex = (h_ex - h_f_ex)/(h_g_ex - h_f_ex)     "exhaust quality [-]"

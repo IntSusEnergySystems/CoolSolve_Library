@@ -233,3 +233,5 @@ Source files (EES 8.940 / 8.652), collection of S. Quoilin:
   `therminol66`/`TherminolVP-1` branches and a built-in fluid fallback).
 
 - `CSL-0153` *orc_whr_refprop_cost*: three-zone plate evaporator (Thonon/Hsieh).
+- `CSL-0312` *orc_offdesign_scroll_expander* — off-design ORC whose evaporator uses the same 3-zone plate formulation with Amalfi boiling.
+

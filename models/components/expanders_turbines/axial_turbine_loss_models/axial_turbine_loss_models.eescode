@@ -1,0 +1,507 @@
+{=============================================================================
+  Axial-turbine loss models: Aungier, Balje-Binsley, Kacker-Okapuu (function library)
+  CoolSolve Library model CSL-0327 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Total-pressure loss coefficients Y = (P01 - P02)/(P02 - P2) of an axial-turbine blade row:
+  Aungier profile, secondary-flow, tip-clearance, trailing-edge, supersonic-expansion, shock
+  and lashing-wire losses (PROCEDURE Aungier_axial_loss), and the Balje-Binsley profile loss
+  and the Kacker-Okapuu secondary loss of the sCO2 design method of Lee et al. (2012).
+  Angles in degrees. A coefficient that is outside 0..1 or whose input is out of range is
+  returned as -1 (the original returns it silently, or raises an error).
+  Inputs : angles [deg], lengths [m], Mach numbers, rho2 [kg/m3], mu2 [Pa-s], w2 [m/s]
+  Outputs: loss coefficients [-]; -1 = invalid
+  Source : Basile Chaudoir, LaboThapPy (ULiege), https://github.com/PyLaboThap/LaboThapPy, commit
+           f03f7f47 (Aungier model; the source names no reference, see README.md)
+  Status : VERIFIED against a re-run of the Python code; source defects documented (README.md)
+=============================================================================}
+
+"!--------------------------- Library functions ---------------------------"
+
+FUNCTION Aungier_Kp(M1p, M2p)
+{Compressibility correction Kp of the profile and secondary losses, as in aungier_axial_turbine.py
+(M1p, M2p: rotating-frame Mach numbers at inlet and outlet, limited as in the original).}
+M1c = (M1p + 0.566 - ABS(0.566 - M1p))/2
+M2c = (M2p + 1 - ABS(M2p - 1))/2
+Xk = 2*M1c/(M1c + M2c + ABS(M2c - M1c))
+K1 = 1 - 0.625*(M2c - 0.2 + ABS(M2c - 0.2))
+Aungier_Kp = 1 - (1 - K1)*Xk^2
+END
+
+FUNCTION Aungier_Kre(Re_c, c, e_r)
+{Reynolds-number correction Kre, as in the original: laminar (Re_c < 1E5) SQRT(1E5/Re_c), transition
+(< 5E5) 1, turbulent (5E5/Re_c)-law, or the roughness law when Re_c > Re_r = 100*c/e_r (e_r = 0:
+smooth). Re_c = rho2*w2*c/mu2, c chord [m], e_r roughness [m].}
+IF (e_r > 0) THEN
+  Re_r = 100*c/e_r
+ELSE
+  Re_r = -1
+ENDIF
+IF (Re_c < 1E5) THEN
+  Kre = SQRT(1E5/Re_c)
+ELSE
+  IF (Re_c < 5E5) THEN
+    Kre = 1
+  ELSE
+    IF ((Re_c > Re_r) AND (Re_r > 1)) THEN
+      Kre = (LOG10(5E5)/LOG10(Re_r))^2.58
+    ELSE
+      Kre = (LOG10(5E5)/LOG10(Re_c))^2.58
+    ENDIF
+  ENDIF
+ENDIF
+Aungier_Kre = Kre
+END
+
+FUNCTION Aungier_Km(M2p, s, R_c)
+{Mach-number correction Km of the profile loss as in the original: 1 for M2p <= 0.6 and M2p > 1, otherwise
+1 + (1.65*(M2p-0.6) + 240*(M2p-0.06)^2)*(s/R_c)^(3*M2p-0.6), s pitch [m], R_c suction-surface radius [m].
+Just above M2p = 0.6 this gives Km of the order of 100 (typo (M2p-0.06) for (M2p-0.6)? not checked against
+the book): Aungier_Yp therefore returns -1 for 0.6 < M2p <= 1 (see README).}
+IF ((M2p <= 0.6) OR (M2p > 1)) THEN
+  Km = 1
+ELSE
+  Km = 1 + (1.65*(M2p - 0.6) + 240*(M2p - 0.06)^2)*(s/R_c)^(3*M2p - 0.6)
+ENDIF
+Aungier_Km = Km
+END
+
+FUNCTION Aungier_Yp(a1p, a2p, beta_g, b1p, c, e_r, mu2, M1p, M2p, R_c, rho2, s, t_max, w2)
+{Profile loss Yp (profile_losses of the original: Kacker-Okapuu-type correlation, Kmod = 0.67). Angles in
+degrees FROM THE TANGENT, in the rotating frame: a1p, a2p flow inlet/outlet, b1p inlet blade angle; beta_g
+gauging angle [deg]; c chord, e_r roughness, R_c suction-surface radius, s pitch, t_max maximum thickness [m];
+mu2 [Pa-s], rho2 [kg/m3], w2 [m/s] outlet viscosity, density, relative speed.
+Returns -1 if: 0 < a2p < 90 is violated, 0.6 < M2p <= 1 (Km of the original, see Aungier_Km), |xi| > 1.3 (the
+original raises an error), the throat is blocked (s*sin(beta_g) <= 0.02*s), i_s = 0, or Yp is outside 0..1.}
+res = -1
+ok = 1
+IF ((M2p > 0.6) AND (M2p <= 1)) THEN
+  ok = 0
+ENDIF
+IF ((a2p <= 0) OR (a2p >= 90) OR (c <= 0) OR (s <= 0) OR (mu2 <= 0) OR (rho2 <= 0) OR (w2 <= 0) OR (e_r < 0) OR (t_max <= 0) OR (R_c <= 0)) THEN
+  ok = 0
+ENDIF
+IF (ok > 0.5) THEN
+  xi = (90 - b1p)/(90 - a2p)
+  IF (ABS(xi) > 1.3) THEN
+    ok = 0
+  ENDIF
+  t2 = 0.02*s
+  den = s*SIN(beta_g) - t2
+  IF (den <= 0) THEN
+    ok = 0
+  ENDIF
+ENDIF
+IF (ok > 0.5) THEN
+  Kmod = 0.67
+  inc = b1p - a1p
+  i_s0 = 20 - (xi + 1)/0.11
+  IF (a2p <= 40) THEN
+    a2c = a2p
+  ELSE
+    a2c = 40
+  ENDIF
+  cA = 61.8 - (1.6 - a2c/165)*a2c
+  cB = 71.9 - 1.69*a2c
+  cC = 7.8 - (0.28 - a2c/320)*a2c
+  cD = 14.2 - (0.16 + a2c/160)*a2c
+  i_sx = i_s0 + cA - cB*xi*xi + cC*xi*xi*xi + cD*xi*xi*xi*xi
+  IF (a2p <= 40) THEN
+    i_sr = i_sx
+  ELSE
+    i_sr = i_s0 + ABS(i_sx - i_s0)*ABS(55 - a2p)/15
+  ENDIF
+  s_c = s/c
+  Xd = s_c - 0.75
+  IF (s_c <= 0.8) THEN
+    Dis = -38*Xd - 53.5*Xd*Xd - 29*Xd*Xd*Xd
+  ELSE
+    Dis = -2.0374 - (s_c - 0.8)*(69.58 - (a2p/14.48)^3.1)
+  ENDIF
+  i_s = i_sr + Dis
+  IF (ABS(i_s) < 1E-9) THEN
+    ok = 0
+    i_s = 1
+  ENDIF
+  rr = inc/i_s
+  IF (rr < -3) THEN
+    Kinc = -1.39214 - 1.90738*rr
+  ELSE
+    IF (rr < 0) THEN
+      Kinc = 1 + 0.52*ABS(rr)^1.7
+    ELSE
+      IF (rr < 1.7) THEN
+        Kinc = 1 + rr^(2.3 + 0.5*rr)
+      ELSE
+        Kinc = 6.23 + 9.8577*(rr - 1.7)
+      ENDIF
+    ENDIF
+  ENDIF
+  Kinc = MIN(Kinc, 20)
+  Km = Aungier_Km(M2p, s, R_c)
+  Kp = Aungier_Kp(M1p, M2p)
+  Kre = Aungier_Kre(rho2*w2*c/mu2, c, e_r)
+  {profile loss of nozzle blades (beta_1 = 90 deg), Yp1}
+  IF (a2p <= 27) THEN
+    A_1 = 0.025 + (27 - a2p)/530
+  ELSE
+    A_1 = 0.025 + (27 - a2p)/3085
+  ENDIF
+  B_1 = 0.1583 - a2p/1640
+  IF (a2p <= 30) THEN
+    s_c_min = 0.46 + a2p/77
+    X_1 = s_c - s_c_min
+    C_1 = 0.08*((a2p/30)^2 - 1)
+    Yp1 = A_1 + B_1*X_1*X_1 + C_1*X_1*X_1*X_1
+  ELSE
+    s_c_min = 0.614 + a2p/130
+    X_1 = s_c - s_c_min
+    n_1 = 1 + a2p/30
+    Yp1 = A_1 + B_1*ABS(X_1)^n_1
+  ENDIF
+  {profile loss of impulse blades (alpha_2' = 90 deg), Yp2}
+  s_c_min2 = 0.224 + 1.575*(a2p/90) - (a2p/90)^2
+  X_2 = s_c - s_c_min2
+  A_2 = 0.242 - a2p/151 + (a2p/127)^2
+  IF (a2p <= 30) THEN
+    B_2 = 0.3 + (30 - a2p)/50
+  ELSE
+    B_2 = 0.3 + (30 - a2p)/275
+  ENDIF
+  C_2 = 0.88 - a2p/42.4 + (a2p/72.8)^2
+  Yp2 = A_2 + B_2*X_2*X_2 - C_2*X_2*X_2*X_2
+  {trailing-edge loss of t = 0.02*s, subtracted as in the original}
+  DY_TE = (s*SIN(beta_g)/den - 1)^2
+  tau = MAX(1E-3, MIN(1E3, 5*t_max/c))
+  fact_1 = Yp1 + xi*xi*(Yp2 - Yp1)
+  fact_2 = tau^xi
+  Ypr = Kmod*Kinc*Km*Kp*Kre*(fact_1*fact_2 - DY_TE)
+  IF ((ok > 0.5) AND (Ypr >= 0) AND (Ypr <= 1)) THEN
+    res = Ypr
+  ENDIF
+ENDIF
+Aungier_Yp = res
+END
+
+FUNCTION Aungier_Ys(a1p, a2p, b1p, b_z, c, e_r, h, mu2, M1p, M2p, rho2, s, w2)
+{Secondary-flow loss Ys (secondary_losses of the original). Angles in degrees from the tangent as in Aungier_Yp;
+b_z axial projection of the chord [m], h blade height [m]. The Ainley loading parameter uses
+alpha_m = arctan((cot a1p + cot a2p)/2) here, whereas Aungier_Ycl uses 90 - arctan(...): as in the original
+(see README). Returns -1 for an invalid input (tan = 0, sin(alpha_m) <= 0) or Ys outside 0..1.}
+res = -1
+ok = 1
+IF ((c <= 0) OR (h <= 0) OR (s <= 0) OR (mu2 <= 0) OR (rho2 <= 0) OR (w2 <= 0) OR (e_r < 0) OR (a2p <= 0) OR (a2p >= 180) OR (a1p <= 0) OR (a1p >= 180) OR (b1p <= 0) OR (b1p >= 180)) THEN
+  ok = 0
+ENDIF
+IF (ok > 0.5) THEN
+  cots = 1/TAN(a1p) + 1/TAN(a2p)
+  C_L = 2*cots*s/c
+  a_m = ARCTAN(cots/2)
+  IF (SIN(a_m) <= 0) THEN
+    ok = 0
+  ENDIF
+ENDIF
+IF (ok > 0.5) THEN
+  Z = (C_L*c/s)*(C_L*c/s)*SIN(a2p)*SIN(a2p)/(SIN(a_m)*SIN(a_m)*SIN(a_m))
+  IF (h/c >= 2) THEN
+    F_AR = c/h
+  ELSE
+    F_AR = 0.5*(2*c/h)^0.7
+  ENDIF
+  Ys_est = 0.0334*F_AR*Z*SIN(a2p)/SIN(b1p)
+  Kre = Aungier_Kre(rho2*w2*c/mu2, c, e_r)
+  Kp = Aungier_Kp(M1p, M2p)
+  Ks = 1 - (1 - Kp)*(b_z/h)^2/(1 + (b_z/h)^2)
+  Ysr = Ks*Kre*SQRT(Ys_est*Ys_est/(1 + 7.5*Ys_est*Ys_est))
+  IF ((Ys_est >= 0) AND (Ysr <= 1)) THEN
+    res = Ysr
+  ENDIF
+ENDIF
+Aungier_Ys = res
+END
+
+FUNCTION Aungier_Ycl(a1p, a2p, c, h, s, delta)
+{Blade tip-clearance loss Ycl (aungier_loss_model of the original): 0.47*Z*(c/h)*(delta/c)^0.78, delta the tip
+clearance [m]. Angles in degrees from the tangent; alpha_m = 90 - arctan((cot a1p + cot a2p)/2).
+Returns -1 for an invalid input or Ycl outside 0..1.}
+res = -1
+IF ((c > 0) AND (h > 0) AND (s > 0) AND (delta >= 0) AND (a1p > 0) AND (a1p < 180) AND (a2p > 0) AND (a2p < 180)) THEN
+  cots = 1/TAN(a1p) + 1/TAN(a2p)
+  C_L = 2*cots*s/c
+  a_m = 90 - ARCTAN(cots/2)
+  IF (SIN(a_m) > 0) THEN
+    Z = (C_L*c/s)*(C_L*c/s)*SIN(a2p)*SIN(a2p)/(SIN(a_m)*SIN(a_m)*SIN(a_m))
+    IF (delta > 0) THEN
+      Yc = 0.47*Z*(c/h)*(delta/c)^0.78
+    ELSE
+      Yc = 0
+    ENDIF
+    IF ((Yc >= 0) AND (Yc <= 1)) THEN
+      res = Yc
+    ENDIF
+  ENDIF
+ENDIF
+Aungier_Ycl = res
+END
+
+FUNCTION Aungier_Yte(beta_g, s, t_TE)
+{Trailing-edge loss Yte = 2*DPt/(rho2*w2^2) = (s*sin(beta_g)/(s*sin(beta_g) - t_TE) - 1)^2, beta_g gauging angle
+[deg], s pitch, t_TE trailing-edge thickness [m]. The original takes np.sin of the angle in degrees here (bug,
+see README); the sine of the angle in degrees is used. -1 if the throat is blocked (s*sin(beta_g) <= t_TE).}
+res = -1
+IF ((s > 0) AND (t_TE >= 0)) THEN
+  den = s*SIN(beta_g) - t_TE
+  IF (den > 0) THEN
+    Yt = (s*SIN(beta_g)/den - 1)^2
+    IF (Yt <= 1) THEN
+      res = Yt
+    ENDIF
+  ENDIF
+ENDIF
+Aungier_Yte = res
+END
+
+FUNCTION Aungier_Yex(M2p)
+{Supersonic-expansion loss, ((M2p - 1)/M2p)^2 for M2p > 1, 0 otherwise (as in the original).}
+IF (M2p <= 1) THEN
+  Aungier_Yex = 0
+ELSE
+  Aungier_Yex = ((M2p - 1)/M2p)^2
+ENDIF
+END
+
+FUNCTION Aungier_Ysh(M1p, M2p)
+{Shock loss (as in the original): X1 = M1p - 0.4 (M1p > 0.4), X2 = M1p/M2p - 1 (M1p > M2p),
+Ysh_est = 0.8*X1^2 + X2^2, Ysh = SQRT(Ysh_est^2/(1 + Ysh_est^2)) (written Ysh_est/SQRT(1 + Ysh_est^2), same
+value, to avoid the derivative of SQRT at 0).}
+IF (M1p <= 0.4) THEN
+  X1 = 0
+ELSE
+  X1 = M1p - 0.4
+ENDIF
+IF ((M1p <= M2p) OR (M2p <= 0)) THEN
+  X2 = 0
+ELSE
+  X2 = M1p/M2p - 1
+ENDIF
+Ysh_est = 0.8*X1^2 + X2^2
+Aungier_Ysh = Ysh_est/SQRT(1 + Ysh_est*Ysh_est)
+END
+
+FUNCTION Aungier_Ylw(rho2, vm2, D_lw, mu2, N_lw, h, w2)
+{Lashing-wire loss N_lw*C_D*D_lw*vm2^2/(h*w2^2), C_D = 1 for Re <= 5E5, 0.35 above (Re = rho2*vm2*D_lw/mu2),
+as in the original. D_lw wire diameter [m], N_lw number of wires, vm2 outlet axial velocity [m/s].}
+Re_w = rho2*vm2*D_lw/mu2
+IF (Re_w <= 5E5) THEN
+  C_D = 1
+ELSE
+  C_D = 0.35
+ENDIF
+res = -1
+IF ((h > 0) AND (w2 > 0)) THEN
+  res = N_lw*C_D*D_lw*vm2^2/(h*w2^2)
+ENDIF
+Aungier_Ylw = res
+END
+
+PROCEDURE Aungier_axial_loss(alpha1, alpha2, beta_g, chi1, c, delta, D_lw, e_r, h, mu2, M1, M2, N_lw, R_c, rho2, s, t_max, t_TE, vm2, w2 : Y_tot, Yp, Ys, Ycl, Yte, Yex, Ysh, Ylw)
+{aungier_loss_model of LaboThapPy (all angles in DEGREES, the rad_flag of the original is dropped).
+alpha1, alpha2 flow inlet/outlet angle and chi1 inlet blade angle, all from the AXIAL direction in the frame of the
+blade row (rotating for a rotor); beta_g gauging angle [deg] (arcsin(throat/pitch)); c chord, delta tip clearance,
+D_lw lashing-wire diameter, e_r roughness, h blade height, R_c suction-surface radius, s pitch, t_max maximum
+thickness, t_TE trailing-edge thickness [m]; mu2 [Pa-s], rho2 [kg/m3] outlet viscosity and density at static
+conditions; M1, M2 rotating-frame Mach numbers; N_lw number of lashing wires; vm2 outlet axial velocity,
+w2 outlet speed in the frame of the row [m/s].
+Y_tot = Yp + Ys + Ycl + Yte + Yex + Ysh + Ylw, referred to Y = (P01' - P02')/(P02' - P2) as in the original.
+Any component equal to -1 is invalid and makes Y_tot = -1.}
+a1p = 90 - alpha1
+a2p = 90 - alpha2
+b1p = 90 - chi1
+b_z = c*SIN(b1p)
+Yp = Aungier_Yp(a1p, a2p, beta_g, b1p, c, e_r, mu2, M1, M2, R_c, rho2, s, t_max, w2)
+Ys = Aungier_Ys(a1p, a2p, b1p, b_z, c, e_r, h, mu2, M1, M2, rho2, s, w2)
+Ycl = Aungier_Ycl(a1p, a2p, c, h, s, delta)
+Yte = Aungier_Yte(beta_g, s, t_TE)
+Yex = Aungier_Yex(M2)
+Ysh = Aungier_Ysh(M1, M2)
+Ylw = Aungier_Ylw(rho2, vm2, D_lw, mu2, N_lw, h, w2)
+IF ((Yp < 0) OR (Ys < 0) OR (Ycl < 0) OR (Yte < 0) OR (Ylw < 0)) THEN
+  Y_tot = -1
+ELSE
+  Y_tot = Yp + Ys + Ycl + Yte + Yex + Ysh + Ylw
+ENDIF
+END
+
+FUNCTION BaljeBinsley_Yp(Re, t_TE, chord, t_blade, chi1, chi2)
+{Balje-Binsley profile loss Yp of balje_binsley (pressure_loss_model.py of LaboThapPy; Lee et al. 2012):
+Re Reynolds number, t_TE trailing-edge and t_blade blade thickness, chord [m]; chi1, chi2 inlet and
+outlet angles [deg] (radians in the original), mean angle abs(chi1 + chi2)/2.
+H_TE = 1.4 + 300/SQRT(Re); theta = 0.036*chord/Re^0.2; theta* = theta/(t_blade*sin(chi)).
+Yp = abs(1 - num/den) in the original; -1 here if num/den > 1 (negative loss) or B <= 0, A <= 0, Re <= 0.}
+res = -1
+IF ((Re > 0) AND (t_blade > 0) AND (chord > 0) AND (t_TE >= 0)) THEN
+  chi = ABS(chi2 + chi1)/2
+  IF (SIN(chi) > 0) THEN
+    H_TE = 1.4 + 300/Re^0.5
+    theta = 0.036*chord/Re^0.2
+    theta_s = theta/(t_blade*SIN(chi))
+    A_b = 1 - (1 + H_TE)*theta_s - t_TE/t_blade
+    B_b = 1 - H_TE*theta_s - t_TE/t_blade
+    IF ((A_b > 0) AND (B_b > 0)) THEN
+      num = COS(chi)^2*A_b^2/B_b^2 + SIN(chi)^2*B_b^2
+      dn = 1 + 2*SIN(chi)^2*(B_b^2 - A_b)
+      IF ((dn > 0) AND (num/dn <= 1)) THEN
+        res = 1 - num/dn
+      ENDIF
+    ENDIF
+  ENDIF
+ENDIF
+BaljeBinsley_Yp = res
+END
+
+FUNCTION KackerOkapuu_Ys(AR, solidity, alpha1, alpha2, beta1)
+{Secondary loss Ys of kacker_okaapu (pressure_loss_model.py of LaboThapPy; Lee et al. 2012):
+Z = solidity*(alpha1 - alpha2)/cos(alpha2), Ys = abs(0.0334/AR*cos(alpha2)/cos(beta1)*Z).
+AR aspect ratio, solidity c/s; alpha1, alpha2 flow angles and beta1 [deg] as in the original (radians there; the
+difference alpha1 - alpha2 enters Z in radians). -1 if AR <= 0, a cosine <= 0 or Ys > 1.}
+res = -1
+IF ((AR > 0) AND (COS(alpha2) > 0) AND (COS(beta1) > 0)) THEN
+  Z = solidity*(alpha1 - alpha2)*pi/180/COS(alpha2)
+  Ysk = ABS(0.0334/AR*COS(alpha2)/COS(beta1)*Z)
+  IF (Ysk <= 1) THEN
+    res = Ysk
+  ENDIF
+ENDIF
+KackerOkapuu_Ys = res
+END
+
+"!--------------------------- Demonstration program ---------------------------"
+"Temperatures: K in the original, C here (value - 273.15). Angles in degrees as in the original ORC case."
+
+"!1. ORC case of the original (R245fa): stator and rotor, reference values of the original in the comments"
+p_in_o = 12.6E5 [Pa]
+T_in_o = 373.7 - 273.15 [C]
+M_dot_o = 50 [kg/s]
+W_dot_o = 1.52E6 [W]
+PR_o = 6.4
+p_out_o = p_in_o/PR_o
+h_in_o = enthalpy(R245fa, T=T_in_o, P=p_in_o)
+T_out_s_o = temperature(R245fa, P=p_out_o, h=h_in_o)     "stator outlet: (T,H) call of the original rewritten as (P,H)"
+h_out_r_o = h_in_o - W_dot_o/M_dot_o
+T_out_r_o = temperature(R245fa, P=p_out_o, h=h_out_r_o)
+rho_s_o = density(R245fa, T=T_out_s_o, P=p_out_o)
+mu_s_o = viscosity(R245fa, T=T_out_s_o, P=p_out_o)
+rho_r_o = density(R245fa, T=T_out_r_o, P=p_out_o)
+mu_r_o = viscosity(R245fa, T=T_out_r_o, P=p_out_o)
+alpha1_o = 3 [deg]
+alpha2_o = 71 [deg]
+beta2_o = -24 [deg]
+beta3_o = 68 [deg]
+vm_o = 65 [m/s]
+v2_o = 202 [m/s]
+w3_o = 172 [m/s]
+M1_o = 0.53
+M2_o = 1.47
+M2r_o = 0.52
+M3_o = 1.23
+c_s_o = 44.34E-3 [m]
+c_r_o = 53.26E-3 [m]
+e_o = 0.002E-3 [m]
+ZW_o = 0.8
+sol_s_o = 2*cos(alpha2_o)/cos(alpha1_o)*sin(alpha2_o - alpha1_o)/ZW_o
+s_s_o = (c_s_o/sol_s_o)/2
+h_s_o = c_s_o*0.43
+h_r_o = c_r_o*0.9
+sol_r_o = 2*cos(beta3_o)/cos(beta2_o)*sin(beta3_o - beta2_o)/ZW_o
+s_r_o = (c_r_o/sol_r_o)/2
+tip_o = 0.0177*h_r_o
+R_c_o = c_s_o/(2*ABS(sin(alpha1_o - alpha2_o)))       "the original takes np.sin of degrees here; R_c is not used at M2' > 1"
+t_TE_s_o = 0.0806*s_s_o*sin(alpha2_o)
+t_TE_r_o = 0.0575*s_s_o*sin(beta3_o)                  "stator pitch in the rotor throat, as in the original"
+t_max_s_o = 0.08*c_s_o
+t_max_r_o = 0.3*c_r_o
+CALL Aungier_axial_loss(alpha1_o, alpha2_o, alpha2_o, alpha1_o, c_s_o, 0, 0, e_o, h_s_o, mu_s_o, M1_o, M2_o, 0, R_c_o, rho_s_o, s_s_o, t_max_s_o, t_TE_s_o, vm_o, v2_o : Y_tot_oS, Yp_oS, Ys_oS, Ycl_oS, Yte_oS, Yex_oS, Ysh_oS, Ylw_oS)
+CALL Aungier_axial_loss(beta2_o, beta3_o, beta3_o, beta2_o, c_r_o, tip_o, 0, e_o, h_r_o, mu_r_o, M2r_o, M3_o, 0, R_c_o, rho_r_o, s_r_o, t_max_r_o, t_TE_r_o, vm_o, w3_o : Y_tot_oR, Yp_oR, Ys_oR, Ycl_oR, Yte_oR, Yex_oR, Ysh_oR, Ylw_oR)
+"Reference values printed in the original (source of the values not stated there): stator Y_tot 0.191,"
+"Yp 0.013, Ys 0.055, Yte 0.008, Ysh 0.013, Yex 0.101, Ycl 0; rotor 0.253, 0.016, 0.05, 0.004, 0.011, 0.034, 0.139"
+
+"!2. 'Test' case of the original (sCO2, R744, 246.8 bar): same inputs, but with the angle inputs made consistent"
+"The original passes beta_g in radians and gives cosd/sind radians; here all angles are in degrees"
+p_in_t = 24679496 [Pa]
+p_out_t = 22409929 [Pa]
+T_in_t = 924.1779935648001 - 273.15 [C]     "T of h = 1159373 J/kg of CoolProp in the original (T,H call)"
+M_dot_t = 50 [kg/s]
+W_dot_t = 1.52E6 [W]
+h_in_t = enthalpy(R744, T=T_in_t, P=p_in_t)
+T_out_s_t = temperature(R744, P=p_out_t, h=h_in_t)
+h_out_r_t = h_in_t - W_dot_t/M_dot_t
+T_out_r_t = temperature(R744, P=p_out_t, h=h_out_r_t)
+rho_s_t = density(R744, T=T_out_s_t, P=p_out_t)
+mu_s_t = viscosity(R744, T=T_out_s_t, P=p_out_t)
+rho_r_t = density(R744, T=T_out_r_t, P=p_out_t)
+mu_r_t = viscosity(R744, T=T_out_r_t, P=p_out_t)
+alpha1_t = -0.691573555766352*180/pi    "[deg]; -0.6916 rad in the original"
+alpha2_t = 1.205642036706006*180/pi     "[deg]; 1.2056 rad"
+beta2_t = 0.8130386970159275*180/pi     "[deg]; 0.8130 rad"
+beta3_t = -1.1740541019416815*180/pi    "[deg]; -1.1741 rad"
+vm_t = 68.84 [m/s]
+v2_t = 192.77 [m/s]
+w3_t = 178.14 [m/s]
+M1_t = 0.18245508233270885
+M2_t = 0.3991590667470393
+M2r_t = 0.20738868745930328
+M3_t = 0.3729579990457117
+c_s_t = 0.02654026363206464 [m]
+c_r_t = 0.02506353058148693 [m]
+h_s_t = 0.019044317415287667 [m]
+h_r_t = 0.017786116071656515 [m]
+e_t = 0.002E-3 [m]
+tip_t = 0.4E-3 [m]
+t_TE_t = 0.0005 [m]
+t_max_s_t = 0.0010331685787306332 [m]
+t_max_r_t = 0.0012531765290743466 [m]
+ZW_t = 0.8
+sol_s_t = 2*cos(alpha2_t)/cos(alpha1_t)*sin(alpha2_t - alpha1_t)/ZW_t
+s_s_t = (c_s_t/sol_s_t)/2
+sol_r_t = 2*cos(-beta3_t)/cos(-beta2_t)*sin(-beta3_t + beta2_t)/ZW_t
+s_r_t = (c_r_t/sol_r_t)/2
+R_c_t = c_s_t/(2*ABS(sin(alpha1_t - alpha2_t)))
+CALL Aungier_axial_loss(alpha1_t, alpha2_t, alpha2_t, alpha1_t, c_s_t, 0, 0, e_t, h_s_t, mu_s_t, M1_t, M2_t, 0, R_c_t, rho_s_t, s_s_t, t_max_s_t, t_TE_t, vm_t, v2_t : Y_tot_tS, Yp_tS, Ys_tS, Ycl_tS, Yte_tS, Yex_tS, Ysh_tS, Ylw_tS)
+CALL Aungier_axial_loss(-beta2_t, -beta3_t, -beta3_t, -beta2_t, c_r_t, tip_t, 0, e_t, h_r_t, mu_r_t, M2r_t, M3_t, 0, R_c_t, rho_r_t, s_r_t, t_max_r_t, t_TE_t, vm_t, w3_t : Y_tot_tR, Yp_tR, Ys_tR, Ycl_tR, Yte_tR, Yex_tR, Ysh_tR, Ylw_tR)
+
+"!3. 'Test' case with the inputs EXACTLY as the original computes them (radians given to cosd/sind, beta_g in rad)"
+"The original returns Yp = -224.9 (stator) and +96.3 (rotor): the functions return -1"
+sol_s_v = 2*cos(1.205642036706006)/cos(-0.691573555766352)*sin(1.205642036706006 + 0.691573555766352)/ZW_t
+s_s_v = (c_s_t/sol_s_v)/2
+sol_r_v = 2*cos(-1.1740541019416815)/cos(0.8130386970159275)*sin(-1.1740541019416815 - 0.8130386970159275)/ZW_t
+s_r_v = (c_r_t/sol_r_v)/2
+CALL Aungier_axial_loss(alpha1_t, alpha2_t, 1.205642036706006, alpha1_t, c_s_t, 0, 0, e_t, h_s_t, mu_s_t, M1_t, M2_t, 0, R_c_t, rho_s_t, s_s_v, t_max_s_t, t_TE_t, vm_t, v2_t : Y_tot_vS, Yp_vS, Ys_vS, Ycl_vS, Yte_vS, Yex_vS, Ysh_vS, Ylw_vS)
+CALL Aungier_axial_loss(-beta2_t, -beta3_t, -1.1740541019416815, -beta2_t, c_r_t, tip_t, 0, e_t, h_r_t, mu_r_t, M2r_t, M3_t, 0, R_c_t, rho_r_t, s_r_v, t_max_r_t, t_TE_t, vm_t, w3_t : Y_tot_vR, Yp_vR, Ys_vR, Ycl_vR, Yte_vR, Yex_vR, Ysh_vR, Ylw_vR)
+
+"!4. Mach correction of the profile loss: Km of the original at M2' = 0.8 and 0.65 (ORC stator geometry)"
+"The original expression gives Km of the order of 100; the function Aungier_Yp returns -1 for 0.6 < M2' <= 1"
+Km_k1 = Aungier_Km(0.8, s_s_o, R_c_o)
+Km_k2 = Aungier_Km(0.65, s_s_o, R_c_o)
+CALL Aungier_axial_loss(alpha1_o, alpha2_o, alpha2_o, alpha1_o, c_s_o, 0, 0, e_o, h_s_o, mu_s_o, M1_o, 0.8, 0, R_c_o, rho_s_o, s_s_o, t_max_s_o, t_TE_s_o, vm_o, v2_o : Y_tot_k, Yp_k, Ys_k, Ycl_k, Yte_k, Yex_k, Ysh_k, Ylw_k)
+
+"!5. Lashing wires (not used in the cases of the original): ORC stator with 2 wires of 1 mm"
+Ylw_w = Aungier_Ylw(rho_s_o, vm_o, 1E-3, mu_s_o, 2, h_s_o, v2_o)
+
+"!6. Balje-Binsley profile loss and Kacker-Okapuu secondary loss, argument sets of the verification (angles in deg)"
+"Balje-Binsley: cases 1-4 valid, case 5 trailing edge thicker than the blade (-1), case 6 negative loss (-1); Kacker-Okapuu: case 6 has AR < 0 (-1)"
+DUPLICATE j = 1, 6
+  Re_bb[j] = LOOKUP('bb_cases', j, 1)
+  tTE_bb[j] = LOOKUP('bb_cases', j, 2)
+  ch_bb[j] = LOOKUP('bb_cases', j, 3)
+  tb_bb[j] = LOOKUP('bb_cases', j, 4)
+  chi1_bb[j] = LOOKUP('bb_cases', j, 5)
+  chi2_bb[j] = LOOKUP('bb_cases', j, 6)
+  Yp_bb[j] = BaljeBinsley_Yp(Re_bb[j], tTE_bb[j], ch_bb[j], tb_bb[j], chi1_bb[j], chi2_bb[j])
+END
+DUPLICATE j = 1, 6
+  AR_ko[j] = LOOKUP('ko_cases', j, 1)
+  sol_ko[j] = LOOKUP('ko_cases', j, 2)
+  a1_ko[j] = LOOKUP('ko_cases', j, 3)
+  a2_ko[j] = LOOKUP('ko_cases', j, 4)
+  b1_ko[j] = LOOKUP('ko_cases', j, 5)
+  Ys_ko[j] = KackerOkapuu_Ys(AR_ko[j], sol_ko[j], a1_ko[j], a2_ko[j], b1_ko[j])
+END

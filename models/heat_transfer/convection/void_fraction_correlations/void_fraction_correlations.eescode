@@ -5,22 +5,19 @@
   One EES FUNCTION per void-fraction correlation of the LaboThapPy module
   void_fraction.py: homogeneous (no slip), Zivi, Fauske and Premoli (slip-ratio
   family), Lockhart-Martinelli and Cioncolini-Thome (empirical), Hughmark
-  (implicit slip ratio), Graham (condensation only), Armand-Treschev and Bankoff
-  (K x alpha_h), Rouhani-Axelsson, Dix and Woldesemayat-Ghajar (drift-flux).
-  The saturated properties are arguments, so the calling model evaluates them;
-  the Reynolds and Weber numbers needed by Premoli are helper functions.
+  (implicit slip ratio, solved by an explicit bisection in its body), Graham
+  (condensation only), Armand-Treschev and Bankoff (K x alpha_h),
+  Rouhani-Axelsson, Dix and Woldesemayat-Ghajar (drift-flux). The saturated
+  properties are arguments; Re and We needed by Premoli are helper functions.
 
   Inputs : rho_l, rho_v [kg/m^3], x [-], mu_l, mu_v [Pa.s], sigma [N/m],
            d_hyd [m], G [kg/(m^2.s)], P [Pa], theta [deg from horizontal]
   Outputs: alpha [-] (one FUNCTION per correlation)
-  Units  : SI - temperatures in C, pressures in Pa, densities in kg/m^3
   Source : LaboThapPy (ULiège Thermodynamics Laboratory), commit f03f7f47,
            labothappy/correlations/void_fraction/void_fraction.py, Apache-2.0
            (licence of the model: MIT); correlations as in R. Dickes, PhD thesis
            ULiège, and J. R. Thome & A. Cioncolini, "Void Fraction", 2015
-  Status : BLOCKED by CS-BUG-IMPLICIT-PROC (void_fraction_Hughmark is implicit):
-           the runnable variant is void_fraction_correlations_coolsolve.eescode;
-           the other 12 correlations match the source. Details: README.md
+  Status : VERIFIED (130 values vs the source example re-run); see README.md
 =============================================================================}
 
 "!--- Dimensionless numbers of the original (helpers)"
@@ -116,13 +113,13 @@ END
 FUNCTION void_fraction_Hughmark(rho_l, rho_v, x, mu_l, mu_v, d_hyd, G)
 {VOID_FRACTION_HUGHMARK - Hughmark void fraction: the homogeneous void fraction
  corrected by an empirical factor K_h (slip-ratio family), as
- void_fraction_hughmark of the original. The original iterates on the void
- fraction through the mixture viscosity mu_mix = mu_l + alpha*(mu_v - mu_l);
- here that iteration is one implicit equation, the function result being the
- unknown.
+ void_fraction_hughmark of the original. The mixture viscosity depends on the
+ void fraction it corrects; as in the original (a Brent solve on the interval
+ [1e-6, 1-1e-6]) the root of alpha = K_h*alpha_h is found by an explicit
+ iteration in the body, here 60 bisection steps (FUNCTION bodies are explicit).
   x  = MIN(0.99, MAX(0.001, x))    quality clipped as in the original
   alpha_h = 1/(1 + (rho_v/rho_l)*(1-x)/x)
-  mu_mix = mu_l + void_fraction_Hughmark*(mu_v - mu_l)
+  mu_mix = mu_l + alpha*(mu_v - mu_l)
   Z  = (d_hyd*G/mu_mix)^(1/6)*((1/(9.81*d_hyd))*(G*x/(rho_v*alpha_h*(1-alpha_h)))^2)^(1/8)
   ln K_h = degree-4 polynomial fit of Hughmark's chart in LN(Z), as in the original
   alpha = K_h*alpha_h
@@ -138,11 +135,24 @@ Taken from: LaboThapPy, commit f03f7f47, void_fraction.py,
 
   x_Hughmark = MIN(0.99, MAX(0.001, x))
   alpha_h_H = 1/(1 + (rho_v/rho_l)*(1 - x_Hughmark)/x_Hughmark)
-  mu_mix = mu_l + void_fraction_Hughmark*(mu_v - mu_l)
-  Z_H = (d_hyd*G/mu_mix)^(1/6)*((1/(9.81*d_hyd))*(G*x_Hughmark/(rho_v*alpha_h_H*(1 - alpha_h_H)))^2)^(1/8)
-  LN_Z_H = LN(Z_H)
-  LN_K_h = -0.010060658854755*LN_Z_H^4 + 0.155594796014726*LN_Z_H^3 - 0.870912508715887*LN_Z_H^2 + 2.167004115373165*LN_Z_H - 2.224608445535130
-  void_fraction_Hughmark = EXP(LN_K_h)*alpha_h_H
+  alpha_lo_H = 1E-6
+  alpha_hi_H = 1 - 1E-6
+  n_it_H = 0
+  REPEAT
+    alpha_H = 0.5*(alpha_lo_H + alpha_hi_H)
+    mu_mix_H = mu_l + alpha_H*(mu_v - mu_l)
+    Z_H = (d_hyd*G/mu_mix_H)^(1/6)*((1/(9.81*d_hyd))*(G*x_Hughmark/(rho_v*alpha_h_H*(1 - alpha_h_H)))^2)^(1/8)
+    LN_Z_H = LN(Z_H)
+    LN_K_h = -0.010060658854755*LN_Z_H^4 + 0.155594796014726*LN_Z_H^3 - 0.870912508715887*LN_Z_H^2 + 2.167004115373165*LN_Z_H - 2.224608445535130
+    res_H = alpha_H - EXP(LN_K_h)*alpha_h_H
+    IF (res_H > 0) THEN
+      alpha_hi_H = alpha_H
+    ELSE
+      alpha_lo_H = alpha_H
+    ENDIF
+    n_it_H = n_it_H + 1
+  UNTIL (n_it_H >= 60)
+  void_fraction_Hughmark = 0.5*(alpha_lo_H + alpha_hi_H)
 END
 
 "!--- Empirical correlations"

@@ -182,3 +182,5 @@ Source file (EES 7.458, comments in French), collection of S. Quoilin:
 - `CSL-0148` *scroll_volume_ratio_cycle_r134a*: same ULiège series on R134a with
   a scroll compressor, where the built-in volume ratio of the machine is the
   geometric input and the pressure ratio it develops is an output.
+- `CSL-0319` *r22_chiller_r407c_heat_pump*: R22 chiller of the same ULiège series (repetition 10) with water circuits, an R407C
+  heat pump on its condenser heat, global COP and part-load factors.

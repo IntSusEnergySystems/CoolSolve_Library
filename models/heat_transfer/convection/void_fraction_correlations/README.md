@@ -1,6 +1,6 @@
 # Void-fraction correlations for two-phase flow (13 models)
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; 🧩 **Function library** &nbsp;|&nbsp; ⛔ **Blocked** (runnable variant verified) &nbsp;|&nbsp; `CSL-0131`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; 🧩 **Function library** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0131`
 
 EES `FUNCTION` library of the void-fraction correlations of
 [LaboThapPy](https://github.com/PyLaboThap/LaboThapPy) (ULiège Thermodynamics
@@ -12,24 +12,21 @@ Premoli needs are helper functions. The demonstration program reproduces the
 case of the original example, `void_fraction_example.py`: R410A at 1.2 MPa in
 an 8 mm pipe at a mass flux of 300 kg/m²·s, ten qualities from 0.05 to 0.95.
 
-The native file is **blocked** by the registered CoolSolve bug
-`CS-BUG-IMPLICIT-PROC`: the Hughmark correlation is implicit (the mixture
-viscosity depends on the void fraction it corrects) and CoolSolve silently does
-not solve an implicit equation sitting inside a multi-statement `FUNCTION` body.
-The native file is left in valid EES; the runnable variant
-`void_fraction_correlations_coolsolve.eescode` writes that one implicit equation
-in the main program and is **verified** against the original (130 values, max
-deviation 2.2·10⁻⁵).
+The Hughmark correlation is implicit (the mixture viscosity depends on the void
+fraction it corrects). As in the original, which solves it with a Brent root
+finder on [10⁻⁶, 1 − 10⁻⁶], its `FUNCTION` finds the root by an explicit
+iteration in the body (60 bisection steps). The model is **verified** against a re-run of the
+original example (130 values, max deviation 2.2·10⁻⁵).
 
 | | |
 |---|---|
 | **Category** | Heat transfer › Convection |
 | **Fluids** | the correlations are fluid-independent; the demonstration program uses R410A (CoolProp `'R410A'` is the EES fluid `R410A`, a real fluid — no renaming needed) |
-| **Size** | 161 equations after analysis (largest block: 1) in the native file, 171 in the variant; 15 functions of 4–37 lines |
+| **Size** | 161 equations after analysis (largest block: 1); 15 functions of 6–44 lines |
 | **Source** | [`LaboThapPy`](https://github.com/PyLaboThap/LaboThapPy), commit `f03f7f47`, file `labothappy/correlations/void_fraction/void_fraction.py` (Apache-2.0 `LICENSE.txt`, MIT `pyproject.toml`), helpers `compute_reynolds`/`compute_weber` of `labothappy/correlations/properties/dimensionless.py` and `get_saturated_phase_properties` of `labothappy/correlations/properties/two_phase.py`; inventory row `LTP-033` of `sources/labothappy/inventory.csv` |
 | **Authors** | Elise Neven (the `void_fraction.py` module); the authors of the correlations are credited in the comment block of each function and in `model.json` |
 | **License** | MIT (library decision D3) |
-| **CoolSolve** | 0.3.0 — native file **blocked** by `CS-BUG-IMPLICIT-PROC`; runnable variant **verified** against LaboThapPy `f03f7f47` (130 values, max deviation 2.2·10⁻⁵) |
+| **CoolSolve** | 0.4.0@9768373 — **verified** against LaboThapPy `f03f7f47` (130 values, max deviation 2.2·10⁻⁵), solves in 0 iterations |
 
 ## Problem statement
 
@@ -48,7 +45,7 @@ lets the caller choose — as `CSL-0130` does for the friction factors.
 | `void_fraction_Zivi` | rho_l, rho_v, x | S = (rho_l/rho_v)^(1/3) in the same slip-ratio form | slip ratio; annular, high quality |
 | `void_fraction_Fauske` | rho_l, rho_v, x | S = (rho_l/rho_v)^(1/2) | slip ratio; water–steam, high mass flux |
 | `void_fraction_Premoli` | rho_l, rho_v, x, mu_l, sigma, d_hyd, G | y = α_h/(1−α_h), F1 = 1.578·Re_l^−0.19·(rho_l/rho_v)^0.22, F2 = 0.0273·We_l·Re_l^−0.51·(rho_l/rho_v)^−0.08, S = 1 + F1·√(y/(1+y·F2) − y·F2) | slip ratio (CISE); vertical adiabatic upward flow |
-| `void_fraction_Hughmark` | rho_l, rho_v, x, mu_l, mu_v, d_hyd, G | Z = (d_hyd·G/mu_mix)^(1/6)·((G·x/(9.81·d_hyd·rho_v·α_h(1−α_h)))²)^(1/8), mu_mix = mu_l + α(mu_v − mu_l), ln K_h = degree-4 polynomial in ln Z, α = K_h·α_h | implicit slip ratio; vertical and horizontal gas–liquid hold-up |
+| `void_fraction_Hughmark` | rho_l, rho_v, x, mu_l, mu_v, d_hyd, G | Z = (d_hyd·G/mu_mix)^(1/6)·((G·x/(9.81·d_hyd·rho_v·α_h(1−α_h)))²)^(1/8), mu_mix = mu_l + α(mu_v − mu_l), ln K_h = degree-4 polynomial in ln Z, α = K_h·α_h | implicit slip ratio, solved by 60 bisection steps on [10⁻⁶, 1 − 10⁻⁶] (the original uses a Brent solve); vertical and horizontal gas–liquid hold-up |
 | `void_fraction_Lockhart_Martinelli` | rho_l, rho_v, x, mu_l, mu_v | X_tt = ((1−x)/x)^0.9·(mu_l/mu_v)^0.1·(rho_v/rho_l)^0.5; α = (1+X_tt^0.8)^−0.378 for X_tt ≤ 10, α = 0.823 − 0.157·ln X_tt above | empirical; both phases turbulent |
 | `void_fraction_Graham` | rho_v, x, d_hyd, G | F_t = √(x³G²/(9.81·rho_v²·d_hyd(1−x))), α = 1 − exp(−1 − 0.3·ln F_t − 0.0328·ln²F_t) for F_t > 0.01032, else 0 | condensation only |
 | `void_fraction_Cioncolini_Thome` | rho_l, rho_v, x | h = −2.129 + 3.129·(rho_v/rho_l)^−0.2186, n = 0.3487 + 0.6513·(rho_v/rho_l)^0.515, α = h·xⁿ/(1 + (h−1)xⁿ) | empirical; annular, 1.05–45.5 mm, macro and microscale |
@@ -82,15 +79,12 @@ only under two *different* definitions of the same name).
 ## How to run
 
 ```bash
-coolsolve ./void_fraction_correlations.eescode              # native file (Hughmark not solved)
-coolsolve ./void_fraction_correlations_coolsolve.eescode   # runnable variant
+coolsolve ./void_fraction_correlations.eescode
 ```
 
-The native file solves with `Solver: SUCCESS (0 iterations)` and reports
-`ALL EQUATIONS SATISFIED`, but the ten `alpha_Hughmark[i]` values are the
-unsolved guess of the implicit equation (see *Blocking gap*). The variant
-solves with `Solver: SUCCESS (40 iterations)` and is the regression baseline
-`void_fraction_correlations_coolsolve.sol`.
+The file solves with `Solver: SUCCESS (0 iterations)` (every equation is
+explicit; 161 equations, 161 blocks of size 1) and is the regression baseline
+`void_fraction_correlations.sol`.
 
 Until CoolSolve supports `$INCLUDE library:…` for functions
 (`CS-FEAT-IMPORT`), a model that needs these correlations copies the
@@ -99,7 +93,7 @@ lists `CSL-0131` in its `related` field.
 
 ## Results
 
-Values of the demonstration program (full precision in the `.sol` files). The
+Values of the demonstration program (full precision in the `.sol` file). The
 reference is the re-run of the original example (see *Verification*).
 
 Saturated R410A properties at 1.2 MPa (T_sat = 13.346 °C): `rho_l` = 1113.80
@@ -142,37 +136,32 @@ model choice matters only below about x = 0.8.
 
 ## Verification
 
-The card names `void_fraction_example.py` (LaboThapPy commit `f03f7f47`) as the
-source's own demonstration. It was re-run in a throw-away virtual environment
-under `work/void_fraction/` (`python3 -m venv`, then
-`pip install ~/git/LaboThapPy`, which brings CoolProp 8.0.0); the venv has been
-deleted with the rest of `work/`. Two scripts, both under `work/`:
-
-- `ref_void_fraction.py` — the original example, unchanged inputs (R410A,
-  P = 1.2 MPa, d_hyd = 8 mm, `m_dot = 300·A_cross`, ten qualities from 0.05 to
-  0.95), writing `ref_void_fraction.csv`: one row per quality with the thirteen
-  void fractions of `compute_void_fraction()`, plus the saturated properties. It
-  prints the same table as the original example.
-- `compare_void_fraction.py` — matches the 130 table values against a `.sol`
-  file (rtol = 10⁻³, the `compare_solution.py` default) and reports the largest
-  deviation.
+The reference is the source's own demonstration, `void_fraction_example.py`
+(LaboThapPy commit `f03f7f47`), re-run on 2026-10-31 in a throw-away virtual
+environment under `work/` (`pip install CoolProp numpy scipy`, CoolProp 8.0.0;
+the library itself is imported from the local clone, the `work/` folder was
+deleted afterwards). The script is the example unchanged (R410A, P = 1.2 MPa,
+d_hyd = 8 mm, `m_dot = 300·A_cross`, ten qualities from 0.05 to 0.95,
+`compute_void_fraction()` for the thirteen models) and writes the 130 void
+fractions; they were compared with the `.sol` file at rtol = 10⁻³ (relative
+deviation |a − b|/max(|a|, |b|)). `tools/compare_solution.py` is not used here: it
+reads a `name,value` list or one row of a parametric table, whereas the
+reference of a quality sweep is a 10×13 table.
 
 | File | 130 values compared | differing | largest relative deviation |
 |---|---:|---:|---|
-| `void_fraction_correlations_coolsolve.sol` (variant) | 130 | **0** | 2.203·10⁻⁵ (`void_fraction_Dix`, x = 0.95) |
-| `void_fraction_correlations.sol` (native) | 130 | 10 (all `alpha_Hughmark`) | 4.748·10⁻² (Hughmark, x = 0.05) |
+| `void_fraction_correlations.sol` | 130 | **0** | 2.203·10⁻⁵ (`void_fraction_Dix`, x = 0.95) |
 
-`tools/compare_solution.py` is not used directly here: it reads a
-`name,value` list or one row of a parametric table, whereas the reference of a
-quality sweep is a 10×13 table; `compare_void_fraction.py` is the same
-comparison (same rtol and same definition of the relative deviation) written for
-that shape, 25 lines, and it is quoted verbatim in the table above.
+The ten `alpha_Hughmark` values agree with the Brent solution of the original to
+8.2·10⁻⁹ (relative; the original stops at a function tolerance of 10⁻⁸, the
+bisection interval after 60 steps is 10⁻¹⁸ wide).
 
-Deviations below the 10⁻³ tolerance: the largest is 2.2·10⁻⁵ on `Dix` at
-x = 0.95, and comes from the surface tension — see the next section. All other
-differences are at the 10⁻¹⁶ level (double-precision round-off of the same
-arithmetic). Every other model agrees to the last printed digit of the original
-table.
+Deviations below the 10⁻³ tolerance: the largest per correlation are 2.2·10⁻⁵
+(Dix, x = 0.95), 1.9·10⁻⁵ (Premoli), 9.2·10⁻⁶ (Rouhani-Axelsson) and 7.3·10⁻⁶
+(Woldesemayat-Ghajar); the four come from the surface tension — see the next
+section. Hughmark differs by 8.2·10⁻⁹ (root tolerance of the original, above) and
+the eight remaining correlations by 2·10⁻¹³ or less (round-off of the same
+arithmetic).
 
 Excluded from the comparison: the branch-check variables of the demonstration
 program (`alpha_Woldesemayat_Ghajar_45`, `alpha_Graham_lowG`, `alpha_LM_low`,
@@ -199,79 +188,30 @@ property function works as documented on the saturated boundary — and it is
 recorded here because the model does not reproduce the source's `sigma(x)`
 exactly.
 
-## Blocking gap
+## Hughmark: explicit iteration in the function body
 
-**`CS-BUG-IMPLICIT-PROC`** (registered, P1 silent, found while importing
-`CSL-0158`): *"An implicit equation in a `FUNCTION`/`PROCEDURE` body that has
-other statements is silently not solved: the implicit variable keeps its
-guess/default."* This model is the second occurrence, and the first with a
-`FUNCTION` rather than a `PROCEDURE`.
+The Hughmark void fraction is the root of `alpha = K_h(alpha)·alpha_h`, because
+the mixture viscosity `mu_mix = mu_l + alpha·(mu_v − mu_l)` inside `Z` depends on
+`alpha`. The original calls `zero_brent(1e-6, 1-1e-6, …)` on the residual
+`alpha − K_h·alpha_h` (function tolerance 10⁻⁸). The body of `FUNCTION
+void_fraction_Hughmark` therefore carries its own iteration, in explicit form
+(assignments executed in order):
 
-`void_fraction_Hughmark` is such a body: `mu_mix = mu_l +
-void_fraction_Hughmark*(mu_v - mu_l)` uses the function's own (unknown) result
-before the last statement defines it. CoolSolve evaluates the body
-procedurally — as the register §8 note on a body variable used before its assignment describes —
-and the result is the *last statement evaluated with the default guess* rather
-than the root, with `SUCCESS` and no warning. Evidence on this build:
+1. `alpha_h_H` is computed from the clipped quality;
+2. 60 bisection steps (`REPEAT … UNTIL n_it_H >= 60`) on [10⁻⁶, 1 − 10⁻⁶]: the
+   mid-point gives `mu_mix_H`, `Z_H`, `LN_K_h` and the residual
+   `res_H = alpha_H − EXP(LN_K_h)·alpha_h_H`; a positive residual moves the upper
+   bound, otherwise the lower bound;
+3. the function value is the mid-point of the final interval.
 
-- the native file solves with `Solver: SUCCESS (0 iterations)` and
-  `coolsolve -d` reports `ALL EQUATIONS SATISFIED` (max residual 5.6·10⁻¹⁷),
-  yet `alpha_Hughmark[1]` = 0.446082 instead of 0.424902 (4.7 %);
-- the reproducer of the register row applies unchanged to a `FUNCTION`
-  (valid EES, deleted with `work/`):
-
-  ```
-  FUNCTION fq(r:x)
-    g = r*2
-    1/SQRT(x) = -2*LOG10(0.001/3.7 + 2.51/(1E5*SQRT(x)))
-  END
-  x = 0.0175
-  z = fq(1)*0
-  ```
-
-  → *SUCCESS*, `x` = 0.0175 (EES: 0.0222) — the implicit variable keeps its
-  initial value, exactly as in the register row;
-- a **single-statement** implicit body does solve (the register already notes
-  this), and moving the same Hughmark equations to the main program solves them
-  to the root: the 14-equation standalone equivalent of
-  `void_fraction_Hughmark` converges in 19 iterations to 0.4249030, i.e. the root
-  that both the original `zero_brent` and the variant return.
-
-No new row was registered: the gap is already in §5 of
-`CoolSolve/docs/model_library_support.md`, and this model is added there as
-further evidence (see *Back-links*). The same analysis applies to the original
-Python solver: `zero_brent(1e-6, 1-1e-6, …)` on the residual returns
-0.4249024218189828 for x = 0.05, which is the root found here — the source and
-the variant agree; only CoolSolve's function-body evaluation does not.
-
-### Runnable variant: `void_fraction_correlations_coolsolve.eescode`
-
-One change, forced by the gap, and it is the workaround the register row itself
-recommends ("move the implicit equation and the variables it needs to the main
-program and pass the result to the routine"):
-
-| Native | Variant |
-|---|---|
-| `FUNCTION void_fraction_Hughmark(rho_l, rho_v, x, mu_l, mu_v, d_hyd, G)` — the implicit relation inside the body | `FUNCTION K_Hughmark(alpha, rho_l, rho_v, x, mu_l, mu_v, d_hyd, G)` — returns the explicit correction factor K_h for a given trial void fraction `alpha`; the local names of the body keep their `_H` suffix, the caller's `void_fraction_Hughmark` disappears |
-| `alpha_Hughmark[i] = void_fraction_Hughmark(...)` (one statement) | `alpha_hughmark_h[i] = void_fraction_homogeneous(...)` and `alpha_Hughmark[i] = K_Hughmark(alpha_Hughmark[i], ...)*alpha_hughmark_h[i]` — the same relation, written as an equation of the main program, with the homogeneous void fraction named `alpha_hughmark_h[i]` because `alpha_h` is already the local of the `K_Hughmark` body |
-
-Everything else is byte-identical: the other twelve correlations, their comment
-blocks, the demonstration inputs, the quality grid and the branch checks. No
-CoolSolve-only syntax is used; the variant is valid EES as well (EES solves the
-implicit equation of a main program directly). The block sizes stay at 1 (the ten
-Hughmark equations form one 5-variable block each), and the whole file converges
-in 40 Newton iterations.
-
-### Native file status
-
-`blocked`, with `CS-BUG-IMPLICIT-PROC` in `missing_features`. The other twelve
-correlations of the native file are correct — 120 of the 130 compared values
-agree within 10⁻³, the ten exceptions being `alpha_Hughmark` — so a model that
-needs only, say, the drift-flux correlations can use the native file as it
-stands; it is the Hughmark function alone that is affected. Because the file is
-a function library whose demonstration program does call Hughmark, the model is
-shipped as a whole with the blocked status rather than pretending the native
-file runs correctly.
+Same bracket as the original; as in the original, a quality for which the
+residual has the same sign at both ends of the bracket has no root and the
+bisection returns one end of the interval. In the demonstration case the root is
+unique and the ten values agree with the Brent solution of the original to
+8.2·10⁻⁹ (see *Verification*). CoolSolve rejects an implicit statement inside a `FUNCTION` body (parse error
+*"variable … is read in FUNCTION … before it is assigned"*, register
+`CS-BUG-IMPLICIT-PROC`), which is why the root is not written as an implicit
+equation of the body.
 
 ## Source and attribution
 
@@ -368,16 +308,22 @@ Added to the existing lists, nothing removed or reordered:
    are reproduced.
 7. **`sigma` at the saturation temperature instead of at the quality** — see
    *Verification*.
-8. **`COS`/`SIN` in `K_Hughmark`**: none needed; the variant only reorders the
-   Hughmark equations (see *Runnable variant*).
+8. **Hughmark root.** The Brent solve of the original becomes 60 bisection
+   steps in the body of the function (see *Hughmark: explicit iteration*); the
+   local names carry the suffix `_H`.
 9. **Fluid name.** The example uses CoolProp `'R410A'`, which is the EES real
    fluid `R410A` as well — the EES ideal-gas substances are the chemical
    formulas only, so no renaming applies (contrast `CO2` → `R744` in the
    `CSL-0014` translation).
 10. **Level.** Taxonomy §3 score: 2 (intermediate) — 13 short algebraic
-    correlations, one implicit relation, a property backend and a 10-case sweep
+    correlations, one iterated relation, a property backend and a 10-case sweep
     in the demonstration program; no network, no design loop, no iteration
     variables.
+
+11. **Re-check 2026-10-31 (card C-452, CoolSolve 0.4.0@9768373).** The Hughmark
+    root is found by the explicit bisection above; the file was re-run and
+    re-compared with the source example (130 values, 0 differ at rtol = 10⁻³,
+    max 2.203·10⁻⁵); the `.sol` baseline is that of this file.
 
 ## Notes and open points
 
@@ -412,6 +358,6 @@ Added to the existing lists, nothing removed or reordered:
 3. R. Dickes, *Charge-sensitive methods for the off-design performance
    characterization of organic Rankine cycle (ORC) power systems*, PhD thesis,
    Université de Liège.
-4. S. Quoilin, *CoolSolve Library*, model `CSL-0131`; CoolSolve 0.3.0 build
-   `7addbbc`; register `CS-BUG-IMPLICIT-PROC` of
+4. S. Quoilin, *CoolSolve Library*, model `CSL-0131`; CoolSolve 0.4.0 build
+   `9768373`; register `CS-BUG-IMPLICIT-PROC` of
    `CoolSolve/docs/model_library_support.md` §5.

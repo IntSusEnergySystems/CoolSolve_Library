@@ -253,3 +253,4 @@ stripping the comments and the blank lines:
   way.
 - `CSL-0057` *two_tanks_max_work_air*: two rigid vessels again, this time as
   an ideal-gas maximum-work (exergy) problem, same course and import route.
+- `CSL-0320` (*R12 tank discharge with heat supply*): the unsteady uniform-state energy balance (heat supply, outflow enthalpy and kinetic energy) that this model's mass/volume balances do not carry.

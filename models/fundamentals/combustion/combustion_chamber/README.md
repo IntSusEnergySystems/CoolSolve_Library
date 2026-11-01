@@ -316,3 +316,5 @@ result table `tests/test_models/cgam-ebsilon-results.csv` (CGAM benchmark).
   `LHV_fuel` function) between an air compressor and a turbine.
 - `CSL-0146` *cgam_cogeneration*: the CGAM benchmark, i.e. this chamber
   (diabatic, TIT given, fuel flow free) inside the full cogeneration cycle.
+- `CSL-0323` *h2_electrolyzer_fuel_cell*: the electrochemical route of the same TESPy snapshot (water electrolyser and H₂/O₂ fuel cell, HHV/LHV efficiencies,
+  heat to a coolant) where this chamber releases the reaction enthalpy of H₂ as flame heat.

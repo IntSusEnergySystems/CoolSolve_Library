@@ -245,3 +245,4 @@ CoolSolve repository as a test case.
 - CoolSolve example `simple_centrifugal_compressor.eescode` (`CSX-043`):
   same exercise, kept in CoolSolve as a test case.
 - `CSL-0318` *cordier_specific_speed*: Cordier line giving the specific diameter from the specific speed, as a pre-design alternative to the given flow and enthalpy factors.
+- `CSL-0328` *radial_machine_loss_models*: rotor and stator loss breakdown (J/kg) of a centrifugal compressor from its geometry and velocity triangles.

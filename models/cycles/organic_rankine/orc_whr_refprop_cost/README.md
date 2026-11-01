@@ -265,3 +265,5 @@ itself.
 - `CSL-0154` *investment_npv_payback*: economic evaluation of the investment
   (NPV, discounted and simple payback time) computed from the equipment cost of
   this model.
+- `CSL-0312` *orc_offdesign_scroll_expander* — first off-design ORC of the library (semi-empirical expander, moving-boundary plate HX); this model is the design-point counterpart.
+

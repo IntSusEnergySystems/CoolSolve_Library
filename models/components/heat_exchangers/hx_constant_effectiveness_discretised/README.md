@@ -215,3 +215,4 @@ Local source clone: `~/git/LaboThapPy` (commit `f03f7f47`); inventory candidate
   library (finite-volume cells, UA-based, procedure-driven).
 - CSL-0138 (hx_moving_boundary_bell): moving-boundary (Bell 2015) translation of the same zone-delimited heat-exchanger family (TESPy TSP-014).
 - `CSL-0315` *ua_cecchinato_partload*: the Cecchinato et al. (2010) UA part-load scaling law (function library, TESPy).
+- `CSL-0322` *pche_htc*: PCHE channel heat-transfer coefficients (LaboThapPy), the kind of coefficient a sCO2 recuperator of this type needs.

@@ -285,3 +285,4 @@ Handbook* (HEDH), Hemisphere, Washington, 1983.
 - `sources/labothappy` LTP-069/LTP-070 (LaboThapPy shell-and-tube sizing by
   particle-swarm optimisation): same intent, different method; the `ht`
   families are the correlation reference.
+- `CSL-0321` *shell_side_htc*: the shell-side heat-transfer coefficient (Kern, Donohue, Bell-Delaware) of the exchanger whose bundle and baffle geometry is sized here.

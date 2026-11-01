@@ -1,0 +1,210 @@
+{=============================================================================
+  Water electrolyser and H2/O2 fuel cell (species flows, HHV/LHV efficiency, heat)
+  CoolSolve Library model CSL-0323
+ -----------------------------------------------------------------------------
+  Two electrochemical reactors in one file, translated from the TESPy components
+  WaterElectrolyzer and FuelCell: H2O -> H2 + 1/2 O2 and the reverse. Mass flows
+  from the stoichiometry, energy balance with the formation enthalpy (-286 kJ/mol,
+  liquid water, 25 degC, 1 bar), efficiency eta = (m_H2 e0)/P (HHV basis) and heat
+  to a cooling-water stream. Cases (index i = electrolyser, j = fuel cell): TESPy
+  docstring design (i=1) and 20 % off-design with the eta characteristic (i=2),
+  test cases (i=3, 4), fuel cell docstring (j=1), test case (j=2), round trip (j=3).
+  Added to the original: LHV efficiencies, check of e0 with the CoolSolve species,
+  warnings for eta beyond the reversible limit. The fuel-cell energy balance has the
+  sign of its power corrected (first law, see README: TESPy bug).
+  Units  : SI - temperatures in degC, pressures in Pa, energies in J
+  Source : F. Witte, B. W. Portner, J. Wronski et al. (TESPy, MIT),
+           https://github.com/oemof/tespy commit 19425523 - see README.md
+  Status : verified against TESPy re-run (README); needs the table h2_electrolyzer_fuel_cell-eta_char.csv
+=============================================================================}
+
+PROCEDURE eta_char_el(x_rel : f_char, flag_range)
+  "efficiency characteristic of the electrolyser (default line of TESPy, data/char_lines.json): f_char = eta/eta_design vs x_rel = M_H2/M_H2_design; outside the table as in TESPy the end value is kept (flagged)"
+  x_c := x_rel
+  flag_range := 0
+  if (x_rel < 0) then x_c := 0
+  if (x_rel < 0) then flag_range := 1
+  if (x_rel < 0) then call warning('eta characteristic: relative hydrogen flow below 0, end value used. A value of xxxE4 was supplied',x_rel)
+  if (x_rel > 1.333) then x_c := 1.333
+  if (x_rel > 1.333) then flag_range := 1
+  if (x_rel > 1.333) then call warning('eta characteristic: relative hydrogen flow above 1.333, end value used. A value of xxxE4 was supplied',x_rel)
+  f_char := interpolate('eta_char','x','y',x_c)
+END
+
+PROCEDURE check_electrolyser(eta, Q_dot_cw, P_in, eta_max : flag_2nd, flag_heat)
+  "flags: eta (HHV basis) above the reversible limit eta_max = DH/DG; heat must be supplied (Q_dot_cw < 0 beyond round-off of 1E-9 of the power input, eta > 1)"
+  flag_2nd := 0
+  flag_heat := 0
+  if (eta > eta_max) then flag_2nd := 1
+  if (eta > eta_max) then call warning('electrolyser efficiency above the reversible limit DH/DG (second law). A value of xxxE4 was supplied',eta)
+  if (Q_dot_cw < -1E-9*P_in) then flag_heat := 1
+  if (Q_dot_cw < -1E-9*P_in) then call warning('electrolyser needs heat from outside (eta above 1 on the HHV basis). Heat to the coolant [W]: xxxE4',Q_dot_cw)
+END
+
+PROCEDURE check_fuel_cell(eta, P_out, eta_max : flag_2nd, flag_power)
+  "flags: eta (HHV basis) above the reversible limit eta_max = DG/DH; power output not positive"
+  flag_2nd := 0
+  flag_power := 0
+  if (eta > eta_max) then flag_2nd := 1
+  if (eta > eta_max) then call warning('fuel cell efficiency above the reversible limit DG/DH (second law). A value of xxxE4 was supplied',eta)
+  if (P_out <= 0) then flag_power := 1
+  if (P_out <= 0) then call warning('fuel cell power output is not positive. A value of xxxE4 was supplied',P_out)
+END
+
+"!Constants, as in the original (reaction H2 + 1/2 O2 -> H2O(l), reference 25 degC and 1 bar)"
+DH_f_H2O = -286000 [J/mol]      "molar formation enthalpy of liquid water, as in the original"
+T_ref = 25 [C]                  "reference temperature, 298.15 K in the original"
+P_ref = 1E5 [Pa]                "reference pressure, as in the original"
+M_H2 = molarmass(Hydrogen)      "[kg/kmol]"
+M_O2 = molarmass(Oxygen)        "[kg/kmol]"
+f_O2 = M_O2/(M_O2 + 2*M_H2)     "mass of O2 per mass of H2O, as in the original [kg/kg]"
+e0 = -DH_f_H2O*1000/M_H2        "minimum specific energy of electrolysis (HHV of H2) [J/kg of H2]"
+h_ref_H2 = enthalpy(Hydrogen,T=T_ref,P=P_ref)  "[J/kg]"
+h_ref_O2 = enthalpy(Oxygen,T=T_ref,P=P_ref)    "[J/kg]"
+h_ref_w  = enthalpy(Water,T=T_ref,P=P_ref)     "[J/kg]"
+
+"!Water electrolyser - inputs per case (cooling water, feed water, product gases)"
+"case 1: TESPy docstring design (100 l/s of H2 at 10 bar, 50 degC, eta = 0.8, pr = 0.99)"
+"case 2: same plant at 20 % of the design power, eta from the characteristic, cooling pressure loss from zeta/D^4"
+"case 3: test_reactors.py, eta = 0.8 and heat output 800 kW; case 4: eta = 1, P = 2.5 MW (heat output must be 0)"
+T_w_el[1] = 15 [C]
+P_w_el[1] = 10E5 [Pa]
+T_g_el[1] = 50 [C]
+T_cwi_el[1] = 15 [C]
+P_cwi_el[1] = 5E5 [Pa]
+T_cwo_el[1] = 45 [C]
+T_w_el[2] = 15 [C]
+P_w_el[2] = 10E5 [Pa]
+T_g_el[2] = 50 [C]
+T_cwi_el[2] = 15 [C]
+P_cwi_el[2] = 5E5 [Pa]
+T_cwo_el[2] = 45 [C]
+T_w_el[3] = 25 [C]
+P_w_el[3] = 1E5 [Pa]
+T_g_el[3] = 50 [C]
+T_cwi_el[3] = 20 [C]
+P_cwi_el[3] = 1E5 [Pa]
+T_cwo_el[3] = 45 [C]
+T_w_el[4] = 25 [C]
+P_w_el[4] = 1E5 [Pa]
+T_g_el[4] = 25 [C]
+T_cwi_el[4] = 20 [C]
+P_cwi_el[4] = 1E5 [Pa]
+T_cwo_el[4] = 45 [C]
+V_dot_H2_1 = 0.1 [m^3/s]      "100 l/s in the original"
+pr_el = 0.99                  "cooling-water pressure ratio of cases 1, 3, 4"
+eta_el[1] = 0.8               "design efficiency (HHV basis)"
+x_rel_max = 1.333
+
+"!Water electrolyser - balances of every case (DUPLICATE over the cases)"
+DUPLICATE i = 1, 4
+  P_g_el[i] = P_w_el[i]                                          "reactor pressure equality: feed water, O2 and H2 [Pa]"
+  h_w_el[i] = enthalpy(Water,T=T_w_el[i],P=P_w_el[i])            "feed water [J/kg]"
+  h_O2_el[i] = enthalpy(Oxygen,T=T_g_el[i],P=P_g_el[i])          "oxygen outlet [J/kg]"
+  h_H2_el[i] = enthalpy(Hydrogen,T=T_g_el[i],P=P_g_el[i])        "hydrogen outlet, same temperature as O2 [J/kg]"
+  h_cwi_el[i] = enthalpy(Water,T=T_cwi_el[i],P=P_cwi_el[i])      "cooling water inlet [J/kg]"
+  h_cwo_el[i] = enthalpy(Water,T=T_cwo_el[i],P=P_cwo_el[i])      "cooling water outlet [J/kg]"
+  M_dot_O2_el[i] = f_O2*M_dot_w_el[i]                            "[kg/s]"
+  M_dot_H2_el[i] = (1 - f_O2)*M_dot_w_el[i]                      "[kg/s]"
+  Q_dot_cw_el[i] = M_dot_cw_el[i]*(h_cwo_el[i] - h_cwi_el[i])    "heat to the cooling water [W]; TESPy Q = -Q_dot_cw_el"
+  P_el[i] = -M_dot_w_el[i]*(h_w_el[i] - h_ref_w) + Q_dot_cw_el[i] + M_dot_O2_el[i]*(h_O2_el[i] - h_ref_O2) + M_dot_H2_el[i]*(h_H2_el[i] - h_ref_H2 + e0)  "energy balance, electric power input [W]"
+  eta_el[i]*P_el[i] = M_dot_H2_el[i]*e0                          "efficiency, HHV basis"
+  e_el[i] = P_el[i]/M_dot_H2_el[i]                               "specific energy consumption [J/kg of H2]"
+  eta_LHV_el[i] = eta_el[i]*LHV_kg/e0                            "efficiency, LHV basis"
+  CALL check_electrolyser(eta_el[i], Q_dot_cw_el[i], P_el[i], eta_max_el : flag_2nd_el[i], flag_heat_el[i])
+END
+
+"!Water electrolyser - closure of every case"
+M_dot_H2_el[1] = V_dot_H2_1*density(Hydrogen,T=T_g_el[1],P=P_g_el[1])   "given hydrogen volume flow [kg/s]"
+P_cwo_el[1] = pr_el*P_cwi_el[1]
+P_el[2] = 0.2*P_el[1]                                          "given power"
+CALL eta_char_el(M_dot_H2_el[2]/M_dot_H2_el[1] : f_char_el2, flag_char_el2)
+eta_el[2] = eta_el[1]*f_char_el2                               "eta_char of the original"
+"cooling-water pressure loss: zeta/D^4 fixed at the design point (case 1), as the off-design of the original"
+v_cwi_el[1] = 1/density(Water,T=T_cwi_el[1],P=P_cwi_el[1])
+v_cwo_el[1] = 1/density(Water,T=T_cwo_el[1],P=P_cwo_el[1])
+zeta_d4_el = (P_cwi_el[1] - P_cwo_el[1])*pi^2/(4*M_dot_cw_el[1]^2*(v_cwi_el[1] + v_cwo_el[1]))   "[1/m^4]"
+v_cwi_el[2] = 1/density(Water,T=T_cwi_el[2],P=P_cwi_el[2])
+v_cwo_el[2] = 1/density(Water,T=T_cwo_el[2],P=P_cwo_el[2])
+P_cwi_el[2] - P_cwo_el[2] = zeta_d4_el*4*M_dot_cw_el[2]^2*(v_cwi_el[2] + v_cwo_el[2])/pi^2
+eta_el[3] = 0.8
+Q_dot_cw_el[3] = 8E5 [W]       "800 kW, Q = -8E5 in the original sign"
+P_cwo_el[3] = pr_el*P_cwi_el[3]
+eta_el[4] = 1
+P_el[4] = 2.5E6 [W]
+P_cwo_el[4] = pr_el*P_cwi_el[4]
+
+"!Fuel cell - inputs per case (cooling water, reactants, water out)"
+"case 1: TESPy docstring (200 kW, eta = 0.45, pr = 0.9, cooling water 25 -> 40 degC, water out at 50 degC)"
+"case 2: test_reactors.py (0.01 kg/s of H2, eta = 0.45, pr = 0.98); case 3: round trip, gases of electrolyser case 1, eta = 0.5"
+T_cwi_fc[1] = 25 [C]
+P_cwi_fc[1] = 1E5 [Pa]
+T_cwo_fc[1] = 40 [C]
+T_O2_fc[1] = 25 [C]
+T_H2_fc[1] = 25 [C]
+P_r_fc[1] = 1E5 [Pa]
+T_w_fc[1] = 50 [C]
+pr_fc[1] = 0.9
+T_cwi_fc[2] = 20 [C]
+P_cwi_fc[2] = 1E5 [Pa]
+T_cwo_fc[2] = 40 [C]
+T_O2_fc[2] = 25 [C]
+T_H2_fc[2] = 25 [C]
+P_r_fc[2] = 1E5 [Pa]
+T_w_fc[2] = 50 [C]
+pr_fc[2] = 0.98
+T_cwi_fc[3] = 20 [C]
+P_cwi_fc[3] = 1E5 [Pa]
+T_cwo_fc[3] = 40 [C]
+T_O2_fc[3] = T_g_el[1]
+T_H2_fc[3] = T_g_el[1]
+P_r_fc[3] = P_g_el[1]
+T_w_fc[3] = 50 [C]
+pr_fc[3] = 0.98
+
+"!Fuel cell - balances of every case (power output P_fc positive; TESPy P = -P_fc)"
+DUPLICATE j = 1, 3
+  P_cwo_fc[j] = pr_fc[j]*P_cwi_fc[j]
+  h_cwi_fc[j] = enthalpy(Water,T=T_cwi_fc[j],P=P_cwi_fc[j])      "[J/kg]"
+  h_cwo_fc[j] = enthalpy(Water,T=T_cwo_fc[j],P=P_cwo_fc[j])      "[J/kg]"
+  h_O2_fc[j] = enthalpy(Oxygen,T=T_O2_fc[j],P=P_r_fc[j])         "oxygen inlet [J/kg]"
+  h_H2_fc[j] = enthalpy(Hydrogen,T=T_H2_fc[j],P=P_r_fc[j])       "hydrogen inlet [J/kg]"
+  h_w_fc[j] = enthalpy(Water,T=T_w_fc[j],P=P_r_fc[j])            "product water, liquid, at the reactor pressure [J/kg]"
+  M_dot_O2_fc[j] = f_O2*M_dot_w_fc[j]                            "[kg/s]"
+  M_dot_H2_fc[j] = (1 - f_O2)*M_dot_w_fc[j]                      "[kg/s]"
+  Q_dot_cw_fc[j] = M_dot_cw_fc[j]*(h_cwo_fc[j] - h_cwi_fc[j])    "heat to the cooling water [W]"
+  "first law (reaction enthalpy -e0 per kg of H2 released): P_fc = H2 and O2 in - water out - heat to the cooling water"
+  P_fc[j] = M_dot_H2_fc[j]*(h_H2_fc[j] - h_ref_H2 + e0) + M_dot_O2_fc[j]*(h_O2_fc[j] - h_ref_O2) - M_dot_w_fc[j]*(h_w_fc[j] - h_ref_w) - Q_dot_cw_fc[j]
+  eta_fc[j]*M_dot_H2_fc[j]*e0 = P_fc[j]                          "efficiency, HHV basis"
+  e_fc[j] = P_fc[j]/M_dot_H2_fc[j]                               "specific energy output [J/kg of H2]"
+  eta_LHV_fc[j] = eta_fc[j]*e0/LHV_kg                            "efficiency, LHV basis"
+  CALL check_fuel_cell(eta_fc[j], P_fc[j], eta_max_fc : flag_2nd_fc[j], flag_power_fc[j])
+END
+
+"!Fuel cell - closure of every case"
+P_fc[1] = 200E3 [W]     "P = -200E3 in the original sign"
+eta_fc[1] = 0.45
+M_dot_H2_fc[2] = 0.01 [kg/s]
+eta_fc[2] = 0.45
+M_dot_H2_fc[3] = M_dot_H2_el[1]       "hydrogen of the electrolyser, case 1"
+eta_fc[3] = 0.5
+
+"!Round trip power -> H2 -> power (electrolyser case 1, fuel cell case 3)"
+eta_rt = P_fc[3]/P_el[1]                    "power-to-power efficiency [-]"
+eta_rt_check = eta_el[1]*eta_fc[3]          "must equal eta_rt (both are HHV-based with the same H2 flow)"
+Q_dot_rt = Q_dot_cw_el[1] + Q_dot_cw_fc[3]  "total heat to the cooling waters [W]"
+
+"!Checks added to the original: e0 and LHV from the CoolSolve ideal-gas species, reversible limits"
+h_H2_ig = enthalpy(H2,T=T_ref,P=P_ref)           "ideal-gas H2, formation enthalpy included [J/kg]"
+h_O2_ig = enthalpy(O2,T=T_ref,P=P_ref)           "[J/kg]"
+h_H2O_ig = enthalpy(H2O,T=T_ref,P=2000)          "ideal-gas H2O vapour (2 kPa, below the saturation pressure at 25 degC) [J/kg]"
+M_Wa = molarmass(Water)                          "[kg/kmol]"
+LHV_mol = M_H2*h_H2_ig + 0.5*M_O2*h_O2_ig - M_Wa*h_H2O_ig   "lower heating value [J/kmol of H2]"
+LHV_kg = LHV_mol/M_H2                            "[J/kg of H2]"
+h_fg_w = enthalpy(Water,T=T_ref,x=1) - enthalpy(Water,T=T_ref,x=0)   "latent heat of water at 25 degC [J/kg]"
+HHV_kg = LHV_kg + (M_Wa/M_H2)*h_fg_w             "higher heating value from the species and the latent heat [J/kg of H2]"
+dev_e0_HHV = e0/HHV_kg - 1                       "constant -286 kJ/mol of the original vs HHV computed here [-]"
+LHV_over_HHV = LHV_kg/e0
+DG_f_H2O = -237130 [J/mol]    "Gibbs energy of formation of liquid water at 25 degC, literature value (not in the original)"
+eta_max_el = DH_f_H2O/DG_f_H2O     "reversible limit of the electrolyser on the HHV basis (DH/DG)"
+eta_max_fc = DG_f_H2O/DH_f_H2O     "reversible limit of the fuel cell on the HHV basis (DG/DH)"

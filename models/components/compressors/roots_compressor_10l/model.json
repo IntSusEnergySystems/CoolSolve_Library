@@ -24,13 +24,13 @@
     "course": "ULiège MSTh, machines et systèmes thermiques, repetition R2, exercise 2 bis"
   },
   "verification": {
-    "summary": "No CoolSolve solution, so compare_solution.py was not run. The square window has no real root: the 5 cm inlet orifice chokes near 0.463 kg/s and the fresh-charge flow is 0.505 kg/s. Shipped initials: Newton stops at iteration 100 (residual 3.438). No initials: line search fails at iteration 0 (residual 1038). Stored P_thr is negative, so the EES point is not a solution.",
-    "checks": [],
-    "reference": "EES stored solution in R2 - EX 2 - SB - Bis.EES (50 values; the decoded name C is empty). Not a converged solution of the active equation window.",
-    "date": "2026-10-15",
-    "coolsolve_version": "0.3.0@ae7946e",
-    "max_rel_diff": null,
-    "notes": "CoolSolve 0.3.0 binary mtime 2026-10-15 20:23:51 is commit ae7946e. The same residual 3.438 was first seen on f5b79cd. With the shipped initials, block 16 (6 variables: C_thr, V_dot_thr, v_thr, h_thr, T_thr, P_thr) stops at Newton iteration 100, residual 3.438073. Without initials the line search fails at iteration 0, residual 1038.346181. The raw stored initials (EES enthalpies, P_thr = -74168.5 Pa) also stop at iteration 100, residual 20599.127227. A sonic, CoolProp-consistent start of the same six equations, run through Newton, TrustRegion, LevenbergMarquardt, BisectionND, Homotopy and Partitioned, stalls near residual 0.024. On ideal-gas Air the orifice mass flow peaks near 0.463 kg/s at about 52.8 kPa; the fresh-charge flow fixed by epsilon_v is 0.505 kg/s. At 20 °C and 1e5 Pa, CoolSolve enthalpy is 419404.9217559 J/kg and the stored h_su_0 is 293534.3441 J/kg (CoolSolve - EES = +125870.5776559 J/kg). Entropy is 3867.259359479 versus 5682.126158 J/kg-K. Specific volume is 0.8411720268193 versus 0.8414254791 m^3/kg (relative difference 3.0e-4). The enthalpy offset is separate from the missing root. No .sol. Fluid left as Air."
+    "summary": "Native file: no solution (5 cm inlet orifice cannot pass the fresh-charge flow). Variant roots_compressor_10l_no_inlet_drop (TM-0034, no orifice): 26/34 values of its EES stored solution agree; the 8 h/s differ by the Air reference offset, all 34 agree after that shift (max 3.22e-4).",
+    "checks": ["ees-stored-solution"],
+    "reference": "Native file: EES stored solution in R2 - EX 2 - SB - Bis.EES (50 values; the decoded name C is empty), not a solution of the active window. Variant: EES stored solution of MSTh-SB-R2-Ex2.EES (34 values).",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.000322,
+    "notes": "max_rel_diff and checks concern the variant roots_compressor_10l_no_inlet_drop (34/34 after a constant h/s reference shift of the 8 enthalpy/entropy values; raw compare_solution.py: 8 differ, 26 agree at rtol 1e-3; solved with its .initials). Native file re-run on 0.4.0@9768373: still block 16, Newton iteration 100, residual 3.43807. Details of the 0.3.0@ae7946e native analysis: CoolSolve 0.3.0 binary mtime 2026-10-15 20:23:51 is commit ae7946e. The same residual 3.438 was first seen on f5b79cd. With the shipped initials, block 16 (6 variables: C_thr, V_dot_thr, v_thr, h_thr, T_thr, P_thr) stops at Newton iteration 100, residual 3.438073. Without initials the line search fails at iteration 0, residual 1038.346181. The raw stored initials (EES enthalpies, P_thr = -74168.5 Pa) also stop at iteration 100, residual 20599.127227. A sonic, CoolProp-consistent start of the same six equations, run through Newton, TrustRegion, LevenbergMarquardt, BisectionND, Homotopy and Partitioned, stalls near residual 0.024. On ideal-gas Air the orifice mass flow peaks near 0.463 kg/s at about 52.8 kPa; the fresh-charge flow fixed by epsilon_v is 0.505 kg/s. At 20 °C and 1e5 Pa, CoolSolve enthalpy is 419404.9217559 J/kg and the stored h_su_0 is 293534.3441 J/kg (CoolSolve - EES = +125870.5776559 J/kg). Entropy is 3867.259359479 versus 5682.126158 J/kg-K. Specific volume is 0.8411720268193 versus 0.8414254791 m^3/kg (relative difference 3.0e-4). The enthalpy offset is separate from the missing root. No .sol for the native file. Fluid left as Air."
   },
   "missing_features": [],
   "related": [],
@@ -38,6 +38,7 @@
   "supersedes": [],
   "previous_paths": [],
   "history": [
-    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"},
+    {"date": "2026-10-31", "action": "variant added: roots_compressor_10l_no_inlet_drop (TM-0034, no inlet orifice, verified against its EES stored solution); TM-0037 merged", "by": "Claude Code worker (card C-380)"}
   ]
 }

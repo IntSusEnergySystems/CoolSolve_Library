@@ -1,0 +1,171 @@
+{=============================================================================
+  Zeotropic propane/isobutane heat pump with glide-matching heat exchangers
+  CoolSolve Library model CSL-0324
+ -----------------------------------------------------------------------------
+  Translation of the TESPy how-to "Zeotropic mixtures in a heat pump"
+  (ZeotropicHeatPumpModel): compressor (constant isentropic efficiency),
+  condenser, isenthalpic valve and evaporator between two water streams, with
+  a propane/isobutane working fluid (mole fractions in the string fluid$).
+  Both exchangers are sectioned (50 sections of equal heat, plus the bubble
+  and dew points): the minimum temperature difference over the sections is
+  imposed, so the glide of the mixture sets both pressures. Superheat over the
+  dew point, subcooling under the bubble point. The composition sweep of the
+  original is run by changing fluid$ (README.md).
+  Inputs : fluid$, eta_s, Q_dot_cd, DELTAT_dew, DELTAT_bub, td_pinch, waters
+  Outputs: P_ev, P_cd, COP, VHC, condenser glide, section profiles
+  Units  : SI - temperatures in degC, pressures in Pa, energies in J
+  Source : F. Witte et al., TESPy (MIT), github.com/oemof/tespy, how-to
+           zeotropic_heat_pump.ipynb, commit 19425523 - see README.md
+  Status : verified vs a re-run of the TESPy model (CoolProp HEOS); needs .initials
+=============================================================================}
+
+"Cand: temperature difference at a saturation point if it lies inside the exchanger (0 <= f <= 1), else dT_end (an end value already in the grid)"
+FUNCTION Cand(f, dT, dT_end)
+  IF ((f >= 0) AND (f <= 1)) THEN
+    Cand = dT
+  ELSE
+    Cand = dT_end
+  ENDIF
+END
+
+"Temperature of a mixture at (P, h) [C], P [Pa], h [J/kg]: the (P,h) flash of CoolProp is slow for mixtures (about 0.1-0.2 s per call);
+ this function inverts the fast (P,x) and (P,T) calls instead (secant iteration, tolerance 1e-8 J/kg). Same result as TEMPERATURE(fl$,P=P,h=h) within 1.1e-8 K on eight points of the solution (README)."
+FUNCTION Tmix_ph(fl$, P, h)
+  hl = ENTHALPY(fl$, P=P, x=0)
+  hv = ENTHALPY(fl$, P=P, x=1)
+  IF (h > hv + 0.000001) THEN
+    Ta = TEMPERATURE(fl$, P=P, x=1)
+    ha = hv
+    Tb = Ta + (h - hv)/CP(fl$, P=P, x=1)
+    hb = ENTHALPY(fl$, P=P, T=Tb)
+    n = 0
+    REPEAT
+      Tc = Tb - (hb - h)*(Tb - Ta)/(hb - ha)
+      Ta = Tb
+      ha = hb
+      Tb = Tc
+      hb = ENTHALPY(fl$, P=P, T=Tb)
+      n = n + 1
+    UNTIL (ABS(hb - h) < 0.00000001) OR (ABS(Tb - Ta) < 0.000000000001) OR (n > 30)
+    Tmix_ph = Tb
+  ELSE
+    IF (h < hl - 0.000001) THEN
+      Ta = TEMPERATURE(fl$, P=P, x=0)
+      ha = hl
+      Tb = Ta - (hl - h)/CP(fl$, P=P, x=0)
+      hb = ENTHALPY(fl$, P=P, T=Tb)
+      n = 0
+      REPEAT
+        Tc = Tb - (hb - h)*(Tb - Ta)/(hb - ha)
+        Ta = Tb
+        ha = hb
+        Tb = Tc
+        hb = ENTHALPY(fl$, P=P, T=Tb)
+        n = n + 1
+      UNTIL (ABS(hb - h) < 0.00000001) OR (ABS(Tb - Ta) < 0.000000000001) OR (n > 30)
+      Tmix_ph = Tb
+    ELSE
+      xa = MIN(1, MAX(0, (h - hl)/(hv - hl)))
+      ha = ENTHALPY(fl$, P=P, x=xa)
+      xb = MIN(1, MAX(0, xa + (h - ha)/(hv - hl)))
+      hb = ENTHALPY(fl$, P=P, x=xb)
+      n = 0
+      IF (ABS(hb - h) > 0.00000001) THEN
+        REPEAT
+          xc = MIN(1, MAX(0, xb - (hb - h)*(xb - xa)/(hb - ha)))
+          xa = xb
+          ha = hb
+          xb = xc
+          hb = ENTHALPY(fl$, P=P, x=xb)
+          n = n + 1
+        UNTIL (ABS(hb - h) < 0.00000001) OR (ABS(xb - xa) < 0.0000000000001) OR (n > 30)
+      ENDIF
+      Tmix_ph = TEMPERATURE(fl$, P=P, x=xb)
+    ENDIF
+  ENDIF
+END
+
+
+"!Inputs (as in _create_network of the original)"
+fluid$ = 'Propane[0.5]&IsoButane[0.5]'   "working fluid, mole fractions in the string (propane fraction 0.5)"
+eta_s = 0.8                 "compressor isentropic efficiency [-]"
+DELTAT_dew = 5              "superheating above the dew point at the compressor inlet, td_dew [K]"
+DELTAT_bub = 2              "subcooling below the bubble point at the condenser outlet, td_bubble [K]"
+Q_dot_cd = 100000           "condenser heat output [W] (Q = -100 kW in the original)"
+td_pinch = 3                "minimum temperature difference of the sections, both exchangers [K]"
+T_11 = 30                   "heating water inlet temperature [C]"
+T_12 = 50                   "heating water outlet temperature [C]"
+T_21 = 15                   "source water inlet temperature [C]"
+T_22 = 10                   "source water outlet temperature [C]"
+P_w = 300000                "water pressure, no pressure drop [Pa]"
+
+"!Compressor: 1 -> 2 (the evaporator outlet 5 is the compressor inlet 1: cycle closer)"
+T_dew_ev = TEMPERATURE(fluid$, P=P_ev, x=1)    "dew point at the evaporation pressure [C]"
+T_1 = T_dew_ev + DELTAT_dew                    "compressor inlet temperature [C]"
+h_1 = ENTHALPY(fluid$, P=P_ev, T=T_1)          "compressor inlet enthalpy [J/kg]"
+s_1 = ENTROPY(fluid$, P=P_ev, T=T_1)           "compressor inlet entropy [J/kg-K]"
+v_1 = VOLUME(fluid$, P=P_ev, T=T_1)            "compressor inlet specific volume [m3/kg]"
+h_2s = ENTHALPY(fluid$, P=P_cd, s=s_1)         "isentropic outlet enthalpy [J/kg]"
+h_2 = h_1 + (h_2s - h_1)/eta_s                 "compressor outlet enthalpy [J/kg]"
+T_2 = TEMPERATURE(fluid$, P=P_cd, h=h_2)       "compressor outlet temperature [C]"
+W_dot = M_dot*(h_2 - h_1)                      "compressor power [W]"
+
+"!Condenser: working fluid 2 -> 3, heating water 11 -> 12"
+T_bub_cd = TEMPERATURE(fluid$, P=P_cd, x=0)    "bubble point at the condensation pressure [C]"
+T_dew_cd = TEMPERATURE(fluid$, P=P_cd, x=1)    "dew point at the condensation pressure [C]"
+T_3 = T_bub_cd - DELTAT_bub                    "condenser outlet temperature [C]"
+h_3 = ENTHALPY(fluid$, P=P_cd, T=T_3)          "condenser outlet enthalpy [J/kg]"
+Q_dot_cd = M_dot*(h_2 - h_3)                   "condenser heat output, working fluid side [W]"
+h_11 = ENTHALPY(Water, T=T_11, P=P_w)          "heating water inlet enthalpy [J/kg]"
+h_12 = ENTHALPY(Water, T=T_12, P=P_w)          "heating water outlet enthalpy [J/kg]"
+Q_dot_cd = M_dot_11*(h_12 - h_11)              "condenser heat output, water side [W]"
+
+"!Valve: 3 -> 4 (isenthalpic)"
+h_4 = h_3                                      "valve outlet enthalpy [J/kg]"
+T_4 = TEMPERATURE(fluid$, P=P_ev, h=h_4)       "valve outlet temperature [C]"
+x_4 = QUALITY(fluid$, P=P_ev, h=h_4)           "valve outlet vapour quality [-]"
+
+"!Evaporator: working fluid 4 -> 5, source water 21 -> 22"
+h_5 = h_1                                      "evaporator outlet enthalpy [J/kg] (cycle closer)"
+Q_dot_ev = M_dot*(h_5 - h_4)                   "evaporator heat input, working fluid side [W]"
+h_21 = ENTHALPY(Water, T=T_21, P=P_w)          "source water inlet enthalpy [J/kg]"
+h_22 = ENTHALPY(Water, T=T_22, P=P_w)          "source water outlet enthalpy [J/kg]"
+Q_dot_ev = M_dot_21*(h_21 - h_22)              "evaporator heat input, water side [W]"
+
+"!Condenser sections: equal heat steps from the cold end (fluid outlet 3, water inlet 11)"
+DUPLICATE i=1,51
+  h_cd_wf[i] = h_3 + (i-1)/50*(h_2 - h_3)      "working fluid enthalpy at the section boundary [J/kg]"
+  T_cd_wf[i] = Tmix_ph(fluid$, P_cd, h_cd_wf[i])   "working fluid temperature [C]"
+  h_cd_w[i] = h_11 + (i-1)/50*(h_12 - h_11)    "water enthalpy at the section boundary [J/kg]"
+  T_cd_w[i] = TEMPERATURE(Water, P=P_w, h=h_cd_w[i])       "water temperature [C]"
+  dT_cd[i] = T_cd_wf[i] - T_cd_w[i]            "temperature difference at the section boundary [K]"
+END
+"Bubble and dew points as extra section boundaries (TESPy _get_moving_steps: the mixture string is one fluid name)"
+DUPLICATE j=1,2
+  h_cd_sat[j] = ENTHALPY(fluid$, P=P_cd, x=j-1)            "saturated liquid (j=1) and vapour (j=2) enthalpy [J/kg]"
+  f_cd[j] = (h_cd_sat[j] - h_3)/(h_2 - h_3)                "heat fraction of the saturation point, from the cold end [-]"
+  T_cd_xw[j] = TEMPERATURE(Water, P=P_w, h=h_11 + MIN(1, MAX(0, f_cd[j]))*(h_12 - h_11))   "water temperature there [C]"
+  dT_cd_sat[j] = Cand(f_cd[j], TEMPERATURE(fluid$, P=P_cd, x=j-1) - T_cd_xw[j], dT_cd[1])  "temperature difference; the cold-end value if outside the exchanger [K]"
+END
+td_pinch = MIN(MIN(dT_cd[1..51]), MIN(dT_cd_sat[1], dT_cd_sat[2]))   "condenser pinch (min over the sections) closes P_cd"
+
+"!Evaporator sections: equal heat steps from the fluid inlet 4 (water outlet 22)"
+DUPLICATE i=1,51
+  h_ev_wf[i] = h_4 + (i-1)/50*(h_5 - h_4)      "working fluid enthalpy at the section boundary [J/kg]"
+  T_ev_wf[i] = Tmix_ph(fluid$, P_ev, h_ev_wf[i])   "working fluid temperature [C]"
+  h_ev_w[i] = h_22 + (i-1)/50*(h_21 - h_22)    "water enthalpy at the section boundary [J/kg]"
+  T_ev_w[i] = TEMPERATURE(Water, P=P_w, h=h_ev_w[i])       "water temperature [C]"
+  dT_ev[i] = T_ev_w[i] - T_ev_wf[i]            "temperature difference at the section boundary [K]"
+END
+DUPLICATE j=1,2
+  h_ev_sat[j] = ENTHALPY(fluid$, P=P_ev, x=j-1)            "saturated liquid (j=1) and vapour (j=2) enthalpy [J/kg]"
+  f_ev[j] = (h_ev_sat[j] - h_4)/(h_5 - h_4)                "heat fraction of the saturation point, from the fluid inlet [-]"
+  T_ev_xw[j] = TEMPERATURE(Water, P=P_w, h=h_22 + MIN(1, MAX(0, f_ev[j]))*(h_21 - h_22))   "water temperature there [C]"
+  dT_ev_sat[j] = Cand(f_ev[j], T_ev_xw[j] - TEMPERATURE(fluid$, P=P_ev, x=j-1), dT_ev[1])  "temperature difference; the inlet value if outside the exchanger [K]"
+END
+td_pinch = MIN(MIN(dT_ev[1..51]), MIN(dT_ev_sat[1], dT_ev_sat[2]))   "evaporator pinch (min over the sections) closes P_ev"
+
+"!Performance indicators (_parameter_lookup of the original)"
+COP = Q_dot_cd/W_dot                           "heating coefficient of performance [-]"
+VHC = Q_dot_cd/(M_dot*v_1)/1000                "volumetric heating capacity at the compressor inlet [kJ/m3]"
+Glide_cd = T_dew_cd - T_bub_cd                 "condenser temperature glide at the condensation pressure [K]"

@@ -1,0 +1,86 @@
+{
+  "id": "CSL-0319",
+  "name": "r22_chiller_r407c_heat_pump",
+  "title": "R22 chiller with an R407C heat pump upgrading its condenser heat",
+  "summary": "R22 water chiller (900 kW cooling at full load, effectiveness-NTU water circuits, constant isentropic efficiency) whose condenser heat (30-35 degC water) is upgraded to 60-70 degC water by an R407C heat pump (20 to 80 degC); gives the COP of each machine, the global COP and the part-load factors ELF and CLF.",
+  "kind": "steady",
+  "level": 2,
+  "status": "modified",
+  "main_file": "r22_chiller_r407c_heat_pump.eescode",
+  "fluids": [
+    "R22",
+    "R407C",
+    "Water"
+  ],
+  "tags": [
+    "chiller",
+    "heat pump",
+    "heat recovery",
+    "heat upgrade",
+    "R407C",
+    "zeotropic refrigerant",
+    "effectiveness-NTU",
+    "water circuit",
+    "global COP",
+    "part-load factors",
+    "exercise"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 108,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 10/MSTH-SB-R10-EX4.EES",
+    "candidate_id": "TM-0157",
+    "authors": [
+      "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory, EES solution; initials SB of the file name)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh course (J. Lebrun, V. Lemort, S. Bertagnolio), repetition TP 10, exercise 4"
+  },
+  "verification": {
+    "summary": "Compared with the stored EES solution (74 variables, rtol 1e-3): R22 chiller within 0.84 %. R407C heat pump NOT reproduced: W_dot_el_pac 760.9 vs 903.5 kW (-16 %), M_dot_r_pac -11.9 %, COP_global 2.639 vs 2.426; cause is the R407C property difference (h_1-h_4 +13 %), not the (P,x) rewrite nor CLF; not confirmed, hence not verified.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "Solution stored in the EES original TM-0157 (MSTH-SB-R10-EX4.EES, EES 7.458, 74 stored variables), compared with tools/compare_solution.py",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.431,
+    "notes": "compare_solution.py (rtol = 0.001): '74 common variables, 31 differ'; maximum 4.31e-01 on s_1_pac, a reference-state offset of the absolute R407C enthalpies and entropies (h_1_pac, h_3_pac, h_4_pac, h_2_pac_s, s_1_pac, up to 3.96e-01). Without these five variables the maximum is 1.58e-01 (W_dot_el_pac, W_dot_cp_pac, W_dot_cp_pac_s). R22 side: largest 8.37e-03 (W_dot_el, COP_chiller, ELF); R22 h_1, h_2, h_2_s, P_cd within rtol. The 34 variables only in CoolSolve are the 33 diagram state-point entries and the unused string fluid$. Follow-up 2026-10-31: W_dot_el_pac stays 746-774 kW whatever the R407C pressure convention (dew, mid-quality, bubble, or the stored EES pressures imposed: 755.9 kW); M_dot_r_pac does not depend on pressure; the stored solution is consistent with CLF = 1. Cause not isolated (EES vs CoolProp R407C equations of state suspected, no third source)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0033",
+    "CSL-0001",
+    "CSL-0068",
+    "CSL-0260"
+  ],
+  "related_external": [
+    "thermo_models TM-0153/TM-0155/TM-0156 (R10 Ex3, R22 chiller identification and sizing: subsets of this model, same R22 equations without the R407C heat pump; not imported)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-31",
+      "action": "added (T-IMPORT TM-0157, card C-400, batch B-17)",
+      "by": "worker agent for S. Quoilin"
+    },
+    {
+      "date": "2026-10-31",
+      "action": "status set to modified after the review: R407C-side deviation (16 % on power) investigated, not explained",
+      "by": "worker agent for S. Quoilin"
+    }
+  ]
+}

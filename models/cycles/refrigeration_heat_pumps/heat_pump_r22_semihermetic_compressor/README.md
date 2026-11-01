@@ -309,3 +309,5 @@ computed with `CP(Water, …)` in both files).
   TM-0156 (R10 Ex3) and TM-0157 (R10 Ex4, R22/R407C comparison).
 - CoolSolve example `heat_pump_MSTh_SB_R10.eescode` (same model, kept in the
   CoolSolve repository as a test case).
+- `CSL-0319` *r22_chiller_r407c_heat_pump*: another exercise of the same repetition (exercise 4): an R22 chiller with constant isentropic
+  efficiency and eps-NTU water circuits whose condenser heat is upgraded by an R407C heat pump.

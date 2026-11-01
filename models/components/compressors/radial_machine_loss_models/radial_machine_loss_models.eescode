@@ -1,0 +1,423 @@
+{=============================================================================
+  Radial compressor and radial turbine loss models (function library)
+  CoolSolve Library model CSL-0328 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  Specific-enthalpy losses [J/kg] of a centrifugal compressor (rotor: incidence, friction, blade
+  loading, clearance, mixing, disc friction, recirculation; vaned stator: friction, incidence) and of
+  a radial-inflow turbine (nozzle; rotor: incidence, passage, clearance, trailing edge), one FUNCTION
+  per loss plus a PROCEDURE per row. Angles in degrees. A loss with invalid inputs or a non-physical
+  result (negative, NaN) is returned as -1 (the original returns it silently). The demonstration
+  program uses illustrative inputs (R134a compressor, R245fa turbine); the source has no example.
+  Inputs : lengths [m], angles [deg], velocities [m/s], rho [kg/m3], mu [Pa-s]; Outputs: [J/kg], -1 = invalid
+  Source : Basile Chaudoir, LaboThapPy (ULiege), https://github.com/PyLaboThap/LaboThapPy, commit
+           f03f7f47, radial_compressor_losses.py and radial_turbine_losses.py (references in README.md)
+  Status : VERIFIED against a re-run of the Python code; source defects documented (README.md)
+=============================================================================}
+
+"!--------------------------- Radial compressor: rotor ---------------------------"
+
+FUNCTION RadComp_Dh_inc_rotor(A1, A1_th, beta1, w1, xhi1)
+{Rotor incidence loss (rotor_incidence_losses; Galvas, NASA technical report 1973). A1, A1_th rotor inlet and throat
+areas [m2]; beta1 relative flow angle, xhi1 inlet blade angle [deg]; w1 inlet relative velocity [m/s]. [J/kg]}
+res = -1
+IF ((A1 > 0) AND (A1_th > 0) AND (ABS(xhi1) < 90) AND (w1 >= 0)) THEN
+  b1opt = ARCTAN((A1/A1_th)*TAN(xhi1))
+  sx = SIN(ABS(beta1) - ABS(b1opt))
+  res = 0.5*w1*w1*sx*sx
+ENDIF
+RadComp_Dh_inc_rotor = res
+END
+
+FUNCTION RadComp_Dh_f_rotor(beta1h, beta1s, beta2, b2, C_fi, L_z, n_bl_r, r1h, r1s, r2, w1h, w1s, w2, xhi2)
+{Rotor friction loss (rotor_friction_losses; Aungier 1995, Galvas 1973, Jansen 1967). beta1h, beta1s hub and shroud
+inlet flow angles, beta2 outlet flow angle, xhi2 outlet blade angle [deg]; b2 outlet passage height, L_z axial
+length, r1h, r1s, r2 radii [m]; C_fi friction coefficient [-]; n_bl_r blades; w1h, w1s, w2 relative velocities [m/s].
+w_bar = (2 w2 + w1s + w1h)/4, L_b and D_hb as in the original. [J/kg]}
+res = -1
+ok = 1
+IF ((b2 <= 0) OR (L_z <= 0) OR (n_bl_r <= 0) OR (r1h <= 0) OR (r1s <= r1h) OR (r2 <= 0) OR (C_fi < 0) OR (w1h < 0) OR (w1s < 0) OR (w2 < 0)) THEN
+  ok = 0
+ENDIF
+IF ((ABS(xhi2) >= 90) OR (ABS(beta1s) >= 90) OR (ABS(beta1h) >= 90) OR (ABS(beta2) >= 90)) THEN
+  ok = 0
+ENDIF
+IF (ok > 0.5) THEN
+  w_bar = (2*w2 + w1s + w1h)/4
+  fact1 = 2*r2 - (r1s + r1h) - b2 + 2*L_z
+  fact2 = 4/((COS(beta1s) + COS(beta1h)) + 2*COS(beta2))
+  L_b = (pi/8)*fact1*fact2
+  term1 = 2*r2/(n_bl_r/(pi*COS(xhi2)) + 2*r2/b2)
+  q1 = r1h/r1s
+  term2 = 2*r1s/(2/(1 - q1) + 2*n_bl_r/(pi*(1 + q1))*SQRT(1 + TAN(beta1s)*TAN(beta1s)*(1 + q1*q1/2)))
+  D_hb = term1 + term2
+  IF ((L_b > 0) AND (D_hb > 0)) THEN
+    res = 2*C_fi*(L_b/D_hb)*w_bar*w_bar
+  ENDIF
+ENDIF
+RadComp_Dh_f_rotor = res
+END
+
+FUNCTION RadComp_Dh_bl_rotor(Dh0, n_bl_r, r1s, r2, u2, w1s, w2)
+{Rotor blade-loading loss (rotor_blade_loading_losses; Coppage and Dallenbach 1956): 0.05*D_f^2*u2^2 with the
+diffusion factor D_f = 1 - w2/w1s + (0.75 Dh0/u2^2)/((w1s/w2)(n/pi (1 - r1s/r2) + 2 r1s/r2)); the factor 0.75
+is fixed in the original (its argument C_df is not used). Dh0 stage enthalpy rise [J/kg]. [J/kg]}
+res = -1
+IF ((Dh0 >= 0) AND (n_bl_r > 0) AND (r1s > 0) AND (r2 > r1s) AND (u2 > 0) AND (w1s > 0) AND (w2 > 0)) THEN
+  num = 0.75*Dh0/(u2*u2)
+  den = w1s/w2*(n_bl_r/pi*(1 - r1s/r2) + 2*(r1s/r2))
+  D_f = 1 - w2/w1s + num/den
+  res = 0.05*D_f*D_f*u2*u2
+ENDIF
+RadComp_Dh_bl_rotor = res
+END
+
+FUNCTION RadComp_Dh_cl_rotor(b2, eps_a, eps_r, n_bl_r, rho1, rho2, r1h, r1s, r2, vu2, v1m)
+{Rotor clearance loss (rotor_clearance_losses; Jansen 1967). eps_a, eps_r axial and radial clearances [m]; vu2 outlet
+absolute tangential velocity, v1m inlet meridional velocity [m/s]. Returns -1 where the square root of the
+original is NaN (r2 <= r1s or a negative velocity product: the original gives NaN). [J/kg]}
+res = -1
+IF ((b2 > 0) AND (eps_a >= 0) AND (eps_r >= 0) AND (n_bl_r > 0) AND (rho1 > 0) AND (rho2 > 0) AND (r1h >= 0) AND (r1s > r1h) AND (r2 > r1s)) THEN
+  eps_mean = (eps_a + eps_r)/2
+  fact1 = 0.6*eps_mean/b2*ABS(vu2)
+  fact2 = (4*pi/(b2*n_bl_r))*((r1s*r1s - r1h*r1h)/((r2 - r1s)*(1 + rho2/rho1)))*ABS(vu2)*v1m
+  IF (fact2 >= 0) THEN
+    res = fact1*SQRT(fact2)
+  ENDIF
+ENDIF
+RadComp_Dh_cl_rotor = res
+END
+
+FUNCTION RadComp_Dh_ml_rotor(alpha2, v2)
+{Rotor mixing loss (rotor_mixing_losses; Jansen 1967, Japikse 1996): 0.5 v2^2/(1 + tan^2 alpha2) ((1 - eps_w - b*)/(1 - eps_w))^2
+with b* = 1 and the wake fraction eps_w from chi = 0.15 (0.93 eps_w^2 + 0.07 eps_w = chi), fixed in the original.
+alpha2 absolute outlet flow angle [deg], v2 absolute outlet velocity [m/s]. [J/kg]}
+res = -1
+IF ((ABS(alpha2) < 90) AND (v2 >= 0)) THEN
+  b_star = 1
+  xhi = 0.15
+  eps_w = (-0.07 + SQRT(0.07*0.07 + 4*0.93*xhi))/(2*0.93)
+  fact1 = 1/(1 + TAN(alpha2)*TAN(alpha2))
+  fact2 = (1 - eps_w - b_star)/(1 - eps_w)
+  res = 0.5*v2*v2*fact1*fact2*fact2
+ENDIF
+RadComp_Dh_ml_rotor = res
+END
+
+FUNCTION RadComp_Dh_df_rotor(b2, eps_b, mdot, mu2, rho1, rho2, r2, u2)
+{Rotor disc-friction loss (rotor_disc_friction_losses; Jansen 1967): Re2 = rho2 u2 r2/mu2, Kf = 3.7 (eps_b/b2)^0.1/Re2^0.5
+for Re2 < 3E5 else 0.102 (eps_b/b2)^0.1/Re2^0.2, Dh = 0.25 rho_mean u2^3 r2^2 Kf/mdot. eps_b back-face gap [m]. [J/kg]}
+res = -1
+IF ((b2 > 0) AND (eps_b > 0) AND (mdot > 0) AND (mu2 > 0) AND (rho1 > 0) AND (rho2 > 0) AND (r2 > 0) AND (u2 > 0)) THEN
+  Re2 = rho2*u2*r2/mu2
+  IF (Re2 < 3E5) THEN
+    Kf = 3.7*(eps_b/b2)^0.1/Re2^0.5
+  ELSE
+    Kf = 0.102*(eps_b/b2)^0.1/Re2^0.2
+  ENDIF
+  rho_mean = (rho1 + rho2)/2
+  res = 0.25*rho_mean*u2*u2*u2*r2*r2*Kf/mdot
+ENDIF
+RadComp_Dh_df_rotor = res
+END
+
+FUNCTION RadComp_Dh_rc_rotor(alpha2, Dh0, n_bl_r, r1s, r2, u2, w1s, w2)
+{Rotor recirculation loss (rotor_recirculation_losses; Oh, Yoon and Chung 1997): 8E-5 sinh(3.5 |alpha2|^3) D_f^2 u2^2 with
+alpha2 in radians inside the sinh and D_f as in RadComp_Dh_bl_rotor. The original also has the Coppage et al.
+form 0.02 tan(|alpha2|) D_f^2 u2^2 as a comment (not translated). alpha2 [deg]. [J/kg]}
+res = -1
+IF ((ABS(alpha2) < 90) AND (Dh0 >= 0) AND (n_bl_r > 0) AND (r1s > 0) AND (r2 > r1s) AND (u2 > 0) AND (w1s > 0) AND (w2 > 0)) THEN
+  num = 0.75*Dh0/(u2*u2)
+  den = w1s/w2*(n_bl_r/pi*(1 - r1s/r2) + 2*(r1s/r2))
+  D_f = 1 - w2/w1s + num/den
+  a_rad = ABS(alpha2)*pi/180
+  res = 8E-5*SINH(3.5*a_rad*a_rad*a_rad)*D_f*D_f*u2*u2
+ENDIF
+RadComp_Dh_rc_rotor = res
+END
+
+"!--------------------------- Radial compressor: vaned stator ---------------------------"
+
+FUNCTION RadComp_Dh_inc_stator(A4, A4_th, beta4, w4, xhi4)
+{Stator incidence loss (stator_incidence_losses; Conrad, Raif et al. 1980, authors as printed in the source): 0.6 w4^2/2 sin^2(beta4_opt - beta4),
+beta4_opt = arctan(A4/A4_th tan xhi4). Angles [deg], w4 inlet velocity [m/s]. [J/kg]}
+res = -1
+IF ((A4 > 0) AND (A4_th > 0) AND (ABS(xhi4) < 90) AND (w4 >= 0)) THEN
+  b4opt = ARCTAN((A4/A4_th)*TAN(xhi4))
+  sx = SIN(b4opt - beta4)
+  res = 0.6*w4*w4/2*sx*sx
+ENDIF
+RadComp_Dh_inc_stator = res
+END
+
+FUNCTION RadComp_Dh_f_stator(C_f, D_h, r3, r5, vm, xhi3, xhi5)
+{Stator friction loss (stator_friction_losses; Conrad et al. 1980): 2 C_f vm^2 L_b/D_h with L_b = (r5 - r3)/cos((xhi3 + xhi5)/2).
+The original has NO D_h: it multiplies by L_b in metres (a length, not a ratio, so its result depends on the unit).
+D_h [m] is an added input: D_h = 1 reproduces the original exactly (README, defect 2). [J/kg]}
+res = -1
+IF ((C_f >= 0) AND (D_h > 0) AND (r5 > r3) AND (r3 > 0) AND (ABS(xhi3 + xhi5) < 180)) THEN
+  L_b = (r5 - r3)/COS((xhi3 + xhi5)/2)
+  IF (L_b > 0) THEN
+    res = 2*C_f*vm*vm*L_b/D_h
+  ENDIF
+ENDIF
+RadComp_Dh_f_stator = res
+END
+
+PROCEDURE RadComp_rotor_loss(A1, A1_th, alpha2, beta1, beta1h, beta1s, beta2, b2, C_fi, Dh0, eps_a, eps_b, eps_r, L_z, mdot, mu2, n_bl_r, rho1, rho2, r1h, r1s, r2, u2, vu2, v1m, v2, w1, w1h, w1s, w2, xhi1, xhi2 : Dh_tot, Dh_inc, Dh_f, Dh_bl, Dh_cl, Dh_ml, Dh_df, Dh_rc)
+{Rotor losses of radial_compressor_rotor_losses (Meroni, Zuhlsdorf, Elmegaard, Haglind, Appl. Energy 2018). C_fi is the
+friction coefficient of the original (used for friction, blade loading is fixed at 0.75, recirculation as above).
+Dh_tot is the sum, or -1 if any term is -1. The original's w1_th, mu1, k_roughness and the friction factor computed
+from them (unused there) are not inputs. [J/kg]}
+Dh_inc = RadComp_Dh_inc_rotor(A1, A1_th, beta1, w1, xhi1)
+Dh_f = RadComp_Dh_f_rotor(beta1h, beta1s, beta2, b2, C_fi, L_z, n_bl_r, r1h, r1s, r2, w1h, w1s, w2, xhi2)
+Dh_bl = RadComp_Dh_bl_rotor(Dh0, n_bl_r, r1s, r2, u2, w1s, w2)
+Dh_cl = RadComp_Dh_cl_rotor(b2, eps_a, eps_r, n_bl_r, rho1, rho2, r1h, r1s, r2, vu2, v1m)
+Dh_ml = RadComp_Dh_ml_rotor(alpha2, v2)
+Dh_df = RadComp_Dh_df_rotor(b2, eps_b, mdot, mu2, rho1, rho2, r2, u2)
+Dh_rc = RadComp_Dh_rc_rotor(alpha2, Dh0, n_bl_r, r1s, r2, u2, w1s, w2)
+IF ((Dh_inc < 0) OR (Dh_f < 0) OR (Dh_bl < 0) OR (Dh_cl < 0) OR (Dh_ml < 0) OR (Dh_df < 0) OR (Dh_rc < 0)) THEN
+  Dh_tot = -1
+ELSE
+  Dh_tot = Dh_inc + Dh_f + Dh_bl + Dh_cl + Dh_ml + Dh_df + Dh_rc
+ENDIF
+END
+
+PROCEDURE RadComp_stator_loss(A4, A4_th, beta4, C_f, D_h, r3, r5, vm, w4, xhi3, xhi4, xhi5 : Dh_tot, Dh_f, Dh_inc)
+{Stator losses of radial_compressor_stator_losses (friction + incidence); D_h added, see RadComp_Dh_f_stator. [J/kg]}
+Dh_f = RadComp_Dh_f_stator(C_f, D_h, r3, r5, vm, xhi3, xhi5)
+Dh_inc = RadComp_Dh_inc_stator(A4, A4_th, beta4, w4, xhi4)
+IF ((Dh_f < 0) OR (Dh_inc < 0)) THEN
+  Dh_tot = -1
+ELSE
+  Dh_tot = Dh_f + Dh_inc
+ENDIF
+END
+
+"!--------------------------- Radial-inflow turbine ---------------------------"
+
+FUNCTION RadTur_Dh_nozzle(v3, Re_3, alpha3, S3, c, b3)
+{Nozzle loss (nozzle_losses; Rodgers 1967): (v3^2/2)(0.05/Re_3^0.2)(3 tan(alpha3)/(S3/c) + S3 cos(alpha3)/b3). v3 outlet
+speed [m/s], Re_3 chord Reynolds number, alpha3 outlet angle [deg], S3 pitch, c chord, b3 passage width [m]. [J/kg]}
+res = -1
+IF ((v3 >= 0) AND (Re_3 > 0) AND (ABS(alpha3) < 90) AND (S3 > 0) AND (c > 0) AND (b3 > 0)) THEN
+  res = (v3*v3/2)*(0.05/Re_3^0.2)*((3*TAN(alpha3))/(S3/c) + (S3*COS(alpha3))/b3)
+ENDIF
+RadTur_Dh_nozzle = res
+END
+
+FUNCTION RadTur_Dh_inc_rotor(alpha4, n_blade_R, w4, beta4)
+{Rotor incidence loss (rotor_incidence_losses; Wasserbauer and Glassman 1975): (w4^2/2) sin^2(beta4 - beta4_opt) with
+beta4_opt = arctan(tan(alpha4)/(1 - n/1.98)). alpha4 absolute, beta4 relative inlet flow angle [deg] (the sign
+of beta4 must follow that of beta4_opt, negative for n > 1.98); -1 for n_blade_R <= 1.98 (guard added here). [J/kg]}
+res = -1
+IF ((n_blade_R > 1.98) AND (ABS(alpha4) < 90) AND (w4 >= 0)) THEN
+  b4opt = ARCTAN(TAN(alpha4)/(1 - n_blade_R/1.98))
+  sx = SIN(beta4 - b4opt)
+  res = (w4*w4/2)*sx*sx
+ENDIF
+RadTur_Dh_inc_rotor = res
+END
+
+FUNCTION RadTur_Dh_passage(beta4, beta5, L_z, r4, r5h, r5s, r5, b4, b5, n_blade_R, w4, w5)
+{Rotor passage loss, friction + secondary flow (rotor_passage_losses; Moustapha et al. 2003, K_p = 0.11, factor mf = 1
+or 2 as in the original). Angles [deg]; lengths [m]. Hydraulic diameter of the inlet written 4 pi r4 b4/(2 pi r4 + n b4):
+the original has r4**b4 (power) there, a typo (README, defect 1). [J/kg]}
+res = -1
+ok = 1
+IF ((L_z <= 0) OR (r4 <= 0) OR (r5h < 0) OR (r5s <= r5h) OR (r5 <= 0) OR (b4 <= 0) OR (b5 <= 0) OR (n_blade_R <= 0) OR (w4 < 0) OR (w5 < 0)) THEN
+  ok = 0
+ENDIF
+IF ((ABS(beta4) >= 90) OR (ABS(beta5) >= 90)) THEN
+  ok = 0
+ENDIF
+IF (ok > 0.5) THEN
+  K_p = 0.11
+  beta_mean = ARCTAN((TAN(beta4) + TAN(beta5))/2)
+  c = L_z/COS(beta_mean)
+  L_h = (pi/4)*((L_z - b4/2) + (r4 - r5s - b5/2))
+  Dh4 = 4*pi*r4*b4/(2*pi*r4 + n_blade_R*b4)
+  Dh5 = 2*pi*(r5s*r5s - r5h*r5h)/(pi*(r5s - r5h) + n_blade_R*b5)
+  Dhmean = (Dh4 + Dh5)/2
+  IF ((r4 - r5s)/b5 > 0.2) THEN
+    mf = 1
+  ELSE
+    mf = 2
+  ENDIF
+  factor = mf*K_p*(w4*w4 + w5*w5)/2
+  Dh_fr = factor*(L_h/Dhmean)
+  Dh_sec = factor*(0.68*(1 - (r5/r4)*(r5/r4)))*COS(beta5)/(b5/c)
+  IF ((Dh_fr >= 0) AND (Dh_sec >= 0)) THEN
+    res = Dh_fr + Dh_sec
+  ENDIF
+ENDIF
+RadTur_Dh_passage = res
+END
+
+FUNCTION RadTur_Dh_clearance(cl_a, cl_r, L_z, r4, r5h, r5s, r5, b4, b5, n_blade_R, u4, vm4, vm5)
+{Rotor clearance loss (rotor_clearance_losses; Moustapha et al. 2003): (n u4^3/(8 pi))(K_a cl_a C_a + K_r cl_r C_r +
+K_ar sqrt(cl_a cl_r C_a C_r)), K_a = 0.4, K_r = 0.75, K_ar = -0.3. cl_a, cl_r axial and radial clearances [m]; u4 blade
+speed, vm4, vm5 meridional velocities [m/s]. The original returns 0 where the square root is NaN: -1 here. [J/kg]}
+res = -1
+IF ((cl_a >= 0) AND (cl_r >= 0) AND (L_z > 0) AND (r4 > 0) AND (r5s >= 0) AND (r5 > 0) AND (b4 > 0) AND (b5 > 0) AND (n_blade_R > 0) AND (u4 > 0) AND (vm4 > 0) AND (vm5 > 0)) THEN
+  C_a = (1 - r5s/r4)/(vm4*b4)
+  C_r = (r5s/r4)*(L_z - b4)/(vm5*r5*b5)
+  arg = cl_a*cl_r*C_a*C_r
+  IF (arg >= 0) THEN
+    Dh_cl = (n_blade_R*u4*u4*u4/(8*pi))*(0.4*cl_a*C_a + 0.75*cl_r*C_r - 0.3*SQRT(arg))
+    IF (Dh_cl >= 0) THEN
+      res = Dh_cl
+    ENDIF
+  ENDIF
+ENDIF
+RadTur_Dh_clearance = res
+END
+
+FUNCTION RadTur_Dh_TE(w5, n_blade_R, t5, r5h, r5s, beta5, gamma5, Ma5_pr)
+{Rotor trailing-edge loss (rotor_trailing_edge_losses; Meroni 2018): (w5^2/2) (n t5/(pi (r5s + r5h) cos(beta5)))
+(1 + (gamma5 - 1) Ma5'^2/2)^(gamma5/(1 - gamma5)). t5 trailing-edge thickness [m], beta5 [deg], Ma5_pr relative Mach number. [J/kg]}
+res = -1
+IF ((w5 >= 0) AND (n_blade_R > 0) AND (t5 >= 0) AND (r5h >= 0) AND (r5s > r5h) AND (ABS(beta5) < 90) AND (gamma5 > 1) AND (Ma5_pr >= 0)) THEN
+  res = (w5*w5/2)*((n_blade_R*t5)/(pi*(r5s + r5h)*COS(beta5)))*(1 + ((gamma5 - 1)*Ma5_pr*Ma5_pr)/2)^(gamma5/(1 - gamma5))
+ENDIF
+RadTur_Dh_TE = res
+END
+
+PROCEDURE RadTur_rotor_loss(alpha4, beta4, beta5, b4, b5, cl_a, cl_r, gamma5, L_z, Ma5_pr, n_blade_R, r4, r5, r5h, r5s, t5, u4, vm4, vm5, w4, w5 : Dh_tot, Dh_inc, Dh_p, Dh_cl, Dh_TE)
+{Rotor losses of rotor_losses (Aqel thesis 2023): sum of incidence, passage, clearance and trailing-edge losses [J/kg],
+-1 if any term is -1. The windage (disc-friction) loss of the original (windage_losses; Daily and Nece 1960) is an
+empty function: nothing to translate.}
+Dh_inc = RadTur_Dh_inc_rotor(alpha4, n_blade_R, w4, beta4)
+Dh_p = RadTur_Dh_passage(beta4, beta5, L_z, r4, r5h, r5s, r5, b4, b5, n_blade_R, w4, w5)
+Dh_cl = RadTur_Dh_clearance(cl_a, cl_r, L_z, r4, r5h, r5s, r5, b4, b5, n_blade_R, u4, vm4, vm5)
+Dh_TE = RadTur_Dh_TE(w5, n_blade_R, t5, r5h, r5s, beta5, gamma5, Ma5_pr)
+IF ((Dh_inc < 0) OR (Dh_p < 0) OR (Dh_cl < 0) OR (Dh_TE < 0)) THEN
+  Dh_tot = -1
+ELSE
+  Dh_tot = Dh_inc + Dh_p + Dh_cl + Dh_TE
+ENDIF
+END
+
+"!--------------------------- Demonstration program ---------------------------"
+"Illustrative inputs chosen for this library (the source has no example). Velocity triangles from simple relations."
+
+"!1. Centrifugal compressor, R134a: rotor and vaned stator"
+N_c = 45000 [rpm]
+omega_c = N_c*2*pi/60
+mdot_c = 1.2 [kg/s]
+P1_c = 3E5 [Pa]
+T1_c = 15 [C]
+h1_c = enthalpy(R134a, T=T1_c, P=P1_c)
+rho1_c = density(R134a, T=T1_c, P=P1_c)
+mu1_c = viscosity(R134a, T=T1_c, P=P1_c)
+r1s_c = 0.02 [m]
+r1h_c = 0.008 [m]
+r2_c = 0.045 [m]
+b2_c = 0.0025 [m]
+L_z_c = 0.025 [m]
+nbl_c = 14
+A1_c = pi*(r1s_c^2 - r1h_c^2)
+A1_th_c = 0.92*A1_c
+v1m_c = mdot_c/(rho1_c*A1_c)
+r1m_c = SQRT((r1s_c^2 + r1h_c^2)/2)
+u1m_c = omega_c*r1m_c
+u1s_c = omega_c*r1s_c
+u1h_c = omega_c*r1h_c
+w1_c = SQRT(u1m_c^2 + v1m_c^2)
+w1s_c = SQRT(u1s_c^2 + v1m_c^2)
+w1h_c = SQRT(u1h_c^2 + v1m_c^2)
+beta1_c = ARCTAN(u1m_c/v1m_c)
+beta1s_c = ARCTAN(u1s_c/v1m_c)
+beta1h_c = ARCTAN(u1h_c/v1m_c)
+xhi1_c = 55 [deg]
+xhi2_c = 50 [deg]
+u2_c = omega_c*r2_c
+vu2_c = 0.8*u2_c                       "outlet tangential velocity: 0.8 u2, chosen"
+Dh0_c = u2_c*vu2_c                     "Euler work, no inlet swirl"
+P2_c = 5.2E5 [Pa]
+h2_c = h1_c + v1m_c^2/2 + Dh0_c - (vu2_c^2 + vm2_c^2)/2
+rho2_c = density(R134a, P=P2_c, h=h2_c)
+mu2_c = viscosity(R134a, P=P2_c, h=h2_c)
+vm2_c = mdot_c/(rho2_c*2*pi*r2_c*b2_c)
+v2_c = SQRT(vu2_c^2 + vm2_c^2)
+w2_c = SQRT((u2_c - vu2_c)^2 + vm2_c^2)
+alpha2_c = ARCTAN(vu2_c/vm2_c)
+beta2_c = ARCTAN((u2_c - vu2_c)/vm2_c)
+C_fi_c = 0.004                          "value quoted with a question mark in the original docstring"
+eps_a_c = 0.2E-3 [m]
+eps_r_c = 0.2E-3 [m]
+eps_b_c = 0.3E-3 [m]
+CALL RadComp_rotor_loss(A1_c, A1_th_c, alpha2_c, beta1_c, beta1h_c, beta1s_c, beta2_c, b2_c, C_fi_c, Dh0_c, eps_a_c, eps_b_c, eps_r_c, L_z_c, mdot_c, mu2_c, nbl_c, rho1_c, rho2_c, r1h_c, r1s_c, r2_c, u2_c, vu2_c, v1m_c, v2_c, w1_c, w1h_c, w1s_c, w2_c, xhi1_c, xhi2_c : Dh_tot_cR, Dh_inc_cR, Dh_f_cR, Dh_bl_cR, Dh_cl_cR, Dh_ml_cR, Dh_df_cR, Dh_rc_cR)
+frac_cR = Dh_tot_cR/Dh0_c              "sum of the rotor losses over Dh0 (plain ratio)"
+
+"Vaned stator: inlet radius r3, vane inlet r4, outlet r5; velocities from angular-momentum conservation (vaneless space)"
+r3_c = 0.0475 [m]
+r4_c = 0.0525 [m]
+r5_c = 0.075 [m]
+b4_c = b2_c
+A4_c = 2*pi*r4_c*b4_c
+A4_th_c = 0.9*A4_c
+vu4_c = vu2_c*r2_c/r4_c
+vm4_c = mdot_c/(rho2_c*A4_c)           "density of state 2 used at the vane inlet (approximation of this demonstration)"
+w4_c = SQRT(vu4_c^2 + vm4_c^2)         "absolute velocity: the vane is stationary"
+beta4_c = ARCTAN(vu4_c/vm4_c)
+xhi3_c = 72 [deg]
+xhi4_c = 76 [deg]
+xhi5_c = 70 [deg]
+C_f_c = 0.004
+D_h_c = 5E-3 [m]                       "illustrative hydraulic diameter (added input)"
+CALL RadComp_stator_loss(A4_c, A4_th_c, beta4_c, C_f_c, D_h_c, r3_c, r5_c, vm4_c, w4_c, xhi3_c, xhi4_c, xhi5_c : Dh_tot_cS, Dh_f_cS, Dh_inc_cS)
+Dh_f_cS1 = RadComp_Dh_f_stator(C_f_c, 1, r3_c, r5_c, vm4_c, xhi3_c, xhi5_c)    "D_h = 1 m: the original, unit-dependent value"
+
+"!2. Radial-inflow turbine, R245fa: nozzle and rotor"
+N_t = 40000 [rpm]
+omega_t = N_t*2*pi/60
+mdot_t = 3 [kg/s]
+P4_t = 7E5 [Pa]
+T4_t = 115 [C]
+rho4_t = density(R245fa, T=T4_t, P=P4_t)
+mu4_t = viscosity(R245fa, T=T4_t, P=P4_t)
+h4_t = enthalpy(R245fa, T=T4_t, P=P4_t)
+r4_t = 0.06 [m]
+b4_t = 0.007 [m]
+r5s_t = 0.04 [m]
+r5h_t = 0.015 [m]
+r5_t = SQRT((r5s_t^2 + r5h_t^2)/2)
+b5_t = r5s_t - r5h_t
+L_z_t = 0.04 [m]
+nbl_t = 12
+u4_t = omega_t*r4_t
+vu4_t = 0.8*u4_t                       "inlet tangential velocity: 0.8 u4, chosen"
+vm4_t = mdot_t/(rho4_t*2*pi*r4_t*b4_t)
+v4_t = SQRT(vu4_t^2 + vm4_t^2)
+alpha4_t = ARCTAN(vu4_t/vm4_t)
+w4_t = SQRT((u4_t - vu4_t)^2 + vm4_t^2)
+beta4_t = ARCTAN((vu4_t - u4_t)/vm4_t)
+P5_t = 2.5E5 [Pa]
+h5_t = h4_t + v4_t^2/2 - u4_t*vu4_t - vm5_t^2/2    "no exit swirl"
+rho5_t = density(R245fa, P=P5_t, h=h5_t)
+vm5_t = mdot_t/(rho5_t*pi*(r5s_t^2 - r5h_t^2))
+u5_t = omega_t*r5_t
+w5_t = SQRT(vm5_t^2 + u5_t^2)
+beta5_t = ARCTAN(-u5_t/vm5_t)
+a5_t = soundspeed(R245fa, P=P5_t, h=h5_t)
+Ma5_t = w5_t/a5_t
+gamma5_t = cp(R245fa, P=P5_t, h=h5_t)/cv(R245fa, P=P5_t, h=h5_t)
+t5_t = 0.4E-3 [m]
+cl_a_t = 0.2E-3 [m]
+cl_r_t = 0.2E-3 [m]
+"Nozzle: outlet = rotor inlet state (no vaneless space), pitch and chord illustrative"
+c_n_t = 0.025 [m]
+S3_t = 0.012 [m]
+Re3_t = rho4_t*v4_t*c_n_t/mu4_t
+Dh_n_t = RadTur_Dh_nozzle(v4_t, Re3_t, alpha4_t, S3_t, c_n_t, b4_t)
+CALL RadTur_rotor_loss(alpha4_t, beta4_t, beta5_t, b4_t, b5_t, cl_a_t, cl_r_t, gamma5_t, L_z_t, Ma5_t, nbl_t, r4_t, r5_t, r5h_t, r5s_t, t5_t, u4_t, vm4_t, vm5_t, w4_t, w5_t : Dh_tot_tR, Dh_inc_tR, Dh_p_tR, Dh_cl_tR, Dh_TE_tR)
+Dh_work_t = u4_t*vu4_t                  "Euler work of the triangles"
+frac_t = (Dh_n_t + Dh_tot_tR)/Dh_work_t "sum of the nozzle and rotor losses over the Euler work (plain ratio)"
+
+"!3. Guards: each call below has an invalid input; the original returns NaN, a number or raises an error (README)"
+g1 = RadComp_Dh_cl_rotor(b2_c, eps_a_c, eps_r_c, nbl_c, rho1_c, rho2_c, r1h_c, r1s_c, 0.015, vu2_c, v1m_c)      "r2 < r1s: sqrt of a negative number in the original (NaN)"
+g2 = RadComp_Dh_rc_rotor(alpha2_c, Dh0_c, nbl_c, r1s_c, r2_c, 0, w1s_c, w2_c)                            "u2 = 0: division by zero in the original (an error)"
+g3 = RadComp_Dh_ml_rotor(95, v2_c)                                                                           "alpha2 beyond 90 degrees"
+g4 = RadTur_Dh_inc_rotor(alpha4_t, 1.5, w4_t, beta4_t)                                                      "n < 1.98: sign of beta4_opt reversed"
+g5 = RadTur_Dh_clearance(cl_a_t, cl_r_t, 0.004, r4_t, r5h_t, r5s_t, r5_t, b4_t, b5_t, nbl_t, u4_t, vm4_t, vm5_t)   "L_z < b4: C_r < 0, NaN -> the original returns 0"
+g6 = RadTur_Dh_TE(w5_t, nbl_t, t5_t, r5h_t, r5s_t, beta5_t, 1, Ma5_t)                                         "gamma5 = 1: exponent undefined (division by zero in the original)"

@@ -196,3 +196,4 @@ and `T_1` matches the stored solution. `T_2` is 69.1 °C, which is not within
   steam turbine.
 - `CSL-0314` (*steam_turbine_baumann*): a steam turbine whose isentropic efficiency is corrected for the
   wetness of the outlet (Baumann rule) instead of being a given constant.
+- `CSL-0327` *axial_turbine_loss_models*: blade-row loss coefficients of an axial turbine from the blade geometry (Aungier, Balje-Binsley, Kacker-Okapuu), the detailed counterpart of an efficiency given as a number.

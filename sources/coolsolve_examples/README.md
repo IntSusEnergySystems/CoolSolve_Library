@@ -43,3 +43,12 @@ and holds curated copies (header, English comments, verification, README).
 [`inventory.csv`](inventory.csv) — one row per example (candidate IDs
 `CSX-001`…`CSX-047`), with category, kind, level and priority guesses, test
 status and duplicate groups (`G-…`) in `notes`/`duplicate_group`.
+
+## 2026-10-31 triage (C-373)
+
+Card C-373 (T-PLAN, novelty triage of the last `todo` row of the inventory,
+CSX-033; against library.json, 291 models): 1 kept `todo` (card C-450).
+
+| ID | Decision | Target / nearest model | Reason |
+|---|---|---|---|
+| CSX-033 | todo (kept) | nearest: CSL-0040 / CSL-0147 / CSL-0129 | solar-driven ORC with discretised heat exchangers is a system the library lacks; research-grade L4 with MODULE flattening (decision D10); card C-450 |

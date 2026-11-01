@@ -219,3 +219,4 @@ test (`test_exergy_analysis`) is out of scope — only the thermodynamic model
 - `CSL-0135` *turbine_stodola_offdesign*: off-design turbine model (Stodola
   cone law) for part-load studies of such plants; not used here (design point
   with fixed stage efficiencies and exhaust pressures).
+- `CSL-0329` *orc_solar_complex*: small solar-driven R245fa ORC with a segment-wise trough collector model (field outlet temperature computed, not imposed).

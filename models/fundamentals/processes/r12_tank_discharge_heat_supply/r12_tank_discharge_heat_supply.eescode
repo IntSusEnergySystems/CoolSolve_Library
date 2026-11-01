@@ -1,0 +1,47 @@
+{=============================================================================
+  R12 tank discharge with heat supply (uniform-state open system)
+  CoolSolve Library model CSL-0320
+ -----------------------------------------------------------------------------
+  A 25 L rigid tank holds refrigerant 12 at 25 C, 90 % liquid and 10 % vapour
+  by volume. A valve is opened and vapour leaves through a nozzle at 100 kPa and
+  -20 C with a velocity of 180 m/s; heat is supplied so that the R12 in the tank
+  stays at 25 C. The process ends when only saturated vapour is left. The model
+  gives (a) the mass that left the tank and (b) the heat supplied, from the
+  first law of the unsteady uniform-state control volume (tank, valve, nozzle).
+
+  Inputs : Vol_t, f_v_l_i, f_v_v_i, T_i, p_out_n, T_out_n, c_out_n
+  Outputs: m_ej, Q
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : ULiege course Thermodynamique appliquee (THD), exercise 5.72 of the
+           course textbook; the file names no author (TBD) - see README.md
+=============================================================================}
+
+"!Data (exercise 5.72)"
+Vol_t = 25e-3 [m^3]     "tank volume [m^3]"
+f_v_l_i = 0.9           "initial liquid fraction of the volume [-]"
+f_v_v_i = 0.1           "initial vapour fraction of the volume [-]"
+T_i = 25 [C]            "temperature of the R12 in the tank, constant [C]"
+p_out_n = 100E3 [Pa]    "nozzle exit pressure [Pa] (100 kPa in the original)"
+T_out_n = -20 [C]       "nozzle exit temperature [C]"
+c_out_n = 180 [m/s]     "nozzle exit velocity [m/s]"
+
+"!a) Mass leaving the tank"
+Vol_l = f_v_l_i*Vol_t           "initial liquid volume [m^3]"
+Vol_v = f_v_v_i*Vol_t           "initial vapour volume [m^3]"
+v_l_i = volume(r12,T=T_i,x=0)   "specific volume of the saturated liquid [m^3/kg]"
+v_v_i = volume(r12,T=T_i,x=1)   "specific volume of the saturated vapour [m^3/kg]"
+m_l_i = Vol_l/v_l_i             "initial liquid mass [kg]"
+m_v_i = Vol_v/v_v_i             "initial vapour mass [kg]"
+m_tot = m_l_i + m_v_i           "initial total mass [kg]"
+x_i = m_v_i/m_tot               "initial quality in the tank [-]"
+
+m_v_f = Vol_t/v_v_i             "final mass: the tank is full of saturated vapour at T_i [kg]"
+m_ej = m_tot - m_v_f            "mass that left the tank [kg]"
+
+"!b) Heat supplied: first law of the unsteady uniform-state control volume"
+{Control volume: tank + valve + nozzle; no work, no inlet, negligible mass in the
+ piping, no velocity or elevation terms inside the tank (as in the original).}
+Q = m_v_f*u_f - m_tot*u_i + m_ej*(h_out_n + c_out_n^2/2)   "heat supplied [J]"
+u_f = intenergy(r12,T=T_i,x=1)         "final specific internal energy, saturated vapour [J/kg]"
+u_i = intenergy(r12,T=T_i,x=x_i)       "initial specific internal energy of the mixture [J/kg]"
+h_out_n = enthalpy(r12,T=T_out_n,p=p_out_n)   "specific enthalpy at the nozzle exit [J/kg]"

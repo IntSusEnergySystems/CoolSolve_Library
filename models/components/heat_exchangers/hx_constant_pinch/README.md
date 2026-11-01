@@ -178,6 +178,10 @@ No student names or personal data involved.
 
 ## Related models
 
+- `CSL-0326` *thermosyphon_hx*: other LaboThapPy heat-exchanger translation
+  (heat-pipe tube bank with ESDU operating limits, card C-447, failing
+  status).
+
 
 - `CSL-0137` *hx_lmtd_ua*: the generic counterflow exchanger of TESPy rated by UA and the smoothed LMTD, with ttd and pinch specifications and the off-design UA characteristic lines; this model sizes the same kind of exchanger by an imposed pinch and a subcooling.
 - CSL-0145 *refrigeration_co2_transcritical_booster*: CO2 booster supermarket cycle whose heat-recovery exchanger imposes the same end-pinch condition (5 K at the CO2 outlet end).
@@ -187,6 +191,9 @@ No student names or personal data involved.
 - CSL-0134 *orc_preheated_recuperated_cyclopentane*: the Zorlu ORC cycle that
   uses this condenser branch and its evaporator twin as the two phase-changing
   exchangers, closed by the two pinch conditions.
+- `CSL-0325` *ejector_two_phase_co2*: other LaboThapPy translation on R744
+  (two-phase ejector; the transcritical CO2 cycle neighbour of this condenser
+  branch).
 - `CSL-0008` (*condenser_three_zones*, level 3): air-cooled condenser with
   fitted ε-NTU conductances per zone (off-design model); this model is the
   design-point counterpart (pinch imposed, pressure solved).

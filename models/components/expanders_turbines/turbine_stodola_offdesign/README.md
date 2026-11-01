@@ -312,3 +312,4 @@ inventory candidate `TSP-003`).
 - `CSL-0314` *steam_turbine_baumann*: the `SteamTurbine` subclass of the same TESPy snapshot, whose
   efficiency depends on the outlet wetness (Baumann rule) instead of the mass flow.
 - `CSL-0313` *heat_pump_nh3_two_stage_flooded*: the same TESPy `eta_s_char` pattern for the compressors and pumps of a two-stage NH3 heat pump (design and off-design solved together).
+- `CSL-0327` *axial_turbine_loss_models*: blade-row loss coefficients of an axial turbine (Aungier, Balje-Binsley, Kacker-Okapuu) from the blade geometry, the next level of detail below this whole-turbine characteristic.

@@ -1,0 +1,358 @@
+{=============================================================================
+  Thermosyphon (heat-pipe) tube-bank heat exchanger - CoolSolve Library CSL-0326
+ -----------------------------------------------------------------------------
+  Steady-state crossflow heat-pipe heat exchanger: hot flue gas over the
+  evaporator bank, boiling/condensing water inside each thermosyphon, and a
+  cold process fluid over the condenser bank. Each tube row is modelled with
+  the thermal-resistance network of the source (external convective+radiative
+  HTC, wall conduction, ESDU internal pool/film resistances, vapour pressure
+  drop, axial wall conduction) solved simultaneously for all 61 rows; the ESDU
+  operating limits are post-processing outputs. The source's outer bisection
+  becomes the boundary condition h_c[62] = h_su_C.
+  Inputs : fluid states of both external fluids (T, P, m_dot), geometry.
+  Outputs: Q_dot_total, row arrays, ESDU operating limits, exhaust states.
+  Units  : SI - °C for property calls; *_K correlation variables in K.
+  Source : Basile Chaudoir, Elise Neven - LaboThapPy (ULiège), commit f03f7f47;
+           Apache-2.0; see README.md.
+  Status : failing - the system does not converge in CoolSolve 0.4.0
+           (diagnosis in README.md); procedures verified piecewise.
+=============================================================================}
+
+FUNCTION Step(x)
+  "! unit step used to transcribe the source if/else branches: 1 if x>0, 0 if x<0"
+  Step = 0.5*(sign(x)+1)
+END
+
+FUNCTION Phi_cond_HP(T_sat_K)
+  "! condensation figure of merit of the heat-pipe fluid (MacGregor, Kew & Reay 2005, as in figures_of_merit); T_sat_K in K"
+  T_sat = min(T_sat_K, 646.75)-273.15  "clamped to 373.6 °C as in the original [°C]"
+  k_l = conductivity(Water, T=T_sat, x=0)
+  rho_l = density(Water, T=T_sat, x=0)
+  mu_l = viscosity(Water, T=T_sat, x=0)
+  h_l = enthalpy(Water, T=T_sat, x=0)
+  h_v = enthalpy(Water, T=T_sat, x=1)
+  Dh_evap = h_v-h_l  "latent heat of evaporation [J/kg]"
+  Phi_cond_HP = ((Dh_evap*k_l^3*rho_l^2)/mu_l)^(1/4)
+END
+
+FUNCTION Phi_boil_HP(T_sat_K)
+  "! boiling figure of merit of the heat-pipe fluid (MacGregor, Kew & Reay 2005, as in figures_of_merit); T_sat_K in K"
+  T_sat = min(T_sat_K, 646.75)-273.15
+  P_atm = 101325  "atmospheric pressure [Pa]"
+  rho_l = density(Water, T=T_sat, x=0)
+  k_l = conductivity(Water, T=T_sat, x=0)
+  cp_l = cp(Water, T=T_sat, x=0)
+  mu_l = viscosity(Water, T=T_sat, x=0)
+  rho_v = density(Water, T=T_sat, x=1)
+  h_l = enthalpy(Water, T=T_sat, x=0)
+  h_v = enthalpy(Water, T=T_sat, x=1)
+  Dh_evap = h_v-h_l  "[J/kg]"
+  P_sat = pressure(Water, T=T_sat, x=0)
+  Phi_boil_HP = (0.32*rho_l^0.65*k_l^0.3*cp_l^0.7)/(rho_v^0.25*Dh_evap^0.4*mu_l^0.1)*(P_sat/P_atm)^0.23
+END
+
+PROCEDURE ThResESDU(F_r, D_i, L_c, L_e, Q_rad, T_sat_K : R_cond, R_evap, R_pool, R_film, Re_f)
+  "! internal thermal resistances of the thermosyphon (ESDU 81038 via MacGregor, Kew & Reay 2005, as in thermal_res_esdu); SI, T_sat_K in K"
+  g = 9.81  "gravity acceleration [m/s^2]"
+  T_sat = T_sat_K-273.15  "[°C]"
+  mu_l = viscosity(Water, T=T_sat, x=0)
+  h_l = enthalpy(Water, T=T_sat, x=0)
+  h_v = enthalpy(Water, T=T_sat, x=1)
+  Dh_evap = h_v-h_l  "[J/kg]"
+  Re_f = 4*Q_rad/(Dh_evap*mu_l*pi*D_i)  "Reynolds number of the falling condensate film [-]"
+  phic = Phi_cond_HP(T_sat_K)
+  phib = Phi_boil_HP(T_sat_K)
+  R_cond_EDSU = 0.235*Q_rad^(1/3)/(D_i^(4/3)*g^(1/3)*L_c*phic^(4/3))  "condenser internal resistance [K/W]"
+  w_hi = Step(Re_f-1300)  "the two Re_f<1300 branches of the original both give plain R_cond_EDSU"
+  R_cond = R_cond_EDSU*(1+w_hi*(191*Re_f^(-0.733)-1))
+  R_film = R_cond*(L_c/L_e)  "evaporator film resistance [K/W]"
+  R_pool = 1/(phib*g^0.2*Q_rad^0.4*(pi*D_i*L_e)^0.6)  "evaporator pool-boiling resistance [K/W]"
+  w_f = Step(R_film-R_pool)
+  R_evap = (1-w_f)*R_pool + w_f*(R_pool*F_r + R_film*(1-F_r))
+END
+
+FUNCTION DeltaPV_HP(D_v, L_eff, Q_rad, T_sat_K)
+  "! vapour pressure drop inside the thermosyphon (as in Delta_P_v); SI, T_sat_K in K"
+  T_sat = min(T_sat_K, 643.15)-273.15  "clamped to 370 °C as in the original [°C]"
+  h_l = enthalpy(Water, T=T_sat, x=0)
+  rho_v = density(Water, T=T_sat, x=1)
+  h_v = enthalpy(Water, T=T_sat, x=1)
+  mu_v = viscosity(Water, T=T_sat, x=1)
+  Dh_evap = h_v-h_l  "[J/kg]"
+  A_v = pi*D_v^2/4  "vapour cross-section area [m^2]"
+  Re_a = Q_rad*D_v/(mu_v*A_v*Dh_evap)  "vapour Reynolds number [-]"
+  DP_lam = 32*mu_v*Q_rad*L_eff/(rho_v*A_v*Dh_evap*D_v^2)  "laminar branch [Pa]"
+  DP_turb = (0.3164/Re_a^(1/4))*(Q_rad^2*L_eff)/(2*rho_v*A_v^2*Dh_evap^2*D_v)  "turbulent branch [Pa]"
+  w_t = Step(Re_a-2300)
+  DeltaPV_HP = (1-w_t)*DP_lam + w_t*DP_turb
+END
+
+PROCEDURE OpLimitsHP(F_r, D_i, L_e, beta, geo_ann, T_sat_K : Q_ent, Q_boil, Q_son, Q_dry, Q_vap)
+  "! ESDU 81038 operating limits of a two-phase closed thermosyphon (as in operating_limits; F_1*F_2*F_3 group = Kutateladze number); SI, beta in rad, T_sat_K in K, geo_ann=1 annular / 0 circular"
+  g = 9.81  "[m/s^2]"
+  T_sat = T_sat_K-273.15  "[°C]"
+  P_sat = pressure(Water, T=T_sat, x=0)
+  rho_l = density(Water, T=T_sat, x=0)
+  mu_l = viscosity(Water, T=T_sat, x=0)
+  h_l = enthalpy(Water, T=T_sat, x=0)
+  rho_v = density(Water, T=T_sat, x=1)
+  h_v = enthalpy(Water, T=T_sat, x=1)
+  mu_v = viscosity(Water, T=T_sat, x=1)
+  sigma = surfacetension(Water, T=T_sat, x=0.5)
+  Dh_evap = h_v-h_l  "[J/kg]"
+  drho = abs(rho_l-rho_v)
+  Bo = D_i*(1-0.5*geo_ann)*sqrt(g*drho/sigma)  "Bond number [-]"
+  w_B = Step(Bo-11)
+  F_1 = w_B*8.2 + (1-w_B)*(-0.0331*Bo^2+0.8161*Bo+3.2134)
+  K_p = P_sat/sqrt(g*drho*sigma)  "dimensionless pressure parameter [-]"
+  w_K = Step(4e4-K_p)
+  F_2 = w_K*K_p^(-0.17) + (1-w_K)*0.165
+  w_e = Step(abs(beta-pi/2)-1e-9)
+  w_4 = Step(Bo-4)
+  w_2 = (1-w_4)*Step(Bo-2)
+  w_lo = (1-w_4)*(1-Step(Bo-2))
+  F3_4 = 0.306075777+3.88126365*beta-8.71941343*beta^2+13.4517469*beta^3-11.9947367*beta^4+5.32966132*beta^5-0.93010743*beta^6
+  F3_2 = 0.222344657+2.71186727*beta-6.78785522*beta^2+13.1807234*beta^3-13.6843299*beta^4+6.73969856*beta^5-1.26256636*beta^6
+  F3_lo = 0.213964282+0.922627057*beta+0.285274233*beta^2-0.721665592*beta^3+0.235369565*beta^4
+  F_3 = (1-w_e)*1 + w_e*(w_4*F3_4+w_2*F3_2+w_lo*F3_lo)  "F_3=1 for a vertical thermosyphon"
+  Q_ent = F_1*F_2*F_3*Dh_evap*sqrt(rho_v)*(sigma*g*drho)^0.25  "entrainment limit [W]"
+  Q_boil = 0.12*rho_v*Dh_evap*((sigma*drho*g)/rho_v^2)^0.25  "boiling limit [W]"
+  Q_son = 0.474*Dh_evap*sqrt(rho_v*P_sat)  "sonic limit [W]"
+  Q_dry = (2*Dh_evap^2*sigma*rho_v)^(3/7)*(rho_l*drho*g*Dh_evap/(3*mu_l*L_e))^(1/7)*(F_r/(447*(1-F_r)))^(4/7)  "dry-out limit [W]"
+  Q_vap = D_i^2*Dh_evap*P_sat*rho_v/(64*mu_v*L_e)  "vapour-pressure limit [W]"
+END
+
+PROCEDURE RadAcoeff(pr, Tg : a_0, a_1, a_2, a_3)
+  "! a_i coefficients of the flue-gas emissivity polynomial: bilinear interpolation of the grid table (as in fg_radiative_htc_corr); pr [-], Tg in K, table values from Long's code via LaboThapPy"
+  Tg_c = min(max(Tg, 0), 2000)  "clipped at the grid ends as in the original [K]"
+  a_0 = interpolate2('fg_a0','pr','Tg','val',pr=pr,Tg=Tg_c)
+  a_1 = interpolate2('fg_a1','pr','Tg','val',pr=pr,Tg=Tg_c)
+  a_2 = interpolate2('fg_a2','pr','Tg','val',pr=pr,Tg=Tg_c)
+  a_3 = interpolate2('fg_a3','pr','Tg','val',pr=pr,Tg=Tg_c)
+END
+
+PROCEDURE RadHTC_FG(p_CO2, p_H2O, T_g_K, T_w_K, L_beam : h_r)
+  "! radiative HTC between flue gas and the evaporator wall (as in radiative_htc_fg); SI, temperatures in K"
+  sigma_sb = 5.67e-8  "Stefan-Boltzmann constant [W/(m^2*K^4)]"
+  pL = (p_CO2+p_H2O)*L_beam  "partial-pressure times beam length [m]"
+  pr = p_CO2/p_H2O  "[-]"
+  CALL RadAcoeff(pr, T_g_K : a_0, a_1, a_2, a_3)
+  epsilon = 10^(a_0+a_1*log10(pL)+a_2*log10(pL)^2+a_3*log10(pL)^3)/T_g_K  "gas emissivity [-]"
+  alpha = epsilon*(T_g_K/T_w_K)^0.5  "gas absorptivity [-]"
+  h_r0 = sigma_sb*(epsilon*T_g_K^4-alpha*T_w_K^4)/(T_g_K-T_w_K)
+  h_r = max(h_r0, 0)  "the original guards h_r<0 / T_w>T_g by returning 0"
+END
+
+PROCEDURE EuBank(a, b, Re : Eu_out)
+  "! Euler number of a crossflow over an INLINE tube bank (Beale, Thermopedia, as in euler_coeff); needs a square bank (a=b), snapped to the tabulated a values; Re outside the tabulated windows gives 0"
+  w_sq = Step(abs(a-b)-1e-12)
+  d1 = abs(a-1.25); d15 = abs(a-1.5); d2 = abs(a-2)
+  w_125 = Step(d15-d1)*Step(d2-d1)
+  w_15 = Step(d1-d15)*Step(d2-d15)
+  w_20 = Step(d1-d2)*Step(d15-d2)
+  i_lo_a = Step(Re-3)*Step(2e3-Re)
+  i_hi_a = Step(Re-2e3)*Step(2e6-Re)
+  E_125 = i_lo_a*(0.272+207/Re+102/Re^2-2860/Re^3) + i_hi_a*(0.267+2490/Re-9.27e6/Re^2+1e10/Re^3)
+  E_15 = i_lo_a*(0.263+86.7/Re-0.202/Re^2) + i_hi_a*(0.235+1970/Re-1.24e8/Re^2+3.12e11/Re^3-2.74e14/Re^4)
+  i_lo_2 = Step(Re-7)*Step(800-Re)
+  i_hi_2 = Step(Re-800)*Step(2e6-Re)
+  E_2 = i_lo_2*(0.188+56.6/Re-646/Re^2+6010/Re^3-1.83e5/Re^4) + i_hi_2*(0.247-0.595/Re+0.15/Re^2-0.137/Re^3+0.396/Re^4)
+  Eu_out = (1-w_sq)*(w_125*E_125+w_15*E_15+w_20*E_2)
+END
+
+PROCEDURE BankHTC(F$, T_in, T_out, T_w, P_in, u_in, N_col, D_o, S_T, S_L : h_o, DP_row, Nu_o, Re_mx, V_mx, a_g)
+  "! crossflow over an INLINE tube bank: Nusselt number (Zukauskas/Churchill-Bernstein regimes as in external_flow_inline_bank, CoolProp property path), pressure drop and V_max; single-phase branch only; SI, temperatures in K"
+  a_p = S_T/D_o
+  b_p = S_L/D_o
+  T_m = (T_in+T_out)/2
+  T_m_C = T_m-273.15
+  T_w_C = T_w-273.15
+  rho_f = density(F$, P=P_in, T=T_m_C)
+  mu_f = viscosity(F$, P=P_in, T=T_m_C)
+  k_f = conductivity(F$, P=P_in, T=T_m_C)
+  cp_f = cp(F$, P=P_in, T=T_m_C)
+  mu_w = viscosity(F$, P=P_in, T=T_w_C)
+  k_w = conductivity(F$, P=P_in, T=T_w_C)
+  cp_w = cp(F$, P=P_in, T=T_w_C)
+  Pr_f = cp_f*mu_f/k_f  "Prandtl number of the flow [-]"
+  Pr_w = cp_w*mu_w/k_w  "Prandtl number at the wall [-]"
+  V_mx = S_T/(S_T-D_o)*u_in  "maximum velocity between tubes [m/s]"
+  Re_mx = rho_f*V_mx*D_o/mu_f  "Reynolds number at V_max [-]"
+  a_g = sqrt(1.4*285.71429*T_in)  "ideal-air sound speed as in the original [m/s]"
+  i1 = Step(Re_mx-10)*Step(100-Re_mx)
+  iCB = Step(Re_mx-100)*Step(1000-Re_mx)
+  i3 = Step(Re_mx-1000)*Step(2e5-Re_mx)
+  i4 = Step(Re_mx-2e5)*Step(2e6-Re_mx)
+  w_st = Step(S_T/S_L-0.7)
+  C_c = 0.80*i1 + 0.27*w_st*i3 + 0.021*i4
+  m_c = 0.40*i1 + 0.63*w_st*i3 + 0.84*i4
+  Nu_CB = 0.3 + (0.62*sqrt(Re_mx)*Pr_f^(1/3))/(1+(0.4/Pr_f)^(2/3))^0.25*(1+(Re_mx/282000)^(5/8))^(4/5)
+  NL_c = min(N_col, 16)
+  C2c = interpolate('c2','NL','C2',NL=NL_c)  "row-count correction, tabulated like C2_NL/C2_VAL of the original"
+  wC2 = Step(19.5-N_col)*(i1+i3+i4)
+  wN20 = (1-Step(19.5-N_col))*(i1+i3+i4)
+  Nu_pow = (wC2*C2c+wN20)*C_c*Re_mx^m_c*Pr_f^0.36*(Pr_f/Pr_w)^0.25
+  Nu_o = iCB*Nu_CB + Nu_pow
+  CALL EuBank(a_p, b_p, Re_mx : Eu_n)
+  DP_row = 0.5*Eu_n*rho_f*V_mx^2  "pressure drop of one row [Pa]"
+  h_o = Nu_o*k_f/D_o  "convective HTC [W/(m^2*K)]"
+END
+
+PROCEDURE ExtConvBoil(D_o, F$, T_sat_C, T_tube_C, V_flow : h_cb)
+  "! forced-convection boiling HTC over a tube, Lienhard-Eichhorn critical heat flux (as in ext_conv_boil, Incropera); temperatures in °C"
+  rho_l = density(F$, T=T_sat_C, x=0)
+  h_l = enthalpy(F$, T=T_sat_C, x=0)
+  rho_v = density(F$, T=T_sat_C, x=1)
+  h_v = enthalpy(F$, T=T_sat_C, x=1)
+  sigma = surfacetension(F$, T=T_sat_C, x=0.5)
+  Dh_evap = h_v-h_l  "[J/kg]"
+  We_D = rho_v*V_flow^2*D_o/sigma  "Weber number [-]"
+  coef_low = (1/pi)*(1+(4/We_D)^(1/3))
+  w_lv = Step(coef_low-((0.275/pi)*sqrt(rho_l/rho_v)+1))
+  q_low = rho_v*V_flow*Dh_evap*coef_low
+  q_high = rho_v*V_flow*Dh_evap*(((rho_l/rho_v)^0.75)/(169*pi)+sqrt(rho_l/rho_v)/(19.2*pi*We_D^(1/3)))
+  h_cb = (w_lv*q_low+(1-w_lv)*q_high)/(T_tube_C-T_sat_C)  "[W/(m^2*K)]"
+END
+
+
+
+"!Inputs and parameters (example of hex_thermosyphon_example.py)"
+fluid_C$ = 'Cyclopentane'  "cold-side working fluid [-]"
+fluid_H$ = 'Air'  "hot-side fluid (flue gas as air) [-]"
+T_su_C = 434-273.15  "cold inlet temperature, 434 K in the original [°C]"
+m_dot_C = 13.76  "cold mass flow rate [kg/s]"
+P_su_C = 31e5  "cold inlet pressure, 31 bar in the original [Pa]"
+T_su_H = 465+273.15-273.15  "hot inlet temperature, 465 °C in the original [°C]"
+m_dot_H = 28.37  "hot mass flow rate [kg/s]"
+P_su_H = 101.8e3  "hot inlet pressure [Pa]"
+h_su_H = enthalpy(fluid_H$, T=T_su_H, P=P_su_H)
+h_su_C = enthalpy(fluid_C$, T=T_su_C, P=P_su_C)
+p_CO2 = 0.176  "CO2 partial pressure in the flue gas [-]"
+p_H2O = 0.101  "H2O partial pressure in the flue gas [-]"
+beta = pi/2  "thermosyphon inclination angle [rad]"
+D_o = 20/1000  "thermosyphon outer diameter [m]"
+t_wall = 3.5/1000  "tube wall thickness ('t' of the original) [m]"
+F_r = 0.6  "filling ratio of the thermosyphons [-]"
+k_pipe = 42.55  "pipe thermal conductivity [W/(m*K)]"
+geo_ann = 1  "annular geometry of the source example ('annular') [-]"
+H_core = 3  "core height [m]"
+L_core = 2.5  "core length [m]"
+W_core = 3  "core width [m]"
+coef_evap = 0.64  "fraction of the core height allocated to the evaporator [-]"
+foul = 0.2  "fouling factor of the external surfaces [-]"
+pitch_T = 2  "transverse pitch ratio S_T/D_o [-]"
+pitch_L = 2  "longitudinal pitch ratio S_L/D_o [-]"
+D_chimney = 2.2  "chimney diameter at the flue-gas inlet [m]"
+
+"!Geometry (source System(), section 1)"
+L_a = H_core/20  "adiabatic zone length [m]"
+L_e = coef_evap*(H_core-L_a)  "evaporator zone length [m]"
+L_c = (1-coef_evap)*(H_core-L_a)  "condenser zone length [m]"
+D_i = D_o-2*t_wall  "thermosyphon inner diameter [m]"
+S_T = pitch_T*D_o  "transverse tube pitch [m]"
+S_L = pitch_L*D_o  "longitudinal tube pitch [m]"
+N_col = FLOOR(L_core/S_T)-1  "number of tube columns crossed by the flows [-]"
+N_tubes_row = FLOOR((W_core-0.012)/S_T)  "number of tubes per row [-]"
+L_M = 1.08*(S_T*S_L-0.785*D_o^2)/D_o  "mean beam length for radiation [m]"
+L_eff = L_a+(L_e+L_c)/2  "thermosyphon effective length [m]"
+A_e_o = pi*L_e*D_o  "evaporator external area of one tube [m^2]"
+A_c_o = pi*L_c*D_o  "condenser external area of one tube [m^2]"
+A_axial = (pi/4)*(D_o^2-D_i^2)  "tube wall annular cross-section [m^2]"
+R_we = ln(D_o/D_i)/(2*pi*L_e*k_pipe)  "evaporator wall conduction resistance [K/W]"
+R_wc = ln(D_o/D_i)/(2*pi*L_c*k_pipe)  "condenser wall conduction resistance [K/W]"
+R_axial = L_eff/(k_pipe*A_axial)  "tube axial wall conduction resistance [K/W]"
+A_chimney = (pi/4)*D_chimney^2  "chimney cross-section [m^2]"
+A_casing_evap = W_core*(L_e+0.016)  "evaporator casing cross-section [m^2]"
+A_casing_cold = (L_c+0.02)*W_core  "condenser casing cross-section ('H_casing*W_casing' of the original) [m^2]"
+
+"!External fluids (source System(), section 2)"
+rho_H_in = density(fluid_H$, T=T_su_H, P=P_su_H)
+cp_H_in = cp(fluid_H$, P=P_su_H, h=h_su_H)
+V_dot_h = m_dot_H/rho_H_in  "hot volumetric flow rate [m^3/s]"
+u_h_chimney = V_dot_h/A_chimney  "hot velocity in the chimney [m/s]"
+rho_wf_in = density(fluid_C$, P=P_su_C, h=h_c[62])  "cold density at the tube-bank outlet [kg/m^3]"
+V_dot_wf = m_dot_C/rho_wf_in  "cold volumetric flow rate [m^3/s]"
+u_wf_in = V_dot_wf/A_casing_cold  "cold velocity in the condenser casing [m/s]"
+
+"!Nozzles (source System(), inlet and exhaust nozzle computations)"
+rho_in_n = P_su_H/(T_su_H+273.15)/285.71429  "nozzle inlet ideal-air density, as in the original [kg/m^3]"
+a_in_n = sqrt(1.4*285.71429*(T_su_H+273.15))  "nozzle inlet sound speed [m/s]"
+T_tot_n = T_su_H+273.15+u_h_chimney^2/(2*cp_H_in)  "nozzle stagnation temperature [K]"
+rho_tot_n = rho_in_n/((T_su_H+273.15)/T_tot_n)^(1/0.4)  "nozzle stagnation density [kg/m^3]"
+P_tot_n = rho_tot_n*285.71429*T_tot_n  "nozzle stagnation pressure [Pa]"
+A_crit_n = m_dot_H/(rho_in_n*a_in_n)  "nozzle critical area [m^2]"
+A_r_in = A_casing_evap/A_crit_n  "area ratio A/A* of the inlet nozzle [-]"
+P_h[1] = P_tot_n*interpolate('nozzle','AAstar','PP0',AAstar=A_r_in)
+T_h[1] = T_tot_n*interpolate('nozzle','AAstar','TT0',AAstar=A_r_in)
+u_h = interpolate('nozzle','AAstar','M',AAstar=A_r_in)*sqrt(1.4*285.71429*T_h[1])
+rho_h_out = density(fluid_H$, P=P_h[62], T=T_h[62])
+V_dot_h_out = m_dot_H/rho_h_out
+u_h_out = V_dot_h_out/A_casing_cold
+cp_h_exit = cp(fluid_H$, P=P_h[61], T=T_h[61])  "cp held from the last loop iteration of the original [J/(kg*K)]"
+rho_in_e = P_h[62]/T_h[62]/285.71429  "exhaust nozzle inlet ideal-air density [kg/m^3]"
+a_in_e = sqrt(1.4*285.71429*T_h[62])  "[m/s]"
+T_tot_e = T_h[62]+u_h_out^2/(2*cp_h_exit)  "[K]"
+rho_tot_e = rho_in_e/(T_h[62]/T_tot_e)^(1/0.4)  "[kg/m^3]"
+P_tot_e = rho_tot_e*285.71429*T_tot_e  "[Pa]"
+A_crit_e = m_dot_H/(rho_in_e*a_in_e)  "[m^2]"
+A_r_ex = A_chimney/A_crit_e  "area ratio A/A* of the exhaust nozzle [-]"
+P_h_out = P_tot_e*interpolate('nozzle','AAstar','PP0',AAstar=A_r_ex)
+T_h_out = T_tot_e*interpolate('nozzle','AAstar','TT0',AAstar=A_r_ex)
+u_h_out2 = interpolate('nozzle','AAstar','M',AAstar=A_r_ex)*sqrt(1.4*285.71429*T_h_out)
+
+"!Cold-side boundary: the cold fluid flows from row N_col+1 (inlet) to row 1 (outlet); this replaces the outer bisection of solve()"
+h_c[62] = h_su_C
+
+"!Per-row thermosyphon equations (source equ_syst, transcribed as simultaneous equations)"
+Tsat_C = temperature(fluid_C$, P=P_su_C, x=0)
+DUPLICATE i=1,61
+  in2ph[i] = 1-Step(abs(T_c[i]-Tsat_C)-1e-6)  "1 when the cold fluid sits on the saturation plateau (the try/except of the original)"
+  CALL BankHTC(fluid_C$, T_c_o_su[i], T_c[i], T_wc_o[i], P_su_C, u_wf_in, N_col, D_o, S_T, S_L : h_c_o[i], DP_cond[i], Nu_cond[i], Re_cond[i], V_max_oil[i], a_gc[i])
+  CALL ExtConvBoil(D_o, fluid_C$, min(T_c[i], Tsat_C), T_wc_o[i], u_wf_in : h_cb[i])  "T_sat clamped below Tsat: off the plateau the original never evaluates this branch (try/except)"
+  h_c_o_eff[i] = (1-in2ph[i])*h_c_o[i]+in2ph[i]*h_cb[i]  "cold-side HTC of the branch selected by the original flag"
+  R_c_o_foul[i] = (1+foul)/(A_c_o*h_c_o_eff[i])  "condenser external resistance with fouling [K/W]"
+  CALL RadHTC_FG(p_CO2, p_H2O, (T_h[i]+T_e_o_ex[i])/2, T_we_o[i], L_M : h_r_e_o[i])
+  CALL BankHTC(fluid_H$, T_h[i], T_e_o_ex[i], T_we_o[i], P_h[i], u_h, N_col, D_o, S_T, S_L : h_c_e_o[i], DP_evap[i], Nu_evap[i], Re_evap[i], V_max_air[i], a_gf[i])
+  h_e_o[i] = h_r_e_o[i]+h_c_e_o[i]  "hot-side HTC, convection + radiation [W/(m^2*K)]"
+  R_e_o_foul[i] = (1+foul)/(A_e_o*h_e_o[i])  "evaporator external resistance with fouling [K/W]"
+  P_HP_h[i] = pressure(Water, T=T_HP_h[i]-273.15, x=1)  "saturation pressure at the evaporator [Pa]"
+  DP_v[i] = DeltaPV_HP(D_i, L_eff, Q_dot_radial[i], T_HP_h[i])  "internal vapour pressure drop [Pa]"
+  P_HP_c[i] = P_HP_h[i]-DP_v[i]  "condenser-side vapour pressure [Pa]"
+  T_HP_c[i] = temperature(Water, P=P_HP_c[i], x=1)+273.15  "condenser saturation temperature [K]"
+  CALL ThResESDU(F_r, D_i, L_c, L_e, Q_dot_radial[i], T_HP_h[i] : R_cond_i[i], R_evap_i[i], R_pool_i[i], R_film_i[i], Re_f_i[i])
+  (T_h[i]-T_we_o[i])/R_e_o_foul[i] = Q_dot_axial[i]+Q_dot_radial[i]  "gas to evaporator wall [W]"
+  (T_we_o[i]-T_we_i[i])/R_we = Q_dot_radial[i]  "through the evaporator wall [W]"
+  (T_we_i[i]-T_HP_h[i])/R_evap_i[i] = Q_dot_radial[i]  "evaporator wall to heat-pipe fluid [W]"
+  (T_HP_c[i]-T_wc_i[i])/R_cond_i[i] = Q_dot_radial[i]  "heat-pipe fluid to condenser wall [W]"
+  (T_wc_i[i]-T_wc_o[i])/R_wc = Q_dot_radial[i]  "through the condenser wall [W]"
+  (T_wc_o[i]-T_c[i])/R_c_o_foul[i] = Q_dot_axial[i]+Q_dot_radial[i]  "condenser wall to cold fluid [W]"
+  T_we[i] = (T_we_i[i]+T_we_o[i])/2  "mean evaporator wall temperature [K]"
+  T_wc[i] = (T_wc_i[i]+T_wc_o[i])/2  "mean condenser wall temperature [K]"
+  (T_we[i]-T_wc[i])/R_axial = Q_dot_axial[i]  "axial wall conduction [W]"
+  cp_wf[i] = cp(fluid_C$, P=P_su_C, T=T_c_o_su[i])  "[J/(kg*K)]"
+  T_c_o_su[i] = T_c[i]-(Q_dot_axial[i]+Q_dot_radial[i])/(m_dot_C*cp_wf[i])  "cold temperature upstream of the row (f14)"
+  cp_H[i] = cp(fluid_H$, P=P_h[i], T=(T_h[i]+T_e_o_ex[i])/2)  "[J/(kg*K)]"
+  T_e_o_ex[i] = T_h[i]-(Q_dot_axial[i]+Q_dot_radial[i])/(m_dot_H*cp_H[i])  "hot temperature at the row exhaust (f15)"
+  P_evap_ex[i] = P_h[i]-DP_evap[i]  "hot-side pressure at the row exhaust [Pa]"
+  R_DP[i] = abs((T_HP_h[i]-T_HP_c[i])/Q_dot_radial[i])  "vapour-flow resistance [K/W]"
+  R_tube_tot[i] = 1/(1/(R_we+R_evap_i[i]+R_DP[i]+R_cond_i[i]+R_wc)+1/R_axial)  "total tube resistance [K/W]"
+END
+
+"!Row marching (source System(), loop over the columns)"
+DUPLICATE i=1,61
+  Q_dot_row[i] = (Q_dot_axial[i]+Q_dot_radial[i])*N_tubes_row  "heat of one full row [W]"
+  cp_h_m[i] = cp(fluid_H$, P=P_h[i], T=T_h[i])  "[J/(kg*K)]"
+  T_h[i+1] = T_h[i]-Q_dot_row[i]/(cp_h_m[i]*m_dot_H)  "hot temperature after the row [K]"
+  P_h[i+1] = P_evap_ex[i]  "hot pressure after the row [Pa]"
+  h_c[i+1] = h_c[i]-Q_dot_row[i]/m_dot_C  "cold enthalpy after the row [J/kg]"
+  T_c[i] = temperature(fluid_C$, P=P_su_C, h=h_c[i])+273.15  "[K]"
+END
+T_c[62] = temperature(fluid_C$, P=P_su_C, h=h_c[62])+273.15  "[K]"
+
+"!ESDU operating limits (computed per row in thermosyphon_model but not returned by the source; exposed here as outputs)"
+DUPLICATE i=1,61
+  CALL OpLimitsHP(F_r, D_i, L_e, beta, geo_ann, T_HP_h[i] : Q_dot_ent[i], Q_dot_boil[i], Q_dot_son[i], Q_dot_dry[i], Q_dot_vap[i])
+END
+
+"!Results"
+Q_dot_total = sum(Q_dot_row[i], i=1, 61)  "total heat exchanged [W]"

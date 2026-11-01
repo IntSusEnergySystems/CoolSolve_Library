@@ -236,3 +236,5 @@ trans-1-Chloro-3,3,3-trifluoropropene (R1233zd(E))", *J. Chem. Eng. Data* 62(9):
 - `CSL-0121` *heat_transfer_fluid_properties*: fluid-property library for the
   secondary and heat-transfer fluids (glycols, therminols); this model covers
   a refrigerant, from a correlation rather than a data sheet.
+- `CSL-0312` *orc_offdesign_scroll_expander* — off-design ORC whose plate correlations use this conductivity function (copied block, workflow §4).
+

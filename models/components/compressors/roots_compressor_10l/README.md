@@ -18,7 +18,13 @@ root.
 | **Source** | thermo_models, file `R2 - EX 2 - SB - Bis.EES` |
 | **Authors** | TBD (ULiège MSTh) |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0@ae7946e — failing (see *Verification*) |
+| **CoolSolve** | 0.4.0@9768373 — native file failing, variant runs (see *Verification*) |
+
+> **Which file to open.** The native file `roots_compressor_10l.eescode` does not
+> converge (status `failing`). The runnable variant
+> `roots_compressor_10l_no_inlet_drop.eescode` (same exercise without the inlet
+> orifice, verified against its EES stored solution) is described in
+> *Variant: no inlet pressure drop* below.
 
 ## Problem statement
 
@@ -123,10 +129,84 @@ Other numbers written in comments, from trials that are not the active window:
 
 <!-- FIGURE (added by the maintainer, docs/model_workflow.md §7): the model has no converged solution yet, so there is no plot. -->
 
+## Variant: no inlet pressure drop
+
+`roots_compressor_10l_no_inlet_drop.eescode` (+ `.initials`, `.sol`) is the
+variant to open when the native file fails. It is the file `MSTh-SB-R2-Ex2.EES`
+of the same course folder (candidate `TM-0034`): the same exercise without the
+inlet orifice, 34 equations, suction at `P_su` = 1 bar. The author's comment in
+the native file ("no suction pressure drop" trial) describes this case.
+
+What differs from the native file:
+
+- There is no inlet orifice (`A_thr`, throat of the fresh charge, `P_crit`,
+  `P_su_0` versus `P_su`). The suction pressure `P_su` is data, and the energy
+  balance of the inlet throat is absent.
+- The leakage nozzle uses `gamma` = 1.4 (provisional value of the source) in
+  `P_thrmin`, where the native file computes `gamma_l` from an isentropic
+  relation written with +273. The leakage entropy is `s_ex_1` = `s_su_1`.
+- Variable names are those of the source file: `P_su`, `h_su`, `s_su`,
+  `W_dot_s` (= `M_dot`·(`h_ex_s` − `h_su`)), `P_thrmin`, `rpm`, `A_thr_l`.
+  The leakage opening `A_thr_l` is an unknown, as in the native file.
+
+The equations are those of the EES source (valid EES, no CoolSolve gap); only
+the comments are translated. Every other quantity is solved as in the native
+file. The file needs its `.initials`: the stored EES values are shifted by the
+enthalpy and entropy reference offset of CoolSolve's Air (see *Conversion
+log*). Without `.initials` CoolSolve reports `SUCCESS` after 51 iterations, but
+the final verification fails with a CoolProp error at `H` = −5.196×10⁸ J/kg:
+that run is not a solution.
+
+| Quantity (variant) | CoolSolve | EES stored solution |
+|---|---:|---:|
+| Fresh-charge mass flow `M_dot` | 0.505247 kg/s | 0.505095 kg/s |
+| Leakage `M_dot_l` | 0.079697 kg/s | 0.079694 kg/s |
+| Leakage fraction `M_dot_l` / `M_dot` | 0.1577 | 0.1578 |
+| Shaft power `W_dot` | 21052.6 W | 21052.6 W |
+| Isentropic efficiency `epsilon_s` | 0.713132 | 0.712902 |
+| Leakage opening `A_thr_l` | 2.77228×10⁻⁴ m² | 2.77282×10⁻⁴ m² |
+
+These are the values of the "no suction pressure drop" trial written in the
+comments of the native file (`epsilon_s` 0.7129, `M_dot_l` 0.07969 kg/s,
+`A_thr_l` 0.0002773 m²), and with the 0.1577 fraction of its third trial.
+
+Candidate `TM-0037` (`R2 - Ex 2 - SB.EES`) is the same exercise as the native
+file with the inlet-orifice block commented out and `P_su` = `P_su_0`. Its EES
+stored solution is cleared (extractor warning: most stored values are −9999),
+so it has no reference of its own and no separate variant is shipped. As a
+check, the native file with the orifice block deleted and `P_su` = `P_su_0`
+solves in CoolSolve (41 equations, 41 variables) and gives `epsilon_s` =
+0.713132 and `A_thr_l` = 2.77212×10⁻⁴ m², the values of the variant (the small
+difference of `A_thr_l` comes from `gamma_l` of the isentropic relation).
+
 ## Verification
 
-`compare_solution.py` was not run. CoolSolve does not produce a solution, so
-there is no `max_rel_diff`.
+Native file (re-run with CoolSolve 0.4.0@9768373, 2026-10-31): it still fails,
+block 16 stops at Newton iteration 100 with the same residual 3.43807.
+`compare_solution.py` was not run on it: there is no solution, so no
+`max_rel_diff`.
+
+Variant `roots_compressor_10l_no_inlet_drop.eescode` (solves in 13 iterations,
+34 equations, 34 variables, largest block 6, residual 1.7e-10), compared with
+its EES stored solution (`MSTh-SB-R2-Ex2.EES`, 34 values, unit system SI,
+`--ees-units` not used):
+
+```
+34 common variables, 8 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0
+```
+
+The 8 differing variables are `h_ex_1`, `h_ex_s`, `h_su`, `h_su_1`, `h_thr`,
+`s_ex_1`, `s_su` and `s_su_1`: the absolute enthalpy and entropy reference of
+CoolSolve's Air differs from the EES one (+125870.58 J/kg and
+−1814.87 J/(kg·K) at 20 °C, 1×10⁵ Pa; measured in the native-file analysis below). The other 26
+values agree within the 1×10⁻³ tolerance (largest 3.22×10⁻⁴, `epsilon_s` and
+`W_dot_s`; `v_su` differs by 3.0×10⁻⁴ as for the native file). With the 8 EES
+enthalpies and entropies shifted by those offsets (a
+temporary reference table, not shipped), the same tool prints
+`34 common variables, 0 differ (rtol=0.001)` and the largest relative
+difference is 3.22×10⁻⁴.
+
+Native file, initial analysis (CoolSolve 0.3.0@ae7946e):
 
 The active window is square: 50 equations, 50 variables, largest block 7
 (the mixture). The failing block is the inlet orifice, size 6. The fresh-charge
@@ -182,6 +262,16 @@ exercise 2 bis. Source file, not copied into the library:
 
 EES X7.458. The text is plain, not RTF. Candidate `TM-0036`.
 
+Variant source (candidate `TM-0034`, EES X7.458, same stamp
+`{$ID$ #202: Laboratoire de Thermodynamique, U. de Liege}`; the file name carries
+the mark `SB`, not used as an author), also not copied:
+
+`~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 02/SB/MSTh-SB-R2-Ex2.EES`
+
+Candidate `TM-0037` (same exercise, cleared stored solution):
+
+`~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 02/SB/R2 - Ex 2 - SB.EES`
+
 ## Conversion log
 
 - **2026-10-15 — import**: `tools/ees_extract.py` on `R2 - EX 2 - SB - Bis.EES`.
@@ -203,6 +293,15 @@ EES X7.458. The text is plain, not RTF. Candidate `TM-0036`.
   in the EES enthalpy reference (`h_thr` + `C_thr`²/2 = `h_su_0`). There is
   no second physical root to select: the active orifice equations have no
   positive-pressure solution.
+- **2026-10-31 — variant (T-MERGE of `TM-0034`)**: `tools/ees_extract.py` on
+  `MSTh-SB-R2-Ex2.EES` (34 variables, no table, unit system SI mass deg Pa C J,
+  no rescaling). `roots_compressor_10l_no_inlet_drop.eescode`: equations
+  unchanged; `$UnitSystem` line deleted; French comments translated to English;
+  header added. `roots_compressor_10l_no_inlet_drop.initials`: the extracted
+  stored values, with the 5 enthalpies (`h_*`) plus 125870.5776559 J/kg and the
+  3 entropies (`s_*`) minus 1814.866798521 J/(kg·K), the CoolSolve − EES offsets
+  of the native-file analysis (10 significant digits). The `.sol` is the run of
+  this file. `TM-0037`: no variant (cleared stored solution), see *Variant*.
 - **Level**: equations 50 → 1; largest block 7 → 1; no function, procedure or
   array → 0; one component, no multi-zone discretisation → 0; the efficiencies
   are data and the window is one test point → 0; a curated start and the full

@@ -322,3 +322,4 @@ The model is published under the library licence (MIT).
 - `CSL-0082` *parabolic_trough_receiver_forristal*: first-principles 1D radial
   receiver balance of the same collector family, the counterpart of this
   absorber/efficiency-map model.
+- `CSL-0329` *orc_solar_complex*: discretised trough collector (Forristall radial heat balance per segment) coupled to the evaporator of an R245fa ORC.

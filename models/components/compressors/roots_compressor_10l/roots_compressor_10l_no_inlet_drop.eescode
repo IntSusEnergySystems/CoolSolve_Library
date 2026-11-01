@@ -1,0 +1,76 @@
+{=============================================================================
+  Roots compressor, 10 L (exercise 2) - no inlet pressure drop
+  Runnable variant of CoolSolve Library model CSL-0202
+ -----------------------------------------------------------------------------
+  Teaching exercise, ULiège MSTh repetition R2, exercise 2: the 10 L compressor
+  tested at 1 bar and 20 °C suction, 1.4 bar discharge (volumetric efficiency
+  85 %, mechanical efficiency 95 %), without the inlet orifice. The leakage
+  flow mixes with the fresh charge and a fictitious leakage opening A_thr_l is
+  found from the energy balance of the leakage nozzle. Equations as in the
+  original (EES X7.458); only the comments are translated.
+
+  Inputs : V_s, T_su, P_su, P_ex, epsilon_v, eta_m, rpm, gamma
+  Outputs: M_dot, M_dot_l, W_dot, epsilon_s, A_thr_l
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ~/Nextcloud/thermo_models/machines et systemes thermiques/
+           MSTh - Repetitions/TP 02/SB/MSTh-SB-R2-Ex2.EES (candidate TM-0034)
+  Authors: TBD (ULiège MSTh; file name mark SB)
+  Licence: MIT
+  Status : runs with the shipped .initials (README, section "Variant")
+=============================================================================}
+
+"MSTh - SB - R2 - Exercise 2"
+
+"Data"
+V_s=10E-3
+T_su=20
+P_su=1E5
+P_ex=1.4E5
+epsilon_v=0.85
+eta_m=0.95
+
+"Flow rate - volumetric efficiency:"
+epsilon_v=V_dot_su/V_dot_s
+V_dot_su=M_dot*v_su
+v_su=VOLUME(Air,T=T_su,P=P_su)
+V_dot_s=N*V_s
+N=rpm/60
+rpm=3000
+
+"Leakage flow"
+M_dot_in=M_dot+M_dot_l
+M_dot_in=V_dot_s/v_su_1
+"provisional value:"
+"v_su_1=v_su"
+v_su_1=VOLUME(Air,h=h_su_1,P=P_su)
+
+"Mechanical efficiency"
+W_dot_in=eta_m*W_dot
+W_dot_in=V_dot_s*(P_ex-P_su)
+
+"!Isentropic efficiency"
+epsilon_s=W_dot_s/W_dot
+W_dot_s=M_dot*(h_ex_s-h_su)
+h_ex_s=ENTHALPY(Air,s=s_su,P=P_ex)
+s_su=ENTROPY(Air,T=T_su,P=P_su)
+h_su=ENTHALPY(Air,T=T_su)
+
+"!Internal leakage"
+h_ex_1*M_dot_l+h_su*M_dot=h_su_1*M_dot_in
+h_ex_1=h_thr+C_thr^2/2
+h_ex_1=ENTHALPY(Air,s=s_su_1,P=P_ex)
+"provisional value:"
+"s_su_1=s_su"
+s_su_1=ENTROPY(Air,h=h_su_1,P=P_su)
+h_thr=ENTHALPY(Air,s=s_ex_1,P=P_thr)
+s_ex_1=s_su_1
+P_thr=max(P_su,P_thrmin)
+p_thrmin=(2/(gamma+1))^(gamma/(gamma-1))*p_ex
+"provisional value:"
+gamma=1.4
+"fictitious leakage opening"
+V_dot_thr=M_dot_l*v_thr
+v_thr=VOLUME(Air,h=h_thr,P=P_thr)
+V_dot_thr=A_thr_l*C_thr
+
+"!Parameter to be determined (as in the original comment): A_thr_l = 0.0002773 m^2"

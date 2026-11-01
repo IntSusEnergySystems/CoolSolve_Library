@@ -402,3 +402,4 @@ Transfer*, 3E, McGraw-Hill, 1998.
 - `CSL-0130` *pipe_pressure_drop_correlations*: the six explicit Darcy
   friction factors that can be computed for the `fd` argument of most functions
   of this file (smooth or rough pipe, single phase or supercritical CO2).
+- `CSL-0322` *pche_htc*: heat-transfer coefficient of the semicircular channels of a printed-circuit heat exchanger (LaboThapPy); a channel geometry that is neither a round pipe nor a rectangular duct.

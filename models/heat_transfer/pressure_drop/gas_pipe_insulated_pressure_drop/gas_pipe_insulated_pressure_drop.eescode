@@ -1,30 +1,34 @@
 {===========================================================================
   Gas pipe pressure drop and heat gain with insulation and fittings
-  CoolSolve Library model CSL-0158 - native file
+  CoolSolve Library model CSL-0158
  ---------------------------------------------------------------------------
   Insulated R717 gas line (Laborelec 2002 toolkit): heat gain from ambient
-  air, Colebrook-White friction drop, fitting K-factors from a table,
-  equivalent nozzle area A. Eight PROCEDUREs with array transfer, lookup
-  tables and the built-in Colebrook/StringPos calls, in the original EES
-  syntax (converted to SI-°C-Pa-J).
-  Status: blocked in CoolSolve (CS-GAP-COLEBROOK, CS-GAP-STRINGPOS,
-  CS-GAP-ARRAY-ARG); verified runnable variant:
-  gas_pipe_insulated_pressure_drop_coolsolve.eescode.
-
+  air, Colebrook-White friction drop (built-in Colebrook), fitting K-factors
+  from a table, equivalent nozzle area A. Eight PROCEDUREs with array
+  transfer SP[1..5] and lookup tables (converted to SI-°C-Pa-J).
+  Status: verified in CoolSolve 0.4.0 against the EES stored solution; the
+  StringPos test of R717_CHECK is rewritten with a table row (see README);
+  the guess of A is in the .initials file.
   Inputs : R$, pipe$, lambda$, T_bub, DELTAT_oh, U, L, z_iso_mm, T_A, R_pro,
            fitting counts, additional pressure drops
-  Outputs: m_dot, V_dot, Dp, p_o, Q, T_int, f, A, Head_loss, notes
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
   Source : ~/Nextcloud/thermo_models/modeles/LABORELEC_2002/4_Pressure Drop/
-           4_2_Gas Pipes/Gas Pipe/Gas_Pipe_Pressure_Drop.EES (EES X6.596) -
-           see README.md. Authors: F. Trebilcock (ULiege, 2002, Laborelec).
+           4_2_Gas Pipes/Gas Pipe/Gas_Pipe_Pressure_Drop.EES (EES X6.596)
+  Authors: F. Trebilcock (ULiege, 2002, Laborelec). Licence: MIT.
 ===========================================================================}
 
 "!#######################################################"
 PROCEDURE R717_CHECK(R$,Pipe$:NOTE$)
+"The original tests A = StringPos('ø',Pipe$) > 1 (designator with a ø after its
+first character, i.e. the copper pipes); row 4 of the pipedata table holds that
+test (1 = copper, 0 = other), see README (StringPos not implemented)."
 
-A = StringPos('ø',Pipe$)
-if (R$='R717') and (A>1) then
+if (Pipe$='User defined') then
+  copper=0
+else
+  copper=lookup('pipedata',4,Pipe$)
+endif
+if (R$='R717') and (copper>0) then
   NOTE$='Note: Copper pipes can not be used with R717 (ammonia)!!!'
 else
   NOTE$=''

@@ -211,3 +211,5 @@ does not cite any reference for its numbers.
 - `CSL-0183` *pump_polynomial_identification*, `CSL-0203` *variable_speed_pump_simulation*: dimensionless head and power polynomials of a selected pump.
 - `CSL-0069` *centrifugal_compressor_design_similarity*, `CSL-0235` *turbomachine_optimal_diameter*: diameter and speed from given flow and enthalpy factors; the Cordier line supplies such a diameter from `omega_s`.
 - `CSL-0207` *turboexpander_parameter_identification*: turbo-expander identification from test data.
+- `CSL-0327` *axial_turbine_loss_models*: blade-row loss coefficients (Aungier, Balje-Binsley, Kacker-Okapuu) once the machine type and diameter are chosen.
+- `CSL-0328` *radial_machine_loss_models*: loss mechanisms of a centrifugal compressor or radial turbine once the diameter is chosen.

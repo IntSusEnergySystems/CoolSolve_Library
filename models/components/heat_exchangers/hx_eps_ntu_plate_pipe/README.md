@@ -280,3 +280,4 @@ for the two-word `ELSE IF` ladder) — and string concatenation inside
   effectiveness instead of a computed `AU`.
 - CSL-0014 (`hx_constant_pinch`) — the LaboThapPy condenser translation of the
   same library, for a phase-changing plate exchanger.
+- CSL-0322 (`pche_htc`) — PCHE channel heat-transfer correlations; its straight-channel branches are the same Stephan-Preusser and Gnielinski-transition equations as this model, on the semicircular hydraulic diameter.

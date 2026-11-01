@@ -1,0 +1,86 @@
+{
+  "id": "CSL-0312",
+  "name": "orc_offdesign_scroll_expander",
+  "title": "Off-design ORC with semi-empirical scroll expander and moving-boundary plate heat exchangers",
+  "summary": "R1233zd(E) organic Rankine cycle solved off-design: Lemort semi-empirical scroll expander (P_M mode), pump on similarity laws with rated curves, two SWEP P200THx140 plate heat exchangers in a zone-wise moving-boundary formulation with Zivi charge. The low pressure is closed by the imposed 7 K pump-suction subcooling, as the source's iteration variable.",
+  "kind": "steady",
+  "level": 4,
+  "status": "failing",
+  "main_file": "orc_offdesign_scroll_expander.eescode",
+  "fluids": [
+    "R1233zd(E)",
+    "Water"
+  ],
+  "tags": [
+    "cycle",
+    "offdesign",
+    "semi-empirical",
+    "moving-boundary",
+    "correlation",
+    "scroll expander",
+    "part load"
+  ],
+  "language_features": [],
+  "stats": {
+    "n_equations": 231,
+    "largest_block": 134
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/machine/examples/ORC/fpi_orc_example.py",
+    "candidate_id": "LTP-057",
+    "authors": [
+      "Basile Chaudoir",
+      "Elise Neven"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy/tree/f03f7f47/labothappy/machine/examples/ORC/fpi_orc_example.py",
+    "license": "Apache-2.0 (source repository); this translation MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "Expander and pump verified against a re-run of the source Python components (LaboThapPy f03f7f47): pump N_pu/eta_pu to 10 digits, expander h_ex/W_dot/eta_is/N_rot/eps_v to 6e-6. The cycle block implements the source's utilisation closure (sum(w)=1); Levenberg-Marquardt drives its residual from 2.2e5 to 25.5 but exceeds the iteration budget, so no cycle solution is stored. Details in README.",
+    "checks": [
+      "source-rerun"
+    ],
+    "reference": "LaboThapPy f03f7f47 standalone component runs (expander_semi_empirical, pump_curve_similarity)",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@eb797fe",
+    "max_rel_diff": 0.00025,
+    "notes": "max_rel_diff concerns the expander+pump subset only (T_w vs the rounded Python print); the HX equations have no source reference (see README verification section)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0134",
+    "CSL-0153",
+    "CSL-0138",
+    "CSL-0111",
+    "CSL-0113",
+    "CSL-0114",
+    "CSL-0159",
+    "CSL-0132",
+    "CSL-0013"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-10-31",
+      "action": "added",
+      "by": "glm (card C-360)"
+    },
+    {
+      "date": "2026-10-31",
+      "action": "continuation (orchestrator review): LMTD guard fixed - initial residual 4.7e8 -> 5.8e5; state-point initials added; still failing",
+      "by": "glm"
+    },
+    {
+      "date": "2026-10-31",
+      "action": "source formulation implemented (orchestrator round 2): per-zone utilisation w = UA_req/UA_avail with the source closure sum(w)=1, w-weighted pressure drops and w-proportional charge; LM reaches residual 25.5 (from 2.2e5) but exceeds the iteration budget - still failing",
+      "by": "glm"
+    }
+  ]
+}

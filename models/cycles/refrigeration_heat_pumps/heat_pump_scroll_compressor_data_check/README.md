@@ -321,3 +321,5 @@ statement with the values of the manufacturer and the equations that check them.
   R134a — which built-in volume ratio to choose for given evaporation and
   condensation temperatures (same definition of the isentropic efficiency).
 - `CSL-0260` *scroll_compressor_reed_valve*: the full scroll compressor reference model with a discharge reed valve (R407C).
+- `CSL-0319` *r22_chiller_r407c_heat_pump*: R407C heat pump (20 to 80 degC) on the condenser heat of an R22 chiller;
+  its mid-quality (T, x = 0.5) calls are rewritten with the (P, x) pair.

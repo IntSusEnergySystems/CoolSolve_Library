@@ -1,10 +1,10 @@
 {
  "snapshot": {
-  "content_hash": "sha256:c0ab5196b185b5ff",
-  "files": 1469,
-  "bytes": 10194145,
-  "models": 288,
-  "functions": 495,
+  "content_hash": "sha256:db73608d8b943bf2",
+  "files": 1554,
+  "bytes": 10960453,
+  "models": 300,
+  "functions": 611,
   "taxonomy_version": "0.2"
  },
  "models": [
@@ -629,7 +629,7 @@
    "kind": "steady",
    "level": 3,
    "status": "verified",
-   "summary": "Reference model of Winandy, Saavedra & Lebrun (2002) as implemented by V. Lemort: six-step compression path (supply drop, heating-up, isentropic compression to the adapted pressure, isochoric compression, exhaust cooling, exhaust drop) with internal leakage, fictitious-wall heat transfers and electromechanical losses; parameters identified on a Copeland ZR72KC-TFD catalogue, refrigerant cycle reduced to an evaporator and a condenser at imposed saturation temperatures. A simplified variant without leakage (converted from the EES original in bar/kJ units) is included.",
+   "summary": "Reference model of Winandy, Saavedra & Lebrun (2002) as implemented by V. Lemort: six-step compression path (supply drop, heating-up, isentropic compression to the adapted pressure, isochoric compression, exhaust cooling, exhaust drop) with internal leakage, fictitious-wall heat transfers and electromechanical losses; parameters identified on a Copeland ZR72KC-TFD catalogue, refrigerant cycle reduced to an evaporator and a condenser at imposed saturation temperatures. A simplified variant without leakage (converted from the EES original in bar/kJ units) and a test-campaign variant (28 measured R22 points of the identification file, model vs measurements) are included.",
    "fluids": [
     "R22"
    ],
@@ -667,9 +667,9 @@
     "CSL-0260",
     "CSL-0123"
    ],
-   "coolsolve_version": "0.3.0@536d427",
-   "verified_on": "2026-10-05",
-   "verification_summary": "The main model was compared with the EES stored solution of the source file (120 common variables): all key outputs agree within 0.1 %, worst case 1.5 % on a small derived quantity (EES 7.9 vs CoolProp R22). The simplified variant agrees within 0.1 % with the stored solution of `scroll_compressor.EES` (95 common variables).",
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Main model vs EES stored solution (120 common variables): key outputs within 0.1 %, worst 1.5 %. Simplified variant vs stored solution of scroll_compressor.EES: within 0.1 %. Test-campaign variant (TM-0278) vs its stored solution (row 28): M_dot, W_dot within 0.05 %, t_ex 0.4 K; vs 28 measurements: mean abs. error 1.4 % (flow), 1.0 % (power).",
    "verification_checks": [
     "ees-stored-solution"
    ],
@@ -677,7 +677,8 @@
    "main_file": "scroll_compressor_semi_empirical.eescode",
    "figures": 0,
    "variants": [
-    "scroll_compressor_semi_empirical_simplified.eescode"
+    "scroll_compressor_semi_empirical_simplified.eescode",
+    "scroll_compressor_semi_empirical_test_campaign.eescode"
    ]
   },
   {
@@ -914,7 +915,8 @@
     "CSL-0020",
     "CSL-0035",
     "CSL-0069",
-    "CSL-0177"
+    "CSL-0177",
+    "CSL-0328"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -1057,7 +1059,8 @@
     "CSL-0023",
     "CSL-0035",
     "CSL-0177",
-    "CSL-0318"
+    "CSL-0318",
+    "CSL-0328"
    ],
    "coolsolve_version": "0.3.0@4798e2b",
    "verified_on": "2026-10-18",
@@ -1529,13 +1532,18 @@
    "url": "",
    "missing_features": [],
    "related": [],
-   "coolsolve_version": "0.3.0@ae7946e",
-   "verified_on": "2026-10-15",
-   "verification_summary": "No CoolSolve solution, so compare_solution.py was not run. The square window has no real root: the 5 cm inlet orifice chokes near 0.463 kg/s and the fresh-charge flow is 0.505 kg/s. Shipped initials: Newton stops at iteration 100 (residual 3.438). No initials: line search fails at iteration 0 (residual 1038). Stored P_thr is negative, so the EES point is not a solution.",
-   "verification_checks": [],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Native file: no solution (5 cm inlet orifice cannot pass the fresh-charge flow). Variant roots_compressor_10l_no_inlet_drop (TM-0034, no orifice): 26/34 values of its EES stored solution agree; the 8 h/s differ by the Air reference offset, all 34 agree after that shift (max 3.22e-4).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/components/compressors/roots_compressor_10l",
    "main_file": "roots_compressor_10l.eescode",
-   "figures": 0
+   "figures": 0,
+   "variants": [
+    "roots_compressor_10l_no_inlet_drop.eescode"
+   ]
   },
   {
    "id": "CSL-0213",
@@ -1742,7 +1750,8 @@
    "related": [
     "CSL-0007",
     "CSL-0078",
-    "CSL-0068"
+    "CSL-0068",
+    "CSL-0319"
    ],
    "coolsolve_version": "0.4.0@9768373",
    "verified_on": "2026-10-22",
@@ -1887,6 +1896,62 @@
    ],
    "path": "models/components/compressors/air_compressor_staging_comparison",
    "main_file": "air_compressor_staging_comparison.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0328",
+   "name": "radial_machine_loss_models",
+   "title": "Radial compressor and radial turbine loss models (function library)",
+   "category": "components/compressors",
+   "kind": "function",
+   "level": 3,
+   "status": "verified",
+   "summary": "Specific-enthalpy losses (J/kg) of a centrifugal compressor (rotor incidence, friction, blade loading, clearance, mixing, disc friction, recirculation; vaned-stator friction and incidence) and of a radial-inflow turbine (nozzle; rotor incidence, passage, clearance, trailing edge), one FUNCTION per loss plus a PROCEDURE per blade row. Invalid inputs or non-physical results return -1; source defects are documented. The demonstration program evaluates illustrative R134a and R245fa velocity triangles.",
+   "fluids": [
+    "R134a",
+    "R245fa"
+   ],
+   "tags": [
+    "centrifugal compressor",
+    "radial turbine",
+    "loss model",
+    "mean-line",
+    "incidence loss",
+    "disc friction",
+    "recirculation",
+    "clearance loss",
+    "nozzle loss",
+    "passage loss",
+    "trailing edge",
+    "function library",
+    "heat pump",
+    "ORC"
+   ],
+   "n_equations": 126,
+   "largest_block": 8,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/correlations/turbomachinery/radial_compressor_losses.py; ~/git/LaboThapPy/labothappy/correlations/turbomachinery/radial_turbine_losses.py",
+   "authors": [
+    "Basile Chaudoir (LaboThapPy, ULiege; author of both translated files in the repository history)"
+   ],
+   "license": "Apache-2.0 (original, LICENSE.txt of LaboThapPy); translation published under the CoolSolve_Library MIT licence (decision D3)",
+   "url": "https://github.com/PyLaboThap/LaboThapPy/tree/f03f7f473b190d0c0b5e296132b50565e89e4421/labothappy/correlations/turbomachinery",
+   "missing_features": [],
+   "related": [
+    "CSL-0327",
+    "CSL-0318",
+    "CSL-0069",
+    "CSL-0023"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "LaboThapPy (commit f03f7f47) re-run in a virtual environment (CoolProp 8.0.0) on the same inputs: 18 demonstration values agree to 5.3e-12 and 680 random-sweep values to 8.6e-10 (above 0.01 J/kg), with two documented changes (r4*b4, added D_h); invalid cases return -1. No publication checked.",
+   "verification_checks": [
+    "source-rerun"
+   ],
+   "path": "models/components/compressors/radial_machine_loss_models",
+   "main_file": "radial_machine_loss_models.eescode",
    "figures": 0
   },
   {
@@ -2037,7 +2102,8 @@
    "missing_features": [],
    "related": [
     "CSL-0037",
-    "CSL-0084"
+    "CSL-0084",
+    "CSL-0329"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
@@ -2091,7 +2157,8 @@
     "CSL-0141",
     "CSL-0147",
     "CSL-0314",
-    "CSL-0313"
+    "CSL-0313",
+    "CSL-0327"
    ],
    "coolsolve_version": "0.3.0@4c80b25",
    "verified_on": "2026-10-13",
@@ -2134,7 +2201,8 @@
    "missing_features": [],
    "related": [
     "CSL-0189",
-    "CSL-0314"
+    "CSL-0314",
+    "CSL-0327"
    ],
    "coolsolve_version": "0.3.0@96e4c95",
    "verified_on": "2026-10-15",
@@ -2487,7 +2555,8 @@
    "missing_features": [],
    "related": [
     "CSL-0135",
-    "CSL-0174"
+    "CSL-0174",
+    "CSL-0327"
    ],
    "coolsolve_version": "0.4.0@9768373",
    "verified_on": "2026-10-31",
@@ -2497,6 +2566,62 @@
    ],
    "path": "models/components/expanders_turbines/steam_turbine_baumann",
    "main_file": "steam_turbine_baumann.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0327",
+   "name": "axial_turbine_loss_models",
+   "title": "Axial-turbine loss models: Aungier, Balje-Binsley, Kacker-Okapuu (function library)",
+   "category": "components/expanders_turbines",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Total-pressure loss coefficients of an axial-turbine blade row: the complete Aungier system (profile, secondary-flow, tip-clearance, trailing-edge, supersonic-expansion, shock and lashing-wire losses, one FUNCTION each plus the PROCEDURE Aungier_axial_loss), the Balje-Binsley profile loss and the Kacker-Okapuu secondary loss of the sCO2 method of Lee et al. (2012). Coefficients outside 0..1 or with invalid inputs return -1; source defects are documented. The demonstration program re-runs the ORC (R245fa) and sCO2 (R744) examples of LaboThapPy.",
+   "fluids": [
+    "R245fa",
+    "R744"
+   ],
+   "tags": [
+    "axial turbine",
+    "loss model",
+    "Aungier",
+    "Balje-Binsley",
+    "Kacker-Okapuu",
+    "blade row",
+    "mean-line",
+    "profile loss",
+    "secondary loss",
+    "tip clearance",
+    "function library",
+    "sCO2",
+    "ORC"
+   ],
+   "n_equations": 221,
+   "largest_block": 8,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/correlations/turbomachinery/aungier_axial_turbine.py; ~/git/LaboThapPy/labothappy/correlations/turbomachinery/pressure_loss_model.py",
+   "authors": [
+    "Basile Chaudoir (LaboThapPy, ULiege; author of both translated files in the repository history)"
+   ],
+   "license": "Apache-2.0 (original, LICENSE.txt of LaboThapPy); translation published under the CoolSolve_Library MIT licence (decision D3)",
+   "url": "https://github.com/PyLaboThap/LaboThapPy/tree/f03f7f473b190d0c0b5e296132b50565e89e4421/labothappy/correlations/turbomachinery",
+   "missing_features": [],
+   "related": [
+    "CSL-0135",
+    "CSL-0318",
+    "CSL-0174",
+    "CSL-0314",
+    "CSL-0328"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "LaboThapPy (commit f03f7f47) re-run in a virtual environment (CoolProp 8.0.0) on the same inputs: 52 loss coefficients (ORC and sCO2 cases, Km, lashing wires, Balje-Binsley, Kacker-Okapuu) agree, max rel. deviation 4.1e-13; invalid cases flagged -1. Printed reference values of the ORC example reproduced within 8 % (rotor Yte +20 %); no publication checked.",
+   "verification_checks": [
+    "source-rerun"
+   ],
+   "path": "models/components/expanders_turbines/axial_turbine_loss_models",
+   "main_file": "axial_turbine_loss_models.eescode",
    "figures": 0
   },
   {
@@ -2659,7 +2784,9 @@
     "CSL-0252",
     "CSL-0133",
     "CSL-0134",
-    "CSL-0315"
+    "CSL-0315",
+    "CSL-0325",
+    "CSL-0326"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -3204,7 +3331,8 @@
     "CSL-0090",
     "CSL-0095",
     "CSL-0103",
-    "CSL-0105"
+    "CSL-0105",
+    "CSL-0321"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
@@ -3253,7 +3381,8 @@
    "missing_features": [],
    "related": [
     "CSL-0096",
-    "CSL-0161"
+    "CSL-0161",
+    "CSL-0312"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
@@ -3367,7 +3496,8 @@
     "CSL-0124",
     "CSL-0114",
     "CSL-0121",
-    "CSL-0153"
+    "CSL-0153",
+    "CSL-0312"
    ],
    "coolsolve_version": "0.3.0@3a5d5ce",
    "verified_on": "2026-10-13",
@@ -3423,7 +3553,8 @@
     "CSL-0113",
     "CSL-0115",
     "CSL-0121",
-    "CSL-0153"
+    "CSL-0153",
+    "CSL-0312"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
@@ -3584,7 +3715,8 @@
     "CSL-0090",
     "CSL-0115",
     "CSL-0138",
-    "CSL-0315"
+    "CSL-0315",
+    "CSL-0322"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
@@ -3640,7 +3772,8 @@
     "CSL-0087",
     "CSL-0091",
     "CSL-0126",
-    "CSL-0014"
+    "CSL-0014",
+    "CSL-0322"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
@@ -3758,7 +3891,8 @@
     "CSL-0127",
     "CSL-0250",
     "CSL-0251",
-    "CSL-0315"
+    "CSL-0315",
+    "CSL-0312"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
@@ -3973,6 +4107,62 @@
    "path": "models/components/heat_exchangers/ua_cecchinato_partload",
    "main_file": "ua_cecchinato_partload.eescode",
    "figures": 0
+  },
+  {
+   "id": "CSL-0326",
+   "name": "thermosyphon_hx",
+   "title": "Thermosyphon (heat-pipe) tube-bank heat exchanger with ESDU operating limits",
+   "category": "components/heat_exchangers",
+   "kind": "steady",
+   "level": 4,
+   "status": "failing",
+   "summary": "Crossflow heat-pipe heat exchanger: flue gas over the evaporator bank, water boiling/condensing inside each thermosyphon (ESDU pool/film resistances, vapour pressure drop, axial wall conduction), boiling Cyclopentane over the condenser bank, ESDU operating limits per row, marching solution over 61 tube rows. Translation of the LaboThapPy HexThermosyphon.",
+   "fluids": [
+    "Water",
+    "Air",
+    "Cyclopentane"
+   ],
+   "tags": [
+    "heat exchanger",
+    "heat pipe",
+    "thermosyphon",
+    "tube bank",
+    "operating limits",
+    "ESDU",
+    "thermal resistance network",
+    "phase change",
+    "radiation"
+   ],
+   "n_equations": 3421,
+   "largest_block": 2923,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/component/heat_exchanger/hex_thermosyphon.py",
+   "authors": [
+    "Basile Chaudoir",
+    "Elise Neven"
+   ],
+   "license": "Apache-2.0",
+   "url": "https://github.com/PyLaboThap/LaboThapPy/blob/f03f7f47/labothappy/component/heat_exchanger/hex_thermosyphon.py",
+   "missing_features": [],
+   "related": [
+    "CSL-0099",
+    "CSL-0014",
+    "CSL-0013"
+   ],
+   "coolsolve_version": "0.4.0@eb797fe",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Not verified end-to-end: both files fail to converge in CoolSolve 0.4.0. The CS-BUG-PROC-NEG-POW check (integer powers rewritten as products, fractional bases guarded, all inlined variables initialised) did not change the outcome; the correlation procedures were solved standalone at the model operating points and the reference numbers come from re-running the source example (7 bisection iterations, residual 9.7e-4).",
+   "verification_checks": [
+    "source-rerun",
+    "other-tool"
+   ],
+   "path": "models/components/heat_exchangers/thermosyphon_hx",
+   "main_file": "thermosyphon_hx.eescode",
+   "figures": 0,
+   "variants": [
+    "thermosyphon_hx_row.eescode"
+   ]
   },
   {
    "id": "CSL-0075",
@@ -4538,7 +4728,9 @@
     "CSL-0203",
     "CSL-0069",
     "CSL-0235",
-    "CSL-0207"
+    "CSL-0207",
+    "CSL-0327",
+    "CSL-0328"
    ],
    "coolsolve_version": "0.4.0@9768373",
    "verified_on": "2026-10-31",
@@ -4686,7 +4878,8 @@
    "missing_features": [],
    "related": [
     "CSL-0122",
-    "CSL-0310"
+    "CSL-0310",
+    "CSL-0325"
    ],
    "coolsolve_version": "0.3.0@47bb416",
    "verified_on": "2026-10-11",
@@ -5002,6 +5195,56 @@
    ],
    "path": "models/components/valves_nozzles_piping/return_duct_paramid",
    "main_file": "return_duct_paramid.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0325",
+   "name": "ejector_two_phase_co2",
+   "title": "Two-phase CO2 ejector (constant-efficiency sections, HEM-choked motive flow)",
+   "category": "components/valves_nozzles_piping",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Transcritical CO2 ejector of Liu & Groll type: motive and suction nozzles with constant isentropic efficiencies, constant-area mixing with a mixing efficiency, diffuser with the Owen et al. two-phase C_t pressure-recovery correlation and homogeneous void fraction; returns section pressures, exhaust state and section areas.",
+   "fluids": [
+    "R744"
+   ],
+   "tags": [
+    "ejector",
+    "two-phase",
+    "transcritical CO2",
+    "entrainment ratio",
+    "Kornhauser sound speed",
+    "homogeneous equilibrium",
+    "choked flow",
+    "refrigeration",
+    "work recovery"
+   ],
+   "n_equations": 76,
+   "largest_block": 11,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/component/expander/ejector_csteff.py",
+   "authors": [
+    "Basile Chaudoir"
+   ],
+   "license": "Apache-2.0/MIT (LaboThapPy; translated and credited, published under the library license)",
+   "url": "https://github.com/PyLaboThap/LaboThapPy/blob/f03f7f47/labothappy/component/expander/ejector_csteff.py",
+   "missing_features": [],
+   "related": [
+    "CSL-0118",
+    "CSL-0014"
+   ],
+   "coolsolve_version": "0.4.0@eb797fe",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Source example re-run in a throw-away venv (LaboThapPy f03f7f47, CoolProp 8.0.0) after fixing its broken void_fraction import; compare_solution.py: 33 common variables, 1 differ (x_mb, 0 by construction vs 5.8e-6 residue), max rel diff 4.48e-04 (v_mb), pressures <= 1.2e-04; scatter explained by the CoolProp version difference.",
+   "verification_checks": [
+    "source-rerun",
+    "energy-balance",
+    "order-of-magnitude"
+   ],
+   "path": "models/components/valves_nozzles_piping/ejector_two_phase_co2",
+   "main_file": "ejector_two_phase_co2.eescode",
    "figures": 0
   },
   {
@@ -6624,7 +6867,8 @@
     "CSL-0013",
     "CSL-0050",
     "CSL-0135",
-    "CSL-0139"
+    "CSL-0139",
+    "CSL-0323"
    ],
    "coolsolve_version": "0.3.0@e635c85",
    "verified_on": "2026-10-14",
@@ -7329,7 +7573,8 @@
     "CSL-0036",
     "CSL-0019",
     "CSL-0038",
-    "CSL-0252"
+    "CSL-0252",
+    "CSL-0329"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -7383,7 +7628,8 @@
     "CSL-0039",
     "CSL-0126",
     "CSL-0133",
-    "CSL-0252"
+    "CSL-0252",
+    "CSL-0312"
    ],
    "coolsolve_version": "0.3.0@4c80b25",
    "verified_on": "2026-10-13",
@@ -7444,7 +7690,8 @@
     "CSL-0121",
     "CSL-0124",
     "CSL-0159",
-    "CSL-0154"
+    "CSL-0154",
+    "CSL-0312"
    ],
    "coolsolve_version": "0.3.0@4798e2b",
    "verified_on": "2026-10-18",
@@ -7496,7 +7743,8 @@
     "CSL-0153",
     "CSL-0036",
     "CSL-0037",
-    "CSL-0084"
+    "CSL-0084",
+    "CSL-0312"
    ],
    "coolsolve_version": "0.3.0@4798e2b",
    "verified_on": "2026-10-18",
@@ -7648,6 +7896,61 @@
    "figures": 0
   },
   {
+   "id": "CSL-0312",
+   "name": "orc_offdesign_scroll_expander",
+   "title": "Off-design ORC with semi-empirical scroll expander and moving-boundary plate heat exchangers",
+   "category": "cycles/organic_rankine",
+   "kind": "steady",
+   "level": 4,
+   "status": "failing",
+   "summary": "R1233zd(E) organic Rankine cycle solved off-design: Lemort semi-empirical scroll expander (P_M mode), pump on similarity laws with rated curves, two SWEP P200THx140 plate heat exchangers in a zone-wise moving-boundary formulation with Zivi charge. The low pressure is closed by the imposed 7 K pump-suction subcooling, as the source's iteration variable.",
+   "fluids": [
+    "R1233zd(E)",
+    "Water"
+   ],
+   "tags": [
+    "cycle",
+    "offdesign",
+    "semi-empirical",
+    "moving-boundary",
+    "correlation",
+    "scroll expander",
+    "part load"
+   ],
+   "n_equations": 231,
+   "largest_block": 134,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/machine/examples/ORC/fpi_orc_example.py",
+   "authors": [
+    "Basile Chaudoir",
+    "Elise Neven"
+   ],
+   "license": "Apache-2.0 (source repository); this translation MIT",
+   "url": "https://github.com/PyLaboThap/LaboThapPy/tree/f03f7f47/labothappy/machine/examples/ORC/fpi_orc_example.py",
+   "missing_features": [],
+   "related": [
+    "CSL-0134",
+    "CSL-0153",
+    "CSL-0138",
+    "CSL-0111",
+    "CSL-0113",
+    "CSL-0114",
+    "CSL-0159",
+    "CSL-0132",
+    "CSL-0013"
+   ],
+   "coolsolve_version": "0.4.0@eb797fe",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Expander and pump verified against a re-run of the source Python components (LaboThapPy f03f7f47): pump N_pu/eta_pu to 10 digits, expander h_ex/W_dot/eta_is/N_rot/eps_v to 6e-6. The cycle block implements the source's utilisation closure (sum(w)=1); Levenberg-Marquardt drives its residual from 2.2e5 to 25.5 but exceeds the iteration budget, so no cycle solution is stored. Details in README.",
+   "verification_checks": [
+    "source-rerun"
+   ],
+   "path": "models/cycles/organic_rankine/orc_offdesign_scroll_expander",
+   "main_file": "orc_offdesign_scroll_expander.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0001",
    "name": "refrigeration_cycle_simple_compressor",
    "title": "Refrigeration cycle with a simple compressor model",
@@ -7695,7 +7998,8 @@
     "CSL-0167",
     "CSL-0136",
     "CSL-0133",
-    "CSL-0148"
+    "CSL-0148",
+    "CSL-0319"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-04",
@@ -7755,7 +8059,10 @@
     "CSL-0145",
     "CSL-0250",
     "CSL-0315",
-    "CSL-0313"
+    "CSL-0313",
+    "CSL-0312",
+    "CSL-0324",
+    "CSL-0326"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -7907,7 +8214,8 @@
    "related": [
     "CSL-0001",
     "CSL-0022",
-    "CSL-0025"
+    "CSL-0025",
+    "CSL-0319"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -8112,7 +8420,8 @@
     "CSL-0061",
     "CSL-0078",
     "CSL-0148",
-    "CSL-0260"
+    "CSL-0260",
+    "CSL-0319"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -8892,7 +9201,8 @@
     "CSL-0145",
     "CSL-0138",
     "CSL-0013",
-    "CSL-0313"
+    "CSL-0313",
+    "CSL-0324"
    ],
    "coolsolve_version": "0.4.0@9768373",
    "verified_on": "2026-10-21",
@@ -8993,7 +9303,8 @@
    "related": [
     "CSL-0014",
     "CSL-0133",
-    "CSL-0145"
+    "CSL-0145",
+    "CSL-0324"
    ],
    "coolsolve_version": "0.4.0@9768373",
    "verified_on": "2026-10-21",
@@ -9167,6 +9478,112 @@
    ],
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_nh3_two_stage_flooded",
    "main_file": "heat_pump_nh3_two_stage_flooded.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0319",
+   "name": "r22_chiller_r407c_heat_pump",
+   "title": "R22 chiller with an R407C heat pump upgrading its condenser heat",
+   "category": "cycles/refrigeration_heat_pumps",
+   "kind": "steady",
+   "level": 2,
+   "status": "modified",
+   "summary": "R22 water chiller (900 kW cooling at full load, effectiveness-NTU water circuits, constant isentropic efficiency) whose condenser heat (30-35 degC water) is upgraded to 60-70 degC water by an R407C heat pump (20 to 80 degC); gives the COP of each machine, the global COP and the part-load factors ELF and CLF.",
+   "fluids": [
+    "R22",
+    "R407C",
+    "Water"
+   ],
+   "tags": [
+    "chiller",
+    "heat pump",
+    "heat recovery",
+    "heat upgrade",
+    "R407C",
+    "zeotropic refrigerant",
+    "effectiveness-NTU",
+    "water circuit",
+    "global COP",
+    "part-load factors",
+    "exercise"
+   ],
+   "n_equations": 108,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 10/MSTH-SB-R10-EX4.EES",
+   "authors": [
+    "Stéphane Bertagnolio (ULiège Thermodynamics Laboratory, EES solution; initials SB of the file name)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [
+    "CSL-0033",
+    "CSL-0001",
+    "CSL-0068",
+    "CSL-0260"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Compared with the stored EES solution (74 variables, rtol 1e-3): R22 chiller within 0.84 %. R407C heat pump NOT reproduced: W_dot_el_pac 760.9 vs 903.5 kW (-16 %), M_dot_r_pac -11.9 %, COP_global 2.639 vs 2.426; cause is the R407C property difference (h_1-h_4 +13 %), not the (P,x) rewrite nor CLF; not confirmed, hence not verified.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/cycles/refrigeration_heat_pumps/r22_chiller_r407c_heat_pump",
+   "main_file": "r22_chiller_r407c_heat_pump.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0324",
+   "name": "zeotropic_hp_propane_isobutane",
+   "title": "Zeotropic propane/isobutane heat pump with glide-matching sectioned exchangers (TESPy)",
+   "category": "cycles/refrigeration_heat_pumps",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Water-to-water heat pump on a propane/isobutane mixture (CoolProp mixture backend): superheat over the dew point, subcooling under the bubble point, and an internal pinch imposed on 50-section condenser and evaporator profiles; COP, volumetric heating capacity and condenser glide versus composition.",
+   "fluids": [
+    "Propane",
+    "IsoButane",
+    "Water"
+   ],
+   "tags": [
+    "heat pump",
+    "zeotropic mixture",
+    "temperature glide",
+    "glide matching",
+    "sectioned heat exchanger",
+    "internal pinch",
+    "composition sweep",
+    "COP",
+    "volumetric heating capacity",
+    "tutorial"
+   ],
+   "n_equations": 567,
+   "largest_block": 335,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/docs/how_to_guides/zeotropic_heat_pump.ipynb",
+   "authors": [
+    "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy/blob/19425523ff7ecd67b36e7b90efe04a9480a9ebe3/docs/how_to_guides/zeotropic_heat_pump.ipynb",
+   "missing_features": [],
+   "related": [
+    "CSL-0253",
+    "CSL-0013",
+    "CSL-0250"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "The TESPy model (notebook class) was re-run in a throw-away venv with the CoolProp HEOS back end: COP, heating capacity per volume, glide and both pressures agree at 0, 30, 50 and 100 % propane to <= 1.9e-9 relative. The thermopack (Peng-Robinson) sweep of the notebook, reproduced exactly, differs by <= 0.95 % (COP) and 0.35 K (glide).",
+   "verification_checks": [
+    "source-rerun"
+   ],
+   "path": "models/cycles/refrigeration_heat_pumps/zeotropic_hp_propane_isobutane",
+   "main_file": "zeotropic_hp_propane_isobutane.eescode",
    "figures": 0
   },
   {
@@ -9460,7 +9877,8 @@
    "related": [
     "CSL-0121",
     "CSL-0029",
-    "CSL-0135"
+    "CSL-0135",
+    "CSL-0329"
    ],
    "coolsolve_version": "0.3.0@e635c85",
    "verified_on": "2026-10-14",
@@ -9922,7 +10340,7 @@
     "CSL-0154"
    ],
    "coolsolve_version": "0.4.0@9768373",
-   "verified_on": "2026-10-21",
+   "verified_on": "2026-10-31",
    "verification_summary": "Runnable variant vs the EES stored solution (compare_solution.py): 17 common variables, 0 differ at rtol=0.001; at rtol=1e-12 the largest printed residual is 4.54e-10 (k_IRR). The 461 EES-only values are procedure locals (CS-GAP-BODY-LOCALS-SOL) and stale/leftover records (CS-BUG-EXTRACT-STALE). The recomputed cash flows also match EES's own lookup table (0 differ at rtol=1e-9, max 8.06e-12).",
    "verification_checks": [
     "ees-stored-solution",
@@ -10159,7 +10577,8 @@
     "CSL-0058",
     "CSL-0150",
     "CSL-0141",
-    "CSL-0146"
+    "CSL-0146",
+    "CSL-0323"
    ],
    "coolsolve_version": "0.3.0@4c80b25",
    "verified_on": "2026-10-13",
@@ -10422,7 +10841,8 @@
     "CSL-0044",
     "CSL-0003",
     "CSL-0045",
-    "CSL-0057"
+    "CSL-0057",
+    "CSL-0320"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -11161,6 +11581,114 @@
    "figures": 0
   },
   {
+   "id": "CSL-0320",
+   "name": "r12_tank_discharge_heat_supply",
+   "title": "R12 tank discharge with heat supply (uniform-state open system)",
+   "category": "fundamentals/processes",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "A 25 L rigid tank of R12 (90 % liquid by volume, 25 C) is discharged through a nozzle at 100 kPa and -20 C with 180 m/s while heat keeps it at 25 C until only saturated vapour is left. The unsteady uniform-state first law gives the mass that left the tank (28.67 kg) and the heat supplied (4037 kJ).",
+   "fluids": [
+    "R12"
+   ],
+   "tags": [
+    "uniform-state open system",
+    "unsteady first law",
+    "tank discharge",
+    "heat supply",
+    "nozzle kinetic energy",
+    "two-phase",
+    "R12",
+    "exercise"
+   ],
+   "n_equations": 21,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R03/THD10_R03_E5.EES",
+   "authors": [
+    "TBD (ULiège, THD course exercise sets, folder THD10_R03)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [],
+   "related": [
+    "CSL-0048",
+    "CSL-0003"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Compared with the EES stored solution of the source file: 21 common variables, 8 differ at rtol=1e-3. The enthalpy/internal-energy differences are a reference-state offset (Q is independent of it); the rest comes from the R12 saturated vapour volume (+1.06 % in CoolProp), Q differs by 2.4e-3. With the EES property values substituted the stored solution is reproduced to 2.1e-10.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance"
+   ],
+   "path": "models/fundamentals/processes/r12_tank_discharge_heat_supply",
+   "main_file": "r12_tank_discharge_heat_supply.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0323",
+   "name": "h2_electrolyzer_fuel_cell",
+   "title": "Water electrolyser and H2/O2 fuel cell (TESPy WaterElectrolyzer and FuelCell)",
+   "category": "fundamentals/processes",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Both directions of the hydrogen electrochemical reaction in one file: water electrolyser (power in, H2 and O2 out) and H2/O2 fuel cell (power out), with species mass flows from the stoichiometry, energy balance with the formation enthalpy, HHV and LHV efficiencies, heat to a cooling-water stream, an eta characteristic for part load and a power-to-power round trip.",
+   "fluids": [
+    "Water",
+    "Hydrogen",
+    "Oxygen",
+    "H2",
+    "O2",
+    "H2O"
+   ],
+   "tags": [
+    "electrolyser",
+    "fuel cell",
+    "hydrogen",
+    "power-to-gas",
+    "power-to-power",
+    "HHV",
+    "LHV",
+    "efficiency characteristic",
+    "energy balance",
+    "TESPy"
+   ],
+   "n_equations": 207,
+   "largest_block": 4,
+   "origin_type": "software_library",
+   "source": "tespy",
+   "source_path": "~/git/tespy/src/tespy/components/reactors/water_electrolyzer.py and fuel_cell.py",
+   "authors": [
+    "Francesco Witte",
+    "Benjamin W. Portner",
+    "Jorrit Wronski",
+    "Karim Shawky (water_electrolyzer.py)",
+    "matbock (GitHub handle, fuel_cell.py)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/oemof/tespy/tree/19425523ff7ecd67b36e7b90efe04a9480a9ebe3/src/tespy/components/reactors",
+   "missing_features": [],
+   "related": [
+    "CSL-0139",
+    "CSL-0141"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "TESPy docstring examples and test_reactors.py cases re-run in a throw-away venv (7 cases): 90 common variables agree with CoolSolve, 0 differ at rtol 1e-9 (max relative 1.7e-9). The TESPy fuel-cell heat output violates the first law (sign of P); it is compared with a one-line sign-patched TESPy. e0 checked against the CoolSolve species (HHV 285.83 vs 286.0 kJ/mol).",
+   "verification_checks": [
+    "source-rerun",
+    "analytical",
+    "energy-balance"
+   ],
+   "path": "models/fundamentals/processes/h2_electrolyzer_fuel_cell",
+   "main_file": "h2_electrolyzer_fuel_cell.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0003",
    "name": "methane_tank_evaporation",
    "title": "Evaporation of liquid methane in a tank",
@@ -11195,7 +11723,8 @@
     "CSL-0044",
     "CSL-0045",
     "CSL-0048",
-    "CSL-0057"
+    "CSL-0057",
+    "CSL-0320"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-04",
@@ -11471,7 +12000,8 @@
    "related": [
     "CSL-0131",
     "CSL-0130",
-    "CSL-0121"
+    "CSL-0121",
+    "CSL-0312"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
@@ -11744,7 +12274,8 @@
     "CSL-0109",
     "CSL-0110",
     "CSL-0128",
-    "CSL-0130"
+    "CSL-0130",
+    "CSL-0322"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
@@ -11932,7 +12463,8 @@
     "CSL-0101",
     "CSL-0103",
     "CSL-0104",
-    "CSL-0128"
+    "CSL-0128",
+    "CSL-0322"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
@@ -12162,7 +12694,8 @@
     "CSL-0099",
     "CSL-0101",
     "CSL-0091",
-    "CSL-0110"
+    "CSL-0110",
+    "CSL-0321"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
@@ -12345,7 +12878,8 @@
     "CSL-0077",
     "CSL-0105",
     "CSL-0091",
-    "CSL-0109"
+    "CSL-0109",
+    "CSL-0326"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
@@ -12517,7 +13051,8 @@
     "CSL-0038",
     "CSL-0087",
     "CSL-0091",
-    "CSL-0317"
+    "CSL-0317",
+    "CSL-0322"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
@@ -12627,7 +13162,7 @@
    "category": "heat_transfer/convection",
    "kind": "function",
    "level": 2,
-   "status": "blocked",
+   "status": "verified",
    "summary": "EES FUNCTION library of the thirteen void-fraction correlations of the LaboThapPy void_fraction module: homogeneous (no slip), Zivi, Fauske, Premoli and Hughmark (slip-ratio family), Lockhart-Martinelli, Graham and Cioncolini-Thome (empirical, the last two respectively condensation-only and annular flow), Armand-Treschev and Bankoff (K times the homogeneous void fraction), and the drift-flux models Rouhani-Axelsson, Dix and Woldesemayat-Ghajar; the Reynolds and Weber numbers Premoli needs are helper functions. Demonstrated on the case of the original example (R410A at 1.2 MPa, 8 mm pipe, 300 kg/m^2.s, ten qualities).",
    "fluids": [
     "R410A"
@@ -12670,27 +13205,125 @@
    ],
    "license": "MIT (declared in pyproject.toml; LICENSE.txt of the library is Apache-2.0) / model published under the library MIT licence (decision D3)",
    "url": "https://github.com/PyLaboThap/LaboThapPy",
-   "missing_features": [
-    "CS-BUG-IMPLICIT-PROC"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0130",
     "CSL-0103",
     "CSL-0121",
     "CSL-0132"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-09",
-   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-BUG-IMPLICIT-PROC): 130 values compared with a re-run of LaboThapPy void_fraction_example.py, 0 differ at rtol=1e-3, largest relative deviation 2.203e-05 (surface tension taken at saturation). In the native file 10 alpha_Hughmark values differ, up to 4.748e-02.",
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Native file compared with a re-run of the LaboThapPy void_fraction_example.py (commit f03f7f47, CoolProp 8.0.0): 130 void fractions, 0 differ at rtol=1e-3, largest relative deviation 2.203e-05 (Dix, x = 0.95; surface tension taken at saturation). Hughmark (bisection vs the original's Brent solve) agrees to 8.2e-9.",
    "verification_checks": [
     "source-rerun"
    ],
    "path": "models/heat_transfer/convection/void_fraction_correlations",
    "main_file": "void_fraction_correlations.eescode",
-   "figures": 0,
-   "variants": [
-    "void_fraction_correlations_coolsolve.eescode"
-   ]
+   "figures": 0
+  },
+  {
+   "id": "CSL-0321",
+   "name": "shell_side_htc",
+   "title": "Shell-side heat-transfer coefficient: Kern, Donohue and Bell-Delaware with J corrections (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Twenty-two EES FUNCTIONs for the shell-side heat-transfer coefficient of a shell-and-tube exchanger: crossflow areas and hydraulic diameter, the Kern and Donohue coefficients, and the Bell-Delaware method (ideal-bank Colburn factor from the tabulated a1..a4 coefficients, the factors Jc, Jl, Jb, Jr, Js computed from the geometry for 0, 45 and 60 degree layouts, and the assembled h). Translation of LaboThapPy shell_and_tube_htc.py; the demo reproduces the source example and 12 further cases, and exposes two probable source slips (Smax parenthesis, Jr product instead of power) with a method flag.",
+   "fluids": [],
+   "tags": [
+    "shell-and-tube",
+    "shell-side heat transfer",
+    "bell-delaware",
+    "kern",
+    "donohue",
+    "colburn factor",
+    "correlation",
+    "heat exchanger",
+    "function library"
+   ],
+   "n_equations": 76,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/correlations/convection/shell_and_tube_htc.py",
+   "authors": [
+    "Basile Chaudoir (LaboThapPy, ULiege)",
+    "D. Q. Kern (Process Heat Transfer, 1950)",
+    "K. J. Bell (Delaware method, 1963, 1988)"
+   ],
+   "license": "Apache-2.0 (LaboThapPy LICENSE.txt); translation published under the library license",
+   "url": "https://github.com/PyLaboThap/LaboThapPy/blob/f03f7f473b190d0c0b5e296132b50565e89e4421/labothappy/correlations/convection/shell_and_tube_htc.py",
+   "missing_features": [],
+   "related": [
+    "CSL-0103",
+    "CSL-0095",
+    "CSL-0110"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Source re-run (LaboThapPy f03f7f47 in a virtualenv, CoolProp 8.0.0): Kern and Bell-Delaware of the source example plus 12 layout/flow cases and their intermediates, 47 values, 0 differ at rtol 1e-9, max deviation 3.5e-13. J factors agree with CSL-0103; Kern areas recomputed analytically. Donohue is a repaired call (source crashes).",
+   "verification_checks": [
+    "source-rerun",
+    "cross-model",
+    "analytical"
+   ],
+   "path": "models/heat_transfer/convection/shell_side_htc",
+   "main_file": "shell_side_htc.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0322",
+   "name": "pche_htc",
+   "title": "Printed-circuit heat exchanger (PCHE): channel heat-transfer coefficient correlations (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "EES FUNCTIONs for the convective heat-transfer coefficient in the semicircular channels of a printed-circuit heat exchanger (sCO2 recuperators): straight channel (Stephan-Preusser laminar and Gnielinski transition on the semicircle hydraulic diameter) and the bending-angle zigzag fits of PCHE_Lee with their friction-factor fit (recommended, alpha <= 40 deg for Re <= 2000). The zigzag formula of PCHE_conv is not physical in the original and returns -1; wavy and airfoil channels are not implemented in the original.",
+   "fluids": [],
+   "tags": [
+    "printed-circuit heat exchanger",
+    "PCHE",
+    "semicircular channel",
+    "zigzag channel",
+    "supercritical CO2",
+    "nusselt number",
+    "correlation",
+    "compact heat exchanger",
+    "function library"
+   ],
+   "n_equations": 66,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy/labothappy/correlations/convection/printed_circuit_htc.py",
+   "authors": [
+    "Basile Chaudoir (LaboThapPy, ULiège)",
+    "S. W. Lee, S. M. Shin, S. Chung, H. Jo (PCHE_conv reference)",
+    "Y. Jiang, E. Liese, S. E. Zitney, D. Bhattacharyya (PCHE_Lee reference)",
+    "Y. Lee, S. Lee, H. B. Park, K. W. Seo, D. Lee (PCHE_Lee reference)"
+   ],
+   "license": "Apache-2.0 (LICENSE.txt and NOTICE.txt of LaboThapPy; pyproject.toml declares MIT)",
+   "url": "https://github.com/PyLaboThap/LaboThapPy/blob/f03f7f47/labothappy/correlations/convection/printed_circuit_htc.py",
+   "missing_features": [],
+   "related": [
+    "CSL-0087",
+    "CSL-0091",
+    "CSL-0104",
+    "CSL-0127",
+    "CSL-0128"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Compared with a re-run of PCHE_conv (straight) and PCHE_Lee of LaboThapPy 0.1.0 (commit f03f7f47) in a throw-away venv: 27 common variables, 0 differ (rtol=0.001), largest relative deviation 4.0e-13. Publications not checked; the non-physical zigzag formula of PCHE_conv is not shipped (returns -1).",
+   "verification_checks": [
+    "source-rerun"
+   ],
+   "path": "models/heat_transfer/convection/pche_htc",
+   "main_file": "pche_htc.eescode",
+   "figures": 0
   },
   {
    "id": "CSL-0018",
@@ -12784,7 +13417,8 @@
     "CSL-0091",
     "CSL-0110",
     "CSL-0130",
-    "CSL-0131"
+    "CSL-0131",
+    "CSL-0321"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
@@ -12925,8 +13559,8 @@
    "category": "heat_transfer/pressure_drop",
    "kind": "steady",
    "level": 3,
-   "status": "blocked",
-   "summary": "Insulated R717 gas line of the Laborelec 2002 toolkit: heat gain from ambient air (internal Nusselt correlation, insulation cylinder, external convection, dew point), Colebrook-White friction drop, fitting K-factor drops from a nearest-diameter table and an equivalent nozzle area identified from the total pressure drop.",
+   "status": "verified",
+   "summary": "Insulated R717 gas line of the Laborelec 2002 toolkit: heat gain from ambient air (internal Nusselt correlation, insulation cylinder, external convection, dew point), Colebrook-White friction drop (built-in Colebrook), fitting K-factor drops from a nearest-diameter table and an equivalent nozzle area identified from the total pressure drop. A liquid-line variant (R134a, TM-0309) is shipped as a runnable variant.",
    "fluids": [
     "R717",
     "AirH2O"
@@ -12941,7 +13575,7 @@
     "R717",
     "refrigeration line"
    ],
-   "n_equations": 107,
+   "n_equations": 72,
    "largest_block": 10,
    "origin_type": "teaching",
    "source": "thermo_models",
@@ -12953,21 +13587,15 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-COLEBROOK",
-    "CS-GAP-STRINGPOS",
-    "CS-GAP-ARRAY-ARG",
-    "CS-BUG-PI-FUNCTION",
-    "CS-BUG-IMPLICIT-PROC"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0018",
     "CSL-0130",
     "CSL-0316"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-08",
-   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-COLEBROOK, CS-GAP-STRINGPOS, CS-GAP-ARRAY-ARG, CS-BUG-PI-FUNCTION and CS-BUG-IMPLICIT-PROC): compared with the EES stored solution, 48 common variables, 44 within 6.2e-4; the rest are an enthalpy reference offset (7.97e-2) and stale stored records.",
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Gas native file vs the EES stored solution (52 variables): 48 common, 44 within 6.2e-4; the 4 others are an enthalpy reference offset (h_i/SP[2]), stale Pr and cp-derived DELTAT_total. Liquid-line variant (TM-0309, R134a) vs its stored solution: 48 common, 8 differ at 1e-3 (enthalpy offset, f 2.8e-3, Dp 2.0e-3).",
    "verification_checks": [
     "ees-stored-solution"
    ],
@@ -12975,7 +13603,8 @@
    "main_file": "gas_pipe_insulated_pressure_drop.eescode",
    "figures": 0,
    "variants": [
-    "gas_pipe_insulated_pressure_drop_coolsolve.eescode"
+    "gas_pipe_insulated_pressure_drop_liquid_line.eescode",
+    "gas_pipe_insulated_pressure_drop_liquid_line_coolsolve.eescode"
    ]
   },
   {
@@ -14409,7 +15038,8 @@
    "related": [
     "CSL-0083",
     "CSL-0119",
-    "CSL-0129"
+    "CSL-0129",
+    "CSL-0329"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
@@ -14550,7 +15180,8 @@
    "missing_features": [],
    "related": [
     "CSL-0083",
-    "CSL-0082"
+    "CSL-0082",
+    "CSL-0329"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
@@ -14562,6 +15193,70 @@
    "path": "models/renewables/solar_thermal/parabolic_trough_collector_discretised",
    "main_file": "parabolic_trough_collector_discretised.eescode",
    "figures": 0
+  },
+  {
+   "id": "CSL-0329",
+   "name": "orc_solar_complex",
+   "title": "Solar-driven R245fa ORC with a discretised parabolic-trough collector and plate heat exchangers",
+   "category": "renewables/solar_thermal",
+   "kind": "steady",
+   "level": 4,
+   "status": "blocked",
+   "summary": "Parabolic-trough field (46 m, glycol, 20 segments with the Forristall 1D radial receiver balance) heating the plate evaporator of an R245fa ORC with a plate recuperator, a pinch-fixed condenser, a pump and a two-stage hermetic scroll expander (optimal intermediate pressure ratio, MODULE flattened per decision D10). Plate counts are solved from imposed pressure drops (Thonon, Hsieh); the field outlet temperature drives the cycle: 5.4 kW net, cycle efficiency 0.106, collector efficiency 0.555.",
+   "fluids": [
+    "R245fa",
+    "Water",
+    "Air",
+    "Glycol"
+   ],
+   "tags": [
+    "solar thermal",
+    "parabolic trough",
+    "organic Rankine cycle",
+    "R245fa",
+    "plate heat exchanger",
+    "scroll expander",
+    "two-stage expansion",
+    "recuperator",
+    "Forristall",
+    "HTF loop",
+    "discretised collector",
+    "plant model"
+   ],
+   "n_equations": 979,
+   "largest_block": 644,
+   "origin_type": "research",
+   "source": "coolsolve_examples",
+   "source_path": "~/git/CoolSolve/examples/orc_solar_complex.eescode",
+   "authors": [
+    "S. Quoilin (ULiège Thermodynamics Laboratory) — probable, to be confirmed by the maintainer (EES licence stamp: Jean Lebrun lab licence, initials 'sylvain')",
+    "R. Forristall (NREL; scientific model and EES functions of the receiver, NREL/TP-550-34169, 2003)"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [
+    "CS-GAP-INDEX-VAR"
+   ],
+   "related": [
+    "CSL-0040",
+    "CSL-0129",
+    "CSL-0082",
+    "CSL-0147",
+    "CSL-0117"
+   ],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-10-31",
+   "verification_summary": "Concerns the runnable variant (native blocked by CS-GAP-INDEX-VAR): compared with the solution stored in the original EES file, 927 common variables, 302 differ at rtol=0.001, mostly R245fa-property-driven plate sizes; first-law results within 4.3e-03 (M_dot 2.75e-03, W_dot_net 4.26e-03); energy balances close.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance"
+   ],
+   "path": "models/renewables/solar_thermal/orc_solar_complex",
+   "main_file": "orc_solar_complex.eescode",
+   "figures": 0,
+   "variants": [
+    "orc_solar_complex_coolsolve.eescode"
+   ]
   }
  ],
  "functions": [
@@ -14622,6 +15317,90 @@
    "path": "models/heat_transfer/pressure_drop/pipe_pressure_drop_correlations/pipe_pressure_drop_correlations.eescode"
   },
   {
+   "function": "Amalfi2P",
+   "type": "PROCEDURE",
+   "signature": "(FL$, Pm, x, Mdot, Nch, Dh, L, W, b, BetaDeg, Atot: alpha, DPu)",
+   "model_id": "CSL-0312",
+   "path": "models/cycles/organic_rankine/orc_offdesign_scroll_expander/orc_offdesign_scroll_expander.eescode"
+  },
+  {
+   "function": "Aungier_axial_loss",
+   "type": "PROCEDURE",
+   "signature": "(alpha1, alpha2, beta_g, chi1, c, delta, D_lw, e_r, h, mu2, M1, M2, N_lw, R_c, rho2, s, t_max, t_TE, vm2, w2 : Y_tot, Yp, Ys, Ycl, Yte, Yex, Ysh, Ylw)",
+   "model_id": "CSL-0327",
+   "path": "models/components/expanders_turbines/axial_turbine_loss_models/axial_turbine_loss_models.eescode"
+  },
+  {
+   "function": "Aungier_Km",
+   "type": "FUNCTION",
+   "signature": "(M2p, s, R_c)",
+   "model_id": "CSL-0327",
+   "path": "models/components/expanders_turbines/axial_turbine_loss_models/axial_turbine_loss_models.eescode"
+  },
+  {
+   "function": "Aungier_Kp",
+   "type": "FUNCTION",
+   "signature": "(M1p, M2p)",
+   "model_id": "CSL-0327",
+   "path": "models/components/expanders_turbines/axial_turbine_loss_models/axial_turbine_loss_models.eescode"
+  },
+  {
+   "function": "Aungier_Kre",
+   "type": "FUNCTION",
+   "signature": "(Re_c, c, e_r)",
+   "model_id": "CSL-0327",
+   "path": "models/components/expanders_turbines/axial_turbine_loss_models/axial_turbine_loss_models.eescode"
+  },
+  {
+   "function": "Aungier_Ycl",
+   "type": "FUNCTION",
+   "signature": "(a1p, a2p, c, h, s, delta)",
+   "model_id": "CSL-0327",
+   "path": "models/components/expanders_turbines/axial_turbine_loss_models/axial_turbine_loss_models.eescode"
+  },
+  {
+   "function": "Aungier_Yex",
+   "type": "FUNCTION",
+   "signature": "(M2p)",
+   "model_id": "CSL-0327",
+   "path": "models/components/expanders_turbines/axial_turbine_loss_models/axial_turbine_loss_models.eescode"
+  },
+  {
+   "function": "Aungier_Ylw",
+   "type": "FUNCTION",
+   "signature": "(rho2, vm2, D_lw, mu2, N_lw, h, w2)",
+   "model_id": "CSL-0327",
+   "path": "models/components/expanders_turbines/axial_turbine_loss_models/axial_turbine_loss_models.eescode"
+  },
+  {
+   "function": "Aungier_Yp",
+   "type": "FUNCTION",
+   "signature": "(a1p, a2p, beta_g, b1p, c, e_r, mu2, M1p, M2p, R_c, rho2, s, t_max, w2)",
+   "model_id": "CSL-0327",
+   "path": "models/components/expanders_turbines/axial_turbine_loss_models/axial_turbine_loss_models.eescode"
+  },
+  {
+   "function": "Aungier_Ys",
+   "type": "FUNCTION",
+   "signature": "(a1p, a2p, b1p, b_z, c, e_r, h, mu2, M1p, M2p, rho2, s, w2)",
+   "model_id": "CSL-0327",
+   "path": "models/components/expanders_turbines/axial_turbine_loss_models/axial_turbine_loss_models.eescode"
+  },
+  {
+   "function": "Aungier_Ysh",
+   "type": "FUNCTION",
+   "signature": "(M1p, M2p)",
+   "model_id": "CSL-0327",
+   "path": "models/components/expanders_turbines/axial_turbine_loss_models/axial_turbine_loss_models.eescode"
+  },
+  {
+   "function": "Aungier_Yte",
+   "type": "FUNCTION",
+   "signature": "(beta_g, s, t_TE)",
+   "model_id": "CSL-0327",
+   "path": "models/components/expanders_turbines/axial_turbine_loss_models/axial_turbine_loss_models.eescode"
+  },
+  {
    "function": "B1_elbow",
    "type": "FUNCTION",
    "signature": "(R0_d)",
@@ -14634,6 +15413,27 @@
    "signature": "(Dshell, L_unsupported, service)",
    "model_id": "CSL-0110",
    "path": "models/components/heat_exchangers/shell_and_tube_sizing/shell_and_tube_sizing.eescode"
+  },
+  {
+   "function": "BaljeBinsley_Yp",
+   "type": "FUNCTION",
+   "signature": "(Re, t_TE, chord, t_blade, chi1, chi2)",
+   "model_id": "CSL-0327",
+   "path": "models/components/expanders_turbines/axial_turbine_loss_models/axial_turbine_loss_models.eescode"
+  },
+  {
+   "function": "BankHTC",
+   "type": "PROCEDURE",
+   "signature": "(F$, T_in, T_out, T_w, P_in, u_in, N_col, D_o, S_T, S_L : h_o, DP_row, Nu_o, Re_mx, V_mx, a_g)",
+   "model_id": "CSL-0326",
+   "path": "models/components/heat_exchangers/thermosyphon_hx/thermosyphon_hx.eescode"
+  },
+  {
+   "function": "BD_coef",
+   "type": "FUNCTION",
+   "signature": "(layout, Re, i)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
   },
   {
    "function": "becomes",
@@ -14741,6 +15541,13 @@
    "path": "models/components/heat_exchangers/hx_eps_ntu_plate_pipe/hx_eps_ntu_plate_pipe.eescode"
   },
   {
+   "function": "Cand",
+   "type": "FUNCTION",
+   "signature": "(f, dT, dT_end)",
+   "model_id": "CSL-0324",
+   "path": "models/cycles/refrigeration_heat_pumps/zeotropic_hp_propane_isobutane/zeotropic_hp_propane_isobutane.eescode"
+  },
+  {
    "function": "CD_eps_ntu",
    "type": "PROCEDURE",
    "signature": "(cf$, R$, P_cf_su, P_cf_ex, t_cf_su, t_cf_ex, t_cd, M_dot_r, M_dot_cf, C_cf, C_r, n_cf, n_r, alpha : Q_dot, epsilon, NTU, AU, P_cd_out, P_crit_cdz)",
@@ -14790,6 +15597,20 @@
    "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
   },
   {
+   "function": "check_electrolyser",
+   "type": "PROCEDURE",
+   "signature": "(eta, Q_dot_cw, P_in, eta_max : flag_2nd, flag_heat)",
+   "model_id": "CSL-0323",
+   "path": "models/fundamentals/processes/h2_electrolyzer_fuel_cell/h2_electrolyzer_fuel_cell.eescode"
+  },
+  {
+   "function": "check_fuel_cell",
+   "type": "PROCEDURE",
+   "signature": "(eta, P_out, eta_max : flag_2nd, flag_power)",
+   "model_id": "CSL-0323",
+   "path": "models/fundamentals/processes/h2_electrolyzer_fuel_cell/h2_electrolyzer_fuel_cell.eescode"
+  },
+  {
    "function": "check_tubing_TEMA",
    "type": "FUNCTION",
    "signature": "(NPS, BWG)",
@@ -14823,6 +15644,13 @@
    "signature": "(T, P)",
    "model_id": "CSL-0132",
    "path": "models/fundamentals/properties/r1233zd_thermal_conductivity/r1233zd_thermal_conductivity.eescode"
+  },
+  {
+   "function": "conductivity_R1233zd_LTP",
+   "type": "FUNCTION",
+   "signature": "(T, P)",
+   "model_id": "CSL-0312",
+   "path": "models/cycles/organic_rankine/orc_offdesign_scroll_expander/orc_offdesign_scroll_expander.eescode"
   },
   {
    "function": "conductivity_R1233zd_published",
@@ -15091,6 +15919,13 @@
    "path": "models/components/heat_exchangers/shell_and_tube_sizing/shell_and_tube_sizing.eescode"
   },
   {
+   "function": "DeltaPV_HP",
+   "type": "FUNCTION",
+   "signature": "(D_v, L_eff, Q_rad, T_sat_K)",
+   "model_id": "CSL-0326",
+   "path": "models/components/heat_exchangers/thermosyphon_hx/thermosyphon_hx.eescode"
+  },
+  {
    "function": "DELTAT_ln",
    "type": "FUNCTION",
    "signature": "(T_1,T_2,T_3, T_4)",
@@ -15105,11 +15940,39 @@
    "path": "models/components/expanders_turbines/double_stage_scroll_expander/double_stage_scroll_expander.eescode"
   },
   {
+   "function": "der_rho",
+   "type": "PROCEDURE",
+   "signature": "(r_p,rho_su:der_lnrho_epsilon)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
    "function": "der_rp",
    "type": "PROCEDURE",
    "signature": "(r_p,rho_su:der_lnrp_epsilon)",
    "model_id": "CSL-0117",
    "path": "models/components/expanders_turbines/double_stage_scroll_expander/double_stage_scroll_expander.eescode"
+  },
+  {
+   "function": "der_rp",
+   "type": "PROCEDURE",
+   "signature": "(r_p,rho_su:der_lnrp_epsilon)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "Dh_Kern",
+   "type": "FUNCTION",
+   "signature": "(Do, pratio, layout)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
+  },
+  {
+   "function": "Dh_PCHE",
+   "type": "FUNCTION",
+   "signature": "(D_c)",
+   "model_id": "CSL-0322",
+   "path": "models/heat_transfer/convection/pche_htc/pche_htc.eescode"
   },
   {
    "function": "DIRECTCONTACTDATA",
@@ -15308,6 +16171,20 @@
    "path": "models/heat_transfer/convection/tube_bank_nusselt/tube_bank_nusselt.eescode"
   },
   {
+   "function": "eta_char_el",
+   "type": "PROCEDURE",
+   "signature": "(x_rel : f_char, flag_range)",
+   "model_id": "CSL-0323",
+   "path": "models/fundamentals/processes/h2_electrolyzer_fuel_cell/h2_electrolyzer_fuel_cell.eescode"
+  },
+  {
+   "function": "Eta_curve",
+   "type": "FUNCTION",
+   "signature": "(Vd)",
+   "model_id": "CSL-0312",
+   "path": "models/cycles/organic_rankine/orc_offdesign_scroll_expander/orc_offdesign_scroll_expander.eescode"
+  },
+  {
    "function": "eta_fin_Kern_Kraus_aircooler",
    "type": "FUNCTION",
    "signature": "(tube_diameter, fin_diameter, fin_thickness, k_fin, h)",
@@ -15343,6 +16220,13 @@
    "path": "models/renewables/solar_thermal/parabolic_trough_loss_correlations/parabolic_trough_loss_correlations.eescode"
   },
   {
+   "function": "EuBank",
+   "type": "PROCEDURE",
+   "signature": "(a, b, Re : Eu_out)",
+   "model_id": "CSL-0326",
+   "path": "models/components/heat_exchangers/thermosyphon_hx/thermosyphon_hx.eescode"
+  },
+  {
    "function": "EV_eps_ntu",
    "type": "PROCEDURE",
    "signature": "(hf$, R$, P_hf_su, P_hf_ex, t_hf_su, t_hf_ex, t_ev, M_dot_r, M_dot_hf, C_hf, C_r, n_hf, n_r : Q_dot, epsilon, NTU, AU, P_ev_out, P_crit_ev)",
@@ -15355,6 +16239,13 @@
    "signature": "(fluid$, fluidev$, T_sf_su_ev, M_dot_sf, p_sf_su_ev, T_r_su_ev, T_r_ex_ev, p_ev, M_dot_r : T_sf_ex_ev, Q_dot_ev, AU_ev_l, AU_ev_tp, AU_ev_v)",
    "model_id": "CSL-0112",
    "path": "models/components/heat_exchangers/three_zone_hx_procedures/three_zone_hx_procedures.eescode"
+  },
+  {
+   "function": "ExtConvBoil",
+   "type": "PROCEDURE",
+   "signature": "(D_o, F$, T_sat_C, T_tube_C, V_flow : h_cb)",
+   "model_id": "CSL-0326",
+   "path": "models/components/heat_exchangers/thermosyphon_hx/thermosyphon_hx.eescode"
   },
   {
    "function": "f_Cheng_CO2",
@@ -15390,6 +16281,13 @@
    "signature": "(Thi, Tho, Tci, Tco, shells)",
    "model_id": "CSL-0105",
    "path": "models/components/heat_exchangers/lmtd_and_f_correction/lmtd_and_f_correction.eescode"
+  },
+  {
+   "function": "f_PCHE_Lee",
+   "type": "FUNCTION",
+   "signature": "(alpha, Re)",
+   "model_id": "CSL-0322",
+   "path": "models/heat_transfer/convection/pche_htc/pche_htc.eescode"
   },
   {
    "function": "f_Petukhov",
@@ -15448,6 +16346,13 @@
    "path": "models/heat_transfer/pressure_drop/gas_pipe_insulated_pressure_drop/gas_pipe_insulated_pressure_drop.eescode"
   },
   {
+   "function": "fk_23",
+   "type": "FUNCTION",
+   "signature": "",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
    "function": "flow_outside_curve",
    "type": "FUNCTION",
    "signature": "(q, q_min, q_max)",
@@ -15483,6 +16388,55 @@
    "path": "models/hvac/cooling_towers/direct_contact_tower_catalogue/direct_contact_tower_catalogue.eescode"
   },
   {
+   "function": "fq_34conv",
+   "type": "FUNCTION",
+   "signature": "",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "fq_34conv",
+   "type": "FUNCTION",
+   "signature": "(T_3, T_4, AnnulusGas$, D_3, D_4, L, P_a)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "fq_36conv",
+   "type": "FUNCTION",
+   "signature": "",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "fq_36conv",
+   "type": "FUNCTION",
+   "signature": "(T_3, T_6, P_6,v_6, D_3, D_4, L, P_a)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "fq_56conv",
+   "type": "FUNCTION",
+   "signature": "",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "fq_57rad",
+   "type": "FUNCTION",
+   "signature": "",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "fq_cond_bracket",
+   "type": "FUNCTION",
+   "signature": "",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
    "function": "Fr_pipe",
    "type": "FUNCTION",
    "signature": "(G, d_hyd, rho)",
@@ -15502,6 +16456,13 @@
    "signature": "(m_ratio_hot, m_ratio_cold, re_exp_hot, re_exp_cold, alpha_ratio, area_ratio)",
    "model_id": "CSL-0315",
    "path": "models/components/heat_exchangers/ua_cecchinato_partload/ua_cecchinato_partload.eescode"
+  },
+  {
+   "function": "Fw_BD",
+   "type": "FUNCTION",
+   "signature": "(Ds, Dotl, Do, Bc)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
   },
   {
    "function": "G",
@@ -15609,6 +16570,13 @@
    "path": "models/components/heat_exchangers/plate_hx_heat_transfer/plate_hx_heat_transfer.eescode"
   },
   {
+   "function": "h_BD",
+   "type": "FUNCTION",
+   "signature": "(m, cp, mu, mu_w, Pr, Do, pratio, Ds, Dotl, B, layout, Bc, nt, cTB, cBS, Nss, Ltube, tst, Bin, Bout, method)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
+  },
+  {
    "function": "h_Bier",
    "type": "FUNCTION",
    "signature": "(P, Pc, Te)",
@@ -15665,11 +16633,25 @@
    "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
   },
   {
+   "function": "H_curve",
+   "type": "FUNCTION",
+   "signature": "(Vd)",
+   "model_id": "CSL-0312",
+   "path": "models/cycles/organic_rankine/orc_offdesign_scroll_expander/orc_offdesign_scroll_expander.eescode"
+  },
+  {
    "function": "h_Davis_David",
    "type": "FUNCTION",
    "signature": "(m, x, D, rhol, rhog, Cpl, kl, mul)",
    "model_id": "CSL-0097",
    "path": "models/heat_transfer/convection/two_phase_nonboiling_in_tube/two_phase_nonboiling_in_tube.eescode"
+  },
+  {
+   "function": "h_Donohue",
+   "type": "FUNCTION",
+   "signature": "(m, rho, mu, Pr, k, Do, pratio, Ds, Dotl, B, layout, Bc, nt, method)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
   },
   {
    "function": "h_Elamvaluthi_Srinivas",
@@ -15791,6 +16773,13 @@
    "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode"
   },
   {
+   "function": "h_Kern",
+   "type": "FUNCTION",
+   "signature": "(m, rho, mu, mu_w, Pr, k, Do, pratio, Ds, B, layout)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
+  },
+  {
    "function": "h_kinetic",
    "type": "FUNCTION",
    "signature": "(T, P, MW, Hvap, f)",
@@ -15868,6 +16857,27 @@
    "path": "models/heat_transfer/convection/condensation_film/condensation_film.eescode"
   },
   {
+   "function": "h_PCHE_Lee",
+   "type": "FUNCTION",
+   "signature": "(alpha, D_c, G, k, mu, Pr)",
+   "model_id": "CSL-0322",
+   "path": "models/heat_transfer/convection/pche_htc/pche_htc.eescode"
+  },
+  {
+   "function": "h_PCHE_straight",
+   "type": "FUNCTION",
+   "signature": "(D_c, G, k, L_c, mu, Pr)",
+   "model_id": "CSL-0322",
+   "path": "models/heat_transfer/convection/pche_htc/pche_htc.eescode"
+  },
+  {
+   "function": "h_PCHE_zigzag",
+   "type": "FUNCTION",
+   "signature": "(alpha, D_c, G, k, L_c, mu, T)",
+   "model_id": "CSL-0322",
+   "path": "models/heat_transfer/convection/pche_htc/pche_htc.eescode"
+  },
+  {
    "function": "h_Ravipudi_Godbold",
    "type": "FUNCTION",
    "signature": "(m, x, D, rhol, rhog, Cpl, kl, mug, mu_b, mu_w)",
@@ -15938,6 +16948,20 @@
    "path": "models/components/heat_exchangers/plate_hx_correlations/plate_hx_correlations.eescode"
   },
   {
+   "function": "HCEdimensions",
+   "type": "PROCEDURE",
+   "signature": "",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "HCEdimensions",
+   "type": "PROCEDURE",
+   "signature": "(HCEtype$, TestType$: D_4, D_5, A_aperture, L_aperture, L_HCE, Number_HCE)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
    "function": "Head_pump",
    "type": "FUNCTION",
    "signature": "(P_1, P_2, rho_1, z_1, z_2, v_1, v_2)",
@@ -15959,6 +16983,13 @@
    "path": "models/components/expanders_turbines/double_stage_scroll_expander/double_stage_scroll_expander.eescode"
   },
   {
+   "function": "hermeticexpander",
+   "type": "PROCEDURE",
+   "signature": "(r_p,rho_su:phi,epsilon)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
    "function": "Hsieh",
    "type": "PROCEDURE",
    "signature": "(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h:DELTAp,h_tp_ev)",
@@ -15978,6 +17009,13 @@
    "signature": "(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h:DELTAp,h_tp_ev)",
    "model_id": "CSL-0116",
    "path": "models/cycles/refrigeration_heat_pumps/heat_pump_vitocal_300g/heat_pump_vitocal_300g.eescode"
+  },
+  {
+   "function": "Hsieh",
+   "type": "PROCEDURE",
+   "signature": "(fluid$,T_sat,M_dot,q,b,L_w_tot,L_h:DELTAp,h_tp_ev)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
   },
   {
    "function": "Hsieh_new",
@@ -16036,6 +17074,13 @@
    "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
   },
   {
+   "function": "hx_ev",
+   "type": "PROCEDURE",
+   "signature": "(fluid$,fluidev$,T_sf_su_ev,M_dot_sf,T_r_su_ev,T_r_ex_ev,M_dot_r,p_ev,p_sf,b,L_w_tot,L_h,beta:A_ev,DELTAp,DELTAp_sf)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
    "function": "hx_ev_three_zones",
    "type": "PROCEDURE",
    "signature": "(fluid$, fluidev$, h_sf_su_ev, M_dot_sf, h_r_su_ev, h_r_ex_ev, M_dot_r, p_ev, p_sf : h_sf_ex_ev, Q_dot_ev, A_l, A_tp, A_v, pinch)",
@@ -16092,11 +17137,25 @@
    "path": "models/heat_transfer/convection/free_conv_cylinders/free_conv_cylinders.eescode"
   },
   {
+   "function": "Jb_BD",
+   "type": "FUNCTION",
+   "signature": "(Ds, Dotl, Do, B, Sm, Pp, Bc, Nss, Re)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
+  },
+  {
    "function": "Jb_Bell",
    "type": "FUNCTION",
    "signature": "(Fsbp, n_seal_strips, n_crossflow_rows, laminar)",
    "model_id": "CSL-0103",
    "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode"
+  },
+  {
+   "function": "Jc_BD",
+   "type": "FUNCTION",
+   "signature": "(Ds, Dotl, Do, Bc)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
   },
   {
    "function": "Jc_Bell",
@@ -16106,11 +17165,32 @@
    "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode"
   },
   {
+   "function": "ji_BD",
+   "type": "FUNCTION",
+   "signature": "(layout, Re, pratio)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
+  },
+  {
+   "function": "Jl_BD",
+   "type": "FUNCTION",
+   "signature": "(Ssb, Stb, Sm)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
+  },
+  {
    "function": "Jl_Bell",
    "type": "FUNCTION",
    "signature": "(Ssb, Stb, Sm)",
    "model_id": "CSL-0103",
    "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode"
+  },
+  {
+   "function": "Jr_BD",
+   "type": "FUNCTION",
+   "signature": "(Re, Ds, Dotl, Do, Pp, Bc, NB, method)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
   },
   {
    "function": "Jr_Bell",
@@ -16120,11 +17200,25 @@
    "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode"
   },
   {
+   "function": "Js_BD",
+   "type": "FUNCTION",
+   "signature": "(NB, Bin, Bout, B, Re)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
+  },
+  {
    "function": "Js_Bell",
    "type": "FUNCTION",
    "signature": "(nb, B, B_in, B_out, laminar)",
    "model_id": "CSL-0103",
    "path": "models/heat_transfer/pressure_drop/tube_bank_dp_bell_delaware/tube_bank_dp_bell_delaware.eescode"
+  },
+  {
+   "function": "k_23",
+   "type": "FUNCTION",
+   "signature": "(AbsorberMaterial$,T_2, T_3)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
   },
   {
    "function": "k_Re_elbow",
@@ -16153,6 +17247,13 @@
    "signature": "(k)",
    "model_id": "CSL-0106",
    "path": "models/heat_transfer/conduction/conduction_resistances_and_shapes/conduction_resistances_and_shapes.eescode"
+  },
+  {
+   "function": "KackerOkapuu_Ys",
+   "type": "FUNCTION",
+   "signature": "(AR, solidity, alpha1, alpha2, beta1)",
+   "model_id": "CSL-0327",
+   "path": "models/components/expanders_turbines/axial_turbine_loss_models/axial_turbine_loss_models.eescode"
   },
   {
    "function": "Kern_knot_step",
@@ -16323,6 +17424,13 @@
    "path": "models/components/heat_exchangers/plate_hx_correlations/plate_hx_correlations.eescode"
   },
   {
+   "function": "MartinHTC",
+   "type": "PROCEDURE",
+   "signature": "(FL$, Pm, Tm, Mdot, Nch, Dh, L, W, b, BetaDeg: alpha, DPu)",
+   "model_id": "CSL-0312",
+   "path": "models/cycles/organic_rankine/orc_offdesign_scroll_expander/orc_offdesign_scroll_expander.eescode"
+  },
+  {
    "function": "mean",
    "type": "PROCEDURE",
    "signature": "(t,DELTAtau,q,h,d,w,m:q_day,q_week,q_month,q_rest)",
@@ -16358,6 +17466,13 @@
    "path": "models/components/heat_exchangers/plate_hx_correlations/plate_hx_correlations.eescode"
   },
   {
+   "function": "NB_BD",
+   "type": "FUNCTION",
+   "signature": "(Ltube, tst, Bin, Bout, B)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
+  },
+  {
    "function": "Nearest",
    "type": "PROCEDURE",
    "signature": "(di_mm: Row,message$,fitting)",
@@ -16365,11 +17480,32 @@
    "path": "models/heat_transfer/pressure_drop/gas_pipe_insulated_pressure_drop/gas_pipe_insulated_pressure_drop.eescode"
   },
   {
+   "function": "NPSH_curve",
+   "type": "FUNCTION",
+   "signature": "(Vd)",
+   "model_id": "CSL-0312",
+   "path": "models/cycles/organic_rankine/orc_offdesign_scroll_expander/orc_offdesign_scroll_expander.eescode"
+  },
+  {
    "function": "NPV",
    "type": "PROCEDURE",
    "signature": "(j_fuel,j_el,annuite,inflow_1,outflow_1,tax,amortissement,k,T_lifetime,INV:DDP_bis,NPVvalue)",
    "model_id": "CSL-0262",
    "path": "models/energy_systems/economics/investment_npv_irr/investment_npv_irr.eescode"
+  },
+  {
+   "function": "Ntcc_BD",
+   "type": "FUNCTION",
+   "signature": "(Ds, Pp, Bc)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
+  },
+  {
+   "function": "Ntcw_BD",
+   "type": "FUNCTION",
+   "signature": "(Ds, Dotl, Do, Pp, Bc)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
   },
   {
    "function": "NTU_boiler_condenser",
@@ -16685,6 +17821,13 @@
    "signature": "(Re, Pr, Dh, L)",
    "model_id": "CSL-0128",
    "path": "models/components/heat_exchangers/hx_eps_ntu_plate_pipe/hx_eps_ntu_plate_pipe.eescode"
+  },
+  {
+   "function": "Nu_GnielinskiTransition_PCHE",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, Dh, L_c)",
+   "model_id": "CSL-0322",
+   "path": "models/heat_transfer/convection/pche_htc/pche_htc.eescode"
   },
   {
    "function": "Nu_Gorban",
@@ -17030,6 +18173,13 @@
    "path": "models/heat_transfer/convection/packed_bed_nusselt/packed_bed_nusselt.eescode"
   },
   {
+   "function": "Nu_PCHE_Lee",
+   "type": "FUNCTION",
+   "signature": "(alpha, Re, Pr)",
+   "model_id": "CSL-0322",
+   "path": "models/heat_transfer/convection/pche_htc/pche_htc.eescode"
+  },
+  {
    "function": "Nu_Petukhov",
    "type": "FUNCTION",
    "signature": "(Re, Pr, rho_w, rho_b, mu_w, mu_b, corr)",
@@ -17091,6 +18241,13 @@
    "signature": "(Re, Pr, Dh, L)",
    "model_id": "CSL-0128",
    "path": "models/components/heat_exchangers/hx_eps_ntu_plate_pipe/hx_eps_ntu_plate_pipe.eescode"
+  },
+  {
+   "function": "Nu_StephanPreusser_PCHE",
+   "type": "FUNCTION",
+   "signature": "(Re, Pr, Dh, L_c)",
+   "model_id": "CSL-0322",
+   "path": "models/heat_transfer/convection/pche_htc/pche_htc.eescode"
   },
   {
    "function": "Nu_Swenson",
@@ -17254,6 +18411,34 @@
    "path": "models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode"
   },
   {
+   "function": "opendriveexpander",
+   "type": "PROCEDURE",
+   "signature": "(N_rot,r_p,rho_su:FF,epsilon_s)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "OpLimitsHP",
+   "type": "PROCEDURE",
+   "signature": "(F_r, D_i, L_e, beta, geo_ann, T_sat_K : Q_ent, Q_boil, Q_son, Q_dry, Q_vap)",
+   "model_id": "CSL-0326",
+   "path": "models/components/heat_exchangers/thermosyphon_hx/thermosyphon_hx.eescode"
+  },
+  {
+   "function": "OpticalEfficiency",
+   "type": "PROCEDURE",
+   "signature": "",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "OpticalEfficiency",
+   "type": "PROCEDURE",
+   "signature": "(HCEtype$, K, Reflectivity, TAU_envelope, GlazingIntact$, Shadowing_UD, TrackingError_UD, GeomEffects_UD: OptEff_env, OptEff_abs)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
    "function": "P_NTU_Pc",
    "type": "FUNCTION",
    "signature": "(x, y)",
@@ -17282,6 +18467,20 @@
    "path": "models/components/heat_exchangers/vertical_ghes_refsim/vertical_ghes_refsim.eescode"
   },
   {
+   "function": "Phi_boil_HP",
+   "type": "FUNCTION",
+   "signature": "(T_sat_K)",
+   "model_id": "CSL-0326",
+   "path": "models/components/heat_exchangers/thermosyphon_hx/thermosyphon_hx.eescode"
+  },
+  {
+   "function": "Phi_cond_HP",
+   "type": "FUNCTION",
+   "signature": "(T_sat_K)",
+   "model_id": "CSL-0326",
+   "path": "models/components/heat_exchangers/thermosyphon_hx/thermosyphon_hx.eescode"
+  },
+  {
    "function": "PIPE_GAS",
    "type": "PROCEDURE",
    "signature": "(R$,SP[1..5],U,di_mm,z_wall_mm,e_mm,z_iso_mm,L,lambda_iso,T_A,R_pro,Row,DpF:m_dot,V_dot,T_DEW,T_int,Error$,f,Dp,p_o,Q,Pr)",
@@ -17301,6 +18500,20 @@
    "signature": "(stroke, omega)",
    "model_id": "CSL-0086",
    "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "Pp_BD",
+   "type": "FUNCTION",
+   "signature": "(Do, pratio, layout)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
+  },
+  {
+   "function": "Pq_12conv",
+   "type": "PROCEDURE",
+   "signature": "",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
   },
   {
    "function": "PressureDropCorrelation_HP",
@@ -17352,6 +18565,13 @@
    "path": "models/cycles/organic_rankine/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
   },
   {
+   "function": "prop_htf",
+   "type": "PROCEDURE",
+   "signature": "(fluid$,T:mu,rho,cp,k)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
    "function": "PseudoBoilingBounds",
    "type": "PROCEDURE",
    "signature": "(fluid$, P, T_pc, T_max : T_minus, T_plus)",
@@ -17373,6 +18593,55 @@
    "path": "models/components/pumps_fans/cordier_specific_speed/cordier_specific_speed.eescode"
   },
   {
+   "function": "q_12conv",
+   "type": "PROCEDURE",
+   "signature": "(T_1ave, v_1ave, T_2, Fluid$, D_h, D_2, L, TestType$: q_12)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "q_34rad",
+   "type": "FUNCTION",
+   "signature": "",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "q_34rad",
+   "type": "FUNCTION",
+   "signature": "(T_3, T_4, i, EPSILON_3[1..imax#], D_3, D_4, L, EPSILON_4)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "q_37rad",
+   "type": "FUNCTION",
+   "signature": "",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "q_37rad",
+   "type": "FUNCTION",
+   "signature": "(T_3, T_7, i, EPSILON_3[1..imax#], D_3, D_4, L, EPSILON_4)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "q_56conv",
+   "type": "FUNCTION",
+   "signature": "(T_5, T_6, D_5, L, P_6, v_6, GlazingIntact$)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "q_57rad",
+   "type": "FUNCTION",
+   "signature": "(T_5, T_7, EPSILON_5, D_5, L, GlazingIntact$)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
    "function": "q_CHF_HEDH_Montinsky",
    "type": "FUNCTION",
    "signature": "(P, Pc)",
@@ -17392,6 +18661,13 @@
    "signature": "(sigma, Hvap, rhol, rhog, K)",
    "model_id": "CSL-0088",
    "path": "models/heat_transfer/convection/nucleate_boiling_and_chf/nucleate_boiling_and_chf.eescode"
+  },
+  {
+   "function": "q_cond_bracket",
+   "type": "FUNCTION",
+   "signature": "(T_3, i, L_HCE, Number_HCE, L_aperture, T_6, P_6, v_6, DELTAL)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
   },
   {
    "function": "q_dot_pinch_fun_cd",
@@ -17450,11 +18726,151 @@
    "path": "models/heat_transfer/convection/free_conv_enclosed_and_jackets/free_conv_enclosed_and_jackets.eescode"
   },
   {
+   "function": "RadAcoeff",
+   "type": "PROCEDURE",
+   "signature": "(pr, Tg : a_0, a_1, a_2, a_3)",
+   "model_id": "CSL-0326",
+   "path": "models/components/heat_exchangers/thermosyphon_hx/thermosyphon_hx.eescode"
+  },
+  {
+   "function": "RadComp_Dh_bl_rotor",
+   "type": "FUNCTION",
+   "signature": "(Dh0, n_bl_r, r1s, r2, u2, w1s, w2)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadComp_Dh_cl_rotor",
+   "type": "FUNCTION",
+   "signature": "(b2, eps_a, eps_r, n_bl_r, rho1, rho2, r1h, r1s, r2, vu2, v1m)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadComp_Dh_df_rotor",
+   "type": "FUNCTION",
+   "signature": "(b2, eps_b, mdot, mu2, rho1, rho2, r2, u2)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadComp_Dh_f_rotor",
+   "type": "FUNCTION",
+   "signature": "(beta1h, beta1s, beta2, b2, C_fi, L_z, n_bl_r, r1h, r1s, r2, w1h, w1s, w2, xhi2)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadComp_Dh_f_stator",
+   "type": "FUNCTION",
+   "signature": "(C_f, D_h, r3, r5, vm, xhi3, xhi5)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadComp_Dh_inc_rotor",
+   "type": "FUNCTION",
+   "signature": "(A1, A1_th, beta1, w1, xhi1)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadComp_Dh_inc_stator",
+   "type": "FUNCTION",
+   "signature": "(A4, A4_th, beta4, w4, xhi4)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadComp_Dh_ml_rotor",
+   "type": "FUNCTION",
+   "signature": "(alpha2, v2)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadComp_Dh_rc_rotor",
+   "type": "FUNCTION",
+   "signature": "(alpha2, Dh0, n_bl_r, r1s, r2, u2, w1s, w2)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadComp_rotor_loss",
+   "type": "PROCEDURE",
+   "signature": "(A1, A1_th, alpha2, beta1, beta1h, beta1s, beta2, b2, C_fi, Dh0, eps_a, eps_b, eps_r, L_z, mdot, mu2, n_bl_r, rho1, rho2, r1h, r1s, r2, u2, vu2, v1m, v2, w1, w1h, w1s, w2, xhi1, xhi2 : Dh_tot, Dh_inc, Dh_f, Dh_bl, Dh_cl, Dh_ml, Dh_df, Dh_rc)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadComp_stator_loss",
+   "type": "PROCEDURE",
+   "signature": "(A4, A4_th, beta4, C_f, D_h, r3, r5, vm, w4, xhi3, xhi4, xhi5 : Dh_tot, Dh_f, Dh_inc)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadHTC_FG",
+   "type": "PROCEDURE",
+   "signature": "(p_CO2, p_H2O, T_g_K, T_w_K, L_beam : h_r)",
+   "model_id": "CSL-0326",
+   "path": "models/components/heat_exchangers/thermosyphon_hx/thermosyphon_hx.eescode"
+  },
+  {
+   "function": "RadTur_Dh_clearance",
+   "type": "FUNCTION",
+   "signature": "(cl_a, cl_r, L_z, r4, r5h, r5s, r5, b4, b5, n_blade_R, u4, vm4, vm5)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadTur_Dh_inc_rotor",
+   "type": "FUNCTION",
+   "signature": "(alpha4, n_blade_R, w4, beta4)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadTur_Dh_nozzle",
+   "type": "FUNCTION",
+   "signature": "(v3, Re_3, alpha3, S3, c, b3)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadTur_Dh_passage",
+   "type": "FUNCTION",
+   "signature": "(beta4, beta5, L_z, r4, r5h, r5s, r5, b4, b5, n_blade_R, w4, w5)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadTur_Dh_TE",
+   "type": "FUNCTION",
+   "signature": "(w5, n_blade_R, t5, r5h, r5s, beta5, gamma5, Ma5_pr)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
+   "function": "RadTur_rotor_loss",
+   "type": "PROCEDURE",
+   "signature": "(alpha4, beta4, beta5, b4, b5, cl_a, cl_r, gamma5, L_z, Ma5_pr, n_blade_R, r4, r5, r5h, r5s, t5, u4, vm4, vm5, w4, w5 : Dh_tot, Dh_inc, Dh_p, Dh_cl, Dh_TE)",
+   "model_id": "CSL-0328",
+   "path": "models/components/compressors/radial_machine_loss_models/radial_machine_loss_models.eescode"
+  },
+  {
    "function": "Re_elbow",
    "type": "FUNCTION",
    "signature": "(m_dot, d_hyd, rho, mu)",
    "model_id": "CSL-0316",
    "path": "models/heat_transfer/pressure_drop/local_losses_idelchik_elbows/local_losses_idelchik_elbows.eescode"
+  },
+  {
+   "function": "Re_Kern",
+   "type": "FUNCTION",
+   "signature": "(m, rho, mu, Do, pratio, Ds, B, layout)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
   },
   {
    "function": "Re_lam_limit_elbow",
@@ -17569,11 +18985,32 @@
    "path": "models/heat_transfer/conduction/conduction_resistances_and_shapes/conduction_resistances_and_shapes.eescode"
   },
   {
+   "function": "SelectiveCoatingProperties",
+   "type": "PROCEDURE",
+   "signature": "",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "SelectiveCoatingProperties",
+   "type": "PROCEDURE",
+   "signature": "(imax#, T_3[1..imax#], TAU_envelope_UD, Alpha_abs_UD, EPSILON_3_100_UD, EPSILON_3_400_UD, SelectiveCoating$: EPSILON_3[1..imax#], Alpha_abs, TAU_envelope)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
    "function": "SH",
    "type": "FUNCTION",
    "signature": "(DELTA_T_sh)",
    "model_id": "CSL-0155",
    "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
+  },
+  {
+   "function": "Shah2P",
+   "type": "PROCEDURE",
+   "signature": "(FL$, Pm, x, Mdot, Nch, Dh, L, W, b, Phi: alpha, DPu)",
+   "model_id": "CSL-0312",
+   "path": "models/cycles/organic_rankine/orc_offdesign_scroll_expander/orc_offdesign_scroll_expander.eescode"
   },
   {
    "function": "shell_clearance",
@@ -17604,6 +19041,27 @@
    "path": "models/components/heat_exchangers/shell_and_tube_sizing/shell_and_tube_sizing.eescode"
   },
   {
+   "function": "SL_Donohue",
+   "type": "FUNCTION",
+   "signature": "(Bc, Ds, nt, Do)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
+  },
+  {
+   "function": "Smax_BD",
+   "type": "FUNCTION",
+   "signature": "(Do, pratio, Ds, Dotl, B, layout, method)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
+  },
+  {
+   "function": "Smax_Kern",
+   "type": "FUNCTION",
+   "signature": "(Do, pratio, Ds, B)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
+  },
+  {
    "function": "SpeedFactor",
    "type": "FUNCTION",
    "signature": "(Operating_mode$,t_out,r_p)",
@@ -17616,6 +19074,27 @@
    "signature": "(Pump_speed$)",
    "model_id": "CSL-0155",
    "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump/inverter_air_water_heat_pump.eescode"
+  },
+  {
+   "function": "Ssb_BD",
+   "type": "FUNCTION",
+   "signature": "(Ds, cBS, Bc)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
+  },
+  {
+   "function": "Stb_BD",
+   "type": "FUNCTION",
+   "signature": "(Do, cTB, nt, Fw)",
+   "model_id": "CSL-0321",
+   "path": "models/heat_transfer/convection/shell_side_htc/shell_side_htc.eescode"
+  },
+  {
+   "function": "Step",
+   "type": "FUNCTION",
+   "signature": "(x)",
+   "model_id": "CSL-0326",
+   "path": "models/components/heat_exchangers/thermosyphon_hx/thermosyphon_hx.eescode"
   },
   {
    "function": "step_smoother",
@@ -17770,6 +19249,27 @@
    "signature": "(fluid$,P,T,M_dot,b,L_w_tot,L_h,beta,WorkingFluidMix$:h,DELTAp)",
    "model_id": "CSL-0124",
    "path": "models/heat_transfer/pressure_drop/plate_hx_pressure_drop_identification/plate_hx_pressure_drop_identification.eescode"
+  },
+  {
+   "function": "Thonon",
+   "type": "PROCEDURE",
+   "signature": "(fluid$,P,T,M_dot,b,L_w_tot,L_h,beta:h,DELTAp)",
+   "model_id": "CSL-0329",
+   "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
+  },
+  {
+   "function": "ThResESDU",
+   "type": "PROCEDURE",
+   "signature": "(F_r, D_i, L_c, L_e, Q_rad, T_sat_K : R_cond, R_evap, R_pool, R_film, Re_f)",
+   "model_id": "CSL-0326",
+   "path": "models/components/heat_exchangers/thermosyphon_hx/thermosyphon_hx.eescode"
+  },
+  {
+   "function": "Tmix_ph",
+   "type": "FUNCTION",
+   "signature": "(fl$, P, h)",
+   "model_id": "CSL-0324",
+   "path": "models/cycles/refrigeration_heat_pumps/zeotropic_hp_propane_isobutane/zeotropic_hp_propane_isobutane.eescode"
   },
   {
    "function": "tr_factor_Richter2",
@@ -17966,6 +19466,13 @@
    "signature": "(M_dot_w_ct,M_dot_w_min,M_dot_w_max:NOTE2$)",
    "model_id": "CSL-0290",
    "path": "models/hvac/cooling_towers/direct_contact_tower_catalogue/direct_contact_tower_catalogue.eescode"
+  },
+  {
+   "function": "WaterHTC",
+   "type": "PROCEDURE",
+   "signature": "(FL$, P, Tm, G, Dh: alpha)",
+   "model_id": "CSL-0312",
+   "path": "models/cycles/organic_rankine/orc_offdesign_scroll_expander/orc_offdesign_scroll_expander.eescode"
   },
   {
    "function": "We_pipe",
@@ -18490,6 +19997,24 @@
    "detail": "Warning *\"Unknown function 'HX'\"*, then the block of the call fails: *\"EvaluationError - Unknown or unsupported function: HX with 5 arguments\"*.",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-GAP-INDEX-VAR": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P3",
+   "text": "**An array element indexed by a main-program variable that an equation sets to a constant**: `mean = ceil(imax#/2)` ⏎ `Q_dot_col_bis = M_dot_htf*cp_1ave[mean]*(T_htf_ex_col - T_htf_su_col)` in the EES file `EES_ok/orc_solar_complex.EES` (CoolSolve …",
+   "detail": "`cp_1ave[mean]` is a variable of its own with no defining equation (`x[n]` and `x[2]` are two unknowns; loud: the system is not square).",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-BUG-PROC-NEG-POW": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P2",
+   "text": "Inside a `PROCEDURE`, a power with a **negative base and an integer exponent** (`x = q^3` with `q` < 0) makes the `CALL` block fail with *SingularJacobian* (initial residual unchanged), although the value is well defined and EES evaluates it; the same …",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
   "CS-BUG-LOOKUP-HINT": {
    "kind": "bug",

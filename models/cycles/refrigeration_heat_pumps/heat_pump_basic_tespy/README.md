@@ -196,6 +196,9 @@ Source file (Python, comments in English), local snapshot of S. Quoilin:
 
 ## Related models
 
+- `CSL-0326` *thermosyphon_hx*: other translation of the same source family
+  (LaboThapPy thermosyphon tube-bank heat exchanger, card C-447).
+
 
 - `CSL-0139` *combustion_chamber*: another translation of the same source
   library (component class `CombustionChamber`), a building block of its
@@ -239,3 +242,5 @@ Source file (Python, comments in English), local snapshot of S. Quoilin:
 - `CSL-0250` *cascade_heat_pump_geothermal_dh*: two-loop cascade TESPy translation (pinch-sized sectioned exchangers, geothermal to district heating).
 - `CSL-0315` *ua_cecchinato_partload*: the Cecchinato et al. (2010) UA part-load scaling law (function library, TESPy).
 - `CSL-0313` *heat_pump_nh3_two_stage_flooded*: the two-stage ammonia heat pump of the TESPy test suite (flooded evaporator with drum and circulation pump, intercooler, off-design with characteristic lines; Ebsilon COP matrix).
+- `CSL-0312` *orc_offdesign_scroll_expander* — another library translation from a Python thermodynamics library (LaboThapPy): first off-design ORC.
+- `CSL-0324` *zeotropic_hp_propane_isobutane*: TESPy zeotropic-mixture heat pump (propane/isobutane) with sectioned exchangers and a composition sweep (same source library).

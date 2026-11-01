@@ -266,3 +266,5 @@ test: `tests/test_basic_tutorials.py`) — inventory candidate `TSP-036`.
   `CSL-0060` *gas_turbine_reheat*: gas turbines of the same category on air as
   a perfect gas, with the combustion chemistry neglected — this model keeps
   the species balances and the mixture properties of the tutorial.
+- `CSL-0323` *h2_electrolyzer_fuel_cell*: TESPy water electrolyser and H₂/O₂ fuel cell, the hydrogen production and the electrochemical use of H₂ (this cycle
+  can burn H₂ as a fuel component).

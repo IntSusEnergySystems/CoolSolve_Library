@@ -192,3 +192,5 @@ Source file (EES 8.940), collection of S. Quoilin:
 - `CSL-0114` *evaporator_3_zones_plate_correlations*: the evaporator counterpart of the same lab file family (same zone structure, Thonon single phase and Hsieh & Lin boiling instead of Kuo; R245fa/oil default point and an auto-size variant file).
 
 - `CSL-0153` *orc_whr_refprop_cost*: three-zone plate condenser (Thonon/Kuo).
+- `CSL-0312` *orc_offdesign_scroll_expander* — off-design ORC whose condenser uses the same 3-zone (SH/2P/SC) plate formulation with Shah condensation.
+

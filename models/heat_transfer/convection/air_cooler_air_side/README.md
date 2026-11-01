@@ -314,6 +314,11 @@ library license with full credit (decision D3 of the `ht` triage).
 
 ## Related models
 
+- `CSL-0326` *thermosyphon_hx*: thermosyphon heat-pipe tube-bank exchanger
+  (LaboThapPy translation, card C-447); its crossflow tube-bank HTC and
+  Euler-number pressure drop are the overlap with this library, embedded in
+  the thermosyphon resistance network.
+
 - `CSL-0095` *tube_bank_nusselt*: the tube-bank Nusselt numbers of the same
   `ht` triage; its `ESDU_tube_row_correction` function is the table written
   inline in `h_ESDU_low_fin` here.
