@@ -100,10 +100,10 @@ PROCEDURE MartinHTC(FL$, Pm, Tm, Mdot, Nch, Dh, L, W, b, BetaDeg: alpha, DPu)
   Pmc = Max(Pm, 1E4)
   rho = Density(FL$, T=Tmc, P=Pmc)
   mu = Viscosity(FL$, T=Tmc, P=Pmc)
-  k = conductivity_R1233zd_LTP(Tmc, Pmc)
+  k = Conductivity(FL$, T=Tmc, P=Pmc)   "ADAPTED: CoolProp R1233zd(E) conductivity; the source function uses the critical constants of R1234ze(E) (382.52 K, 489.24 kg/m3): +9 % liquid, +20 % vapour"
   Pr = mu*Cp(FL$, T=Tmc, P=Pmc)/k
   Re = Mdot*Dh/(Nch*b*W*mu)
-  beta_r = (90 - BetaDeg)*pi()/180   "the source works with (90 deg - beta) in radians"
+  beta_r = 90 - BetaDeg   "ADAPTED: (90 deg - beta) in DEGREES: CoolSolve and EES (DEG setting) take trigonometric arguments in degrees; the translation passed radians (cos(1.05 deg) instead of cos(60 deg), HTC 8x too low)"
   If (Re >= 2000) Then
     xhi_0 = (1.8*ln(Re) - 1.5)^(-2)
     xhi_1_0 = 39/Re^0.289
@@ -118,18 +118,26 @@ PROCEDURE MartinHTC(FL$, Pm, Tm, Mdot, Nch, Dh, L, W, b, BetaDeg: alpha, DPu)
   alpha = 0.122*Pr^(1/3)*(2*Hg*sin(2*beta_r))^0.374*k/Dh   "constants c_q = 0.122, q = 0.374"
 End
 
-PROCEDURE Amalfi2P(FL$, Pm, x, Mdot, Nch, Dh, L, W, b, BetaDeg, Atot: alpha, DPu)
+FUNCTION SigmaR1233zdE(T_C)
+{Surface tension of saturated R1233zd(E) [N/m], T_C in degC: Kondou, Nagata, Nii, Koyama, Higashi,
+ Int. J. Refrig. 53 (2015) 80-89, van der Waals form sigma = 61.95*(1 - T/T_crit)^1.277 mN/m with
+ T_crit = 438.75 K (Hulse et al. 2012); fitted on 274-350 K, +/- 0.05 mN/m.}
+  Tr = Min((T_C + 273.15)/438.75, 0.999)
+  SigmaR1233zdE = 61.95E-3*(1 - Tr)^1.277
+END
+
+PROCEDURE Amalfi2P(FL$, Pm, x, Mdot, Nch, Dh, L, W, b, BetaDeg, q_dot: alpha, DPu)
 {Two-phase boiling heat-transfer coefficient and pressure drop of a
  chevron plate channel, amalfi_plate_HTC of LaboThapPy: M. Amalfi, F.
  Vakili-Farahani, J.R. Thome, "Applications of sustainable energy: a
  review of heat transfer pumps", part of the High-Performance HX work;
  boiling Nusselt of Amalfi & Thome for chevron plates (Bd < 4 and >= 4
  regimes); pressure drop after Longo et al. (deceleration, gravity,
- manifold, friction 1.95*KEV*1000 as coded in the original, a factor 1000
- kept as written - see README). Inputs as MartinHTC plus x the quality at
- which the correlation is evaluated (the source averages over
- x = 0.1..1, this call uses the mean quality 0.55) and Atot the total
- heat-transfer area used for the heat flux [m2]; outputs alpha [W/m2-K],
+ manifold, friction 1.95*KEV). ADAPTED on 2026-11-01 (README): per-channel
+ mass flux, liquid conductivity, zone heat flux, friction in Pa. Inputs as
+ MartinHTC plus x the quality at which the correlation is evaluated (the
+ source averages over x = 0.1..1, this call uses the mean quality 0.55) and
+ q_dot the heat flux of the boiling zone [W/m2]; outputs alpha [W/m2-K],
  DPu drop over L [Pa]}
   Pmc = Max(Pm, 1E4)   "trial guard, inactive at the solution"
   rho_g = Density(FL$, P=Pmc, x=1)
@@ -140,12 +148,11 @@ PROCEDURE Amalfi2P(FL$, Pm, x, Mdot, Nch, Dh, L, W, b, BetaDeg, Atot: alpha, DPu
   mu_g = Viscosity(FL$, T=T_sat + 0.001, P=Pmc)
   mu_l = Viscosity(FL$, T=T_sat - 0.001, P=Pmc)
   rho_x = Density(FL$, P=Pmc, x=x)
-  sigma_x = surfacetension(FL$, T=T_sat, x=x)
-  k_x = (0.09513*(T_sat + 273.15) - 17.963)/1000   "conductivity of R1233zd(E) as coded in the original (T_sat in K)"
+  sigma_x = SigmaR1233zdE(T_sat)   "ADAPTED: CoolProp has no surface-tension model for R1233zd(E) ('surface tension curve not provided'), the source call cannot be evaluated"
+  k_l = Conductivity(FL$, T=T_sat - 0.001, P=Pmc)   "ADAPTED: saturated-liquid conductivity (Amalfi's Nu = h*Dh/k_l); the source used a linear fit that gives the VAPOUR value (13.7 mW/m-K at 60 C)"
   x_m = 0.5*x   "average quality of the original"
   rho_m = 1/(x_m/rho_g + (1 - x_m)/rho_l)
-  G = Mdot/(2*b*W)   "mass velocity of the boiling side of the original [kg/m2-s]"
-  q_dot = (Mdot*(h_g - Enthalpy(FL$, P=Pm, x=x)))/Atot   "heat flux as in the original [W/m2]"
+  G = Mdot/Nch/(W*b)   "ADAPTED: mass flux per channel; the source wrote Mdot/(2*b*W), the whole flow in one channel (500 times too high here) [kg/m2-s]"
   Bo = q_dot/(G*(h_g - h_l))   "boiling number [-]"
   We = G^2*Dh/(rho_m*sigma_x)   "Weber number [-]"
   Re_LT = G*Dh/mu_l   "all-liquid Reynolds number [-]"
@@ -158,14 +165,14 @@ PROCEDURE Amalfi2P(FL$, Pm, x, Mdot, Nch, Dh, L, W, b, BetaDeg, Atot: alpha, DPu
   Else
     Nu_TP = 18.495^(ratio_beta^0.248)*Re_GS^0.135*Re_LT^0.351*Bd^0.235*Bo^0.198*ratio_rho^(-0.223)
   EndIf
-  alpha = Nu_TP*k_x/Dh
+  alpha = Nu_TP*k_l/Dh
   G_dp = Mdot/Nch/(W*b)   "mass velocity per channel of the pressure-drop part [kg/m2-s]"
   rho_m_dp = 1/(0.5/rho_g + 0.5/rho_l)
   DP_a = G_dp^2*(1/rho_g - 1/rho_l)   "deceleration drop [Pa]"
   DP_g = 9.81*rho_m_dp*L   "gravity drop over the plate length [Pa]"
   DP_c = 1.5*G_dp^2/(2*rho_m_dp)   "manifold and ports drop (Shah & Focke 1988) [Pa]"
   KEV = G_dp^2/(2*rho_m_dp)
-  DP_f = 1.95*KEV*1000   "friction drop (Longo), factor 1000 as coded in the original"
+  DP_f = 1.95*KEV   "ADAPTED: friction drop of Longo et al., DP_f [kPa] = 1.95*KEV [kJ/m3], i.e. the same in Pa; the source multiplied by 1000"
   DPu = DP_a + DP_g + DP_c + DP_f
 End
 
@@ -200,10 +207,10 @@ PROCEDURE Shah2P(FL$, Pm, x, Mdot, Nch, Dh, L, W, b, Phi: alpha, DPu)
   EndIf
   rho_m_dp = 1/(0.5/rho_g + 0.5/rho_l)
   DP_a = G^2*(1/rho_g - 1/rho_l)
-  DP_g = 9.81*rho_m_dp*L
+  DP_g = -9.81*rho_m_dp*L   "ADAPTED: down-flow condensation, the gravity head is a pressure gain (the source added it as a loss)"
   DP_c = 1.5*G^2/(2*rho_m_dp)
   KEV = G^2/(2*rho_m_dp)
-  DP_f = 1.95*KEV*1000   "friction drop, factor 1000 as coded in the original"
+  DP_f = 1.95*KEV   "ADAPTED: friction drop in Pa (the source multiplied by 1000, see Amalfi2P)"
   DPu = DP_a + DP_g + DP_c + DP_f
 End
 
@@ -241,7 +248,7 @@ A_ev = 17.8 [m^2]   "heat transfer area per side, PlateGeomSWEP P200THx140/1P_Ev
 foul_ev = 0.00111   "fooling (fouling factor of the source) [-]"
 L_ev = 0.525 [m]   "plate length between ports"
 W_ev = 0.243 [m]   "plate width"
-b_ev = 0.00015 [m]   "corrugation amplitude (refrigerant side)"
+b_ev = CS_c_ev/W_ev   "ADAPTED: channel gap from the channel cross-section (2.15 mm); the source's 'amplitude' 0.00015 m is marked 'to adjust!!' there and contradicts its own channel thickness (2.16 mm) [m]"
 beta_ev = 30 [degree]   "chevron angle"
 Dh_c_ev = 0.00428934223204838 [m]   "refrigerant-side hydraulic diameter (C_Dh)"
 Nch_c_ev = 69   "refrigerant channels (C_n_canals)"
@@ -273,8 +280,8 @@ w_l_ev = Q_liq_ev/(k_l_ev*A_ev*LMTD_l_ev)   "utilisation = required/available co
 w_2p_ev = Q_2p_ev/(k_2p_ev*A_ev*LMTD_2p_ev)
 w_sh_ev = Q_sh_ev/(k_sh_ev*A_ev*LMTD_sh_ev)
 w_l_ev + w_2p_ev + w_sh_ev = 1   "closure of the source: objective 1 - sum(w) = 0 (the zones share the whole plate area)"
-h_w_n2_ev = h_wi_ev + Q_sh_ev/m_w_ev   "water nodes, counterflow: water inlet at the refrigerant outlet end"
-h_w_n1_ev = h_w_n2_ev + Q_2p_ev/m_w_ev
+h_w_n2_ev = h_wi_ev - Q_sh_ev/m_w_ev   "water nodes, counterflow: water inlet at the refrigerant outlet end; ADAPTED: the hot water LOSES the zone heat (the translation added it)"
+h_w_n1_ev = h_w_n2_ev - Q_2p_ev/m_w_ev
 T_w_n2_ev = Temperature(Water, P=p_w, h=h_w_n2_ev)
 T_w_n1_ev = Temperature(Water, P=p_w, h=h_w_n1_ev)
 DTA_l_ev = Max(T_w_n1_ev - T_sat_ev, 1E-6)
@@ -289,7 +296,8 @@ DTB_2p_ev = Max(T_w_n1_ev - T_sat_ev, 1E-6)
 "log-mean temperature difference; DTA when DTA/DTB is within 1E-6 of 1 (guard corrected 2026-11-01: the 5th IF argument was the 0/0 form); the plain form holds for DTA < DTB as well"
 E_lmtd_2p_ev = Abs(DTA_2p_ev/DTB_2p_ev - 1)
 LMTD_2p_ev = IF(-E_lmtd_2p_ev, -1E-6, (DTA_2p_ev - DTB_2p_ev)/ln(DTA_2p_ev/DTB_2p_ev), DTA_2p_ev, DTA_2p_ev)
-CALL Amalfi2P(FL$, Pm_2p_ev, 0.55, m_dot, Nch_c_ev, Dh_c_ev, L_ev, W_ev, b_ev, beta_ev, A_ev: al_c_2p_ev, DPu_2p_ev)
+qflux_2p_ev = k_2p_ev*LMTD_2p_ev   "ADAPTED: heat flux of the boiling zone for the boiling number, = Q_2p_ev/(w_2p_ev*A_ev) [W/m2]"
+CALL Amalfi2P(FL$, Pm_2p_ev, 0.55, m_dot, Nch_c_ev, Dh_c_ev, L_ev, W_ev, b_ev, beta_ev, qflux_2p_ev: al_c_2p_ev, DPu_2p_ev)
 CALL WaterHTC('Water', p_w, (T_w_n1_ev + T_w_n2_ev)/2, m_w_ev/(Nch_h_ev*CS_h_ev), Dh_h_ev: al_h_2p_ev)
 DTA_sh_ev = Max(T_wi_ev - T_4, 1E-6)
 DTB_sh_ev = Max(T_w_n2_ev - T_sat_ev, 1E-6)
@@ -318,41 +326,44 @@ P_x_ex = P_cd_in   "expander exhaust feeds the condenser"
 s_x_su = Entropy(FL$, P=P_4, h=h_4)
 rho_x_su = Density(FL$, P=P_4, h=h_4)
 h_x_ex_s = Enthalpy(FL$, P=P_x_ex, s=s_x_su)   "isentropic exhaust enthalpy"
-A_su_x = pi()*d_su1_x^2/4   "suction pressure drop su->su1 (nozzle diameter d_su1)"
-C_su_x = m_dot/(rho_x_su*A_su_x)   "suction velocity [m/s]"
-h_su_thr1_x = h_4 - C_su_x^2/2
-h_su_thr_x = Max(h_su_thr1_x, h_x_ex_s)
-P_su_thr_x = Pressure(FL$, h=h_su_thr_x, s=s_x_su)
-P_su1_x = Max(P_su_thr_x, P_x_ex + 1)
+A_su_x = pi()*d_su1_x^2/4   "suction port of the calibrated model (d_su1)"
+C_su_x = m_dot/(rho_x_su*A_su_x)   "suction velocity through that port [m/s]: about 680 m/s at this operating point, i.e. supersonic"
+{ADAPTED 2026-11-01: the source's suction-pressure-drop model (isentropic throat at the inlet velocity m/(rho*A)) is
+ meaningless at a supersonic velocity: it sends P_su1 down to the exhaust pressure. The source hid it by resetting the
+ state su2 to su before the expansion. The drop is neglected here, as in the source's default (d_su1 = 0).}
+P_su1_x = P_4   "suction pressure drop neglected [Pa]"
 T_su1_x = Temperature(FL$, h=h_4, P=P_su1_x)
 cp_su1_x = Cp(FL$, h=h_4, P=P_su1_x)
 AU_su_x = AU_su_n_x*(m_dot/m_dot_n_x)^0.8
 NTU_su_x = AU_su_x/(m_dot*cp_su1_x)
 eps_su_x = Max(0, 1 - exp(-NTU_su_x))
-Q_dot_x_su = Max(0, eps_su_x*m_dot*cp_su1_x*(T_su1_x - T_w_x))   "suction heat transfer su1->su2; the state su2 is overridden to su in the source, only Q_dot_su enters the balance"
+Q_dot_x_su = eps_su_x*m_dot*cp_su1_x*(T_su1_x - T_w_x)   "suction heat transfer su1->su2, signed (ADAPTED: no max(0) clamp) [W]"
+h_su2_x = h_4 - Q_dot_x_su/m_dot   "ADAPTED: state su2 after the suction heat transfer (Lemort); the source computed it and then reset su2 to su, so Q_dot_su entered the wall balance without leaving the gas [J/kg]"
+s_su2_x = Entropy(FL$, P=P_su1_x, h=h_su2_x)
+rho_su2_x = Density(FL$, P=P_su1_x, h=h_su2_x)
 cv_su1_x = Cv(FL$, h=h_4, P=P_su1_x)
-gamma_x = Max(0.01, cp_su1_x/cv_su1_x)
+gamma_x = Max(1.01, cp_su1_x/cv_su1_x)   "ADAPTED guard: gamma > 1 (the source guard 0.01 allowed gamma = 1, where gamma/(gamma-1) is infinite)"
 P_crit_x = P_su1_x*(2/(gamma_x + 1))^(gamma_x/(gamma_x - 1))
 P_thr_leak_x = Max(P_x_ex, P_crit_x)
-rho_thr_leak_x = Density(FL$, P=P_thr_leak_x, s=s_x_su)
-h_thr_leak_x = Enthalpy(FL$, P=P_thr_leak_x, s=s_x_su)
-C_thr_leak_x = sqrt(2*(h_4 - h_thr_leak_x))   "leakage throat velocity [m/s]"
+rho_thr_leak_x = Density(FL$, P=P_thr_leak_x, s=s_su2_x)
+h_thr_leak_x = Enthalpy(FL$, P=P_thr_leak_x, s=s_su2_x)
+C_thr_leak_x = sqrt(2*(h_su2_x - h_thr_leak_x))   "leakage throat velocity, from su2 [m/s]"
 m_dot_leak_x = A_leak_x*C_thr_leak_x*rho_thr_leak_x
 m_dot_in_x = m_dot - m_dot_leak_x   "flow through the expansion volume"
-N_x_rot = (m_dot_in_x/(V_s_x*rho_x_su))*60   "rotational speed [rpm], P_M mode"
-rho_in_x = rho_x_su/rv_in_x   "internal expansion: isentropic to the built-in volume then constant-volume"
-P_in_x = Pressure(FL$, d=rho_in_x, s=s_x_su)
+N_x_rot = (m_dot_in_x/(V_s_x*rho_su2_x))*60   "rotational speed [rpm], P_M mode (swept volume filled at su2)"
+rho_in_x = rho_su2_x/rv_in_x   "internal expansion from su2: isentropic to the built-in volume then constant-volume"
+P_in_x = Pressure(FL$, d=rho_in_x, s=s_su2_x)
 h_in_x = Enthalpy(FL$, d=rho_in_x, P=P_in_x)
-w_in_s_x = h_4 - h_in_x   "specific isentropic expansion work [J/kg]"
+w_in_s_x = h_su2_x - h_in_x   "specific isentropic expansion work [J/kg]"
 w_in_v_x = (P_in_x - P_x_ex)/rho_in_x   "specific constant-volume work [J/kg]"
 h_ex2_x = h_in_x - w_in_v_x
 W_dot_in_x = m_dot_in_x*(w_in_s_x + w_in_v_x)   "internal power [W]"
-h_ex1_x = Max(Min((m_dot_in_x*h_ex2_x + m_dot_leak_x*h_4)/m_dot, h_4), h_ex2_x)   "adiabatic mixing with the leakage"
+h_ex1_x = (m_dot_in_x*h_ex2_x + m_dot_leak_x*h_su2_x)/m_dot   "adiabatic mixing with the leakage (ADAPTED: from su2, no clamps)"
 T_ex1_x = Temperature(FL$, h=h_ex1_x, P=P_x_ex)
 cp_ex2_x = Cp(FL$, h=h_ex1_x, P=P_x_ex)
 AU_ex_x = AU_ex_n_x*(m_dot/m_dot_n_x)^0.8
 eps_ex_x = Max(0, 1 - exp(-AU_ex_x/(m_dot*cp_ex2_x)))
-Q_dot_x_ex = Max(0, eps_ex_x*m_dot*cp_ex2_x*(T_w_x - T_ex1_x))   "exhaust heat transfer"
+Q_dot_x_ex = eps_ex_x*m_dot*cp_ex2_x*(T_w_x - T_ex1_x)   "exhaust heat transfer, signed (ADAPTED: no max(0) clamp) [W]"
 h_x_ex = h_ex1_x + Q_dot_x_ex/m_dot   "expander outlet enthalpy"
 T_x_ex = Temperature(FL$, h=h_x_ex, P=P_x_ex)
 Q_dot_x_amb = AU_amb_x*(T_w_x - T_amb)
@@ -368,7 +379,7 @@ A_cd = 17.8 [m^2]   "heat transfer area per side, PlateGeomSWEP P200THx140/1P_Co
 foul_cd = 0.00258   "fooling [-]"
 L_cd = 0.525 [m]
 W_cd = 0.243 [m]
-b_cd = 0.002 [m]   "corrugation amplitude (refrigerant side)"
+b_cd = CS_h_cd/W_cd   "ADAPTED: channel gap from the channel cross-section (2.39 mm; source: 0.002 m) [m]"
 beta_cd = 60 [degree]
 phi_cd = 1.2806248474865698   "plate enlargement factor of the condenser geometry [-]"
 Dh_h_cd = 0.0047502140853388445 [m]   "refrigerant-side hydraulic diameter (H_Dh)"

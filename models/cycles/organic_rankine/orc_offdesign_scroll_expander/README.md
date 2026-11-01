@@ -5,13 +5,13 @@ expander, a pump on similarity laws with rated curves and two SWEP P200THx140
 brazed-plate heat exchangers in a moving-boundary formulation. Translation of
 LaboThapPy `machine/examples/ORC/fpi_orc_example.py`, study case `off_design`.
 
-> 🔴 **Level 4 · Research** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ❌ **Failing** (solver convergence; review of 2026-11-01) &nbsp;|&nbsp; `CSL-0312`
+> 🔴 **Level 4 · Research** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** (adapted from the original; review of 2026-11-01) &nbsp;|&nbsp; `CSL-0312`
 
 | | |
 |---|---|
 | Category | `cycles/organic_rankine` |
 | Kind | steady (one operating point, imposed `m_dot`) |
-| Status | **failing** — square system (226 equations / 226 unknowns), the coupled heat-exchanger block does not converge in CoolSolve (diagnosis below) |
+| Status | **verified (adapted)** — after correcting errors of the source correlations and of the translation (see *Adaptation of 2026-11-01*), the cycle converges (57 Newton iterations from the shipped `.initials`); energy balances closed, second law respected |
 | Fluids | R1233zd(E), Water |
 | Origin | software library (LaboThapPy, ULiège) |
 
@@ -102,7 +102,7 @@ find on `Q`.
   printed Python output, not an EES variable file; the comparison was done with
   the driver scripts of the work folder, deleted after the import.)
 
-- **Full cycle: not solved** (status `failing`). The system is square (226/226)
+- **Full cycle: solved since the adaptation of 2026-11-01** (see that section); the text below is the record of the first import: The system is square (226/226)
   but the 129–138-equation coupled block (both plate HXs + expander + pump)
   does not converge: Newton/TrustRegion/Levenberg-Marquardt and multi-start all
   stall between 3.5e7 and 4e8 initial residual, with ~72 000 CoolProp
@@ -165,55 +165,74 @@ solution) are in place. Status stays **failing**: a faithful model whose
 budget. Next lever for a re-check: a split/teared solve of the block (HX by
 HX), or CoolSolve LM with a larger iteration budget on faster hardware.
 
-## Review of 2026-11-01 (failing models)
+## Adaptation of 2026-11-01 (failing → verified)
 
-Classification: **failing, solver convergence** — the system is square and
-a solution should exist (see below), but CoolSolve does not converge the
-134-equation coupled block, also with **Try Harder**. Findings:
+The model was re-checked equation by equation against the LaboThapPy source and against physics. The
+non-convergence came from **errors**, not from the solver: once they are corrected the cycle converges and is
+thermodynamically consistent. Every change is marked `ADAPTED` in the file.
 
-- **Bug of the translation, corrected.** The six LMTD guards were written
-  `IF(-E, -1E-6, f, DTA, f)` with `f = (DTA − DTB)/ln(DTA/DTB)`: for
-  `E = |DTA/DTB − 1| < 1e-6` the five-argument `IF` returns its *last*
-  argument, i.e. `f` again (0/0), so the guard never protected the
-  `DTA ≈ DTB` case. The last argument is now `DTA`.
-- **Solver behaviour** (CoolSolve 0.4.0, also with the AD fix of the CoolSolve
-  branch `fix/ad-pow-negative-base`; shipped `.initials`): Levenberg–Marquardt
-  brings the block residual from 2.18·10⁵ to 6.2·10³ in about 50 iterations
-  and then stalls: the damping saturates at 10⁸ and the step is zero for the
-  remaining iterations, i.e. a **local minimum of ‖F‖**, not slow
-  convergence (a 300-iteration LM run shows it in 24 s). With the shipped
-  coolsolve.conf (`LevenbergMarquardt, TrustRegion, Newton`,
-  `maxIterations = 20000`) the solver spends the whole budget after that
-  stall and runs past 20 min; Try Harder also runs past its 15–25 min test
-  timeouts. The most likely cause is the non-smooth clamps
-  `Max(ΔT, 1E-6)` on the zone temperature differences: when one is active its
-  derivative is zero and the residual surface is flat in that direction (a
-  temperature cross inside a zone during the iterations).
-- **Validity of the translation.** The physics of the source is sound, but
-  (i) the source example cannot be run at commit `f03f7f47` (three
-  independent errors, see *Verification*), so the cycle has no reference;
-  (ii) the translation departs from the source (3-zone moving boundary
-  instead of the source's cells, two-phase correlations at one mean quality,
-  pressure-drop feedback removed from the zone states, the `1.95*KEV*1000`
-  "kPa" factor kept as written); (iii) the expander and the pump are verified
-  against the source components. If the model converged it would be
-  `modified`, not `verified`.
-- Correction of a statement below: EES does **not** accept IF–THEN–ELSE blocks
-  in the main equations window either (only inside FUNCTION/PROCEDURE), so the
-  inline five-argument `IF` used for the guards is the right EES form; there
-  is no CoolSolve gap there.
+Errors of the **source** (LaboThapPy `f03f7f47`), corrected:
 
-Hints for CoolSolve: (a) when LM saturates its damping with a non-zero
-residual, report it as a local minimum and restart from a perturbed point
-(the multi-start of Try Harder perturbs only thermodynamic blocks from
-reference states); (b) smooth `MAX`/`MIN` (soft-plus with a small width) as
-an option would remove the flat regions; (c) the coupled block contains both
-heat exchangers: tearing them apart (condenser at fixed `P_1`, evaporator at
-fixed `P_2`, then the closure on the subcooling, as the source's
-sequential-modular solver does) would give two smaller blocks. Hint for the
-model: use a smooth LMTD approximation (e.g. Chen's) instead of the clamped
-log form. The maintainer may also consider dropping the model (no reference
-for the cycle, heavily modified translation); it is kept as `failing` here.
+1. **Amalfi boiling correlation, mass flux**: `G = m_dot/(2*amplitude*width)` is the whole refrigerant flow
+   through one channel cross-section; the per-channel flux `m_dot/(N_ch*b*W)` is used (500 times lower here).
+2. **Amalfi, conductivity**: the linear fit `0.09513*T − 17.963` mW/(m·K) gives the **vapour** conductivity of
+   R1233zd(E) (13.7 mW/(m·K) at 60 °C), whereas Amalfi's Nusselt number uses the liquid one; CoolProp's
+   saturated-liquid conductivity is used.
+3. **Amalfi, boiling number**: the source divides the heat needed to evaporate the remaining liquid by the total
+   plate area; the heat flux of the boiling zone is used (`qflux_2p_ev = k_2p_ev*LMTD_2p_ev`, identical to
+   `Q_2p_ev/(w_2p_ev*A_ev)`).
+4. **Surface tension**: CoolProp has **no surface-tension model for R1233zd(E)** ("surface tension curve not
+   provided", also in CoolProp 8.0.0): the source's Amalfi call cannot even be evaluated. The correlation of
+   Kondou et al., *Int. J. Refrig.* 53 (2015) 80–89, `sigma = 61.95*(1 − T/438.75 K)^1.277` mN/m (274–350 K,
+   ±0.05 mN/m), is used (FUNCTION `SigmaR1233zdE`).
+5. **Friction pressure drop**: `DeltaP_f = 1.95*KEV*1000` with KEV already in Pa; Longo's correlation is
+   ΔP_f [kPa] = 1.95·KEV [kJ/m³], i.e. the same number in Pa: the factor 1000 is removed (Amalfi and Shah).
+6. **Gravity term in the condenser**: added as a loss; in down-flow condensation it is a pressure gain.
+7. **Evaporator plate "amplitude"**: 0.15 mm, marked "to adjust!!" in the source geometry and contradicting its own
+   channel thickness (2.16 mm); the channel gap is taken from the channel cross-section (`b = CS/W`, 2.15 mm
+   evaporator, 2.39 mm condenser).
+8. **R1233zd(E) conductivity function** (`conductivity_R1233zd_LTP`, copied from `CSL-0132`): it uses the critical
+   constants of **R1234ze(E)** (382.52 K, 489.24 kg/m³); +9 % (liquid) to +20 % (vapour) against CoolProp's
+   R1233zd(E) model, which is now used in the Martin correlation (`CSL-0132` documents this and also ships the
+   function with the published constants of Perkins & Huber).
+9. **Expander state su2**: the source computes the suction pressure drop and heat transfer, then resets the state
+   to the suction state before the expansion (lines commented out), so `Q_dot_su` entered the wall balance without
+   leaving the gas (energy not conserved whenever it is non-zero). Lemort's model is restored (expansion from su2,
+   signed heat transfers without `max(0, …)` clamps). At this operating point the calibrated 6.48 mm suction port
+   would see a **supersonic** velocity (690 m/s, kept as output `C_su_x`), where the drop formula has no meaning:
+   the suction pressure drop is neglected, the source's default (`d_su1 = 0`).
+10. `gamma_x` guard `Max(0.01, …)` → `Max(1.01, …)` (γ/(γ−1) is infinite at γ = 1; inactive at the solution).
+
+Errors of the **translation**, corrected:
+
+11. **Trigonometric units**: CoolSolve (like EES with its DEG setting) takes trigonometric arguments in degrees;
+    the Martin procedure passed `(90 − beta)·π/180` in radians, i.e. cos(1.05°) instead of cos(60°): single-phase
+    HTCs were 8 times too low (38 instead of 290 W/(m²·K)).
+12. **Evaporator water nodes**: `h_w_n2_ev = h_wi_ev + Q_sh_ev/m_w_ev` — the hot water must **lose** the zone heat
+    (minus); as written the water reached 76 °C inside the exchanger with a 70 °C inlet.
+13. The LMTD guard bug found in the first review (5th argument of the inline `IF`).
+
+**Result** (default operating point, shipped `.sol`): R1233zd(E) 0.45 kg/s between 4.03 bar (60 °C, fixed as in
+the source) and 1.089 bar (condensing at 20.1 °C, 7 K subcooling): `Q_ev` = 106.4 kW, `Q_cd` = 99.6 kW, expander
+6.85 kW (η_is 0.615, ε_v 1.04, 9210 rpm), pump 0.495 kW (1760 rpm, η 0.20), net 6.36 kW, `eta_th` = 5.97 %
+(Carnot between the 70 °C and 10 °C water inlets: 17.5 %). Area fractions: evaporator 0.30 (liquid) / 0.18
+(boiling) / 0.53 (superheat, the vapour leaves at 69.92 °C, 0.08 K below the water inlet: the 17.8 m² exchanger is
+oversized for this flow); condenser 0.34 / 0.42 / 0.25. HTCs: refrigerant liquid 287, boiling 6650, vapour
+220 W/(m²·K); condensation 1730; water about 10⁴. **Checks**: cycle energy balance closed to 1·10⁻⁹ W, expander to
+2·10⁻⁸ W, expander wall balance to 3·10⁻¹⁰ W; no temperature-difference clamp active; water-side balances; second
+law. The pump and expander translations were verified against the source components in the first import (the
+expander change of item 9 moves its results by the 12 W of suction heat at this point).
+
+**Limitations of the source operating point**: the expander runs at 9210 rpm and 4.5 times its nominal flow
+(`m_dot_n_x` = 0.1 kg/s), with a supersonic calibrated suction port: the semi-empirical parameters are used far
+outside their calibration. The high pressure is fixed (the source's single iteration variable is the low
+pressure), so this is a "given flow, given high pressure" simulation, not a fully free off-design point.
+
+**Solver notes / CoolSolve hints**: with the corrected model the cycle converges with the default Newton from the
+shipped `.initials` (57 iterations); from the earlier initials it needs Try Harder (1023 iterations), and it was
+first obtained by a decomposition (pump outlet fixed, duty imposed, then released). Hint: a CoolSolve diagnostic
+listing the equations with the largest residual at the stall point (the best iterate, not the start) would have
+pointed at the zone balances immediately.
 
 ## Continuation attempt (orchestrator review, 2026-10-31)
 
@@ -304,6 +323,6 @@ ORC with economics), `CSL-0138` (moving-boundary HX component, Bell 2015),
 
 ## Figure
 
-*(no figure: the model does not solve yet; the state-point arrays `P[i]`,
+*(no figure yet; the model solves since 2026-11-01; the state-point arrays `P[i]`,
 `T[i]`, `h[i]`, `s[i]` of §8 are in place for the maintainer's diagram once it
 does.)*

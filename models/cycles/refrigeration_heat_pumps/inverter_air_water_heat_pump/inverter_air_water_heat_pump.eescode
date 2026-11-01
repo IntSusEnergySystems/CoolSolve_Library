@@ -13,8 +13,10 @@
   source only (see README.md). Units SI, degC, Pa, J (unchanged from original).
   Source: ULiege Thermodynamics Laboratory (V. Lemort collab., file initials VLD),
   ~/Nextcloud/thermo_models/modeles/HP_INVERTER_REV_VLD05092007_DAIKIN-ALTHERMA3.EES
-  Licence MIT. Status: failing (block 106 does not converge in CoolSolve, even with
-  Try Harder) - see README.md; frost-term sign corrected on 2026-11-01.
+  Licence MIT. Status: BLOCKED by CS-GAP-USER-STRING-FUNC (five user FUNCTIONs returning a
+  string, display labels only); runnable variant inverter_air_water_heat_pump_coolsolve.eescode.
+  ADAPTED on 2026-11-01 (frost-term sign, crankcase-heater balance, condenser driving
+  temperature, fan-curve branch): see README.md, "Review of 2026-11-01".
 =============================================================================}
 
 "!Functioning and reversibility functions (FUNCTIONs of the original, kept as they are)"
@@ -620,7 +622,9 @@ s_r_su1_cp= entropy( fluid$, t = t_r_su1_cp , p = p_r_su1_cp ) "refrigerant entr
 
  "2.2 WALL BALANCE:"
 
-Q_dot_out_cp = Q_dot_r_su_cp +Q_dot_r_ex_cp - W_dot_loss_cp "wall balance" "W"
+{ADAPTED 2026-11-01 (first law): the original wall balance omits the crankcase heater, whose 30 W are counted in
+ W_dot_cp = W_dot_in_cp + W_dot_loss_cp + W_dot_heater but appeared in no heat balance. The heater warms the shell (wall).}
+Q_dot_out_cp = Q_dot_r_su_cp +Q_dot_r_ex_cp - W_dot_loss_cp - W_dot_heater "wall balance" "W"
 
 "With the ambient heat gain given by:"
 
@@ -784,7 +788,12 @@ h_w_ex_cd=Enthalpy(Water,T=t_w_ex_cd,P=p_w_ex) "water enthalpy heat at the conde
 
 " Epsilon - NTU effectiveness model:"
 
-Q_dot_cd_water=epsilon_cd_water*C_dot_w_cd_water*(t_cd_mean_water-t_w_su_cd) "thermal power" "W"
+{ADAPTED 2026-11-01: the original drives this lumped effectiveness model with t_cd_mean_water, a mean that weights the
+ whole superheat zone at the compressor DISCHARGE temperature (about 170 C at this point, t_cd_mean = 108 C for a 46.7 C
+ condensation). With it the balance has no physical root: even with condensation below the water outlet temperature the
+ water side would absorb tens of kW more than the refrigerant gives. The mean condensing temperature t_cd_water is used, as
+ in the other models of the same model bank (e.g. CSL-0078); t_cd_mean_water is kept as an output.}
+Q_dot_cd_water=epsilon_cd_water*C_dot_w_cd_water*(t_cd_water-t_w_su_cd) "thermal power" "W"
 C_dot_w_cd_water=M_dot_w_cd*((cp_w_su_cd+cp_w_ex_cd)/2) "fictitious thermal capacity flow rate" "W/K"
 
 epsilon_cd_water=1-exp(-NTU_cd_water) "evaporator effectiveness" "[-]"
@@ -890,8 +899,12 @@ c_p_fan_ev=SPECHEAT(AirH2O,T=T_su_fan_ev,P=P_su_fan_ev,R=RH_su_fan_ev) "air spec
 
 "Flow-pressure characterisitc:"
 
-Phi_fan_ev=alpha_0_fan_cd + alpha_1_fan_cd*psi_fan_ev +alpha_2_fan_cd*psi_fan_ev^2+alpha_3_fan_cd*psi_fan_ev^3 "[-]"
-lambda_fan_ev=beta_0_fan_cd + beta_1_fan_cd*psi_fan_ev +beta_2_fan_cd*psi_fan_ev^2+beta_3_fan_cd*psi_fan_ev^3 "[-]"
+{ADAPTED 2026-11-01: the cubic fit phi(psi) falls to about 0 at psi = 0.33 (shut-off) and rises again beyond it, an
+ extrapolation of the fit; with the coil curve phi ~ 0.78*sqrt(psi) it gave a second, non-physical operating point
+ (psi = 0.58, fan efficiency 0.99, 14 450 m3/h, 926 W). The characteristic is evaluated on its valid, decreasing branch.}
+psi_fan_c=Min(psi_fan_ev, 0.30) "pressure factor limited to the fitted branch of the characteristic" "[-]"
+Phi_fan_ev=alpha_0_fan_cd + alpha_1_fan_cd*psi_fan_c +alpha_2_fan_cd*psi_fan_c^2+alpha_3_fan_cd*psi_fan_c^3 "[-]"
+lambda_fan_ev=beta_0_fan_cd + beta_1_fan_cd*psi_fan_c +beta_2_fan_cd*psi_fan_c^2+beta_3_fan_cd*psi_fan_c^3 "[-]"
 
 "Evaporator fan parameters:"
 

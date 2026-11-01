@@ -5,7 +5,7 @@
   "summary": "Detailed steady-state model of an inverter-driven reversible air-to-water heat pump (Daikin Altherma type, 2007): inverter compressor with isentropic and isochoric compression stages, effectiveness heat exchangers, fan and pump characteristics, frost/ice correction. Heating-mode branch of the original two-mode (SUBPROGRAM) file, flattened per decision D10.",
   "kind": "steady",
   "level": 4,
-  "status": "failing",
+  "status": "blocked",
   "main_file": "inverter_air_water_heat_pump.eescode",
   "fluids": [
     "R410A",
@@ -48,15 +48,21 @@
     "course": ""
   },
   "verification": {
-    "summary": "Not verified: the native file does not converge (151-variable block 106, 180 of 181 blocks solve; register C-147) and no solution is shipped. The stored EES solution is partly self-inconsistent, so it is not usable as a converged reference.",
-    "checks": [],
-    "reference": "EES stored solution (226 of 492 variables); partly self-inconsistent (condenser dew point 18.5 °C vs water heated to 42 °C), see README",
-    "date": "2026-10-10",
-    "coolsolve_version": "0.3.0@59b2862",
+    "summary": "Runnable variant (labels as literals), adapted: energy balances of compressor and cycle closed to 1e-9 W, COP_cp 1.79 < Carnot 4.84; vs the EES stored solution the consistent air side agrees (air flow 4776/4778 m3/h, fan 92.8/92.9 W, compressor eps_s 0.324/0.3245); EES's stored condenser state is self-inconsistent, so W_cp and COP are not comparable.",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of HP_INVERTER_REV_VLD05092007_DAIKIN-ALTHERMA3.EES (226 of 492 values; condenser part inconsistent)",
+    "date": "2026-11-01",
+    "coolsolve_version": "0.4.0@9768373",
     "max_rel_diff": null,
-    "notes": "Not verified: the native file (CS-GAP-IF5 closed, all 14 five-argument IF evaluate) solves 180 of 181 blocks but the 151-variable block 106 (dry/wet evaporator selection + compressor + condenser coupling) does not converge (Newton SingularJacobian/LineSearchFailed, TrustRegion MaxIterations, residual about 1e4 from a CoolProp-consistent initial point; register section 8, C-147). The stored EES R410A enthalpies/entropies are in EES's reference state (offset 142244.6 J/kg for h, to be added for CoolProp) and 118 of the 151 block variables are not stored; the shipped .initials is the stored solution with the reference-state offset applied and a consistent cycle point for the unstored variables. No .sol. The _coolsolve variant was removed (it never solved). 2026-11-01: wet-coil frost term sign corrected (+M_dot_ice*H_ice); Try Harder results and hints in README (Review of 2026-11-01)."
+    "notes": "Adaptations 2026-11-01: (1) frost latent heat +M_ice*H_ice; (2) crankcase heater in the wall balance; (3) condenser eps-NTU on t_cd_water: with t_cd_mean_water (superheat zone weighted at the 177 C discharge) the balance has no root with condensation above the water temperature - the cause of all earlier stalls; (4) fan cubic limited to psi <= 0.30: second, non-physical root (psi 0.58, eta 0.99, 926 W) removed. Native file: every numeric block converges, then CS-GAP-USER-STRING-FUNC (warning$ = change$(...)). Solution found by decomposition (pressures imposed) and continuation on p_cd; the shipped .initials converge the variant in 8 iterations."
   },
-  "missing_features": [],
+  "missing_features": [
+    "CS-GAP-USER-STRING-FUNC"
+  ],
   "related": [
     "CSL-0078",
     "CSL-0116"
@@ -79,7 +85,12 @@
       "date": "2026-11-01",
       "action": "review of the failing models: stays failing (solver convergence, Try Harder fails; much closer with CoolSolve branch fix/ad-pow-negative-base); frost latent-heat sign of the wet-coil balance corrected (first law); diagnosis and CoolSolve hints in README",
       "by": "Claude Code for S. Quoilin"
+    },
+    {
+      "date": "2026-11-01",
+      "action": "second review: four corrections of the original (frost sign, heater balance, condenser driving temperature, fan-curve branch); converges; failing -> blocked by the new gap CS-GAP-USER-STRING-FUNC; runnable variant _coolsolve (+ .initials, .sol) verified; coolsolve.conf removed",
+      "by": "Claude Code for S. Quoilin"
     }
   ],
-  "diagnosis": "Review 2026-11-01: block 106 (151 var.) does not converge even with Try Harder: residual 369 on CoolSolve 0.4.0, 0.37 with branch fix/ad-pow-negative-base (NaN AD derivative of x^y for x<0, t_out^2/t_out^3 at t_out=-15 C). Forcing the wet regime (IF selectors removed) still fails (127-var block, 1e4): wet-coil contact model + compressor/condenser coupling. Frost latent-heat sign corrected (first law)."
+  "diagnosis": "Blocked by CS-GAP-USER-STRING-FUNC (five label functions). Before the 2026-11-01 adaptation the condenser closure had no physical root and the fan curve a spurious second root; both fixed, the numeric model converges."
 }

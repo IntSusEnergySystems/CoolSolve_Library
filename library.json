@@ -1,10 +1,10 @@
 {
  "snapshot": {
-  "content_hash": "sha256:77faa6ff54c3ac45",
-  "files": 1551,
-  "bytes": 10976762,
+  "content_hash": "sha256:eaee5e606885d4e8",
+  "files": 1553,
+  "bytes": 11338976,
   "models": 300,
-  "functions": 611,
+  "functions": 612,
   "taxonomy_version": "0.2"
  },
  "models": [
@@ -4116,8 +4116,8 @@
    "category": "components/heat_exchangers",
    "kind": "steady",
    "level": 4,
-   "status": "failing",
-   "summary": "Crossflow heat-pipe heat exchanger: flue gas over the evaporator bank, water boiling/condensing inside each thermosyphon (ESDU pool/film resistances, vapour pressure drop, axial wall conduction), boiling Cyclopentane over the condenser bank, ESDU operating limits per row, marching solution over 61 tube rows. Translation of the LaboThapPy HexThermosyphon.",
+   "status": "verified",
+   "summary": "Crossflow heat-pipe heat exchanger: flue gas over the evaporator bank, water boiling/condensing inside each thermosyphon (ESDU pool/film resistances, vapour pressure drop, axial wall conduction), Cyclopentane over the condenser bank (forced convection + Rohsenow nucleate boiling, CHF-capped), ESDU operating limits per row, 61 tube rows marched in counter-flow. Translation of the LaboThapPy HexThermosyphon, external side adapted (2026-11-01).",
    "fluids": [
     "Water",
     "Air",
@@ -4134,8 +4134,8 @@
     "phase change",
     "radiation"
    ],
-   "n_equations": 3421,
-   "largest_block": 2923,
+   "n_equations": 4597,
+   "largest_block": 3599,
    "origin_type": "software_library",
    "source": "labothappy",
    "source_path": "~/git/LaboThapPy/labothappy/component/heat_exchanger/hex_thermosyphon.py",
@@ -4151,11 +4151,14 @@
     "CSL-0014",
     "CSL-0013"
    ],
-   "coolsolve_version": "0.4.0@eb797fe",
+   "coolsolve_version": "0.4.0@9768373",
    "verified_on": "2026-11-01",
-   "verification_summary": "Not verified end-to-end (failing). Row companion, corrected (unit errors) and solved with CoolSolve branch fix/ad-pow-negative-base + Try Harder: single-phase rows 1 and 61 match an instrumented re-run of the LaboThapPy example within 0.6 % (tube heat, T_HP_h, HTCs); the two-phase row 31 does not converge (CHF-based boiling closure of the source).",
+   "verification_summary": "Adapted model: stream energy balances closed to 1.4e-6 W on 6.06 MW, cold inlet met exactly, full model equal to an independent row-by-row marching to 1.7e-6, flux <= 11 % of CHF. Correlation translation checked against an instrumented LaboThapPy re-run before the adaptation (single-phase rows within 0.6 %).",
    "verification_checks": [
-    "source-rerun"
+    "source-rerun",
+    "energy-balance",
+    "cross-model",
+    "order-of-magnitude"
    ],
    "path": "models/components/heat_exchangers/thermosyphon_hx",
    "main_file": "thermosyphon_hx.eescode",
@@ -7899,8 +7902,8 @@
    "category": "cycles/organic_rankine",
    "kind": "steady",
    "level": 4,
-   "status": "failing",
-   "summary": "R1233zd(E) organic Rankine cycle solved off-design: Lemort semi-empirical scroll expander (P_M mode), pump on similarity laws with rated curves, two SWEP P200THx140 plate heat exchangers in a zone-wise moving-boundary formulation with Zivi charge. The low pressure is closed by the imposed 7 K pump-suction subcooling, as the source's iteration variable.",
+   "status": "verified",
+   "summary": "R1233zd(E) organic Rankine cycle solved off-design: Lemort semi-empirical scroll expander (P_M mode), pump on similarity laws with rated curves, two SWEP P200THx140 plate heat exchangers in a zone-wise moving-boundary formulation with Zivi charge. The low pressure is closed by the imposed 7 K pump-suction subcooling, as the source's iteration variable. Adapted from the source on 2026-11-01 (corrected plate correlations, surface tension, expander su2 state, trigonometric units): the cycle converges and is thermodynamically consistent.",
    "fluids": [
     "R1233zd(E)",
     "Water"
@@ -7937,11 +7940,13 @@
     "CSL-0132",
     "CSL-0013"
    ],
-   "coolsolve_version": "0.4.0@eb797fe",
-   "verified_on": "2026-10-31",
-   "verification_summary": "Expander and pump verified against a re-run of the source Python components (LaboThapPy f03f7f47): pump N_pu/eta_pu to 10 digits, expander h_ex/W_dot/eta_is/N_rot/eps_v to 6e-6. The cycle block implements the source's utilisation closure (sum(w)=1); Levenberg-Marquardt drives its residual from 2.2e5 to 25.5 but exceeds the iteration budget, so no cycle solution is stored. Details in README.",
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-11-01",
+   "verification_summary": "Adapted model: cycle, expander and expander-wall energy balances closed (<=2e-8 W), no temperature cross, eta_th 5.97 % < Carnot 17.5 %, plate HTCs in the usual ranges (liquid 287, boiling 6650, vapour 220, condensing 1730 W/m2K). Pump and expander checked against the source components at import; the source cycle example cannot run, so no cycle reference.",
    "verification_checks": [
-    "source-rerun"
+    "source-rerun",
+    "energy-balance",
+    "order-of-magnitude"
    ],
    "path": "models/cycles/organic_rankine/orc_offdesign_scroll_expander",
    "main_file": "orc_offdesign_scroll_expander.eescode",
@@ -8778,7 +8783,7 @@
    "category": "cycles/refrigeration_heat_pumps",
    "kind": "steady",
    "level": 4,
-   "status": "failing",
+   "status": "blocked",
    "summary": "Detailed steady-state model of an inverter-driven reversible air-to-water heat pump (Daikin Altherma type, 2007): inverter compressor with isentropic and isochoric compression stages, effectiveness heat exchangers, fan and pump characteristics, frost/ice correction. Heating-mode branch of the original two-mode (SUBPROGRAM) file, flattened per decision D10.",
    "fluids": [
     "R410A",
@@ -8805,18 +8810,27 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [],
+   "missing_features": [
+    "CS-GAP-USER-STRING-FUNC"
+   ],
    "related": [
     "CSL-0078",
     "CSL-0116"
    ],
-   "coolsolve_version": "0.3.0@59b2862",
-   "verified_on": "2026-10-10",
-   "verification_summary": "Not verified: the native file does not converge (151-variable block 106, 180 of 181 blocks solve; register C-147) and no solution is shipped. The stored EES solution is partly self-inconsistent, so it is not usable as a converged reference.",
-   "verification_checks": [],
+   "coolsolve_version": "0.4.0@9768373",
+   "verified_on": "2026-11-01",
+   "verification_summary": "Runnable variant (labels as literals), adapted: energy balances of compressor and cycle closed to 1e-9 W, COP_cp 1.79 < Carnot 4.84; vs the EES stored solution the consistent air side agrees (air flow 4776/4778 m3/h, fan 92.8/92.9 W, compressor eps_s 0.324/0.3245); EES's stored condenser state is self-inconsistent, so W_cp and COP are not comparable.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance",
+    "order-of-magnitude"
+   ],
    "path": "models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump",
    "main_file": "inverter_air_water_heat_pump.eescode",
-   "figures": 0
+   "figures": 0,
+   "variants": [
+    "inverter_air_water_heat_pump_coolsolve.eescode"
+   ]
   },
   {
    "id": "CSL-0171",
@@ -15317,7 +15331,7 @@
   {
    "function": "Amalfi2P",
    "type": "PROCEDURE",
-   "signature": "(FL$, Pm, x, Mdot, Nch, Dh, L, W, b, BetaDeg, Atot: alpha, DPu)",
+   "signature": "(FL$, Pm, x, Mdot, Nch, Dh, L, W, b, BetaDeg, q_dot: alpha, DPu)",
    "model_id": "CSL-0312",
    "path": "models/cycles/organic_rankine/orc_offdesign_scroll_expander/orc_offdesign_scroll_expander.eescode"
   },
@@ -15614,6 +15628,13 @@
    "signature": "(NPS, BWG)",
    "model_id": "CSL-0110",
    "path": "models/components/heat_exchangers/shell_and_tube_sizing/shell_and_tube_sizing.eescode"
+  },
+  {
+   "function": "CHF_LienhardEichhorn",
+   "type": "PROCEDURE",
+   "signature": "(D_o, F$, T_sat_C, V_flow : q_max_LE)",
+   "model_id": "CSL-0326",
+   "path": "models/components/heat_exchangers/thermosyphon_hx/thermosyphon_hx.eescode"
   },
   {
    "function": "coeficiente",
@@ -16237,13 +16258,6 @@
    "signature": "(fluid$, fluidev$, T_sf_su_ev, M_dot_sf, p_sf_su_ev, T_r_su_ev, T_r_ex_ev, p_ev, M_dot_r : T_sf_ex_ev, Q_dot_ev, AU_ev_l, AU_ev_tp, AU_ev_v)",
    "model_id": "CSL-0112",
    "path": "models/components/heat_exchangers/three_zone_hx_procedures/three_zone_hx_procedures.eescode"
-  },
-  {
-   "function": "ExtConvBoil",
-   "type": "PROCEDURE",
-   "signature": "(D_o, F$, T_sat_C, T_tube_C, V_flow : h_cb)",
-   "model_id": "CSL-0326",
-   "path": "models/components/heat_exchangers/thermosyphon_hx/thermosyphon_hx.eescode"
   },
   {
    "function": "f_Cheng_CO2",
@@ -18416,9 +18430,9 @@
    "path": "models/renewables/solar_thermal/orc_solar_complex/orc_solar_complex.eescode"
   },
   {
-   "function": "OpLimitsHP",
-   "type": "PROCEDURE",
-   "signature": "(F_r, D_i, L_e, beta, geo_ann, T_sat_K : Q_ent, Q_boil, Q_son, Q_dry, Q_vap)",
+   "function": "OpLimHP",
+   "type": "FUNCTION",
+   "signature": "(F_r, D_i, L_e, beta, geo_ann, T_sat_K, k_lim)",
    "model_id": "CSL-0326",
    "path": "models/components/heat_exchangers/thermosyphon_hx/thermosyphon_hx.eescode"
   },
@@ -19016,6 +19030,13 @@
    "signature": "(mode, D)",
    "model_id": "CSL-0110",
    "path": "models/components/heat_exchangers/shell_and_tube_sizing/shell_and_tube_sizing.eescode"
+  },
+  {
+   "function": "SigmaR1233zdE",
+   "type": "FUNCTION",
+   "signature": "(T_C)",
+   "model_id": "CSL-0312",
+   "path": "models/cycles/organic_rankine/orc_offdesign_scroll_expander/orc_offdesign_scroll_expander.eescode"
   },
   {
    "function": "single_phase_HX",
@@ -19960,6 +19981,15 @@
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
+  "CS-GAP-USER-STRING-FUNC": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P2",
+   "text": "**User FUNCTIONs that return a string** (name ending in `$`, the body assigns a string to it, e.g.",
+   "detail": "`evaluateString` (`src/evaluator.cpp`) only knows the built-in string functions: *\"String-valued function not supported: change$\"* (EvaluationError on the size-1 block of the string variable).",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
   "CS-GAP-IF-NO-CONSTANT": {
    "kind": "gap",
    "state": "open",
@@ -20004,15 +20034,6 @@
    "detail": "`cp_1ave[mean]` is a variable of its own with no defining equation (`x[n]` and `x[2]` are two unknowns; loud: the system is not square).",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-BUG-PROC-NEG-POW": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P2",
-   "text": "Inside a `PROCEDURE`, a power with a **negative base and an integer exponent** (`x = q^3` with `q` < 0) makes the `CALL` block fail with *SingularJacobian* (initial residual unchanged), although the value is well defined and EES evaluates it; the same …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
   "CS-BUG-LOOKUP-HINT": {
    "kind": "bug",
@@ -21128,6 +21149,15 @@
    "text": "No *\"Did you mean\"* for a registered fluid (`CO2`, `R22`, `Steam`, `Air`); the AirH2O hint for `Air` only with `humrat`, `relhum`, `wetbulb`, `dewpoint`",
    "detail": "",
    "fixed_in": "2026-10-18, `main`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-PROC-NEG-POW": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "The AD derivative of `x^y` (`pow(ADValue, ADValue)`, used whenever both operands are expressions, e.g. in FUNCTION/PROCEDURE bodies) went through `ln(x)` for every component: a negative base gave a NaN Jacobian row even with a constant exponent (`q^3`, …",
+   "detail": "",
+   "fixed_in": "2026-11-01, `fix/ad-pow-negative-base` `b26946d`",
    "anchor": "7-closed-gaps-and-bugs"
   },
   "CS-GAP-NH3H2O": {

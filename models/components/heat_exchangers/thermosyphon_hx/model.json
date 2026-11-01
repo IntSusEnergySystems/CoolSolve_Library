@@ -2,10 +2,10 @@
   "id": "CSL-0326",
   "name": "thermosyphon_hx",
   "title": "Thermosyphon (heat-pipe) tube-bank heat exchanger with ESDU operating limits",
-  "summary": "Crossflow heat-pipe heat exchanger: flue gas over the evaporator bank, water boiling/condensing inside each thermosyphon (ESDU pool/film resistances, vapour pressure drop, axial wall conduction), boiling Cyclopentane over the condenser bank, ESDU operating limits per row, marching solution over 61 tube rows. Translation of the LaboThapPy HexThermosyphon.",
+  "summary": "Crossflow heat-pipe heat exchanger: flue gas over the evaporator bank, water boiling/condensing inside each thermosyphon (ESDU pool/film resistances, vapour pressure drop, axial wall conduction), Cyclopentane over the condenser bank (forced convection + Rohsenow nucleate boiling, CHF-capped), ESDU operating limits per row, 61 tube rows marched in counter-flow. Translation of the LaboThapPy HexThermosyphon, external side adapted (2026-11-01).",
   "kind": "steady",
   "level": 4,
-  "status": "failing",
+  "status": "verified",
   "main_file": "thermosyphon_hx.eescode",
   "fluids": [
     "Water",
@@ -33,8 +33,8 @@
     "interpolate2"
   ],
   "stats": {
-    "n_equations": 3421,
-    "largest_block": 2923
+    "n_equations": 4597,
+    "largest_block": 3599
   },
   "origin": {
     "type": "software_library",
@@ -51,17 +51,20 @@
     "language": "en"
   },
   "verification": {
-    "summary": "Not verified end-to-end (failing). Row companion, corrected (unit errors) and solved with CoolSolve branch fix/ad-pow-negative-base + Try Harder: single-phase rows 1 and 61 match an instrumented re-run of the LaboThapPy example within 0.6 % (tube heat, T_HP_h, HTCs); the two-phase row 31 does not converge (CHF-based boiling closure of the source).",
+    "summary": "Adapted model: stream energy balances closed to 1.4e-6 W on 6.06 MW, cold inlet met exactly, full model equal to an independent row-by-row marching to 1.7e-6, flux <= 11 % of CHF. Correlation translation checked against an instrumented LaboThapPy re-run before the adaptation (single-phase rows within 0.6 %).",
     "checks": [
-      "source-rerun"
+      "source-rerun",
+      "energy-balance",
+      "cross-model",
+      "order-of-magnitude"
     ],
-    "reference": "hex_thermosyphon_example.py re-run in a throw-away venv (CoolProp 8.0.0): cold outlet 516.861 K, hot outlet 543.364 K, sum Q_dot_row 5.869 MW; standalone procedure checks against CoolProp 8.1.0-dev",
+    "reference": "hex_thermosyphon_example.py re-run (LaboThapPy f03f7f47, CoolProp 8.0.0), instrumented to record the row states; independent row-by-row marching with the 3-row model",
     "date": "2026-11-01",
-    "coolsolve_version": "0.4.0@eb797fe",
+    "coolsolve_version": "0.4.0@9768373",
     "max_rel_diff": null,
-    "notes": "Review 2026-11-01: (1) SingularJacobian at iteration 0 = CS-BUG-PROC-NEG-POW (NaN AD derivative of log10(pL)^2 in RadHTC_FG), fixed on CoolSolve branch fix/ad-pow-negative-base; the old 'singular equation a_g' reading came from a garbled Jacobian dump (also fixed there). (2) Unit errors corrected in both files (in2ph K vs C, ExtConvBoil wall temperature, cp_wf/cp_H/cp_h_m/rho_h_out/cp_h_exit, cold BankHTC inputs of the companion; rho_wf_in at the outlet; companion u_h = 6.718 m/s of the source run). (3) Two-phase rows: h = q_CHF/(T_w - T_sat) makes the cold-side heat flow independent of the wall temperature (degenerate Jacobian); fsolve copes, CoolSolve does not. Row 1: 1259.9 vs 1261.4 W/tube, T_HP_h 626.10 vs 626.19 K; row 61: 938.9 vs 944.0 W. Source quirks (nozzle continuity, cp_H from the wrong AbstractState) in README."
+    "notes": "Source issues corrected: CHF (Lienhard-Eichhorn q_max) used as an HTC -> forced convection + Rohsenow (source's own pool_boiling constants) capped at the pool CHF; one cold velocity from the outlet vapour density (oil code) -> continuity per row and phase; nozzle() without the critical-flow factor -> continuity; per-tube balances with the whole bank flow -> row states from the marching; ESDU limits returned as fluxes labelled W -> per-tube limits with areas, explicit FUNCTION. First review: CS-BUG-PROC-NEG-POW root cause (branch fix/ad-pow-negative-base; products used here), 11 unit/state errors of the translation. Results: 6.061 MW (source 5.869); row 1 at the entrainment limit (641.6 K heat pipe, 5.5 K below water Tc); dry-out correlation of the source exceeded in all rows. Full solve ~10 min (dense AD, 3599-variable block)."
   },
-  "diagnosis": "Review 2026-11-01: CoolSolve bug CS-BUG-PROC-NEG-POW (fixed on branch fix/ad-pow-negative-base) + translation unit errors (corrected) + degenerate two-phase rows of the source (CHF used as the operating heat flux: cold-side equation loses its wall-temperature dependence). Single-phase rows reproduce the source within 0.6 %. Options: keep failing, or adapt the boiling HTC (would make the model 'modified').",
+  "diagnosis": null,
   "missing_features": [],
   "related": [
     "CSL-0099",
@@ -77,19 +80,24 @@
     "thermosyphon_hx-fg_a1.csv",
     "thermosyphon_hx-fg_a2.csv",
     "thermosyphon_hx-fg_a3.csv",
-    "thermosyphon_hx-nozzle.csv",
     "thermosyphon_hx-c2.csv",
     "thermosyphon_hx_row-fg_a0.csv",
     "thermosyphon_hx_row-fg_a1.csv",
     "thermosyphon_hx_row-fg_a2.csv",
     "thermosyphon_hx_row-fg_a3.csv",
-    "thermosyphon_hx_row-nozzle.csv",
-    "thermosyphon_hx_row-c2.csv"
+    "thermosyphon_hx_row-c2.csv",
+    "thermosyphon_hx.sol",
+    "thermosyphon_hx_row.sol"
   ],
   "history": [
     {
       "date": "2026-11-01",
       "action": "review of the failing models: root cause of the iteration-0 SingularJacobian found (CS-BUG-PROC-NEG-POW, fixed on CoolSolve branch fix/ad-pow-negative-base); translation unit errors corrected in both files; row-companion inputs/initials from an instrumented source re-run; single-phase rows verified within 0.6 %; stays failing (two-phase rows)",
+      "by": "Claude Code for S. Quoilin"
+    },
+    {
+      "date": "2026-11-01",
+      "action": "second review: external side adapted (boiling superposition with CHF cap, continuity velocities, nozzle, row states from the marching, operating-limit units); full model converges (initials from a row-by-row marching); failing -> verified (adapted); .initials/.sol for both files; nozzle tables removed",
       "by": "Claude Code for S. Quoilin"
     }
   ]

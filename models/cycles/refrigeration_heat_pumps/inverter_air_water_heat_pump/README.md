@@ -1,6 +1,6 @@
 # Inverter air-to-water heat pump (Daikin Altherma type), heating mode
 
-🔴 **Level 4 · Research** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ❌ **Failing** (solver convergence; review of 2026-11-01) &nbsp;|&nbsp; `CSL-0155`
+🔴 **Level 4 · Research** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** (`CS-GAP-USER-STRING-FUNC`; runnable variant verified, adapted from the original) &nbsp;|&nbsp; `CSL-0155`
 
 Detailed steady-state model of an inverter-driven reversible air-to-water heat
 pump of the Daikin Altherma type (2007): inverter compressor modelled as an
@@ -19,7 +19,7 @@ stored run).
 | **Source** | ULiège Thermodynamics Laboratory model bank — `~/Nextcloud/thermo_models/modeles/HP_INVERTER_REV_VLD05092007_DAIKIN-ALTHERMA3.EES` (EES 7.793, 2007, inventory candidate `TM-0274`) |
 | **Authors** | TBD (ULiège Thermodynamics Laboratory; file initials `VLD`, EES licence of the J. Lebrun lab) |
 | **License** | MIT |
-| **CoolSolve** | **failing**: the native file parses and evaluates every five-argument `IF`, but the 151-variable block 106 does not converge (register §8, C-147; see *Verification*) |
+| **CoolSolve** | **blocked** by `CS-GAP-USER-STRING-FUNC` (five user FUNCTIONs returning display labels); every numeric block of the native file converges. Runnable variant `inverter_air_water_heat_pump_coolsolve.eescode` (labels written as literals) verified. Adapted from the original on 2026-11-01 (four corrections, see *Review of 2026-11-01*) |
 
 ## Problem statement
 
@@ -57,25 +57,34 @@ compressor 3100 rpm).
 
 ## How to run
 
-The native file **does not converge yet** in CoolSolve:
-
 ```bash
-coolsolve ./inverter_air_water_heat_pump.eescode
-# Block 106 (size 151) failed to converge: MaxIterations (residual ≈ 1e4)
+coolsolve ./inverter_air_water_heat_pump_coolsolve.eescode   # runnable variant, 8 iterations
+coolsolve ./inverter_air_water_heat_pump.eescode             # native file: stops at the labels (CS-GAP-USER-STRING-FUNC)
 ```
 
-The `.initials` file is the best starting point found (see *Verification*: stored EES values with the R410A
-enthalpies and entropies moved to CoolProp's reference state, completed by consistent guesses for the 118
-unstored variables); `coolsolve.conf` raises the iteration limit and adds `TrustRegion` for the large selection
-block. Even so, Newton fails at the first iteration and `TrustRegion` stalls (see below), so no `.sol` is
-committed.
+Both files ship the same `.initials` (the converged solution). The native file converges every numeric block
+and then stops at `warning$ = change$(t_out, Operating_mode$)`, a user FUNCTION returning a string; the variant
+writes the five labels as the strings these functions return in heating mode at −15 °C (`''`, `'Outdoor Unit'`,
+`'Indoor Unit'`, `'Available'`, `'Not available'`). **Hard start:** without the shipped `.initials` the
+151-variable block does not converge (see *Review of 2026-11-01* for how the starting point was obtained).
 
 ## Results
 
-No converged CoolSolve run yet; see *Verification* for the EES reference values
-of the default operating point (heating, −15 °C): Q̇_ev = 5843 W, Ẇ = 3522 W,
-t_ev = −20.86 °C, Ṁ_r = 0.0293 kg/s (but the condenser part of the stored
-solution is inconsistent, see below).
+Default operating point (heating, outdoor −15 °C / RH 0.8, water 40 °C, 3100 rpm), runnable variant:
+
+| Quantity | Value | Quantity | Value |
+|---|---:|---|---:|
+| heating power `Q_dot_cd` | 8.909 kW | evaporating `t_ev` / `p_ev` | −19.40 °C / 405.3 kPa |
+| evaporator duty `Q_dot_ev` | 4.238 kW (dry coil, SHR 100 %) | condensing `t_cd` / `p_cd` | 46.72 °C / 2.847 MPa |
+| compressor `W_dot_cp` | 5.017 kW | refrigerant flow `M_dot_r_cp` | 0.02820 kg/s |
+| outdoor fan `W_dot_fan_ev` | 92.8 W (4776 m³/h, 25.0 Pa, η 0.357) | water pump `W_dot_pump_cd` | 111.9 W |
+| `COP_cp` (heat / compressor) | 1.789 | `COP` (whole unit) | 1.717 |
+| discharge `t_r_ex_cp` | 176.9 °C | compressor `epsilon_s_cp` / `epsilon_v_cp` | 0.324 / 0.720 |
+| water `t_w_ex_cd` | 41.97 °C (1.090 kg/s) | compressor shell loss | 346 W |
+
+The compressor-only COP (1.79) is below the Carnot value at the refrigerant temperatures (4.84). The low
+global isentropic effectiveness (0.32, the value EES stored as well) comes from the compressor parameters of the
+file at a pressure ratio of 7 (large constant electromechanical losses), hence the high discharge temperature.
 
 ## Verification
 
@@ -132,51 +141,58 @@ not tried.
 
 ### Review of 2026-11-01
 
-Classification: **failing, solver convergence** (no missing CoolSolve
-feature: every construct parses and evaluates). Findings:
+**Classification: blocked** (missing CoolSolve feature), after four corrections of the original that make the
+model thermodynamically consistent and give it a single physical solution. Every finding below was checked on the
+solution of the variant.
 
-- **First-law error in the original, corrected.** The wet-coil balance wrote
-  `Q_dot_ev_wet = M_a·((h_su − h_ex) − (w_su − w_ex)·c_w·t_c) − M_dot_ice·H_ice`.
-  When the condensate freezes (contact temperature below 0.001 °C, the frost
-  case of this −15 °C operating point) it releases its latent heat, which the
-  refrigerant has to remove: with the condensate leaving as ice
-  (`h = c_w·t_c − H_fus`), the balance is `… + M_dot_ice·H_ice`. The sign is
-  corrected in the file (the original line is kept as a comment); the term is
-  small at this point (outdoor air at −15 °C, RH 0.8, `w` ≈ 0.0008 kg/kg).
-- **Try Harder does not converge it.** CoolSolve 0.4.0@9768373, shipped
-  `.initials`: normal pipeline (`Newton, TrustRegion`, 300 iterations) stops
-  at residual 1.0·10⁴ (Newton line search fails at iteration 0, step norm
-  6.5·10⁵); Try Harder (all solvers, tearing, symbolic reduction, multi-start)
-  reaches 369 and ends with a singular Schur complement in the tearing. With
-  the CoolSolve branch `fix/ad-pow-negative-base` (AD derivative of `x^y` for
-  `x` < 0, see `CSL-0326`) Try Harder gets much closer — best residual 0.39
-  (0.37 with the sign correction) from 1.2·10⁶ — but still stops (tearing
-  singular Schur complement, LM at its iteration limit). The AD bug therefore
-  also affected this model: it evaluates integer powers of quantities that are
-  negative at this point or during the iterations (`t_out^2`, `t_out^3` with
-  `t_out` = −15 °C in the speed-correction functions, `r_p^2`, `psi_fan_ev^3`,
-  `phi_pump^3` …), whose derivatives were NaN on CoolSolve `main`.
-- **The dry/wet selection is not the only obstacle.** With the 13
-  `IF(Q_dot_ev_dry, Q_dot_ev_wet, …)` selectors replaced by their wet branch
-  (test file, not shipped), the block shrinks to 127 variables and still fails
-  (best residual 1.0·10⁴). The remaining difficulty sits in the wet-coil
-  contact model (fictitious specific heat `cp_f_a_ev`, a ratio of two
-  differences that both vanish when the coil is dry, as here) coupled with the
-  compressor (isentropic + isochoric stages through the `(s, v)` state) and
-  the water condenser.
+Corrections of the original (marked `ADAPTED` in the file, the original lines kept as comments):
 
-Hints for CoolSolve: (a) when a block of this size stalls near the solution
-(residual 0.4 out of 10⁶), a final polishing stage with exact Newton steps and
-a relaxed line search, or a restart of LM from the best iterate with a fresh
-damping, could finish it; (b) write the best iterate of a failed block to the
-debug folder (`best_iterate.initials`), so that a user can restart from it
-(today a failed solve only keeps the initial guesses); (c) the five-argument
-`IF` used as a regime selector has a zero derivative with respect to its
-condition: a smoothed selector (e.g. a logistic blend over a small band) as an
-option would let Newton cross the dry/wet boundary. Hints for the model: cut
-the loop as the debugging guide suggests (fix `p_ev` and `p_cd`, solve, then
-release them with the converged `.initials`); the stored EES solution cannot
-serve as a reference (see above).
+1. **Frost latent heat, sign (first law).** The wet-coil balance wrote `… − M_dot_ice·H_ice`; freezing the
+   condensate releases its latent heat, which the refrigerant must remove: `+ M_dot_ice·H_ice`. (Inactive at
+   this point: the coil is dry.)
+2. **Crankcase heater (first law).** `W_dot_cp = W_dot_in_cp + W_dot_loss_cp + W_dot_heater` counted the 30 W
+   heater, but its heat appeared in no balance; it now enters the compressor wall balance. With it the
+   compressor balance `W_dot_cp + Q_dot_out_cp = M_dot_r_cp·(h_ex − h_su)` closes to 7·10⁻¹⁰ W and the cycle
+   balance `Q_dot_ev + W_dot_cp + Q_dot_out_cp = Q_dot_cd` to 8·10⁻¹⁰ W.
+3. **Condenser driving temperature (no physical root).** The lumped effectiveness model was driven by
+   `t_cd_mean_water`, an average that weights the whole superheat zone at the compressor **discharge**
+   temperature (177 °C here; `t_cd_mean_water` = 108 °C for a 46.7 °C condensation). A continuation on the
+   condensing pressure (pressures imposed, see below) shows that this balance has **no root with condensation
+   above the water temperature**: at 2.2 MPa (36 °C, below the 42 °C water outlet) the water side would still
+   absorb 51 kW more than the refrigerant gives. This, not the solver, is why every earlier attempt stalled at a
+   residual of about 1·10⁴. The mean condensing temperature `t_cd_water` is now used, as in the other models of
+   the same bank (`CSL-0078`); the root is then at 46.7 °C, above the water outlet (42.0 °C), as it must be.
+4. **Fan characteristic outside its fit (two solutions).** The cubic `phi(psi)` falls to about 0 at
+   `psi` = 0.33 (shut-off) and rises again beyond it; together with the coil curve `phi ≈ 0.78·sqrt(psi)` it gave a
+   second, non-physical operating point (`psi` = 0.58, fan efficiency 0.99, 14 450 m³/h, 926 W) next to the
+   physical one (`psi` = 0.064, efficiency 0.357). The characteristic is now evaluated on its decreasing branch
+   (`psi` ≤ 0.30); the solution is unique and matches the EES stored fan point (below).
+
+Other checks of the equations (no change needed): the compressor (supply heating, isentropic + isochoric
+compression through the `(s, v)` state, exhaust cooling, fictitious wall, no leakage, so `M·w_in` is the internal
+power), the effectiveness models of both exchangers, the Braun-type wet-coil contact model, the dry/wet
+selection (larger capacity; here the contact temperature −16 °C is above the frost point of the −15 °C air, so the
+dry regime is selected and the wet branch, whose condensation comes out negative, is inactive), the connections
+(isenthalpic expansion, superheat and subcooling imposed, saturation states consistent), and the second law
+(`COP_cp` 1.79 < Carnot 4.84).
+
+**Verification against the EES stored solution** (226 of 492 values; its condenser part is self-inconsistent, see
+*Verification* above): the air side agrees — air flow 4776 vs 4778 m³/h, fan power 92.8 vs 92.9 W, compressor
+`epsilon_s_cp` 0.324 vs 0.3245 — while the compressor power (5017 vs 3311 W), the evaporator duty
+(4238 vs 5843 W) and the COP (1.72 vs 2.68) differ because EES stored a condensing pressure of 1.39 MPa (dew point
+18.5 °C) that cannot heat water to 42 °C; with it the refrigerating effect is larger and the pressure ratio lower.
+
+**How the solution was found** (for a re-check): the model was decomposed by imposing the condensing pressure
+(in place of the condenser balance) and the evaporating pressure (in place of the wet-coil effectiveness
+relation); that problem converges (Try Harder); a continuation on the condensing pressure located the root of
+the condenser balance (item 3); releasing both relations from there, the full variant converges in 18 Newton
+iterations, and in 8 from the shipped `.initials`.
+
+**CoolSolve findings**: `CS-GAP-USER-STRING-FUNC` (new register row; it was hidden behind the convergence
+failure); the AD bug `CS-BUG-PROC-NEG-POW` (fixed on branch `fix/ad-pow-negative-base`) made the earlier Try Harder
+runs worse (residual 369 → 0.37 with the fix). Hints: a regime selector or a fitted characteristic used outside
+its range easily creates spurious roots — a CoolSolve warning when an IF-selected or polynomial branch changes
+during the iterations would help diagnose them.
 
 ## Source and attribution
 
@@ -218,18 +234,19 @@ the file, hence `TBD`. No student or personal data in the file.
 
 ## Limitations and CoolSolve gaps
 
-- **Block 106 does not converge** (151 variables, register §8, C-147): the model is *failing*, no `.sol`.
-  See *Verification* for the tests of initial guesses and the stored-solution reference-state offset of the
-  R410A enthalpies and entropies.
-- The frost latent-heat term of the wet-coil balance had the wrong sign in the
-  original; corrected on 2026-11-01 (see *Review of 2026-11-01*).
+- **Blocked** by `CS-GAP-USER-STRING-FUNC` (user FUNCTIONs returning a string, five display labels); the
+  runnable variant writes their heating-mode values as literals.
+- **Adapted from the original** (2026-11-01): frost latent-heat sign, crankcase-heater heat in the wall balance,
+  condenser effectiveness driven by the mean condensing temperature, fan characteristic limited to its fitted
+  branch — see *Review of 2026-11-01*.
+- **Hard start**: the 151-variable block needs the shipped `.initials` (obtained by decomposition and
+  continuation, see *Review*).
 - `CS-GAP-ENTHALPY-FUSION`: `Enthalpy_Fusion` missing —
   worked around by a stand-in FUNCTION.
 - The heating-mode branch only; the cooling branch of the original (identical
   structure, other parameters) was not imported.
-- The EES stored solution is partly inconsistent (see *Verification*), so even
-  a converged CoolSolve run could only be verified on the consistent subset
-  (evaporator/compressor side).
+- The EES stored solution is partly inconsistent (see *Verification*): the variant is verified on balances,
+  the second law and the consistent subset of the stored values (air side, fan, compressor effectiveness).
 
 ## Related models
 

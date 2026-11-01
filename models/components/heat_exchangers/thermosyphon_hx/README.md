@@ -1,7 +1,7 @@
 # CSL-0326 — thermosyphon_hx
 
-Thermosyphon (heat-pipe) tube-bank heat exchanger — **status: `failing`** (see
-[Why the model fails](#why-the-model-fails)).
+Thermosyphon (heat-pipe) tube-bank heat exchanger — **status: `verified` (adapted from the original)**, see
+[Adaptation of 2026-11-01](#adaptation-of-2026-11-01-second-review).
 
 Steady-state crossflow heat-pipe heat exchanger: hot flue gas (air) flows over
 the evaporator bank of vertical thermosyphon tubes, water boils and condenses
@@ -17,14 +17,82 @@ axial wall conduction. The ESDU operating limits (entrainment, boiling, sonic,
 dry-out, vapour pressure) are added as post-processing outputs. The row
 marching of the source (fsolve per column) becomes simultaneous array
 equations; the outer bisection on the cold-outlet state becomes the direct
-boundary condition `h_c[62] = h_su_C`. Inlet and exhaust nozzles use the
-tabulated isentropic-flow functions of the source.
+boundary condition `h_c[62] = h_su_C`. The external side (cold-side boiling, stream velocities, row states,
+nozzles, operating limits) was corrected on 2026-11-01.
 
-- Main file: `thermosyphon_hx.eescode` (full 61-row bank, 3421 equations,
-  square; the demo case of `hex_thermosyphon_example.py`).
-- Companion: `thermosyphon_hx_row.eescode` (+ `.initials`): three independent
-  rows (rows 1, 31, 61 of the source run) — the small verification
-  configuration. Fails in CoolSolve like the full file.
+- Main file: `thermosyphon_hx.eescode` (+ `.initials`, `.sol`): full 61-row bank, 4597 equations, one
+  3599-variable block; the demo case of `hex_thermosyphon_example.py`. Converges with the default Newton from the
+  shipped `.initials`; **slow** (about 10 min, dense Jacobian of the 3599-variable block).
+- Companion: `thermosyphon_hx_row.eescode` (+ `.initials`, `.sol`): three independent rows fed with the row
+  states of the source run (rows 1, 31, 61: superheated vapour, boiling, subcooled liquid on the cold side) — the
+  small verification configuration (1.4 s).
+
+## Adaptation of 2026-11-01 (second review)
+
+The first review (section *Why the model failed*, below) fixed the CoolSolve AD bug and the unit errors of the
+translation and showed that the single-phase rows reproduce the source within 0.6 %, but left the two-phase rows
+degenerate. The second review checked the source physics itself; **the external side of the source is not
+right** in several places, and the model was adapted to standard correlations of the source's own reference
+(Incropera). Changes (marked `ADAPTED` in both files):
+
+1. **Boiling on the cold side.** The source's `ext_conv_boil` computes the Lienhard–Eichhorn **critical** heat
+   flux (it is called `q_max` in the code) and divides it by the wall superheat to make a "heat transfer
+   coefficient": the cold-side heat flow of every two-phase row is then pinned at the CHF, whatever the wall
+   temperature (source row 31: 1598 W per tube = q_max·A/(1+foul) = 1608 W), which makes the equations degenerate
+   and is physically wrong (the CHF is the upper limit of nucleate boiling, not its operating flux). Moreover the
+   correlation is used at 0.06 m/s, essentially pool boiling, where its "high-velocity" branch gives a CHF ten times
+   below the pool-boiling value. Replaced by the **superposition** of forced convection (Zukauskas, as the
+   source's single-phase rows) and **Rohsenow nucleate boiling** (Incropera eq. 10.5) with the constants the same
+   authors use in their own `pool_boiling` function (C_sf = 0.013, n = 1.7, pentane on polished nickel),
+   active where liquid is present and the wall is above saturation, and **capped at the critical heat flux**
+   (Zuber/Lienhard pool value, Incropera eq. 10.7, C = 0.149): above it Rohsenow does not apply — near the dew
+   point the hot wall is about 100 K above saturation. The forced-convection HTC blends the liquid and vapour
+   branches with the vapour quality, so the cold-side flux is continuous across the bubble and dew points. The
+   Lienhard–Eichhorn CHF is kept as an informative output (`q_max_LE`), the ratio flux/CHF as `q_ratio_CHF[i]`
+   (at most 0.11).
+2. **Stream velocities.** The source uses one cold velocity for all rows, computed with the density of the cold
+   **outlet** (vapour) state — the code was written for an incompressible oil ("oil density at 110 °C") — so the
+   liquid rows had a velocity six times too high; and one hot velocity from `nozzle()`. Both are replaced by
+   continuity at each row, `u = G/rho(row state)` (for the cold side, per phase branch).
+3. **Nozzle.** `nozzle()` computes the critical area without the critical-flow factor 0.5787 and interpolates the
+   Mach table linearly: its casing velocity (6.72 m/s) violates continuity (10.70 m/s); the exhaust nozzle used the
+   condenser casing area. Replaced by continuity and the steady-flow energy balance (Mach < 0.05).
+4. **Row states.** The per-tube balances `f14`/`f15` of the source use the heat of one tube against the flow of the
+   whole bank (their internal gas and cold temperatures barely move). The row states are now those of the row
+   marching (`T_h[i]`→`T_h[i+1]`, `h_c[i]`→`h_c[i+1]`), both streams on enthalpy, with the row-mean
+   temperatures as driving temperatures.
+5. **Operating limits.** The source returns the ESDU 81038 limits as heat **fluxes** but labels them in W
+   (dimensional check: every expression is in W/m²); the heat-rate limits per tube are now computed with the pipe
+   cross-section (entrainment, sonic, dry-out, vapour pressure) and the evaporator wall (boiling), and given as
+   ratios (`ratio_ent[i]`, `ratio_dry[i]`). They are explicit FUNCTION calls (`OpLimHP`): as a PROCEDURE CALL their
+   huge values (up to 1E14 W/m²) formed an implicit block whose absolute tolerance could not be met.
+6. **CoolSolve workaround** for the AD bug of the current release: `log10(pL)^2`, `^3` and `Q_rad^2` written as
+   products (the model no longer needs the fix branch).
+
+**Results** (default operating point, shipped `.sol`): 6.061 MW exchanged (source run 5.869 MW); flue gas
+738.2 → 536.7 K (exhaust 536.7 K, 100 397 Pa; casing pressure drop 1411 Pa); Cyclopentane 434.0 → 522.0 K, outlet
+superheated vapour. Per tube: about 1.4 kW in the superheated-vapour rows (1–15), 1.5 to 2.4 kW in the
+nucleate-boiling rows (16–33), down to 0.62 kW in the subcooled-liquid rows (34–61). Heat-pipe saturation temperature 641.6 K in row 1
+down to 488.6 K in row 61.
+
+**Checks**: hot- and cold-stream energy balances closed to 1.4·10⁻⁶ W (6 MW exchanged); cold inlet boundary met
+exactly; the coupled full model agrees with an **independent row-by-row marching** (each row solved alone,
+secant on the cold outlet, 5 passes) to 1.7·10⁻⁶ on every row heat; cold-side flux ≤ 11 % of the CHF; no
+temperature cross. The translation of the correlations was verified against the source in the first review
+(single-phase rows within 0.6 % of an instrumented re-run of LaboThapPy before the adaptation).
+
+**Design flags of the source example** (results of the model, not errors): the water thermosyphons of the
+first rows run at 641.6 K, 5.5 K below the critical point of water, and row 1 sits at its **entrainment limit**
+(1408 W per tube for a limit of 1410 W); the **dry-out** limit as coded in the source (constant 447, fill ratio
+0.6) is exceeded in every row (by 2.8 to 43 times) — this correlation could not be checked against ESDU 81038.
+
+**Solver notes / CoolSolve hints**: the coupled model (counter-flow marching of both streams) is one
+3599-variable block; it converges with the default Newton from the shipped `.initials`, which come from the
+row-by-row marching above (from the source states alone Newton creeps, 0.4 % per iteration). Each solve takes
+about 10 min because CoolSolve's forward-mode AD carries a dense 3599-component gradient on every intermediate
+value and factors a dense Jacobian — **sparse AD / sparse Jacobians** would make such models fast. A
+block-sequential strategy for marching structures (solve the rows in order inside an outer iteration on the
+boundary, as the source and the marching script do) would also remove the need for curated initials.
 
 ## Source and attribution
 
@@ -142,7 +210,7 @@ relative residual 9.7e-4 ≤ its `res_tol` 1e-3 — the source itself stops at
 | T_HP_h[1] / P_HP_h[1] | 626.186 K / 17.155 MPa |
 | exhaust nozzle T_h_out / P_h_out | 543.458 K / 101153.0 Pa |
 
-## Why the model fails
+## Why the model failed (first review of 2026-11-01, history)
 
 ### Review of 2026-11-01 (supersedes the diagnosis below)
 
@@ -285,28 +353,21 @@ CoolSolve's `max(..., i=1, N)` indexed form is not implemented (SUM is).
 
 ## Verification status
 
-Not verified end-to-end: no `.sol` could be produced (status `failing`). The
-single-phase rows of the corrected row companion agree with the source within
-0.6 % with the CoolSolve fix of branch `fix/ad-pow-negative-base` (see *Why the
-model fails*). Earlier checks (2026-10-31; note that the standalone cold-side
-value 59.1 W/(m²·K) below is not the source's row-1 value, 227.85, which the
-corrected translation reproduces):
-every correlation procedure was solved standalone at the model's own operating
-points and agrees with CoolProp values (e.g. cold-side bank at row 1:
-h = 59.1 W/m²K, Re = 1399; ESDU resistances R_cond = 3.44e-3 K/W,
-R_evap = 4.27e-3 K/W; radiative HTC = 7.5 W/m²K; operating limits at
-T_HP_h[1] = 626.19 K: Q_ent = 22.1 MW, Q_boil = 2.14 MW, Q_son = 18.3 GW,
-Q_dry = 0.73 MW, Q_vap = 1.05 TW); the constants-substituted variant of the
-row equations converges to the source's row states. The reference numbers
-above come from re-running the source example.
+Verified (adapted model, 2026-11-01): energy balances, independent row-by-row marching, CHF and phase-continuity
+checks, see *Adaptation of 2026-11-01*; the correlation translation against an instrumented re-run of the source
+(first review). History of the earlier checks (2026-10-31; the standalone cold-side value 59.1 W/(m²·K) quoted
+there is not the source's row-1 value, 227.85, which the corrected translation reproduces):
+every correlation procedure was solved standalone at the model's own operating points and agrees with CoolProp
+values (ESDU resistances R_cond = 3.44e-3 K/W, R_evap = 4.27e-3 K/W; radiative HTC = 7.5 W/m²K); the
+operating-limit values of that time (Q_ent = 22.1 MW, …) are heat fluxes in W/m², not watts (see item 5).
 
 ## Files
 
-- `thermosyphon_hx.eescode` + `.initials` — full model (failing); the `.initials` are the 61 converged rows of the source example (2026-11-01).
-- `thermosyphon_hx_row.eescode` + `.initials` — single-row configuration (failing).
-- `thermosyphon_hx-{fg_a0..fg_a3,nozzle,c2}.csv` and the
-  `thermosyphon_hx_row-*` copies — correlation and nozzle tables extracted
-  from the source modules.
+- `thermosyphon_hx.eescode` + `.initials` + `.sol` — full model (verified, adapted); the `.initials` are its
+  converged solution, first obtained from a row-by-row marching (2026-11-01).
+- `thermosyphon_hx_row.eescode` + `.initials` + `.sol` — three-row verification configuration.
+- `thermosyphon_hx-{fg_a0..fg_a3,c2}.csv` and the `thermosyphon_hx_row-*` copies — correlation tables extracted
+  from the source modules (the nozzle tables were removed with the source's `nozzle()`, see item 3).
 
 ## Follow-up of 2026-10-31 (CS-BUG-PROC-NEG-POW check)
 
