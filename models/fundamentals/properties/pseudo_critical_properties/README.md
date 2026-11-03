@@ -21,6 +21,14 @@ pseudo-critical line.
 | **License** | MIT (translation); original Apache-2.0 |
 | **CoolSolve** | 0.4.0@9768373 — verified against a re-run of the Python source (max abs 3.1e-06 K) |
 
+## Problem statement
+
+Supply the pseudo-critical temperature `T_pc` of a fluid above its critical
+pressure — the temperature of maximum isobaric specific heat — together with
+the pseudo-boiling bounds of Banuti's linear model and an empirical CO2
+polynomial, so that the near-supercritical Nusselt correlations of `CSL-0104`
+and the sCO2 / transcritical-CO2 cycle models can take it as an input.
+
 ## Niche
 
 No library model computes a pseudo-critical temperature: `CSL-0104` takes `T_pc` as an

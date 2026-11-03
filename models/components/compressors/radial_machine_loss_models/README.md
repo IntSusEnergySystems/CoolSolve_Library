@@ -17,7 +17,7 @@ no example).
 | **Source** | [LaboThapPy](https://github.com/PyLaboThap/LaboThapPy) commit `f03f7f47`, files `labothappy/correlations/turbomachinery/radial_compressor_losses.py` and `labothappy/correlations/turbomachinery/radial_turbine_losses.py`; inventory row `LTP-052` (rows `LTP-003`, `LTP-067`, `LTP-068` are duplicates of it) |
 | **Authors** | Basile Chaudoir (the only author of the two files in the repository history, 2025-09 to 2026-05) |
 | **License** | Original: Apache-2.0 (`LICENSE.txt` of LaboThapPy); translation published under the library MIT licence |
-| **CoolSolve** | 0.4.0 - **verified** against a re-run of the Python code (demonstration: 18 values, max relative deviation 5.3·10⁻¹²; random sweep: 680 values, below 9·10⁻¹⁰ for values above 0.01 J/kg) |
+| **CoolSolve** | 0.4.0 - **verified** against a re-run of the Python code (demonstration: 18 values, max relative deviation 5.3·10⁻¹²; random sweep: 680 values, below 9·10⁻¹⁰ for values above 0.01 J/kg); re-checked on `0.4.0@2dc1367` (C-484), unchanged `.sol` |
 
 ## Niche
 
@@ -152,7 +152,9 @@ A. Meroni, B. Zühlsdorf, B. Elmegaard, F. Haglind, *Design of centrifugal compr
 ## Conversion log
 
 - **2026-10-31 - translation (T-FUNC, card C-449)**: 14 functions + 3 procedures + demonstration program; angles radians -> degrees; `PropsSI` calls replaced by property functions with `(T,P)` or `(P,h)` (no `(T,H)` call was needed);
-  `np.sinh` -> `SINH`, `np.arctan` -> `ARCTAN`, `**` -> `^`; the `if/elif` of the original -> `IF/THEN/ELSE`; integer powers of signed quantities are written as products (`x*x`, as in `CSL-0327`, because of `CS-BUG-PROC-NEG-POW`; not tested here).
+  `np.sinh` -> `SINH`, `np.arctan` -> `ARCTAN`, `**` -> `^`; the `if/elif` of the original -> `IF/THEN/ELSE`. At import, integer powers of signed quantities were written as products (`x*x`) to dodge the CoolSolve bug `CS-BUG-PROC-NEG-POW`.
+- **2026-11-02 - re-check (T-RECHECK card C-484)**: `CS-BUG-PROC-NEG-POW` (AD derivative of `x^y` for a negative base in a FUNCTION/PROCEDURE body of a multi-output `CALL`) is fixed and closed (CoolSolve `07bf9dc`, build `0.4.0@2dc1367`); the integer powers are restored as in the Python source
+  (`(w1*sx)^2` of the rotor incidence, `TAN(beta1s)^2`, `q1^2`, `w_bar^2`, `u2^2` (blade loading and recirculation), `D_f^2`, `r1s^2 - r1h^2` (clearance), `0.07^2`, `TAN(alpha2)^2`, `v2^2`, `fact2^2`, `u2^3*r2^2` (disc friction), `a_rad^3`, `w4^2` and `sx^2` of the stator and turbine incidence, `vm^2`, `v3^2`, `r5s^2 - r5h^2`, `w4^2 + w5^2`, `(r5/r4)^2`, `u4^3`, `w5^2`, `Ma5_pr^2`); the `.sol` is byte-for-byte identical (16 iterations).
 - Variable names that differ only in case are one variable in EES: the demonstration names the blade numbers `nbl_c`, `nbl_t` because `N_c`, `N_t` are the speeds.
 - **Level** (taxonomy §3): equations 126 -> 1; largest block 8 -> 1; functions/procedures -> 1; no multi-zone structure, no off-design -> 0 + 0; curated guesses (`.initials`) for the two property loops -> 1; score 4 -> level 3.
 

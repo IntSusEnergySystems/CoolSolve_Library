@@ -32,6 +32,18 @@ line (valid EES too); it solves and was compared with the EES stored solution.
 | **License** | MIT |
 | **CoolSolve** | native **blocked** by `CS-GAP-INDEX-VAR`; variant `_coolsolve` verified (0.4.0@9768373) |
 
+## Problem statement
+
+Model a small parabolic-trough solar field (46 m of collector, glycol
+heat-transfer fluid) driving the evaporator of an organic Rankine cycle on
+R245fa: the discretised receiver heat balance gives the field outlet
+temperature and the collector efficiency as results, and the cycle — three-zone
+plate evaporator and plate recuperator sized from an imposed pressure drop,
+condenser fixed by a pinch, pump, fan, and a two-stage hermetic scroll
+expander with the intermediate pressure ratio that maximises the overall
+isentropic effectiveness — feeds back on the HTF return temperature
+(see *Niche* and *Model*).
+
 ## Niche
 
 Nearest library models: `CSL-0040` *orc_biomass_chp* (same research family, MODULE

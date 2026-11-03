@@ -18,7 +18,16 @@ through a valve or nozzle opening) and three validity-range checkers.
 | **License** | MIT |
 | **CoolSolve** | 0.3.0@4798e2b — library file runs and is verified (see *Verification*) |
 
-## Functions
+## Problem statement
+
+Provide the procedures for air flow metering with the ASHRAE 41.2 / ISO R859
+discharge nozzles (a bank of up to four nozzles used simultaneously or
+separately) and with an ISO 5167 **long-radius nozzle**, plus a
+compressible-flow **admission** procedure (choked / subsonic mass flow
+through a valve or nozzle opening) and three validity-range checkers, so that
+a calling model only passes the nozzle geometry and the state.
+
+## Model
 
 | Function | Signature | Purpose / reference | Source |
 |---|---|---|---|

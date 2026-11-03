@@ -130,6 +130,9 @@ Source file (EES 7.888, comments in English), collection of S. Quoilin:
   the same coefficient tables.
 - `CSL-0161` *plate_hx_thermal_resistances*: imported in the same wave with the
   same pattern (native blocked by `$IF` and `CALL` gaps, runnable variant).
+- `CSL-0163` *cooling_coil_paramid*: the same one-zone wet-coil formulation
+  used for parameter identification from a measured point (same model bank,
+  card C-155).
 
 ## Conversion log
 
@@ -184,9 +187,23 @@ Source file (EES 7.888, comments in English), collection of S. Quoilin:
   largest block 65 → 2; procedures/arrays/DUPLICATE present → 1; three coupled
   components (two coils + pump/piping on one loop) → 1; no calibration/off-design → 0;
   curated guesses + two solver pipelines tried, needs Try Harder-class
-  numerics → 1. Score 7 → level 4; moved down to **level 3**: the structure is
-  a textbook ε-NTU pair (the level-4 rating is driven by the size of the
-  explicit cycle, a CoolSolve artefact).
-- `CSL-0163` *cooling_coil_paramid*: the same one-zone wet-coil formulation
-  used for parameter identification from a measured point (same model bank,
-  card C-155).
+   numerics → 1. Score 7 → level 4; moved down to **level 3**: the structure is
+   a textbook ε-NTU pair (the level-4 rating is driven by the size of the
+   explicit cycle, a CoolSolve artefact).
+
+## Limitations and CoolSolve gaps
+
+- Native file **blocked**: `CS-GAP-INCLUDE` (the BrineProp procedure comes
+  from the implicit EES `USERLIB`) and then the `CS-BUG-NEWTON-CYCLE` block;
+  the runnable `_coolsolve` variant is blocked by the solver bug
+  `CS-BUG-NEWTON-CYCLE` (65-equation block, `SingularJacobian` from
+  iteration 0 although the block Jacobian is full rank) — both IDs are in
+  `model.json` `missing_features`.
+- The two coils are supposed to have the same characteristics (nominal
+  resistances corrected with mass-flow exponents 0.6 / 0.8, zero metal
+  resistance), as in the original.
+- Verification is pointwise only (equations satisfied at the EES stored
+  point, with the EES-vs-CoolProp humid-air enthalpy difference of 0.22 %);
+  the variant has no `.sol` yet (see *How to run*).
+
+## Related models

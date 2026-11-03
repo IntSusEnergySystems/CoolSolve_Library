@@ -9,7 +9,8 @@ coefficient `zeta` depends on the bend angle `delta`, the radius ratio `R0/d_hyd
 the Reynolds number (laminar, intermediate and high-Re branches blended with a
 cubic step) and the wall roughness (correction factor `CF_fri` from the friction
 of the bend arc). The pressure drop is `dP = zeta_tot·ρ·v²/2`, for a single-phase
-flow or for a two-phase inlet through a mixture density. One `FUNCTION` per
+flow or for a two-phase inlet through a mixture density (adapted 2026-11-02 to
+the fixed upstream formula, see below). One `FUNCTION` per
 element; the demonstration program calls them for three flows (water, water,
 two-phase R410A), for the coefficient tables and for a Reynolds-number sweep.
 
@@ -18,10 +19,10 @@ two-phase R410A), for the coefficient tables and for a Reynolds-number sweep.
 | **Category** | Heat transfer › Pressure drop |
 | **Fluids** | none in the functions; the demonstration uses Water and R410A |
 | **Size** | 146 equations after analysis (largest block: 1); 14 functions |
-| **Source** | [`LaboThapPy`](https://github.com/PyLaboThap/LaboThapPy), commit `f03f7f47`, file `labothappy/correlations/pressure_drop/local_losses/curved_elbow.py`; inventory row `LTP-029` of `sources/labothappy/inventory.csv` |
+| **Source** | [`LaboThapPy`](https://github.com/PyLaboThap/LaboThapPy), commit `f03f7f47` (`curved_elbow.py` byte-identical on branch `origin/Elise` `9364dfc6`; `two_phase.py` taken at the branch fix), file `labothappy/correlations/pressure_drop/local_losses/curved_elbow.py`; inventory row `LTP-029` of `sources/labothappy/inventory.csv` |
 | **Authors** | Elise Neven (the `curved_elbow.py` module); the correlation is I. E. Idelchik's |
 | **License** | MIT (original: Apache-2.0, `LICENSE.txt` of LaboThapPy) |
-| **CoolSolve** | 0.4.0@9768373 — **verified** against a Python re-run of the source (95 values, max deviation 4.4·10⁻¹³) |
+| **CoolSolve** | 0.4.0@2dc1367 — **verified** against a Python re-run of the source (95 values, max deviation 4.4·10⁻¹³; two-phase values re-checked against the branch fix on 2026-11-02, max 3.2·10⁻¹³); adapted 2026-11-02 to the upstream two-phase density fix (pinned-source result kept below) |
 
 ## Niche
 
@@ -59,7 +60,7 @@ With `R0_d = R0/d_hyd`, `Re = |m_dot|/A·d_hyd/μ` (floor of 1), `A = π·d_hyd�
 | `CF_fri_elbow(zeta_LOC,…,mode)` | `CF_fri = 1 + s·min(1.4, f·L_arc/(d·zeta_LOC))`, `L_arc = |δ|·π/180·R0` |
 | `zeta_tot_elbow(…,mode)` | `zeta_tot = max(10⁻¹², CF_fri)·zeta_LOC` |
 | `dP_elbow(…,mode)` | `dP = zeta_tot·ρ·v²/2`, `v = |m_dot|/(ρA)` |
-| `rho_mix_elbow(x,ρ_l,ρ_v)` | `α = 1/(1+(ρ_v/ρ_l)(1−x)/x)`, `ρ = 1/(α/ρ_v + (1−α)/ρ_l)` (formula of the original) |
+| `rho_mix_elbow(x,ρ_l,ρ_v)` | `α = 1/(1+(ρ_v/ρ_l)(1−x)/x)`, `ρ = α·ρ_v + (1−α)·ρ_l` (fixed upstream formula, equals the homogeneous density `1/(x/ρ_v+(1−x)/ρ_l)`; the pinned commit divided specific volumes by `α`, see below) |
 | `dP_elbow_two_phase(…,x,ρ_l,ρ_v,μ_l,…)` | `dP_elbow` with `ρ = rho_mix_elbow`, `μ = μ_l` (saturated liquid), as the two-phase branch of the original |
 
 Arguments (SI): `d_hyd`, `R0`, `K` `[m]`, `delta` `[deg]`, `rho`, `rho_l`, `rho_v`
@@ -82,8 +83,9 @@ therefore behave as hard switches in the wrong places:
 * the roughness weight is 0 for `Re ≥ Re_lam` (1908 for `K/d ≤ 0.007`), i.e. the
   roughness correction acts only below that Reynolds number.
 
-**`mode = 1`** reproduces the source exactly as written (verified numerically,
-below). **`mode = 2`** is *this model's reading of the documented intent*
+**`mode = 1`** reproduces the source blending exactly as written (verified
+numerically, below; the two-phase density, common to both modes, follows the
+fixed upstream formula since 2026-11-02, see the next section). **`mode = 2`** is *this model's reading of the documented intent*
 (docstring: laminar branch below `Re_transition`, intermediate branch up to
 `4·10⁴`, high-Re branch above `3·10⁵`, roughness correction "0 in laminar, 1 in
 turbulent"): the same weights with `x = Re` in the third position,
@@ -98,14 +100,27 @@ documentation describes.
 
 ### Two-phase mixture density
 
-`rho_mix_elbow` keeps the formula of the original, `1/(α/ρ_v + (1−α)/ρ_l)` with the
-homogeneous void fraction `α`, which is not the homogeneous density
-`1/(x/ρ_v + (1−x)/ρ_l)` (`α` is a volume fraction, so `α/ρ_v` has no direct
-physical meaning). For R410A at 400 kPa, `x = 0.9` the original formula gives
-15.46 kg/m³ against 17.13 kg/m³ for the homogeneous density (−9.8 %, recomputed
-from the `.sol`: `rho_mix_C`, `rho_hom_C`). `CSL-0130` (`rho_two_phase_homogeneous`)
-carries the same formula. It is reproduced for fidelity; `rho_hom_C` in the
-demonstration gives the homogeneous value for comparison.
+The pinned commit `f03f7f47` computes the bend mixture density as
+`1/(α/ρ_v + (1−α)/ρ_l)` — specific volumes weighted by the void fraction `α`,
+which is a *volume* fraction, so the formula is dimensionally inconsistent (the
+same defect as `compute_two_phase_density` of `two_phase.py`, fixed for the
+pipes of `CSL-0130` in card C-482). The elbow file `curved_elbow.py` itself is
+byte-identical between `f03f7f47` and branch `origin/Elise` (`9364dfc6`) — the
+inline formula is still there upstream — but the central `two_phase.py` helper
+was fixed (commits `3977f2b0`/`44de58bd`) to the in-situ density
+`α·ρ_v + (1−α)·ρ_l`, which with the homogeneous void fraction equals the
+textbook homogeneous density `1/(x/ρ_v + (1−x)/ρ_l)` (verified with the
+branch's own `compute_two_phase_density`: identical to 3.7·10⁻¹⁵ relative).
+**The model was adapted accordingly (2026-11-02, card C-483)**: `rho_mix_elbow`
+follows the fixed formula (one equation; the translation is otherwise
+unchanged). For R410A at 400 kPa, `x = 0.9` the pinned formula gave
+15.4635 kg/m³ against 17.1347 kg/m³ for the fixed one (+10.8 %; `rho_mix_C`,
+with `rho_hom_C` the textbook value, equal to 8.4·10⁻¹⁴ relative), and the
+case-C drops fell from 384.3203 Pa to 346.8362 Pa (mode 1) and from
+1503.0102 Pa to 1356.4165 Pa (mode 2), i.e. −9.8 % (`dP ∝ 1/ρ`; `Re_C` is
+density-independent). The pinned-source values are kept here as a documented
+comparison, by design not reproduced by this file any more on `rho_mix_C`,
+`dP_C1`, `dP_C2`.
 
 ## How to run
 
@@ -131,7 +146,7 @@ Demonstration cases (values from the `.sol`):
 | | `dP` | 168.66 Pa | 372.26 Pa |
 | B — water 101325 Pa, 10⁵ J/kg, 10 mm, 90°, `R0 = 0.5 m`, smooth, 0.5 kg/s (`Re` = 69 621) | `zeta_tot` | 0.029327 | 0.096320 |
 | | `dP` | 595.88 Pa | 1957.06 Pa |
-| C — R410A 400 kPa, `x` = 0.9, 10 mm, 90°, `R0 = 0.5 m`, 0.05 kg/s (`Re` = 30 191) | `dP` | 384.32 Pa | 1503.01 Pa |
+| C — R410A 400 kPa, `x` = 0.9, 10 mm, 90°, `R0 = 0.5 m`, 0.05 kg/s (`Re` = 30 191; `rho_mix` = 17.1347 kg/m³) | `dP` | 346.84 Pa | 1356.42 Pa |
 
 Coefficients (case D): `A1` = 0.072837 / 0.183090 / 0.987500 / 3.0 for
 δ = 30 / 45 / 90 / 180°; `A2` = 600 / 1000 / 3000 / 6000 / 4000 for
@@ -160,7 +175,37 @@ columns) and rises by `A2/Re` only at 5·10⁵; the small excess at `Re` = 300 a
 
 ## Verification
 
-**Reference.** The Python source itself, commit `f03f7f47` of the local clone,
+**Reference (2026-11-02 re-check, card C-483).** `curved_elbow.py` is
+byte-identical between the pinned commit `f03f7f47` and branch `origin/Elise`
+at `9364dfc6` (permanent link
+<https://github.com/PyLaboThap/LaboThapPy/tree/9364dfc6>; throw-away clone
+under `work/ltp`, `git diff f03f7f47 9364dfc6 -- …curved_elbow.py` empty, no
+checkout in `~/git/LaboThapPy`): the zeta chain (Reynolds number, Idelchik
+coefficients, blending, roughness correction) is unchanged upstream, and the
+2026-10-31 comparison below still covers it — re-solving after the density
+adaptation leaves every value of the baseline bit-identical except
+`rho_mix_C`, `dP_C1`, `dP_C2` (`diff` of the two `.sol`). The three adapted
+values were compared with the branch state recomputed in Python (the upstream
+`compute_zeta_tot` of `curved_elbow.py`, `compute_two_phase_density` of
+`two_phase.py` at `9364dfc6` with the homogeneous `alpha`, and the
+`ce_fixed.py` reordered-step copy for mode 2; inputs `rho_l`, `rho_v`, `mu_l`
+taken from the solved CoolSolve values so the comparison isolates the
+equations), with `CoolSolve/tools/compare_solution.py --rtol 1e-6`:
+
+```
+4 common variables, 0 differ (rtol=1e-06); only in EES: 0; only in CoolSolve: 143
+```
+
+Largest relative deviation over the 4 values: **3.24·10⁻¹³** (`dP_C2`), i.e.
+round-off in the double-precision evaluation; `rho_mix_C` agrees with the
+branch `compute_two_phase_density` to 8.4·10⁻¹⁴ and with the textbook
+homogeneous formula to the printed digits. The reference run and the equality
+check of the two density formulas were executed with the clone on
+`PYTHONPATH` (CoolProp stubbed: only imported at module level by
+`two_phase.py`, never used by these functions).
+
+**Pinned-commit comparison (2026-10-31, kept for record).** The Python source
+itself, commit `f03f7f47` of the local clone,
 re-run in a throw-away virtual environment under `work/elbow` (CoolProp 6.6.0,
 the version pinned in the repository's `requirements.txt`; the clone was used
 through `PYTHONPATH`, not installed). Script `work/elbow/ref_elbow.py` calls
@@ -178,7 +223,9 @@ Comparison with `CoolSolve/tools/compare_solution.py … --rtol 1e-6`:
 (the 52 values only in CoolSolve are inputs and intermediate quantities). The
 largest relative deviation over the 95 values is **4.4·10⁻¹³** (`zt_g3_m2[1]`),
 round-off. Mode-1 values of cases A, B, C: `dP_A1` 168.6575 Pa, `dP_B1`
-595.8778 Pa, `dP_C1` 384.3203 Pa, identical to the Python in the printed digits.
+595.8778 Pa, `dP_C1` 384.3203 Pa, identical to the Python in the printed digits
+(case C at the pinned density, no longer reproduced by this file — the
+2026-11-02 value is 346.8362 Pa, see the table above).
 
 The source has no `__main__`, example script or test: its own example is the
 docstring of `pressure_drop_curved_elbow` (water at 300 K, 3 bar, `D = 0.01`,
@@ -202,12 +249,20 @@ physical reference.
 
 * **Original code**: Elise Neven, LaboThapPy (ULiège Thermodynamics Laboratory),
   <https://github.com/PyLaboThap/LaboThapPy>, commit `f03f7f47`, file
-  `labothappy/correlations/pressure_drop/local_losses/curved_elbow.py` (history of
+  `labothappy/correlations/pressure_drop/local_losses/curved_elbow.py`
+  (byte-identical on branch `origin/Elise` at `9364dfc6`,
+  <https://github.com/PyLaboThap/LaboThapPy/tree/9364dfc6>; history of
   the file: Elise Neven), Apache-2.0 (`LICENSE.txt`); the elbow component is
-  `labothappy/component/pipe/curved_elbow.py`. Local clone `~/git/LaboThapPy`.
-  The helper `stepsmoother` is `labothappy/toolbox/helper_function/step_smoother.py`
-  and the Swamee-Jain factor `friction_factor_swamee_jain` of
-  `labothappy/correlations/pressure_drop/pipe_DP.py` (same commit).
+  `labothappy/component/pipe/curved_elbow.py`. Local clone `~/git/LaboThapPy`
+  (pinned commit only; the branch was read from a throw-away clone under
+  `work/`). The helper `stepsmoother` is
+  `labothappy/toolbox/helper_function/step_smoother.py` and the Swamee-Jain
+  factor `friction_factor_swamee_jain` of
+  `labothappy/correlations/pressure_drop/pipe_DP.py` (same commit). The fixed
+  two-phase density adapted on 2026-11-02 is the upstream
+  `compute_two_phase_density` of `labothappy/correlations/properties/two_phase.py`
+  (branch `origin/Elise`, commits `3977f2b0`/`44de58bd`) with its default
+  homogeneous void fraction.
 * **Scientific basis** (cited by the source, not consulted here): I. E. Idelchik,
   *Handbook of Hydraulic Resistance: Coefficients of Local Resistance and of
   Friction*, Hemisphere Publishing, 1986 (3rd ed. 2006); D. S. Miller, *Internal
@@ -227,6 +282,24 @@ physical reference.
   the `AbstractState` property lookup of `pressure_drop_curved_elbow` is left to
   the caller (`dP_elbow`: single-phase `ρ`, `μ`; `dP_elbow_two_phase`: saturated
   properties, `μ_l`).
+- **2026-11-02 — re-check and adaptation (T-RECHECK card C-483, batch B-19).**
+  Re-run on CoolSolve 0.4.0 (`0.4.0@2dc1367`) against branch `origin/Elise`
+  (`9364dfc6`, throw-away clone under `work/`, never checked out in
+  `~/git/LaboThapPy`): `curved_elbow.py` is byte-identical to the pinned commit,
+  so the zeta chain and its 2026-10-31 verification stand (all values but three
+  bit-identical on re-solve) — but upstream **fixed the two-phase density**
+  (`two_phase.py`, commits `3977f2b0`/`44de58bd`; same defect as `CSL-0130`,
+  card C-482): from `1/(α/ρ_v + (1−α)/ρ_l)` (specific volumes weighted by the
+  void fraction, a volume fraction — dimensionally inconsistent) to the in-situ
+  density `α·ρ_v + (1−α)·ρ_l`, which with the homogeneous α equals the textbook
+  `1/(x/ρ_v + (1−x)/ρ_l)`. The elbow file still carries the old inline formula
+  upstream; **the model was adapted** to the fixed formula (one equation of
+  `rho_mix_elbow`; the model is marked as adapted in `model.json`; the
+  pinned-source result is kept as a documented comparison). 3 of the 95
+  demonstration values change (`rho_mix_C` +10.8 %, `dP_C1` −9.8 %,
+  `dP_C2` −9.8 %; `Re_C` and all single-phase values unchanged). New baseline
+  `.sol`; the 3 adapted values match the branch recomputation with max
+  deviation 3.2·10⁻¹³.
 - **`mode` argument added**: 1 = as the original, 2 = reordered `stepsmoother`
   arguments (described above); not in the source.
 - **Duplicated names**: `f_Swamee_Jain_elbow` is `f_Swamee_Jain` of `CSL-0130`
@@ -239,8 +312,8 @@ physical reference.
 
 No CoolSolve gap: the file solves as is (`System square: Yes`, 146 equations).
 The correlation is limited to what the source states: circular bend, adiabatic,
-constant diameter, no elevation; the homogeneous two-phase treatment and its
-mixture-density formula are discussed above. The behaviour of mode 1 reflects an
+constant diameter, no elevation; the two-phase treatment and the mixture-density
+adaptation are discussed above. The behaviour of mode 1 reflects an
 apparent argument-order error of the source, not a CoolSolve limitation.
 Reproducer of the source behaviour (LaboThapPy `f03f7f47`):
 

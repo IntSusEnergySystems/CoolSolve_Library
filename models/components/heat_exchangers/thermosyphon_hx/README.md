@@ -27,6 +27,61 @@ nozzles, operating limits) was corrected on 2026-11-01.
   states of the source run (rows 1, 31, 61: superheated vapour, boiling, subcooled liquid on the cold side) — the
   small verification configuration (1.4 s).
 
+## Problem statement
+
+Recover heat from a hot flue-gas stream into a boiling process fluid with a
+crossflow thermosyphon (heat-pipe) tube-bank heat exchanger: hot flue gas (air)
+flows over the evaporator bank of vertical thermosyphon tubes, water boils and
+condenses inside each thermosyphon, and a cold process fluid (Cyclopentane at
+31 bar, which boils on the condenser side) flows over the condenser bank. The
+demonstrated case is the demo case of the source example
+`hex_thermosyphon_example.py` (61 rows, 74 tubes per row).
+
+## Model
+
+Each tube row is modelled with the detailed thermal-resistance network of the
+source: external convective HTC (Zukauskas-type inline-tube-bank correlation
+with regime selection and row-count correction), external radiative HTC
+(flue-gas emissivity polynomial with bilinear-interpolated coefficients), wall
+conduction, ESDU internal pool-boiling/film-condensation resistances (ESDU
+81038 via MacGregor, Kew & Reay 2005), internal vapour pressure drop and axial
+wall conduction. The ESDU operating limits (entrainment, boiling, sonic,
+dry-out, vapour pressure) are added as post-processing outputs. The row
+marching of the source (fsolve per column) becomes simultaneous array
+equations; the outer bisection on the cold-outlet state becomes the direct
+boundary condition `h_c[62] = h_su_C`. The external side (cold-side boiling,
+stream velocities, row states, nozzles, operating limits) was corrected on
+2026-11-01 (see *Adaptation of 2026-11-01*); the transcription of the
+correlations and the solver-plumbing mapping are in *Conversion log*.
+
+## How to run
+
+```bash
+coolsolve ./thermosyphon_hx.eescode        # full 61-row bank (about 10 min)
+coolsolve ./thermosyphon_hx_row.eescode    # three-row verification configuration (1.4 s)
+```
+
+Both files need their shipped `.initials`: the main file converges with the
+default Newton from them (they come from a row-by-row marching of the
+adapted model; from the source states alone Newton creeps, 0.4 % per
+iteration); the row companion is fed with the row states of the source run
+(rows 1, 31, 61: superheated vapour, boiling, subcooled liquid on the cold
+side). Correlation tables ship as `thermosyphon_hx-{fg_a0..fg_a3,c2}.csv`
+(see *Files*).
+
+## Results
+
+Default operating point (shipped `.sol`, adapted model): 6.061 MW exchanged
+(source run 5.869 MW); flue gas 738.2 → 536.7 K (exhaust 536.7 K, 100 397 Pa;
+casing pressure drop 1411 Pa); Cyclopentane 434.0 → 522.0 K, outlet
+superheated vapour. Per tube: about 1.4 kW in the superheated-vapour rows
+(1–15), 1.5 to 2.4 kW in the nucleate-boiling rows (16–33), down to 0.62 kW in
+the subcooled-liquid rows (34–61). Heat-pipe saturation temperature 641.6 K in
+row 1 down to 488.6 K in row 61. The re-run of the source example is tabulated
+in *Results of the source example (re-run of the reference)* below; design flags of
+the source example (entrainment limit in row 1, dry-out limit exceeded in
+every row) are in *Adaptation of 2026-11-01*.
+
 ## Adaptation of 2026-11-01 (second review)
 
 The first review (section *Why the model failed*, below) fixed the CoolSolve AD bug and the unit errors of the
@@ -66,14 +121,12 @@ right** in several places, and the model was adapted to standard correlations of
    cross-section (entrainment, sonic, dry-out, vapour pressure) and the evaporator wall (boiling), and given as
    ratios (`ratio_ent[i]`, `ratio_dry[i]`). They are explicit FUNCTION calls (`OpLimHP`): as a PROCEDURE CALL their
    huge values (up to 1E14 W/m²) formed an implicit block whose absolute tolerance could not be met.
-6. **CoolSolve workaround** for the AD bug of the current release: `log10(pL)^2`, `^3` and `Q_rad^2` written as
-   products (the model no longer needs the fix branch).
-
-**Results** (default operating point, shipped `.sol`): 6.061 MW exchanged (source run 5.869 MW); flue gas
-738.2 → 536.7 K (exhaust 536.7 K, 100 397 Pa; casing pressure drop 1411 Pa); Cyclopentane 434.0 → 522.0 K, outlet
-superheated vapour. Per tube: about 1.4 kW in the superheated-vapour rows (1–15), 1.5 to 2.4 kW in the
-nucleate-boiling rows (16–33), down to 0.62 kW in the subcooled-liquid rows (34–61). Heat-pipe saturation temperature 641.6 K in row 1
-down to 488.6 K in row 61.
+6. **CoolSolve powers** — at import, `lpL^2`, `lpL^3` (`lpL = log10(pL)` < 0) and `Q_rad^2` were written as
+   products to dodge the AD bug `CS-BUG-PROC-NEG-POW` of the then-current release; restored to the power forms of
+   the Python source on 2026-11-02 (re-check card C-484, bug closed in CoolSolve `07bf9dc`, build `0.4.0@2dc1367`).
+   Row companion `.sol` byte-for-byte identical; main file: max rel. diff 6.5·10⁻¹⁰ (at `q_dry[4]`) over all
+   variables of magnitude above 1e-6 — within rtol 1e-9; the only larger raw ratios are machine noise on values of
+   |v| <= 7.8e-8 (absolute differences <= 2e-16, e.g. `f_v[41]` = -6.6e-30 vs -6.7e-27, zero to within 1e-26).
 
 **Checks**: hot- and cold-stream energy balances closed to 1.4·10⁻⁶ W (6 MW exchanged); cold inlet boundary met
 exactly; the coupled full model agrees with an **independent row-by-row marching** (each row solved alone,
@@ -131,7 +184,7 @@ own form (Zukauskas regimes + C2 row correction + Euler-number pressure drop)
 because the resistance network, the two-phase rows and the marching solution
 are the model's substance.
 
-## Translation notes (conversion log)
+## Conversion log
 
 - Python solver plumbing removed: the fsolve-per-row (`equ_syst`, 17
   equations) becomes simultaneous equations over arrays `i=1..61`; the outer
@@ -189,7 +242,7 @@ are the model's substance.
   source run's 6.718 m/s, row-companion `.initials` replaced by the source's
   converged row states (instrumented re-run). No other equation changed.
 
-## Reference results (re-run of the source example)
+## Results of the source example (re-run of the reference)
 
 `hex_thermosyphon_example.py` was re-run in a throw-away virtual environment
 (`pip install` of the local clone, CoolProp 8.0.0, scipy; script and raw
@@ -226,7 +279,8 @@ The failure has three distinct causes; the first two are fixed.
    *SingularJacobian* at iteration 0 and tearing reports a singular Schur
    complement, exactly the symptoms seen since the import. The fix (power rule
    for `d/dx`, the `ln x` term only where the exponent varies) is on the
-   CoolSolve branch **`fix/ad-pow-negative-base`** (not merged; regression
+   CoolSolve branch **`fix/ad-pow-negative-base`** (merged in CoolSolve main `07bf9dc` on 2026-11-01, closed in
+   register §7; regression
    tests `[neg-pow]`, `[autodiff]`), which also fixes the
    `solver_singular_diagnostics.md` dump: it printed a garbled Jacobian
    (`J.row(r).data()` on a column-major matrix), which had led to the wrong
@@ -396,3 +450,30 @@ observation tied to the full model context, not a registered gap. The indexed
 `EES_ok.zip`/`thermo_models` and stays unregistered. FLOOR in DUPLICATE bounds
 and the Partitioned no-progress stall likewise stay unregistered (no minimal
 reproducer / no EES-side evidence).
+
+## Limitations and CoolSolve gaps
+
+- The external side of the **source** was not right in several places
+  (CHF-based boiling HTC, one outlet-density velocity for all rows, nozzle
+  without the critical-flow factor, per-tube balances); the model adapts them
+  to standard correlations of the source's own reference (Incropera), marked
+  `ADAPTED` (see *Adaptation of 2026-11-01*).
+- Design flags of the source example (results of the model, not errors): row 1
+  sits at its entrainment limit (1408 W per tube for a limit of 1410 W); the
+  dry-out limit as coded in the source is exceeded in every row (by 2.8 to 43
+  times) and could not be checked against ESDU 81038.
+- **Slow solve**: one 3599-variable block, dense AD gradient and dense
+  Jacobian, about 10 min per solve; sparse AD / sparse Jacobians and a
+  block-sequential strategy for marching structures are the CoolSolve
+  improvements suggested in *Adaptation of 2026-11-01* (unregistered
+  suggestions, with the CALL-in-DUPLICATE observation of the history below).
+- No CoolSolve gap blocks the model: both files solve with the shipped
+  `.initials` (`missing_features` empty).
+
+## Related models
+
+- `CSL-0099` *air_cooler_air_side*: air-side HTC, pressure drop and fan noise
+  of a finned tube bundle (function library) — the tube-bank external HTC
+  correlations are the overlap; kept here in the source's own form.
+- `CSL-0014` *hx_constant_pinch*: LaboThapPy pilot.
+- `CSL-0013` *heat_pump_basic_tespy*: TESPy pilot.

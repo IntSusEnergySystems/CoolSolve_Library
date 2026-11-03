@@ -60,9 +60,9 @@
     ],
     "reference": "LaboThapPy commit f03f7f47 re-run in a throw-away virtual environment under work/: radial_compressor_rotor_losses, radial_compressor_stator_losses, nozzle_losses (unmodified) and rotor_losses of the turbine module with r4**b4 read as r4*b4, on the demonstration inputs and on 160 random argument sets",
     "date": "2026-10-31",
-    "coolsolve_version": "0.4.0@9768373",
+    "coolsolve_version": "0.4.0@2dc1367",
     "max_rel_diff": 8.58e-10,
-    "notes": "Demonstration: 18 values, max relative deviation 5.3e-12. Random sweep: 680 values (40 sets of the rotor, stator, turbine-rotor and nozzle calls), max relative deviation 8.6e-10 for values above 0.01 J/kg (two values below 3e-3 J/kg: 1.5e-8 and 2.2e-9 relative). Stator friction compared as original/D_h. Unmodified original turbine passage loss 887.7 J/kg against 3445.8 J/kg with r4*b4 (source defect). CoolProp 8.1.0dev and 8.0.0 differ on the R245fa viscosity (+14.4 %), without effect on the comparison (inputs taken from the .sol). The source has no reference results; no publication checked."
+    "notes": "Demonstration: 18 values, max relative deviation 5.3e-12. Random sweep: 680 values (40 sets of the rotor, stator, turbine-rotor and nozzle calls), max relative deviation 8.6e-10 for values above 0.01 J/kg (two values below 3e-3 J/kg: 1.5e-8 and 2.2e-9 relative). Stator friction compared as original/D_h. Unmodified original turbine passage loss 887.7 J/kg against 3445.8 J/kg with r4*b4 (source defect). CoolProp 8.1.0dev and 8.0.0 differ on the R245fa viscosity (+14.4 %), without effect on the comparison (inputs taken from the .sol). The source has no reference results; no publication checked. Re-check 2026-11-02 (card C-484, build 0.4.0@2dc1367): after restoring the powers hidden by CS-BUG-PROC-NEG-POW, the new .sol is byte-for-byte identical to the previous baseline."
   },
   "missing_features": [],
   "related": [
@@ -80,6 +80,11 @@
     {
       "date": "2026-10-31",
       "action": "added (T-FUNC card C-449, batch B-12/B-18: LaboThapPy LTP-052)",
+      "by": "worker for S. Quoilin"
+    },
+    {
+      "date": "2026-11-02",
+      "action": "re-check (T-RECHECK card C-484): CS-BUG-PROC-NEG-POW fixed and closed (CoolSolve 07bf9dc); integer powers written as products at import restored to the x^n forms of the source, .sol byte-for-byte identical",
       "by": "worker for S. Quoilin"
     }
   ]

@@ -95,7 +95,7 @@ Orchestrator pruning: TSP-033 (exergy one-liner) discarded, TSP-024/025 combined
 
 **Open queue.** (1) C-447 merged at 20:15 as `CSL-0326` thermosyphon HX, status *failing* (3421 eq., CoolSolve cannot converge it even with the 3-row
 companion; correlations checked standalone) — maintainer: keep as failing or drop with `drop_model.py`. Library: 300 models. (2) Taxonomy v0.3 proposal
-[docs/taxonomy_v0.3_proposal.md](docs/taxonomy_v0.3_proposal.md) — maintainer decision, then a T-MOVE card. (3) The backlog is exhausted except `skip` rows and C-237
+[docs/taxonomy_v0.3.md](docs/taxonomy_v0.3.md) (single plan, revised 2026-11-03: 12 top categories, 57 leaves of 2–7 models) — maintainer decision, then a T-MOVE card. (3) The backlog is exhausted except `skip` rows and C-237
 (`LowerHeatingValue(H2)`); next work = re-checks of blocked/failing models after CoolSolve fixes, figures, the maintainer items below.
 (4) Free-model benchmark (results in `~/llm/opencode-model-comparison.md`): glm-5.3-flash-free qualified with caveats (4/5); flint rejected (2/5); beam rejected (copied the
 reference from another lane); deepseek-v4.1-flash unusable; big-pickle, nemotron-3.5-super-vl, mimo not yet tested (no probe reply on 10-31).
@@ -532,7 +532,7 @@ most 100 kB.
 
 ## 4. Decisions and open questions
 
-**Open (2026-10-31): taxonomy v0.3 proposal (C-139)** — [docs/taxonomy_v0.3_proposal.md](docs/taxonomy_v0.3_proposal.md): split rule ~40 → ~20 models; flat sibling splits of `components/compressors` (positive displacement / turbo), `components/heat_exchangers` (condensers_evaporators), `cycles/refrigeration_heat_pumps` (refrigeration / heat_pumps / high_temperature_heat_pumps), `cycles/engines`, `fundamentals/processes`, `heat_transfer/convection`; ~15 misfiled models; photovoltaics merged into `renewables/solar`. Not applied: maintainer decides (then a T-MOVE card regenerates `redirects.csv`).
+**Open: taxonomy v0.3 plan** — [docs/taxonomy_v0.3.md](docs/taxonomy_v0.3.md), one file (rules, tree with counts, the complete `taxonomy.json`, the move table read by `tools/move_model.py --plan`). Revised 2026-11-03 at the maintainer's request: at most 6–7 models per category, no near-empty ones, two levels as the GUI Library menu; `components` and `cycles` split into `heat_exchangers`, `machines`, `components`, `power_cycles`, `engines`, `refrigeration_heat_pumps`; 259 of 302 models move; applied on a scratch copy: build_index 0 errors. First version (C-139, 2026-10-31): split rule ~40 → ~20 models; flat sibling splits of `components/compressors` (positive displacement / turbo), `components/heat_exchangers` (condensers_evaporators), `cycles/refrigeration_heat_pumps` (refrigeration / heat_pumps / high_temperature_heat_pumps), `cycles/engines`, `fundamentals/processes`, `heat_transfer/convection`; ~15 misfiled models; photovoltaics merged into `renewables/solar`. Not applied: maintainer decides (then a T-MOVE card regenerates `redirects.csv`).
 
 Decisions of the maintainer (2026-10-04), applied in the documents and tools:
 
@@ -912,7 +912,7 @@ Medium `todo` rows, one model at a time, two workers. Cards are written as they 
 [x] C-234 T-IMPORT TM-0349 → cycles/steam_power/steam_reheat_power_plant_arrays — [std] Cengel 10-34b, reheat Rankine cycle with state arrays, 80 MW; verification: EES stored solution (74/74) — CSL-0208
 [x] C-235 T-IMPORT TM-0351 (DG-0079) → cycles/refrigeration_heat_pumps/r134a_water_cooled_condenser — [std] Cengel 11-11, R134a cycle with a water-cooled condenser; verification: EES stored solution (29/29) — CSL-0209
 [x] C-236 T-IMPORT TM-0360 (DG-0081) → fundamentals/processes/piston_cylinder_spring_water — [std] water heated in a piston-cylinder with a spring (kPa/kJ → convert); verification: EES stored solution (40/40) — CSL-0210
-[ ] C-237 T-IMPORT TM-0236 → cycles/engines/engine_cylinder_count — stopped: CoolSolve rejects LowerHeatingValue(H2); no registered gap, so the model was not shipped and TM-0236 stays todo — no id
+[x] C-237 T-IMPORT TM-0236 → cycles/engines/engine_cylinder_count — stopped: CoolSolve rejects LowerHeatingValue(H2); no registered gap, so the model was not shipped and TM-0236 stays todo — no id
 [x] C-238 T-IMPORT TM-0447 → cycles/refrigeration_heat_pumps/reverse_brayton_intercooling — [std] air refrigeration cycle with intercooling (kPa/kJ → convert); verification: EES stored solution (49/49) — CSL-0212
 [x] C-239 T-IMPORT TM-0415 (DG-0099) → components/compressors/centrifugal_air_compressor_ke — [std] MECA0002 example 5.14, centrifugal compressor power with kinetic energy (kPa → convert, temperatures in K); verification: EES stored solution (10/10) — CSL-0213
 [x] C-240 T-IMPORT TM-0400 (DG-0098) → fundamentals/processes/piston_cylinder_stops_air — [std] air in a piston-cylinder with stops (kPa/kJ → convert, temperatures in K); verification: EES stored solution (17/17) — CSL-0214
@@ -1115,6 +1115,46 @@ Novelty triage of the 42 remaining `low`/`medium` rows (notes `~/llm/scripts/csl
 [x] C-450 T-IMPORT CSX-033 → renewables/solar_thermal/orc_solar_complex — [hard] solar ORC with discretised heat exchangers (MODULE flattening, decision D10) (nearest CSL-0040); verify: CoolSolve solve + energy balances (no stored .sol) — CSL-0329
 [x] C-451 T-RECHECK CSL-0158 → heat_transfer/pressure_drop/gas_pipe_insulated_pressure_drop — [std] re-check the native file on CoolSolve 0.4.0@9768373: Colebrook, SP[1..5] array arguments, pi in procedures and accented identifiers seem to work now (C-401); update missing_features/status, simplify the gas `_coolsolve` variant — CSL-0158
 [x] C-452 T-RECHECK CSL-0262 + CSL-0131 — [std] both list a gap the register marks closed (CS-BUG-LOOKUP-WRITE, CS-BUG-IMPLICIT-PROC): re-run the native files on 0.4.0@9768373, update status/missing_features, delete variants that only worked around closed gaps — CSL-0262
+```
+
+### B-19 — New upstream inputs: TESPy v0.12 and LaboThapPy branches (Phase 1, P1.2/P1.3 refresh) 🔄
+
+The Python sources are pinned (TESPy `19425523`, LaboThapPy `f03f7f47`); TESPy `dev` is now 166 commits ahead (v0.12.0, new `equilibrium_separator`,
+changes to electrolyser/fuel cell, steam turbine, pump, turbocompressor, characteristic limits) and three LaboThapPy branches carry newer work (`Elise`
+updated 2026-11-02, `Basile_Chaudoir`, `Titouan_Janod`). Triage with the novelty rule + impact on the models already translated. Notes:
+`~/llm/scripts/csl/b19_triage.txt`. Proposed cards from C-470 (TESPy) and C-480 (LaboThapPy).
+
+```
+[x] C-460 T-TRIAGE TESPy 19425523 → origin/dev (v0.12) → sources/tespy/ — [std] new candidates + impact on CSL-0013, 0313, 0314, 0315, 0323, 0324 and the other TESPy translations; cards from C-470
+[x] C-461 T-TRIAGE LaboThapPy branches Elise / Basile_Chaudoir / Titouan_Janod (since f03f7f47) → sources/labothappy/ — [std] new candidates (unmerged branch work: note the branch and commit) + impact; cards from C-480
+[x] C-480 T-FUNC LTP-078 → heat_transfer/convection/curved_duct_htc — [std] helical/spiral-coil and rectangular-duct HTC (Ito critical Re and curvature factors, Shah-London laminar polynomial + Gnielinski), branch origin/Basile_Chaudoir (unmerged: cite branch + commit); nearest CSL-0095/CSL-0111/CSL-0321; verify: Python re-run of the functions from a clone of the branch — CSL-0330
+[x] C-481 T-RECHECK CSL-0125 → components/pumps_fans/pump_curve_similarity — [std] the pinned source evaluates efficiency (and NPSH_r) at the actual flow instead of the similar point V_dot*N_rated/N; upstream origin/Elise 8514bf89 corrects it: check the physics (affinity laws), adapt the model if the pinned source is wrong (mark as adapted, keep the pinned-source result as a documented comparison); verify: branch example re-run — CSL-0125
+[x] C-482 T-RECHECK CSL-0130 → heat_transfer/pressure_drop/… — [std] upstream two_phase.py viscosity/surface-tension fallback fix (origin/Elise ff52f643) and pipe call scheme m_dot→G: does any translated value change? adapt only for a real fix — CSL-0130
+[x] C-483 T-RECHECK CSL-0316 → heat_transfer/pressure_drop/local_losses_idelchik_elbows — [std] same two-phase density error as CSL-0130 (fixed upstream on origin/Elise 9364dfc6, see C-482): adapt the homogeneous two-phase bend density to αρv+(1−α)ρl as CSL-0130, keep the pinned-source result as a documented comparison — CSL-0316
+[x] C-484 T-RECHECK CSL-0327 + CSL-0328 + CSL-0326 — [std] CS-BUG-PROC-NEG-POW is fixed (CoolSolve 07bf9dc, in the 0.4.0 build of 2026-11-01) and closed: restore the faithful `x^n` powers that were written as products only to dodge the bug, re-run, confirm identical .sol, drop the workaround notes — CSL-0327
+```
+
+### B-20 — Tooling for the taxonomy move (Phase 6, P6.5) ☐
+
+```
+[x] C-490 T-TOOL tools/move_model.py — [std] move/rename models by ID (single move or a plan CSV `id,new_path[,new_name]`), dry-run report, `git mv` when tracked, `previous_paths`, rewrite of links in other models' READMEs/model.json, new categories declared in taxonomy.json, rebuild + checks; tested by a round trip only — the v0.3 taxonomy is NOT applied (maintainer decision pending)
+[x] C-491 T-PLAN docs/taxonomy_v0.3_plan.csv — [std] translate docs/taxonomy_v0.3_proposal.md into the move plan of tools/move_model.py (id,new_category) + the taxonomy.json entries to declare (titles/descriptions drafted) + a dry-run report appended to the proposal; NOT applied
+[x] C-492 T-QUALITY README completeness (P6.4) — [std] 23 READMEs miss template sections (Problem statement, Model, How to run, Results, Limitations, Related…): rename non-standard headings or add short sections from content already in the folder (README, model.json, .eescode header, .sol) — no new facts, no new verification claims
+```
+
+### B-21 — Independent Python references for *thermodynamique appliquée* (Phase 6, P6.5) 🔄
+
+The course MECA0002 ships teacher solution scripts in Python (CoolProp + `fsolve`) beside the EES files: independent references for the ≈ 63
+library models of the course. Each card maps the scripts of its folders to library models, re-runs them and compares with the committed `.sol`;
+it writes only `sources/thermo_models/python_refs/<card>.csv/.md`, and the orchestrator applies the `other-tool` verification entries after review.
+Exam scripts are used anonymised (no student name anywhere; credit "Thermodynamics Laboratory, University of Liège", maintainer 2026-11-03); exam questions
+follow the repetition exercises, so most are expected to be duplicates of models already in the library. Notes: `~/llm/scripts/csl/b21_pyref.txt`.
+
+```
+[ ] C-500 T-VERIFY python refs 2022-2023/ (78 scripts) + Aout 2022/code_base* → sources/thermo_models/python_refs/C-500 — [std] map, re-run, compare with the .sol; no model edits
+[ ] C-501 T-VERIFY python refs 2017-2018/ + 2018-2019/ + Exam passés/ + Exam janv 2021/ (≈ 96 scripts) → sources/thermo_models/python_refs/C-501 — [std] same as C-500
+[ ] C-503 T-VERIFY python refs Exam janv 2020/ (146 scripts: student submissions + `_corr` corrected versions, two sessions) → sources/thermo_models/python_refs/C-503 — [std] anonymised; identify the distinct exam questions first, map them to repetition exercises/library models (duplicates expected), compare only the corrected (`_corr`) versions that agree with each other; no import unless clearly new
+[ ] C-502 T-QUALITY apply C-500/C-501/C-503 — [std] add `other-tool` to verification.checks and a Verification paragraph for the `match` rows; `differs` rows diagnosed one by one (adapt only for a real model bug)
 ```
 
 ## 7. Dispatching a batch to agents
@@ -1588,3 +1628,15 @@ and adds the log line in §8.
 | 2026-11-01 | 2nd review `CSL-0326` | failing → verified (adapted): CHF-as-HTC boiling replaced by forced convection + Rohsenow capped at the CHF, continuity velocities, nozzle, marching row states, operating-limit units (fluxes) and explicit FUNCTION; full model (4597 eq., 3599-var block) converges from initials of a row-by-row marching; balances 1.4e-6 W; = marching to 1.7e-6 (Claude Code) |
 | 2026-11-01 | 2nd review `CSL-0312` | failing → verified (adapted): 13 source/translation errors corrected (Amalfi G/k/Bo, R1233zd(E) surface tension missing in CoolProp → Kondou 2015, friction ×1000, amplitude, conductivity constants, expander su2, trig in radians, water-node sign …); converges in 57 iterations; balances ≤ 2e-8 W (Claude Code) |
 | 2026-11-01 | 2nd review `CSL-0155` | failing → blocked (new `CS-GAP-USER-STRING-FUNC`) + verified `_coolsolve` variant: frost sign, heater balance, condenser driving temperature (no physical root before), fan-curve spurious root; air side = EES stored (Claude Code) |
+| 2026-11-02 | C-460 T-TRIAGE | TESPy 19425523 → dev (v0.12, 166 commits): mostly API/deprecations; no doctest reference value of a translated component changed → no re-check; CSL-0323 FuelCell heat sign error confirmed upstream (not fixed); 2 new rows: TSP-053 EquilibriumSeparator (merged into CSL-0313 by the orchestrator, novelty), TSP-054 McAdams viscosity (merged → CSL-0130) (glm 7 min) |
+| 2026-11-02 | C-461 T-TRIAGE | LaboThapPy branches since f03f7f47 (Elise 19, Basile_Chaudoir 62 commits, Titouan_Janod): 8 new rows LTP-075…082 (1 todo: LTP-078 curved-duct/helical-coil HTC → C-480; 3 merged, 3 duplicate, 1 discarded); impact: CSL-0125 pump similarity (efficiency at the similar point, Elise 8514bf89) and CSL-0130 two-phase property fallback fix → re-checks C-481/C-482; CSL-0111/0131 refactors only (no card) (glm-5.3-flash-free 10 min) |
+| 2026-11-02 | C-480 `CSL-0330` | curved_duct_htc (helical/spiral-coil and rectangular-duct HTC: Ito, Schmidt, Facão-Oliveira, Di Piazza-Ciofalo, Shah-London + Gnielinski; 7 functions) from the unmerged LaboThapPy branch Basile_Chaudoir@98b78ebd, verified vs Python re-run (13 values, 2.9e-13); 2 source errors fixed and documented (curvature ratio Dh/2*R typo, Gnielinski tuple misuse) (glm 17 min) |
+| 2026-11-02 | C-482 → `CSL-0130` | T-RECHECK vs LaboThapPy origin/Elise 9364dfc6: real fix of compute_two_phase_density (in-situ αρv+(1−α)ρl instead of 1/(α/ρv+(1−α)/ρl)) → model adapted (1 equation, 12 demo values change, pinned-source result kept as comparison), verified vs branch recomputation (40 values, 7.9e-12); pipe_DP call scheme already as pinned (glm 11 min) |
+| 2026-11-02 | C-483 → `CSL-0316` | T-RECHECK: two-phase bend density adapted to the upstream fix (as CSL-0130): 3 of 95 values change (rho_mix_C +10.8 %, dP_C −9.8 %), verified vs branch recomputation (3.2e-13); still verified (adapted) (glm 7 min) |
+| 2026-11-02 | C-490 T-TOOL | tools/move_model.py (single move or plan CSV, dry run, git mv / plain move, renames, previous_paths, link rewrites, --declare-new, rebuild): tested by dry run + byte-identical round trip; documented in docs/taxonomy.md §6 and README (glm 13 min) |
+| 2026-11-02 | C-491 T-PLAN | docs/taxonomy_v0.3_plan.csv (110 moves, all IDs checked), docs/taxonomy_v0.3_categories.md (11 new keys, solar rename, version bump text), dry run appended to the proposal (6 files / 16 link rewrites); nothing applied; CSL-0326 → condensers_evaporators and the `solar` key to confirm (glm 6 min) |
+| 2026-11-02 | C-237 `CSL-0331` | engine_cylinder_count imported (TM-0236, MCI TP2 Ex3: cylinder count solved with CEIL, H2 combustion with O2 + recirculated water): native blocked by new CS-GAP-HEATING-VALUE (LowerHeatingValue(H2), reproduced by the orchestrator), runnable variant with the LHV from formation enthalpies (+0.012 % vs EES) verified vs EES stored solution (43 vars, max 1.2e-04); kPa/kJ/K converted by hand (glm 11 min, re-dispatch) |
+| 2026-11-02 | C-484 → `CSL-0327`, `CSL-0328`, `CSL-0326` | T-RECHECK after the CS-BUG-PROC-NEG-POW fix (CoolSolve 07bf9dc): faithful x^n powers restored (products kept only where the source writes them or SQRT(0) needs a guard), .sol identical (byte-identical; CSL-0326 main within 6.5e-10); CSL-0155 wording updated (glm, 2 rounds) |
+| 2026-11-02 | CSL-0217 solver pipeline | regression found with CoolSolve 2dc1367 (and the build of 2026-11-01): CSL-0217 failed (MaxIterations, block of 27) since b26946d (CS-BUG-PROC-NEG-POW fix — Newton used to stop on a NaN derivative and TrustRegion found the root); bisected eb797fe OK / b26946d fail; fix: coolsolve.conf solverPipeline = TrustRegion (11 iterations, .sol unchanged with the three builds) (orchestrator) |
+| 2026-11-03 | README completeness | done (glm t263): missing template sections added/renamed in the 23 READMEs from in-folder material; orchestrator fixed one false log line (CSL-0120 comments are still French); build_index 0 errors |
+| 2026-11-03 | T-RECHECK CSL-0125 | done (glmfree t256): mode_MN adapted to upstream Elise 8514bf89 (eta at the similar flow, NPSH_r x N^2), default point and the three .sol unchanged, verified 4.8e-10 against the fixed source; CS-GAP-INTERP-EXTRAP evidence added |

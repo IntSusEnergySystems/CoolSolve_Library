@@ -2,7 +2,7 @@
   "id": "CSL-0316",
   "name": "local_losses_idelchik_elbows",
   "title": "Local pressure loss of curved bends: Idelchik coefficients, single-phase and two-phase (function library)",
-  "summary": "EES FUNCTION library of the loss coefficient of circular pipe bends (Idelchik coefficients as in LaboThapPy): angle coefficient A1, radius coefficients A2 and B1, laminar/intermediate/high-Reynolds branches blended with a cubic step, roughness correction from the friction of the bend arc, total coefficient zeta_tot and pressure drop zeta_tot*rho*v^2/2, with a homogeneous two-phase extension; a mode argument gives the blending as written in the source (whose stepsmoother calls look argument-swapped) or with the arguments reordered.",
+  "summary": "EES FUNCTION library of the loss coefficient of circular pipe bends (Idelchik coefficients as in LaboThapPy): angle coefficient A1, radius coefficients A2 and B1, laminar/intermediate/high-Reynolds branches blended with a cubic step, roughness correction from the friction of the bend arc, total coefficient zeta_tot and pressure drop zeta_tot*rho*v^2/2, with a two-phase extension through a mixture density (the fixed upstream in-situ formula alpha*rho_v+(1-alpha)*rho_l); a mode argument gives the blending as written in the source (whose stepsmoother calls look argument-swapped) or with the arguments reordered.",
   "kind": "function",
   "level": 2,
   "status": "verified",
@@ -51,18 +51,18 @@
     "ees_version": "",
     "language": "en",
     "course": "",
-    "notes": "LaboThapPy commit f03f7f47 (local clone ~/git/LaboThapPy): curved_elbow.py (compute_re_lam_transition, compute_idelchik_coefficients, compute_reynolds_correction_turbulent, compute_zeta_LOC, compute_cf_fri, compute_zeta_tot, pressure_drop_curved_elbow), helpers toolbox/helper_function/step_smoother.py and correlations/pressure_drop/pipe_DP.py (friction_factor_swamee_jain). The source is a port of the Modelica Dissipation library CurvedBend_LDP (Idelchik; Miller; VDI-Waermeatlas Lac 6). Translation published under the CoolSolve_Library MIT license (decision D3)."
+    "notes": "LaboThapPy commit f03f7f47 (local clone ~/git/LaboThapPy): curved_elbow.py (compute_re_lam_transition, compute_idelchik_coefficients, compute_reynolds_correction_turbulent, compute_zeta_LOC, compute_cf_fri, compute_zeta_tot, pressure_drop_curved_elbow), helpers toolbox/helper_function/step_smoother.py and correlations/pressure_drop/pipe_DP.py (friction_factor_swamee_jain). curved_elbow.py is byte-identical on branch origin/Elise at 9364dfc6; the two-phase density follows the fixed upstream compute_two_phase_density of correlations/properties/two_phase.py (commits 3977f2b0/44de58bd), adapted 2026-11-02 (see README). The source is a port of the Modelica Dissipation library CurvedBend_LDP (Idelchik; Miller; VDI-Waermeatlas Lac 6). Translation published under the CoolSolve_Library MIT license (decision D3). Model adapted 2026-11-02 to the upstream density fix."
   },
   "verification": {
-    "summary": "95 output values were compared with the LaboThapPy source (commit f03f7f47) re-run in Python with CoolProp 6.6.0: 0 differ at rtol=1e-6, largest relative deviation 4.4e-13. The source has no example or test; its docstring example has the (P, T) arguments swapped. Idelchik values not consulted.",
+    "summary": "Re-check 2026-11-02 (card C-483): curved_elbow.py is byte-identical between the pinned f03f7f47 and branch origin/Elise 9364dfc6, so the 2026-10-31 comparison (95 values, max dev 4.4e-13 vs a Python re-run) stands; after adapting the two-phase bend density to the upstream two_phase.py fix, the 3 changed values match the branch recomputation: 4 common variables, 0 differ at rtol=1e-6, max 3.24e-13.",
     "checks": [
       "source-rerun"
     ],
-    "reference": "labothappy curved_elbow.py (compute_zeta_LOC, compute_cf_fri, compute_zeta_tot, compute_idelchik_coefficients, pressure_drop_curved_elbow) recomputed in a throw-away virtual environment under work/elbow (script ref_elbow.py, clone used through PYTHONPATH); mode 2 compared with a copy of the source with the three stepsmoother calls reordered",
-    "date": "2026-10-31",
-    "coolsolve_version": "0.4.0@9768373",
-    "max_rel_diff": 4.38e-13,
-    "notes": "compare_solution.py --rtol 1e-6: 95 common variables, 0 differ; largest relative deviation 4.4e-13 (zt_g3_m2[1]), round-off. Mode 2 is this model's reading of the intended step order, not taken from the source or checked against the handbook."
+    "reference": "the upstream functions of branch origin/Elise, commit 9364dfc6 (https://github.com/PyLaboThap/LaboThapPy/tree/9364dfc6), recomputed from a throw-away clone under work/ (compute_zeta_tot, compute_two_phase_density with homogeneous alpha; ce_fixed.py reordered-step copy for mode 2; CoolProp stubbed, only imported at module level); property inputs taken from the solved CoolSolve values; pinned-commit f03f7f47 comparison of 2026-10-31 kept in the README",
+    "date": "2026-11-02",
+    "coolsolve_version": "0.4.0@2dc1367",
+    "max_rel_diff": 3.24e-13,
+    "notes": "compare_solution.py --rtol 1e-6: 4 common variables, 0 differ; largest relative deviation 3.24e-13 (dP_C2), round-off. curved_elbow.py unchanged upstream (git diff empty); the adaptation changed one equation of rho_mix_elbow; 3 of the 95 demonstration values change (rho_mix_C +10.8 %, dP_C1 and dP_C2 -9.8 %). The pinned-commit result is kept as a documented comparison. Mode 2 is this model's reading of the intended step order, not taken from the source or checked against the handbook."
   },
   "missing_features": [],
   "related": [
@@ -78,6 +78,11 @@
       "date": "2026-10-31",
       "action": "added (T-FUNC card C-364, inventory row LTP-029)",
       "by": "sonnet worker for S. Quoilin"
+    },
+    {
+      "date": "2026-11-02",
+      "action": "re-checked (T-RECHECK card C-483, batch B-19) on 0.4.0@2dc1367 against LaboThapPy branch origin/Elise (9364dfc6): adapted rho_mix_elbow to the upstream two_phase.py density fix (commits 3977f2b0/44de58bd, as CSL-0130 in C-482); 3 demonstration values change; curved_elbow.py itself unchanged upstream; re-baselined .sol; pinned-source result kept as documented comparison",
+      "by": "opencode worker (t258) for S. Quoilin"
     }
   ]
 }

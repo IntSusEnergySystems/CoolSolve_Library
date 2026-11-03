@@ -4,14 +4,13 @@
   Three independent thermosyphon-tube rows (rows 1, 31 and 61 of the source
   run) with the same per-row equations, correlations and ESDU operating limits
   as thermosyphon_hx.eescode, each fed with the row inlet states of the
-  converged source example. Intended as the small verification configuration
-  of the model. Status (review of 2026-11-01, README "Why the model fails"):
-  CoolSolve 0.4.0 stops at iteration 0 (SingularJacobian) because of
-  CS-BUG-PROC-NEG-POW (NaN AD derivative of log10(pL)^2 in RadHTC_FG; fixed on
-  the CoolSolve branch fix/ad-pow-negative-base). With that fix and Try
-  Harder, the single-phase rows 1 and 61 reproduce the source within 0.6 %;
-  the two-phase row 31 does not converge (boiling closure of the source).
-  Unit errors of the first translation corrected on 2026-11-01.
+  converged source example.   Small verification configuration: three independent rows (rows 1, 31 and 61
+  of the source run: superheated vapour, boiling, subcooled liquid on the cold
+  side), each fed with the row inlet states of the converged source run, with
+  the same correlations and operating limits as thermosyphon_hx.eescode.
+  Solves in about 1.5 s from the shipped .initials; CS-BUG-PROC-NEG-POW closed
+  in CoolSolve 0.4.0 (2026-11-01). Unit errors of the first translation
+  corrected on 2026-11-01.
   Units  : SI - temperatures in °C for property calls; *_K variables in K.
   Source : Basile Chaudoir, Elise Neven - LaboThapPy (ULiège), commit f03f7f47;
            Apache-2.0; see README.md.
@@ -81,7 +80,7 @@ FUNCTION DeltaPV_HP(D_v, L_eff, Q_rad, T_sat_K)
   A_v = pi*D_v^2/4  "vapour cross-section area [m^2]"
   Re_a = Q_rad*D_v/(mu_v*A_v*Dh_evap)  "vapour Reynolds number [-]"
   DP_lam = 32*mu_v*Q_rad*L_eff/(rho_v*A_v*Dh_evap*D_v^2)  "laminar branch [Pa]"
-  DP_turb = (0.3164/Re_a^(1/4))*(Q_rad*Q_rad*L_eff)/(2*rho_v*A_v^2*Dh_evap^2*D_v)  "turbulent branch [Pa]"
+  DP_turb = (0.3164/Re_a^(1/4))*(Q_rad^2*L_eff)/(2*rho_v*A_v^2*Dh_evap^2*D_v)  "turbulent branch [Pa]"
   w_t = Step(Re_a-2300)
   DeltaPV_HP = (1-w_t)*DP_lam + w_t*DP_turb
 END
@@ -155,8 +154,8 @@ PROCEDURE RadHTC_FG(p_CO2, p_H2O, T_g_K, T_w_K, L_beam : h_r)
   pL = (p_CO2+p_H2O)*L_beam  "partial-pressure times beam length [m]"
   pr = p_CO2/p_H2O  "[-]"
   CALL RadAcoeff(pr, T_g_K : a_0, a_1, a_2, a_3)
-  lpL = log10(pL)  "negative (pL < 1): powers written as products, CoolSolve CS-BUG-PROC-NEG-POW workaround"
-  epsilon = 10^(a_0+a_1*lpL+a_2*lpL*lpL+a_3*lpL*lpL*lpL)/T_g_K  "gas emissivity [-]"
+  lpL = log10(pL)  "[-], negative for pL < 1"
+  epsilon = 10^(a_0+a_1*lpL+a_2*lpL^2+a_3*lpL^3)/T_g_K  "gas emissivity [-]"
   alpha = epsilon*(T_g_K/T_w_K)^0.5  "gas absorptivity [-]"
   h_r0 = sigma_sb*(epsilon*T_g_K^4-alpha*T_w_K^4)/(T_g_K-T_w_K)
   h_r = max(h_r0, 0)  "the original guards h_r<0 / T_w>T_g by returning 0"

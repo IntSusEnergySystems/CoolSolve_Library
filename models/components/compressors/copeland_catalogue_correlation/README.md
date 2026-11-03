@@ -23,7 +23,15 @@ mass flow [lbm/hr]) and `Vs` (swept volume per revolution, read at row 1
 | **License** | MIT |
 | **CoolSolve** | v0.3.0@d5d6b37 — verified (see *Verification*) |
 
-## The function
+## Problem statement
+
+Evaluate the ARI 10-coefficient third-order catalogue polynomial of a Copeland
+scroll compressor (electrical power, refrigerant mass flow, …) from the
+evaporation and condensation temperatures, with the catalogue tables shipped
+as companion CSVs, so that cycle models can call it as a compressor
+correlation (as `CSL-0116` does in its `'ari'` mode).
+
+## Model
 
 - Inputs: `table$` catalogue name (one of the five tables below), `coef$`
   column name (`'W'`, `'M'`, …), `T_ev`, `T_cd` evaporation/condensation
@@ -61,6 +69,18 @@ of the stored run and `W/M` leaves the range of the fluid (next section).
 `W_err` is the difference between `W_dot`
 and the same polynomial recomputed in the main program: 0 exactly, so the
 function and its table read are exact.
+
+## How to run
+
+```bash
+coolsolve ./copeland_catalogue_correlation.eescode
+```
+
+The five catalogue tables ship as the companion CSVs of the model folder; no
+`.initials` and no `coolsolve.conf` are needed (the native file solves as
+written, `SUCCESS`, 0 iterations). Models that call the function copy its
+definition until `$INCLUDE library:<name>` works (`CS-FEAT-IMPORT`), using
+the name `copeland_ari` (see *Conversion log*).
 
 ## Results
 

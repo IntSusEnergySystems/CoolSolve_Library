@@ -1,0 +1,293 @@
+{=============================================================================
+  Curved-duct single-phase heat-transfer coefficients (function library)
+  CoolSolve Library model CSL-0330 (kind = function)
+-----------------------------------------------------------------------------
+  Seven EES FUNCTIONS returning the convection heat-transfer coefficient h
+  [W/m2-K] of single-phase flow in curved ducts: helically coiled pipe
+  (regime selected by the Ito critical Reynolds number Re_cr =
+  12730*curv_ratio^0.2; laminar Xhan/Zhang, transition Xhan with the Ito
+  friction factor, turbulent Schmidt factor on Gnielinski or Di
+  Piazza-Ciofalo), curved rectangular duct (Facao-Oliveira, laminar),
+  straight rectangular duct (Shah-London polynomial, Gnielinski, linear
+  interpolation in between) and spiral-plate (SPHE) channel. The
+  demonstration program calls each function with water data.
+  Inputs : mu, mu_w [Pa-s], Pr [-], k [W/m-K], G [kg/m2-s],
+           Dh, L, R_curv, ch_w [m], AR [-]
+  Outputs: h [W/m2-K] (one FUNCTION per geometry)
+  Source : B. Chaudoir, LaboThapPy, branch origin/Basile_Chaudoir, commit
+           98b78ebd, correlations/convection/*.py, Apache-2.0,
+           https://github.com/PyLaboThap/LaboThapPy - see README.md
+  Status : VERIFIED against a re-run of the branch functions (README)
+=============================================================================}
+
+FUNCTION gnielinski_pipe_htc(mu, Pr, mu_w, k, G, Dh, L)
+{GNIELINSKI_PIPE_HTC - straight-pipe helper of the LaboThapPy HTC functions
+(pipe_htc.py, gnielinski_pipe_htc): h [W/m2-K] from the Stephan-Preusser
+entry-region correlation for Re < 2300 and from Gnielinski above.
+The source also computes a Sieder-Tate Nusselt number for Re > 10000, which
+its control flow then overwrites with Gnielinski (the second test is an "if",
+not "elif"): only the effective physics is translated, mu_w is an unused
+argument (the Sieder-Tate value is never returned). The Re and Pr echoed by
+the Python function are not needed here.
+Validity: as in the source; the source warns outside 0 < Re < 1E6 and
+0.1 < Pr < 1000 (Gnielinski range).
+Original: Stephan, K. and P. Preusser (laminar); Gnielinski, V., "New
+equations for heat and mass transfer in turbulent pipe and channel flow",
+Int. Chem. Eng. 16:359-368, 1976 (as cited in the source).
+Taken from: LaboThapPy branch origin/Basile_Chaudoir, commit 98b78ebd,
+labothappy/correlations/convection/pipe_htc.py, Apache-2.0, B. Chaudoir -
+https://github.com/PyLaboThap/LaboThapPy}
+  Re = G*Dh/mu
+  IF (Re < 2300) THEN
+    Nu = 3.657 + 0.0677*(Re*Pr*(Dh/L)^1.33)/(1 + 0.1*Pr*(Re*Dh/L)^0.3)   "Stephan-Preusser [-]"
+  ELSE
+    f = (1.82*LOG10(Re) - 1.64)^(-2)                                      "friction factor of the Gnielinski correlation [-]"
+    Nu = ((f/8)*(Re - 1000)*Pr)/(1 + 12.7*(f/8)^(1/2)*(Pr^(2/3) - 1))*(1 + (Dh/L)^(2/3))   "Gnielinski [-]"
+  ENDIF
+  gnielinski_pipe_htc = Nu*k/Dh
+END
+
+FUNCTION laminar_curved_pipe_1P_htc(mu, Pr, mu_w, k, G, Dh, L, R_curv)
+{LAMINAR_CURVED_PIPE_1P_HTC - laminar flow in a helically coiled pipe,
+h [W/m2-K] (spiral_ducts_htc.py, laminar_curved_pipe_1P_htc). Dean number
+De = Re*sqrt(curv_ratio) with curv_ratio = Dh/(2*R_curv). Nearly straight
+coil (curv_ratio <= 0.01): straight-pipe correlation; 0.01 < curv_ratio <=
+0.1: Xhan correlation (as cited by Sigalotti et al.); larger curvature:
+Zhang et al. correlation ("Dean number only can not determine ...", as in
+the original comment).
+Original: Sigalotti, L. D. G., C. E. Alvarado-Rodriguez and O. Rendon,
+"Fluid Flow in Helically Coiled Pipes", 2023 (Xhan correlation); Zhang et
+al. (large-curvature correlation), as cited in the source.
+Taken from: LaboThapPy branch origin/Basile_Chaudoir, commit 98b78ebd,
+labothappy/correlations/convection/spiral_ducts_htc.py, Apache-2.0,
+B. Chaudoir - https://github.com/PyLaboThap/LaboThapPy}
+  curv_ratio = Dh/(2*R_curv)                                              "curvature ratio Dh/(2 R_curv) [-]"
+  Re = G*Dh/mu                                                            "Reynolds number [-]"
+  De = Re*SQRT(curv_ratio)                                                "Dean number [-]"
+  IF (curv_ratio <= 0.01) THEN
+    h = gnielinski_pipe_htc(mu, Pr, mu_w, k, G, Dh, L)                    "nearly straight coil [W/m2-K]"
+  ELSE
+    IF (curv_ratio <= 0.1) THEN
+      Nu = (2.153 + 0.318*De^0.643)*Pr^0.177                             "Xhan correlation [-]"
+      h = Nu*k/Dh
+    ELSE
+      Nu = 0.8532*De^0.4822*curv_ratio^(-0.03451)                        "Zhang et al. correlation [-]"
+      h = Nu*k/Dh
+    ENDIF
+  ENDIF
+  laminar_curved_pipe_1P_htc = h
+END
+
+FUNCTION transition_curved_pipe_1P_htc(mu, Pr, mu_w, k, G, Dh, L, R_curv)
+{TRANSITION_CURVED_PIPE_1P_HTC - transitional flow in a helically coiled
+pipe (Re_cr <= Re < 1E5), h [W/m2-K] (spiral_ducts_htc.py,
+transition_curved_pipe_1P_htc). Nearly straight coil (curv_ratio <= 0.01):
+straight-pipe correlation; 0.01 < curv_ratio <= 0.1: Xhan correlation with
+the Ito friction factor f; larger curvature: Di Piazza & Ciofalo (the
+source applies it both for 0.1 <= curv_ratio <= 0.3 and above, "no other
+correlations for this").
+Original: Xhan correlation and Ito friction factor, as cited by
+Sigalotti, L. D. G., C. E. Alvarado-Rodriguez and O. Rendon, "Fluid Flow
+in Helically Coiled Pipes", 2023; Di Piazza, I. and M. Ciofalo,
+"Numerical prediction of turbulent flow and heat transfer in helically
+coiled pipes", Int. J. Heat Mass Transfer 53:4152-4159, 2010 (Gnielinski
+form with the Ito friction factor), as cited in the source.
+Taken from: LaboThapPy branch origin/Basile_Chaudoir, commit 98b78ebd,
+labothappy/correlations/convection/spiral_ducts_htc.py, Apache-2.0,
+B. Chaudoir - https://github.com/PyLaboThap/LaboThapPy}
+  curv_ratio = Dh/(2*R_curv)                                              "curvature ratio Dh/(2 R_curv) [-]"
+  Re = G*Dh/mu                                                            "Reynolds number [-]"
+  De = Re*SQRT(curv_ratio)                                                "Dean number [-]"
+  IF (curv_ratio <= 0.01) THEN
+    h = gnielinski_pipe_htc(mu, Pr, mu_w, k, G, Dh, L)                    "nearly straight coil [W/m2-K]"
+  ELSE
+    IF (curv_ratio <= 0.1) THEN
+      f = 16*(0.1033*SQRT(De))/(Re*((1 + 1.729/De)^(1/2) - (1.729/De)^(1/2))^3)   "Ito friction factor [-]"
+      Nu = 0.04*f*Re^1.13*curv_ratio^0.077*Pr^0.4                        "Xhan correlation [-]"
+      h = Nu*k/Dh
+    ELSE
+      f = 16*(0.1033*SQRT(De))/(Re*((1 + 1.729/De)^(1/2) - (1.729/De)^(1/2))^3)   "Ito friction factor [-]"
+      Nu = ((f/8)*(Re - 1000)*Pr)/(1 + 12.7*(f/8)^(1/2)*(Pr^(2/3) - 1))*(1 + (Dh/L)^(2/3))   "Di Piazza & Ciofalo [-]"
+      h = Nu*k/Dh
+    ENDIF
+  ENDIF
+  transition_curved_pipe_1P_htc = h
+END
+
+FUNCTION turbulent_curved_pipe_1P_htc(mu, Pr, mu_w, k, G, Dh, L, R_curv)
+{TURBULENT_CURVED_PIPE_1P_HTC - turbulent flow (Re >= 1E5) in a helically
+coiled pipe, h [W/m2-K] (spiral_ducts_htc.py, turbulent_curved_pipe_1P_htc).
+Nearly straight coil (curv_ratio <= 0.01): straight-pipe correlation;
+0.01 < curv_ratio <= 0.2: Schmidt curvature correction applied to the
+straight-pipe correlation (as given by Nellis and Klein); larger curvature:
+Di Piazza & Ciofalo (as in the transition function).
+Original: Schmidt, E. F., "Waermeuebergang und Druckverlust in
+Rohrschlangen", Chemie-Ingenieur-Technik 39:636-642, 1967 (correction
+factor, cited from Nellis, G. and S. Klein, "Heat Transfer", Cambridge,
+2009); Di Piazza, I. and M. Ciofalo, 2010 (as above), as cited in the
+source.
+Taken from: LaboThapPy branch origin/Basile_Chaudoir, commit 98b78ebd,
+labothappy/correlations/convection/spiral_ducts_htc.py, Apache-2.0,
+B. Chaudoir - https://github.com/PyLaboThap/LaboThapPy}
+  curv_ratio = Dh/(2*R_curv)                                              "curvature ratio Dh/(2 R_curv) [-]"
+  Re = G*Dh/mu                                                            "Reynolds number [-]"
+  De = Re*SQRT(curv_ratio)                                                "Dean number [-]"
+  IF (curv_ratio <= 0.01) THEN
+    h = gnielinski_pipe_htc(mu, Pr, mu_w, k, G, Dh, L)                    "nearly straight coil [W/m2-K]"
+  ELSE
+    IF (curv_ratio <= 0.2) THEN
+      h = gnielinski_pipe_htc(mu, Pr, mu_w, k, G, Dh, L)*(1 + 3.6*(1 - curv_ratio)*curv_ratio^0.8)   "Schmidt correction [W/m2-K]"
+    ELSE
+      f = 16*(0.1033*SQRT(De))/(Re*((1 + 1.729/De)^(1/2) - (1.729/De)^(1/2))^3)   "Ito friction factor [-]"
+      Nu = ((f/8)*(Re - 1000)*Pr)/(1 + 12.7*(f/8)^(1/2)*(Pr^(2/3) - 1))*(1 + (Dh/L)^(2/3))   "Di Piazza & Ciofalo [-]"
+      h = Nu*k/Dh
+    ENDIF
+  ENDIF
+  turbulent_curved_pipe_1P_htc = h
+END
+
+FUNCTION curved_pipe_1P_htc(mu, Pr, mu_w, k, G, Dh, L, R_curv)
+{CURVED_PIPE_1P_HTC - heat-transfer coefficient h [W/m2-K] of single-phase
+flow in a helically coiled pipe, all regimes (spiral_ducts_htc.py,
+curved_pipe_1P_htc). The laminar-turbulent transition Reynolds number
+follows the Ito criterion Re_cr = 12730*curv_ratio^0.2 (curv_ratio =
+Dh/(2*R_curv)); Re < Re_cr: laminar function, Re >= 1E5: turbulent
+function, in between: transition function.
+Original: Ito, H., "Laminar flow in curved pipes", 1959 (critical
+Reynolds), as cited by Sigalotti, L. D. G., C. E. Alvarado-Rodriguez and
+O. Rendon, "Fluid Flow in Helically Coiled Pipes", 2023.
+Taken from: LaboThapPy branch origin/Basile_Chaudoir, commit 98b78ebd,
+labothappy/correlations/convection/spiral_ducts_htc.py, Apache-2.0,
+B. Chaudoir - https://github.com/PyLaboThap/LaboThapPy}
+  curv_ratio = Dh/(2*R_curv)                                              "curvature ratio Dh/(2 R_curv) [-]"
+  Re = G*Dh/mu                                                            "Reynolds number [-]"
+  Re_cr = 12730*curv_ratio^0.2                                            "Ito critical Reynolds number [-]"
+  IF (Re < Re_cr) THEN
+    h = laminar_curved_pipe_1P_htc(mu, Pr, mu_w, k, G, Dh, L, R_curv)
+  ELSE
+    IF (Re >= 1E5) THEN
+      h = turbulent_curved_pipe_1P_htc(mu, Pr, mu_w, k, G, Dh, L, R_curv)
+    ELSE
+      h = transition_curved_pipe_1P_htc(mu, Pr, mu_w, k, G, Dh, L, R_curv)
+    ENDIF
+  ENDIF
+  curved_pipe_1P_htc = h
+END
+
+FUNCTION curved_rect_duct_1P_htc(mu, Pr, mu_w, k, G, Dh, L, R_curv)
+{CURVED_RECT_DUCT_1P_HTC - laminar flow in a curved rectangular duct,
+h [W/m2-K] (spiral_ducts_htc.py, curved_rect_duct_1P_htc); above
+Re = 2300 the coiled-pipe function is used, as in the source. Dean number
+De = Re*sqrt(curv_ratio); below De = 1000 the Facao & Oliveira power law,
+above De = 1200 the plateau Nu = 38.5, linear interpolation in between.
+Correction (logged in the README): the source computes
+curv_ratio = Dh/2*R_curv (= Dh*R_curv/2, dimensionally wrong); the
+dimensionally consistent Dh/(2*R_curv) is used here.
+Original: Facao, J. and A. C. Oliveira, "Modeling laminar heat transfer in
+a curved rectangular duct with a computational fluid dynamics code", as
+cited in the source.
+Taken from: LaboThapPy branch origin/Basile_Chaudoir, commit 98b78ebd,
+labothappy/correlations/convection/spiral_ducts_htc.py, Apache-2.0,
+B. Chaudoir - https://github.com/PyLaboThap/LaboThapPy}
+  curv_ratio = Dh/(2*R_curv)                                              "curvature ratio Dh/(2 R_curv) [-]"
+  Re = G*Dh/mu                                                            "Reynolds number [-]"
+  De = Re*SQRT(curv_ratio)                                                "Dean number [-]"
+  IF (Re < 2300) THEN
+    IF (De < 1000) THEN
+      Nu = 0.8508*De^0.5207                                              "Facao & Oliveira [-]"
+    ELSE
+      IF (De > 1200) THEN
+        Nu = 38.5                                                        "plateau [-]"
+      ELSE
+        Nu = 0.8508*1000^0.5207 + (38.5 - 0.8508*1000^0.5207)*(De - 1000)/(1200 - 1000)   "linear interpolation [-]"
+      ENDIF
+    ENDIF
+    h = Nu*k/Dh
+  ELSE
+    h = curved_pipe_1P_htc(mu, Pr, mu_w, k, G, Dh, L, R_curv)            "turbulent: as the coiled pipe [W/m2-K]"
+  ENDIF
+  curved_rect_duct_1P_htc = h
+END
+
+FUNCTION rect_duct_1P_htc(mu, Pr, mu_w, k, G, Dh, L, AR)
+{RECT_DUCT_1P_HTC - straight rectangular duct, h [W/m2-K]
+(rectangular_duct.py, rect_duct_1P_htc): Shah & London laminar polynomial
+in the aspect ratio AR, Gnielinski above Re = 10000, linear interpolation
+of h between Re = 2300 and Re = 10000 in the transition region.
+Correction (logged in the README): the source calls
+gnielinski_pipe_htc without taking the first element of the returned
+tuple, so its turbulent branch returns a tuple and its transition branch
+raises TypeError; the scalar h (first element) is translated here.
+Original: Shah, R. K. and A. L. London, "Laminar Flow Forced Convection
+in Ducts", Academic Press, 1978; Gnielinski, V., 1976 (as above).
+Taken from: LaboThapPy branch origin/Basile_Chaudoir, commit 98b78ebd,
+labothappy/correlations/convection/rectangular_duct.py, Apache-2.0,
+B. Chaudoir - https://github.com/PyLaboThap/LaboThapPy}
+  Re = G*Dh/mu                                                            "Reynolds number [-]"
+  Nu_lam = 7.541*(1 - 2.61*AR + 4.97*AR^2 - 5.119*AR^3 + 2.702*AR^4 - 0.548*AR^5)   "Shah & London polynomial [-]"
+  IF (Re < 2300) THEN
+    h = Nu_lam*k/Dh
+  ELSE
+    h_turb = gnielinski_pipe_htc(mu, Pr, mu_w, k, G, Dh, L)              "as in a circular pipe [W/m2-K]"
+    IF (Re > 10000) THEN
+      h = h_turb
+    ELSE
+      h = Nu_lam*k/Dh + (h_turb - Nu_lam*k/Dh)*(Re - 2300)/(10000 - 2300)   "linear interpolation [W/m2-K]"
+    ENDIF
+  ENDIF
+  rect_duct_1P_htc = h
+END
+
+FUNCTION single_phase_spiral_plate_htc(mu, Pr, mu_w, k, G, Dh, R_curv, ch_w)
+{SINGLE_PHASE_SPIRAL_PLATE_HTC - single-phase channel of a spiral-plate
+(SPHE) heat exchanger, h [W/m2-K] (spiral_plate_htc.py,
+single_phase_spiral_plate_htc). The Ito critical Reynolds number
+Re_cr = 12730*curv_ratio^0.2 separates the laminar form (straight-duct
+turbulent factor 0.023*Re^-0.2*Pr^-2/3 with the curvature factor
+1 + 3.5*curv_ratio) from the turbulent form with the channel width
+ch_w over coil radius ratio to the power 1/6. mu_w is an unused argument,
+as in the source.
+Original: as cited in the source (Ito, H., 1959, critical Reynolds; SPHE
+channel correlations of the LaboThapPy SPHE moving-boundary model).
+Taken from: LaboThapPy branch origin/Basile_Chaudoir, commit 98b78ebd,
+labothappy/correlations/convection/spiral_plate_htc.py, Apache-2.0,
+B. Chaudoir - https://github.com/PyLaboThap/LaboThapPy}
+  curv_ratio = Dh/(2*R_curv)                                              "curvature ratio Dh/(2 R_curv) [-]"
+  Re = G*Dh/mu                                                            "Reynolds number [-]"
+  Re_cr = 12730*curv_ratio^0.2                                            "Ito critical Reynolds number [-]"
+  cp = Pr*k/mu                                                            "specific heat capacity [J/kg-K]"
+  IF (Re <= Re_cr) THEN
+    h = cp*G*(1 + 3.5*curv_ratio)*(0.023*Re^(-0.2)*Pr^(-2/3))            "laminar [W/m2-K]"
+  ELSE
+    h = 1.86*cp*G*Re^(-2/3)*Pr^(-2/3)*(ch_w/(2*R_curv))^(1/6)            "turbulent [W/m2-K]"
+  ENDIF
+  single_phase_spiral_plate_htc = h
+END
+
+"Demonstration program - water at about 50 degC, properties fixed for the test"
+mu = 5.47E-4        "dynamic viscosity [Pa-s]"
+Pr = 3.55           "Prandtl number [-]"
+mu_w = 5.0E-4       "dynamic viscosity at the wall [Pa-s]"
+k = 0.643           "thermal conductivity [W/m-K]"
+L = 2               "flow length [m]"
+
+"!Helically coiled pipe - Dh = 0.01 m, G and R_curv per case"
+h_cp_lam_xhan = curved_pipe_1P_htc(mu, Pr, mu_w, k, 200, 0.01, L, 0.1)          "Re = 3656 < Re_cr = 6993, curv_ratio = 0.05: Xhan [W/m2-K]"
+h_cp_lam_zhang = curved_pipe_1P_htc(mu, Pr, mu_w, k, 200, 0.01, L, 0.0333333)   "Re = 3656 < Re_cr, curv_ratio = 0.15: Zhang [W/m2-K]"
+h_cp_straight = curved_pipe_1P_htc(mu, Pr, mu_w, k, 200, 0.01, L, 1)            "curv_ratio = 0.005 <= 0.01: straight-pipe correlation [W/m2-K]"
+h_cp_tr_xhan = curved_pipe_1P_htc(mu, Pr, mu_w, k, 500, 0.01, L, 0.1)           "Re = 9141, Re_cr = 6993 <= Re < 1E5, curv_ratio = 0.05: Xhan [W/m2-K]"
+h_cp_turb_schmidt = curved_pipe_1P_htc(mu, Pr, mu_w, k, 1000, 0.01, L, 0.1)     "Re = 18282, curv_ratio = 0.05: straight + Schmidt factor [W/m2-K]"
+h_cp_turb_dipiazza = curved_pipe_1P_htc(mu, Pr, mu_w, k, 10000, 0.01, L, 0.02)  "Re = 182815 >= 1E5, curv_ratio = 0.25: Di Piazza & Ciofalo [W/m2-K]"
+
+"!Curved rectangular duct - Dh = 0.02 m, R_curv = 0.3 m"
+h_crd_lam = curved_rect_duct_1P_htc(mu, Pr, mu_w, k, 50, 0.02, L, 0.3)          "Re = 1828 < 2300, De = 334: Facao & Oliveira [W/m2-K]"
+h_crd_turb = curved_rect_duct_1P_htc(mu, Pr, mu_w, k, 1000, 0.02, L, 0.3)       "Re = 36563: coiled-pipe function, transition Xhan [W/m2-K]"
+
+"!Straight rectangular duct - Dh = 0.01 m, AR = 0.5"
+h_rd_lam = rect_duct_1P_htc(mu, Pr, mu_w, k, 82.05, 0.01, L, 0.5)               "Re = 1500 < 2300: Shah & London [W/m2-K]"
+h_rd_tr = rect_duct_1P_htc(mu, Pr, mu_w, k, 273.5, 0.01, L, 0.5)                "Re = 5000: interpolation [W/m2-K]"
+h_rd_turb = rect_duct_1P_htc(mu, Pr, mu_w, k, 1094, 0.01, L, 0.5)               "Re = 20000 > 10000: Gnielinski [W/m2-K]"
+
+"!Spiral-plate (SPHE) channel - Dh = 0.008 m, R_curv = 0.1 m, ch_w = 0.002 m"
+h_sphe_lam = single_phase_spiral_plate_htc(mu, Pr, mu_w, k, 205.125, 0.008, 0.1, 0.002)   "Re = 3000 <= Re_cr = 6687: laminar [W/m2-K]"
+h_sphe_turb = single_phase_spiral_plate_htc(mu, Pr, mu_w, k, 1367.5, 0.008, 0.1, 0.002)   "Re = 20000 > Re_cr: turbulent [W/m2-K]"

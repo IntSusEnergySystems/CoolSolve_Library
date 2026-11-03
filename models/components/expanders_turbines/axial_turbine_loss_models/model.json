@@ -60,9 +60,9 @@
     ],
     "reference": "LaboThapPy commit f03f7f47 re-run in a throw-away virtual environment under work/: aungier_loss_model (unmodified and with the trailing-edge sine in degrees), balje_binsley and kacker_okaapu on the ORC and Test cases of the source, a Mach-correction case, lashing wires and 6 + 6 argument sets",
     "date": "2026-10-31",
-    "coolsolve_version": "0.4.0@9768373",
+    "coolsolve_version": "0.4.0@2dc1367",
     "max_rel_diff": 4.08e-13,
-    "notes": "52 values compared (Yp, Ys, Ycl, Yte, Yex, Ysh, Ylw, Y_tot, Km, Balje-Binsley, Kacker-Okapuu), max relative deviation 4.08e-13; Yte and Y_tot of the ORC cases are compared with the original with the unit fix of defect 1 (unmodified original: Y_tot 0.19533 / 0.25322 against 0.19542 / 0.25409). Every -1 flag has a Python value outside 0..1 or an input the guards reject. Printed reference values of the ORC example (origin not stated): components within +8.4 % / -5.3 %, rotor Yte +20 %, totals +2.3 % / +0.4 %. CoolSolve CoolProp 8.1.0dev gives another R245fa viscosity (1.2388e-5 vs 1.4115e-5 Pa-s), without effect on the results (roughness-limited Reynolds regime). No publication checked."
+    "notes": "52 values compared (Yp, Ys, Ycl, Yte, Yex, Ysh, Ylw, Y_tot, Km, Balje-Binsley, Kacker-Okapuu), max relative deviation 4.08e-13; Yte and Y_tot of the ORC cases are compared with the original with the unit fix of defect 1 (unmodified original: Y_tot 0.19533 / 0.25322 against 0.19542 / 0.25409). Every -1 flag has a Python value outside 0..1 or an input the guards reject. Printed reference values of the ORC example (origin not stated): components within +8.4 % / -5.3 %, rotor Yte +20 %, totals +2.3 % / +0.4 %. CoolSolve CoolProp 8.1.0dev gives another R245fa viscosity (1.2388e-5 vs 1.4115e-5 Pa-s), without effect on the results (roughness-limited Reynolds regime). No publication checked. Re-check 2026-11-02 (card C-484, build 0.4.0@2dc1367): after restoring the powers hidden by CS-BUG-PROC-NEG-POW, the new .sol is byte-for-byte identical to the previous baseline."
   },
   "missing_features": [],
   "related": [
@@ -81,6 +81,11 @@
     {
       "date": "2026-10-31",
       "action": "added (T-FUNC card C-448, batch B-12/B-18: LaboThapPy LTP-051)",
+      "by": "worker for S. Quoilin"
+    },
+    {
+      "date": "2026-11-02",
+      "action": "re-check (T-RECHECK card C-484): CS-BUG-PROC-NEG-POW fixed and closed (CoolSolve 07bf9dc); integer powers written as products at import restored to the x^n forms of the source, .sol byte-for-byte identical; Aungier_Ysh keeps Ysh_est/SQRT(1 + Ysh_est^2) to avoid SQRT(0) (infinite derivative at 0, expected behaviour)",
       "by": "worker for S. Quoilin"
     }
   ]

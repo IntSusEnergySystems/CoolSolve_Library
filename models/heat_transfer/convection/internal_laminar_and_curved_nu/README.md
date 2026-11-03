@@ -320,3 +320,4 @@ of them come from in `ht` is Bergman, Lavine, Incropera & DeWitt,
   Nusselt number that tends to the 3.657 constant of
   `Nu_laminar_T_const` of this file.
 - `CSL-0322` *pche_htc*: heat-transfer coefficient of the semicircular channels of a printed-circuit heat exchanger (LaboThapPy); a channel geometry that is neither a round pipe nor a rectangular duct.
+- `CSL-0330` *curved_duct_htc*: h (not Nu) of helically coiled pipes and curved rectangular ducts with the Ito critical-Re regime switching (Xhan, Zhang, Di Piazza-Ciofalo, Facao-Oliveira correlations, absent from this file), plus straight rectangular ducts and spiral-plate channels; LaboThapPy branch translation.

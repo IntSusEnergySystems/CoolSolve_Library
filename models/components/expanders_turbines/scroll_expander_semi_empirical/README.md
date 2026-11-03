@@ -21,6 +21,14 @@ to be reused inside ORC cycle models (see the merged source TM-0272 below).
 | **License** | MIT |
 | **CoolSolve** | v0.3.0@536d427 — runs from the shipped `.initials` with the shipped `coolsolve.conf` (Newton fails on the 40-variable block, TrustRegion converges); import verified against the EES solution report (see *Verification*) |
 
+## Problem statement
+
+From the machine geometry, the loss parameters and the supply state of a
+scroll expander, determine the mass flow rate, the shaft power, the
+calculated exhaust state and the global isentropic effectiveness. The module
+was designed to be reused inside ORC cycle models (see the merged source
+TM-0272 below).
+
 ## Model
 
 Given the supply state (`p_r_su_exp`, `t_r_su_exp`), the exhaust pressure and
@@ -146,6 +154,17 @@ Source files (MIT, collection of S. Quoilin):
   `coolsolve.conf` adds TrustRegion (8 iterations). Deep-search
   (multi-start) also recovers the solution from rough guesses, giving the
   same point.
+
+## Limitations and CoolSolve gaps
+
+- The library version flattens the original EES `MODULE expander(...)` into
+  the main program (decision D10): CoolSolve does not implement
+  `MODULE`/`SUBPROGRAM` (`CS-GAP-MODULE`, not blocking after flattening).
+- Newton alone fails on the 40-variable algebraic block (`SingularJacobian`);
+  the shipped `coolsolve.conf` adds TrustRegion and the shipped `.initials`
+  hold the converged solution (see *How to run*).
+- Verification deviations are attributed to R123 property differences between
+  EES 9.920 and CoolProp (see *Verification*).
 
 ## Related models
 

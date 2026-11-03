@@ -55,6 +55,19 @@ at 20 °C), regenerator effectiveness 0.7.
 - **Results**: `eta_tg = W_dot_el/(Q_dot_b + Q_dot_b2)` and
   `deltaq_m_e = q_m_e2/q_m_e·100` (reheat fuel as % of the main-chamber fuel).
 
+## How to run
+
+Open `gas_turbine_reheat.eescode` in the CoolSolve GUI and press *Solve*, or
+from a terminal:
+
+```bash
+coolsolve ./gas_turbine_reheat.eescode
+```
+
+The model converges from CoolSolve's default guesses (no `.initials` needed).
+
+## Results
+
 | Inputs | Value | Outputs | Value |
 |---|---|---|---|
 | `q_m_a` air flow | 100 kg/s | `eta_tg` cycle efficiency | 0.3265 |
@@ -73,17 +86,6 @@ physical conclusion of the exercise.
 
 <!-- FIGURE (added by the maintainer, docs/model_workflow.md §7): ideal-gas model — parametric sweep plot,
      e.g. eta_tg vs pi_c (CoolSolve *Parametric* tab; decision D7: no ideal-gas diagram yet, CS-FEAT-DIAGRAM-IDEAL) -->
-
-## How to run
-
-Open `gas_turbine_reheat.eescode` in the CoolSolve GUI and press *Solve*, or
-from a terminal:
-
-```bash
-coolsolve ./gas_turbine_reheat.eescode
-```
-
-The model converges from CoolSolve's default guesses (no `.initials` needed).
 
 ## Verification
 

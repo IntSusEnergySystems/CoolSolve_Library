@@ -185,6 +185,21 @@ S. Quoilin:
   −78 333.0 kJ/kmol quoted from the stored solution; `ntot` flagged as
   inconsistent (see *Results*).
 
+## Limitations and CoolSolve gaps
+
+- **Blocked in CoolSolve** (native file kept in valid EES): `CALL CHEM_EQUIL`
+  → *"Unknown procedure: CHEM_EQUIL"* (`CS-GAP-CHEM-EQUIL`); H, O, OH, N, NO,
+  NO2 are not registered as CoolSolve fluids (*"Unknown fluid"*,
+  `CS-GAP-FLUIDS-NASA-SPECIES`). Both gaps are in `model.json`
+  `missing_features`.
+- **No runnable variant**: a faithful transcription would require
+  re-implementing the 14-species Gibbs-energy equilibrium solver inside the
+  model; a no-dissociation variant would answer a different question and has
+  no stored EES values to verify against (see *Why no runnable variant*).
+- Not blocking: the EES stored bounds of `T` (1000–3500 K) keep EES in the
+  physical branch (`CS-GAP-BOUNDS`).
+- `ntot` of the stored reference is flagged as inconsistent (see *Results*).
+
 ## Related models
 
 - `CSL-0046` *octane_combustion_400pct_air*: adiabatic flame temperature

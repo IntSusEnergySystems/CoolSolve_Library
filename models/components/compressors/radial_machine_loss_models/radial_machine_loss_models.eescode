@@ -23,7 +23,7 @@ res = -1
 IF ((A1 > 0) AND (A1_th > 0) AND (ABS(xhi1) < 90) AND (w1 >= 0)) THEN
   b1opt = ARCTAN((A1/A1_th)*TAN(xhi1))
   sx = SIN(ABS(beta1) - ABS(b1opt))
-  res = 0.5*w1*w1*sx*sx
+  res = 0.5*(w1*sx)^2
 ENDIF
 RadComp_Dh_inc_rotor = res
 END
@@ -48,10 +48,10 @@ IF (ok > 0.5) THEN
   L_b = (pi/8)*fact1*fact2
   term1 = 2*r2/(n_bl_r/(pi*COS(xhi2)) + 2*r2/b2)
   q1 = r1h/r1s
-  term2 = 2*r1s/(2/(1 - q1) + 2*n_bl_r/(pi*(1 + q1))*SQRT(1 + TAN(beta1s)*TAN(beta1s)*(1 + q1*q1/2)))
+  term2 = 2*r1s/(2/(1 - q1) + 2*n_bl_r/(pi*(1 + q1))*SQRT(1 + TAN(beta1s)^2*(1 + q1^2/2)))
   D_hb = term1 + term2
   IF ((L_b > 0) AND (D_hb > 0)) THEN
-    res = 2*C_fi*(L_b/D_hb)*w_bar*w_bar
+    res = 2*C_fi*(L_b/D_hb)*w_bar^2
   ENDIF
 ENDIF
 RadComp_Dh_f_rotor = res
@@ -63,10 +63,10 @@ diffusion factor D_f = 1 - w2/w1s + (0.75 Dh0/u2^2)/((w1s/w2)(n/pi (1 - r1s/r2) 
 is fixed in the original (its argument C_df is not used). Dh0 stage enthalpy rise [J/kg]. [J/kg]}
 res = -1
 IF ((Dh0 >= 0) AND (n_bl_r > 0) AND (r1s > 0) AND (r2 > r1s) AND (u2 > 0) AND (w1s > 0) AND (w2 > 0)) THEN
-  num = 0.75*Dh0/(u2*u2)
+  num = 0.75*Dh0/u2^2
   den = w1s/w2*(n_bl_r/pi*(1 - r1s/r2) + 2*(r1s/r2))
   D_f = 1 - w2/w1s + num/den
-  res = 0.05*D_f*D_f*u2*u2
+  res = 0.05*D_f^2*u2^2
 ENDIF
 RadComp_Dh_bl_rotor = res
 END
@@ -79,7 +79,7 @@ res = -1
 IF ((b2 > 0) AND (eps_a >= 0) AND (eps_r >= 0) AND (n_bl_r > 0) AND (rho1 > 0) AND (rho2 > 0) AND (r1h >= 0) AND (r1s > r1h) AND (r2 > r1s)) THEN
   eps_mean = (eps_a + eps_r)/2
   fact1 = 0.6*eps_mean/b2*ABS(vu2)
-  fact2 = (4*pi/(b2*n_bl_r))*((r1s*r1s - r1h*r1h)/((r2 - r1s)*(1 + rho2/rho1)))*ABS(vu2)*v1m
+  fact2 = (4*pi/(b2*n_bl_r))*((r1s^2 - r1h^2)/((r2 - r1s)*(1 + rho2/rho1)))*ABS(vu2)*v1m
   IF (fact2 >= 0) THEN
     res = fact1*SQRT(fact2)
   ENDIF
@@ -95,10 +95,10 @@ res = -1
 IF ((ABS(alpha2) < 90) AND (v2 >= 0)) THEN
   b_star = 1
   xhi = 0.15
-  eps_w = (-0.07 + SQRT(0.07*0.07 + 4*0.93*xhi))/(2*0.93)
-  fact1 = 1/(1 + TAN(alpha2)*TAN(alpha2))
+  eps_w = (-0.07 + SQRT(0.07^2 + 4*0.93*xhi))/(2*0.93)
+  fact1 = 1/(1 + TAN(alpha2)^2)
   fact2 = (1 - eps_w - b_star)/(1 - eps_w)
-  res = 0.5*v2*v2*fact1*fact2*fact2
+  res = 0.5*v2^2*fact1*fact2^2
 ENDIF
 RadComp_Dh_ml_rotor = res
 END
@@ -115,7 +115,7 @@ IF ((b2 > 0) AND (eps_b > 0) AND (mdot > 0) AND (mu2 > 0) AND (rho1 > 0) AND (rh
     Kf = 0.102*(eps_b/b2)^0.1/Re2^0.2
   ENDIF
   rho_mean = (rho1 + rho2)/2
-  res = 0.25*rho_mean*u2*u2*u2*r2*r2*Kf/mdot
+  res = 0.25*rho_mean*u2^3*r2^2*Kf/mdot
 ENDIF
 RadComp_Dh_df_rotor = res
 END
@@ -126,11 +126,11 @@ alpha2 in radians inside the sinh and D_f as in RadComp_Dh_bl_rotor. The origina
 form 0.02 tan(|alpha2|) D_f^2 u2^2 as a comment (not translated). alpha2 [deg]. [J/kg]}
 res = -1
 IF ((ABS(alpha2) < 90) AND (Dh0 >= 0) AND (n_bl_r > 0) AND (r1s > 0) AND (r2 > r1s) AND (u2 > 0) AND (w1s > 0) AND (w2 > 0)) THEN
-  num = 0.75*Dh0/(u2*u2)
+  num = 0.75*Dh0/u2^2
   den = w1s/w2*(n_bl_r/pi*(1 - r1s/r2) + 2*(r1s/r2))
   D_f = 1 - w2/w1s + num/den
   a_rad = ABS(alpha2)*pi/180
-  res = 8E-5*SINH(3.5*a_rad*a_rad*a_rad)*D_f*D_f*u2*u2
+  res = 8E-5*SINH(3.5*a_rad^3)*D_f^2*u2^2
 ENDIF
 RadComp_Dh_rc_rotor = res
 END
@@ -144,7 +144,7 @@ res = -1
 IF ((A4 > 0) AND (A4_th > 0) AND (ABS(xhi4) < 90) AND (w4 >= 0)) THEN
   b4opt = ARCTAN((A4/A4_th)*TAN(xhi4))
   sx = SIN(b4opt - beta4)
-  res = 0.6*w4*w4/2*sx*sx
+  res = 0.6*w4^2/2*sx^2
 ENDIF
 RadComp_Dh_inc_stator = res
 END
@@ -157,7 +157,7 @@ res = -1
 IF ((C_f >= 0) AND (D_h > 0) AND (r5 > r3) AND (r3 > 0) AND (ABS(xhi3 + xhi5) < 180)) THEN
   L_b = (r5 - r3)/COS((xhi3 + xhi5)/2)
   IF (L_b > 0) THEN
-    res = 2*C_f*vm*vm*L_b/D_h
+    res = 2*C_f*vm^2*L_b/D_h
   ENDIF
 ENDIF
 RadComp_Dh_f_stator = res
@@ -200,7 +200,7 @@ FUNCTION RadTur_Dh_nozzle(v3, Re_3, alpha3, S3, c, b3)
 speed [m/s], Re_3 chord Reynolds number, alpha3 outlet angle [deg], S3 pitch, c chord, b3 passage width [m]. [J/kg]}
 res = -1
 IF ((v3 >= 0) AND (Re_3 > 0) AND (ABS(alpha3) < 90) AND (S3 > 0) AND (c > 0) AND (b3 > 0)) THEN
-  res = (v3*v3/2)*(0.05/Re_3^0.2)*((3*TAN(alpha3))/(S3/c) + (S3*COS(alpha3))/b3)
+  res = (v3^2/2)*(0.05/Re_3^0.2)*((3*TAN(alpha3))/(S3/c) + (S3*COS(alpha3))/b3)
 ENDIF
 RadTur_Dh_nozzle = res
 END
@@ -213,7 +213,7 @@ res = -1
 IF ((n_blade_R > 1.98) AND (ABS(alpha4) < 90) AND (w4 >= 0)) THEN
   b4opt = ARCTAN(TAN(alpha4)/(1 - n_blade_R/1.98))
   sx = SIN(beta4 - b4opt)
-  res = (w4*w4/2)*sx*sx
+  res = (w4^2/2)*sx^2
 ENDIF
 RadTur_Dh_inc_rotor = res
 END
@@ -236,16 +236,16 @@ IF (ok > 0.5) THEN
   c = L_z/COS(beta_mean)
   L_h = (pi/4)*((L_z - b4/2) + (r4 - r5s - b5/2))
   Dh4 = 4*pi*r4*b4/(2*pi*r4 + n_blade_R*b4)
-  Dh5 = 2*pi*(r5s*r5s - r5h*r5h)/(pi*(r5s - r5h) + n_blade_R*b5)
+  Dh5 = 2*pi*(r5s^2 - r5h^2)/(pi*(r5s - r5h) + n_blade_R*b5)
   Dhmean = (Dh4 + Dh5)/2
   IF ((r4 - r5s)/b5 > 0.2) THEN
     mf = 1
   ELSE
     mf = 2
   ENDIF
-  factor = mf*K_p*(w4*w4 + w5*w5)/2
+  factor = mf*K_p*(w4^2 + w5^2)/2
   Dh_fr = factor*(L_h/Dhmean)
-  Dh_sec = factor*(0.68*(1 - (r5/r4)*(r5/r4)))*COS(beta5)/(b5/c)
+  Dh_sec = factor*(0.68*(1 - (r5/r4)^2))*COS(beta5)/(b5/c)
   IF ((Dh_fr >= 0) AND (Dh_sec >= 0)) THEN
     res = Dh_fr + Dh_sec
   ENDIF
@@ -263,7 +263,7 @@ IF ((cl_a >= 0) AND (cl_r >= 0) AND (L_z > 0) AND (r4 > 0) AND (r5s >= 0) AND (r
   C_r = (r5s/r4)*(L_z - b4)/(vm5*r5*b5)
   arg = cl_a*cl_r*C_a*C_r
   IF (arg >= 0) THEN
-    Dh_cl = (n_blade_R*u4*u4*u4/(8*pi))*(0.4*cl_a*C_a + 0.75*cl_r*C_r - 0.3*SQRT(arg))
+    Dh_cl = (n_blade_R*u4^3/(8*pi))*(0.4*cl_a*C_a + 0.75*cl_r*C_r - 0.3*SQRT(arg))
     IF (Dh_cl >= 0) THEN
       res = Dh_cl
     ENDIF
@@ -277,7 +277,7 @@ FUNCTION RadTur_Dh_TE(w5, n_blade_R, t5, r5h, r5s, beta5, gamma5, Ma5_pr)
 (1 + (gamma5 - 1) Ma5'^2/2)^(gamma5/(1 - gamma5)). t5 trailing-edge thickness [m], beta5 [deg], Ma5_pr relative Mach number. [J/kg]}
 res = -1
 IF ((w5 >= 0) AND (n_blade_R > 0) AND (t5 >= 0) AND (r5h >= 0) AND (r5s > r5h) AND (ABS(beta5) < 90) AND (gamma5 > 1) AND (Ma5_pr >= 0)) THEN
-  res = (w5*w5/2)*((n_blade_R*t5)/(pi*(r5s + r5h)*COS(beta5)))*(1 + ((gamma5 - 1)*Ma5_pr*Ma5_pr)/2)^(gamma5/(1 - gamma5))
+  res = (w5^2/2)*((n_blade_R*t5)/(pi*(r5s + r5h)*COS(beta5)))*(1 + ((gamma5 - 1)*Ma5_pr^2)/2)^(gamma5/(1 - gamma5))
 ENDIF
 RadTur_Dh_TE = res
 END

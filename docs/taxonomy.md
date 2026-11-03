@@ -246,3 +246,29 @@ Paths are never the identity of a model: the ID is. Generated files
 Because CoolSolve resolves library models through `library.json` and
 `redirects.csv`, and models reference each other by ID, none of these
 operations breaks a link.
+
+### Moving a model with `tools/move_model.py`
+
+The steps above are done by one command (dry run first — it never asks for
+confirmation). The tool finds the model **by ID** (`model.json`), moves the
+folder (`git mv` when tracked, plain move otherwise), renames the files named
+after the folder when the model is renamed (`<name>.eescode`, `.sol`,
+`.initials`, `<name>-<table>.csv`), updates `model.json` (`name`,
+`main_file`, `category` if present, and the old path appended to
+`previous_paths`), rewrites the links to the old path in the other models'
+README.md/model.json, in `docs/*.md` and in `sources/*/README.md` (relative
+Markdown links and plain path mentions, count reported per file), and
+rebuilds the index (`tools/build_index.py`):
+
+```bash
+python3 tools/move_model.py CSL-0123 components/compressors_turbo [--name new_folder_name] [--dry-run]
+python3 tools/move_model.py --plan plan.csv [--dry-run]   # CSV columns: id,new_category[,new_name]
+```
+
+A new category of the plan must already be declared in `taxonomy.json`, or is
+declared by the tool with `--declare-new` (placeholder title and description,
+to review); without it the tool stops and lists the undeclared categories. The
+tool refuses to run when the git tree has conflict files (`*.lane-*`). After a
+real move, test the moved models (`tools/test_models.py <ID> --coolsolve
+…`) — a `.sol` baseline travels with the folder, so a move alone does not
+change the results.

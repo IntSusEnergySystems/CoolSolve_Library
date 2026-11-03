@@ -201,10 +201,40 @@ suffice (0) → score 2 → **level 2**, same rating as the comparable `CSL-0096
   SQ080229.EES` (TM-0496, S. Bertagnolio and S. Quoilin, martin procedure and
   its `martin_hx` demonstration). The scientific basis of each correlation is
   the paper cited in its comment block (table above).
-- Related models: `CSL-0096` (`ht` HT-010 transcription of the Kumar, Martin
-  and Muley-Manglik single-phase correlations, independent source), the
-  ULiège plate-HX component models that embed copies of these procedures
+
+## Limitations and CoolSolve gaps
+
+- The `Muley` procedure keeps the source file's typo in the
+  enlargement-factor polynomial (`− 10.51·phi³` instead of the published
+  `− 10.1507·phi³`), a faithful transcription: −45 % on Nu at `phi` = 1.2 as
+  published (see *Verification*).
+- The `Han` procedure is transcribed but not demonstrated: with its `Ge`
+  coefficients built on `(p/D_h)^4.17` where `p` is the fluid pressure, it
+  returns absurd pressure drops at any realistic pressure; the call stays
+  commented as in the original (see *Conversion log*).
+- The `beta` chevron-angle convention of this file (angle between the axial
+  flow and the corrugations) is complementary to the one of `ht`/`CSL-0096`
+  and Martin's paper: a correlation selected at a given `beta` in one
+  convention must be read at `90 − beta` in the other (see *Problem
+  statement*).
+- The R410A viscosity differs between the EES formulation and the CoolProp
+  pseudo-pure model, which carries into `Re` and the correlation outputs
+  (max relative deviation 5.83e-2 on `mu`, see *Verification*).
+- CoolSolve workarounds inside the procedure bodies: `pi` → `pi()` and
+  `g#` → literal `9.80665 m/s²` (`CS-BUG-PI-FUNCTION`, behaviour-preserving,
+  see *Conversion log*).
+
+## Related models
+
+- `CSL-0096`: independent transcription of the overlapping single-phase
+  correlations from the Python library `ht` (Kumar, Martin, Muley-Manglik).
+- `CSL-0161` *plate_hx_thermal_resistances*: the 2008 single-phase plate-HX
+  resistance model whose inline Martin equations this library supersedes as
+  procedures.
+- `CSL-0330` *curved_duct_htc*: single-phase h of curved ducts (helical coils
+  with the Ito critical Reynolds, curved rectangular duct, spiral-plate SPHE
+  channel); the straight-chevron-channel counterpart among the geometry
+  families.
+- The ULiège plate-HX component models that embed copies of these procedures
   (e.g. `condenser_3_zones_plate_correlations`,
-  `evaporator_3_zones_plate_correlations`), and `CSL-0161`
-  (`plate_hx_thermal_resistances`, the 2008 single-phase plate-HX resistance
-  model whose inline Martin equations this library supersedes as procedures).
+  `evaporator_3_zones_plate_correlations`).

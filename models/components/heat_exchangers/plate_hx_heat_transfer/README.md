@@ -335,3 +335,4 @@ function is the original paper quoted in the `ht` docstring.
   transcription independent of `ht`); its Muley polynomial keeps the
   `10.51·phi^3` typo of the source file, which this file's `ht`-based
   `Nu_Muley_Manglik` does not carry.
+- `CSL-0330` *curved_duct_htc*: single-phase h correlations for curved geometries (helical coils with the Ito critical Reynolds, curved rectangular duct, spiral-plate channel), LaboThapPy translation; complements these straight-chevron-channel correlations.

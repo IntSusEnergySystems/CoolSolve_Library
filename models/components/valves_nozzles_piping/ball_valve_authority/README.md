@@ -48,10 +48,24 @@ Outputs (for gamma_0=23°, gamma_v=40°, D=50mm):
 From a terminal:
 
 ```bash
-coolsolve /sylvain/git/csl-lanes/nemol/CoolSolve_Library/models/components/valves_nozzles_piping/ball_valve_authority/ball_valve_authority.eescode
+coolsolve ./ball_valve_authority.eescode
 ```
 
 Or via the CoolSolve GUI: open the `.eescode` file and press *Solve*.
+
+## Results
+
+At the default operating point (`gamma_0` = 23°, `gamma_v` = 40°, `D` = 50 mm),
+values of the `.sol` baseline:
+
+| Variable | Value | Unit |
+|---|---:|---|
+| `d_eq` equivalent opening diameter | 0.0199693 | m |
+| `K_bille` discharge-coefficient correction | 1.8118 | [-] |
+| `A` flow area | 3.1320e-4 | m² |
+| `A_tot` total cross-sectional area | 1.9635e-3 | m² |
+| `DELTAx` ball displacement | 6.6950e-3 | m |
+| `teta` opening angle of the flow section | 85.858 | ° |
 
 ## Verification
 
@@ -80,6 +94,24 @@ Source file (EES X7.793, comments in French): `~/Nextcloud/thermo_models/procedu
 (inventory candidate `TM-0588`).
 
 © 2026 Sylvain Quoilin (ULiège Thermodynamics Laboratory). MIT license.
+
+## Conversion log
+
+- **Import**: extraction of `vanne à bille SQ071010.EES` (EES X7.793,
+  `$UnitSystem SI MASS DEG PA C J` — no unit-system change needed); the
+  comments of the equation window are kept in French; the procedure
+  `diam_vanne` and its demonstration call kept.
+- **Unit conversion of the inputs**: the original works in mm
+  (`D = 50 [mm]`); the library file takes `D = 0.05` in SI metres, and all
+  derived results are consistent after this conversion (see *Verification*).
+
+## Limitations and CoolSolve gaps
+
+- The stored EES values of `K_bille`, `DELTAx`, `gamma_rad`, `R_sphere` are
+  the locals of the last procedure call made by EES (a run with `gamma_0` =
+  15° and `gamma_v` = 90°), not of the default case: only the default-case
+  result `d_eq` is compared with the reference (see *Verification*).
+- No CoolSolve gap blocks the model (14 explicit equations, largest block 1).
 
 ## Related models
 

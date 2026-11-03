@@ -15,6 +15,64 @@ LaboThapPy `machine/examples/ORC/fpi_orc_example.py`, study case `off_design`.
 | Fluids | R1233zd(E), Water |
 | Origin | software library (LaboThapPy, ULiège) |
 
+## Problem statement
+
+Simulate the **off-design** operating point of an organic Rankine cycle on
+R1233zd(E): a Lemort semi-empirical scroll expander, a pump on similarity laws
+with rated curves and two SWEP P200THx140 brazed-plate heat exchangers in a
+moving-boundary formulation, at an imposed refrigerant flow (translation of
+LaboThapPy `machine/examples/ORC/fpi_orc_example.py`, study case
+`off_design`). The expander speed, pump speed, pressures and heat-transfer
+coefficients all float (see *Niche*).
+
+## Model (structure of the translation)
+
+The sequential-modular Python circuit (DFS component solves, Wegstein
+iteration, one residual variable: expander exhaust pressure vs 7 K pump-suction
+subcooling) becomes one simultaneous system: the low pressure `P_1` is an
+unknown closed by `T_1 = T_sat(P_1) - 7 K` (the source's iteration target), the
+high pressure is the fixed source guess `P_2 = Psat(60 °C)`. The expander's
+internal `fsolve` on the wall temperature becomes the wall energy balance
+`Q_dot_su + W_dot_loss = Q_dot_ex + Q_dot_amb` (single unknown `T_w_x` in `P_M`
+mode, as in the original). The pump's `root_scalar` head balance becomes the
+similarity equation `H_curve(V_dot*2900/N_pu)*(N_pu/2900)^2 = H_req`. The
+curves are piecewise-linear with linear extrapolation, written in ReLU form
+(identical to a linear interpolation of the rated points).
+
+Heat exchangers: zone-wise (SH / 2P / SC) moving-boundary formulation. Zone
+areas are split proportionally to the zone heat rates — the same heat-rate
+weighting the source uses for its cells (`Qdot_c_rel`); the per-zone `UA` uses
+the source's plate formula `1/((1+fooling)/(alpha_h*A_h) + 1/(alpha_c*A_c))`.
+The overall balance `Q = Σ UA_z*LMTD_z` replaces the source's `brentq` root
+find on `Q`.
+
+
+## How to run
+
+```bash
+coolsolve ./orc_offdesign_scroll_expander.eescode
+```
+
+The cycle converges with the default Newton from the shipped
+`.initials` (57 iterations; from the earlier initials it needs Try Harder,
+1023 iterations; it was first obtained by a decomposition — pump outlet fixed,
+duty imposed, then released). No `coolsolve.conf` is needed for the adapted
+model.
+
+## Results
+
+Default operating point (shipped `.sol`): R1233zd(E) 0.45 kg/s between 4.03 bar (60 °C, fixed as in
+the source) and 1.089 bar (condensing at 20.1 °C, 7 K subcooling): `Q_ev` = 106.4 kW, `Q_cd` = 99.6 kW, expander
+6.85 kW (η_is 0.615, ε_v 1.04, 9210 rpm), pump 0.495 kW (1760 rpm, η 0.20), net 6.36 kW, `eta_th` = 5.97 %
+(Carnot between the 70 °C and 10 °C water inlets: 17.5 %). Area fractions: evaporator 0.30 (liquid) / 0.18
+(boiling) / 0.53 (superheat, the vapour leaves at 69.92 °C, 0.08 K below the water inlet: the 17.8 m² exchanger is
+oversized for this flow); condenser 0.34 / 0.42 / 0.25. HTCs: refrigerant liquid 287, boiling 6650, vapour
+220 W/(m²·K); condensation 1730; water about 10⁴. **Checks**: cycle energy balance closed to 1·10⁻⁹ W, expander to
+2·10⁻⁸ W, expander wall balance to 3·10⁻¹⁰ W; no temperature-difference clamp active; water-side balances; second
+law. The pump and expander translations were verified against the source components in the first import (the
+expander change of item 9 moves its results by the 12 W of suction heat at this point).
+
+
 ## Source and attribution
 
 - **Original model**: Basile **Chaudoir** and Elise **Neven** (ULiège
@@ -59,26 +117,6 @@ plate heat exchangers with refrigerant charge (Zivi). Nearest models:
 cycle from TESPy). The off-design behaviour (expander speed, pump speed,
 pressures and heat-transfer coefficients all floating) is the new physics.
 
-## Structure of the translation
-
-The sequential-modular Python circuit (DFS component solves, Wegstein
-iteration, one residual variable: expander exhaust pressure vs 7 K pump-suction
-subcooling) becomes one simultaneous system: the low pressure `P_1` is an
-unknown closed by `T_1 = T_sat(P_1) - 7 K` (the source's iteration target), the
-high pressure is the fixed source guess `P_2 = Psat(60 °C)`. The expander's
-internal `fsolve` on the wall temperature becomes the wall energy balance
-`Q_dot_su + W_dot_loss = Q_dot_ex + Q_dot_amb` (single unknown `T_w_x` in `P_M`
-mode, as in the original). The pump's `root_scalar` head balance becomes the
-similarity equation `H_curve(V_dot*2900/N_pu)*(N_pu/2900)^2 = H_req`. The
-curves are piecewise-linear with linear extrapolation, written in ReLU form
-(identical to a linear interpolation of the rated points).
-
-Heat exchangers: zone-wise (SH / 2P / SC) moving-boundary formulation. Zone
-areas are split proportionally to the zone heat rates — the same heat-rate
-weighting the source uses for its cells (`Qdot_c_rel`); the per-zone `UA` uses
-the source's plate formula `1/((1+fooling)/(alpha_h*A_h) + 1/(alpha_c*A_c))`.
-The overall balance `Q = Σ UA_z*LMTD_z` replaces the source's `brentq` root
-find on `Q`.
 
 ## Verification
 
@@ -212,22 +250,6 @@ Errors of the **translation**, corrected:
     (minus); as written the water reached 76 °C inside the exchanger with a 70 °C inlet.
 13. The LMTD guard bug found in the first review (5th argument of the inline `IF`).
 
-**Result** (default operating point, shipped `.sol`): R1233zd(E) 0.45 kg/s between 4.03 bar (60 °C, fixed as in
-the source) and 1.089 bar (condensing at 20.1 °C, 7 K subcooling): `Q_ev` = 106.4 kW, `Q_cd` = 99.6 kW, expander
-6.85 kW (η_is 0.615, ε_v 1.04, 9210 rpm), pump 0.495 kW (1760 rpm, η 0.20), net 6.36 kW, `eta_th` = 5.97 %
-(Carnot between the 70 °C and 10 °C water inlets: 17.5 %). Area fractions: evaporator 0.30 (liquid) / 0.18
-(boiling) / 0.53 (superheat, the vapour leaves at 69.92 °C, 0.08 K below the water inlet: the 17.8 m² exchanger is
-oversized for this flow); condenser 0.34 / 0.42 / 0.25. HTCs: refrigerant liquid 287, boiling 6650, vapour
-220 W/(m²·K); condensation 1730; water about 10⁴. **Checks**: cycle energy balance closed to 1·10⁻⁹ W, expander to
-2·10⁻⁸ W, expander wall balance to 3·10⁻¹⁰ W; no temperature-difference clamp active; water-side balances; second
-law. The pump and expander translations were verified against the source components in the first import (the
-expander change of item 9 moves its results by the 12 W of suction heat at this point).
-
-**Limitations of the source operating point**: the expander runs at 9210 rpm and 4.5 times its nominal flow
-(`m_dot_n_x` = 0.1 kg/s), with a supersonic calibrated suction port: the semi-empirical parameters are used far
-outside their calibration. The high pressure is fixed (the source's single iteration variable is the low
-pressure), so this is a "given flow, given high pressure" simulation, not a fully free off-design point.
-
 **Solver notes / CoolSolve hints**: with the corrected model the cycle converges with the default Newton from the
 shipped `.initials` (57 iterations); from the earlier initials it needs Try Harder (1023 iterations), and it was
 first obtained by a decomposition (pump outlet fixed, duty imposed, then released). Hint: a CoolSolve diagnostic
@@ -311,6 +333,28 @@ Equations ≈ 226 (1 pt: 50–300), largest block > 30 (2 pts), functions +
 procedures + arrays present (1 pt), ≥ 3 coupled components (1 pt), off-design +
 semi-empirical calibration (1 pt), curated guesses needed (1 pt) = **7 → level
 4**.
+
+## Limitations and CoolSolve gaps
+
+-  the expander runs at 9210 rpm and 4.5 times its nominal flow
+(`m_dot_n_x` = 0.1 kg/s), with a supersonic calibrated suction port: the semi-empirical parameters are used far
+outside their calibration. The high pressure is fixed (the source's single iteration variable is the low
+pressure), so this is a "given flow, given high pressure" simulation, not a fully free off-design point.
+
+
+- Deviations of the translation (see *Conversion log*, to be re-examined on a
+  re-check): the refrigerant pressure-drop feedback is removed (zone states at
+  the inlet pressure, drops post-processed — the biggest physical deviation);
+  the adaptive cell scheme is replaced by a 3-zone (SH/2P/SC) formulation; the
+  two-phase correlations are evaluated once at the mean quality instead of
+  averaged over 100 qualities.
+- The R1233zd(E) conductivity function of `CSL-0132` is copied into the file
+  per workflow §4 (`$INCLUDE` not available yet, `CS-GAP-INCLUDE`); the
+  friction-drop factor `1.95*KEV*1000` of the two-phase correlations is kept
+  as coded (likely an author unit slip, kept for faithfulness).
+- Unverified suggestions, not registered (see *Conversion log*): the chained
+  equality `x = f(t)^2 = y` is not accepted by CoolSolve; If/Then/Else blocks
+  are rejected in the main program (the inline `IF(A,B,X,Y,Z)` is used).
 
 ## Related models
 

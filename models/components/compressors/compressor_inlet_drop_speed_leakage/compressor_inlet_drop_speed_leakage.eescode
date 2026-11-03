@@ -13,6 +13,9 @@
   Inputs : rpm, T_su, P_su, P_ex, A_thr_su, A_thr_leak, V_s
   Outputs: M_dot, M_dot_l, W_dot, epsilon_s, DELTAP_su
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Solver : runs ONLY with the TrustRegion solver (coolsolve.conf:
+           solverPipeline = TrustRegion) and the shipped .initials. Newton,
+           alone or before TrustRegion, diverges on the 27-equation block.
   Source : Stéphane Bertagnolio, ULiège MSTh - see README.md
 =============================================================================}
 

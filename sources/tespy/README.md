@@ -163,3 +163,55 @@ C-444, C-445), 3 `merged`, 1 `duplicate`, 5 `discarded`.
 Kept `todo`: TSP-033 (physical-exergy function, card C-440), TSP-024 (water
 electrolyzer, card C-443), TSP-025 (fuel cell, card C-444), TSP-049 (zeotropic
 mixture heat pump, card C-445).
+
+## 2026-11-02 upstream sweep (C-460)
+
+Card C-460 (T-TRIAGE): pinned commit `19425523` vs upstream `origin/dev`
+(166 commits ahead; v0.11.4, a compatibility-only release, in between;
+v0.12.0 still "under development"). Inspected in a throw-away clone
+(`work/tespy`, upstream fetched from github.com/oemof/tespy); the shared
+pinned clones were not touched. 171 files changed, +31.9 k/−11.8 k lines.
+
+**Counts.** The bulk of the delta is the v0.12 API overhaul: restructured
+data containers (`ComponentParameter`, `OptionalEquation`, …), characteristics
+carry physical quantities and units (interpretation of *dimensioned* axis data
+changes for non-SI networks only: pump `flow_char`/`head_flow_map`, valve
+`dp_char`; the shipped default characteristics are SI), export format v2,
+result-only parameters refuse user values, deprecation removals
+(`kA_char`, `zeta`, `td_log`, `rpm`, `reference_state` dict), solver numerics
+(HX edge weights, Levenberg–Marquardt, numerical derivatives). **No reference
+value changed:** every component doctest number is identical between the two
+commits (checked HeatExchanger base, Turbine, Pump, Compressor, TurboCompressor,
+SteamTurbine, FuelCell, WaterElectrolyzer, Drum); `char_lines.json` only lost
+the deprecated `kA_char*` aliases (DEFAULT/TRAUPEL/UA_char data untouched);
+all test files changed only in API (`nw.save()`). No new notebook or
+model-library entry (`steam_LCI`/`kcorc` images are thumbnails of external
+links on the educational-resources page).
+
+**New inventory rows (2):**
+
+| ID | Candidate | Decision | Reason |
+|---|---|---|---|
+| TSP-053 | `EquilibriumSeparator` (new v0.12 component, `nodes/equilibrium_separator.py`) | todo | flash tank that also accepts single-phase inlets: full flow to the phase-matching outlet, zero flow at saturated state out of the other one; new behaviour vs the discarded droplet separator (TSP-020); doctest + `test_equilibrium_separator.py` as reference |
+| TSP-054 | McAdams two-phase viscosity (`viscosity_mix_ph`, McAdams 1942 harmonic-mean closure) | merged | one-line homogeneous-model closure; belongs as a helper to the pressure-drop/friction library CSL-0130; no independent reference data |
+
+Not candidates: the characteristic range check of PR #1107
+(`test_characteristic_limits.py`; post-solve validation of the characteristic
+data, raises the status outside the data range unless the line extrapolates —
+validation, not physics), the T_dew/T_bubble overdetermination error
+(validation), McAdams (merged above), PR #1102 (bug fix, impact below).
+
+**Impact on the existing TESPy translations** (all re-checks answered by
+inspection; no model re-run needed because no doctest/test reference value
+changed):
+
+| Model | Upstream commit(s) | Effect | Re-check needed |
+|---|---|---|---|
+| CSL-0323 h2_electrolyzer_fuel_cell | none touching reactor physics | `FuelCell.energy_balance_func` still returns `P - calc_P()`: the suspected sign error documented in the model is **confirmed upstream, not fixed** (the model's sign patch remains necessary); electrolyser unchanged | no |
+| CSL-0314 steam_turbine_baumann | API only (`steam_turbine.py`) | Baumann equations and doctest numbers identical; PR #1102 (vapour quality 0/1 single-phase subcritical, nan supercritical) does not affect wet-outlet cases | no |
+| CSL-0315 ua_cecchinato_partload | API only (`sectioned.py`) | Cecchinato formula unchanged; `UA_cecchinato_hc` alias deprecated (model already uses the hot/cold convention) | no |
+| CSL-0013 heat_pump_basic_tespy | none (tutorial untouched) | no change | no |
+| CSL-0313 heat_pump_nh3_two_stage_flooded | test API only | Ebsilon COP reference table unchanged | no |
+| CSL-0324 zeotropic_hp_propane_isobutane | PR #1102, T_dew fix | pure-fluid quality fix n/a for a mixture; T_dew/T_bubble overdetermination is a validation change, the equations solved are the same | no |
+| CSL-0137 hx_lmtd_ua | dcb07d3e + 7f6ebcca | `eff_hot`/`eff_cold` theoretical max enthalpy change now bounded at the saturated state (`h_mix_pQ`) when the other side sits exactly at T_sat, and clipped to property range during iteration; converged doctest values identical; UA characteristic lines unchanged | no |
+| all others (CSL-0090, 0125, 0128, 0130, 0135, 0136, 0138, 0139, 0140, 0141, 0142, 0143, 0144, 0145, 0149) | API/numerics only | no equation or reference-value change (doctest numbers identical); the characteristic range check is post-solve validation only | no |

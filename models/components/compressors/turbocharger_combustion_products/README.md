@@ -24,6 +24,14 @@ recovered as a percentage of the fuel energy.
 | **License** | MIT |
 | **CoolSolve** | native file runs (63 iterations with the shipped `.initials`); verified against the EES stored solution |
 
+## Problem statement
+
+Match a turbocharger on a supercharged engine at one steady-state operating
+point: the turbine is matched on the compressor through the shaft power
+balance, and the model computes the equivalent exhaust-orifice diameter and
+the heat recovered as a percentage of the fuel energy (see *Model* for the
+given data).
+
 ## Model
 
 One operating point, all default values of the original:

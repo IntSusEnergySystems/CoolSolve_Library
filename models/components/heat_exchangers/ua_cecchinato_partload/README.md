@@ -20,6 +20,17 @@ a sectioned steam condenser cooled by air (design, then off design).
 | **License** | MIT (TESPy MIT, translation under the library licence, decision D3) |
 | **CoolSolve** | 0.4.0@9768373: **verified** against a re-run of the TESPy doctest and tests (26 values, max deviation 1.35·10⁻⁵) |
 
+## Problem statement
+
+Provide the part-load scaling of the overall conductance `UA` of a heat
+exchanger as an analytic function: the conductance at part load follows from
+the design conductance, the mass-flow ratios of the two sides, one Reynolds
+exponent per side and the product of the side heat-transfer-coefficient ratio
+and area ratio (the TESPy `UA_cecchinato_hc` parameter group). The
+demonstration main program evaluates the factor at the points of the TESPy
+tests and applies it to a sectioned steam condenser cooled by air (design,
+then off design).
+
 ## Niche
 
 The library has UA models that rate a heat exchanger at one point or scale it
@@ -33,7 +44,7 @@ polynomial of the same paper (`polynomial_compressor_en12900`,
 `copeland_catalogue_correlation`), not this law. `CSL-0138` is the
 moving-boundary model that this law can be applied to.
 
-## The functions
+## Model (the functions)
 
 | Function | Content |
 |---|---|
@@ -88,6 +99,26 @@ derivation above only shows that it is the series-resistance law.
 A `.initials` file is shipped: without guesses for the pinch block (condensing
 pressure, duty, section enthalpies) the Newton solver stopped in a line-search
 failure in my first run.
+
+## Results
+
+Main outputs of the demonstration program (Part D, doctest condenser; values
+of the `.sol` baseline, compared with TESPy in *Verification*):
+
+| Quantity | Design (`_1`) | Off design (`_2`, hot flow 0.8 kg/s) |
+|---|---:|---:|
+| `UA` / `UA_sum` [W/K] | 273 452.2 | 239 651.5 |
+| `Q_dot` [W] | 2 479 524 | 1 984 950 |
+| `P_h` condensing pressure [Pa] | 4218.999 | 4051.119 |
+| `DT_min` pinch [K] | 5.000 | 4.2951 |
+| `f_UA` = `UA_ratio` [-] | 1 (design) | 0.876393 |
+
+Parts A–C output the scaling factor `f_UA` itself (0.662684 / 0.738773 /
+0.876393 / 1.113435 at the four doctest hot-flow ratios; 0.927695 / 0.918906
+at the condenser/evaporator test points) and the self-check `f_C − f_A3` =
+2.2e-16.
+
+<!-- FIGURE (added by the maintainer, docs/model_workflow.md §7): f_UA versus hot-side mass-flow ratio -->
 
 ## Verification
 
@@ -176,7 +207,6 @@ flows (`M_dot_c_*`, ≤ 4.5e−08).
 * Sign: `Q_dot` is the heat released by the hot side (TESPy: negative).
 * No (T, h) property call or MODULE was needed.
 
-<!-- FIGURE (added by the maintainer, docs/model_workflow.md §7): f_UA versus hot-side mass-flow ratio -->
 
 ## Related models
 

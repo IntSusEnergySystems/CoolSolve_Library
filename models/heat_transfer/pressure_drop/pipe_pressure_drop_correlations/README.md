@@ -21,10 +21,10 @@ of `CSL-0018` (Colebrook-White) was the only one available before.
 | **Category** | Heat transfer › Pressure drop |
 | **Fluids** | the correlations are fluid-independent; the demonstration program uses R134a (two-phase), Water (single-phase) and R744 (supercritical CO2) |
 | **Size** | 104 equations after analysis (largest block: 1); 22 functions of 3–45 lines |
-| **Source** | [`LaboThapPy`](https://github.com/PyLaboThap/LaboThapPy), commit `f03f7f47`, file `labothappy/correlations/pressure_drop/pipe_DP.py` (Apache-2.0 `LICENSE.txt`, MIT `pyproject.toml`); inventory row `LTP-028` of `sources/labothappy/inventory.csv` |
+| **Source** | [`LaboThapPy`](https://github.com/PyLaboThap/LaboThapPy), commit `f03f7f47` (`pipe_DP.py`, byte-identical on branch `origin/Elise` `9364dfc6`; `two_phase.py` taken at the branch fix), file `labothappy/correlations/pressure_drop/pipe_DP.py` (Apache-2.0 `LICENSE.txt`, MIT `pyproject.toml`); inventory row `LTP-028` of `sources/labothappy/inventory.csv` |
 | **Authors** | Elise Neven (the `pipe_DP.py` module); the authors of the correlations are credited in the comment block of each function and in `model.json` |
 | **License** | MIT |
-| **CoolSolve** | 0.3.0 — **verified** against LaboThapPy `f03f7f47` (34 values, max deviation 1.0·10⁻¹²) |
+| **CoolSolve** | 0.4.0 — **verified** against LaboThapPy branch `origin/Elise` `9364dfc6` (40 values, max deviation 7.9·10⁻¹²); adapted 2026-11-02 to the upstream `two_phase.py` density fix (pinned-commit result kept below) |
 
 ## Problem statement
 
@@ -113,17 +113,17 @@ Values of the demonstration program (full precision in
 | | (Petukhov) | 52 411.3 Pa |
 | | (Haaland) | 51 849.7 Pa |
 | B2 — same pipe at 45° | friction / gravity / total (Churchill) | 52 002.2 / 69 245.9 / 121 248.1 Pa |
-| C — R134a, 10 °C, 10 mm × 3 m, 0.05 kg/s, x = 0.5081 | `dP_Friedel` | 35 365.7 Pa |
+| C — R134a, 10 °C, 10 mm × 3 m, 0.05 kg/s, x = 0.5081 | `dP_Friedel` | 36 708.3 Pa |
 | | `dP_Muller_Steinhagen_Heck` | 35 825.0 Pa |
-| D — same tube, evaporation x = 0.3 → 0.7 | `dP_Choi` | 76 524.3 Pa |
+| D — same tube, evaporation x = 0.3 → 0.7 | `dP_Choi` | 39 714.1 Pa |
 | E — acceleration, x = 0.3 → 0.7 | homogeneous void fraction | 7 886.7 Pa |
 | | Zivi void fraction | 7 886.7 Pa |
 | | liquid inlet (x_in = 0) | 13 801.6 Pa |
 | | vapour outlet (x_out = 1) | 13 801.6 Pa |
-| | gravity at +45° / −45° | +427.5 / −427.5 Pa |
-| E — total, outlet quality read at h = const. | `x_out` | 0.30957 |
-| | friction / acceleration / total (horizontal) | 22 111.3 / 188.7 / 22 300.0 Pa |
-| | total at 45° | 22 736.0 Pa |
+| | gravity at +45° / −45° | +828.5 / −828.5 Pa |
+| E — total, outlet quality read at h = const. | `x_out` | 0.31033 |
+| | friction / acceleration / total (horizontal) | 23 833.3 / 203.6 / 24 036.8 Pa |
+| | total at 45° | 25 367.5 Pa |
 | F — CO2, 90 bar, 8 mm × 2 m, 0.05 kg/s | `f_Cheng_CO2` at 0 / 30 / 60 °C | 0.0290717 / 0.0256176 / 0.0207664 |
 | | `dP_pipe_single_phase` at 0 / 30 / 60 °C | 3 713.9 / 4 256.9 / 10 911.4 Pa |
 
@@ -133,8 +133,79 @@ Values of the demonstration program (full precision in
 
 ## Verification
 
-**Reference.** The LaboThapPy correlations of the local clone, commit
-`f03f7f47`, recomputed in a throw-away virtual environment under `work/`
+**Reference (2026-11-02 re-check).** The LaboThapPy correlations of branch
+`origin/Elise` at commit `9364dfc6` (permanent link
+<https://github.com/PyLaboThap/LaboThapPy/tree/9364dfc6>), recomputed with a
+throw-away clone and virtual environment under `work/` (`pip install -e`,
+script calling the upstream `pipe_DP.py`, `void_fraction.py` and
+`two_phase.py` functions; deleted after the card): the 40 output values of the
+demonstration program were compared with `CoolSolve/tools/compare_solution.py`
+(tolerance `rtol = 0.001`); the property inputs of the reference (sat R134a at
+10 °C, water at 2 bar/20 °C, CO2 at 90 bar) were taken from the solved
+CoolSolve values so that the comparison isolates the correlation equations
+from the property backend:
+
+```
+40 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 65
+```
+
+(the 65 "only in CoolSolve" variables are the inputs and intermediate
+properties of the demonstration program — the mass fluxes, the geometry, the
+fluid states, the saturated properties, the dimensionless numbers —; the
+reference table holds only the 40 outputs). The largest relative deviation
+over the 40 values is **7.9·10⁻¹²** (`dP_acc_E`), i.e. round-off in the
+double-precision evaluation. The outlet quality was additionally cross-checked
+between property backends: `x_out = 0.31032518762593` with CoolProp 8.0.0
+(reference venv) and `0.31032518762580` with the CoolSolve build's CoolProp
+8.1.0dev (1.3·10⁻¹³ relative).
+
+**Adaptation of 2026-11-02 (card C-482, upstream `two_phase.py` fix).** The
+pinned commit `f03f7f47` computes the homogeneous two-phase density as
+`1/(α/ρ_v + (1−α)/ρ_l)` — specific volumes weighted by the void fraction `α`,
+which is a *volume* fraction, so the formula is dimensionally inconsistent
+(homogeneous model: slip ratio 1). Branch `origin/Elise` (commits `3977f2b0`/
+`44de58bd`) fixes it to the in-situ mixture density `α·ρ_v + (1−α)·ρ_l`, which
+with the homogeneous void fraction equals the textbook homogeneous density
+`1/(x/ρ_v + (1−x)/ρ_l)` (checked numerically: identical to 4·10⁻¹⁶ relative)
+— exactly the density the Choi docstring of the source itself requires
+("1/ρ = x·v_v + (1−x)·v_l"). The translated `rho_two_phase_homogeneous` was
+adapted accordingly (one equation; the translation is otherwise unchanged).
+The `m_dot→G` call-scheme rework of the pipe components (`0aab141c`,
+`285ac7f5`) was **already merged into the pinned commit** (`f03f7f47` = merge
+of PR #81): `pipe_DP.py` is byte-identical between `f03f7f47` and
+`origin/Elise` (`git diff` empty), and the demonstration program already
+passes `G = M_dot/A` as the signatures require — no value changes from it. The
+`get_saturated_phase_properties` surface-tension/viscosity *fallbacks* added
+upstream (for tabular backends) change no value here (the translation reads
+the properties directly, and the fallbacks return the same HEOS values); the
+`void_fraction.py` dispatcher refactor does not touch the `homogeneous`/`Zivi`
+formulas. Values that change with the fix (R134a sat. 10 °C, ρ_l = 1260.96,
+ρ_v = 20.226 kg/m³):
+
+| Quantity | pinned `f03f7f47` (kept for record) | branch `9364dfc6` (= this file) | change |
+|---|---:|---:|---|
+| `rho_su` (x = 0.3) | 20.9702 kg/m³ | 64.9870 kg/m³ | ×3.10 |
+| `rho_ex` (x = 0.7) | 20.3626 kg/m³ | 28.6967 kg/m³ | ×1.41 |
+| `dP_Friedel_C` | 35 365.7 Pa | 36 708.3 Pa | +3.8 % |
+| `dP_Choi_D` | 76 524.3 Pa | 39 714.1 Pa | −48 % |
+| `dP_friction_E` | 22 111.3 Pa | 23 833.3 Pa | +7.8 % |
+| `x_out` | 0.309569 | 0.310325 | +2.4·10⁻³ |
+| `dP_acc_E` | 188.67 Pa | 203.58 Pa | +7.9 % |
+| `dP_grav_45_E` / `dP_grav_m45_E` | ±427.5 Pa | ±828.5 Pa | ×1.94 |
+| `dP_grav_E_45` | 436.0 Pa | 1330.7 Pa | ×3.05 |
+| `dP_total_E` | 22 300.0 Pa | 24 036.8 Pa | +7.8 % |
+| `dP_total_E_45` | 22 736.0 Pa | 25 367.5 Pa | +11.6 % |
+
+All other outputs (friction factors, single-phase cases, `dP_MSH_C`, the pure
+acceleration terms, the supercritical CO2 case F) are unchanged. Note that the
+pinned-commit column of the table is *not* reproduced by this file any more on
+those 12 quantities, by design (the model follows the upstream fix); the
+per-value table below is the original `f03f7f47` comparison kept as
+documentation of the pinned-source result.
+
+**Pinned-commit comparison (2026-10-09, kept for record).** The LaboThapPy
+correlations of the local clone, commit `f03f7f47`, recomputed in a
+throw-away virtual environment under `work/`
 (`pip install -e ~/git/LaboThapPy`, script `work/pipe_dp/ref_pipe_dp.py`): the
 34 output values of the demonstration program were compared with
 `CoolSolve/tools/compare_solution.py` (tolerance `rtol = 0.001`):
@@ -149,9 +220,9 @@ fluid states, the saturated properties, the dimensionless numbers —; the
 reference table holds only the 34 outputs). The largest relative deviation
 over the 34 values is **1.0·10⁻¹²** (`dP_F3`, the supercritical-CO2 pressure
 drop), i.e. round-off in the double-precision evaluation. Per-value table
-(see the `.sol` and `reference_values.csv` for full precision):
+(full precision in that card's `.sol` and reference CSV):
 
-| Quantity | LaboThapPy | CoolSolve | rel. dev. |
+| Quantity | LaboThapPy `f03f7f47` | CoolSolve at `f03f7f47` | rel. dev. |
 |---|---:|---:|---:|
 | `f_Churchill_A` | 0.017874821628 | 0.017874821628 | 1.5e-13 |
 | `f_Swamee_Jain_A` | 0.017862577892 | 0.017862577892 | 1.4e-13 |
@@ -227,20 +298,26 @@ Two things are read from this output and checked against the numbers:
    uses `G = M_dot/A`, as the function signature requires, and that is what the
    comparison table above verifies. This is a defect of the *example*, not of
    the correlations; it is reported here so that nobody uses the printed values
-   as reference data.
+   as reference data. (The component-side fix — `StraightPipe` computing
+   `G = m_dot/A_cross` before the call, commits `0aab141c`/`285ac7f5` — is
+   already part of the pinned commit `f03f7f47`; the example script itself
+   still passes `m_dot`.)
 
 ## Source and attribution
 
 This CoolSolve model is a translation (into the EES-compatible language
 CoolSolve reads) of the pipe pressure-drop module of LaboThapPy, the
 component library of the ULiège Thermodynamics Laboratory, file
-`labothappy/correlations/pressure_drop/pipe_DP.py`, commit `f03f7f47`, with the
+`labothappy/correlations/pressure_drop/pipe_DP.py` — byte-identical between
+the pinned commit `f03f7f47` and branch `origin/Elise` at `9364dfc6`
+(<https://github.com/PyLaboThap/LaboThapPy/tree/9364dfc6>) —, with the
 helper relations of `labothappy/correlations/properties/dimensionless.py`
 (`compute_reynolds`, `compute_froude`, `compute_weber`),
 `labothappy/correlations/void_fraction/void_fraction.py`
 (`void_fraction_homogeneous`, `void_fraction_zivi`),
 `labothappy/correlations/properties/two_phase.py`
-(`compute_two_phase_density`) and
+(`compute_two_phase_density`, taken at its `origin/Elise` fixed version,
+commits `3977f2b0`/`44de58bd`, see the conversion log) and
 `labothappy/correlations/properties/supercritical.py`
 (`pseudo_boiling_bounds`, `pseudo_critical_temperature_CO2`).
 
@@ -265,8 +342,28 @@ Kedzierski & Domanski (2001, 1999), Wallis (1969), Collier & Thome (1994).
   `dP_Friedel`, …), with the formula, the validity range **as quoted in the
   source**, the original paper and the source module, function and commit in
   the comment block. Arguments are the Python arguments, all in SI
-  (`Pa·s`, `kg/m³`, `N/m`, `m`, `deg`, `kg/(m²·s)`); the Python `math.log`
-  became the EES `LN` and `math.log10` the EES `LOG10`.
+   (`Pa·s`, `kg/m³`, `N/m`, `m`, `deg`, `kg/(m²·s)`); the Python `math.log`
+   became the EES `LN` and `math.log10` the EES `LOG10`.
+- **2026-11-02 — re-check and adaptation (T-RECHECK card C-482, batch B-19).**
+  Re-run on CoolSolve 0.4.0 (`0.4.0@2dc1367`) against branch `origin/Elise`
+  (`9364dfc6`, clone under `work/`, never checked out in `~/git/LaboThapPy`):
+  `pipe_DP.py` is byte-identical to the pinned commit (the `m_dot→G` rework of
+  the *components* was already merged in `f03f7f47`), and the void-fraction
+  refactor changes no formula used here — but upstream **fixed the homogeneous
+  two-phase density** (`two_phase.py`, commits `3977f2b0`/`44de58bd`): from
+  `1/(α/ρ_v + (1−α)/ρ_l)` (specific volumes weighted by the void fraction, a
+  volume fraction — dimensionally inconsistent) to the in-situ density
+  `α·ρ_v + (1−α)·ρ_l`, which with the homogeneous α equals the textbook
+  `1/(x/ρ_v + (1−x)/ρ_l)` (verified numerically) and is what the Choi
+  docstring of the source itself requires. **The model was adapted**: the one
+  equation of `rho_two_phase_homogeneous` now follows the fixed formula
+  (only change; the model is marked as adapted in `model.json`). 12 of the 40
+  demonstration outputs change (see the table in *Verification*: `rho_su`
+  ×3.10, `dP_Choi_D` −48 %, gravity ×1.9–3.1…); the pinned-source result is
+  kept as a documented comparison. The upstream surface-tension/viscosity
+  *fallbacks* of `get_saturated_phase_properties` change no value here (the
+  translation reads the properties directly). New baseline `.sol`; 40 values
+  match the branch recomputation with max deviation 7.9·10⁻¹².
 - **String dispatchers not translated.** `pressure_drop_pipe_single_phase`,
   `pressure_drop_pipe_frictional_two_phase` and `pressure_drop_pipe_two_phase`
   select the correlation with a `correlation='…'` argument; in EES the caller
@@ -317,9 +414,10 @@ Kedzierski & Domanski (2001, 1999), Wallis (1969), Collier & Thome (1994).
   `theta` as a *downward* flow for `pressure_drop_pipe_single_phase` and as an
   *upward* flow for `pressure_drop_pipe_gravity_two_phase`, while both
   equations are `ΔP = g·ρ·L·sin(theta)`: the two comments cannot both hold.
-  The equations are transcribed unchanged (each with a comment reporting what
-  the source says); the demonstration program shows the sign (`dP_grav_45_E`
-  = +427.5 Pa, `dP_grav_m45_E` = −427.5 Pa).
+   The equations are transcribed unchanged (each with a comment reporting what
+   the source says); the demonstration program shows the sign (`dP_grav_45_E`
+   = +828.5 Pa, `dP_grav_m45_E` = −828.5 Pa, after the 2026-11-02 adaptation;
+   they were ±427.5 Pa with the pinned-commit density).
 - **Homogeneous and Zivi acceleration terms are identical** for the
   demonstration case (7886.6515 Pa both). This is not a copy error: with
   f(x) = x²·v_v/α + (1−x)²·v_l/(1−α), the homogeneous and the Zivi models
@@ -370,7 +468,9 @@ Kedzierski & Domanski (2001, 1999), Wallis (1969), Collier & Thome (1994).
   correlations copies the definitions for now.
 - **No gap registered for this card**: everything in the file is plain EES
   (`FUNCTION`, block `IF/THEN/ELSE`, `LN`, `LOG10`, property functions) and runs
-  in CoolSolve v0.3.0 (`Solver: SUCCESS (0 iterations)`).
+  in CoolSolve v0.4.0 (`Solver: SUCCESS (0 iterations)`; unchanged since the
+  0.3.0 import). The two-phase density follows the fixed upstream formula of
+  branch `origin/Elise`; no CoolSolve gap blocks the file.
 
 ## Related models
 

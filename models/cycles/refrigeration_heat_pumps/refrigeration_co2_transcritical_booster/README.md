@@ -79,6 +79,15 @@ State points are exported as arrays `T[i]`, `P[i]`, `h[i]`, `s[i]`
 (`i` = 1…16, process order, TESPy connection labels in the comments) for the
 CoolSolve diagram overlay.
 
+## How to run
+
+```bash
+coolsolve ./refrigeration_co2_transcritical_booster.eescode
+```
+
+The model solves from CoolSolve's default guesses (no `.initials`, no
+`coolsolve.conf`).
+
 ## Results (Case Study 1, baseline `.sol`)
 
 | Quantity | TESPy (notebook re-run) | CoolSolve | rel. diff |

@@ -189,7 +189,7 @@ the condenser balance (item 3); releasing both relations from there, the full va
 iterations, and in 8 from the shipped `.initials`.
 
 **CoolSolve findings**: `CS-GAP-USER-STRING-FUNC` (new register row; it was hidden behind the convergence
-failure); the AD bug `CS-BUG-PROC-NEG-POW` (fixed on branch `fix/ad-pow-negative-base`) made the earlier Try Harder
+failure); the AD bug `CS-BUG-PROC-NEG-POW` (fixed and closed: merged in CoolSolve main `07bf9dc`, register §7) made the earlier Try Harder
 runs worse (residual 369 → 0.37 with the fix). Hints: a regime selector or a fitted characteristic used outside
 its range easily creates spurious roots — a CoolSolve warning when an IF-selected or polynomial branch changes
 during the iterations would help diagnose them.

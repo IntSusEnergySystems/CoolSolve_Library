@@ -17,6 +17,7 @@ rotational speed. The stored point is 6000 rpm.
 | **Authors** | Stéphane Bertagnolio |
 | **License** | MIT |
 | **CoolSolve** | 0.3.0@332d95a — verified (see *Verification*) |
+| **Solver** | ⚠️ TrustRegion only (`solverPipeline = TrustRegion`) |
 
 ## Problem statement
 
@@ -85,15 +86,17 @@ The CLI loads the sibling `.initials` and `coolsolve.conf`:
 ../CoolSolve/build/coolsolve ./compressor_inlet_drop_speed_leakage.eescode
 ```
 
-`coolsolve.conf` sets `solverPipeline = Newton, TrustRegion`. From the stored
-guesses, Newton reports `SingularJacobian` on the 27-equation block and
-TrustRegion then converges. The run reports 23 iterations.
+> **This model runs only with the TrustRegion solver.** The shipped
+> `coolsolve.conf` sets `solverPipeline = TrustRegion`; keep it. With Newton in
+> the pipeline (alone or as `Newton, TrustRegion`), current CoolSolve builds
+> (07bf9dc and later) fail on the 27-equation block with `MaxIterations`.
+
+From the stored guesses, TrustRegion converges in 11 iterations.
 
 `C_thr` and `C_thr_l` are defined by squared velocities. The `.initials` are
 the stored solution, including the positive speeds (`C_thr` = 299.82 m/s,
-`C_thr_l` = 390.44 m/s) and the positive diameter. Without `.initials`, Newton
-is `SingularJacobian` and TrustRegion stops at its limit of 500 iterations
-(residual stays 4.194×10⁵). There is no second shipped root.
+`C_thr_l` = 390.44 m/s) and the positive diameter. Without `.initials`, TrustRegion stops
+at its limit of 500 iterations (residual stays 4.194×10⁵). There is no second shipped root.
 
 No diagram-state arrays: the fluid is ideal-gas `Air`.
 
@@ -174,10 +177,10 @@ residual of a few parts per thousand. Specific volume `v_su` agrees within
 3.01e-04. The `.sol` labels on `v_su`, `v_su_2`, `v_thr_su` and `v_thr_l` say
 kg/m³; the numbers are the specific volumes returned by `volume()`.
 
-With the stored `.initials`, the CLI reports success in 23 iterations. Block 12
-is Newton then TrustRegion (19 iterations on that block). Without `.initials`,
-Newton reports `SingularJacobian` and TrustRegion reaches 500 iterations with
-the residual still 4.194×10⁵. No `.sol` is produced in that case.
+With the stored `.initials` and `solverPipeline = TrustRegion`, the CLI reports
+success in 11 iterations (CoolSolve builds of 2026-11-01 and 2dc1367). Without
+`.initials`, TrustRegion reaches 500 iterations with the residual still
+4.194×10⁵. No `.sol` is produced in that case.
 
 ## Source and attribution
 
@@ -193,7 +196,9 @@ Source file (EES X7.458, French comments, not copied into the library):
 
 - **2026-10-15 — import**: `ees_extract.py` on `R3 - SB - Ex 2 - 2.EES` (EES X7.458, plain text, 51 variables, no lookup or parametric table, no warnings). Unit system `$UnitSystem SI MASS DEG PA C J`, already Pa, °C and J, so nothing was rescaled. `$UnitSystem` was deleted. The file has no `$TABSTOPS` and no `$Export`. Comments translated to English. No D10–D14 rewrite (no `MODULE`/`SUBPROGRAM`, no unsupported property pair, no `$COMMON`, no string array). No variant. `missing_features` is empty.
 - **2026-10-15 — square system**: with only `$UnitSystem` removed, CoolSolve reports 50 equations, 51 unknowns, `System square: No`. The unmatched unknown is `rpm` (it appears only in `N = rpm/60`). The line `rpm = 3000` is a comment and was not turned into an equation, nor were `epsilon_s = 0.75`, `M_dot = 1`, `M_dot_l = 0.1*M_dot`, `gamma = 1.4` or `gamma_l = 1.4`. The added equation is `rpm = 6000`, the stored value (guess 3000). The system is then square: 51 equations, 51 variables, largest block 27. No stored unknown replaced an equation. `.initials` are the stored solution, including the positive speeds.
-- **Level**: equations 51 → 1 (50–300); largest block 27 → 1 (6–30); no procedure, array or `DUPLICATE` → 0; one compressor, the two nozzles are parts of that machine → 0; identified throat areas, and efficiency and the leakage ratio are results of the speed → 1; the 27-equation block needs the stored `.initials` and `solverPipeline = Newton, TrustRegion` → 1. Score 4 → level 3. No pedagogical ±1.
+- **Level**: equations 51 → 1 (50–300); largest block 27 → 1 (6–30); no procedure, array or `DUPLICATE` → 0; one compressor, the two nozzles are parts of that machine → 0; identified throat areas, and efficiency and the leakage ratio are results of the speed → 1; the 27-equation block needs the stored `.initials` and `solverPipeline = Newton, TrustRegion` (TrustRegion alone since 2026-11-02) → 1. Score 4 → level 3. No pedagogical ±1.
+
+- **2026-11-02 — solver pipeline**: with CoolSolve 07bf9dc and later (fix of `CS-BUG-PROC-NEG-POW`, finite derivative of integer powers of negative numbers) Newton no longer stops at once on the 27-equation block; it moves away from the root and the `Newton, TrustRegion` pipeline failed (MaxIterations). `coolsolve.conf` now runs `TrustRegion` alone: 11 iterations, `.sol` unchanged (regression OK with the builds of 2026-10-31, 2026-11-01 and 2dc1367).
 
 ## Limitations and CoolSolve gaps
 
@@ -202,7 +207,8 @@ and is not constant; entropy differs by about −1815 J/kg·K. The kelvin
 conversion in the isentropic relations is `+273`, as written. `gamma_l` is
 solved from `P_thr`/`P_ex`, as written, and is about 1.08 at this point.
 One speed is stored; the optimum mentioned in the closing comment is not
-computed. No CoolSolve gap blocks the file. `missing_features` is empty.
+computed. The model runs only with `solverPipeline = TrustRegion` and the
+stored `.initials`. No CoolSolve gap blocks the file. `missing_features` is empty.
 
 ## Related models
 

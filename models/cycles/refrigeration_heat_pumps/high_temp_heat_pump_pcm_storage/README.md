@@ -55,19 +55,6 @@ and the COP, and the PCM storage volume and discharge power.
   2.8·10⁷ W·h = 28 MWh, `Vol_PCM` = 311 m³ for `E_density_PCM` = 9·10⁴ W·h/m³
   ≡ 90 kWh/m³). The heat-pump results are unaffected.
 
-| Inputs | Value | Outputs | Value |
-|---|---:|---|---:|
-| `Q_dot_cd_HP` condenser duty | 7 MW | `Q_dot_cd` condenser duty (pinch zones) | 7.010 MW |
-| `epsilon_s_cp` compressor isentropic eff. | 0.8 | `W_dot_cp` compressor power | 1.055 MW |
-| `epsilon_ihx_hp` recuperator effectiveness | 0.8 | `W_dot_sf_pp` brine pump power | 37.5 kW |
-| `DELTAT_pp_cd` / `DELTAT_pp_ev` | 10 / 3 K | `COP_HP` (pump power included) | 6.417 |
-| `m_dot` refrigerant flow | 19.99 kg/s | `p_su_ev` / `p_su_cd` | 4.93 / 12.59 bar |
-| `m_dot_sf_su_ev` brine flow | 497.6 kg/s | `T_out_cp` compressor outlet | 180.0 °C |
-| `m_dot_sf_su_cd` water flow | 10 000 kg/s | `T_sf_ex_cd` water outlet | 141.3 °C |
-| `t_charge` / `t_discharge` | 4 / 2 h | `Vol_PCM` storage volume | 311 m³ |
-| `E_density_PCM` storage density | 90 kWh/m³ | `Q_dis_PCM` discharge power | 13.3 MW |
-| `PCM_cap` capacity requirement | 29 MWh | `Q_dot_rec` recuperator duty | 1.223 MW |
-
 ## How to run
 
 Open `high_temp_heat_pump_pcm_storage.eescode` in the CoolSolve GUI and press
@@ -81,6 +68,21 @@ The shipped `.initials` (converged solution of the pinch formulation) is
 required: the CoolSolve solver-robustness report shows that most solver
 configurations fail without it, because the pinch procedures make the
 63-variable block strongly conditional. No `coolsolve.conf` is needed.
+
+## Results
+
+| Inputs | Value | Outputs | Value |
+|---|---:|---|---:|
+| `Q_dot_cd_HP` condenser duty | 7 MW | `Q_dot_cd` condenser duty (pinch zones) | 7.010 MW |
+| `epsilon_s_cp` compressor isentropic eff. | 0.8 | `W_dot_cp` compressor power | 1.055 MW |
+| `epsilon_ihx_hp` recuperator effectiveness | 0.8 | `W_dot_sf_pp` brine pump power | 37.5 kW |
+| `DELTAT_pp_cd` / `DELTAT_pp_ev` | 10 / 3 K | `COP_HP` (pump power included) | 6.417 |
+| `m_dot` refrigerant flow | 19.99 kg/s | `p_su_ev` / `p_su_cd` | 4.93 / 12.59 bar |
+| `m_dot_sf_su_ev` brine flow | 497.6 kg/s | `T_out_cp` compressor outlet | 180.0 °C |
+| `m_dot_sf_su_cd` water flow | 10 000 kg/s | `T_sf_ex_cd` water outlet | 141.3 °C |
+| `t_charge` / `t_discharge` | 4 / 2 h | `Vol_PCM` storage volume | 311 m³ |
+| `E_density_PCM` storage density | 90 kWh/m³ | `Q_dis_PCM` discharge power | 13.3 MW |
+| `PCM_cap` capacity requirement | 29 MWh | `Q_dot_rec` recuperator duty | 1.223 MW |
 
 The arrays `P[i]`, `h[i]`, `T[i]`, `s[i]` (i = 1 evaporator outlet, 2
 compressor suction, 3 condenser inlet, 4 condenser outlet, 5 valve inlet,

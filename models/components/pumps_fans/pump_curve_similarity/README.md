@@ -1,6 +1,6 @@
 # Centrifugal pump from manufacturer curves and similarity laws
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0125`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** (adapted from the original; re-check of 2026-11-02) &nbsp;|&nbsp; `CSL-0125`
 
 A pump whose performance is described by the four characteristic curves of a
 catalogue (volumetric flow rate, head rise, isentropic efficiency, required
@@ -20,7 +20,7 @@ flow rate and speed given → discharge pressure).
 | **Source** | LaboThapPy (Apache-2.0 / MIT), file `labothappy/component/pump/pump_curve_similarity.py`, commit `f03f7f47` |
 | **Authors** | Basile Chaudoir, Elise Neven (ULiège Thermodynamics Laboratory; LaboThapPy contributors, see `AUTHORS.txt`) |
 | **License** | MIT (translation with credits, roadmap decision D3) |
-| **CoolSolve** | main 2026-10-05 — runs; verified against the LaboThapPy component in its three modes (see *Verification*) |
+| **CoolSolve** | main 2026-11-02 — runs; verified against the LaboThapPy component in its three modes (see *Verification*); the `M_N` branch is adapted to the corrected affinity laws of the upstream fix (branch `Elise`, commit `8514bf89`), see *Adaptation of 2026-11-02* |
 
 ## Problem statement
 
@@ -77,6 +77,69 @@ the curves) reproduces the original's out-of-range flag, through the small
 | curves | table `pump_curves` | `Delta_H` / `W_dot_hyd` | 1254.18 m / 3.665 MW |
 | | | `h_ex` / `T_ex` | 237.14 kJ/kg / 20.22 °C |
 | | | `W_dot_shaft` | 4.146 MW |
+
+## Adaptation of 2026-11-02 (re-check card C-481: upstream fix, branch `Elise`)
+
+The pinned source `f03f7f47` was re-checked against the corrected component of
+the unmerged upstream branch `origin/Elise`, commit
+`8514bf89a6d9a9acd4507f5375318985ab568336` (permanent link:
+https://github.com/PyLaboThap/LaboThapPy/blob/8514bf89a6d9a9acd4507f5375318985ab568336/labothappy/component/pump/pump_curve_similarity.py,
+diff `8514bf89^..8514bf89` touches only `solve_MN` and the example fluid
+switch).
+
+**The upstream fix is physics-correct.** For an operating point (`Q`, `N`) the
+similar point is (`Q·N_rated/N`, `N_rated`): the head scales as `N²`, the
+efficiency is a property of the similar point (unchanged between similar
+points, `η(Q) = η_r(Q·N_rated/N)`) and `NPSH_r` scales as `N²` at that same
+similar flow rate. The pinned `M_N` branch violated this: it read `eta_is` and
+`NPSH_r` on the rated curves **at the actual flow rate** and left `NPSH_r`
+un-scaled, i.e. as if the pump always ran at its rated speed (`Q_rated = Q`,
+`N = N_rated`). The `P_N` and `P_M` branches were already correct (they map to
+`V_dot/s` before reading the curves), and so were our main and `mode_PM`
+files — only `mode_MN` reproduced the pinned error. **Model adapted**: `eta_is`
+and `NPSH_r` are now read at `V_dot/N_ratio` and `NPSH_r` is scaled as
+`N_ratio²`, in `pump_curve_similarity_mode_MN.eescode` only (three equations,
+marked `ADAPTED`). The `V_dot_flag` now tests the equivalent flow against the
+rated range — the same condition as the original's actual-flow test against the
+scaled range.
+
+Pinned-source result kept as a documented comparison (CO2 case, `m_dot` =
+297.8817 kg/s, both sources re-run in the throw-away venv, plain `HEOS`
+backend; `Delta_H` and `P_ex` are identical in the two versions because the
+pinned head curve was already scaled):
+
+| `N_rot` [rpm] | `eta_is` pinned | `eta_is` fixed | `NPSH_r` pinned [m] | `NPSH_r` fixed [m] | `W_dot_shaft` pinned [MW] | `W_dot_shaft` fixed [MW] |
+|---|---:|---:|---:|---:|---:|---:|
+| 2900 (= rated) | 0.862799 | 0.862799 | 2.4517 | 2.4517 | 4.1461 | 4.1461 |
+| 2500 | 0.862799 | 0.858804 | 2.4517 | 2.9439 | 2.7166 | 2.7292 |
+| 3500 | 0.862799 | 0.820983 | 2.4517 | 2.7188 | 6.4949 | 6.8257 |
+| 4000 | 0.862799 | 0.777192 | 2.4517 | 3.2685 | 8.6811 | 9.6373 |
+| 1450 | 0.862799 | 0.674962 | 2.4517 | 2.8686 | 0.1430 | 0.1828 |
+
+The pinned source returns the efficiency at the rated flow rate whatever the
+speed (here 0.8628, the curve value at the rated flow rate, at ½ to 1.38× the
+rated speed) and ignores the `N²` scaling of the required NPSH. At the default
+operating point (`N_rot` = `N_rot_rated` = 2900 rpm) the two versions agree
+exactly, so the shipped result and the three `.sol` baselines are unchanged
+(`compare_solution.py`-style diff of the new `mode_MN` solution against the
+committed one: empty).
+
+Verification of the adaptation (`pump_curve_similarity_mode_MN` with `N_rot`
+replaced in scratch copies, run with CoolSolve 0.4.0@2dc1367):
+
+- `N_rot` = 2500 and 4000 rpm (equivalent flow in the curve range): the
+  adapted file agrees with the corrected upstream component to **4.80e-10**
+  (`NPSH_r`, N = 2500) and **2.77e-10** (`Delta_H`, N = 4000) relative.
+- `N_rot` = 1450 rpm (equivalent flow 2467.4 m³/h, outside the curve range,
+  flag = 1 in both): max relative difference **1.24e-08** (`Delta_H`) —
+  CoolSolve's `INTERPOLATE` now extrapolates linearly through the end nodes
+  (`CS-GAP-INTERP-EXTRAP`, closed), as the scipy `interp1d` of the source; the
+  flat-clamp behaviour of the 2026-10-08 import no longer exists.
+- Cross-mode consistency at 2500 rpm (which the pinned source failed): the
+  adapted `M_N` discharge pressure (11.5143 MPa) fed to `mode_PM` with
+  `m_dot` = 297.8817 kg/s returns `N_rot` = 2500.000 (relative 3e-10) and the
+  same `eta_is` 0.858804; the three modes now describe the same pump point at
+  any speed.
 
 ## How to run
 
@@ -155,13 +218,18 @@ path on the P-h or T-s diagram (CoolSolve *Diagram* tab, *Overlay array path*).
 3. **Model vs the HEOS reference** (`tools/compare_solution.py`, `--ees-units`,
    tolerance 1·10⁻³): **all common variables agree, largest relative difference
    1.13e-09** (`NPSH_r`) for the main file; the same 1.13e-09 for
-   `…_mode_PM` and `…_mode_MN`. `V_dot_flag` = 0 everywhere (the operating
+   `…_mode_PM`; `…_mode_MN` is unchanged at its default point (`N_rot` =
+   `N_rot_rated`, where the pre- and post-adaptation physics coincide) and its
+   off-rated-speed verification is in *Adaptation of 2026-11-02*. `V_dot_flag`
+   = 0 everywhere (the operating
    point is inside the curves: 1233.7 m³/h between 395.3 and 1533.0 m³/h).
    Against the **default** LaboThapPy run (bicubic backend) the same
    comparison gives a largest difference of 7.2e-03 (`W_dot_shaft`), 6.8e-03
    (`m_dot`), 4.1e-03 (`V_dot`), 2.7e-03 (`Delta_H`), 1.7e-02 (`NPSH_r`,
    a small quantity read on a steep part of its curve) — the effect of the
-   backend, item 2.
+   backend, item 2. For the `M_N` branch, the reference since the adaptation
+   of 2026-11-02 is the corrected upstream component (branch `Elise`,
+   commit `8514bf89`) — see *Adaptation of 2026-11-02*.
 4. **Self-consistency of the three modes.** Feeding the `P_N` mass flow rate
    (297.8817 kg/s) to `P_M` returns `N_rot` = 2900.000 rpm (5.8e-15 relative),
    and feeding it with `N_rot` = 2900 rpm to `M_N` returns `P_ex` =
@@ -254,26 +322,41 @@ No student names or personal data involved.
 - **2026-10-08 — modes**: the mode switch of the Python component becomes three
   files (main = `P_N`, `mode_PM`, `mode_MN`), each with its companion table and
   its `.sol` baseline, instead of commented alternatives, so that each mode is
-  solved and regression-tested. In `M_N` the original reads `eta_is` and
+  solved and regression-tested. In `M_N` the original then read `eta_is` and
   `NPSH_r` on the *rated* curves at the actual flow rate (no speed scaling,
-  unlike the other two modes); this is reproduced as in the original and
-  commented in the file.
+  unlike the other two modes); this was reproduced as in the original —
+  corrected on 2026-11-02 (next entry).
 - **2026-10-08 — Level**: rubric of taxonomy §3 — 33 equations (< 50 → 0),
   largest block 1 (≤ 5 → 0), functions and arrays present (1), three coupled
   components no (0), semi-empirical / off-design (characteristic curves of a
   catalogue, three operating modes → 1), numerics: converges from the default
   guesses (0) — score 2 → **level 2**.
+- **2026-11-02 — re-check and adaptation** (card C-481, `T-RECHECK`): the
+  upstream correction of the `M_N` branch (LaboThapPy branch `Elise`, commit
+  `8514bf89a6d9a9acd4507f5375318985ab568336`) is physics-correct —
+  `eta_is` and `NPSH_r` are read at the equivalent flow rate `V_dot/N_ratio`
+  and `NPSH_r` scaled by `N_ratio²`, as in the two other modes. The three
+  equations of `pump_curve_similarity_mode_MN.eescode` are adapted
+  (`eta_is`, `NPSH_r`, `V_dot_flag`; marked `ADAPTED` in the file); the pinned
+  `f03f7f47` result is kept as the documented comparison table of
+  *Adaptation of 2026-11-02*. Files re-solved with CoolSolve 0.4.0@2dc1367:
+  the three `.sol` baselines are unchanged (the default point, `N_rot` =
+  `N_rot_rated`, is untouched; the `mode_MN` solution diff against the
+  committed baseline is empty). No `missing_features` (verified, none blocking).
 
 ## Limitations and CoolSolve gaps
 
-- **No extrapolation** (registered gap `CS-GAP-INTERP-EXTRAP`, *not* blocking
-  this model). `interp1d(fill_value="extrapolate")` of the original continues
-  the curve linearly outside its range, while CoolSolve/EES clamp to the last
-  table point. The three shipped cases are inside the curves (1233.7 m³/h
-  between 395.3 and 1533.0 m³/h), but an operating point outside them is
-  silently returned at the curve end: `V_dot_flag` and the `V_dot_rated_min/max`
-  variables are there to be checked, and the extrapolation has to be applied
-  by hand (polynomial fit or extended table).
+- **Extrapolation, as in the original now** (`CS-GAP-INTERP-EXTRAP`, closed;
+  update of 2026-11-02, checked on this build). `interp1d
+  (fill_value="extrapolate")` of the original continues the curve linearly
+  outside its range; CoolSolve's `INTERPOLATE` does the same since the gap was
+  closed (the clamping assumed at the import no longer exists: the N = 1450
+  rpm run of *Adaptation of 2026-11-02* returns the linear extrapolation to
+  1.2e-08). The extrapolation is silent, so an operating point outside the
+  curves is still returned as an extrapolated value: `V_dot_flag` and the
+  `V_dot_rated_min/max` variables are there to be checked; keep in mind that
+  the extrapolated values are the small-flow/too-low-head region of a pump,
+  which the catalogue does not cover.
 - **Density of the suction state** is used for the head (`Delta_H = DeltaP/(g·rho)`),
   as in the original: for a two-phase or compressible fluid the head is an
   approximation. The `M_N` branch of the original uses the same density for the
@@ -283,13 +366,16 @@ No student names or personal data involved.
   (power scaling $P\sim N^3$ is used only in the plotting function of the
   original, which is not translated — the shaft power comes from the
   thermodynamics).
-- **`V_dot_flag`** is 0 in the shipped cases; the `M_N` branch of the original
-  compares the flow rate with the *rated* range (not the scaled one) and
-  `P_M` has no flag at all — reproduced as in the original.
+ - **`V_dot_flag`** is 0 in the shipped cases; the `M_N` branch of the pinned
+   original compared the actual flow rate with the *rated* range (not the
+   scaled one) and `P_M` has no flag at all — `mode_MN` now tests the
+   equivalent flow rate against the rated range, the same condition as the
+   corrected upstream source (8514bf89) and as the actual-flow-vs-scaled-range
+   test of the two other files; `P_M` keeps no flag, as in the original.
 - No CoolSolve gap blocks this model (`missing_features` is empty): the three
-  files are valid EES and converge. The only behavioural difference met
-  (`CS-GAP-INTERP-EXTRAP`, already registered, and `CS-BUG-INTERP-DESC`, closed)
-  does not affect the shipped operating points.
+  files are valid EES and converge. The two behavioural items met on the way
+  (`CS-GAP-INTERP-EXTRAP`, closed, linear extrapolation now as in the source;
+  `CS-BUG-INTERP-DESC`, closed) do not affect the shipped operating points.
 
 ## Related models
 

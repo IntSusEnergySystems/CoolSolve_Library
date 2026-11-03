@@ -61,19 +61,18 @@
     "ees_version": "",
     "language": "en",
     "course": "",
-    "notes": "LaboThapPy commit f03f7f47, file labothappy/correlations/pressure_drop/pipe_DP.py, with the helpers of labothappy/correlations/properties/dimensionless.py (compute_reynolds, compute_froude, compute_weber), labothappy/correlations/void_fraction/void_fraction.py (void_fraction_homogeneous, void_fraction_zivi), labothappy/correlations/properties/two_phase.py (compute_two_phase_density) and labothappy/correlations/properties/supercritical.py (pseudo_boiling_bounds, pseudo_critical_temperature_CO2). The demonstration cases come from the library example labothappy/component/examples/heat_exchanger/hex_pipe_DP_correlations_comparison_example.py. Translation published under the CoolSolve_Library MIT license (decision D3); the scientific basis of each correlation is the original paper named in its function comment block."
+    "notes": "LaboThapPy commit f03f7f47, file labothappy/correlations/pressure_drop/pipe_DP.py (byte-identical on branch origin/Elise at commit 9364dfc6, https://github.com/PyLaboThap/LaboThapPy/tree/9364dfc6), with the helpers of labothappy/correlations/properties/dimensionless.py (compute_reynolds, compute_froude, compute_weber), labothappy/correlations/void_fraction/void_fraction.py (void_fraction_homogeneous, void_fraction_zivi), labothappy/correlations/properties/two_phase.py (compute_two_phase_density, taken at its origin/Elise fixed version, commits 3977f2b0/44de58bd: in-situ mixture density instead of specific volumes weighted by the void fraction) and labothappy/correlations/properties/supercritical.py (pseudo_boiling_bounds, pseudo_critical_temperature_CO2). The demonstration cases come from the library example labothappy/component/examples/heat_exchanger/hex_pipe_DP_correlations_comparison_example.py. Translation published under the CoolSolve_Library MIT license (decision D3); the scientific basis of each correlation is the original paper named in its function comment block."
   },
   "verification": {
-    "summary": "The 34 output values were compared with the LaboThapPy correlations (commit f03f7f47) recomputed in Python: 34 common variables, 0 differ at rtol=0.001, largest relative deviation 1.0e-12 (round-off). The five friction factors also reproduce the values printed by the library example.",
-    "checks": ["source-rerun"],
+    "summary": "Re-check 2026-11-02 (card C-482): the 40 output values of the demonstration program were compared with the LaboThapPy branch origin/Elise (commit 9364dfc6) correlations recomputed in Python: 40 common variables, 0 differ at rtol=0.001, largest relative deviation 7.9e-12. The model was adapted to the upstream two_phase.py homogeneous-density fix (12 values change; the pinned-commit f03f7f47 result is kept as a documented comparison in the README).",
     "checks": [
       "source-rerun"
     ],
-    "reference": "the LaboThapPy correlations of commit f03f7f47, recomputed in a throw-away virtual environment under work/ (work/pipe_dp/ref_pipe_dp.py, installed with pip install -e ~/git/LaboThapPy); the five friction factors also reproduce the values printed by the library example itself at the Reynolds number of its logspace grid; 34 output values in total",
-    "date": "2026-10-09",
-    "coolsolve_version": "0.3.0@7addbbc",
-    "max_rel_diff": 1.02e-12,
-    "notes": "compare_solution.py: 34 common variables, 0 differ (rtol=0.001); the largest relative deviation is 1.0e-12 (dP_F3, supercritical CO2), i.e. round-off in the double-precision evaluation."
+    "reference": "the LaboThapPy correlations of branch origin/Elise, commit 9364dfc6 (https://github.com/PyLaboThap/LaboThapPy/tree/9364dfc6), recomputed in a throw-away clone + virtualenv under work/ (deleted after the card) calling the upstream pipe_DP.py, void_fraction.py and two_phase.py functions; property inputs taken from the solved CoolSolve values so the comparison isolates the correlations; 40 output values in total",
+    "date": "2026-11-02",
+    "coolsolve_version": "0.4.0@2dc1367",
+    "max_rel_diff": 7.9e-12,
+    "notes": "compare_solution.py: 40 common variables, 0 differ (rtol=0.001); the largest relative deviation is 7.9e-12 (dP_acc_E), i.e. round-off in the double-precision evaluation. pipe_DP.py is byte-identical between f03f7f47 and origin/Elise; the m_dot->G component rework was already merged in the pinned commit. The adaptation changes one equation (rho_two_phase_homogeneous); 12 demonstration values change (Choi -48 %, gravity x1.9-3.1, Friedel +3.8 %)."
   },
   "missing_features": [],
   "related": [
@@ -96,6 +95,11 @@
       "date": "2026-10-09",
       "action": "added (T-FUNC card C-175, inventory row LTP-028)",
       "by": "opencode worker (space-bunny-free) for S. Quoilin"
+    },
+    {
+      "date": "2026-11-02",
+      "action": "re-checked (T-RECHECK card C-482, batch B-19) on 0.4.0@2dc1367 against LaboThapPy branch origin/Elise (9364dfc6): adapted rho_two_phase_homogeneous to the upstream two_phase.py density fix (commits 3977f2b0/44de58bd); 12 demonstration values change; pipe_DP.py unchanged upstream; re-baselined .sol with the current pinned CoolProp",
+      "by": "opencode worker (t257) for S. Quoilin"
     }
   ]
 }

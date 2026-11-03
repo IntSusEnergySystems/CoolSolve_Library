@@ -15,18 +15,27 @@ blocks into the main program (library decision D10; CoolSolve does not implement
 `pump`, `cond` and the `FUNCTION`s `write`, `cp_g`.
 
 The model does **not** run in CoolSolve: a registered gap blocks the native
-file (see *Blocked features*). The file stays valid EES; the flattening of the
+file (see *Limitations and CoolSolve gaps (Blocked features)*). The file stays valid EES; the flattening of the
 sub-models has known deviations (see *Known deviations of the flattening*).
 
 | | |
 |---|---|
 | **Category** | Cycles › Organic Rankine cycles |
 | **Fluids** | R123 (cycle), Water (feed water, evaporator source), Air / humid air (condenser part 2, boiler air), CO2 / H2O / O2 / N2 (combustion products, ideal gases) |
-| **Size** | 363 equations, 392 unknowns once the nine switches are resolved for the stored run (372 and 401 with the nine string constants), see *Blocked features* |
+| **Size** | 363 equations, 392 unknowns once the nine switches are resolved for the stored run (372 and 401 with the nine string constants), see *Limitations and CoolSolve gaps (Blocked features)* |
 | **Source** | S. Quoilin (ULiège Thermodynamics Laboratory), EES file `orc_complex.EES` (EES 9.920), transcribed as CoolSolve example `examples/orc_complex.eescode` |
 | **Authors** | S. Quoilin (ULiège Thermodynamics Laboratory) — probable, to be confirmed by the maintainer |
 | **License** | MIT |
 | **CoolSolve** | **blocked**: the file parses (the `C%`, `H%`, `O%` names are accepted; the `$if` directives are evaluated) and stops on the nine Diagram-window strings that have no value (`CS-GAP-IF-NO-CONSTANT`) |
+
+## Problem statement
+
+An organic Rankine cycle on R123 is heated by a **biomass boiler** and coupled,
+through the feed-water loop, to a condenser split into a **water-cooled** and an
+**air-cooled** part; the scroll **expander** (5 machines in parallel), the
+**evaporator** and the biomass **burner** are dedicated sub-models. The model
+computes the cycle performances for the stored operating point of the original
+(see *Results*).
 
 ## Model
 
@@ -159,7 +168,7 @@ Two properties of the reference material must be known before importing:
   baseline could not be produced (blocked model) and stale guesses would be
   worse than none.
 
-## Blocked features
+## Limitations and CoolSolve gaps (Blocked features)
 
 `model.json` `missing_features` lists the registered gap that blocks the native
 file:

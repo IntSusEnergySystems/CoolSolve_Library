@@ -151,3 +151,68 @@ HX with operating limits, card C-447), LTP-037 (shell-side HTC correction
 factors, card C-441), LTP-040 (PCHE HTC, card C-442), LTP-051 (Aungier axial
 turbine loss models, card C-448), LTP-052 (radial machine loss models, card
 C-449).
+
+## 2026-11-02 upstream sweep (C-46x)
+
+Card C-461 (T-TRIAGE, batch B-19): the three unmerged branches since the pinned
+commit f03f7f47 - `origin/Elise` (19 commits, ~4100 lines added), `origin/Basile_Chaudoir`
+(62 commits, ~17000/-10700) and `origin/Titouan_Janod` (large reorganising diff) -
+inspected with throw-away diffs against f03f7f47 (no checkout in ~/git/LaboThapPy).
+8 new inventory rows LTP-075..LTP-082 (2 `todo`, 4 `merged`, 3 `duplicate` in
+total for the batch: counts below), labothappy now 82 candidates.
+
+Survey (pure API/packaging/docs/plotting changes: `pressure_drop_distributor.py`,
+`plate_DP_old.py` extraction, `toolboxes/solvers/__inti__.py` typo fix, branch
+file renames design/sizing_1D -> design_1D/sizing, report.log churn, deleted
+toolboxes (step_smoother, pump_perf_data, zero_brent)): NOT candidates.
+
+No new row (reviewed): pytest-infra `machine/circuit_rec.py` + the
+solver_comparison example set (Titouan: rec vs it solvers around already
+translated components Zorlu HP/ORC; CSL-0039/CSL-0312 stay representative);
+`CO2_HP_COP_Optimization`, `CO2_RC_HX_presize_Optimization`,
+`CO2_RC_efficency_Optimization`, `CO2_RC_Cost_Optimization`, `PCHE_sizing.py`,
+`shell_and_tube_sizing.py` (Basile, all pyswarms/PSO layouts
+-> same infeasibility class as LTP-063/LTP-069/LTP-071); `CO2_RC.py` cycle
+example (architecture duplicate of LTP-058 -> CSL-0144); `hexs_Zorlu.py`,
+`hex_LHTES.py` (Titouan example scripts around `hex_MB_charge_sensitive`
+-> CSL-0138 and `hex_eNTU` -> CSL-0128); `Aitor.py` (renamed `Aitor_F&T.py`,
+LTP-054); `hydraulic_diameter_shell.py` helper (equations subset of
+CSL-0103/CSL-0321); `properties/void_fraction.py` (move of the LTP-033 module,
+merged; note upstream also DELETES `component/expander/ejector_csteff.py`,
+the source of CSL-0325, which stays pinned at f03f7f47).
+
+### New inventory rows
+
+| ID | Decision | Target | Reason |
+|---|---|---|---|
+| LTP-075 | merged | CSL-0138 | hex_MB_charge_sensitive_bis: clean restructure, no new physics |
+| LTP-076 | merged | CSL-0138 | hex_MB_plate_elise + correlations-distributor adapter API; plate HX already LTP-016 -> CSL-0138; the Martin/Lockhart-Martinelli DP rewrite of `plate_DP.py` is under re-check (impact CSL-0111) |
+| LTP-077 | discarded | nearest CSL-0130/0316/0131 | splitter with optional dp/charge: trivial mass balance + calls to already translated sources |
+| LTP-078 | todo | (T-FUNC card) | NEW physics: curved-duct HTC correlations (helical coil/Ito, SPHE spiral-plate, Shah-London rectangular duct) + SPHE MB example; absent from the library |
+| LTP-079 | duplicate | LTP-028 | straight_pipe_DP.py: rewritten subset of pipe_DP.py (CSL-0130) |
+| LTP-080 | duplicate | LTP-051 | Titouan axial-turbine mean-line loss-model design; Aungier core already LTP-051 -> CSL-0327 |
+| LTP-081 | duplicate | LTP-051 | Basile axial-turbine mean-line loss-model sizing (PSO) |
+| LTP-082 | duplicate | LTP-052 | Titouan radial compressor eta-row designs + 1D radial pump design; loss models already LTP-052 -> CSL-0328 |
+
+### Impact on existing labothappy-derived models
+
+| Model | Upstream (branch, commit/files) | Effect | Re-check? |
+|---|---|---|---|
+| CSL-0125 pump_curve_similarity | origin/Elise 8514bf89 (pump_curve_similarity.py rewrite + example) | mode M_N physical change: eta and NPSH_r now evaluated at the equivalent flow V_dot/N_rated (eta attributed unchanged at similarity, NPSH_r scaled N^2), out-of-range flag on the equivalent flow | yes |
+| CSL-0131 void fraction | origin/Elise (void_fraction.py 86 lines: NEEDS_FLOW refactor, geometry-derived G, model-name validation) | compute_void_fraction refactor: G now derivable from m_dot/(A*n) or circular section for the 6 flow-dependent models; results should be identical when G is explicit | yes |
+| CSL-0111 plate HX correlations | origin/Elise plate_DP.py rewrite (Martin/VDI dp, Lockhart-Martinelli-Chisholm) | translated equations (HAN dp and HTC set at f03f7f47) differ from rewritten upstream; same family, different equations (the HAN DP dropped to plate_DP_old.py) | yes |
+| CSL-0130 pipe correlations | origin/Elise 0aab141c (pipe_DP.py modified, 23 lines: adapter consistency; new straight_pipe_DP subset is LTP-079) | correlations unchanged in intent; the component's correlation-calling scheme reworked (m_dot -> G) around pipe_DP | yes |
+| CSL-0138, CSL-0312, CSL-0325 (MB family) | origin/Elise ff52f643 (two_phase.py: viscosity/surface-tension fallback to a full-EOS state; hex_MB_charge_sensitive.py comments only) | source crash conditioned on R1233zd(E) transport in CoolProp 8.0.0 partially fixed by the added CSP fallbacks; these helper fixes are used by CSL-0138/CSL-0130/CSL-0131; no physics change in the pinned components; the crash in the CSL-0312 source example (R1233zd(E) transport in CoolProp 8.0.0) is partially addressed upstream; the CSL-0325 source file ejector_csteff.py is DELETED upstream (Titouan reorg) | no (pinned sources unchanged for library) |
+| CSL-0130/CSL-0131-0313 (two-phase density/charge) | origin/Elise two_phase.py viscosity compute fixed | two-phase density/charge results can change marginally; the two-phase viscosity used by CSL-0130/CSL-0131 is capped by the same fallback | yes |
+
+Secondary (TESPy side of the card text; the TESPy repository is pinned at
+19425523 and dev is 166 commits ahead / v0.12.0):
+
+| Model | Upstream | Effect | Re-check? |
+|---|---|---|---|
+| CSL-0323 fuel cell | src/tespy/components/reactors/fuel_cell.py unchanged 19425523..origin/dev except API/deprecation cleanups | `_calc_Q` keeps `Q = -m_in1*(h_out1 - h_in1)` with Q<=0 (heat rejected): the sign convention suspected in CSL-0323 is CONFIRMED unchanged upstream, not fixed | no |
+| all TESPy-oracle models (e.g. CSL-0314 steam_turbine) | dev commit e3038fff (PR #1102, fix #709 "vapour content sign"): pure-fluid quality 0/1 below T_crit even outside two-phase, NaN supercritical, consistent for all wrappers | affects only reference values computed with TESPy dev >= this commit (previously -1 returned above T_crit at subcritical p) | no for pinned translations (re-check only if a model re-verifies against TESPy dev) |
+
+steam_turbine / pump / turbocompressor / characteristic-limits TESPy sweeps
+were NOT re-inspected in this LaboThapPy card (template text of the TESPy
+sweep card; deferred to that card).

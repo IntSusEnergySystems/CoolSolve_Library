@@ -1,0 +1,91 @@
+{=============================================================================
+  Number of cylinders and operating parameters at rated power
+  CoolSolve Library model CSL-0331
+ -----------------------------------------------------------------------------
+  From the bore, the stroke, the intermittency factor and the rated shaft
+  power of a four-stroke engine, the model computes the displacement per
+  cylinder, the (non-integer) number of cylinders, rounded up to the next
+  integer with the mean effective pressure corrected so that the rated shaft
+  power is kept, the speed and the volumetric efficiency. It then computes
+  the combustion of H2 with an oxidiser of O2 plus recirculated H2O (phi = 1)
+  and the fuel and oxidiser mass flows. EES built-in LowerHeatingValue(H2)
+  checks the LHV given in the statement.
+  Runnable variant of engine_cylinder_count.eescode (that native file is
+  blocked: LowerHeatingValue is not implemented in CoolSolve,
+  CS-GAP-HEATING-VALUE). Only change (logged in the README): the call
+  LHV_f_EES = LowerHeatingValue(H2) is replaced by the same LHV computed
+  from the CoolSolve species enthalpies of formation (H2, O2, water vapour);
+  it agrees with the EES stored value within 0.012 %. Valid EES throughout.
+
+  Inputs : W_dot_sh_n, DELTAp_bar_e_n, C_m_n, D, L, i, W_dot_sh_2,
+           y_O2_oxydant, phi, LHV_f, eta, p_inlet, T_inlet
+  Outputs: V_s, n_c, N_cyl, N_1, N_2, DELTAp_bar_e_new, DELTAp_bar_e_2,
+           epsilon_v, M_dot_f, M_dot_oxydant
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ULiège MCI course, TP2 exercise 3 (Ph. Ngendakumana; Rémi Dickes)
+=============================================================================}
+
+"!Exercise 3"
+
+"!Data at rated power"
+W_dot_sh_n = -400e3 [W]              "-400 kW in the original"
+DELTAp_bar_e_n = 1.3e6 [Pa]          "1300 kPa in the original: mean effective pressure"
+C_m_n = 17.5 [m/s]                   "mean piston speed"
+D = 110e-3 [m]                       "bore, as in the original"
+L = 150e-3 [m]                       "stroke, as in the original"
+i = 0.5                              "intermittency factor of a four-stroke engine [-]"
+
+"!Number of cylinders"
+V_s = pi*(D^2/4)*L                   "displacement per cylinder [m^3]"
+C_m_n = 2*L*(N_1/60)                 "speed N_1 in rev/min"
+W_dot_sh_n = - DELTAp_bar_e_n*V_dot_th
+V_dot_th = i*V_s*(N_1/60)*n_c        "number of cylinders"
+"Non-integer number of cylinders: the mean effective pressure is corrected, keeping the rated shaft power"
+N_cyl = CEIL(n_c)                    "rounded up to the next integer [-]"
+W_dot_sh_n = - DELTAp_bar_e_new*V_dot_th_new
+V_dot_th_new = i*V_s*(N_1/60)*N_cyl
+
+"From now on the number of cylinders is 8 (solution above)"
+W_dot_sh_1 = W_dot_sh_n
+V_dot_th_1 = V_dot_th_new
+
+"!Engine performance in submerged operation: index 2"
+W_dot_sh_2 = -300e3 [W]              "-300 kW in the original"
+W_dot_sh_n/W_dot_sh_2 = (N_1/N_2)^3  "speed N_2 in rev/min, as in the original"
+V_dot_th_2 = i*V_s*(N_2/60)*N_cyl
+W_dot_sh_2 = - DELTAp_bar_e_2*V_dot_th_2
+
+"!Combustion of H2 with O2 + exhaust gas: H2 + (0.5*O2 + alpha*H2O) = (1+alpha)*H2O"
+y_O2_oxydant = 0.3                   "mass fraction of O2 in the oxidiser [-]"
+y_O2_oxydant = 0.5*molarmass(O2)/(0.5*molarmass(O2)+alpha*molarmass(H2O))
+y_H2O_oxydant = alpha*molarmass(H2O)/(0.5*molarmass(O2)+alpha*molarmass(H2O))  "as a check [-]"
+phi = 1                              "fuel-air equivalence ratio [-]"
+phi = f/f_st                         "f from the definition of phi [-]"
+f_st = molarmass(H2)/(0.5*molarmass(O2)+alpha*molarmass(H2O))
+W_dot_sh = W_dot_sh_2                "same power as in submerged operation (exercise b)"
+LHV_f = 1.2e8 [J/kg]                 "120000 kJ/kg in the original"
+h_H2 = enthalpy(H2,T=25)            "formation enthalpy included [J/kg]"
+h_O2 = enthalpy(O2,T=25)            "[J/kg]"
+h_H2O_v = enthalpy(H2O,T=25)        "water vapour, formation enthalpy included [J/kg]"
+LHV_f_EES = (h_H2*molarmass(H2)+0.5*h_O2*molarmass(O2)-h_H2O_v*molarmass(H2O))/molarmass(H2)  "as EES LowerHeatingValue(H2), from the species enthalpies of formation [J/kg]"
+eta = 0.32                           "thermal efficiency of the engine [-]"
+eta = -W_dot_sh/(M_dot_f*LHV_f)      "fuel mass flow M_dot_f [kg/s]"
+f = M_dot_f/M_dot_oxydant            "oxidiser mass flow M_dot_oxydant [kg/s]"
+M_dot_O2 = 0.3*M_dot_oxydant         "oxygen mass flow [kg/s]"
+M_dot_GR = 0.7*M_dot_oxydant         "recirculated gas mass flow [kg/s]"
+
+"!Volumetric efficiency"
+epsilon_v = M_dot_oxydant/(rho_inlet*V_dot_th_2)
+p_inlet = 1.8e5 [Pa]                 "180 kPa in the original"
+T_inlet = 114.85 [C]                 "388 K in the original"
+"Mole fractions of the constituents and molar mass of the reactants mixture"
+x_H2 = 1/(1+0.5+alpha)
+x_O2 = 0.5/(1+0.5+alpha)
+x_H2O = alpha/(1+0.5+alpha)
+MM_inlet = x_H2*molarmass(H2)+x_O2*molarmass(O2)+x_H2O*molarmass(H2O)  "kg/kmol"
+"Inlet density"
+p_inlet = rho_inlet*r*(T_inlet + 273.15)   "T in K in the original"
+r = R_u/MM_inlet                     "specific gas constant of the mixture [J/kg-K]"
+R_u = 8314 [J/(kmol-K)]              "8.314 kJ/(kmol-K) in the original"
+
+"!PNG: the volumetric efficiency is about 0.8, OK for a non-supercharged engine (as in the original)"

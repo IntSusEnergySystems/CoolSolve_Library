@@ -325,6 +325,26 @@ Added to the existing lists, nothing removed or reordered:
     re-compared with the source example (130 values, 0 differ at rtol = 10⁻³,
     max 2.203·10⁻⁵); the `.sol` baseline is that of this file.
 
+## Limitations and CoolSolve gaps
+
+- The Lockhart-Martinelli and Hughmark closed forms are, in the module's own
+  words, *later curve-fit approximations* of the original papers' chart data;
+  the homogeneous and Armand-Treschev models are presented in the module
+  without a paper (each function's comment block repeats this qualification).
+- The three other LM regimes (laminar-liquid, laminar-vapour, and the original
+  three-parameter form) and the `theta` dependency of the drift-flux models
+  other than Woldesemayat-Ghajar are not in the source and are not invented
+  here (see *Notes and open points*).
+- `SURFACETENSION(R410A, T=…, x=…)` returns NaN in CoolSolve for a two-phase
+  quality (verified), so the model takes the saturated-liquid value at the
+  saturation temperature; a 0.24 % difference at worst in one argument of
+  four correlations, at the 10⁻⁵ level on `alpha` — not a CoolSolve gap (see
+  *Verification*).
+- The Hughmark root is computed by explicit bisection in the function body
+  because implicit equations are not supported inside a `FUNCTION` body
+  (`CS-BUG-IMPLICIT-PROC`, see *Hughmark: explicit iteration in the function
+  body*).
+
 ## Notes and open points
 
 - The Lockhart-Martinelli and Hughmark closed forms are, in the module's own

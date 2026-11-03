@@ -11,12 +11,16 @@
   the dimensionless numbers, void fractions and mixture density they need. One
   FUNCTION per correlation, SI arguments (m, Pa, Pa.s, kg/m^3, N/m, degC);
   outputs are a Darcy friction factor [-] or a pressure drop [Pa].
-  Source : LaboThapPy (E. Neven, S. Gendebien, B. Chaudoir, ULiège Thermo-
-           dynamics Laboratory), labothappy/correlations/pressure_drop/
-           pipe_DP.py, commit f03f7f47, Apache-2.0 (licence of the model: MIT)
-  Status : VERIFIED against the LaboThapPy correlations of that commit; no
-           CoolSolve gap blocking. The demonstration program at the end calls
-           every function; cases, reference values and deviations: README.md.
+   Source : LaboThapPy (E. Neven, S. Gendebien, B. Chaudoir, ULiège Thermo-
+            dynamics Laboratory), labothappy/correlations/pressure_drop/
+            pipe_DP.py, commit f03f7f47 (identical on branch origin/Elise,
+            commit 9364dfc6), Apache-2.0 (licence of the model: MIT)
+   Status : VERIFIED against the LaboThapPy correlations; no CoolSolve gap
+            blocking. Adapted 2026-11-02 to the origin/Elise fix of
+            compute_two_phase_density (rho_two_phase_homogeneous below; the
+            pinned-commit result is kept in the README). The demonstration
+            program at the end calls every function; cases, reference values
+            and deviations: README.md.
 =============================================================================}
 
 "!--- Dimensionless numbers and two-phase mixture relations (helpers)"
@@ -64,12 +68,15 @@ END
 FUNCTION rho_two_phase_homogeneous(x, rho_l, rho_v)
 {RHO_TWO_PHASE_HOMOGENEOUS - Homogeneous (no-slip) density of a saturated
  two-phase mixture, as the compute_two_phase_density helper of the original
- with its default void fraction (alpha = None -> homogeneous).
-  rho = 1/(alpha/rho_v + (1-alpha)/rho_l) with the homogeneous alpha
-                                               x [-] -> rho [kg/m^3]}
+ with its default void fraction (alpha = None -> homogeneous), at its fixed
+ version of branch origin/Elise (commit 9364dfc6; commit 3977f2b0/44de58bd
+ changed the formula, see README.md):
+   rho = alpha*rho_v + (1 - alpha)*rho_l, which with the homogeneous alpha
+   equals the textbook 1/(x/rho_v + (1 - x)/rho_l)
+                                                x [-] -> rho [kg/m^3]}
 
   alpha = alpha_homogeneous(rho_l, rho_v, x)
-  rho_two_phase_homogeneous = 1/(alpha/rho_v + (1 - alpha)/rho_l)
+  rho_two_phase_homogeneous = alpha*rho_v + (1 - alpha)*rho_l
 END
 
 "!--- Single-phase Darcy friction factors (one FUNCTION per correlation)"

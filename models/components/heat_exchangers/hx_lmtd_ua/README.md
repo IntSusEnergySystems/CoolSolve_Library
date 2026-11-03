@@ -72,6 +72,13 @@ unknowns) and in an `offdesign` phase (the design state is read back from
   `UA = UA_design·f_UA` from the characteristic lines, and the ttd's are
   outputs (the pinch of an off-design point).
 
+## How to run
+
+```bash
+coolsolve ./hx_lmtd_ua.eescode              # main file
+coolsolve ./hx_lmtd_ua_condenser.eescode   # condensing variant
+```
+
 ## Results
 
 `hx_lmtd_ua.eescode` vs the TESPy `HeatExchanger` doctest (case 1 = design,
@@ -246,6 +253,21 @@ D3), with credit to the authors of the original model.
     (the results are unchanged); the file ends with a newline, without it
     CoolSolve drops the last equation (see the register row).
 
+## Limitations and CoolSolve gaps
+
+- Pressure drops `dp_1`/`dp_2` are inputs: TESPy computes them from a
+  pipe-friction model outside the scope of this card (UA/LMTD/ttd/pinch,
+  see *Conversion log*).
+- The EES `INTERPOLATE` of CoolSolve is linear and extrapolates beyond the
+  table (`CS-GAP-INTERP-EXTRAP`) where TESPy clamps to the first and last
+  node; on the shipped tables the two agree on the whole range (see
+  *Conversion log*).
+- EES `Air` is the ideal-gas substance while TESPy uses the CoolProp `air`
+  mixture: absolute enthalpies/entropies are not compared and the condenser
+  off-design case keeps residual deviations of ~4·10⁻⁵ (see *Verification*).
+- The off-design block of the main file needs the shipped `.initials`
+  (see *Conversion log*).
+
 ## Related models
 
 * `CSL-0105` *lmtd_and_f_correction* — the `LMTD` `FUNCTION` and the
@@ -259,18 +281,9 @@ D3), with credit to the authors of the original model.
   (this model uses characteristic lines).
 * `CSL-0313` *heat_pump_nh3_two_stage_flooded*: a complete two-stage NH3 heat pump whose four exchangers use this UA/characteristic-line
   rating (design and off-design) with the `LMTD_smoothed` function copied from this model.
-
-## How to run
-
-```bash
-coolsolve ./hx_lmtd_ua.eescode              # main file
-coolsolve ./hx_lmtd_ua_condenser.eescode   # condensing variant
-```
-
-- `CSL-0140` *rankine_cycle_part_load*: a Rankine cycle of the same TESPy
+* `CSL-0140` *rankine_cycle_part_load*: a Rankine cycle of the same TESPy
   snapshot whose main condenser uses the `LMTD_smoothed` function copied
   from this model and the UA/ttd_u rating.
-
 * `CSL-0142` *district_heating_loop*: the district-heating loop of the
   same TESPy snapshot, whose two pipes lose heat with the same UA rating
   (the `lmtd_ambient` function of that model).

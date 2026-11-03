@@ -166,3 +166,7 @@ model is a fixed-design teaching exercise, not an engine map.
   the mechanical efficiency, from a dynamometer test.
 - CSL-0278 (`vehicle_exhaust_emissions`): same TP7 session, exercise 1;
   emissions per km and per kWh of brake work from the fuel flow.
+- CSL-0331 (`engine_cylinder_count`): same bore/stroke/volumetric-efficiency
+  sizing, but the cylinder count is there an unknown (CEIL rounding + mean
+  effective pressure correction) and the fuel is H2 with an
+  O2 + recirculated-H2O oxidiser.

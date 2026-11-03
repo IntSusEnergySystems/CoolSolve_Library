@@ -234,3 +234,4 @@ consulted here). Donohue's correlation is attributed in the source to Kern.
   computes them from the geometry and adds `ji`, Kern, Donohue and the assembly.
 - `CSL-0095` *tube_bank_nusselt*: open tube-bank Nusselt numbers (Zukauskas, ESDU,
   HEDH), the alternative to the `ji` of Bell for the ideal bank.
+- `CSL-0330` *curved_duct_htc*: curved-duct single-phase h correlations (helical coil, curved rectangular duct, spiral-plate channel) from the unmerged LaboThapPy branch `origin/Basile_Chaudoir`, another single-phase h function family.

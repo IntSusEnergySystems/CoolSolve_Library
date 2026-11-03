@@ -104,7 +104,7 @@ IF (ok > 0.5) THEN
   cB = 71.9 - 1.69*a2c
   cC = 7.8 - (0.28 - a2c/320)*a2c
   cD = 14.2 - (0.16 + a2c/160)*a2c
-  i_sx = i_s0 + cA - cB*xi*xi + cC*xi*xi*xi + cD*xi*xi*xi*xi
+  i_sx = i_s0 + cA - cB*xi^2 + cC*xi^3 + cD*xi^4
   IF (a2p <= 40) THEN
     i_sr = i_sx
   ELSE
@@ -113,7 +113,7 @@ IF (ok > 0.5) THEN
   s_c = s/c
   Xd = s_c - 0.75
   IF (s_c <= 0.8) THEN
-    Dis = -38*Xd - 53.5*Xd*Xd - 29*Xd*Xd*Xd
+    Dis = -38*Xd - 53.5*Xd^2 - 29*Xd^3
   ELSE
     Dis = -2.0374 - (s_c - 0.8)*(69.58 - (a2p/14.48)^3.1)
   ENDIF
@@ -151,7 +151,7 @@ IF (ok > 0.5) THEN
     s_c_min = 0.46 + a2p/77
     X_1 = s_c - s_c_min
     C_1 = 0.08*((a2p/30)^2 - 1)
-    Yp1 = A_1 + B_1*X_1*X_1 + C_1*X_1*X_1*X_1
+    Yp1 = A_1 + B_1*X_1^2 + C_1*X_1^3
   ELSE
     s_c_min = 0.614 + a2p/130
     X_1 = s_c - s_c_min
@@ -168,11 +168,11 @@ IF (ok > 0.5) THEN
     B_2 = 0.3 + (30 - a2p)/275
   ENDIF
   C_2 = 0.88 - a2p/42.4 + (a2p/72.8)^2
-  Yp2 = A_2 + B_2*X_2*X_2 - C_2*X_2*X_2*X_2
+  Yp2 = A_2 + B_2*X_2^2 - C_2*X_2^3
   {trailing-edge loss of t = 0.02*s, subtracted as in the original}
   DY_TE = (s*SIN(beta_g)/den - 1)^2
   tau = MAX(1E-3, MIN(1E3, 5*t_max/c))
-  fact_1 = Yp1 + xi*xi*(Yp2 - Yp1)
+  fact_1 = Yp1 + xi^2*(Yp2 - Yp1)
   fact_2 = tau^xi
   Ypr = Kmod*Kinc*Km*Kp*Kre*(fact_1*fact_2 - DY_TE)
   IF ((ok > 0.5) AND (Ypr >= 0) AND (Ypr <= 1)) THEN
@@ -201,7 +201,7 @@ IF (ok > 0.5) THEN
   ENDIF
 ENDIF
 IF (ok > 0.5) THEN
-  Z = (C_L*c/s)*(C_L*c/s)*SIN(a2p)*SIN(a2p)/(SIN(a_m)*SIN(a_m)*SIN(a_m))
+  Z = (C_L*c/s)^2*SIN(a2p)^2/SIN(a_m)^3
   IF (h/c >= 2) THEN
     F_AR = c/h
   ELSE
@@ -211,7 +211,7 @@ IF (ok > 0.5) THEN
   Kre = Aungier_Kre(rho2*w2*c/mu2, c, e_r)
   Kp = Aungier_Kp(M1p, M2p)
   Ks = 1 - (1 - Kp)*(b_z/h)^2/(1 + (b_z/h)^2)
-  Ysr = Ks*Kre*SQRT(Ys_est*Ys_est/(1 + 7.5*Ys_est*Ys_est))
+  Ysr = Ks*Kre*SQRT(Ys_est^2/(1 + 7.5*Ys_est^2))
   IF ((Ys_est >= 0) AND (Ysr <= 1)) THEN
     res = Ysr
   ENDIF
@@ -229,7 +229,7 @@ IF ((c > 0) AND (h > 0) AND (s > 0) AND (delta >= 0) AND (a1p > 0) AND (a1p < 18
   C_L = 2*cots*s/c
   a_m = 90 - ARCTAN(cots/2)
   IF (SIN(a_m) > 0) THEN
-    Z = (C_L*c/s)*(C_L*c/s)*SIN(a2p)*SIN(a2p)/(SIN(a_m)*SIN(a_m)*SIN(a_m))
+    Z = (C_L*c/s)^2*SIN(a2p)^2/SIN(a_m)^3
     IF (delta > 0) THEN
       Yc = 0.47*Z*(c/h)*(delta/c)^0.78
     ELSE
@@ -271,8 +271,9 @@ END
 
 FUNCTION Aungier_Ysh(M1p, M2p)
 {Shock loss (as in the original): X1 = M1p - 0.4 (M1p > 0.4), X2 = M1p/M2p - 1 (M1p > M2p),
-Ysh_est = 0.8*X1^2 + X2^2, Ysh = SQRT(Ysh_est^2/(1 + Ysh_est^2)) (written Ysh_est/SQRT(1 + Ysh_est^2), same
-value, to avoid the derivative of SQRT at 0).}
+Ysh_est = 0.8*X1^2 + X2^2, Ysh = SQRT(Ysh_est^2/(1 + Ysh_est^2)) in the original, written
+Ysh_est/SQRT(1 + Ysh_est^2) here (same value, Ysh_est >= 0): Ysh_est is exactly 0 in some cases
+and the derivative of SQRT is infinite at 0.}
 IF (M1p <= 0.4) THEN
   X1 = 0
 ELSE
@@ -284,7 +285,7 @@ ELSE
   X2 = M1p/M2p - 1
 ENDIF
 Ysh_est = 0.8*X1^2 + X2^2
-Aungier_Ysh = Ysh_est/SQRT(1 + Ysh_est*Ysh_est)
+  Aungier_Ysh = Ysh_est/SQRT(1 + Ysh_est^2)
 END
 
 FUNCTION Aungier_Ylw(rho2, vm2, D_lw, mu2, N_lw, h, w2)

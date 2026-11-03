@@ -60,9 +60,9 @@
     ],
     "reference": "hex_thermosyphon_example.py re-run (LaboThapPy f03f7f47, CoolProp 8.0.0), instrumented to record the row states; independent row-by-row marching with the 3-row model",
     "date": "2026-11-01",
-    "coolsolve_version": "0.4.0@9768373",
+    "coolsolve_version": "0.4.0@2dc1367",
     "max_rel_diff": null,
-    "notes": "Source issues corrected: CHF (Lienhard-Eichhorn q_max) used as an HTC -> forced convection + Rohsenow (source's own pool_boiling constants) capped at the pool CHF; one cold velocity from the outlet vapour density (oil code) -> continuity per row and phase; nozzle() without the critical-flow factor -> continuity; per-tube balances with the whole bank flow -> row states from the marching; ESDU limits returned as fluxes labelled W -> per-tube limits with areas, explicit FUNCTION. First review: CS-BUG-PROC-NEG-POW root cause (branch fix/ad-pow-negative-base; products used here), 11 unit/state errors of the translation. Results: 6.061 MW (source 5.869); row 1 at the entrainment limit (641.6 K heat pipe, 5.5 K below water Tc); dry-out correlation of the source exceeded in all rows. Full solve ~10 min (dense AD, 3599-variable block)."
+    "notes": "Source issues corrected: CHF (Lienhard-Eichhorn q_max) used as an HTC -> forced convection + Rohsenow (source's own pool_boiling constants) capped at the pool CHF; one cold velocity from the outlet vapour density (oil code) -> continuity per row and phase; nozzle() without the critical-flow factor -> continuity; per-tube balances with the whole bank flow -> row states from the marching; ESDU limits returned as fluxes labelled W -> per-tube limits with areas, explicit FUNCTION. First review: CS-BUG-PROC-NEG-POW root cause (branch fix/ad-pow-negative-base; products used here), 11 unit/state errors of the translation. Results: 6.061 MW (source 5.869); row 1 at the entrainment limit (641.6 K heat pipe, 5.5 K below water Tc); dry-out correlation of the source exceeded in all rows. Full solve ~10 min (dense AD, 3599-variable block). Re-check 2026-11-02 (card C-484, build 0.4.0@2dc1367): the powers hidden by CS-BUG-PROC-NEG-POW restored in both files; row .sol byte-for-byte identical, main .sol within rtol 1e-9 (max rel. diff 6.5e-10 at q_dry[4] over variables of magnitude above 1e-6; larger raw ratios only on values of |v| <= 7.8e-8, absolute differences <= 2e-16)."
   },
   "diagnosis": null,
   "missing_features": [],
@@ -99,6 +99,11 @@
       "date": "2026-11-01",
       "action": "second review: external side adapted (boiling superposition with CHF cap, continuity velocities, nozzle, row states from the marching, operating-limit units); full model converges (initials from a row-by-row marching); failing -> verified (adapted); .initials/.sol for both files; nozzle tables removed",
       "by": "Claude Code for S. Quoilin"
+    },
+    {
+      "date": "2026-11-02",
+      "action": "re-check (T-RECHECK card C-484): CS-BUG-PROC-NEG-POW fixed and closed (CoolSolve 07bf9dc); lpL^2/lpL^3 and Q_rad^2 written as products at import restored to the power forms of the source in both files; row .sol byte-for-byte identical, main .sol within rtol 1e-9 (max rel. diff 6.5e-10 over variables of magnitude above 1e-6, noise otherwise); stale failing headers updated",
+      "by": "worker for S. Quoilin"
     }
   ]
 }

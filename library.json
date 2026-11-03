@@ -1,10 +1,10 @@
 {
  "snapshot": {
-  "content_hash": "sha256:eaee5e606885d4e8",
-  "files": 1553,
-  "bytes": 11338976,
-  "models": 300,
-  "functions": 612,
+  "content_hash": "sha256:0349d72be05f1c0c",
+  "files": 1564,
+  "bytes": 11447956,
+  "models": 302,
+  "functions": 620,
   "taxonomy_version": "0.2"
  },
  "models": [
@@ -1945,7 +1945,7 @@
     "CSL-0069",
     "CSL-0023"
    ],
-   "coolsolve_version": "0.4.0@9768373",
+   "coolsolve_version": "0.4.0@2dc1367",
    "verified_on": "2026-10-31",
    "verification_summary": "LaboThapPy (commit f03f7f47) re-run in a virtual environment (CoolProp 8.0.0) on the same inputs: 18 demonstration values agree to 5.3e-12 and 680 random-sweep values to 8.6e-10 (above 0.01 J/kg), with two documented changes (r4*b4, added D_h); invalid cases return -1. No publication checked.",
    "verification_checks": [
@@ -2615,7 +2615,7 @@
     "CSL-0314",
     "CSL-0328"
    ],
-   "coolsolve_version": "0.4.0@9768373",
+   "coolsolve_version": "0.4.0@2dc1367",
    "verified_on": "2026-10-31",
    "verification_summary": "LaboThapPy (commit f03f7f47) re-run in a virtual environment (CoolProp 8.0.0) on the same inputs: 52 loss coefficients (ORC and sCO2 cases, Km, lashing wires, Balje-Binsley, Kacker-Okapuu) agree, max rel. deviation 4.1e-13; invalid cases flagged -1. Printed reference values of the ORC example reproduced within 8 % (rotor Yte +20 %); no publication checked.",
    "verification_checks": [
@@ -3167,7 +3167,8 @@
     "CSL-0102",
     "CSL-0113",
     "CSL-0112",
-    "CSL-0111"
+    "CSL-0111",
+    "CSL-0330"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
@@ -3383,7 +3384,8 @@
    "related": [
     "CSL-0096",
     "CSL-0161",
-    "CSL-0312"
+    "CSL-0312",
+    "CSL-0330"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
@@ -3893,7 +3895,8 @@
     "CSL-0250",
     "CSL-0251",
     "CSL-0315",
-    "CSL-0312"
+    "CSL-0312",
+    "CSL-0330"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
@@ -4151,7 +4154,7 @@
     "CSL-0014",
     "CSL-0013"
    ],
-   "coolsolve_version": "0.4.0@9768373",
+   "coolsolve_version": "0.4.0@2dc1367",
    "verified_on": "2026-11-01",
    "verification_summary": "Adapted model: stream energy balances closed to 1.4e-6 W on 6.06 MW, cold inlet met exactly, full model equal to an independent row-by-row marching to 1.7e-6, flux <= 11 % of CHF. Correlation translation checked against an instrumented LaboThapPy re-run before the adaptation (single-phase rows within 0.6 %).",
    "verification_checks": [
@@ -4402,7 +4405,7 @@
     "Elise Neven"
    ],
    "license": "MIT",
-   "url": "https://github.com/PyLaboThap/LaboThapPy",
+   "url": "https://github.com/PyLaboThap/LaboThapPy/blob/8514bf89a6d9a9acd4507f5375318985ab568336/labothappy/component/pump/pump_curve_similarity.py",
    "missing_features": [],
    "related": [
     "CSL-0084",
@@ -4411,12 +4414,13 @@
     "CSL-0183",
     "CSL-0318"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-08",
-   "verification_summary": "The LaboThapPy component PumpCurveSimilarity was re-run in all three modes: all common variables agree within 1.13e-09 with a same-backend reference, and within 7.2e-03 (W_dot_shaft) of the default bicubic run. The affinity laws are exact (to 4e-10).",
+   "coolsolve_version": "0.4.0@2dc1367",
+   "verified_on": "2026-11-02",
+   "verification_summary": "Adapted from the original (re-check 2026-11-02): the pinned M_N branch read eta_is and NPSH_r at the actual flow instead of the similar point; adapted to the corrected affinity laws of the upstream fix (branch Elise, 8514bf89) and verified against it: max 4.80e-10 at 2500/4000 rpm, 1.24e-08 out of range at 1450 rpm; default point unchanged (1.13e-09 vs the pinned source re-run on 2026-10-08).",
    "verification_checks": [
     "source-rerun",
-    "analytical"
+    "analytical",
+    "cross-model"
    ],
    "path": "models/components/pumps_fans/pump_curve_similarity",
    "main_file": "pump_curve_similarity.eescode",
@@ -5756,7 +5760,8 @@
     "CSL-0178",
     "CSL-0188",
     "CSL-0277",
-    "CSL-0276"
+    "CSL-0276",
+    "CSL-0331"
    ],
    "coolsolve_version": "0.3.0@96e4c95",
    "verified_on": "2026-10-15",
@@ -6500,7 +6505,8 @@
    "related": [
     "CSL-0221",
     "CSL-0244",
-    "CSL-0278"
+    "CSL-0278",
+    "CSL-0331"
    ],
    "coolsolve_version": "0.4.0@9768373",
    "verified_on": "2026-10-23",
@@ -6559,6 +6565,60 @@
    "path": "models/cycles/engines/diesel_cycle_air_standard",
    "main_file": "diesel_cycle_air_standard.eescode",
    "figures": 0
+  },
+  {
+   "id": "CSL-0331",
+   "name": "engine_cylinder_count",
+   "title": "Engine cylinder count and operating parameters at rated power",
+   "category": "cycles/engines",
+   "kind": "steady",
+   "level": 2,
+   "status": "blocked",
+   "summary": "Four-stroke H2 engine sized from bore, stroke, mean piston speed and rated shaft power: the non-integer cylinder count is rounded up with the mean effective pressure corrected. Submerged operation at part load with an O2 + recirculated-H2O oxidiser, stoichiometric combustion and volumetric efficiency from the mixture molar mass.",
+   "fluids": [
+    "H2",
+    "O2",
+    "H2O"
+   ],
+   "tags": [
+    "engine",
+    "cylinder count",
+    "mean effective pressure",
+    "hydrogen",
+    "oxy-combustion",
+    "volumetric efficiency",
+    "exercise"
+   ],
+   "n_equations": 43,
+   "largest_block": 1,
+   "origin_type": "teaching",
+   "source": "thermo_models",
+   "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP2_Ex_1-3/Exercice_3_Param opératoires et combustion.EES",
+   "authors": [
+    "Ph. Ngendakumana",
+    "Rémi Dickes"
+   ],
+   "license": "MIT",
+   "url": "",
+   "missing_features": [
+    "CS-GAP-HEATING-VALUE"
+   ],
+   "related": [
+    "CSL-0279",
+    "CSL-0185"
+   ],
+   "coolsolve_version": "0.4.0@2dc1367",
+   "verified_on": "2026-11-02",
+   "verification_summary": "The runnable variant engine_cylinder_count_coolsolve was compared with the EES stored solution (compare_solution.py --ees-units): 43 common variables, only r differs (EES stores 0.53659 kJ/(kg-K) without a units cell; the same value). Excluding that units artifact the maximum is 1.21e-04 on LHV_f_EES: the LHV from CoolSolve formation enthalpies (119960.5 kJ/kg) against EES LowerHeatingValue(H2) (119946 kJ/kg).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/cycles/engines/engine_cylinder_count",
+   "main_file": "engine_cylinder_count.eescode",
+   "figures": 0,
+   "variants": [
+    "engine_cylinder_count_coolsolve.eescode"
+   ]
   },
   {
    "id": "CSL-0011",
@@ -12287,7 +12347,8 @@
     "CSL-0110",
     "CSL-0128",
     "CSL-0130",
-    "CSL-0322"
+    "CSL-0322",
+    "CSL-0330"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
@@ -12476,7 +12537,8 @@
     "CSL-0103",
     "CSL-0104",
     "CSL-0128",
-    "CSL-0322"
+    "CSL-0322",
+    "CSL-0330"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
@@ -12707,7 +12769,8 @@
     "CSL-0101",
     "CSL-0091",
     "CSL-0110",
-    "CSL-0321"
+    "CSL-0321",
+    "CSL-0330"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
@@ -13271,7 +13334,8 @@
    "related": [
     "CSL-0103",
     "CSL-0095",
-    "CSL-0110"
+    "CSL-0110",
+    "CSL-0330"
    ],
    "coolsolve_version": "0.4.0@9768373",
    "verified_on": "2026-10-31",
@@ -13335,6 +13399,58 @@
    ],
    "path": "models/heat_transfer/convection/pche_htc",
    "main_file": "pche_htc.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0330",
+   "name": "curved_duct_htc",
+   "title": "Curved-duct single-phase heat-transfer coefficients (function library)",
+   "category": "heat_transfer/convection",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "Seven EES FUNCTIONS returning the single-phase convection coefficient of helically coiled pipes (Ito critical-Re regime switching; laminar Xhan/Zhang, transition Xhan with the Ito friction factor, turbulent Schmidt factor or Di Piazza-Ciofalo), curved rectangular ducts (Facao-Oliveira), straight rectangular ducts (Shah-London polynomial + Gnielinski with linear interpolation) and spiral-plate (SPHE) channels.",
+   "fluids": [],
+   "tags": [
+    "internal convection",
+    "curved duct",
+    "helical coil",
+    "spiral-plate heat exchanger",
+    "dean number",
+    "ito",
+    "gnielinski",
+    "shah-london",
+    "correlation",
+    "function library"
+   ],
+   "n_equations": 18,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "labothappy",
+   "source_path": "~/git/LaboThapPy (branch origin/Basile_Chaudoir)",
+   "authors": [
+    "Basile Chaudoir (ULiège)"
+   ],
+   "license": "Apache-2.0 (LICENSE.txt of the original; pyproject.toml declares MIT); translation published under the library MIT license",
+   "url": "https://github.com/PyLaboThap/LaboThapPy/blob/98b78ebda930157e5f51820cd59db13aa3bc210c/labothappy/correlations/convection/spiral_ducts_htc.py",
+   "missing_features": [],
+   "related": [
+    "CSL-0087",
+    "CSL-0091",
+    "CSL-0095",
+    "CSL-0096",
+    "CSL-0111",
+    "CSL-0138",
+    "CSL-0321"
+   ],
+   "coolsolve_version": "0.4.0@2dc1367",
+   "verified_on": "2026-11-02",
+   "verification_summary": "The branch functions were re-run in a throw-away virtualenv (clone of origin/Basile_Chaudoir, commit 98b78ebd) with the demo inputs; compare_solution.py: 13 common variables, 0 differ (rtol=0.001), largest relative deviation 2.92e-13. Two documented source fixes (curv_ratio typo, tuple return) checked against recomputed values.",
+   "verification_checks": [
+    "source-rerun"
+   ],
+   "path": "models/heat_transfer/convection/curved_duct_htc",
+   "main_file": "curved_duct_htc.eescode",
    "figures": 0
   },
   {
@@ -13554,9 +13670,9 @@
     "CSL-0142",
     "CSL-0316"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-09",
-   "verification_summary": "The 34 output values were compared with the LaboThapPy correlations (commit f03f7f47) recomputed in Python: 34 common variables, 0 differ at rtol=0.001, largest relative deviation 1.0e-12 (round-off). The five friction factors also reproduce the values printed by the library example.",
+   "coolsolve_version": "0.4.0@2dc1367",
+   "verified_on": "2026-11-02",
+   "verification_summary": "Re-check 2026-11-02 (card C-482): the 40 output values of the demonstration program were compared with the LaboThapPy branch origin/Elise (commit 9364dfc6) correlations recomputed in Python: 40 common variables, 0 differ at rtol=0.001, largest relative deviation 7.9e-12. The model was adapted to the upstream two_phase.py homogeneous-density fix (12 values change; the pinned-commit f03f7f47 result is kept as a documented comparison in the README).",
    "verification_checks": [
     "source-rerun"
    ],
@@ -13627,7 +13743,7 @@
    "kind": "function",
    "level": 2,
    "status": "verified",
-   "summary": "EES FUNCTION library of the loss coefficient of circular pipe bends (Idelchik coefficients as in LaboThapPy): angle coefficient A1, radius coefficients A2 and B1, laminar/intermediate/high-Reynolds branches blended with a cubic step, roughness correction from the friction of the bend arc, total coefficient zeta_tot and pressure drop zeta_tot*rho*v^2/2, with a homogeneous two-phase extension; a mode argument gives the blending as written in the source (whose stepsmoother calls look argument-swapped) or with the arguments reordered.",
+   "summary": "EES FUNCTION library of the loss coefficient of circular pipe bends (Idelchik coefficients as in LaboThapPy): angle coefficient A1, radius coefficients A2 and B1, laminar/intermediate/high-Reynolds branches blended with a cubic step, roughness correction from the friction of the bend arc, total coefficient zeta_tot and pressure drop zeta_tot*rho*v^2/2, with a two-phase extension through a mixture density (the fixed upstream in-situ formula alpha*rho_v+(1-alpha)*rho_l); a mode argument gives the blending as written in the source (whose stepsmoother calls look argument-swapped) or with the arguments reordered.",
    "fluids": [
     "Water",
     "R410A"
@@ -13663,9 +13779,9 @@
     "CSL-0158",
     "CSL-0018"
    ],
-   "coolsolve_version": "0.4.0@9768373",
-   "verified_on": "2026-10-31",
-   "verification_summary": "95 output values were compared with the LaboThapPy source (commit f03f7f47) re-run in Python with CoolProp 6.6.0: 0 differ at rtol=1e-6, largest relative deviation 4.4e-13. The source has no example or test; its docstring example has the (P, T) arguments swapped. Idelchik values not consulted.",
+   "coolsolve_version": "0.4.0@2dc1367",
+   "verified_on": "2026-11-02",
+   "verification_summary": "Re-check 2026-11-02 (card C-483): curved_elbow.py is byte-identical between the pinned f03f7f47 and branch origin/Elise 9364dfc6, so the 2026-10-31 comparison (95 values, max dev 4.4e-13 vs a Python re-run) stands; after adapting the two-phase bend density to the upstream two_phase.py fix, the 3 changed values match the branch recomputation: 4 common variables, 0 differ at rtol=1e-6, max 3.24e-13.",
    "verification_checks": [
     "source-rerun"
    ],
@@ -15889,6 +16005,20 @@
    "path": "models/components/heat_exchangers/hx_effectiveness_ntu/hx_effectiveness_ntu.eescode"
   },
   {
+   "function": "curved_pipe_1P_htc",
+   "type": "FUNCTION",
+   "signature": "(mu, Pr, mu_w, k, G, Dh, L, R_curv)",
+   "model_id": "CSL-0330",
+   "path": "models/heat_transfer/convection/curved_duct_htc/curved_duct_htc.eescode"
+  },
+  {
+   "function": "curved_rect_duct_1P_htc",
+   "type": "FUNCTION",
+   "signature": "(mu, Pr, mu_w, k, G, Dh, L, R_curv)",
+   "model_id": "CSL-0330",
+   "path": "models/heat_transfer/convection/curved_duct_htc/curved_duct_htc.eescode"
+  },
+  {
    "function": "CylinderVolume",
    "type": "FUNCTION",
    "signature": "(A_p, position)",
@@ -16552,6 +16682,13 @@
    "signature": "(rp, rpm, p)",
    "model_id": "CSL-0084",
    "path": "models/components/expanders_turbines/orc_expander_pump_empirical_maps/orc_expander_pump_empirical_maps.eescode"
+  },
+  {
+   "function": "gnielinski_pipe_htc",
+   "type": "FUNCTION",
+   "signature": "(mu, Pr, mu_w, k, G, Dh, L)",
+   "model_id": "CSL-0330",
+   "path": "models/heat_transfer/convection/curved_duct_htc/curved_duct_htc.eescode"
   },
   {
    "function": "grey_transmittance",
@@ -17322,6 +17459,13 @@
    "signature": "(Do, material)",
    "model_id": "CSL-0110",
    "path": "models/components/heat_exchangers/shell_and_tube_sizing/shell_and_tube_sizing.eescode"
+  },
+  {
+   "function": "laminar_curved_pipe_1P_htc",
+   "type": "FUNCTION",
+   "signature": "(mu, Pr, mu_w, k, G, Dh, L, R_curv)",
+   "model_id": "CSL-0330",
+   "path": "models/heat_transfer/convection/curved_duct_htc/curved_duct_htc.eescode"
   },
   {
    "function": "LHV_fuel",
@@ -18913,6 +19057,13 @@
    "path": "models/renewables/photovoltaics/pv_module_single_diode/pv_module_single_diode.eescode"
   },
   {
+   "function": "rect_duct_1P_htc",
+   "type": "FUNCTION",
+   "signature": "(mu, Pr, mu_w, k, G, Dh, L, AR)",
+   "model_id": "CSL-0330",
+   "path": "models/heat_transfer/convection/curved_duct_htc/curved_duct_htc.eescode"
+  },
+  {
    "function": "REYNOLDS",
    "type": "PROCEDURE",
    "signature": "(rho_f,mu_f,A_bar,PHI,V_dot_f_m3h,A_cs,d_h,u_f:Re_f,f_0,f_1,Regime$)",
@@ -19051,6 +19202,13 @@
    "signature": "(hf$, cf$, t_cf_su, t_cf_ex, P_cf_su, P_cf_ex, P_hf_su, P_hf_ex, t_hf_su, t_hf_ex, M_dot_hf, M_dot_cf, C_cf, C_hf, n_cf, n_hf, alpha : Q_dot, epsilon, NTU, AU)",
    "model_id": "CSL-0112",
    "path": "models/components/heat_exchangers/three_zone_hx_procedures/three_zone_hx_procedures.eescode"
+  },
+  {
+   "function": "single_phase_spiral_plate_htc",
+   "type": "FUNCTION",
+   "signature": "(mu, Pr, mu_w, k, G, Dh, R_curv, ch_w)",
+   "model_id": "CSL-0330",
+   "path": "models/heat_transfer/convection/curved_duct_htc/curved_duct_htc.eescode"
   },
   {
    "function": "size_bundle_from_tubecount",
@@ -19298,11 +19456,25 @@
    "path": "models/heat_transfer/convection/flow_boiling_in_tubes/flow_boiling_in_tubes.eescode"
   },
   {
+   "function": "transition_curved_pipe_1P_htc",
+   "type": "FUNCTION",
+   "signature": "(mu, Pr, mu_w, k, G, Dh, L, R_curv)",
+   "model_id": "CSL-0330",
+   "path": "models/heat_transfer/convection/curved_duct_htc/curved_duct_htc.eescode"
+  },
+  {
    "function": "TransitionFactor",
    "type": "FUNCTION",
    "signature": "(start, stop, position)",
    "model_id": "CSL-0086",
    "path": "models/heat_transfer/convection/in_cylinder_htc_correlations/in_cylinder_htc_correlations.eescode"
+  },
+  {
+   "function": "turbulent_curved_pipe_1P_htc",
+   "type": "FUNCTION",
+   "signature": "(mu, Pr, mu_w, k, G, Dh, L, R_curv)",
+   "model_id": "CSL-0330",
+   "path": "models/heat_transfer/convection/curved_duct_htc/curved_duct_htc.eescode"
   },
   {
    "function": "two_phase_CD",
@@ -20032,6 +20204,15 @@
    "priority": "P3",
    "text": "**An array element indexed by a main-program variable that an equation sets to a constant**: `mean = ceil(imax#/2)` ⏎ `Q_dot_col_bis = M_dot_htf*cp_1ave[mean]*(T_htf_ex_col - T_htf_su_col)` in the EES file `EES_ok/orc_solar_complex.EES` (CoolSolve …",
    "detail": "`cp_1ave[mean]` is a variable of its own with no defining equation (`x[n]` and `x[2]` are two unknowns; loud: the system is not square).",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-GAP-HEATING-VALUE": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P3",
+   "text": "The EES built-in **property function `LowerHeatingValue(Fuel$)`** (lower heating value of a fuel, water vapour as product; same family as `Enthalpy_Fusion`, `CS-GAP-ENTHALPY-FUSION`), called with an unquoted or quoted fluid name.",
+   "detail": "Warning *\"Unknown function 'LowerHeatingValue'\"*, then *\"Unknown or unsupported function: LowerHeatingValue with 1 arguments\"* (EvaluationError on the size-1 block of `LHV_f_EES`).",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },

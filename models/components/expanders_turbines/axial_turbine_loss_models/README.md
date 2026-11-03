@@ -17,7 +17,7 @@ rotor, R245fa) and the sCO2 "Test" example (R744), and shows what the guards do.
 | **Source** | [LaboThapPy](https://github.com/PyLaboThap/LaboThapPy) commit `f03f7f47`, files `labothappy/correlations/turbomachinery/aungier_axial_turbine.py` and `labothappy/correlations/turbomachinery/pressure_loss_model.py`; inventory row `LTP-051` (kept `todo` by C-373; rows `LTP-007`, `LTP-066` are duplicates of it) |
 | **Authors** | Basile Chaudoir (the only author of the two files in the repository history) |
 | **License** | Original: Apache-2.0 (`LICENSE.txt` of LaboThapPy); translation published under the library MIT licence |
-| **CoolSolve** | 0.4.0 - **verified** against a re-run of the Python code (52 values compared, max relative deviation 4.1·10⁻¹³; flags checked separately) |
+| **CoolSolve** | 0.4.0 - **verified** against a re-run of the Python code (52 values compared, max relative deviation 4.1·10⁻¹³; flags checked separately); re-checked on `0.4.0@2dc1367` (C-484), unchanged `.sol` |
 
 ## Niche
 
@@ -185,10 +185,9 @@ J. Eng. Power 104 (1982); `pressure_loss_model.py` cites J. Lee, J. I. Lee, Y. A
 - **2026-10-31 - translation (T-FUNC, card C-448)**: 12 functions + 1 procedure + demonstration program; temperatures K -> °C; `(T,H)` property calls rewritten with `(P,h)` (section 1: `T_out_s_o`, `T_out_r_o`, section 2: `T_out_s_t`, `T_out_r_t`);
   the inlet temperature of the "Test" case (CoolProp `T(H = 1159373 J/kg, P)` = 924.178 K) is a constant here because the enthalpy reference of EES differs from CoolProp's.
 - Variable names that differ only in case are one variable in EES: coefficients of the original (`A`, `B`, `C`, `D`; `X`) are `A_1`, `cA`, ... in the functions, because the chord is `c`.
-- **Workaround for a CoolSolve behaviour (unverified suggestion, not registered: no EES evidence at hand).** A `CALL` with two or more outputs whose body evaluates `SQRT(0)` or a negative number to the power 3 fails with
-  *SingularJacobian* (NaN in the Jacobian), whereas the same code in the main program or in a one-output `CALL` solves. Reproducer: `PROCEDURE PP(a : x, y)` ⏎ `q = a - 0.75` ⏎ `x = q^3` ⏎ `y = 1` ⏎ `END` ⏎ `CALL PP(0.25 : x, y)`
-  (the same with `x = SQRT(a)` and `CALL PP(0 : x, y)`). The functions therefore write integer powers of signed quantities as products (`xi*xi*xi`) and `Ysh_est/SQRT(1 + Ysh_est*Ysh_est)` for `SQRT(Ysh_est²/(1 + Ysh_est²))` (same value).
-  May be related to the unreduced SingularJacobian row of section 8 of the register (2026-10-10, string output of a `CALL`).
+- **2026-11-02 - re-check (T-RECHECK card C-484)**: the AD bug `CS-BUG-PROC-NEG-POW` (derivative of `x^y` for a negative base in a FUNCTION/PROCEDURE body of a multi-output `CALL`) is fixed and closed (CoolSolve `07bf9dc`, build `0.4.0@2dc1367`); the integer powers that the import had written as products only for it are restored as in the Python source
+  (`xi^2`, `xi^3`, `xi^4`, `Xd^2`, `Xd^3`, `X_1^2`, `X_1^3`, `X_2^2`, `X_2^3`, `Z = (C_L*c/s)^2*SIN(a2p)^2/SIN(a_m)^3`, `SQRT(Ys_est^2/(1 + 7.5*Ys_est^2))`). The `.sol` is byte-for-byte identical (14 iterations).
+  `Aungier_Ysh` keeps `Ysh_est/SQRT(1 + Ysh_est^2)` (same value, `Ysh_est >= 0`): the faithful `SQRT(Ysh_est^2/(1 + Ysh_est^2))` evaluates `SQRT(0)` in this file (the "Test" cases have M1 <= 0.4 and M1 <= M2), and the derivative of `SQRT` is infinite at 0 — the Newton step on a `CALL` block that contains it is singular (reproducer `PROCEDURE PP(a : x, y)` ⏎ `x = SQRT(a)` ⏎ `y = 1` ⏎ `END` ⏎ `CALL PP(0 : x, y)` fails; `CALL PP(0.25 : x, y)` solves). The divided form avoids the zero argument numerically; it is a form choice, not a workaround for a registered bug.
 - **Level** (taxonomy §3): equations 221 -> 1; largest block 8 -> 1; functions/procedures and arrays -> 1; no multi-zone structure, off-design or curated guesses -> 0 + 0 + 0; score 3 -> level 2.
 
 ## Limitations and CoolSolve gaps
@@ -196,7 +195,7 @@ J. Eng. Power 104 (1982); `pressure_loss_model.py` cites J. Lee, J. I. Lee, Y. A
 * Only the algebraic loss coefficients are translated. Not translated: the mean-line stage assembly, deviation, map interpolation and PSO design loops (`LTP-007`, `LTP-066`, duplicates of this row), the Bezier blade construction, the `'CO2'` example case (non-physical in the original), and the radial-turbine losses (another inventory row).
 * `Km` is unavailable for `0.6 < M2' <= 1` (defect 2); no number can be given there without the reference.
 * The validity range of the correlations is not stated in the original; the guards above only exclude invalid or non-physical inputs and results.
-* No registered CoolSolve gap is needed (`missing_features` empty); the `CALL` behaviour above is an unverified suggestion.
+* No registered CoolSolve gap blocks the model (`missing_features` empty). `CS-BUG-PROC-NEG-POW` (register §7, closed 2026-11-01) used to force integer powers as products; they are restored (re-check C-484). `Aungier_Ysh` keeps a form that avoids `SQRT(0)` (infinite derivative at 0, expected behaviour, not a gap).
 
 ## Related models
 

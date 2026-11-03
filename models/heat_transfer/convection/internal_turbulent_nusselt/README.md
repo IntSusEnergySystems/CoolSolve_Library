@@ -403,3 +403,4 @@ Transfer*, 3E, McGraw-Hill, 1998.
   friction factors that can be computed for the `fd` argument of most functions
   of this file (smooth or rough pipe, single phase or supercritical CO2).
 - `CSL-0322` *pche_htc*: heat-transfer coefficient of the semicircular channels of a printed-circuit heat exchanger (LaboThapPy); a channel geometry that is neither a round pipe nor a rectangular duct.
+- `CSL-0330` *curved_duct_htc*: h of helically coiled pipes with the Ito critical-Re regime switching (Xhan, Zhang, Di Piazza-Ciofalo, Schmidt factor on the straight-pipe Gnielinski correlation of this family), LaboThapPy branch translation.

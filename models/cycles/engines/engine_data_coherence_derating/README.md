@@ -136,3 +136,24 @@ common variables agree to < 2.6e-4 (mostly exact).
 - The original header stamps the file as an exam resolution; per the
   maintainer decision on exams (`sources/thermo_models/README.md`) it is
   published here as a worked example.
+
+## Limitations and CoolSolve gaps
+
+- The derating law is the reduced pressure/temperature ISO 3046-type form
+  with the charge-air-cooled exponents; the full ISO table with humidity and
+  coolant terms is in `CSL-0151` (see *Source and attribution*).
+- `epsilon_v` = 2.19 > 1, as in the original: it comes from the data-sheet
+  air flow (see *Results*).
+- The absolute air enthalpies/entropies of the ideal-gas backend carry a
+  reference-state offset vs the EES air tables; they cancel in the quantities
+  that use them (see *Verification*).
+
+## Related models
+
+- `CSL-0151` *engine_derating_iso3046*: the full ISO 3046 derating table
+  (humidity and coolant terms); the derating law and the barometric formula
+  match.
+- `CSL-0244` *engine_dynamometer_test*: engine test-bed data model.
+- `CSL-0223` *turbocharged_engine_expander*: turbocharged engine with the
+  charge-air compressor/expander representation.
+- `CSL-0274` *scania_marine_diesel_handbook*: marine diesel engine data model.

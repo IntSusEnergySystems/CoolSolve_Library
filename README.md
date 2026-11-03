@@ -52,6 +52,8 @@ CoolSolve_Library/
 ├── tools/
 │   ├── build_index.py      validates the library, regenerates the index files
 │   ├── library_dashboard.html  template of library.html
+│   ├── move_model.py       moves/renames models by ID (taxonomy changes: git mv,
+│   │                        previous_paths, link rewrites, new categories, rebuild)
 │   └── test_models.py      solves the models with CoolSolve, compares with baselines
 ├── taxonomy.json           declared categories (machine-readable)
 ├── library.html            dashboard: models, functions, gaps       (generated)

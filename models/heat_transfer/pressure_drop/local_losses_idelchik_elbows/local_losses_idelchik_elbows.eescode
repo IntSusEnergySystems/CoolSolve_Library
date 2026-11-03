@@ -16,7 +16,8 @@
            (port of the Modelica Dissipation library CurvedBend_LDP; Idelchik,
            Handbook of Hydraulic Resistance) - see README.md
   Status : verified against the Python source (re-run); mode 1 reproduces the
-           source, whose step_smoother calls look argument-swapped (README)
+            source, whose step_smoother calls look argument-swapped (README);
+            2026-11-02: two-phase density adapted to the upstream fix (9364dfc6)
 =============================================================================}
 
 "!--- Cubic smoothing step"
@@ -252,16 +253,20 @@ Taken from: LaboThapPy commit f03f7f47, curved_elbow.py,
 END
 
 FUNCTION rho_mix_elbow(x, rho_l, rho_v)
-{RHO_MIX_ELBOW - mixture density used by the original for a two-phase inlet:
-  alpha = 1/(1 + (rho_v/rho_l)*(1 - x)/x)    (homogeneous void fraction)
-  rho = 1/(alpha/rho_v + (1 - alpha)/rho_l)  (formula as in the original; it
-  is not the homogeneous density 1/(x/rho_v + (1 - x)/rho_l), see README)
+{RHO_MIX_ELBOW - mixture density used for a two-phase inlet, at the fixed
+ version of the upstream two-phase density (branch origin/Elise, commit
+ 9364dfc6, two_phase.py compute_two_phase_density; the pinned commit f03f7f47
+ divided specific volumes by the void fraction, a density error adapted here,
+ see README):
+   alpha = 1/(1 + (rho_v/rho_l)*(1 - x)/x)    (homogeneous void fraction)
+   rho = alpha*rho_v + (1 - alpha)*rho_l      (in-situ density; with the
+   homogeneous alpha it equals the textbook 1/(x/rho_v + (1 - x)/rho_l))
  x [-], rho_l, rho_v [kg/m^3] -> rho [kg/m^3]
-Taken from: LaboThapPy commit f03f7f47, curved_elbow.py,
+Adapted from: LaboThapPy commit f03f7f47, curved_elbow.py,
  pressure_drop_curved_elbow (and void_fraction_homogeneous), Apache-2.0}
 
   alpha = 1/(1 + (rho_v/rho_l)*(1 - x)/x)
-  rho_mix_elbow = 1/(alpha/rho_v + (1 - alpha)/rho_l)
+  rho_mix_elbow = alpha*rho_v + (1 - alpha)*rho_l
 END
 
 FUNCTION dP_elbow_two_phase(d_hyd, R0, delta, K, x, rho_l, rho_v, mu_l, m_dot, mode)

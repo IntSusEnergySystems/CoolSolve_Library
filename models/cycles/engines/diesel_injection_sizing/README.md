@@ -234,3 +234,6 @@ ULiège course MCI, TP5, exercise 4. Published under the library licence (MIT).
   pressure differential, outlet diameter).
 - `CSL-0276` — valve overlap from the crank-angle valve timing, ULiège MCI
   TP5 exercise 2. Same course session, a different exercise.
+- `CSL-0331` — cylinder count and operating parameters of an H2 engine,
+  ULiège MCI TP2 exercise 3: same displacement/volumetric-efficiency
+  skeleton, with the cylinder count solved (and rounded up) instead of given.

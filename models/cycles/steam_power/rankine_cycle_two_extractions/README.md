@@ -2,7 +2,7 @@
 
 🟠 **Level 3 · Advanced** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0143`
 
-## Description
+## Problem statement
 
 Regenerative steam power plant of the TESPy optimisation tutorial: 200 kg/s of
 live steam (100 bar, 650 °C) expand through HP, MP and LP turbines
@@ -24,6 +24,45 @@ pressures with a pymoo differential-evolution optimiser. CoolSolve has no
 optimiser (`CS-GAP-OPTIM`); per the card decision the model is shipped at the
 design point `p_2` = 20 bar, `p_4` = 3 bar as a steady model, and the
 optimisation is replaced by a **2-D sweep** (below).
+
+## Model (Python solver plumbing → simultaneous equations)
+
+- TESPy connection variables `(m, p, h)` become named variables `m_<n>`, `p_<n>`,
+  `h_<n>` with `<n>` = the connection label of the tutorial (states 1–13, 21–24,
+  31–33, 41–42); `T` and `s` come from CoolProp property calls.
+- The `CycleCloser` disappears: the SG pressure ratio and the loop closure give
+  `p_13 = p_1/pr_sg`; the mass closure `m_13 = m_1` is implied by the mass
+  balances of the splitters and merges and is not written.
+- Splitters are isenthalpic with no pressure drop (`h_21 = h_2`, `p_21 = p_2`,
+  …), as in the original. Merges are adiabatic mixtures: mass sum, equal
+  pressure, `m_a*h_a + m_b*h_b = m_c*h_c`.
+- Turbines: `h_in - h_out = eta_s_t*(h_in - h_out_s)` with
+  `h_out_s = enthalpy(Water, s = s_in, P = p_out)`; pumps:
+  `eta_s_p*(h_out - h_in) = h_out_s - h_in`.
+- The TESPy `Condenser` model is used for the condenser **and** both feedwater
+  heaters: hot outlet saturated liquid (`h = enthalpy(Water, P = p, x = 0)`),
+  `ttd_u` referred to the **dew temperature at the hot inlet pressure**
+  (`T_9 = T_sat(p_31) - ttd_u`, `T_11 = T_sat(p_22) - ttd_u`,
+  `p_6 = pressure(Water, T = T_cw_out + ttd_u, x = 0)`), and pressure ratios
+  `pr1`, `pr2`.
+- The TESPy `Desuperheater` cools the hot gas **to the saturated vapour state**:
+  its `saturated_gas` equation `h_22 = enthalpy(Water, P = p_22, x = 1)` is
+  part of the model (it closes the mass-flow system: without it the two
+  extraction flows have one degree of freedom left).
+- The `INCOMP::Water` cooling water is replaced by the real-fluid `Water`
+  (CoolSolve has no incompressible library); see the note in *Results*.
+- The power bus is the sum `P_grid = W_hpt + W_mpt + W_lpt - W_pu1 - W_pu2 - W_pu3`.
+
+
+## How to run
+
+```bash
+coolsolve ./rankine_cycle_two_extractions.eescode
+```
+
+The model converges from CoolSolve's default guesses (267 iterations); the
+committed `.initials` carry the TESPy reference values and speed the solve up
+to 71 iterations (see *Verification*).
 
 ## Results (design point, CoolSolve vs re-run TESPy source)
 
@@ -63,33 +102,6 @@ J. Open Source Softw. 5(49), 2178 (2020), doi:10.21105/joss.02178.
 Authors: Francesco Witte (TESPy lead developer) and the TESPy contributors.
 Local snapshot: `~/git/tespy` (commit `19425523`, version 0.11.3.dev0).
 
-## Translation notes (Python solver plumbing → simultaneous equations)
-
-- TESPy connection variables `(m, p, h)` become named variables `m_<n>`, `p_<n>`,
-  `h_<n>` with `<n>` = the connection label of the tutorial (states 1–13, 21–24,
-  31–33, 41–42); `T` and `s` come from CoolProp property calls.
-- The `CycleCloser` disappears: the SG pressure ratio and the loop closure give
-  `p_13 = p_1/pr_sg`; the mass closure `m_13 = m_1` is implied by the mass
-  balances of the splitters and merges and is not written.
-- Splitters are isenthalpic with no pressure drop (`h_21 = h_2`, `p_21 = p_2`,
-  …), as in the original. Merges are adiabatic mixtures: mass sum, equal
-  pressure, `m_a*h_a + m_b*h_b = m_c*h_c`.
-- Turbines: `h_in - h_out = eta_s_t*(h_in - h_out_s)` with
-  `h_out_s = enthalpy(Water, s = s_in, P = p_out)`; pumps:
-  `eta_s_p*(h_out - h_in) = h_out_s - h_in`.
-- The TESPy `Condenser` model is used for the condenser **and** both feedwater
-  heaters: hot outlet saturated liquid (`h = enthalpy(Water, P = p, x = 0)`),
-  `ttd_u` referred to the **dew temperature at the hot inlet pressure**
-  (`T_9 = T_sat(p_31) - ttd_u`, `T_11 = T_sat(p_22) - ttd_u`,
-  `p_6 = pressure(Water, T = T_cw_out + ttd_u, x = 0)`), and pressure ratios
-  `pr1`, `pr2`.
-- The TESPy `Desuperheater` cools the hot gas **to the saturated vapour state**:
-  its `saturated_gas` equation `h_22 = enthalpy(Water, P = p_22, x = 1)` is
-  part of the model (it closes the mass-flow system: without it the two
-  extraction flows have one degree of freedom left).
-- The `INCOMP::Water` cooling water is replaced by the real-fluid `Water`
-  (CoolSolve has no incompressible library); see the note in *Results*.
-- The power bus is the sum `P_grid = W_hpt + W_mpt + W_lpt - W_pu1 - W_pu2 - W_pu3`.
 
 ## Verification
 
@@ -120,11 +132,33 @@ difference 3e-11), lower than the design point 0.4477110 at 20/3 bar — the
 sweep landscape is reproducible by the GUI parametric study; the committed
 baseline is the design point.
 
+## Conversion log
+
+- **Import (translation)**: the `SamplePlant` model of
+  `tutorial/advanced/optimization_example.py` (commit `19425523`) translated
+  from Python to CoolSolve equations (mapping in *Model*); design point fixed
+  at the given extraction pressures (20 / 3 bar); the pymoo optimisation
+  replaced by a documented 2-D sweep (see *Sweep instead of the pymoo
+  optimisation*). Connection variables `(m, p, h)` renamed `m_<n>`/`p_<n>`/`h_<n>`
+  with `<n>` = the tutorial connection label; the `INCOMP::Water` cooling water
+  replaced by the real-fluid `Water` (CoolSolve has no incompressible library).
+
 ## Level justification
 
 154 equations (score 1), largest algebraic block 16 (1), arrays for the state
 points (1), more than three coupled components (1), no off-design/semi-empirical
 physics (0), converges from default guesses (0): score 4 → **level 3**.
+
+## Limitations and CoolSolve gaps
+
+- CoolSolve has no optimiser (`CS-GAP-OPTIM`): the tutorial's pymoo
+  differential-evolution maximisation of `eta_th` is not translated; the model
+  is shipped at the design point `p_2` = 20 bar, `p_4` = 3 bar and the
+  optimisation is replaced by a 2-D sweep (see *Problem statement* and
+  *Sweep instead of the pymoo optimisation*).
+- The cooling water is `INCOMP::Water` in TESPy and the real-fluid `Water`
+  (IAPWS-IF97) in CoolSolve: the 0.2 % liquid-enthalpy difference gives the
+  2.0e-3 relative difference on `m_cw` (see *Results*, note (1)).
 
 ## Related models
 

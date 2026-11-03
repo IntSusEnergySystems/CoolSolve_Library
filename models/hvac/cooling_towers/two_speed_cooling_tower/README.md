@@ -59,6 +59,23 @@ session, the tower with AU = 90 kW/K, 50 kg/s of water and 60 kg/s of air,
   fraction falls out of [0, 1] and the model reports it (part of the
   exercise).
 
+## How to run
+
+Open `two_speed_cooling_tower.eescode` in the CoolSolve GUI and press
+*Solve*, or from a terminal:
+
+```bash
+coolsolve ./two_speed_cooling_tower.eescode
+```
+
+The shipped `two_speed_cooling_tower.initials` (guess values = the EES stored
+solution) is required: without it the coupled wet heat-transfer loop does not
+converge (already noted in the CoolSolve example). The default run uses
+`t_w_ex_set` = 35 °C; sweep it in the GUI (*Parametric* tab) to redo the
+26–36 °C study of the exercise.
+
+## Results
+
 | Inputs | Value | Outputs | Value |
 |---|---|---|---|
 | `AU` / `AU_r` UA, nominal / half speed | 90 / 45 kW/K | `Q_dot` / `Q_dot_r` heat rejected | 1.977 / 1.211 MW |
@@ -78,21 +95,6 @@ from 26 to 36 °C (parametric study in the GUI) shows the regime change: near
 <!-- FIGURE (added by the maintainer, docs/model_workflow.md §7): parametric
      sweep plot, e.g. theta, theta_1 and the mean fan powers vs t_w_ex_set
      (26–36 °C), showing the physical regime in [0, 1] -->
-
-## How to run
-
-Open `two_speed_cooling_tower.eescode` in the CoolSolve GUI and press
-*Solve*, or from a terminal:
-
-```bash
-coolsolve ./two_speed_cooling_tower.eescode
-```
-
-The shipped `two_speed_cooling_tower.initials` (guess values = the EES stored
-solution) is required: without it the coupled wet heat-transfer loop does not
-converge (already noted in the CoolSolve example). The default run uses
-`t_w_ex_set` = 35 °C; sweep it in the GUI (*Parametric* tab) to redo the
-26–36 °C study of the exercise.
 
 ## Verification
 
