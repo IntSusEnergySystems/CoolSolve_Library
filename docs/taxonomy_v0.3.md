@@ -752,4 +752,5 @@ the old paths keep working through `previous_paths` and `redirects.csv` (`$INCLU
 - 2026-11-02, C-490/C-491: `tools/move_model.py`, a 110-row CSV plan and the drafted category entries; dry run clean.
 - 2026-11-03 (maintainer): one file only; at most 6–7 models per category and no near-empty categories, for browsing in
   `library.html` and in the GUI. The v0.2 top categories `components` and `cycles` (99 and 96 models) are split into
-  `heat_exchangers`, `machines`, `components`, `power_cycles`, `engines` and `refrigeration_heat_pumps`; this plan.
+  `heat_exchangers`, `machines`, `components`, `power_cycles`, `engines` and `refrigeration_heat_pumps`; this plan. Applied on a scratch copy of the library: `build_index.py` 0 errors, 259 redirects,
+  `test_models.py` 314 targets (277 main files + 37 variants), 0 failure (CoolSolve 0.4.0 build of 2026-11-01).

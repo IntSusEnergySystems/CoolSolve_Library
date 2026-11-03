@@ -7,39 +7,39 @@ each tested and marked done. *How* each step is executed is described in
 [docs/model_workflow.md](docs/model_workflow.md); the classification rules are
 in [docs/taxonomy.md](docs/taxonomy.md).
 
-*Last update: 2026-11-01 (review of the failing/modified models; handover at the top of §1).*
+*Last update: 2026-11-03 (B-19/B-20 closed, taxonomy v0.3 plan ready, B-21 Python references started; handover at the top of §1).*
 
 ---
 
 ## 1. Status at a glance
 
-| Library (2026-11-01, CoolSolve 0.4.0@9768373) | Count |
+| Library (2026-11-03, CoolSolve 0.4.0 build of 2026-11-01 and 2dc1367) | Count |
 |---|---:|
-| Models (`library.json`) | 300 |
-| … verified / blocked / failing / modified (`runs` merged into `verified`, D15) | 276 / 24 / 0 / 0 |
-| … blocked with a runnable `_coolsolve` variant (with `.sol`) / not runnable at all | 20 / 5 (`CSL-0081`, `CSL-0040`, `CSL-0116`, `CSL-0150`, `CSL-0264`); failing: none |
-| … steady / function / dynamic / optimization | 249 / 45 / 5 / 1 |
-| Functions and procedures (`library.json`) | 611 |
-| Regression (`test_models.py`) | 285 targets (252 main files + 33 variants), 0 failure on 2026-10-24 with CoolSolve 0.4.0 (excluding the slow `CSL-0009:coolsolve`; `CSL-0162:coolsolve` has no `.sol`) |
-| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md) §4–§5) | 67 (40 gaps, 25 bugs, 2 doc issues; counted by row prefix, 2026-10-24) |
-| … closed (§7) | 99 (43 gaps, 55 bugs, 1 doc issue) |
+| Models (`library.json`) | 302 |
+| … verified / blocked / failing / modified (`runs` merged into `verified`, D15) | 277 / 25 / 0 / 0 |
+| … blocked with a runnable `_coolsolve` variant (with `.sol`) / not runnable at all | 20 / 5 (`CSL-0081`, `CSL-0040`, `CSL-0116`, `CSL-0150`, `CSL-0264`); the 20 include `CSL-0155` and `CSL-0331` |
+| … steady / function / dynamic / optimization | 250 / 46 / 5 / 1 |
+| Functions and procedures (`library.json`) | 620 |
+| Regression (`test_models.py`) | 314 targets (277 main files + 37 variants), 0 failure on 2026-11-03 (CoolSolve build of 2026-11-01; run on the scratch copy with the taxonomy v0.3 moves applied, same models), excluding the slow `CSL-0009:coolsolve` |
+| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md) §4–§5) | 72 (43 gaps, 27 bugs, 2 doc issues; counted by row prefix, 2026-11-03) |
+| … closed (§7) | 100 (43 gaps, 56 bugs, 1 doc issue) |
 | … unverified suggestions (§8 *Unverified by a reviewer*) | 9 |
 
 Not runnable at all (no verified variant): `CSL-0081` (borefield, dynamic; `CS-GAP-INTEGRALVALUE`), `CSL-0040` (biomass
 ORC CHP; `CS-GAP-IF-NO-CONSTANT`), `CSL-0116` (Vitocal heat pump; `CS-GAP-INCLUDE`, catalogue table missing), `CSL-0150`
-(flame with dissociation; `CS-GAP-CHEM-EQUIL`, `CS-GAP-FLUIDS-NASA-SPECIES`), `CSL-0162` (run-around loop;
-`CS-GAP-INCLUDE`, `CS-BUG-NEWTON-CYCLE`) — 5 blocked models. Failing: `CSL-0078` (the native file is over-determined as the
-original stands), `CSL-0155` (inverter heat pump, one 151-variable coupled block does not converge — register §8) and
-`CSL-0202`.
+(flame with dissociation; `CS-GAP-CHEM-EQUIL`, `CS-GAP-FLUIDS-NASA-SPECIES`), `CSL-0264` — 5 blocked models. Failing: none
+(the 6 failing models of 2026-10-31 were resolved on 2026-11-01, handover below). All 25 blocked models were re-checked with
+CoolSolve 2dc1367 on 2026-11-02: none changes status.
 
-| Backlog (source inventories) | Candidates | todo | added | merged | duplicate | discarded | parked |
+| Backlog (source inventories, 2026-11-03) | Candidates | todo | added | merged | duplicate | discarded | parked |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| ULiège collection `thermo_models` | 602 | 322 | 99 | 38 | 92 | 50 | 1 |
-| CoolSolve examples | 47 | 1 | 33 | 9 | 1 | 3 | 0 |
+| ULiège collection `thermo_models` | 602 | 27 (all `skip`) | 218 | 116 | 166 | 74 | 1 |
+| CoolSolve examples | 47 | 0 | 34 | 9 | 1 | 3 | 0 |
 | `ht` (Caleb Bell), one row per correlation family | 24 | 0 | 24 | 0 | 0 | 0 | 0 |
-| ThermoCycle | 21 | 2 | 4 | 1 | 0 | 14 | 0 |
-| LaboThapPy | 74 | 59 | 9 | 6 | 0 | 0 | 0 |
-| TESPy | 52 | 49 | 2 | 1 | 0 | 0 | 0 |
+| ThermoCycle | 21 | 0 | 4 | 3 | 0 | 14 | 0 |
+| LaboThapPy | 82 | 14 (all `skip`) | 22 | 20 | 14 | 12 | 0 |
+| TESPy | 54 | 0 | 21 | 19 | 2 | 12 | 0 |
+| External leads (`ext_leads`) | 10 | 0 | 5 | 1 | 4 | 0 | 0 |
 
 The tables count inventory **rows**, not models: a model imported from a
 CoolSolve example and from its EES original in `thermo_models` has two `added`
@@ -54,7 +54,48 @@ TESPy 8 / 8 / 23 / 13 / 0.
 Refresh with `python3 tools/build_index.py` (models) and
 `python3 tools/backlog_stats.py` (candidates).
 
-### HANDOVER of 2026-11-01 — review of the failing and modified models (read this first)
+### HANDOVER of 2026-11-03 (sessions of 2026-11-02 → 03; read this first)
+
+**State (2026-11-03 12:00).** 302 models (277 verified / 25 blocked / 0 failing), 620 functions; kinds 250 steady / 46 function / 5 dynamic / 1 optimization.
+Regression: 314 targets (277 main files + 37 variants), 0 failure. The backlog is exhausted: the only `todo` inventory rows left are `skip` rows.
+**Nothing committed** since `326532b`: modified `roadmap.md`, `docs/taxonomy_v0.3.md`; new `sources/thermo_models/python_refs/` (C-501).
+CoolSolve (`~/git/CoolSolve`, `main` @`2dc1367`): only the register `docs/model_library_support.md` is modified (evidence lines, new rows).
+
+**Done** (§8 log rows of 2026-11-02/03):
+- B-19 closed: TESPy v0.12 and LaboThapPy branches triaged (C-460/C-461); `CSL-0330` curved-duct/helical-coil HTC (unmerged branch `Basile_Chaudoir`);
+  re-checks against upstream fixes: `CSL-0125` (pump similarity, adapted), `CSL-0130` and `CSL-0316` (two-phase density, adapted); `CSL-0327/0328/0326` faithful
+  powers restored after the `CS-BUG-PROC-NEG-POW` fix. `CSL-0331` engine cylinder count (C-237; native blocked by new `CS-GAP-HEATING-VALUE`, variant verified).
+- **`CSL-0217` runs only with the TrustRegion solver** (`coolsolve.conf: solverPipeline = TrustRegion` + the shipped `.initials`; stated in the README and the
+  `.eescode` header). Regression introduced by CoolSolve `b26946d` (Newton used to stop on a NaN derivative and hand over to TrustRegion); bisected `eb797fe` OK.
+- B-20 closed: `tools/move_model.py` (C-490), README completeness of 23 models (C-492).
+- **Taxonomy v0.3 plan, ready for the maintainer's decision:** one file [docs/taxonomy_v0.3.md](docs/taxonomy_v0.3.md) (replaces the proposal, the plan CSV and the
+  categories note: rules, tree with counts, the full `taxonomy.json`, the 259-row move table). 12 top categories (3 flat: buildings, renewables, energy_systems),
+  57 leaves of 2–7 models, sized for the HTML library and the 2-level CoolSolve GUI menu. `tools/move_model.py --plan docs/taxonomy_v0.3.md` reads it directly
+  (also writes the new `taxonomy.json`). Applied on a scratch copy only: `build_index` 0 errors, regression 314 targets, 0 failure. Judgement calls to confirm
+  are listed in the plan (§2): `CSL-0326`, `CSL-0147`, `CSL-0058/0266`, `CSL-0323`, `CSL-0186`, `CSL-0010/0169/0270`.
+- B-21 started (independent Python references of the course *thermodynamique appliquée*, notes `~/llm/scripts/csl/b21_pyref.txt`): C-501 merged
+  (96 scripts: 20 match, 5 differs — all other statement data, no model bug; `R07E02` vs `CSL-0029` re-checked by the orchestrator: not comparable).
+  **Anonymity rule (maintainer, 2026-11-03):** exam scripts are used without any student name ("<folder>/exam script <n>", credit "Thermodynamics
+  Laboratory, University of Liège").
+
+**In progress (worker lanes, not merged).**
+- C-503 (Exam janv 2020, 146 scripts) — glmfree, task `t266`, lane `~/git/csl-lanes/glmfree`. `C-503.csv` partly written (anonymised so far);
+  the free model is rate-limited every few minutes, the supervisor retries.
+- C-500 (2022-2023 + Aout 2022) — glm, task `t264`, lane `~/git/csl-lanes/glm`; no output yet. **glm-5.3-flash weekly quota exhausted**, quoted reset
+  2026-11-04 15:25 UTC+8 (≈ 08:25 CET): the supervisor resumes it automatically.
+- On completion: `oc-orch.py result tN`, `csl.py check LANE`, check that no student name appears in the csv/md, spot-check the `match`/`differs` rows
+  against the scripts, then `csl.py merge LANE` and `csl.py tick`. Then C-502 (apply `other-tool` to the `match` rows; C-501 match list:
+  `CSL-0044/0225/0003/0048/0214/0283/0053/0282/0186/0184/0236/0059/0004/0015/0054/0061/0063/0056/0045/0058`).
+- Stop everything with `python3 ~/llm/scripts/oc-orch.py down` (the lanes keep their files).
+
+**For the maintainer.** (1) Decide on the taxonomy v0.3 plan (then a T-MOVE card: `python3 tools/move_model.py --plan docs/taxonomy_v0.3.md`, dry run first).
+(2) Still open from 2026-11-01: CoolSolve `fix/ad-pow-negative-base` review, `CS-GAP-USER-STRING-FUNC`, the adaptations of `CSL-0326/0312/0155`.
+(3) Consider making TrustRegion a fallback after Newton in CoolSolve's default pipeline (`CSL-0217`). (4) Borderline pairs to decide (keep both or merge):
+`CSL-0226`/`CSL-0295` (turbojet without/with afterburner) and `CSL-0032`/`CSL-0227` (condensers). (5) TESPy `FuelCell` heat sign (`CSL-0323`) confirmed upstream,
+not fixed: report it. **Workers:** only glm-5.3-flash (z.ai) and glm-5.3-flash-free (opencode) are usable; the other free models were unusable
+in the benchmark; no Sonnet sub-agents at the maintainer's request (2026-11-02), at most two workers at a time.
+
+### HANDOVER of 2026-11-01 — review of the failing and modified models (history; read the 2026-11-03 handover first)
 
 The 6 failing models and the modified one were reviewed one by one (decision rule of the maintainer: missing feature →
 blocked; no convergence even with Try Harder → failing + diagnosis + CoolSolve hints in the README; converges only with
@@ -78,7 +119,7 @@ near the critical point (`CSL-0078`, `CSL-0319`, `CSL-0260`): compare R407C mode
 (4) New register rows (CoolSolve working tree, uncommitted): `CS-BUG-GUESS-INFER` (default guesses: T/P/h types recognised only for bare property-call arguments and `X = Property(...)`; K temperatures, CALL arguments, linear relations get 1.0), `CS-BUG-NONFINITE-START` (pipeline keeps iterating on ‖F‖ = inf), root cause added to `CS-BUG-UNIT-VOLUME` (`volume` mapped to density: wrong label **and** wrong guess, ×10⁶ for liquids), fix note on `CS-BUG-PROC-NEG-POW`. (5) Source issues to report upstream (LaboThapPy `f03f7f47`): `nozzle()` critical area without the 0.5787 factor (casing
 velocity violates continuity), `cp_H` read from the wrong AbstractState in `equ_syst`, CHF-based `ext_conv_boil`.
 
-### HANDOVER of 2026-10-31 (read this first; the 2026-10-24 handover below is history)
+### HANDOVER of 2026-10-31 (history)
 
 **State (20:15).** 300 models (270 verified / 23 blocked / 6 failing / 1 modified); kinds 248 steady / 45 function / 5 dynamic / 1 optimization.
 Full regression at 20:30 (300 models): 307 targets (271 main files + 36 variants), 0 failure (CoolSolve 0.4.0@9768373, excl. `CSL-0009:coolsolve`).
@@ -111,7 +152,7 @@ unsupported (`CSL-0262` blocked): an open gap row may be clearer.
 but one deleted `~/git/csl-lanes` with an `rm -rf` on an absolute path (lost: an in-progress glm lane and the `_results` archive) → DELETION RULE in
 `base_prompt.txt`, results archive moved to `~/.local/state/opencode-orch/csl-results/`, `bench_c10_prep.sh` reads its reference from git.
 
-### HANDOVER of 2026-10-24 (end of the session of 2026-10-21 → 24; read this first)
+### HANDOVER of 2026-10-24 (end of the session of 2026-10-21 → 24; history)
 
 **State.** 280 models (252 verified / 24 blocked / 4 failing), 468 functions. Regression with CoolSolve 0.4.0 (`main` @`9768373`, CoolProp pin `75af7816`):
 285 targets (252 main files + 33 variants), 0 failure (excluding the slow `CSL-0009:coolsolve`). The maintainer committed the library as `79c315b` during the session; only this `roadmap.md` is modified afterwards. The CoolSolve register
@@ -532,7 +573,7 @@ most 100 kB.
 
 ## 4. Decisions and open questions
 
-**Open: taxonomy v0.3 plan** — [docs/taxonomy_v0.3.md](docs/taxonomy_v0.3.md), one file (rules, tree with counts, the complete `taxonomy.json`, the move table read by `tools/move_model.py --plan`). Revised 2026-11-03 at the maintainer's request: at most 6–7 models per category, no near-empty ones, two levels as the GUI Library menu; `components` and `cycles` split into `heat_exchangers`, `machines`, `components`, `power_cycles`, `engines`, `refrigeration_heat_pumps`; 259 of 302 models move; applied on a scratch copy: build_index 0 errors. First version (C-139, 2026-10-31): split rule ~40 → ~20 models; flat sibling splits of `components/compressors` (positive displacement / turbo), `components/heat_exchangers` (condensers_evaporators), `cycles/refrigeration_heat_pumps` (refrigeration / heat_pumps / high_temperature_heat_pumps), `cycles/engines`, `fundamentals/processes`, `heat_transfer/convection`; ~15 misfiled models; photovoltaics merged into `renewables/solar`. Not applied: maintainer decides (then a T-MOVE card regenerates `redirects.csv`).
+**Open: taxonomy v0.3 plan** — [docs/taxonomy_v0.3.md](docs/taxonomy_v0.3.md), one file (rules, tree with counts, the complete `taxonomy.json`, the move table read by `tools/move_model.py --plan`). Revised 2026-11-03 at the maintainer's request: at most 6–7 models per category, no near-empty ones, two levels as the GUI Library menu; `components` and `cycles` split into `heat_exchangers`, `machines`, `components`, `power_cycles`, `engines`, `refrigeration_heat_pumps`; 259 of 302 models move; applied on a scratch copy: build_index 0 errors, test_models 314 targets 0 failure. First version (C-139, 2026-10-31): split rule ~40 → ~20 models; flat sibling splits of `components/compressors` (positive displacement / turbo), `components/heat_exchangers` (condensers_evaporators), `cycles/refrigeration_heat_pumps` (refrigeration / heat_pumps / high_temperature_heat_pumps), `cycles/engines`, `fundamentals/processes`, `heat_transfer/convection`; ~15 misfiled models; photovoltaics merged into `renewables/solar`. Not applied: maintainer decides (then a T-MOVE card regenerates `redirects.csv`).
 
 Decisions of the maintainer (2026-10-04), applied in the documents and tools:
 
@@ -1117,7 +1158,7 @@ Novelty triage of the 42 remaining `low`/`medium` rows (notes `~/llm/scripts/csl
 [x] C-452 T-RECHECK CSL-0262 + CSL-0131 — [std] both list a gap the register marks closed (CS-BUG-LOOKUP-WRITE, CS-BUG-IMPLICIT-PROC): re-run the native files on 0.4.0@9768373, update status/missing_features, delete variants that only worked around closed gaps — CSL-0262
 ```
 
-### B-19 — New upstream inputs: TESPy v0.12 and LaboThapPy branches (Phase 1, P1.2/P1.3 refresh) 🔄
+### B-19 — New upstream inputs: TESPy v0.12 and LaboThapPy branches (Phase 1, P1.2/P1.3 refresh) ✅
 
 The Python sources are pinned (TESPy `19425523`, LaboThapPy `f03f7f47`); TESPy `dev` is now 166 commits ahead (v0.12.0, new `equilibrium_separator`,
 changes to electrolyser/fuel cell, steam turbine, pump, turbocompressor, characteristic limits) and three LaboThapPy branches carry newer work (`Elise`
@@ -1134,7 +1175,7 @@ updated 2026-11-02, `Basile_Chaudoir`, `Titouan_Janod`). Triage with the novelty
 [x] C-484 T-RECHECK CSL-0327 + CSL-0328 + CSL-0326 — [std] CS-BUG-PROC-NEG-POW is fixed (CoolSolve 07bf9dc, in the 0.4.0 build of 2026-11-01) and closed: restore the faithful `x^n` powers that were written as products only to dodge the bug, re-run, confirm identical .sol, drop the workaround notes — CSL-0327
 ```
 
-### B-20 — Tooling for the taxonomy move (Phase 6, P6.5) ☐
+### B-20 — Tooling for the taxonomy move (Phase 6, P6.5) ✅
 
 ```
 [x] C-490 T-TOOL tools/move_model.py — [std] move/rename models by ID (single move or a plan CSV `id,new_path[,new_name]`), dry-run report, `git mv` when tracked, `previous_paths`, rewrite of links in other models' READMEs/model.json, new categories declared in taxonomy.json, rebuild + checks; tested by a round trip only — the v0.3 taxonomy is NOT applied (maintainer decision pending)
@@ -1152,7 +1193,7 @@ follow the repetition exercises, so most are expected to be duplicates of models
 
 ```
 [ ] C-500 T-VERIFY python refs 2022-2023/ (78 scripts) + Aout 2022/code_base* → sources/thermo_models/python_refs/C-500 — [std] map, re-run, compare with the .sol; no model edits
-[ ] C-501 T-VERIFY python refs 2017-2018/ + 2018-2019/ + Exam passés/ + Exam janv 2021/ (≈ 96 scripts) → sources/thermo_models/python_refs/C-501 — [std] same as C-500
+[x] C-501 T-VERIFY python refs 2017-2018/ + 2018-2019/ + Exam passés/ + Exam janv 2021/ (≈ 96 scripts) → sources/thermo_models/python_refs/C-501 — [std] same as C-500
 [ ] C-503 T-VERIFY python refs Exam janv 2020/ (146 scripts: student submissions + `_corr` corrected versions, two sessions) → sources/thermo_models/python_refs/C-503 — [std] anonymised; identify the distinct exam questions first, map them to repetition exercises/library models (duplicates expected), compare only the corrected (`_corr`) versions that agree with each other; no import unless clearly new
 [ ] C-502 T-QUALITY apply C-500/C-501/C-503 — [std] add `other-tool` to verification.checks and a Verification paragraph for the `match` rows; `differs` rows diagnosed one by one (adapt only for a real model bug)
 ```
@@ -1640,3 +1681,4 @@ and adds the log line in §8.
 | 2026-11-02 | CSL-0217 solver pipeline | regression found with CoolSolve 2dc1367 (and the build of 2026-11-01): CSL-0217 failed (MaxIterations, block of 27) since b26946d (CS-BUG-PROC-NEG-POW fix — Newton used to stop on a NaN derivative and TrustRegion found the root); bisected eb797fe OK / b26946d fail; fix: coolsolve.conf solverPipeline = TrustRegion (11 iterations, .sol unchanged with the three builds) (orchestrator) |
 | 2026-11-03 | README completeness | done (glm t263): missing template sections added/renamed in the 23 READMEs from in-folder material; orchestrator fixed one false log line (CSL-0120 comments are still French); build_index 0 errors |
 | 2026-11-03 | T-RECHECK CSL-0125 | done (glmfree t256): mode_MN adapted to upstream Elise 8514bf89 (eta at the similar flow, NPSH_r x N^2), default point and the three .sol unchanged, verified 4.8e-10 against the fixed source; CS-GAP-INTERP-EXTRAP evidence added |
+| 2026-11-03 | T-VERIFY python refs | done (glmfree t265): 96 scripts re-run (CoolProp 8.0.0) -> 20 match, 5 differs (other statement data), 16 not-comparable, 26 duplicate-of, 17 not-runnable, 12 no-model; no model bug; R07E02 vs CSL-0029 re-checked by the orchestrator (other pressures and eta definition); exam scripts anonymised |
