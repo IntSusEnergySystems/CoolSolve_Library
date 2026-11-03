@@ -1,0 +1,78 @@
+{
+  "id": "CSL-0330",
+  "name": "curved_duct_htc",
+  "title": "Curved-duct single-phase heat-transfer coefficients (function library)",
+  "summary": "Seven EES FUNCTIONS returning the single-phase convection coefficient of helically coiled pipes (Ito critical-Re regime switching; laminar Xhan/Zhang, transition Xhan with the Ito friction factor, turbulent Schmidt factor or Di Piazza-Ciofalo), curved rectangular ducts (Facao-Oliveira), straight rectangular ducts (Shah-London polynomial + Gnielinski with linear interpolation) and spiral-plate (SPHE) channels.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "curved_duct_htc.eescode",
+  "fluids": [],
+  "tags": [
+    "internal convection",
+    "curved duct",
+    "helical coil",
+    "spiral-plate heat exchanger",
+    "dean number",
+    "ito",
+    "gnielinski",
+    "shah-london",
+    "correlation",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE",
+    "LOG10"
+  ],
+  "stats": {
+    "n_equations": 18,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy (branch origin/Basile_Chaudoir)",
+    "candidate_id": "LTP-078",
+    "authors": [
+      "Basile Chaudoir (ULiège)"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy/blob/98b78ebda930157e5f51820cd59db13aa3bc210c/labothappy/correlations/convection/spiral_ducts_htc.py",
+    "license": "Apache-2.0 (LICENSE.txt of the original; pyproject.toml declares MIT); translation published under the library MIT license",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "Unmerged upstream branch origin/Basile_Chaudoir, commit 98b78ebda930157e5f51820cd59db13aa3bc210c (2026-10-23); files labothappy/correlations/convection/{spiral_ducts_htc,rectangular_duct,spiral_plate_htc,pipe_htc}.py. The pinned main commit of the library (f03f7f47) is not affected. Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "summary": "The branch functions were re-run in a throw-away virtualenv (clone of origin/Basile_Chaudoir, commit 98b78ebd) with the demo inputs; compare_solution.py: 13 common variables, 0 differ (rtol=0.001), largest relative deviation 2.92e-13. Two documented source fixes (curv_ratio typo, tuple return) checked against recomputed values.",
+    "checks": ["source-rerun"],
+    "reference": "Re-run of labothappy/correlations/convection/{spiral_ducts_htc,rectangular_duct,spiral_plate_htc}.py (branch commit 98b78ebd) in a virtualenv",
+    "date": "2026-11-02",
+    "coolsolve_version": "0.4.0@2dc1367",
+    "max_rel_diff": 2.92e-13,
+    "notes": "compare_solution.py: 13 common variables, 0 differ (rtol=0.001); max relative deviation 2.92e-13 (h_cp_straight), round-off only."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0087",
+    "CSL-0091",
+    "CSL-0095",
+    "CSL-0096",
+    "CSL-0111",
+    "CSL-0138",
+    "CSL-0321"
+  ],
+  "related_external": [
+    "sources/labothappy LTP-078 (branch origin/Basile_Chaudoir, commit 98b78ebd; SPHE moving-boundary example hex_SPHE_MB_charge_sensitive_example.py uses the same correlations)"
+  ],
+  "supersedes": [],
+  "previous_paths": ["models/heat_transfer/convection/curved_duct_htc"],
+  "history": [
+    {
+      "date": "2026-11-02",
+      "action": "added (T-FUNC card C-480, batch B-19; unmerged branch origin/Basile_Chaudoir)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

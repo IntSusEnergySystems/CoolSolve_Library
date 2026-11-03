@@ -1,0 +1,76 @@
+{
+  "id": "CSL-0202",
+  "name": "roots_compressor_10l",
+  "title": "Roots compressor, 10 L (exercise 2 bis)",
+  "summary": "Teaching exercise for a 10 L Roots compressor tested at 1.4 bar discharge, with a volumetric efficiency of 85 % and a mechanical efficiency of 95 %. The equation window is that test point, with an inlet orifice and a leakage nozzle; adapted from the original (orifice area 0.004601 m², the author's commented value: the 5 cm orifice of the original chokes below the fresh-charge flow).",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "roots_compressor_10l.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "exercise",
+    "roots compressor",
+    "volumetric efficiency",
+    "isentropic efficiency",
+    "leakage"
+  ],
+  "language_features": [
+    "property functions",
+    "max()"
+  ],
+  "stats": {
+    "n_equations": 50,
+    "largest_block": 7
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 02/SB/R2 - EX 2 - SB - Bis.EES",
+    "candidate_id": "TM-0036",
+    "authors": [
+      "TBD (ULiège MSTh)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.458",
+    "language": "fr",
+    "course": "ULiège MSTh, machines et systèmes thermiques, repetition R2, exercise 2 bis"
+  },
+  "verification": {
+    "summary": "Adapted main file (orifice area 0.004601 m², the author's commented value) vs the EES stored solution with the Air h/s reference offsets: 43/50 values agree (max 9.65e-4); the 7 others are the adapted area and the throat state, which in the store is not a solution (P_thr < 0). Variant no_inlet_drop: 34/34 after the same offsets (max 3.22e-4).",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance"
+    ],
+    "reference": "EES stored solution of R2 - EX 2 - SB - Bis.EES (50 values; operating point of the author's trial with A_thr = 0.004601 m2); variant: EES stored solution of MSTh-SB-R2-Ex2.EES (34 values).",
+    "date": "2026-11-01",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.000965,
+    "notes": "Adaptation: the original 5 cm orifice (A_thr = 0.0019635 m2) has no solution: the isentropic throat chokes at 0.463 kg/s (ideal-gas Air, P_crit 52.8 kPa) while epsilon_v imposes 0.505 kg/s; Newton stops at residual 3.438, Try Harder at 0.0242. The author's comment flags the problem; the stored solution is the trial M_dot_l = 0.1*M_dot whose inlet area the author wrote as 0.004601 m2, and the EES guess column of the six throat variables is exactly the CoolSolve throat state. Compared with compare_solution.py after shifting the 8 stored h_*/s_* by +125870.5776559 J/kg and -1814.866798521 J/kg-K (CoolSolve - EES for Air at 20 C, 1e5 Pa). Balance checks: inlet throttling at constant total enthalpy, isentropic leakage nozzle, mixing balance closed, epsilon_s < 1. Solves in 27 iterations from the shipped .initials; from the default guesses only Try Harder converges (549 iterations). Variant: 26/34 raw, 34/34 after the offsets."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": ["models/components/compressors/roots_compressor_10l"],
+  "history": [
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    },
+    {
+      "date": "2026-10-31",
+      "action": "variant added: roots_compressor_10l_no_inlet_drop (TM-0034, no inlet orifice, verified against its EES stored solution); TM-0037 merged",
+      "by": "Claude Code worker (card C-380)"
+    },
+    {
+      "date": "2026-11-01",
+      "action": "failing -> verified: adapted from the original (inlet orifice area 0.004601 m2, the author's commented value; the 5 cm orifice has no solution); .sol added",
+      "by": "Claude Code for S. Quoilin"
+    }
+  ]
+}

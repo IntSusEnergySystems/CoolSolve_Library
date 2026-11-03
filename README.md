@@ -62,20 +62,34 @@ CoolSolve_Library/
 └── roadmap.md              work programme and progress log
 ```
 
-Categories (taxonomy v0.2, see [docs/taxonomy.md](docs/taxonomy.md)):
+Categories (taxonomy v0.3, 12 top categories, 57 subcategories of 2–7 models, see [docs/taxonomy.md](docs/taxonomy.md)):
 
 ```
 models/
-├── fundamentals/     properties · processes · combustion
-├── heat_transfer/    conduction · convection · radiation · pressure_drop
-├── components/       heat_exchangers · compressors · expanders_turbines · pumps_fans ·
-│                     valves_nozzles_piping · boilers_burners · storage · instrumentation
-├── cycles/           steam_power · organic_rankine · gas_turbines · engines ·
-│                     refrigeration_heat_pumps · absorption_sorption
-├── hvac/             psychrometrics · air_handling · cooling_towers
-├── renewables/       solar_thermal · photovoltaics · geothermal_biomass
+├── fundamentals/      properties · property_libraries · tanks_vessels ·
+│                      piston_cylinders · steady_flow · second_law · combustion
+├── heat_transfer/     conduction_radiation · internal_convection ·
+│                      external_convection · natural_convection · two_phase ·
+│                      pressure_drop
+├── heat_exchangers/   methods · effectiveness_lmtd · plate · zoned_discretised ·
+│                      condensers_evaporators
+├── machines/          reciprocating_compressors · rotary_compressors ·
+│                      compressor_maps · turbocompressors · turbomachine_design ·
+│                      steam_turbines · expanders · pumps · fans
+├── components/        boilers_burners · nozzles_ejectors · piping_valves · storage
+├── power_cycles/      steam_basic · steam_advanced · orc_design ·
+│                      orc_applications · gas_turbine_design ·
+│                      gas_turbine_offdesign · jet_propulsion ·
+│                      supercritical_combined
+├── engines/           air_standard_cycles · engine_models · sizing · performance
+├── refrigeration_heat_pumps/
+│                      refrigeration_cycles · refrigeration_systems · absorption ·
+│                      heat_pump_cycles · heat_pump_systems · high_temperature
+├── hvac/              psychrometrics · cooling_coils · air_handling ·
+│                      cooling_towers · evaporative_coolers
 ├── buildings/
-└── energy_systems/   cogeneration · district_heating · economics
+├── renewables/
+└── energy_systems/
 ```
 
 The taxonomy can evolve: models are identified by a permanent ID (`CSL-0001`),

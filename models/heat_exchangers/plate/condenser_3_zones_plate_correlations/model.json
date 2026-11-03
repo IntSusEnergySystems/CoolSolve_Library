@@ -1,0 +1,78 @@
+{
+  "id": "CSL-0113",
+  "name": "condenser_3_zones_plate_correlations",
+  "title": "Three-zone plate condenser with heat-transfer correlations (Thonon/Kuo)",
+  "summary": "Plate condenser for R123 with water (or glycol) cooling: three refrigerant zones (desuperheating, condensation, subcooling) sized with LMTD and plate-heat-exchanger correlations (Thonon single phase, Kuo two phase); computes area, pressure drops, hold-up mass and volume.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "condenser_3_zones_plate_correlations.eescode",
+  "fluids": [
+    "R123",
+    "Water"
+  ],
+  "tags": [
+    "plate heat exchanger",
+    "condenser",
+    "three zones",
+    "Thonon correlation",
+    "Kuo correlation",
+    "pressure drop",
+    "design"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "procedures",
+    "repeat loop"
+  ],
+  "stats": {
+    "n_equations": 35,
+    "largest_block": 4
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/procedures EES/condenser 3 zones with correlations.EES",
+    "candidate_id": "TM-0563",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.940",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of the source file: 17 common variables, 5 differ at rtol=0.001, max 7.74e-03 on DELTAp_sf_cd, all inputs exact; the rest is attributed to the R123 property library. CoolProp saturation values also check against published R123 tables.",
+    "checks": ["ees-stored-solution", "publication"],
+    "reference": "EES stored solution stored in the source file (18 variables)",
+    "date": "2026-10-13",
+    "coolsolve_version": "0.3.0@3a5d5ce",
+    "max_rel_diff": 0.00774,
+    "notes": "compare_solution.py: 17 common variables, 5 differ (rtol=0.001), max 7.74e-03 on DELTAp_sf_cd; every input agrees exactly. The 5 differing variables are the integrated outputs (A_cd, DELTAp_cd, DELTAp_sf_cd, M_fluid_cd, V_cd), remaining deviation attributed to the R123 property library of EES 8 (2008) vs CoolProp in the superheated region (desuperheating duty = small difference of large enthalpies); within the 'older EES fluid models: up to a few %' tolerance of ees_import.md §11. Re-baselined 2026-10-13 after the CoolSolve fix of CS-BUG-PI-FUNCTION (g# read as 1 in the Kuo function: the earlier 5.56e-02 was mostly that bug), see the README."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0008",
+    "CSL-0096",
+    "CSL-0079",
+    "CSL-0115",
+    "CSL-0124",
+    "CSL-0114",
+    "CSL-0121",
+    "CSL-0153",
+    "CSL-0312"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": ["models/components/heat_exchangers/condenser_3_zones_plate_correlations"],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    }
+  ]
+}

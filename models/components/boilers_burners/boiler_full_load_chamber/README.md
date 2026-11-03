@@ -135,7 +135,7 @@ Source file (EES X7.458, French comments):
 `~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 07/SB/MSTh-SB-R7-Ex4.EES`
 (inventory `TM-0114`).
 
-`PROCEDURE cpbar` is copied from `models/cycles/gas_turbines/gas_turbine_part_load/` (the routine of CSL-0005, including the 0/0 guard). `FUNCTION gamma` is not copied: this procedure does not call it. The equation window does not define `cpbar`.
+`PROCEDURE cpbar` is copied from `models/power_cycles/gas_turbine_offdesign/gas_turbine_part_load/` (the routine of CSL-0005, including the 0/0 guard). `FUNCTION gamma` is not copied: this procedure does not call it. The equation window does not define `cpbar`.
 
 ## Conversion log
 

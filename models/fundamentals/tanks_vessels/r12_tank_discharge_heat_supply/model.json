@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0320",
+  "name": "r12_tank_discharge_heat_supply",
+  "title": "R12 tank discharge with heat supply (uniform-state open system)",
+  "summary": "A 25 L rigid tank of R12 (90 % liquid by volume, 25 C) is discharged through a nozzle at 100 kPa and -20 C with 180 m/s while heat keeps it at 25 C until only saturated vapour is left. The unsteady uniform-state first law gives the mass that left the tank (28.67 kg) and the heat supplied (4037 kJ).",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "r12_tank_discharge_heat_supply.eescode",
+  "fluids": ["R12"],
+  "tags": ["uniform-state open system", "unsteady first law", "tank discharge", "heat supply", "nozzle kinetic energy", "two-phase", "R12", "exercise"],
+  "language_features": ["property functions"],
+  "stats": {"n_equations": 21, "largest_block": 1},
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R03/THD10_R03_E5.EES",
+    "candidate_id": "TM-0369",
+    "authors": ["TBD (ULiège, THD course exercise sets, folder THD10_R03)"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.423",
+    "language": "fr",
+    "course": "Thermodynamique appliquée (ULiège, THD), exercise 5.72 of the course textbook"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of the source file: 21 common variables, 8 differ at rtol=1e-3. The enthalpy/internal-energy differences are a reference-state offset (Q is independent of it); the rest comes from the R12 saturated vapour volume (+1.06 % in CoolProp), Q differs by 2.4e-3. With the EES property values substituted the stored solution is reproduced to 2.1e-10.",
+    "checks": ["ees-stored-solution", "energy-balance"],
+    "reference": "EES stored solution of the source file (21 variables in common with the model; extra EES variable P = 1 is unused), converted with --ees-units",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 0.734,
+    "notes": "compare_solution.py (rtol=1e-3, --ees-units): '21 common variables, 8 differ'; largest relative difference 7.34e-01 (u_i, reference-state offset; h_out_n 4.78e-01, u_f 4.79e-01); excluding h_out_n, u_f, u_i the largest is 1.06e-02 (v_v_i, m_v_f, m_v_i, x_i), Q 2.41e-03, m_ej 3.9e-04. A shift of 1e5 J/kg of u_f, u_i and h_out_n leaves Q unchanged. Substituting the EES values of v_l_i, v_v_i, u_f, u_i, h_out_n: 21 common variables, 4 differ at rtol=1e-12, largest 2.09e-10 (m_ej)."
+  },
+  "missing_features": [],
+  "related": ["CSL-0048", "CSL-0003"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": ["models/fundamentals/processes/r12_tank_discharge_heat_supply"],
+  "history": [
+    {"date": "2026-10-31", "action": "added (card C-420, roadmap batch B-17; candidate TM-0369)", "by": "Claude worker agent for S. Quoilin"}
+  ]
+}

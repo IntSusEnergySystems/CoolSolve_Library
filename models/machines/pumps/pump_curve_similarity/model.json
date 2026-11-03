@@ -1,0 +1,87 @@
+{
+  "id": "CSL-0125",
+  "name": "pump_curve_similarity",
+  "title": "Centrifugal pump from manufacturer curves and similarity laws",
+  "summary": "Pump sized from catalogue characteristic curves (flow rate, head, isentropic efficiency, required NPSH at a rated speed) and scaled to any speed with the affinity laws; the three operating modes of the original component (P_N: flow rate from pressures and speed, P_M: speed from pressures and flow rate, M_N: discharge pressure from flow rate and speed) are shipped as three files. Translation of the LaboThapPy component PumpCurveSimilarity.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "pump_curve_similarity.eescode",
+  "fluids": [
+    "R744"
+  ],
+  "tags": [
+    "pump",
+    "characteristic curves",
+    "affinity laws",
+    "NPSH",
+    "off-design",
+    "lookup table",
+    "three modes"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "lookup tables",
+    "functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 33,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/component/pump/pump_curve_similarity.py",
+    "candidate_id": "LTP-009",
+    "authors": [
+      "Basile Chaudoir",
+      "Elise Neven"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy/blob/8514bf89a6d9a9acd4507f5375318985ab568336/labothappy/component/pump/pump_curve_similarity.py",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "upstream_branch": "origin/Elise",
+    "upstream_commit": "8514bf89a6d9a9acd4507f5375318985ab568336",
+    "pinned_commit": "f03f7f47"
+  },
+  "verification": {
+    "summary": "Adapted from the original (re-check 2026-11-02): the pinned M_N branch read eta_is and NPSH_r at the actual flow instead of the similar point; adapted to the corrected affinity laws of the upstream fix (branch Elise, 8514bf89) and verified against it: max 4.80e-10 at 2500/4000 rpm, 1.24e-08 out of range at 1450 rpm; default point unchanged (1.13e-09 vs the pinned source re-run on 2026-10-08).",
+    "checks": [
+      "source-rerun",
+      "analytical",
+      "cross-model"
+    ],
+    "reference": "LaboThapPy component PumpCurveSimilarity, branch origin/Elise commit 8514bf89 (pinned f03f7f47) re-run in a throw-away venv (Python 3.12, CoolProp 8.0.0, SciPy 1.18) in modes P_N, P_M and M_N; affinity-law self-check; cross-mode consistency at 2500 rpm (P_M recovers N_rot from the adapted M_N discharge pressure to 3e-10)",
+    "date": "2026-11-02",
+    "coolsolve_version": "0.4.0@2dc1367",
+    "max_rel_diff": 4.8e-10,
+    "notes": "Adaptation of 2026-11-02 (card C-481, branch origin/Elise): only solve_MN changed upstream; the pinned source evaluated eta_is and NPSH_r at the actual flow rate and left NPSH_r un-scaled (as if the pump ran at rated speed); physics check (affinity laws): efficiency is a property of the similar point, eta(Q) = eta_rated(Q*N_rated/N), NPSH_r = (N/N_rated)^2 * NPSHr_rated(Q*N_rated/N). Adapted equations: eta_is, NPSH_r, V_dot_flag of pump_curve_similarity_mode_MN.eescode (marked ADAPTED). Comparison: at the default point (N_rot = N_rot_rated = 2900 rpm) pinned and fixed agree exactly and the three .sol baselines are unchanged (diff of the new mode_MN solution: empty); off-rated (2500, 3500, 4000 rpm) the pinned source returns the rated-flow efficiency 0.8628 and the unscaled NPSH_r 2.4517 m where the corrected physics gives 0.8588/0.8210/0.7772 and 2.944/2.719/3.268 m (fixed W_dot_shaft 2.7292/6.8257/9.6373 MW, pinned 2.7166/6.4949/8.6811 MW). The 2026-10-08 verification numbers (1.13e-09 in the three modes against the pinned f03f7f47 component in plain HEOS, 7.2e-03 against its default BICUBIC&HEOS backend) still hold at the default point. CS-GAP-INTERP-EXTRAP is closed: CoolSolve INTERPOLATE extrapolates linearly like scipy interp1d (checked: N = 1450 rpm, eq. flow 2467.4 m3/h outside the curves, max 1.24e-08)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0084",
+    "CSL-0072",
+    "CSL-0071",
+    "CSL-0183",
+    "CSL-0318"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": ["models/components/pumps_fans/pump_curve_similarity"],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (T-TRANSLATE of the LaboThapPy PumpCurveSimilarity component, three modes; verified against the component re-run in a throw-away venv)",
+      "by": "opencode worker for S. Quoilin"
+    },
+    {
+      "date": "2026-11-02",
+      "action": "re-check (T-RECHECK, card C-481, branch origin/Elise 8514bf89): physics check confirmed the upstream fix (M_N branch must read eta_is at the similar point V_dot*N_rated/N and scale NPSH_r by (N/N_rated)^2); mode_MN adapted (eta_is, NPSH_r, V_dot_flag; marked ADAPTED), pinned f03f7f47 result kept as documented comparison; default point and the three .sol baselines unchanged; verified against 8514bf89 (max 4.80e-10 in range, 1.24e-08 out of range) and the three modes re-checked on CoolSolve 0.4.0@2dc1367",
+      "by": "opencode worker (GLM) for S. Quoilin"
+    }
+  ]
+}

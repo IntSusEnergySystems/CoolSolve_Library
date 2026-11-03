@@ -1,0 +1,96 @@
+{
+  "id": "CSL-0155",
+  "name": "inverter_air_water_heat_pump",
+  "title": "Inverter air-to-water heat pump (Daikin Altherma type), heating mode",
+  "summary": "Detailed steady-state model of an inverter-driven reversible air-to-water heat pump (Daikin Altherma type, 2007): inverter compressor with isentropic and isochoric compression stages, effectiveness heat exchangers, fan and pump characteristics, frost/ice correction. Heating-mode branch of the original two-mode (SUBPROGRAM) file, flattened per decision D10.",
+  "kind": "steady",
+  "level": 4,
+  "status": "blocked",
+  "main_file": "inverter_air_water_heat_pump.eescode",
+  "fluids": [
+    "R410A",
+    "Water",
+    "AirH2O"
+  ],
+  "tags": [
+    "heat pump",
+    "inverter compressor",
+    "reversible",
+    "air-to-water",
+    "frost",
+    "fan characteristics",
+    "catalogue model",
+    "part load"
+  ],
+  "language_features": [
+    "SUBPROGRAM flattened",
+    "string variables",
+    "five-argument IF (EES built-in)",
+    "humid-air properties",
+    "(s,v) property input pair"
+  ],
+  "stats": {
+    "n_equations": 343,
+    "largest_block": 151
+  },
+  "origin": {
+    "type": "research",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/modeles/HP_INVERTER_REV_VLD05092007_DAIKIN-ALTHERMA3.EES",
+    "candidate_id": "TM-0274",
+    "authors": [
+      "TBD (ULiège Thermodynamics Laboratory, file initials VLD)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.793L",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "Runnable variant (labels as literals), adapted: energy balances of compressor and cycle closed to 1e-9 W, COP_cp 1.79 < Carnot 4.84; vs the EES stored solution the consistent air side agrees (air flow 4776/4778 m3/h, fan 92.8/92.9 W, compressor eps_s 0.324/0.3245); EES's stored condenser state is self-inconsistent, so W_cp and COP are not comparable.",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of HP_INVERTER_REV_VLD05092007_DAIKIN-ALTHERMA3.EES (226 of 492 values; condenser part inconsistent)",
+    "date": "2026-11-01",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": null,
+    "notes": "Adaptations 2026-11-01: (1) frost latent heat +M_ice*H_ice; (2) crankcase heater in the wall balance; (3) condenser eps-NTU on t_cd_water: with t_cd_mean_water (superheat zone weighted at the 177 C discharge) the balance has no root with condensation above the water temperature - the cause of all earlier stalls; (4) fan cubic limited to psi <= 0.30: second, non-physical root (psi 0.58, eta 0.99, 926 W) removed. Native file: every numeric block converges, then CS-GAP-USER-STRING-FUNC (warning$ = change$(...)). Solution found by decomposition (pressures imposed) and continuation on p_cd; the shipped .initials converge the variant in 8 iterations."
+  },
+  "missing_features": [
+    "CS-GAP-USER-STRING-FUNC"
+  ],
+  "related": [
+    "CSL-0078",
+    "CSL-0116"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": ["models/cycles/refrigeration_heat_pumps/inverter_air_water_heat_pump"],
+  "history": [
+    {
+      "date": "2026-10-08",
+      "action": "added (blocked: CS-GAP-IF-5ARG; heating branch of TM-0274 flattened per D10)",
+      "by": "glm-5.3-flash (opencode worker) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @59b2862 (T-RECHECK, CS-GAP-IF5 closed): blocked -> failing, block 106 does not converge (initial-guess tests: README Verification); missing_features emptied (status failing: no registered gap left), _coolsolve variant removed, .initials rebuilt (R410A reference-state offset, consistent cycle point)",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-11-01",
+      "action": "review of the failing models: stays failing (solver convergence, Try Harder fails; much closer with CoolSolve branch fix/ad-pow-negative-base); frost latent-heat sign of the wet-coil balance corrected (first law); diagnosis and CoolSolve hints in README",
+      "by": "Claude Code for S. Quoilin"
+    },
+    {
+      "date": "2026-11-01",
+      "action": "second review: four corrections of the original (frost sign, heater balance, condenser driving temperature, fan-curve branch); converges; failing -> blocked by the new gap CS-GAP-USER-STRING-FUNC; runnable variant _coolsolve (+ .initials, .sol) verified; coolsolve.conf removed",
+      "by": "Claude Code for S. Quoilin"
+    }
+  ],
+  "diagnosis": "Blocked by CS-GAP-USER-STRING-FUNC (five label functions). Before the 2026-11-01 adaptation the condenser closure had no physical root and the fan curve a spurious second root; both fixed, the numeric model converges."
+}

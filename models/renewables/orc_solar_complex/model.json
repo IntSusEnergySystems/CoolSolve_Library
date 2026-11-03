@@ -1,0 +1,98 @@
+{
+  "id": "CSL-0329",
+  "name": "orc_solar_complex",
+  "title": "Solar-driven R245fa ORC with a discretised parabolic-trough collector and plate heat exchangers",
+  "summary": "Parabolic-trough field (46 m, glycol, 20 segments with the Forristall 1D radial receiver balance) heating the plate evaporator of an R245fa ORC with a plate recuperator, a pinch-fixed condenser, a pump and a two-stage hermetic scroll expander (optimal intermediate pressure ratio, MODULE flattened per decision D10). Plate counts are solved from imposed pressure drops (Thonon, Hsieh); the field outlet temperature drives the cycle: 5.4 kW net, cycle efficiency 0.106, collector efficiency 0.555.",
+  "kind": "steady",
+  "level": 4,
+  "status": "blocked",
+  "main_file": "orc_solar_complex.eescode",
+  "fluids": [
+    "R245fa",
+    "Water",
+    "Air",
+    "Glycol"
+  ],
+  "tags": [
+    "solar thermal",
+    "parabolic trough",
+    "organic Rankine cycle",
+    "R245fa",
+    "plate heat exchanger",
+    "scroll expander",
+    "two-stage expansion",
+    "recuperator",
+    "Forristall",
+    "HTF loop",
+    "discretised collector",
+    "plant model"
+  ],
+  "language_features": [
+    "MODULE flattened",
+    "PROCEDURE",
+    "FUNCTION",
+    "DUPLICATE",
+    "arrays",
+    "string variables",
+    "$if directives",
+    "lookup tables",
+    "display comments"
+  ],
+  "stats": {
+    "n_equations": 979,
+    "largest_block": 644
+  },
+  "origin": {
+    "type": "research",
+    "source": "coolsolve_examples",
+    "source_path": "~/git/CoolSolve/examples/orc_solar_complex.eescode",
+    "candidate_id": "CSX-033",
+    "authors": [
+      "S. Quoilin (ULiège Thermodynamics Laboratory) — probable, to be confirmed by the maintainer (EES licence stamp: Jean Lebrun lab licence, initials 'sylvain')",
+      "R. Forristall (NREL; scientific model and EES functions of the receiver, NREL/TP-550-34169, 2003)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "9.920",
+    "language": "en",
+    "course": "EES original EES_ok/orc_solar_complex.EES in ~/git/CoolSolve/misc/EES_ok.zip (equation-identical to the example after removing comments, blank lines, $bookmark and $UnitSystem; sources/thermo_models has no row for this file); the collector adaptations are marked AVM in the file (person not identified)"
+  },
+  "verification": {
+    "summary": "Concerns the runnable variant (native blocked by CS-GAP-INDEX-VAR): compared with the solution stored in the original EES file, 927 common variables, 302 differ at rtol=0.001, mostly R245fa-property-driven plate sizes; first-law results within 4.3e-03 (M_dot 2.75e-03, W_dot_net 4.26e-03); energy balances close.",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance"
+    ],
+    "reference": "EES stored solution of EES_ok/orc_solar_complex.EES (CoolSolve misc/EES_ok.zip), extracted with ees_extract.py (1064 variables); compare_solution.py on the variant .sol",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 1.0,
+    "notes": "max_rel_diff 1.0 is x (quality of a superheated state: EES 100, CoolSolve 0, CS-GAP-QUALITY-DOME); the largest other is DELTAp_hf_ev at 1.25e-01, then A_ev 8.05e-02, L_rec 8.01e-02, L_w_tot 7.04e-02, N_p 6.40e-02. Median of the other 301 deviations 2.8e-03. Cycle balance Q_dot_ev + W_dot_pp = W_dot_exp + Q_dot_cd closes to 5e-10 W; Q_dot_ev = M_dot_hf*cp_hf*(T_hf_su_ev - T_hf_ex_ev). The module variables of doubleexpander have stale stored values (CS-BUG-EXTRACT-STALE) and are compared under their actual-argument names. The native file does not solve (979 equations, 980 unknowns)."
+  },
+  "missing_features": [
+    "CS-GAP-INDEX-VAR"
+  ],
+  "related": [
+    "CSL-0040",
+    "CSL-0129",
+    "CSL-0082",
+    "CSL-0147",
+    "CSL-0117"
+  ],
+  "related_external": [
+    "CoolSolve examples/orc_solar_complex.eescode (the example this model was imported from, kept in CoolSolve, with its orc_solar_complex.initials)",
+    "CoolSolve misc/EES_ok.zip: EES_ok/orc_solar_complex.EES (EES 9.920, the original), .tex (solution report) and .residuals",
+    "R. Forristall, Heat Transfer Analysis and Modeling of a Parabolic Trough Solar Receiver Implemented in Engineering Equation Solver, NREL/TP-550-34169, October 2003"
+  ],
+  "supersedes": [
+    "coolsolve_examples:CSX-033"
+  ],
+  "previous_paths": ["models/renewables/solar_thermal/orc_solar_complex"],
+  "history": [
+    {
+      "date": "2026-10-31",
+      "action": "added (roadmap card C-450, batch B-18); import of CoolSolve example CSX-033 with MODULE flattening (D10) and $COMMON replaced by arguments (D13); native file blocked by the new gap CS-GAP-INDEX-VAR (cp_1ave[mean]); runnable variant orc_solar_complex_coolsolve verified against the EES stored solution",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    }
+  ]
+}

@@ -23,21 +23,37 @@ the CoolSolve GUI and survive folder moves.
 
 ---
 
-## 1. Categories (taxonomy v0.2)
+## 1. Categories (taxonomy v0.3)
 
 ```
 models/
-├── fundamentals/        properties · processes · combustion
-├── heat_transfer/       conduction · convection · radiation · pressure_drop
-├── components/          heat_exchangers · compressors · expanders_turbines · pumps_fans ·
-│                        valves_nozzles_piping · boilers_burners · storage · instrumentation
-├── cycles/              steam_power · organic_rankine · gas_turbines · engines ·
-│                        refrigeration_heat_pumps · absorption_sorption
-├── hvac/                psychrometrics · air_handling · cooling_towers
-├── renewables/          solar_thermal · photovoltaics · geothermal_biomass
+├── fundamentals/      properties · property_libraries · tanks_vessels ·
+│                      piston_cylinders · steady_flow · second_law · combustion
+├── heat_transfer/     conduction_radiation · internal_convection ·
+│                      external_convection · natural_convection · two_phase ·
+│                      pressure_drop
+├── heat_exchangers/   methods · effectiveness_lmtd · plate · zoned_discretised ·
+│                      condensers_evaporators
+├── machines/          reciprocating_compressors · rotary_compressors ·
+│                      compressor_maps · turbocompressors · turbomachine_design ·
+│                      steam_turbines · expanders · pumps · fans
+├── components/        boilers_burners · nozzles_ejectors · piping_valves · storage
+├── power_cycles/      steam_basic · steam_advanced · orc_design ·
+│                      orc_applications · gas_turbine_design ·
+│                      gas_turbine_offdesign · jet_propulsion ·
+│                      supercritical_combined
+├── engines/           air_standard_cycles · engine_models · sizing · performance
+├── refrigeration_heat_pumps/
+│                      refrigeration_cycles · refrigeration_systems · absorption ·
+│                      heat_pump_cycles · heat_pump_systems · high_temperature
+├── hvac/              psychrometrics · cooling_coils · air_handling ·
+│                      cooling_towers · evaporative_coolers
 ├── buildings/
-└── energy_systems/      cogeneration · district_heating · economics
+├── renewables/
+└── energy_systems/
 ```
+
+The tree, the counts and the rationale of v0.3 are in [taxonomy_v0.3.md](taxonomy_v0.3.md).
 
 Descriptions of every category are in [`taxonomy.json`](../taxonomy.json)
 (the file validated by `tools/build_index.py`). Rules:
@@ -46,15 +62,17 @@ Descriptions of every category are in [`taxonomy.json`](../taxonomy.json)
   contains model folders only (a top category without children, such as
   `buildings/`, contains model folders directly).
 - Classify by the **main object** of the model: a heat-pump cycle with a
-  detailed compressor sub-model goes to `cycles/refrigeration_heat_pumps`; the
-  compressor alone goes to `components/compressors`.
+  detailed compressor sub-model goes to `refrigeration_heat_pumps/`; the
+  compressor alone goes to `machines/`. A textbook exercise on a machine sits
+  with that machine; an exercise on a principle with no machine model sits in
+  `fundamentals/`.
 - **Function libraries** go with the physics they serve (`cpbar` →
   `fundamentals/combustion`, two-phase heat-transfer correlations →
-  `heat_transfer/convection`).
+  `heat_transfer/two_phase`).
 - When a model fits two categories, choose the one a user would browse first
   and add the other as a tag.
 - Sub-categories are created only when they hold models; split a category when
-  it exceeds ~40 models (taxonomy review, roadmap Phase 6).
+  it exceeds 7 models (taxonomy review, roadmap Phase 6); keep at most about 9 subcategories per top category (the GUI menu has two levels).
 - Cross-cutting aspects are **tags**, not categories: `control` (on/off
   boilers, thermostatic valves, cooling ceilings), `parameter identification`
   (models identifying parameters from catalogue or test data), `exergy`,
@@ -67,24 +85,24 @@ the worker chooses the folder when importing:
 
 | `category_guess` | Folder(s) |
 |---|---|
-| fundamentals | `fundamentals/processes` (first/second law, exergy, cycles of ideal gases in exercises) |
-| properties | `fundamentals/properties` |
-| heat_transfer | `heat_transfer/conduction`, `…/convection`, `…/radiation`, `…/pressure_drop` |
-| heat_exchangers | `components/heat_exchangers` |
-| compressors | `components/compressors` |
-| expanders_turbines | `components/expanders_turbines` |
-| pumps_fans | `components/pumps_fans` |
-| valves_nozzles_piping | `components/valves_nozzles_piping`; flow metering → `components/instrumentation`; friction/pressure-drop correlations → `heat_transfer/pressure_drop` |
+| fundamentals | `fundamentals/tanks_vessels`, `piston_cylinders`, `steady_flow`, `second_law` |
+| properties | `fundamentals/properties`, `fundamentals/property_libraries` (function libraries) |
+| heat_transfer | `heat_transfer/conduction_radiation`, `internal_convection`, `external_convection`, `natural_convection`, `two_phase`, `pressure_drop` |
+| heat_exchangers | `heat_exchangers/methods`, `effectiveness_lmtd`, `plate`, `zoned_discretised`, `condensers_evaporators` |
+| compressors | `machines/reciprocating_compressors`, `rotary_compressors`, `compressor_maps`, `turbocompressors` |
+| expanders_turbines | `machines/steam_turbines`, `machines/expanders`, `machines/turbomachine_design` |
+| pumps_fans | `machines/pumps`, `machines/fans` |
+| valves_nozzles_piping | `components/nozzles_ejectors`, `components/piping_valves` (incl. flow metering); friction/pressure-drop correlations → `heat_transfer/pressure_drop` |
 | storage | `components/storage` |
 | combustion_boilers | equipment → `components/boilers_burners`; combustion chemistry and `cpbar`-type functions → `fundamentals/combustion` |
-| engines | `cycles/engines` |
-| power_cycles_vapour | water/steam → `cycles/steam_power`; organic fluids, transcritical CO2 → `cycles/organic_rankine` |
-| power_cycles_gas | `cycles/gas_turbines` (incl. combined cycles, turbojets) |
-| refrigeration_heat_pumps | `cycles/refrigeration_heat_pumps` |
-| absorption_sorption | `cycles/absorption_sorption` |
-| hvac_psychrometrics | `hvac/psychrometrics`, `hvac/air_handling`, `hvac/cooling_towers` |
-| solar_renewables | `renewables/solar_thermal`, `renewables/photovoltaics`, `renewables/geothermal_biomass` (borefields) |
-| cogeneration_energy_systems | `energy_systems/cogeneration`, `…/district_heating`, `…/economics` |
+| engines | `engines/air_standard_cycles`, `engine_models`, `sizing`, `performance` |
+| power_cycles_vapour | water/steam → `power_cycles/steam_basic`, `steam_advanced`; organic fluids → `power_cycles/orc_design`, `orc_applications`; supercritical CO2 → `power_cycles/supercritical_combined` |
+| power_cycles_gas | `power_cycles/gas_turbine_design`, `gas_turbine_offdesign`, `jet_propulsion`, `supercritical_combined` (combined cycles) |
+| refrigeration_heat_pumps | `refrigeration_heat_pumps/refrigeration_cycles`, `refrigeration_systems`, `heat_pump_cycles`, `heat_pump_systems`, `high_temperature` |
+| absorption_sorption | `refrigeration_heat_pumps/absorption` |
+| hvac_psychrometrics | `hvac/psychrometrics`, `cooling_coils`, `air_handling`, `cooling_towers`, `evaporative_coolers` |
+| solar_renewables | `renewables` (solar thermal, photovoltaics, borefields; flat) |
+| cogeneration_energy_systems | `energy_systems` (flat) |
 | buildings | `buildings` |
 | misc | case by case; propose a taxonomy change (`T-TAXO`) if several models share a new topic |
 
@@ -261,7 +279,7 @@ Markdown links and plain path mentions, count reported per file), and
 rebuilds the index (`tools/build_index.py`):
 
 ```bash
-python3 tools/move_model.py CSL-0123 components/compressors_turbo [--name new_folder_name] [--dry-run]
+python3 tools/move_model.py CSL-0123 machines/turbocompressors [--name new_folder_name] [--dry-run]
 python3 tools/move_model.py --plan plan.csv [--dry-run]   # CSV columns: id,new_category[,new_name]
 ```
 

@@ -1,0 +1,73 @@
+{
+  "id": "CSL-0119",
+  "name": "solar_geometry_sun_path",
+  "title": "Solar geometry and sun path",
+  "summary": "Solar geometry for a fixed site (Port-au-Prince, Haiti): day of year, declination, hour angle, incidence and zenith angles, solar altitude and azimuth, sunrise/sunset times.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "solar_geometry_sun_path.eescode",
+  "fluids": [],
+  "tags": [
+    "solar geometry",
+    "sun path",
+    "declination",
+    "hour angle",
+    "sunrise",
+    "exercise"
+  ],
+  "language_features": [
+    "date function nDay_",
+    "$ifnot parametrictable directive",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 22,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/solar/angles.EES",
+    "candidate_id": "TM-0589",
+    "authors": [
+      "TBD (ULiège, J. Lebrun laboratory)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X8.198",
+    "language": "fr",
+    "course": ""
+  },
+  "verification": {
+    "summary": "The native file run at t = 24 was compared with the EES stored solution of solar/angles.EES: 22 common variables, 0 differ at rtol=0.001, max relative difference 1.6e-6 on theta_z (trigonometric round-off). Spot checks against closed-form re-evaluation also agree.",
+    "checks": ["ees-stored-solution", "analytical"],
+    "reference": "EES stored solution of solar/angles.EES (22 variables, stored parametric run t = 24) compared with the native file run at t = 24",
+    "date": "2026-10-12",
+    "coolsolve_version": "0.3.0+fix/library-gaps-3@36cdbcf",
+    "max_rel_diff": 1.6e-06,
+    "notes": "22 common variables, 0 differ at rtol 1e-3; max 1.5e-6 on theta_z (trigonometric round-off); the shipped default run is t = 0."
+  },
+  "missing_features": [],
+  "related": ["CSL-0082", "CSL-0083"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": ["models/renewables/solar_thermal/solar_geometry_sun_path"],
+  "history": [
+    {
+      "date": "2026-10-07",
+      "action": "added (roadmap card C-130)",
+      "by": "opencode worker (muse-spark) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-10",
+      "action": "re-checked with CoolSolve fix/library-gaps-2 @9423934 (T-RECHECK, CS-GAP-IF-DIRECTIVE closed); still blocked by CS-GAP-NDAY (native file now keeps the $ifnot parametrictable block, t = 0, 22 equations/22 unknowns, first error Unknown function nDay_); _coolsolve variant kept (nDay_ replacement still needed, t = 24 is the stored parametric run)",
+      "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-10-12",
+      "action": "re-checked with CoolSolve fix/library-gaps-3@36cdbcf: verified",
+      "by": "Claude (Haiku) for S. Quoilin"
+    }
+  ]
+}

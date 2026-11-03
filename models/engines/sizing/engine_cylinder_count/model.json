@@ -1,0 +1,50 @@
+{
+  "id": "CSL-0331",
+  "name": "engine_cylinder_count",
+  "title": "Engine cylinder count and operating parameters at rated power",
+  "summary": "Four-stroke H2 engine sized from bore, stroke, mean piston speed and rated shaft power: the non-integer cylinder count is rounded up with the mean effective pressure corrected. Submerged operation at part load with an O2 + recirculated-H2O oxidiser, stoichiometric combustion and volumetric efficiency from the mixture molar mass.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "engine_cylinder_count.eescode",
+  "fluids": ["H2", "O2", "H2O"],
+  "tags": ["engine", "cylinder count", "mean effective pressure", "hydrogen", "oxy-combustion", "volumetric efficiency", "exercise"],
+  "language_features": [],
+  "stats": {
+    "n_equations": 43,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/MCI_REMIDICKES/MCI/TP/MCI_TP2_Ex_1-3/Exercice_3_Param opératoires et combustion.EES",
+    "candidate_id": "TM-0236",
+    "authors": ["Ph. Ngendakumana", "Rémi Dickes"],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X10.589",
+    "language": "fr",
+    "course": "Machines et combustion industrielle (ULiège), TP2 exercise 3"
+  },
+  "verification": {
+    "summary": "The runnable variant engine_cylinder_count_coolsolve was compared with the EES stored solution (compare_solution.py --ees-units): 43 common variables, only r differs (EES stores 0.53659 kJ/(kg-K) without a units cell; the same value). Excluding that units artifact the maximum is 1.21e-04 on LHV_f_EES: the LHV from CoolSolve formation enthalpies (119960.5 kJ/kg) against EES LowerHeatingValue(H2) (119946 kJ/kg).",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution of TM-0236 (Exercice_3_Param opératoires et combustion.EES)",
+    "date": "2026-11-02",
+    "coolsolve_version": "0.4.0@2dc1367",
+    "max_rel_diff": 0.999,
+    "notes": "Printed maximum 9.99e-01 is the r row, a units artifact (blank units cell in the EES reference, kJ/(kg-K) vs J/(kg-K)); excluding it the maximum is 1.21e-04. The native file is blocked and was not solved."
+  },
+  "missing_features": ["CS-GAP-HEATING-VALUE"],
+  "related": ["CSL-0279", "CSL-0185"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": ["models/cycles/engines/engine_cylinder_count"],
+  "history": [
+    {
+      "date": "2026-11-02",
+      "action": "added (C-237, re-dispatch of the stopped import; gap CS-GAP-HEATING-VALUE registered)",
+      "by": "GLM (glm-5.3-flash) for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "id": "CSL-0324",
+  "name": "zeotropic_hp_propane_isobutane",
+  "title": "Zeotropic propane/isobutane heat pump with glide-matching sectioned exchangers (TESPy)",
+  "summary": "Water-to-water heat pump on a propane/isobutane mixture (CoolProp mixture backend): superheat over the dew point, subcooling under the bubble point, and an internal pinch imposed on 50-section condenser and evaporator profiles; COP, volumetric heating capacity and condenser glide versus composition.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "zeotropic_hp_propane_isobutane.eescode",
+  "fluids": [
+    "Propane",
+    "IsoButane",
+    "Water"
+  ],
+  "tags": [
+    "heat pump",
+    "zeotropic mixture",
+    "temperature glide",
+    "glide matching",
+    "sectioned heat exchanger",
+    "internal pinch",
+    "composition sweep",
+    "COP",
+    "volumetric heating capacity",
+    "tutorial"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions",
+    "FUNCTION",
+    "DUPLICATE arrays",
+    "CoolProp mixture A[x]&B[y]",
+    "REPEAT UNTIL"
+  ],
+  "stats": {
+    "n_equations": 567,
+    "largest_block": 335
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "tespy",
+    "source_path": "~/git/tespy/docs/how_to_guides/zeotropic_heat_pump.ipynb",
+    "candidate_id": "TSP-049",
+    "authors": [
+      "Francesco Witte (TESPy lead developer) and the TESPy contributors"
+    ],
+    "url": "https://github.com/oemof/tespy/blob/19425523ff7ecd67b36e7b90efe04a9480a9ebe3/docs/how_to_guides/zeotropic_heat_pump.ipynb",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "TESPy how-to 'Zeotropic mixtures in a heat pump' (commit 19425523)"
+  },
+  "verification": {
+    "summary": "The TESPy model (notebook class) was re-run in a throw-away venv with the CoolProp HEOS back end: COP, heating capacity per volume, glide and both pressures agree at 0, 30, 50 and 100 % propane to <= 1.9e-9 relative. The thermopack (Peng-Robinson) sweep of the notebook, reproduced exactly, differs by <= 0.95 % (COP) and 0.35 K (glide).",
+    "checks": [
+      "source-rerun"
+    ],
+    "reference": "TESPy ZeotropicHeatPumpModel of docs/how_to_guides/zeotropic_heat_pump.ipynb (commit 19425523), CoolProp HEOS mixture (0, 0.3, 0.5, 1 propane mole fraction) and thermopack engine (11 compositions, notebook stored values reproduced)",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 1.9e-09,
+    "notes": "Same CoolProp equation of state on both sides (8.0.0 in the venv, 8.1.0dev in CoolSolve). Without the bubble/dew points as extra section boundaries the condenser pressure differs by 0.5 % (TESPy adds them, see README). Thermopack deviations are an equation-of-state effect, comparable to the thermopack-REFPROP deviations the notebook reports."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0253",
+    "CSL-0013",
+    "CSL-0250"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": ["models/cycles/refrigeration_heat_pumps/zeotropic_hp_propane_isobutane"],
+  "history": [
+    {
+      "date": "2026-10-31",
+      "action": "added (T-TRANSLATE of the TESPy zeotropic heat-pump how-to, card C-445)",
+      "by": "Claude (Sonnet 5.5) for S. Quoilin"
+    }
+  ]
+}

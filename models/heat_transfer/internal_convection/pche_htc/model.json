@@ -1,0 +1,85 @@
+{
+  "id": "CSL-0322",
+  "name": "pche_htc",
+  "title": "Printed-circuit heat exchanger (PCHE): channel heat-transfer coefficient correlations (function library)",
+  "summary": "EES FUNCTIONs for the convective heat-transfer coefficient in the semicircular channels of a printed-circuit heat exchanger (sCO2 recuperators): straight channel (Stephan-Preusser laminar and Gnielinski transition on the semicircle hydraulic diameter) and the bending-angle zigzag fits of PCHE_Lee with their friction-factor fit (recommended, alpha <= 40 deg for Re <= 2000). The zigzag formula of PCHE_conv is not physical in the original and returns -1; wavy and airfoil channels are not implemented in the original.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "pche_htc.eescode",
+  "fluids": [],
+  "tags": [
+    "printed-circuit heat exchanger",
+    "PCHE",
+    "semicircular channel",
+    "zigzag channel",
+    "supercritical CO2",
+    "nusselt number",
+    "correlation",
+    "compact heat exchanger",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "IF/THEN/ELSE (nested blocks)",
+    "DUPLICATE",
+    "pi inside functions",
+    "LOG10"
+  ],
+  "stats": {
+    "n_equations": 66,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/correlations/convection/printed_circuit_htc.py",
+    "candidate_id": "LTP-040",
+    "authors": [
+      "Basile Chaudoir (LaboThapPy, ULiège)",
+      "S. W. Lee, S. M. Shin, S. Chung, H. Jo (PCHE_conv reference)",
+      "Y. Jiang, E. Liese, S. E. Zitney, D. Bhattacharyya (PCHE_Lee reference)",
+      "Y. Lee, S. Lee, H. B. Park, K. W. Seo, D. Lee (PCHE_Lee reference)"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy/blob/f03f7f47/labothappy/correlations/convection/printed_circuit_htc.py",
+    "license": "Apache-2.0 (LICENSE.txt and NOTICE.txt of LaboThapPy; pyproject.toml declares MIT)",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "LaboThapPy commit f03f7f47; functions PCHE_conv and PCHE_Lee. The scientific references are those quoted in the docstrings of the original and were not checked. Translation published under the CoolSolve_Library MIT license (decision D3)."
+  },
+  "verification": {
+    "summary": "Compared with a re-run of PCHE_conv (straight) and PCHE_Lee of LaboThapPy 0.1.0 (commit f03f7f47) in a throw-away venv: 27 common variables, 0 differ (rtol=0.001), largest relative deviation 4.0e-13. Publications not checked; the non-physical zigzag formula of PCHE_conv is not shipped (returns -1).",
+    "checks": [
+      "source-rerun"
+    ],
+    "reference": "LaboThapPy printed_circuit_htc.py (PCHE_conv straight, PCHE_Lee) called with the demonstration inputs in a throw-away virtualenv (pip install of the local clone, CoolProp 8.0.0)",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": 4e-13,
+    "notes": "compare_solution.py: 27 common variables, 0 differ (rtol=0.001); largest relative deviation 4.0e-13 (h_L[8]), round-off of the 13 digits of the .sol. The friction fit f_L is a local variable of the original; checked with a separate Python line (alpha = 5, 15, 35 deg). The zigzag branch of PCHE_conv (h ~ 1e13 W/m2-K) was reproduced before being withdrawn."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0087",
+    "CSL-0091",
+    "CSL-0104",
+    "CSL-0127",
+    "CSL-0128"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": ["models/heat_transfer/convection/pche_htc"],
+  "history": [
+    {
+      "date": "2026-10-31",
+      "action": "added (T-FUNC card C-442, inventory row LTP-040)",
+      "by": "sonnet worker for S. Quoilin"
+    },
+    {
+      "date": "2026-10-31",
+      "action": "zigzag branch of PCHE_conv replaced by the flag -1 (orchestrator correction, card C-442)",
+      "by": "sonnet worker for S. Quoilin"
+    }
+  ]
+}

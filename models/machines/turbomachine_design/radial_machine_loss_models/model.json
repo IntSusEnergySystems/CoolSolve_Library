@@ -1,0 +1,91 @@
+{
+  "id": "CSL-0328",
+  "name": "radial_machine_loss_models",
+  "title": "Radial compressor and radial turbine loss models (function library)",
+  "summary": "Specific-enthalpy losses (J/kg) of a centrifugal compressor (rotor incidence, friction, blade loading, clearance, mixing, disc friction, recirculation; vaned-stator friction and incidence) and of a radial-inflow turbine (nozzle; rotor incidence, passage, clearance, trailing edge), one FUNCTION per loss plus a PROCEDURE per blade row. Invalid inputs or non-physical results return -1; source defects are documented. The demonstration program evaluates illustrative R134a and R245fa velocity triangles.",
+  "kind": "function",
+  "level": 3,
+  "status": "verified",
+  "main_file": "radial_machine_loss_models.eescode",
+  "fluids": [
+    "R134a",
+    "R245fa"
+  ],
+  "tags": [
+    "centrifugal compressor",
+    "radial turbine",
+    "loss model",
+    "mean-line",
+    "incidence loss",
+    "disc friction",
+    "recirculation",
+    "clearance loss",
+    "nozzle loss",
+    "passage loss",
+    "trailing edge",
+    "function library",
+    "heat pump",
+    "ORC"
+  ],
+  "language_features": [
+    "functions",
+    "procedures",
+    "IF/THEN/ELSE",
+    "property functions",
+    "initial guesses"
+  ],
+  "stats": {
+    "n_equations": 126,
+    "largest_block": 8
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/correlations/turbomachinery/radial_compressor_losses.py; ~/git/LaboThapPy/labothappy/correlations/turbomachinery/radial_turbine_losses.py",
+    "candidate_id": "LTP-052",
+    "authors": [
+      "Basile Chaudoir (LaboThapPy, ULiege; author of both translated files in the repository history)"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy/tree/f03f7f473b190d0c0b5e296132b50565e89e4421/labothappy/correlations/turbomachinery",
+    "license": "Apache-2.0 (original, LICENSE.txt of LaboThapPy); translation published under the CoolSolve_Library MIT licence (decision D3)",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "LaboThapPy commit f03f7f47 (files above, history 2025-09 to 2026-05). The source cites Galvas 1973, Aungier 1995, Jansen 1967, Coppage and Dallenbach 1956, Oh et al. 1997, Japikse 1996, Conrad et al. 1980, Meroni et al. 2018 (compressor) and Rodgers 1967, Wasserbauer and Glassman 1975, Moustapha et al. 2003, Meroni 2018, the Aqel thesis 2023 (turbine); none was checked. Inventory row LTP-052; LTP-003, LTP-067 and LTP-068 are duplicates of it (mean-line components and optimisation loops not translated)."
+  },
+  "verification": {
+    "summary": "LaboThapPy (commit f03f7f47) re-run in a virtual environment (CoolProp 8.0.0) on the same inputs: 18 demonstration values agree to 5.3e-12 and 680 random-sweep values to 8.6e-10 (above 0.01 J/kg), with two documented changes (r4*b4, added D_h); invalid cases return -1. No publication checked.",
+    "checks": [
+      "source-rerun"
+    ],
+    "reference": "LaboThapPy commit f03f7f47 re-run in a throw-away virtual environment under work/: radial_compressor_rotor_losses, radial_compressor_stator_losses, nozzle_losses (unmodified) and rotor_losses of the turbine module with r4**b4 read as r4*b4, on the demonstration inputs and on 160 random argument sets",
+    "date": "2026-10-31",
+    "coolsolve_version": "0.4.0@2dc1367",
+    "max_rel_diff": 8.58e-10,
+    "notes": "Demonstration: 18 values, max relative deviation 5.3e-12. Random sweep: 680 values (40 sets of the rotor, stator, turbine-rotor and nozzle calls), max relative deviation 8.6e-10 for values above 0.01 J/kg (two values below 3e-3 J/kg: 1.5e-8 and 2.2e-9 relative). Stator friction compared as original/D_h. Unmodified original turbine passage loss 887.7 J/kg against 3445.8 J/kg with r4*b4 (source defect). CoolProp 8.1.0dev and 8.0.0 differ on the R245fa viscosity (+14.4 %), without effect on the comparison (inputs taken from the .sol). The source has no reference results; no publication checked. Re-check 2026-11-02 (card C-484, build 0.4.0@2dc1367): after restoring the powers hidden by CS-BUG-PROC-NEG-POW, the new .sol is byte-for-byte identical to the previous baseline."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0327",
+    "CSL-0318",
+    "CSL-0069",
+    "CSL-0023"
+  ],
+  "related_external": [
+    "LaboThapPy radial_compressor_losses.py and radial_turbine_losses.py (github.com/PyLaboThap/LaboThapPy, commit f03f7f47)"
+  ],
+  "supersedes": [],
+  "previous_paths": ["models/components/compressors/radial_machine_loss_models"],
+  "history": [
+    {
+      "date": "2026-10-31",
+      "action": "added (T-FUNC card C-449, batch B-12/B-18: LaboThapPy LTP-052)",
+      "by": "worker for S. Quoilin"
+    },
+    {
+      "date": "2026-11-02",
+      "action": "re-check (T-RECHECK card C-484): CS-BUG-PROC-NEG-POW fixed and closed (CoolSolve 07bf9dc); integer powers written as products at import restored to the x^n forms of the source, .sol byte-for-byte identical",
+      "by": "worker for S. Quoilin"
+    }
+  ]
+}

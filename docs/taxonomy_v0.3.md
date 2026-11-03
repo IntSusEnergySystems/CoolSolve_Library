@@ -1,7 +1,7 @@
-# Taxonomy v0.3 — plan (not applied)
+# Taxonomy v0.3 — plan (applied 2026-11-03)
 
 Single plan of the v0.3 taxonomy (2026-11-03). It replaces the C-139 proposal, the C-491 move CSV and the C-491 category drafts,
-and it is the input of `tools/move_model.py`. Nothing is applied: `taxonomy.json` is still v0.2 and no folder has moved. Maintainer decision pending.
+and it is the input of `tools/move_model.py`. Applied on 2026-11-03 with `tools/move_model.py --plan docs/taxonomy_v0.3.md` (not committed yet): `taxonomy.json` is v0.3 and the folders have moved; the file is kept as the rationale and the record of the moves.
 
 ## 1. Rules
 
@@ -735,7 +735,7 @@ the old paths keep working through `previous_paths` and `redirects.csv` (`$INCLU
 | CSL-0160 | pv_module_single_diode | renewables/photovoltaics | renewables |
 | CSL-0329 | orc_solar_complex | renewables/solar_thermal | renewables |
 
-## 5. How to apply (maintainer, then a T-MOVE card)
+## 5. How it was applied
 
 1. Decide on sections 1–3 (edit this file: the JSON block and the table are the plan).
 2. `python3 tools/move_model.py --plan docs/taxonomy_v0.3.md --dry-run` — checks that every model ends in a declared category,
@@ -754,3 +754,4 @@ the old paths keep working through `previous_paths` and `redirects.csv` (`$INCLU
   `library.html` and in the GUI. The v0.2 top categories `components` and `cycles` (99 and 96 models) are split into
   `heat_exchangers`, `machines`, `components`, `power_cycles`, `engines` and `refrigeration_heat_pumps`; this plan. Applied on a scratch copy of the library: `build_index.py` 0 errors, 259 redirects,
   `test_models.py` 314 targets (277 main files + 37 variants), 0 failure (CoolSolve 0.4.0 build of 2026-11-01).
+- 2026-11-03: applied. `move_model.py` moved 259 folders (`git mv`, staged), rewrote 29 links in 12 files, wrote `taxonomy.json`; `build_index.py` 0 errors; `docs/taxonomy.md` §1 and the README tree updated.

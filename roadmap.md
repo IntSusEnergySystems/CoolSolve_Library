@@ -7,7 +7,7 @@ each tested and marked done. *How* each step is executed is described in
 [docs/model_workflow.md](docs/model_workflow.md); the classification rules are
 in [docs/taxonomy.md](docs/taxonomy.md).
 
-*Last update: 2026-11-03 (B-19/B-20 closed, taxonomy v0.3 plan ready, B-21 Python references started; handover at the top of §1).*
+*Last update: 2026-11-03 (B-19/B-20 closed, taxonomy v0.3 applied, B-21 Python references started; handover at the top of §1).*
 
 ---
 
@@ -88,7 +88,7 @@ CoolSolve (`~/git/CoolSolve`, `main` @`2dc1367`): only the register `docs/model_
   `CSL-0044/0225/0003/0048/0214/0283/0053/0282/0186/0184/0236/0059/0004/0015/0054/0061/0063/0056/0045/0058`).
 - Stop everything with `python3 ~/llm/scripts/oc-orch.py down` (the lanes keep their files).
 
-**For the maintainer.** (1) Decide on the taxonomy v0.3 plan (then a T-MOVE card: `python3 tools/move_model.py --plan docs/taxonomy_v0.3.md`, dry run first).
+**For the maintainer.** (1) ~~Taxonomy v0.3~~ applied 2026-11-03 (not committed): review `git status`, look at the GUI Library menu, commit, and tag the library at the next CoolSolve release (P6.3).
 (2) Still open from 2026-11-01: CoolSolve `fix/ad-pow-negative-base` review, `CS-GAP-USER-STRING-FUNC`, the adaptations of `CSL-0326/0312/0155`.
 (3) Consider making TrustRegion a fallback after Newton in CoolSolve's default pipeline (`CSL-0217`). (4) Borderline pairs to decide (keep both or merge):
 `CSL-0226`/`CSL-0295` (turbojet without/with afterburner) and `CSL-0032`/`CSL-0227` (condensers). (5) TESPy `FuelCell` heat sign (`CSL-0323`) confirmed upstream,
@@ -557,7 +557,7 @@ most 100 kB.
 
 - [ ] P6.0 **Maintainer track** (continuous, after each batch): `T-FIGURE` for the runnable models without figure and completion of the `TBD` authors — both lists are printed by `python3 tools/build_index.py`
 - [ ] P6.1 Continuous integration (GitHub Actions): `build_index.py --check`, `test_models.py` with the latest CoolSolve release
-- [ ] P6.2 Taxonomy reviews at M1, M2, M3 (split crowded categories — `compressors`, `refrigeration_heat_pumps` and `fundamentals` already hold 60–90 candidates; bump the taxonomy version)
+- [ ] P6.2 Taxonomy reviews at M1, M2, M3 (**M2 review done and applied 2026-11-03: taxonomy v0.3**) (split crowded categories — `compressors`, `refrigeration_heat_pumps` and `fundamentals` already hold 60–90 candidates; bump the taxonomy version)
   - **M1 review (`C-14`, 2026-10-05; 24 models in 15 of the 31 leaf categories): taxonomy v0.2 kept, nothing restructured.** The taxonomy covered every case of B-01/B-02 without a new category. Recommendations for the maintainer, to apply at M2 (the ~40-model rule is not reached yet; models are `compressors` 6, `heat_exchangers` 3, `refrigeration_heat_pumps` 3, each other category 1):
     - **`components/compressors`** (52 distinct candidates, 30 wave1/high/medium; already 6 models) is the first to split: `positive_displacement` (piston 9, scroll 5, screw 5, rotary) and `turbomachines` (centrifugal/axial 16); keep two-point identification as the tag `parameter identification` (3 of the 6 models), not as a category.
     - **`cycles/refrigeration_heat_pumps`** (65): split `heat_pumps` (23 titles) from `refrigeration` (chillers, cabinets); 17 titles mention an evaporator or a condenser: route such models to `components/heat_exchangers` when the component, not the cycle, is the main object (existing rule).
@@ -573,7 +573,7 @@ most 100 kB.
 
 ## 4. Decisions and open questions
 
-**Open: taxonomy v0.3 plan** — [docs/taxonomy_v0.3.md](docs/taxonomy_v0.3.md), one file (rules, tree with counts, the complete `taxonomy.json`, the move table read by `tools/move_model.py --plan`). Revised 2026-11-03 at the maintainer's request: at most 6–7 models per category, no near-empty ones, two levels as the GUI Library menu; `components` and `cycles` split into `heat_exchangers`, `machines`, `components`, `power_cycles`, `engines`, `refrigeration_heat_pumps`; 259 of 302 models move; applied on a scratch copy: build_index 0 errors, test_models 314 targets 0 failure. First version (C-139, 2026-10-31): split rule ~40 → ~20 models; flat sibling splits of `components/compressors` (positive displacement / turbo), `components/heat_exchangers` (condensers_evaporators), `cycles/refrigeration_heat_pumps` (refrigeration / heat_pumps / high_temperature_heat_pumps), `cycles/engines`, `fundamentals/processes`, `heat_transfer/convection`; ~15 misfiled models; photovoltaics merged into `renewables/solar`. Not applied: maintainer decides (then a T-MOVE card regenerates `redirects.csv`).
+**Done (2026-11-03): taxonomy v0.3** — [docs/taxonomy_v0.3.md](docs/taxonomy_v0.3.md), one file (rules, tree with counts, the complete `taxonomy.json`, the move table read by `tools/move_model.py --plan`). Revised 2026-11-03 at the maintainer's request: at most 6–7 models per category, no near-empty ones, two levels as the GUI Library menu; `components` and `cycles` split into `heat_exchangers`, `machines`, `components`, `power_cycles`, `engines`, `refrigeration_heat_pumps`; 259 of 302 models move; applied on a scratch copy: build_index 0 errors, test_models 314 targets 0 failure. First version (C-139, 2026-10-31): split rule ~40 → ~20 models; flat sibling splits of `components/compressors` (positive displacement / turbo), `components/heat_exchangers` (condensers_evaporators), `cycles/refrigeration_heat_pumps` (refrigeration / heat_pumps / high_temperature_heat_pumps), `cycles/engines`, `fundamentals/processes`, `heat_transfer/convection`; ~15 misfiled models; photovoltaics merged into `renewables/solar`. **Applied 2026-11-03** by the maintainer's request (`tools/move_model.py --plan docs/taxonomy_v0.3.md`: 259 folders moved with `git mv`, 29 links rewritten, `taxonomy.json` v0.3, `redirects.csv` regenerated, `docs/taxonomy.md` §1 and the README tree updated; `build_index.py` 0 errors; regression: see the §8 log row). Not committed yet.
 
 Decisions of the maintainer (2026-10-04), applied in the documents and tools:
 
@@ -1682,3 +1682,4 @@ and adds the log line in §8.
 | 2026-11-03 | README completeness | done (glm t263): missing template sections added/renamed in the 23 READMEs from in-folder material; orchestrator fixed one false log line (CSL-0120 comments are still French); build_index 0 errors |
 | 2026-11-03 | T-RECHECK CSL-0125 | done (glmfree t256): mode_MN adapted to upstream Elise 8514bf89 (eta at the similar flow, NPSH_r x N^2), default point and the three .sol unchanged, verified 4.8e-10 against the fixed source; CS-GAP-INTERP-EXTRAP evidence added |
 | 2026-11-03 | T-VERIFY python refs | done (glmfree t265): 96 scripts re-run (CoolProp 8.0.0) -> 20 match, 5 differs (other statement data), 16 not-comparable, 26 duplicate-of, 17 not-runnable, 12 no-model; no model bug; R07E02 vs CSL-0029 re-checked by the orchestrator (other pressures and eta definition); exam scripts anonymised |
+| 2026-11-03 | T-MOVE taxonomy v0.3 | done: `move_model.py --plan docs/taxonomy_v0.3.md` (259 folders `git mv`, 29 links in 12 files, `taxonomy.json` v0.3, `redirects.csv`), `docs/taxonomy.md` §1 and README tree updated; `build_index.py` 0 errors; `test_models.py` 314 targets (277 main + 37 variants), 0 failure (CoolSolve 0.4.0, CoolProp 75af7816). Not committed |

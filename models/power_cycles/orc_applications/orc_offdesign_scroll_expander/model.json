@@ -1,0 +1,99 @@
+{
+  "id": "CSL-0312",
+  "name": "orc_offdesign_scroll_expander",
+  "title": "Off-design ORC with semi-empirical scroll expander and moving-boundary plate heat exchangers",
+  "summary": "R1233zd(E) organic Rankine cycle solved off-design: Lemort semi-empirical scroll expander (P_M mode), pump on similarity laws with rated curves, two SWEP P200THx140 plate heat exchangers in a zone-wise moving-boundary formulation with Zivi charge. The low pressure is closed by the imposed 7 K pump-suction subcooling, as the source's iteration variable. Adapted from the source on 2026-11-01 (corrected plate correlations, surface tension, expander su2 state, trigonometric units): the cycle converges and is thermodynamically consistent.",
+  "kind": "steady",
+  "level": 4,
+  "status": "verified",
+  "main_file": "orc_offdesign_scroll_expander.eescode",
+  "fluids": [
+    "R1233zd(E)",
+    "Water"
+  ],
+  "tags": [
+    "cycle",
+    "offdesign",
+    "semi-empirical",
+    "moving-boundary",
+    "correlation",
+    "scroll expander",
+    "part load"
+  ],
+  "language_features": [],
+  "stats": {
+    "n_equations": 231,
+    "largest_block": 134
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "labothappy",
+    "source_path": "~/git/LaboThapPy/labothappy/machine/examples/ORC/fpi_orc_example.py",
+    "candidate_id": "LTP-057",
+    "authors": [
+      "Basile Chaudoir",
+      "Elise Neven"
+    ],
+    "url": "https://github.com/PyLaboThap/LaboThapPy/tree/f03f7f47/labothappy/machine/examples/ORC/fpi_orc_example.py",
+    "license": "Apache-2.0 (source repository); this translation MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "Adapted model: cycle, expander and expander-wall energy balances closed (<=2e-8 W), no temperature cross, eta_th 5.97 % < Carnot 17.5 %, plate HTCs in the usual ranges (liquid 287, boiling 6650, vapour 220, condensing 1730 W/m2K). Pump and expander checked against the source components at import; the source cycle example cannot run, so no cycle reference.",
+    "checks": [
+      "source-rerun",
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "LaboThapPy f03f7f47 component runs (expander_semi_empirical, pump_curve_similarity); Kondou et al. 2015 (R1233zd(E) surface tension)",
+    "date": "2026-11-01",
+    "coolsolve_version": "0.4.0@9768373",
+    "max_rel_diff": null,
+    "notes": "Corrections: source - Amalfi G (whole flow in one channel, x500), Amalfi conductivity (vapour value), Amalfi boiling number (zone heat flux), no CoolProp surface tension for R1233zd(E) (Kondou 2015 correlation added), friction x1000, condenser gravity sign, evaporator amplitude 0.15 mm ('to adjust') -> channel gap, conductivity function with R1234ze(E) critical constants -> CoolProp, expander su2 reset (energy not conserved) -> Lemort su2 restored, suction drop neglected (supersonic port), gamma guard; translation - trigonometric arguments in radians (CoolSolve uses degrees), evaporator water-node sign, LMTD guard. Converges in 57 Newton iterations from the shipped .initials (Try Harder from the old initials). Operating point of the source: expander 9210 rpm, 4.5x nominal flow."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0134",
+    "CSL-0153",
+    "CSL-0138",
+    "CSL-0111",
+    "CSL-0113",
+    "CSL-0114",
+    "CSL-0159",
+    "CSL-0132",
+    "CSL-0013"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": ["models/cycles/organic_rankine/orc_offdesign_scroll_expander"],
+  "history": [
+    {
+      "date": "2026-10-31",
+      "action": "added",
+      "by": "glm (card C-360)"
+    },
+    {
+      "date": "2026-10-31",
+      "action": "continuation (orchestrator review): LMTD guard fixed - initial residual 4.7e8 -> 5.8e5; state-point initials added; still failing",
+      "by": "glm"
+    },
+    {
+      "date": "2026-10-31",
+      "action": "source formulation implemented (orchestrator round 2): per-zone utilisation w = UA_req/UA_avail with the source closure sum(w)=1, w-weighted pressure drops and w-proportional charge; LM reaches residual 25.5 (from 2.2e5) but exceeds the iteration budget - still failing",
+      "by": "glm"
+    },
+    {
+      "date": "2026-11-01",
+      "action": "review of the failing models: stays failing (solver convergence; Try Harder fails); LMTD guard bug of the translation corrected; diagnosis and CoolSolve hints in README; maintainer may consider dropping (no cycle reference, heavily modified translation)",
+      "by": "Claude Code for S. Quoilin"
+    },
+    {
+      "date": "2026-11-01",
+      "action": "second review: source and translation errors corrected (13 items, README 'Adaptation of 2026-11-01'); failing -> verified (adapted); .initials and .sol added; coolsolve.conf removed",
+      "by": "Claude Code for S. Quoilin"
+    }
+  ],
+  "diagnosis": null
+}

@@ -1,0 +1,78 @@
+{
+  "id": "CSL-0035",
+  "name": "centrifugal_compressor_lookup_map",
+  "title": "Centrifugal compressor with a lookup-table performance map (air)",
+  "summary": "Constant-speed centrifugal air compressor characterised by a three-point performance map: reduced mass flow rate and isentropic efficiency interpolated from the map at the pressure ratio, then mass flow rate and absorbed power.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "centrifugal_compressor_lookup_map.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "centrifugal compressor",
+    "performance map",
+    "lookup table",
+    "interpolation",
+    "off-design",
+    "exercise"
+  ],
+  "language_features": [
+    "INTERPOLATE (native EES call form with a named argument)",
+    "property functions (Air)"
+  ],
+  "stats": {
+    "n_equations": 14,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "teaching",
+    "source": "thermo_models",
+    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 04/MSTH_041012_exercice_8.EES",
+    "candidate_id": "TM-0061",
+    "authors": [
+      "TBD (ULiège MSTh course — Machines et systèmes thermiques; course team J. Lebrun, V. Lemort, S. Bertagnolio; individual author not identified)"
+    ],
+    "url": "",
+    "license": "MIT",
+    "ees_version": "X7.210",
+    "language": "fr",
+    "course": "ULiège, Machines et systèmes thermiques, repetition 4 (2004-10-12), exercise 6"
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of TM-0061 at p_ex = 5.4 bar (r_p = 6, linear extrapolation of the map as in EES): epsilon_s, M_r and M_dot agree to 3e-9; w_s and W_dot differ by 9.6e-4 (EES 7 vs CoolProp Air); h and s carry constant reference-state offsets.",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution of thermo_models TM-0061 (EES 7.210, 12 variables, internally consistent run at p_ex = 5.4 bar / r_p = 6.0)",
+    "date": "2026-10-18",
+    "coolsolve_version": "0.3.0@4798e2b",
+    "max_rel_diff": 0.00096,
+    "notes": "Native file solved with p_ex = 5.4E5. p_su, p_ex, r_p, t_su exact; epsilon_s 1.093333, M_r 29.9, M_dot 1.572099 (3e-9); w_s 196824 vs 196636 J/kg and W_dot 283013 vs 282742 W (9.6e-4, EES 7 vs CoolProp Air); h_su, h_exs and s_su left out (constant EES-7-vs-CoolProp Air reference-state offsets: +125.87 kJ/kg on h, -1814.8 J/kg-K on s). The 127x2 parametric table of the original is not usable as reference (lost .lkt, values inconsistent with the published map - see README)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0011",
+    "CSL-0023",
+    "CSL-0069",
+    "CSL-0157"
+  ],
+  "related_external": [
+    "CoolSolve examples/turbocompressor_interpolate.eescode (CSX-045: same exercise, kept in CoolSolve as a test case; p_ex imposed at 4.5 bar and map data only in comments, see README)"
+  ],
+  "supersedes": [],
+  "previous_paths": ["models/components/compressors/centrifugal_compressor_lookup_map"],
+  "history": [
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-36, batch B-03; native file blocked by CS-GAP-INTERP-EES/CS-GAP-INTERP-EXTRAP, runnable variant CSL-0035:coolsolve verified)",
+      "by": "opencode worker for S. Quoilin"
+    },
+    {
+      "date": "2026-10-18",
+      "action": "re-checked (CoolSolve 0.3.0@4798e2b): the native file solves and reproduces the EES stored solution at r_p = 6 (INTERPOLATE named-argument form and linear extrapolation now supported); status verified, runnable variant and its table deleted, native .sol added",
+      "by": "Claude for S. Quoilin"
+    }
+  ]
+}
