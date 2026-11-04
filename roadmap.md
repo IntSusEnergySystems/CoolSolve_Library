@@ -58,7 +58,7 @@ Refresh with `python3 tools/build_index.py` (models) and
 
 **State (2026-11-03 12:00).** 302 models (277 verified / 25 blocked / 0 failing), 620 functions; kinds 250 steady / 46 function / 5 dynamic / 1 optimization.
 Regression: 314 targets (277 main files + 37 variants), 0 failure. The backlog is exhausted: the only `todo` inventory rows left are `skip` rows.
-**Nothing committed** since `326532b`: modified `roadmap.md`, `docs/taxonomy_v0.3.md`; new `sources/thermo_models/python_refs/` (C-501).
+**Nothing committed** since `326532b`: modified `roadmap.md`, `docs/taxonomy.md`; new `sources/thermo_models/python_refs/` (C-501).
 CoolSolve (`~/git/CoolSolve`, `main` @`2dc1367`): only the register `docs/model_library_support.md` is modified (evidence lines, new rows).
 
 **Done** (§8 log rows of 2026-11-02/03):
@@ -68,9 +68,9 @@ CoolSolve (`~/git/CoolSolve`, `main` @`2dc1367`): only the register `docs/model_
 - **`CSL-0217` runs only with the TrustRegion solver** (`coolsolve.conf: solverPipeline = TrustRegion` + the shipped `.initials`; stated in the README and the
   `.eescode` header). Regression introduced by CoolSolve `b26946d` (Newton used to stop on a NaN derivative and hand over to TrustRegion); bisected `eb797fe` OK.
 - B-20 closed: `tools/move_model.py` (C-490), README completeness of 23 models (C-492).
-- **Taxonomy v0.3 plan, ready for the maintainer's decision:** one file [docs/taxonomy_v0.3.md](docs/taxonomy_v0.3.md) (replaces the proposal, the plan CSV and the
+- **Taxonomy v0.3 plan, ready for the maintainer's decision:** one file [docs/taxonomy.md](docs/taxonomy.md) (replaces the proposal, the plan CSV and the
   categories note: rules, tree with counts, the full `taxonomy.json`, the 259-row move table). 12 top categories (3 flat: buildings, renewables, energy_systems),
-  57 leaves of 2–7 models, sized for the HTML library and the 2-level CoolSolve GUI menu. `tools/move_model.py --plan docs/taxonomy_v0.3.md` reads it directly
+  57 leaves of 2–7 models, sized for the HTML library and the 2-level CoolSolve GUI menu. `tools/move_model.py --plan docs/taxonomy.md` reads it directly
   (also writes the new `taxonomy.json`). Applied on a scratch copy only: `build_index` 0 errors, regression 314 targets, 0 failure. Judgement calls to confirm
   are listed in the plan (§2): `CSL-0326`, `CSL-0147`, `CSL-0058/0266`, `CSL-0323`, `CSL-0186`, `CSL-0010/0169/0270`.
 - B-21 started (independent Python references of the course *thermodynamique appliquée*, notes `~/llm/scripts/csl/b21_pyref.txt`): C-501 merged
@@ -136,7 +136,7 @@ Orchestrator pruning: TSP-033 (exergy one-liner) discarded, TSP-024/025 combined
 
 **Open queue.** (1) C-447 merged at 20:15 as `CSL-0326` thermosyphon HX, status *failing* (3421 eq., CoolSolve cannot converge it even with the 3-row
 companion; correlations checked standalone) — maintainer: keep as failing or drop with `drop_model.py`. Library: 300 models. (2) Taxonomy v0.3 proposal
-[docs/taxonomy_v0.3.md](docs/taxonomy_v0.3.md) (single plan, revised 2026-11-03: 12 top categories, 57 leaves of 2–7 models) — maintainer decision, then a T-MOVE card. (3) The backlog is exhausted except `skip` rows and C-237
+[docs/taxonomy.md](docs/taxonomy.md) (single plan, revised 2026-11-03: 12 top categories, 57 leaves of 2–7 models) — maintainer decision, then a T-MOVE card. (3) The backlog is exhausted except `skip` rows and C-237
 (`LowerHeatingValue(H2)`); next work = re-checks of blocked/failing models after CoolSolve fixes, figures, the maintainer items below.
 (4) Free-model benchmark (results in `~/llm/opencode-model-comparison.md`): glm-5.3-flash-free qualified with caveats (4/5); flint rejected (2/5); beam rejected (copied the
 reference from another lane); deepseek-v4.1-flash unusable; big-pickle, nemotron-3.5-super-vl, mimo not yet tested (no probe reply on 10-31).
@@ -573,7 +573,7 @@ most 100 kB.
 
 ## 4. Decisions and open questions
 
-**Done (2026-11-03): taxonomy v0.3** — [docs/taxonomy_v0.3.md](docs/taxonomy_v0.3.md), one file (rules, tree with counts, the complete `taxonomy.json`, the move table read by `tools/move_model.py --plan`). Revised 2026-11-03 at the maintainer's request: at most 6–7 models per category, no near-empty ones, two levels as the GUI Library menu; `components` and `cycles` split into `heat_exchangers`, `machines`, `components`, `power_cycles`, `engines`, `refrigeration_heat_pumps`; 259 of 302 models move; applied on a scratch copy: build_index 0 errors, test_models 314 targets 0 failure. First version (C-139, 2026-10-31): split rule ~40 → ~20 models; flat sibling splits of `components/compressors` (positive displacement / turbo), `components/heat_exchangers` (condensers_evaporators), `cycles/refrigeration_heat_pumps` (refrigeration / heat_pumps / high_temperature_heat_pumps), `cycles/engines`, `fundamentals/processes`, `heat_transfer/convection`; ~15 misfiled models; photovoltaics merged into `renewables/solar`. **Applied 2026-11-03** by the maintainer's request (`tools/move_model.py --plan docs/taxonomy_v0.3.md`: 259 folders moved with `git mv`, 29 links rewritten, `taxonomy.json` v0.3, `redirects.csv` regenerated, `docs/taxonomy.md` §1 and the README tree updated; `build_index.py` 0 errors; regression: see the §8 log row). Not committed yet.
+**Done (2026-11-03): taxonomy v0.3** — [docs/taxonomy.md](docs/taxonomy.md), one file (rules, tree with counts, the complete `taxonomy.json`, the move table read by `tools/move_model.py --plan`). Revised 2026-11-03 at the maintainer's request: at most 6–7 models per category, no near-empty ones, two levels as the GUI Library menu; `components` and `cycles` split into `heat_exchangers`, `machines`, `components`, `power_cycles`, `engines`, `refrigeration_heat_pumps`; 259 of 302 models move; applied on a scratch copy: build_index 0 errors, test_models 314 targets 0 failure. First version (C-139, 2026-10-31): split rule ~40 → ~20 models; flat sibling splits of `components/compressors` (positive displacement / turbo), `components/heat_exchangers` (condensers_evaporators), `cycles/refrigeration_heat_pumps` (refrigeration / heat_pumps / high_temperature_heat_pumps), `cycles/engines`, `fundamentals/processes`, `heat_transfer/convection`; ~15 misfiled models; photovoltaics merged into `renewables/solar`. **Applied 2026-11-03** by the maintainer's request (`tools/move_model.py --plan docs/taxonomy.md`: 259 folders moved with `git mv`, 29 links rewritten, `taxonomy.json` v0.3, `redirects.csv` regenerated, `docs/taxonomy.md` §1 and the README tree updated; `build_index.py` 0 errors; regression: see the §8 log row). Not committed yet.
 
 Decisions of the maintainer (2026-10-04), applied in the documents and tools:
 
@@ -1682,4 +1682,4 @@ and adds the log line in §8.
 | 2026-11-03 | README completeness | done (glm t263): missing template sections added/renamed in the 23 READMEs from in-folder material; orchestrator fixed one false log line (CSL-0120 comments are still French); build_index 0 errors |
 | 2026-11-03 | T-RECHECK CSL-0125 | done (glmfree t256): mode_MN adapted to upstream Elise 8514bf89 (eta at the similar flow, NPSH_r x N^2), default point and the three .sol unchanged, verified 4.8e-10 against the fixed source; CS-GAP-INTERP-EXTRAP evidence added |
 | 2026-11-03 | T-VERIFY python refs | done (glmfree t265): 96 scripts re-run (CoolProp 8.0.0) -> 20 match, 5 differs (other statement data), 16 not-comparable, 26 duplicate-of, 17 not-runnable, 12 no-model; no model bug; R07E02 vs CSL-0029 re-checked by the orchestrator (other pressures and eta definition); exam scripts anonymised |
-| 2026-11-03 | T-MOVE taxonomy v0.3 | done: `move_model.py --plan docs/taxonomy_v0.3.md` (259 folders `git mv`, 29 links in 12 files, `taxonomy.json` v0.3, `redirects.csv`), `docs/taxonomy.md` §1 and README tree updated; `build_index.py` 0 errors; `test_models.py` 314 targets (277 main + 37 variants), 0 failure (CoolSolve 0.4.0, CoolProp 75af7816). Not committed |
+| 2026-11-03 | T-MOVE taxonomy v0.3 | done: `move_model.py --plan docs/taxonomy.md` (259 folders `git mv`, 29 links in 12 files, `taxonomy.json` v0.3, `redirects.csv`), `docs/taxonomy.md` §1 and README tree updated; `build_index.py` 0 errors; `test_models.py` 314 targets (277 main + 37 variants), 0 failure (CoolSolve 0.4.0, CoolProp 75af7816). Not committed |

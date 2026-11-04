@@ -25,38 +25,116 @@ the CoolSolve GUI and survive folder moves.
 
 ## 1. Categories (taxonomy v0.3)
 
-```
-models/
-├── fundamentals/      properties · property_libraries · tanks_vessels ·
-│                      piston_cylinders · steady_flow · second_law · combustion
-├── heat_transfer/     conduction_radiation · internal_convection ·
-│                      external_convection · natural_convection · two_phase ·
-│                      pressure_drop
-├── heat_exchangers/   methods · effectiveness_lmtd · plate · zoned_discretised ·
-│                      condensers_evaporators
-├── machines/          reciprocating_compressors · rotary_compressors ·
-│                      compressor_maps · turbocompressors · turbomachine_design ·
-│                      steam_turbines · expanders · pumps · fans
-├── components/        boilers_burners · nozzles_ejectors · piping_valves · storage
-├── power_cycles/      steam_basic · steam_advanced · orc_design ·
-│                      orc_applications · gas_turbine_design ·
-│                      gas_turbine_offdesign · jet_propulsion ·
-│                      supercritical_combined
-├── engines/           air_standard_cycles · engine_models · sizing · performance
-├── refrigeration_heat_pumps/
-│                      refrigeration_cycles · refrigeration_systems · absorption ·
-│                      heat_pump_cycles · heat_pump_systems · high_temperature
-├── hvac/              psychrometrics · cooling_coils · air_handling ·
-│                      cooling_towers · evaporative_coolers
-├── buildings/
-├── renewables/
-└── energy_systems/
-```
+The taxonomy was reorganised on 2026-11-03 (v0.2 → v0.3: `components` and
+`cycles` split into `heat_exchangers`, `machines`, `components`, `power_cycles`,
+`engines` and `refrigeration_heat_pumps`; 259 of 302 models moved). Old paths
+keep working through `previous_paths` and `redirects.csv`; `$INCLUDE
+'library:CSL-xxxx'` resolves by ID. The authoritative list, with the title and
+description of each category, is [`taxonomy.json`](../taxonomy.json).
 
-The tree, the counts and the rationale of v0.3 are in [taxonomy_v0.3.md](taxonomy_v0.3.md).
+### Design rules
 
-Descriptions of every category are in [`taxonomy.json`](../taxonomy.json)
-(the file validated by `tools/build_index.py`). Rules:
+The goal is smooth browsing of the library in `library.html` and in the **Library** button of the CoolSolve GUI. The GUI menu
+(`CoolSolve/src/library_store.cpp`, `LibraryStore::menu`) has exactly two levels (top category → subcategory → models). It lists
+the categories in `taxonomy.json` order, shows only `verified` models (sorted by title) and hides empty categories. Hence:
+
+- **Two levels at most.** A third level would need a GUI change. Long lists are split into sibling subcategories instead.
+- **3 to 7 models per subcategory** (a few exceptions of 2, stated below). Above 7, split by physical system or machine type;
+  below 3, merge with the nearest sibling, unless the subject is distinct and the backlog will fill it.
+- **At most about 9 subcategories per top category**, so that each GUI submenu stays short. A top category with 7 models or fewer
+  holds its models directly, without subcategories (`buildings` already does).
+- **Browse by object.** A textbook exercise on a machine sits with that machine (steam-turbine exercises under steam turbines). An
+  exercise on a principle with no machine model (ideal or staged compression, tank energy balance, Carnot) sits in `fundamentals`.
+- Keys are lower-case `snake_case`, unique among siblings; folder names of the models are unchanged (no renames).
+
+### Tree and counts
+
+302 models (277 verified, shown in the GUI), 12 top categories, 57 leaf categories; leaf size 2–7, median 5.
+Counts are *all models / verified models (GUI)*, as of 2026-11-03.
+
+- **Fundamentals** `fundamentals` — 39 / 35, 7 subcategories
+  - Properties `fundamentals/properties` — 5 / 5
+  - Property libraries `fundamentals/property_libraries` — 4 / 4
+  - Tanks and vessels `fundamentals/tanks_vessels` — 7 / 7
+  - Piston-cylinder devices `fundamentals/piston_cylinders` — 5 / 5
+  - Steady-flow processes `fundamentals/steady_flow` — 5 / 5
+  - Second law and exergy `fundamentals/second_law` — 6 / 6
+  - Combustion `fundamentals/combustion` — 7 / 3
+- **Heat transfer** `heat_transfer` — 27 / 27, 6 subcategories
+  - Conduction, fins and radiation `heat_transfer/conduction_radiation` — 3 / 3
+  - Internal convection `heat_transfer/internal_convection` — 6 / 6
+  - External convection `heat_transfer/external_convection` — 6 / 6
+  - Natural convection `heat_transfer/natural_convection` — 3 / 3
+  - Boiling and condensation `heat_transfer/two_phase` — 5 / 5
+  - Pressure drop `heat_transfer/pressure_drop` — 4 / 4
+- **Heat exchangers** `heat_exchangers` — 27 / 27, 5 subcategories
+  - Rating and sizing methods `heat_exchangers/methods` — 6 / 6
+  - Single-phase exchangers `heat_exchangers/effectiveness_lmtd` — 5 / 5
+  - Plate heat exchangers `heat_exchangers/plate` — 6 / 6
+  - Zoned and discretised models `heat_exchangers/zoned_discretised` — 5 / 5
+  - Condensers and evaporators `heat_exchangers/condensers_evaporators` — 5 / 5
+- **Compressors, turbines and pumps** `machines` — 48 / 48, 9 subcategories
+  - Reciprocating compressors `machines/reciprocating_compressors` — 6 / 6
+  - Scroll, screw and Roots compressors `machines/rotary_compressors` — 5 / 5
+  - Compressor catalogues and maps `machines/compressor_maps` — 5 / 5
+  - Turbocompressors `machines/turbocompressors` — 5 / 5
+  - Turbomachine design `machines/turbomachine_design` — 5 / 5
+  - Steam turbines `machines/steam_turbines` — 6 / 6
+  - Expanders and turbo-expanders `machines/expanders` — 7 / 7
+  - Pumps `machines/pumps` — 5 / 5
+  - Fans `machines/fans` — 4 / 4
+- **Other components** `components` — 20 / 18, 4 subcategories
+  - Boilers and burners `components/boilers_burners` — 6 / 5
+  - Nozzles, diffusers and ejectors `components/nozzles_ejectors` — 5 / 5
+  - Pipes, valves and flow meters `components/piping_valves` — 7 / 7
+  - Thermal storage `components/storage` — 2 / 1
+- **Power cycles** `power_cycles` — 37 / 35, 8 subcategories
+  - Steam power plants `power_cycles/steam_basic` — 5 / 5
+  - Reheat and regenerative steam cycles `power_cycles/steam_advanced` — 5 / 5
+  - Organic Rankine cycles `power_cycles/orc_design` — 6 / 6
+  - ORC off-design and applications `power_cycles/orc_applications` — 4 / 3
+  - Gas turbine cycles `power_cycles/gas_turbine_design` — 6 / 6
+  - Gas turbines off design `power_cycles/gas_turbine_offdesign` — 5 / 4
+  - Jet propulsion `power_cycles/jet_propulsion` — 3 / 3
+  - Supercritical and combined cycles `power_cycles/supercritical_combined` — 3 / 3
+- **Engines** `engines` — 26 / 21, 4 subcategories
+  - Air-standard cycles `engines/air_standard_cycles` — 5 / 4
+  - Engine and boost models `engines/engine_models` — 7 / 5
+  - Engine sizing `engines/sizing` — 7 / 6
+  - Performance and emissions `engines/performance` — 7 / 6
+- **Refrigeration and heat pumps** `refrigeration_heat_pumps` — 32 / 29, 6 subcategories
+  - Refrigeration cycles `refrigeration_heat_pumps/refrigeration_cycles` — 6 / 6
+  - Refrigeration systems and chillers `refrigeration_heat_pumps/refrigeration_systems` — 5 / 5
+  - Absorption chillers `refrigeration_heat_pumps/absorption` — 2 / 2
+  - Heat pump cycles `refrigeration_heat_pumps/heat_pump_cycles` — 6 / 6
+  - Heat pump systems `refrigeration_heat_pumps/heat_pump_systems` — 7 / 5
+  - High-temperature heat pumps `refrigeration_heat_pumps/high_temperature` — 6 / 5
+- **HVAC** `hvac` — 26 / 20, 5 subcategories
+  - Psychrometrics `hvac/psychrometrics` — 5 / 5
+  - Cooling coils `hvac/cooling_coils` — 7 / 4
+  - Air handling `hvac/air_handling` — 4 / 2
+  - Cooling towers `hvac/cooling_towers` — 7 / 7
+  - Evaporative condensers and fluid coolers `hvac/evaporative_coolers` — 3 / 2
+- **Buildings** `buildings` — 6 / 6 (no subcategories)
+- **Renewables** `renewables` — 7 / 5 (no subcategories)
+- **Energy systems** `energy_systems` — 7 / 6 (no subcategories)
+
+**Exceptions and GUI notes.**
+- `components/storage` (2, one verified) and `refrigeration_heat_pumps/absorption` (2) are kept as exceptions: distinct objects
+  (dynamic storage tanks; absorption cycles) that the backlog will fill, and merging them into an unrelated sibling would hide them.
+  `hvac/air_handling` and `hvac/evaporative_coolers` hold blocked models that the GUI hides until their CoolSolve gaps close.
+- Emissions are not a subcategory of their own: the two exhaust-gas analyses (CSL-0058, CSL-0266, blocked) are combustion
+  stoichiometry and stay in `fundamentals/combustion`; fuel and CO2 figures join `engines/performance`, so no GUI submenu shows one model.
+- `machines` has 9 subcategories, the maximum; `power_cycles` 8.
+
+**Judgement calls (applied).** CSL-0326 thermosyphon in `heat_exchangers/zoned_discretised` (row-by-row model) rather than
+condensers; CSL-0147 SEGS stays a steam cycle (`power_cycles/steam_advanced`) rather than `renewables`; CSL-0058/0266 (excess air
+from exhaust-gas analysis of engines) stay in `fundamentals/combustion`; CSL-0323 electrolyser and fuel cell goes to
+`energy_systems`; CSL-0186 Carnot engine + refrigerator to `fundamentals/second_law`; CSL-0010/0169/0270 (compression with no
+machine model) to `fundamentals/steady_flow`. The borderline pairs of the library audit (CSL-0226/0295 turbojets, CSL-0032/0227
+condensers, CSL-0310 vs CSL-0199/0207/0234 nozzles) end up as neighbours or in sibling categories, which makes them easy to compare.
+
+Further classification rules (`taxonomy.json` is validated by `tools/build_index.py`):
 
 - At most **two levels** of categories below `models/`; a category folder
   contains model folders only (a top category without children, such as

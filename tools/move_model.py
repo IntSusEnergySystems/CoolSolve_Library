@@ -25,7 +25,7 @@ Usage:
 
     python3 tools/move_model.py CSL-0123 components/compressors_turbo [--name new_folder_name] [options]
     python3 tools/move_model.py --plan plan.csv [options]        # CSV: id,new_category[,new_name]
-    python3 tools/move_model.py --plan docs/taxonomy_v0.3.md [options]
+    python3 tools/move_model.py --plan taxonomy_plan.md [options]
 
 A Markdown plan (.md) holds the moves as table rows `| CSL-NNNN | ... | new_category |`
 (first cell the ID, last cell the target) and the complete new taxonomy as a
