@@ -5,7 +5,7 @@
   "summary": "Identification of a closed-loop (indirect-contact) cooling tower from B.A.C. VXI catalogue data: equivalent counterflow exchanger between the cooled fluid and a fictitious air at the wet-bulb temperature, air/fluid resistance split with mass-flow exponents, percentage error against the catalogue over 205 operating points.",
   "kind": "steady",
   "level": 2,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "indirect_contact_tower_identification.eescode",
   "fluids": [
     "AirH2O",
@@ -48,7 +48,7 @@
     "course": "Laborelec toolkit 2002 (evaporative equipment), fluid-cooler identification model; duplicate group DG-0070 (TM-0296 simulation variant)"
   },
   "verification": {
-    "summary": "Compared the runnable variant with the EES stored solution (kJ/kW values converted by hand, resistances K/kW /1000): 40 common variables, max relative difference 8.08e-02 on ERQ_dot_ct/ERRQ_dot_ct (the 2.97e-03 deviation of Q_dot_ct amplified on the small error term), all other deviations below 4.2e-03 (EES vs CoolProp humid-air properties). Native file fails only on the HX call (CS-GAP-HX).",
+    "summary": "Compared with the EES stored solution (kJ/kW values converted by hand): 40 common variables, max relative difference 8.08e-02 on ERQ_dot_ct/ERRQ_dot_ct (the 2.97e-03 deviation of Q_dot_ct amplified on a small error term), all others below 4.2e-03 (humid-air properties). The native file, with $INCLUDE hx_ees_function (CSL-0332), equals its variant.",
     "checks": [
       "ees-stored-solution",
       "order-of-magnitude"
@@ -57,14 +57,13 @@
     "date": "2026-10-23",
     "coolsolve_version": "0.4.0@9768373",
     "max_rel_diff": 0.0808,
-    "notes": "Concerns the variant indirect_contact_tower_identification_coolsolve.eescode (regression target CSL-0286:coolsolve). Deviations: Q_dot_ct 2.97e-03, h_a 2.6e-03, c_p_af 4.0e-03, epsilon_ct 1.3e-03; ERQ/ERRQ 8.08e-02 by amplification. Stale variables of an earlier program excluded (C_dot, R, epsilon, V_dot, rho, R_a, w, COP)."
+    "notes": "Concerns the variant indirect_contact_tower_identification_coolsolve.eescode (regression target CSL-0286:coolsolve). Deviations: Q_dot_ct 2.97e-03, h_a 2.6e-03, c_p_af 4.0e-03, epsilon_ct 1.3e-03; ERQ/ERRQ 8.08e-02 by amplification. Stale variables of an earlier program excluded (C_dot, R, epsilon, V_dot, rho, R_a, w, COP). 2026-11-04: the native file runs with $INCLUDE hx_ees_function and equals the variant on all 33 common variables (CoolSolve 0.4.0@2f4860b with $INCLUDE)."
   },
-  "missing_features": [
-    "CS-GAP-HX"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0076",
-    "CSL-0290"
+    "CSL-0290",
+    "CSL-0332"
   ],
   "related_external": [],
   "supersedes": [],
@@ -74,6 +73,11 @@
       "date": "2026-10-23",
       "action": "added (T-IMPORT TM-0295, batch B-11)",
       "by": "opencode worker (t227) for S. Quoilin"
+    },
+    {
+      "date": "2026-11-04",
+      "action": "native file runs: $INCLUDE hx_ees_function (CSL-0332) for the EES HX function, CS-GAP-HX closed; status blocked -> verified",
+      "by": "Claude (Opus 5.5) for S. Quoilin"
     }
   ]
 }

@@ -1,0 +1,83 @@
+{
+  "id": "CSL-0332",
+  "name": "hx_ees_function",
+  "title": "Heat exchangers: the EES HX function (effectiveness-NTU by flow arrangement)",
+  "summary": "The HX function of the EES heat exchanger library as a library function: epsilon = HX(TypeHX$, NTU, C_dot_1, C_dot_2, 'epsilon') and its inverse 'NTU' for parallel flow, counterflow, the three crossflow arrangements, N shell passes, the nine TEMA E/G/H/J types and the balanced regenerator. A model written for EES runs unchanged with $INCLUDE hx_ees_function.",
+  "kind": "function",
+  "level": 2,
+  "status": "verified",
+  "main_file": "hx_ees_function.eescode",
+  "fluids": [],
+  "tags": [
+    "heat exchanger",
+    "effectiveness-NTU",
+    "EES",
+    "HX function",
+    "counterflow",
+    "crossflow",
+    "shell and tube",
+    "TEMA",
+    "regenerator",
+    "function library"
+  ],
+  "language_features": [
+    "functions",
+    "$INCLUDE of other library models (CSL-0090, CSL-0102)",
+    "string arguments",
+    "IF/THEN/ELSE",
+    "REPEAT-UNTIL (numerical inversion)",
+    "CALL ERROR"
+  ],
+  "stats": {
+    "n_equations": 38,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "EES",
+    "source_path": "",
+    "candidate_id": "",
+    "authors": [
+      "S. Klein and G. Nellis (EES heat exchanger library, F-Chart Software): the HX function and its interface",
+      "T. L. Bergman, A. S. Lavine, F. P. Incropera and D. P. DeWitt (both fluids mixed, N shell passes)",
+      "R. K. Shah and D. P. Sekulic; W. Rohsenow, J. Hartnett and Y. Cho (TEMA relations, through CSL-0102)",
+      "W. M. Kays and A. L. London (regenerator)",
+      "Caleb Bell (ht library, the relations of CSL-0090 and CSL-0102)"
+    ],
+    "url": "https://fchartsoftware.com/ees/heat_transfer_library/heat_exchangers/hs1000.htm",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "Written for the CoolSolve Library from the documentation of the EES HX function (its interface, flow types and worked examples; the EES source is not distributed) and from the published relations; the relations of CSL-0090 and CSL-0102 are included, not copied. Replaces the CoolSolve gap CS-GAP-HX: the function is ordinary library code instead of a CoolSolve built-in."
+  },
+  "verification": {
+    "summary": "Compared with the 33 worked examples of the EES help (one page per type, UA = 75 W/K, C_dot_1 = 50 W/K, C_dot_2 = 30 W/K, epsilon = 0.61): 32 agree to every printed digit (max relative deviation 3.5e-4, rounding of the 3-4 printed digits); the regenerator gives 0.8560 against 0.8559 (Kays and London relation, EES uses Dragutinovic and Baclic).",
+    "checks": [
+      "publication",
+      "cross-model"
+    ],
+    "reference": "worked examples of the EES help pages hs10, hs20, hs30, hs40, hs50, hs60, hs70, hs80, hs90, hs100, hs110, hs120, hs130, hs135, hs140, hs150, hs160 and hs170 of https://fchartsoftware.com/ees/heat_transfer_library/heat_exchangers/ (epsilon from NTU and NTU from epsilon); the relations are those of CSL-0090 and CSL-0102, verified against ht 1.2.0",
+    "date": "2026-11-04",
+    "coolsolve_version": "0.4.0@2f4860b",
+    "max_rel_diff": 0.00035,
+    "notes": "README.md, Verification: table of the 33 values. The relative deviations are those of the EES values printed with 3 or 4 significant digits; the round trip epsilon -> NTU -> epsilon of the numerically inverted types agrees to 1e-11 (8e-12 for crossflow_both_unmixed, 0 for 12TEMAG). Needs CoolSolve with $INCLUDE (CS-FEAT-IMPORT)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0090",
+    "CSL-0102",
+    "CSL-0105",
+    "CSL-0286"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-04",
+      "action": "added (replaces the CoolSolve gap CS-GAP-HX by a library function model)",
+      "by": "Claude (Opus 5.5) for S. Quoilin"
+    }
+  ]
+}

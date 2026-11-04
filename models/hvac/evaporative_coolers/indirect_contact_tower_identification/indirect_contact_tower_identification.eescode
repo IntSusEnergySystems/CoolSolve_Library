@@ -14,10 +14,12 @@
            (EES 6.350), ~/Nextcloud/thermo_models/modeles/LABORELEC_2002/...
   Authors: Felipe Trebilcock (ULiège Thermodynamics Lab, Dec 2002, for
            Laborelec); reviewers J. Lebrun, E. Winandy - see README.md
-  Status : blocked - the EES built-in HX('counterflow',...) is not supported
-           by CoolSolve (CS-GAP-HX); runnable verified variant
-           indirect_contact_tower_identification_coolsolve.eescode
+  Status : VERIFIED - the EES HX function comes from the library model
+           CSL-0332 (hx_ees_function, line below); same solution as the
+           variant indirect_contact_tower_identification_coolsolve.eescode
 =============================================================================}
+
+$INCLUDE hx_ees_function   "the EES HX function (CSL-0332), added to the EES source"
 
 "!Fluid cooler model (identification)"
 

@@ -1,0 +1,275 @@
+{=============================================================================
+  Heat exchangers: the EES HX function (effectiveness-NTU by flow arrangement)
+  CoolSolve Library model CSL-0332 (function library, kind = function)
+  -----------------------------------------------------------------------------
+  The HX function of the EES heat exchanger library, as an ordinary library
+  function: a model written for EES that calls
+
+     epsilon = HX(TypeHX$, NTU, C_dot_1, C_dot_2, 'epsilon')
+     NTU     = HX(TypeHX$, epsilon, C_dot_1, C_dot_2, 'NTU')
+
+  runs unchanged in CoolSolve with one more line, $INCLUDE hx_ees_function.
+  NTU = UA/C_dot_min, epsilon = Q_dot/(C_dot_min*(T_h,in - T_c,in)), and
+  C_dot_1, C_dot_2 [W/K] are the heat capacity rates of the two streams.
+
+  TypeHX$ (any case), as in EES:
+    'parallelflow', 'counterflow'
+    'crossflow_both_unmixed', 'crossflow_both_mixed'
+    'crossflow_one_unmixed'      C_dot_1 is the unmixed stream
+    'shell&tube_N'               N = 1..9 shell passes, 2N, 4N... tube passes
+    '12TEMAE_2shellsidestreams', '13TEMAE', '11TEMAG', '12TEMAG', '11TEMAH',
+    '12TEMAH', '11TEMAJ', '12TEMAJ', '14TEMAJ'
+                                 C_dot_1 is the shell-side stream
+    'regenerator'                balanced counterflow regenerator: C_dot_1 is
+                                 the stream, C_dot_2 the matrix capacitance
+                                 rate (matrix heat capacity / blow period) and
+                                 NTU the hA of one blow over C_dot_1
+  Return$: 'epsilon' or 'NTU'. As in EES the NTU cannot be returned for
+  '12TEMAJ', '14TEMAJ' (their effectiveness is not monotonic in NTU) and
+  'regenerator'; for 'crossflow_both_mixed' the lower of the two NTUs that
+  give the effectiveness is returned.
+
+  The relations are those of the library function models CSL-0090
+  (hx_effectiveness_ntu) and CSL-0102 (hx_temperature_effectiveness_pntu),
+  included below: this file only dispatches on TypeHX$, converts between the
+  effectiveness referred to C_dot_min and the temperature effectiveness of
+  the shell-side stream (TEMA types), adds the relations those files do not
+  have (both fluids mixed, N shell passes, regenerator), and inverts the
+  relations that have no closed inverse.
+
+  Inputs : TypeHX$, Return$ [-], NTU or epsilon [-], C_dot_1, C_dot_2 [W/K]
+  Outputs: epsilon or NTU [-]
+  Units  : SI - W/K, dimensionless numbers
+  Source : EES heat exchanger library, HX function (F-Chart Software,
+           https://fchartsoftware.com/ees/heat_transfer_library/heat_exchangers/
+           hs1000.htm); relations by the authors cited in CSL-0090, CSL-0102
+           and in each function block below - see README.md
+  Status : VERIFIED against the worked examples of the EES help (README.md,
+           "Verification")
+=============================================================================}
+
+$INCLUDE hx_effectiveness_ntu
+$INCLUDE hx_temperature_effectiveness_pntu
+
+FUNCTION HX_shell_passes(TypeHX$)
+{HX_SHELL_PASSES - number of shell passes N of the type 'shell&tube_N' of the
+ HX function, 0 for any other type [-].}
+  N = 0
+  IF (TypeHX$ = 'shell&tube_1') THEN N = 1
+  IF (TypeHX$ = 'shell&tube_2') THEN N = 2
+  IF (TypeHX$ = 'shell&tube_3') THEN N = 3
+  IF (TypeHX$ = 'shell&tube_4') THEN N = 4
+  IF (TypeHX$ = 'shell&tube_5') THEN N = 5
+  IF (TypeHX$ = 'shell&tube_6') THEN N = 6
+  IF (TypeHX$ = 'shell&tube_7') THEN N = 7
+  IF (TypeHX$ = 'shell&tube_8') THEN N = 8
+  IF (TypeHX$ = 'shell&tube_9') THEN N = 9
+  HX_shell_passes = N
+END
+
+FUNCTION HX_epsilon(TypeHX$, NTU, C_dot_1, C_dot_2)
+{HX_EPSILON - effectiveness of a heat exchanger of type TypeHX$ (the types of
+ the HX function) for NTU = UA/C_dot_min [-].
+
+ Relations not found in CSL-0090 and CSL-0102:
+  crossflow, both fluids mixed:
+   eps = [1/(1 - exp(-NTU)) + Cr/(1 - exp(-Cr*NTU)) - 1/NTU]^-1
+  N shell passes (2N, 4N... tube passes), eps_1 of one 1-2 TEMA E shell with
+  NTU/N:
+   eps = [((1 - eps_1*Cr)/(1 - eps_1))^N - 1]/[((1 - eps_1*Cr)/(1 - eps_1))^N - Cr]
+   eps = N*eps_1/(1 + (N - 1)*eps_1)                         Cr = 1
+  balanced counterflow regenerator (Lambertson; Kays and London), NTU_o = NTU/2
+  for the two equal blows and Cr* = C_dot_2/C_dot_1:
+   eps = NTU_o/(1 + NTU_o)*(1 - 1/(9*Cr*^1.93))
+ The TEMA types use the temperature effectiveness P1 of the shell-side stream
+ 1: R1 = C_dot_1/C_dot_2, NTU1 = NTU*C_dot_min/C_dot_1, eps = P1*C_dot_1/C_dot_min.
+ Original: Incropera, F. P., D. P. DeWitt, T. L. Bergman and A. S. Lavine,
+   "Fundamentals of Heat and Mass Transfer", 6E, Wiley, 2007, Table 11.3
+   (both fluids mixed, N shell passes); Nellis, G. and S. Klein, "Heat
+   Transfer", Cambridge University Press, 2009, Table 8-1 (the source of the
+   EES library); Kays, W. M. and A. L. London, "Compact Heat Exchangers", 3rd
+   ed., McGraw-Hill, 1984 (regenerator).}
+  C_dot_min = MIN(C_dot_1, C_dot_2)
+  C_r = C_dot_min/MAX(C_dot_1, C_dot_2)
+  R_1 = C_dot_1/C_dot_2
+  NTU_1 = NTU*C_dot_min/C_dot_1
+  P_1 = -1
+  eps = -1
+  N = HX_shell_passes(TypeHX$)
+  IF (TypeHX$ = 'parallelflow') THEN eps = eps_parallel(NTU, C_r)
+  IF (TypeHX$ = 'counterflow') THEN eps = eps_counterflow(NTU, C_r)
+  IF (TypeHX$ = 'crossflow_both_unmixed') THEN eps = eps_crossflow_approx(NTU, C_r)
+  IF (TypeHX$ = 'crossflow_both_mixed') THEN
+    eps = 1/(1/(1 - exp(-NTU)) + C_r/(1 - exp(-C_r*NTU)) - 1/NTU)
+  ENDIF
+  IF (TypeHX$ = 'crossflow_one_unmixed') THEN
+    IF (C_dot_1 < C_dot_2) THEN
+      eps = eps_crossflow_mixed_Cmax(NTU, C_r)   "the unmixed stream 1 is Cmin"
+    ELSE
+      eps = eps_crossflow_mixed_Cmin(NTU, C_r)   "the mixed stream 2 is Cmin"
+    ENDIF
+  ENDIF
+  IF (N > 0) THEN
+    eps_1 = temperature_effectiveness_TEMA_E(C_r, NTU/N, 2, 1)   "one 1-2 shell: symmetric, R1 = Cr"
+    IF (C_r = 1) THEN
+      eps = N*eps_1/(1 + (N - 1)*eps_1)
+    ELSE
+      X = ((1 - eps_1*C_r)/(1 - eps_1))^N
+      eps = (X - 1)/(X - C_r)
+    ENDIF
+  ENDIF
+  IF (TypeHX$ = '12TEMAE_2shellsidestreams') THEN P_1 = temperature_effectiveness_TEMA_E(R_1, NTU_1, 2, 0)
+  IF (TypeHX$ = '13TEMAE') THEN P_1 = temperature_effectiveness_TEMA_E(R_1, NTU_1, 3, 1)
+  IF (TypeHX$ = '11TEMAG') THEN P_1 = temperature_effectiveness_TEMA_G(R_1, NTU_1, 1, 1)
+  IF (TypeHX$ = '12TEMAG') THEN P_1 = temperature_effectiveness_TEMA_G(R_1, NTU_1, 2, 1)
+  IF (TypeHX$ = '11TEMAH') THEN P_1 = temperature_effectiveness_TEMA_H(R_1, NTU_1, 1, 1)
+  IF (TypeHX$ = '12TEMAH') THEN P_1 = temperature_effectiveness_TEMA_H(R_1, NTU_1, 2, 1)
+  IF (TypeHX$ = '11TEMAJ') THEN P_1 = temperature_effectiveness_TEMA_J(R_1, NTU_1, 1)
+  IF (TypeHX$ = '12TEMAJ') THEN P_1 = temperature_effectiveness_TEMA_J(R_1, NTU_1, 2)
+  IF (TypeHX$ = '14TEMAJ') THEN P_1 = temperature_effectiveness_TEMA_J(R_1, NTU_1, 4)
+  IF (P_1 >= 0) THEN eps = P_1*C_dot_1/C_dot_min
+  IF (TypeHX$ = 'regenerator') THEN
+    NTU_o = NTU/2
+    eps = NTU_o/(1 + NTU_o)*(1 - 1/(9*(C_dot_2/C_dot_1)^1.93))
+  ENDIF
+  IF (eps < 0) THEN CALL ERROR('HX: unknown heat exchanger type XXX$ (see the list in hx_ees_function)', TypeHX$)
+  HX_epsilon = eps
+END
+
+FUNCTION HX_NTU_numerical(TypeHX$, epsilon, C_dot_1, C_dot_2)
+{HX_NTU_NUMERICAL - the lowest NTU for which HX_epsilon(TypeHX$, NTU, C_dot_1,
+ C_dot_2) = epsilon, for the types without a closed inverse [-].
+ NTU is marched up from 0.01 (factor 1.25) until the effectiveness reaches
+ epsilon (so the lower root of a non-monotonic relation is found), the
+ bracket is bisected 60 times, and a last Newton step on the converged value
+ gives the result the derivatives of the implicit relation (with respect to
+ epsilon, C_dot_1 and C_dot_2) that the solver of the calling model needs.}
+  NTU_lo = 0
+  NTU_hi = 0.01
+  eps_hi = HX_epsilon(TypeHX$, NTU_hi, C_dot_1, C_dot_2)
+  REPEAT
+    IF (eps_hi < epsilon) THEN
+      NTU_lo = NTU_hi
+      NTU_hi = 1.25*NTU_hi
+      eps_hi = HX_epsilon(TypeHX$, NTU_hi, C_dot_1, C_dot_2)
+    ENDIF
+  UNTIL (eps_hi >= epsilon) OR (NTU_hi > 1000)
+  IF (eps_hi < epsilon) THEN CALL ERROR('HX: no NTU up to 1000 gives the effectiveness XXXA4 for this type and these capacity rates', epsilon)
+  i = 0
+  REPEAT
+    NTU_mid = (NTU_lo + NTU_hi)/2
+    IF (HX_epsilon(TypeHX$, NTU_mid, C_dot_1, C_dot_2) < epsilon) THEN
+      NTU_lo = NTU_mid
+    ELSE
+      NTU_hi = NTU_mid
+    ENDIF
+    i = i + 1
+  UNTIL (i >= 60)
+  NTU_b = (NTU_lo + NTU_hi)/2
+  h = 1E-6*NTU_b
+  slope = (HX_epsilon(TypeHX$, NTU_b + h, C_dot_1, C_dot_2) - HX_epsilon(TypeHX$, NTU_b - h, C_dot_1, C_dot_2))/(2*h)
+  HX_NTU_numerical = NTU_b - (HX_epsilon(TypeHX$, NTU_b, C_dot_1, C_dot_2) - epsilon)/slope
+END
+
+FUNCTION HX_NTU(TypeHX$, epsilon, C_dot_1, C_dot_2)
+{HX_NTU - number of transfer units NTU = UA/C_dot_min of a heat exchanger of
+ type TypeHX$ and effectiveness epsilon [-]: the closed inverse relations of
+ CSL-0090 and CSL-0102 where they exist, N shell passes by the inverse of the
+ series combination,
+   F = ((epsilon*Cr - 1)/(epsilon - 1))^(1/N), eps_1 = (F - 1)/(F - Cr)
+   eps_1 = epsilon/(N - (N - 1)*epsilon)                       Cr = 1
+ then NTU = N*NTU_1(eps_1), and HX_NTU_numerical for the other types.
+ Original: Incropera et al. 2007, Table 11.4; Nellis and Klein 2009, Table 8-2.}
+  C_r = MIN(C_dot_1, C_dot_2)/MAX(C_dot_1, C_dot_2)
+  N = HX_shell_passes(TypeHX$)
+  IF (TypeHX$ = '12TEMAJ') OR (TypeHX$ = '14TEMAJ') OR (TypeHX$ = 'regenerator') THEN
+    CALL ERROR('HX: the NTU of type XXX$ cannot be found from the effectiveness (as in EES); call HX with Return$ = epsilon and let the model solve for NTU', TypeHX$)
+  ENDIF
+  NTU = -1
+  IF (TypeHX$ = 'parallelflow') THEN NTU = NTU_parallel(epsilon, C_r)
+  IF (TypeHX$ = 'counterflow') THEN NTU = NTU_counterflow(epsilon, C_r)
+  IF (TypeHX$ = 'crossflow_one_unmixed') THEN
+    IF (C_dot_1 < C_dot_2) THEN
+      NTU = NTU_crossflow_mixed_Cmax(epsilon, C_r)
+    ELSE
+      NTU = NTU_crossflow_mixed_Cmin(epsilon, C_r)
+    ENDIF
+  ENDIF
+  IF (N > 0) THEN
+    IF (C_r = 1) THEN
+      eps_1 = epsilon/(N - (N - 1)*epsilon)
+    ELSE
+      F = ((epsilon*C_r - 1)/(epsilon - 1))^(1/N)
+      eps_1 = (F - 1)/(F - C_r)
+    ENDIF
+    NTU = N*NTU_from_P_E(eps_1, C_r, 2, 1)
+  ENDIF
+  IF (NTU < 0) THEN NTU = HX_NTU_numerical(TypeHX$, epsilon, C_dot_1, C_dot_2)
+  HX_NTU = NTU
+END
+
+FUNCTION HX(TypeHX$, NTU_or_epsilon, C_dot_1, C_dot_2, Return$)
+{HX - the HX function of the EES heat exchanger library [-]:
+   epsilon = HX(TypeHX$, NTU, C_dot_1, C_dot_2, 'epsilon')
+   NTU     = HX(TypeHX$, epsilon, C_dot_1, C_dot_2, 'NTU')
+ See the header of this file for TypeHX$ and the meaning of C_dot_1, C_dot_2.
+ Original: EES heat exchanger library, HX function (F-Chart Software).}
+  IF (Return$ = 'epsilon') THEN
+    HX = HX_epsilon(TypeHX$, NTU_or_epsilon, C_dot_1, C_dot_2)
+  ELSE
+    IF (Return$ = 'NTU') THEN
+      HX = HX_NTU(TypeHX$, NTU_or_epsilon, C_dot_1, C_dot_2)
+    ELSE
+      CALL ERROR('HX: Return$ must be epsilon or NTU, not XXX$', Return$)
+      HX = 0
+    ENDIF
+  ENDIF
+END
+
+"!Demonstration program: the worked examples of the EES help, one per type"
+"It is ignored by $INCLUDE hx_ees_function: only the functions above are imported."
+"Example 1 of each page: UA = 75 W/K, C_dot_1 = 50 W/K, C_dot_2 = 30 W/K, epsilon from NTU = UA/C_dot_min."
+"Example 2: epsilon = 0.61, NTU (and UA) from epsilon. The EES values are in the comments (README, verification)."
+C_dot_1 = 50 [W/K]
+C_dot_2 = 30 [W/K]
+UA = 75 [W/K]
+NTU = UA/MIN(C_dot_1, C_dot_2)
+epsilon = 0.61
+
+epsilon_parallelflow = HX('parallelflow', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.6136"
+NTU_parallelflow = HX('parallelflow', epsilon, C_dot_1, C_dot_2, 'NTU')   "EES 2.331"
+epsilon_crossflow_both_unmixed = HX('crossflow_both_unmixed', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.7632"
+NTU_crossflow_both_unmixed = HX('crossflow_both_unmixed', epsilon, C_dot_1, C_dot_2, 'NTU')   "EES 1.341"
+epsilon_crossflow_one_unmixed = HX('crossflow_one_unmixed', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.726"
+NTU_crossflow_one_unmixed = HX('crossflow_one_unmixed', epsilon, C_dot_1, C_dot_2, 'NTU')   "EES 1.387"
+epsilon_crossflow_both_mixed = HX('crossflow_both_mixed', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.6841"
+NTU_crossflow_both_mixed = HX('crossflow_both_mixed', epsilon, C_dot_1, C_dot_2, 'NTU')   "EES 1.478"
+epsilon_shell_tube_1 = HX('shell&tube_1', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.6897"
+NTU_shell_tube_1 = HX('shell&tube_1', epsilon, C_dot_1, C_dot_2, 'NTU')   "EES 1.470"
+epsilon_shell_tube_2 = HX('shell&tube_2', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.7753"
+NTU_shell_tube_2 = HX('shell&tube_2', epsilon, C_dot_1, C_dot_2, 'NTU')   "EES 1.263"
+epsilon_shell_tube_6 = HX('shell&tube_6', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.8070"
+NTU_shell_tube_8 = HX('shell&tube_8', epsilon, C_dot_1, C_dot_2, 'NTU')   "EES 1.218"
+epsilon_12TEMAE_2streams = HX('12TEMAE_2shellsidestreams', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.7272"
+NTU_12TEMAE_2streams = HX('12TEMAE_2shellsidestreams', epsilon, C_dot_1, C_dot_2, 'NTU')   "EES 1.393"
+epsilon_13TEMAE = HX('13TEMAE', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.7041"
+NTU_13TEMAE = HX('13TEMAE', epsilon, C_dot_1, C_dot_2, 'NTU')   "EES 1.427"
+epsilon_11TEMAG = HX('11TEMAG', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.7482"
+NTU_11TEMAG = HX('11TEMAG', epsilon, C_dot_1, C_dot_2, 'NTU')   "EES 1.360"
+epsilon_12TEMAG = HX('12TEMAG', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.7784"
+NTU_12TEMAG = HX('12TEMAG', epsilon, C_dot_1, C_dot_2, 'NTU')   "EES 1.261"
+epsilon_11TEMAH = HX('11TEMAH', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.7479"
+NTU_11TEMAH = HX('11TEMAH', epsilon, C_dot_1, C_dot_2, 'NTU')   "EES 1.354"
+epsilon_12TEMAH = HX('12TEMAH', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.7793"
+NTU_12TEMAH = HX('12TEMAH', epsilon, C_dot_1, C_dot_2, 'NTU')   "EES 1.261"
+epsilon_11TEMAJ = HX('11TEMAJ', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.7272"
+NTU_11TEMAJ = HX('11TEMAJ', epsilon, C_dot_1, C_dot_2, 'NTU')   "EES 1.393"
+epsilon_12TEMAJ = HX('12TEMAJ', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.6828"
+epsilon_14TEMAJ = HX('14TEMAJ', NTU, C_dot_1, C_dot_2, 'epsilon')   "EES 0.6843"
+
+"Counterflow page: UA = 100 W/K and epsilon = 0.74"
+epsilon_counter = HX('counterflow', 100/MIN(C_dot_1, C_dot_2), C_dot_1, C_dot_2, 'epsilon')   "EES 0.8748"
+NTU_counter = HX('counterflow', 0.74, C_dot_1, C_dot_2, 'NTU')   "EES 1.9"
+
+"Balanced regenerator page: UA = 600 W/K, C_dot = 50 W/K, C_matrix = 500 J/K, FlowTime = 1 s"
+epsilon_regenerator = HX('regenerator', 600/50, 50, 500/1, 'epsilon')   "EES 0.8559 (Dragutinovic and Baclic)"

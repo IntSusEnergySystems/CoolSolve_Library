@@ -28,8 +28,8 @@ the CoolSolve GUI and survive folder moves.
 The taxonomy was reorganised on 2026-11-03 (v0.2 → v0.3: `components` and
 `cycles` split into `heat_exchangers`, `machines`, `components`, `power_cycles`,
 `engines` and `refrigeration_heat_pumps`; 259 of 302 models moved). Old paths
-keep working through `previous_paths` and `redirects.csv`; `$INCLUDE
-'library:CSL-xxxx'` resolves by ID. The authoritative list, with the title and
+keep working through `previous_paths` and `redirects.csv`; CoolSolve's
+`$INCLUDE <name>` resolves by name or by ID (`$INCLUDE CSL-xxxx`), never by path. The authoritative list, with the title and
 description of each category, is [`taxonomy.json`](../taxonomy.json).
 
 ### Design rules
@@ -298,7 +298,8 @@ The new keys `summary` and `checks` go first. Existing keys (`reference`, `date`
 - **ID** `CSL-NNNN`: assigned once (next free ID printed by
   `tools/build_index.py`), never changed, never reused (removed models go to
   `retired.csv`). Cross-references (README "Related models", `related`,
-  `supersedes`, CoolSolve `$INCLUDE 'library:…'`) use IDs, never paths.
+  `supersedes`) use IDs, never paths; CoolSolve's `$INCLUDE` takes the name
+  or the ID.
 - **Name** (= folder name = `name` field): English `snake_case`, descriptive,
   unique in the whole library, ≤ 50 characters, without level/status/kind
   information (e.g. `orc_recuperator_r245fa`, `scroll_compressor_semi_empirical`).

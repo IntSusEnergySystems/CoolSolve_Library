@@ -295,14 +295,17 @@ reference. The example itself stays in the CoolSolve repository.
    `two_phase_htc_correlations`), `kind = function`. Its functions are listed
    automatically in the index (`library.json`, *Functions* tab of `library.html`).
 4. Function names must be unique across the library (`tools/build_index.py`
-   warns otherwise): CoolSolve resolves `$INCLUDE library:<name>` and its
-   editor quick-fixes through them.
-5. Models that need these functions will write `$INCLUDE library:<name>`
-   (CoolSolve `CS-FEAT-IMPORT`: all functions and procedures of the
-   `.eescode` file are imported, its demonstration program is ignored). Until
-   CoolSolve supports it, copy the definitions in a block
-   `{--- Library functions copied from CSL-XXXX ---}`, and list `CSL-XXXX` in
-   their `related` field.
+   warns otherwise): a model that includes two library models gets one
+   definition per name.
+5. Models that need these functions write `$INCLUDE <name>` (or
+   `$INCLUDE CSL-XXXX`), CoolSolve `CS-FEAT-IMPORT`: all functions and
+   procedures of the `.eescode` file are imported, its demonstration program is
+   ignored, and its own `$INCLUDE`s are followed (in the library only). Do not
+   copy library functions into a model any more; list `CSL-XXXX` in its
+   `related` field. A file of the model folder with the same name takes
+   precedence over the library model, so a native EES file that calls a
+   library routine gets one added line, `$INCLUDE <name>` (e.g. the EES `HX`
+   function, `CSL-0332`), logged in the conversion log.
 
 ---
 

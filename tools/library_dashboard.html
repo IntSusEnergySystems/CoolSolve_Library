@@ -116,6 +116,10 @@ footer { color: var(--muted); font-size: 12px; padding: 0 24px 24px; }
 a.btn { display: inline-block; background: var(--accent); color: var(--on-accent); border-radius: 6px;
         padding: 7px 14px; font-weight: 600; white-space: nowrap; }
 a.btn:hover { text-decoration: none; filter: brightness(1.08); }
+/* The $INCLUDE line of a model with functions, with its Copy button */
+.include-line { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 6px; }
+.include-line code { padding: 3px 8px; border: 1px solid var(--border, #ccc); border-radius: 4px; }
+.include-line button { cursor: pointer; padding: 3px 10px; border-radius: 4px; }
 .quick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 8px; }
 .quick .lbl { color: var(--muted); font-size: 12.5px; min-width: 52px; }
 .toc { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 16px 0 22px; padding: 10px 0;
@@ -530,7 +534,11 @@ function modelDetail(m) {
   return `<div class="detail-grid"><div>
       <h3>Summary</h3><p style="margin:0">${esc(m.summary)}</p>
       ${m.missing_features.length ? `<h3>Why it does not run in CoolSolve yet</h3><ul class="gaps">${gaps}</ul>` : ""}
-      ${fns.length ? `<h3>Functions and procedures (${fns.length})</h3><p class="mono" style="margin:0;white-space:normal">` +
+      ${fns.length ? `<h3>Functions and procedures (${fns.length})</h3>` +
+        `<div class="include-line"><code>$INCLUDE ${esc(m.name)}</code>` +
+        `<button type="button" data-copy="$INCLUDE ${esc(m.name)}" title="Copy, then paste it in a CoolSolve model: ` +
+        `it imports these functions and procedures (not the main program)">Copy</button></div>` +
+        `<p class="mono" style="margin:0;white-space:normal">` +
         fns.map((f) => esc(f.function) + esc(f.signature)).join("<br>") + "</p>" : ""}
       ${m.tags.length ? `<h3>Tags</h3>${m.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}` : ""}
       ${SERVED ? `<h3>Open</h3><div class="links"><a class="btn" href="${esc(openUrl(m))}" target="_blank" rel="noopener">` +
@@ -636,6 +644,13 @@ $("reset").addEventListener("click", () => {
   render();
 });
 document.addEventListener("click", (e) => {
+  const copy = e.target.closest("button[data-copy]");               // the $INCLUDE line of a model
+  if (copy) {
+    const done = () => { copy.textContent = "Copied"; setTimeout(() => { copy.textContent = "Copy"; }, 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(copy.dataset.copy).then(done, () => { copy.textContent = "Select the line to copy"; });
+    else copy.textContent = "Select the line to copy";
+    return;
+  }
   const s = e.target.closest("button[data-sort], button[data-fsort], button[data-gsort]");
   if (s) {
     const [which, key] = s.dataset.sort ? ["sort", s.dataset.sort] : s.dataset.fsort ? ["fsort", s.dataset.fsort] : ["gsort", s.dataset.gsort];

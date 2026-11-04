@@ -30,10 +30,11 @@ This library gathers them in one place and makes them:
   (the `main` branch of this repository) and embeds it: the *Library* button of
   the GUI follows the taxonomy and opens a whole model folder in one click
   (verified models), and the dashboard served at `/library/` lists every model,
-  blocked ones included, each with an *Open in CoolSolve* link. Any model will
-  be able to import the functions and procedures of a library model with
-  `$INCLUDE library:<name>` (planned, see
-  [CoolSolve support](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md)).
+  blocked ones included, each with an *Open in CoolSolve* link. Any model
+  imports the functions and procedures of a library model with
+  `$INCLUDE <name>` (e.g. `$INCLUDE hx_ees_function` for the EES `HX` function;
+  the *Library* menu and each model page have a button that copies the line), see
+  [CoolSolve support](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md).
 
 The library covers the whole range from introductory exercises to
 research-grade models, and steady-state, dynamic, optimisation and

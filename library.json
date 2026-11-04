@@ -1,10 +1,10 @@
 {
  "snapshot": {
-  "content_hash": "sha256:ef7e858176e79c1c",
-  "files": 1564,
-  "bytes": 11478395,
-  "models": 302,
-  "functions": 620,
+  "content_hash": "sha256:7d823447c604dadb",
+  "files": 1569,
+  "bytes": 11511007,
+  "models": 303,
+  "functions": 625,
   "taxonomy_version": "0.3"
  },
  "models": [
@@ -5402,7 +5402,8 @@
     "CSL-0110",
     "CSL-0126",
     "CSL-0128",
-    "CSL-0127"
+    "CSL-0127",
+    "CSL-0332"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
@@ -5459,7 +5460,8 @@
     "CSL-0090",
     "CSL-0096",
     "CSL-0032",
-    "CSL-0105"
+    "CSL-0105",
+    "CSL-0332"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
@@ -5514,7 +5516,8 @@
     "CSL-0026",
     "CSL-0027",
     "CSL-0110",
-    "CSL-0137"
+    "CSL-0137",
+    "CSL-0332"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
@@ -5692,6 +5695,60 @@
    ],
    "path": "models/heat_exchangers/methods/ua_cecchinato_partload",
    "main_file": "ua_cecchinato_partload.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0332",
+   "name": "hx_ees_function",
+   "title": "Heat exchangers: the EES HX function (effectiveness-NTU by flow arrangement)",
+   "category": "heat_exchangers/methods",
+   "kind": "function",
+   "level": 2,
+   "status": "verified",
+   "summary": "The HX function of the EES heat exchanger library as a library function: epsilon = HX(TypeHX$, NTU, C_dot_1, C_dot_2, 'epsilon') and its inverse 'NTU' for parallel flow, counterflow, the three crossflow arrangements, N shell passes, the nine TEMA E/G/H/J types and the balanced regenerator. A model written for EES runs unchanged with $INCLUDE hx_ees_function.",
+   "fluids": [],
+   "tags": [
+    "heat exchanger",
+    "effectiveness-NTU",
+    "EES",
+    "HX function",
+    "counterflow",
+    "crossflow",
+    "shell and tube",
+    "TEMA",
+    "regenerator",
+    "function library"
+   ],
+   "n_equations": 38,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "EES",
+   "source_path": "",
+   "authors": [
+    "S. Klein and G. Nellis (EES heat exchanger library, F-Chart Software): the HX function and its interface",
+    "T. L. Bergman, A. S. Lavine, F. P. Incropera and D. P. DeWitt (both fluids mixed, N shell passes)",
+    "R. K. Shah and D. P. Sekulic; W. Rohsenow, J. Hartnett and Y. Cho (TEMA relations, through CSL-0102)",
+    "W. M. Kays and A. L. London (regenerator)",
+    "Caleb Bell (ht library, the relations of CSL-0090 and CSL-0102)"
+   ],
+   "license": "MIT",
+   "url": "https://fchartsoftware.com/ees/heat_transfer_library/heat_exchangers/hs1000.htm",
+   "missing_features": [],
+   "related": [
+    "CSL-0090",
+    "CSL-0102",
+    "CSL-0105",
+    "CSL-0286"
+   ],
+   "coolsolve_version": "0.4.0@2f4860b",
+   "verified_on": "2026-11-04",
+   "verification_summary": "Compared with the 33 worked examples of the EES help (one page per type, UA = 75 W/K, C_dot_1 = 50 W/K, C_dot_2 = 30 W/K, epsilon = 0.61): 32 agree to every printed digit (max relative deviation 3.5e-4, rounding of the 3-4 printed digits); the regenerator gives 0.8560 against 0.8559 (Kays and London relation, EES uses Dragutinovic and Baclic).",
+   "verification_checks": [
+    "publication",
+    "cross-model"
+   ],
+   "path": "models/heat_exchangers/methods/hx_ees_function",
+   "main_file": "hx_ees_function.eescode",
    "figures": 0
   },
   {
@@ -8878,7 +8935,7 @@
    "category": "hvac/evaporative_coolers",
    "kind": "steady",
    "level": 2,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Identification of a closed-loop (indirect-contact) cooling tower from B.A.C. VXI catalogue data: equivalent counterflow exchanger between the cooled fluid and a fictitious air at the wet-bulb temperature, air/fluid resistance split with mass-flow exponents, percentage error against the catalogue over 205 operating points.",
    "fluids": [
     "AirH2O",
@@ -8908,16 +8965,15 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-HX"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0076",
-    "CSL-0290"
+    "CSL-0290",
+    "CSL-0332"
    ],
    "coolsolve_version": "0.4.0@9768373",
    "verified_on": "2026-10-23",
-   "verification_summary": "Compared the runnable variant with the EES stored solution (kJ/kW values converted by hand, resistances K/kW /1000): 40 common variables, max relative difference 8.08e-02 on ERQ_dot_ct/ERRQ_dot_ct (the 2.97e-03 deviation of Q_dot_ct amplified on the small error term), all other deviations below 4.2e-03 (EES vs CoolProp humid-air properties). Native file fails only on the HX call (CS-GAP-HX).",
+   "verification_summary": "Compared with the EES stored solution (kJ/kW values converted by hand): 40 common variables, max relative difference 8.08e-02 on ERQ_dot_ct/ERRQ_dot_ct (the 2.97e-03 deviation of Q_dot_ct amplified on a small error term), all others below 4.2e-03 (humid-air properties). The native file, with $INCLUDE hx_ees_function (CSL-0332), equals its variant.",
    "verification_checks": [
     "ees-stored-solution",
     "order-of-magnitude"
@@ -17181,6 +17237,13 @@
    "path": "models/power_cycles/orc_applications/orc_whr_refprop_cost/orc_whr_refprop_cost.eescode"
   },
   {
+   "function": "HX",
+   "type": "FUNCTION",
+   "signature": "(TypeHX$, NTU_or_epsilon, C_dot_1, C_dot_2, Return$)",
+   "model_id": "CSL-0332",
+   "path": "models/heat_exchangers/methods/hx_ees_function/hx_ees_function.eescode"
+  },
+  {
    "function": "hx_cd",
    "type": "PROCEDURE",
    "signature": "(fluid$,fluidcd$,T_sf_su,M_dot_sf,T_r_su,T_r_ex,M_dot_r,p_cd,p_sf,b,L_w_tot,beta:A_cd,DELTAp,DELTAp_sf,M_fluid)",
@@ -17207,6 +17270,13 @@
    "signature": "(fluid$, fluidcd$, T_sf_su, M_dot_sf, T_r_su, T_r_ex, M_dot_r, p_cd, p_sf, b, L_w_tot, beta : A_cd, M_fluid, pinch, Q_dot_cd)",
    "model_id": "CSL-0112",
    "path": "models/heat_exchangers/methods/three_zone_hx_procedures/three_zone_hx_procedures.eescode"
+  },
+  {
+   "function": "HX_epsilon",
+   "type": "FUNCTION",
+   "signature": "(TypeHX$, NTU, C_dot_1, C_dot_2)",
+   "model_id": "CSL-0332",
+   "path": "models/heat_exchangers/methods/hx_ees_function/hx_ees_function.eescode"
   },
   {
    "function": "hx_ev",
@@ -17242,6 +17312,27 @@
    "signature": "(fluid$,fluidev$,T_sf_su_ev,M_dot_sf,h_r_su_ev,h_r_ex_ev,M_dot_r,p_ev,p_sf,b,L_w_tot,beta:A_ev,DELTAp,DELTAp_sf,pinch)",
    "model_id": "CSL-0116",
    "path": "models/refrigeration_heat_pumps/heat_pump_systems/heat_pump_vitocal_300g/heat_pump_vitocal_300g.eescode"
+  },
+  {
+   "function": "HX_NTU",
+   "type": "FUNCTION",
+   "signature": "(TypeHX$, epsilon, C_dot_1, C_dot_2)",
+   "model_id": "CSL-0332",
+   "path": "models/heat_exchangers/methods/hx_ees_function/hx_ees_function.eescode"
+  },
+  {
+   "function": "HX_NTU_numerical",
+   "type": "FUNCTION",
+   "signature": "(TypeHX$, epsilon, C_dot_1, C_dot_2)",
+   "model_id": "CSL-0332",
+   "path": "models/heat_exchangers/methods/hx_ees_function/hx_ees_function.eescode"
+  },
+  {
+   "function": "HX_shell_passes",
+   "type": "FUNCTION",
+   "signature": "(TypeHX$)",
+   "model_id": "CSL-0332",
+   "path": "models/heat_exchangers/methods/hx_ees_function/hx_ees_function.eescode"
   },
   {
    "function": "hxfem",
@@ -19743,7 +19834,7 @@
    "kind": "feature",
    "state": "open",
    "priority": "P1",
-   "text": "HTML model explorer: taxonomy, search, facets, model pages, *Open* — **done** (Library menu + `/library/` dashboard); *Include functions* waits for `CS-FEAT-IMPORT`",
+   "text": "HTML model explorer: taxonomy, search, facets, model pages, *Open* — **done** (Library menu + `/library/` dashboard), *Include functions* (copy `$INCLUDE <name>`) **done**",
    "detail": "",
    "fixed_in": "",
    "anchor": "3-features-and-implementation-plan"
@@ -19752,7 +19843,7 @@
    "kind": "feature",
    "state": "open",
    "priority": "P1",
-   "text": "`$INCLUDE` of library models and `.eescode` files (all their functions and procedures); native `.txt`/`.lib` for compatibility",
+   "text": "`$INCLUDE` of library models and `.eescode` files (all their functions and procedures) — **done**; native `.txt`/`.lib` not planned (convert them to `.eescode`)",
    "detail": "",
    "fixed_in": "",
    "anchor": "3-features-and-implementation-plan"
@@ -19779,7 +19870,7 @@
    "kind": "feature",
    "state": "open",
    "priority": "P2",
-   "text": "*Export for EES*: flatten `$INCLUDE`s into a self-contained file; ZIP option",
+   "text": "*Export for EES*: flatten `$INCLUDE`s into a self-contained file (the ZIP bundle already carries the included files)",
    "detail": "",
    "fixed_in": "",
    "anchor": "3-features-and-implementation-plan"
@@ -19880,15 +19971,6 @@
    "priority": "",
    "text": "`MODULE` / `SUBPROGRAM`",
    "detail": "Parse error (\"not yet handled\")",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-GAP-INCLUDE": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P1",
-   "text": "`$Include` / `$Load`, implicit `USERLIB` functions",
-   "detail": "Not supported",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
@@ -20189,15 +20271,6 @@
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
-  "CS-GAP-HX": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P3",
-   "text": "The EES built-in **`HX` heat-exchanger function**: `HX(Type$, NTU, C_dot_1, C_dot_2, Param$)` evaluates an effectiveness–NTU relation of the EES heat-exchanger library (`'counterflow'`, `'parallel'`, cross-flow…; `Param$` selects the returned quantity, e.g.",
-   "detail": "Warning *\"Unknown function 'HX'\"*, then the block of the call fails: *\"EvaluationError - Unknown or unsupported function: HX with 5 arguments\"*.",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
   "CS-GAP-INDEX-VAR": {
    "kind": "gap",
    "state": "open",
@@ -20476,6 +20549,24 @@
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-GAP-INCLUDE": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "`$INCLUDE <name>` (`CS-FEAT-IMPORT`, §2.3): the functions and procedures of a library model (by name or ID) or of a `.eescode` file of the model folder, which takes precedence; nested includes, cycle and conflict rules, the same resolution in the CLI and the …",
+   "detail": "",
+   "fixed_in": "post-v0.4.0, `$INCLUDE`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-HX": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "Not a solver built-in: the EES `HX(TypeHX$, NTU, C_dot_1, C_dot_2, Return$)` is the library function model `CSL-0332` *hx_ees_function* (all the EES flow types, `'epsilon'` and `'NTU'`, the 33 worked examples of the EES help reproduced), which an EES model …",
+   "detail": "",
+   "fixed_in": "post-v0.4.0, library `CSL-0332`",
+   "anchor": "7-closed-gaps-and-bugs"
   },
   "CS-BUG-IF-IGNORED": {
    "kind": "bug",

@@ -18,7 +18,7 @@ few percent over a 205-point catalogue table.
 | **Source** | ULiège/Laborelec toolkit 2002, `Indirect_contact_identification.EES` (EES 6.350), collection of S. Quoilin |
 | **Authors** | Felipe Trebilcock (ULiège Thermodynamics Lab, Dec 2002, for Laborelec); reviewers J. Lebrun, E. Winandy |
 | **License** | MIT |
-| **CoolSolve** | v0.4.0 — blocked by `CS-GAP-HX`; the runnable variant `indirect_contact_tower_identification_coolsolve.eescode` is verified (see *Verification*) |
+| **CoolSolve** | v0.4.0 — verified: the native file takes the EES `HX` function from the library model `CSL-0332` (`$INCLUDE hx_ees_function`); the variant `indirect_contact_tower_identification_coolsolve.eescode` gives the same solution (see *Verification*) |
 
 ## Problem statement
 
@@ -61,13 +61,15 @@ J/kg-K, `RH_su_ct` = 0.5, `RH_ex_ct` = 1, `i` = 205 (catalogue row: wet-bulb
 
 ## How to run
 
-The native file keeps the EES built-in `HX('counterflow', …)` call and is
-blocked by `CS-GAP-HX` (CoolSolve has no `HX` function). The runnable variant
-`indirect_contact_tower_identification_coolsolve.eescode` writes the
-counterflow effectiveness–NTU relation explicitly — the only change, logged in
-the conversion log — and is regression-tested as `CSL-0286:coolsolve`:
+The native file keeps the EES call `HX('counterflow', …)`; the function comes
+from the library model `CSL-0332` through the line `$INCLUDE hx_ees_function`
+added at the top (the only change to the EES source, logged in the conversion
+log). The variant `indirect_contact_tower_identification_coolsolve.eescode`
+writes the counterflow effectiveness–NTU relation explicitly and gives the same
+solution; both are regression targets (`CSL-0286`, `CSL-0286:coolsolve`):
 
 ```bash
+coolsolve ./indirect_contact_tower_identification.eescode
 coolsolve ./indirect_contact_tower_identification_coolsolve.eescode
 ```
 
@@ -167,6 +169,13 @@ Source file (EES 6.350, comments in English, kPa/kJ units, decimal comma):
   are inputs of the original (no defining equation); the stored-run values
   `i = 205` are set in the equations, the two air temperatures follow from the
   wet-bulb calls at the stored `RH_su_ct` = 0.5 / `RH_ex_ct` = 1.
+- **2026-11-04 — native file runs**: CoolSolve now has `$INCLUDE`
+  (`CS-FEAT-IMPORT`) and the EES `HX` function is the library model `CSL-0332`
+  (`CS-GAP-HX` closed by a library model instead of a solver built-in): the line
+  `$INCLUDE hx_ees_function` is added to the native file, which then gives the
+  solution of the variant (33 common variables, all equal; the variant has the
+  two more auxiliaries `C_dot_max_ct`, `Cr_ct`). `.sol` baseline of the native
+  file added.
 - **Level**: score of taxonomy.md §3: equations 40 (< 50) = 0; largest block 13
   (6–30) = 1; no functions/arrays = 0; no multi-zone structure = 0;
   semi-empirical calibration = 1; stored-solution guesses suffice = 0.
@@ -176,9 +185,9 @@ Source file (EES 6.350, comments in English, kPa/kJ units, decimal comma):
 
 ## Limitations and CoolSolve gaps
 
-- `CS-GAP-HX`: the EES built-in heat-exchanger function `HX(Type$, NTU, C_dot_1,
-  C_dot_2, Param$)` is not implemented in CoolSolve; the native file is blocked
-  by it, the variant replaces the single call (see *Conversion log*).
+- The EES heat-exchanger function `HX(Type$, NTU, C_dot_1, C_dot_2, Param$)` is
+  not a CoolSolve built-in: the native file includes it from the library model
+  `CSL-0332` (`CS-GAP-HX`, closed 2026-11-04 by that model).
 - The fictitious-air hypothesis collapses the humid-air state to the wet-bulb
   temperature; the exhaust air is taken saturated (`RH_ex_ct` = 1), as in the
   original.
