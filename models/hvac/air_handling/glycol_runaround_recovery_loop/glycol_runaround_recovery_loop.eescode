@@ -1,6 +1,6 @@
 {=============================================================================
   Air-to-air glycol run-around heat-recovery loop
-  CoolSolve Library model CSL-0162 - native file, BLOCKED
+  CoolSolve Library model CSL-0162 - native file
  -----------------------------------------------------------------------------
   Two air coils (extraction side and fresh-air side) linked by a glycol loop
   and a pump: classical epsilon-NTU equations with Braun's hypothesis for the
@@ -15,10 +15,14 @@
            epsilon_recovery, W_dot_gw_pump
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
   Source : ULiège model bank, S. Bertagnolio, 10 January 2008 - see README.md
-  Status : blocked (CS-GAP-INCLUDE, then CS-BUG-NEWTON-CYCLE, which also
-           blocks the runnable variant) - see README.md
+  Status : VERIFIED against the EES stored solution - BRINEPROP and its
+           tables come from CSL-0079 (line below); needs the .initials (the
+           runnable variant is still affected by CS-BUG-NEWTON-CYCLE)
+           - see README.md
 
 =============================================================================}
+
+$INCLUDE brineprop_secondary_refrigerants   "BRINEPROP of the ULiège BrineProp library (CSL-0079), added to the EES source"
 
 "!Inputs (diagram-window inputs of the original; values of the stored run)"
 recovery_regime$='winter'  "diagram-window input; the original offers 'winter' and 'summer'"

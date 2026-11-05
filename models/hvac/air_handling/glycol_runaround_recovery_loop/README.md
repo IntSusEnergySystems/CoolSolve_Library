@@ -1,6 +1,6 @@
 # Air-to-air glycol run-around heat-recovery loop
 
-🟠 **Level 3 · Advanced** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0162`
+🟠 **Level 3 · Advanced** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0162`
 
 Two air coils (one on the extraction air, one on the fresh air of an air
 handling unit) linked by a glycol loop with a pump: a run-around heat-recovery
@@ -19,7 +19,7 @@ power closes the glycol loop (the pump heat input warms the glycol).
 | **Source** | ULiège model bank — air-to-air glycol recovery loop, 10 January 2008 (`GLYCOL_RECOVERY_LOOP_SB080110.EES`) |
 | **Authors** | Stéphane Bertagnolio (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** by `CS-GAP-INCLUDE`, then by the `CS-BUG-NEWTON-CYCLE` block; the runnable `_coolsolve` variant is blocked by the solver bug `CS-BUG-NEWTON-CYCLE` |
+| **CoolSolve** | v0.4.0 — verified: the native file includes `BRINEPROP` and its lookup tables from `CSL-0079` (`$INCLUDE brineprop_secondary_refrigerants`) and reproduces the EES stored solution from its `.initials`; the runnable `_coolsolve` variant converges to a nonphysical root (`CS-BUG-NEWTON-CYCLE`) and has no `.sol` |
 
 ## Problem statement
 
@@ -60,12 +60,25 @@ Inputs and outputs are listed in the header of the `.eescode` files.
 
 ## How to run
 
-The native file `glycol_runaround_recovery_loop.eescode` cannot be solved by
-CoolSolve (see *Conversion log*); it is kept in native EES syntax. The runnable
-transcription `glycol_runaround_recovery_loop_coolsolve.eescode` (winter
-regime, values of the stored run) currently **fails to converge** on the
-solver bug `CS-BUG-NEWTON-CYCLE` (65-equation block; the equations are all
-satisfied at the EES stored point, see *Verification*). It has no `.sol` yet;
+```bash
+coolsolve ./glycol_runaround_recovery_loop.eescode
+```
+
+The native file `glycol_runaround_recovery_loop.eescode` is kept in native EES
+syntax, plus the line `$INCLUDE brineprop_secondary_refrigerants` that brings
+in the `BRINEPROP` procedure of `CSL-0079` with its lookup tables (`Units`,
+`Brine1`, `Brine2`). It needs its `.initials` (the EES stored solution, 144
+values): from the default guesses the 61-variable block of the glycol
+properties and the two coils fails with *SingularJacobian* (the structure of
+`CS-BUG-NEWTON-CYCLE`); with it the model solves in 9 iterations (146
+equations, largest block 61).
+
+The runnable transcription
+`glycol_runaround_recovery_loop_coolsolve.eescode` (winter regime, values of
+the stored run) currently **does not reach the stored solution** on the
+solver bug `CS-BUG-NEWTON-CYCLE` (65-equation block: no convergence with
+CoolSolve 0.3.0, a nonphysical root with the 2026-11-04 binary; the equations
+are all satisfied at the EES stored point, see *Verification*). It has no `.sol` yet;
 when the bug is closed, solve it and commit its `.sol` to enable the
 regression test (`CSL-0162:coolsolve`). The BrineProp coefficient tables are
 shipped as the companion tables `glycol_runaround_recovery_loop_coolsolve-Brine1/2.csv`
@@ -84,8 +97,26 @@ recovered power 62 359 W (sensible 47 001 W, latent 15 358 W), condensate
 
 ## Verification
 
-The native file cannot be solved (gaps of the card), so the verification
-concerns the runnable variant, and is **pointwise**: at the EES stored point
+**Native file** (2026-11-04, `tools/compare_solution.py` against the stored
+solution of `GLYCOL_RECOVERY_LOOP_SB080110.EES`):
+
+```
+143 common variables, 29 differ (rtol=0.001); only in EES: 1; only in CoolSolve: 4
+```
+
+The 29 deviations are all humid-air quantities, from the EES vs CoolProp
+humid-air formulations: the humidity ratios (4.2·10⁻³ to 5.3·10⁻³, maximum
+5.31e-03 on `W_cooling_c_wet`; already 4.4·10⁻³ on `w_ge_a_su` at the imposed
+23 °C / 50 %), the enthalpies and the fictitious-air properties of the wet
+extraction coil (2.0·10⁻³ to 3.8·10⁻³) and the condensate and latent power
+(1.1·10⁻³ to 1.3·10⁻³). The glycol properties agree within 1.9·10⁻⁵ (BrineProp
+of `CSL-0079`), the pump power to 1.7·10⁻⁷, `epsilon_recovery` to 3.0·10⁻⁵,
+the recovered sensible power to 3.7·10⁻⁴ and the air outlet temperatures
+within 4·10⁻⁴. `epsilon` is a stale variable of the source (no equation); the
+four CoolSolve-only variables are `PI` and three expression outputs of the
+`CALL BRINEPROP` statements.
+
+**Runnable variant**: the verification is **pointwise**: at the EES stored point
 (`.initials`, the 144 stored values) the residuals of the 65 equations of the
 failing block are ≤ 0.04, except the humid-air enthalpy
 `h_cooling_c_wet = ENTHALPY(AirH2O, t=t_cooling_c_wet, R=1, P=P_atm)`:
@@ -149,7 +180,7 @@ Source file (EES 7.888, comments in English), collection of S. Quoilin:
   output declarations of the diagram window (16 lines) were removed too
   (logged here, listed in the README *Results* instead).
 - **Gaps blocking the native file**: `CS-GAP-INCLUDE` (BrineProp comes from the implicit
-  `USERLIB` of EES, `Brineprop.lib`, TM-0479).
+  `USERLIB` of EES, `Brineprop.lib`, TM-0479); closed 2026-11-04, see below.
 
 - **2026-10-08 — runnable variant** `glycol_runaround_recovery_loop_coolsolve.eescode`,
   changing only what the gaps force, each change valid EES unless noted:
@@ -183,6 +214,22 @@ Source file (EES 7.888, comments in English), collection of S. Quoilin:
   `added` → `CSL-0162`. TM-0320 (Jaccard 0.92) and TM-0476 (Jaccard 0.99,
   inside a zip) kept at the C-137 decision (`todo`): near-duplicates that
   could be `duplicate` after an equation diff, left to the manager.
+- **2026-11-04 — native file runs**: CoolSolve now has `$INCLUDE`
+  (`CS-FEAT-IMPORT`, `CS-GAP-INCLUDE` closed), and an included library model
+  brings its lookup tables; the line
+  `$INCLUDE brineprop_secondary_refrigerants` is added at the top of the native
+  file (the only change to the EES source), which then reads `BRINEPROP` and
+  its tables `Units`, `Brine1`, `Brine2` from `CSL-0079` (no table is copied
+  into this folder). The native file gets a `.initials`: the 144 values of the
+  EES stored solution, as extracted by `tools/ees_extract.py` (the variant's
+  `.initials` holds the same values plus guesses for its flattened BrineProp
+  variables). From the default guesses its 61-variable block fails
+  (*SingularJacobian*). It then solves in 9 iterations and agrees with the EES
+  stored solution (see *Verification*); `.sol` baseline of the native file
+  added, status `blocked` → `verified`. The variant, re-run with the same
+  binary, now converges (111 iterations) but to a nonphysical root
+  (`t_gp_a_ex` = −11.9 °C instead of 3.9 °C, negative condensate; 78 of 143
+  variables differ from EES), so it still has no `.sol`.
 - **Level justification** (taxonomy.md §3): equations 271 (variant) → 2;
   largest block 65 → 2; procedures/arrays/DUPLICATE present → 1; three coupled
   components (two coils + pump/piping on one loop) → 1; no calibration/off-design → 0;
@@ -193,17 +240,17 @@ Source file (EES 7.888, comments in English), collection of S. Quoilin:
 
 ## Limitations and CoolSolve gaps
 
-- Native file **blocked**: `CS-GAP-INCLUDE` (the BrineProp procedure comes
-  from the implicit EES `USERLIB`) and then the `CS-BUG-NEWTON-CYCLE` block;
-  the runnable `_coolsolve` variant is blocked by the solver bug
-  `CS-BUG-NEWTON-CYCLE` (65-equation block, `SingularJacobian` from
-  iteration 0 although the block Jacobian is full rank) — both IDs are in
-  `model.json` `missing_features`.
+- The native file solves only from its `.initials` (the EES stored
+  solution); from the default guesses its 61-variable block fails with
+  *SingularJacobian*, the symptom of the solver bug `CS-BUG-NEWTON-CYCLE`. The
+  runnable `_coolsolve` variant is still affected by that bug (65-equation
+  block: `SingularJacobian` from iteration 0 with CoolSolve 0.3.0, a
+  nonphysical root with the 2026-11-04 binary) and has no `.sol`.
 - The two coils are supposed to have the same characteristics (nominal
   resistances corrected with mass-flow exponents 0.6 / 0.8, zero metal
   resistance), as in the original.
-- Verification is pointwise only (equations satisfied at the EES stored
-  point, with the EES-vs-CoolProp humid-air enthalpy difference of 0.22 %);
-  the variant has no `.sol` yet (see *How to run*).
+- The verification of the variant is pointwise only (equations satisfied at
+  the EES stored point, with the EES-vs-CoolProp humid-air enthalpy difference
+  of 0.22 %); the native file is compared with the full stored solution.
 
 ## Related models

@@ -1,25 +1,26 @@
 # Identified full-load point of a 5 L four-stroke gas engine
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0272`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0272`
 
 Steady-state model of the 5 L four-stroke natural-gas engine of the ULiège MSTh
 course at its maximum-power point (2400 rpm, about 90 kW on the shaft),
 *recomputed from the engine characteristics identified in exercise 1*: total
 valve area, jacket and water-to-environment conductance products, indicated
 efficiency and friction torque. The fuel flow, the shaft power and all state
-temperatures are outputs (second part of exercise 2). The native file is
-blocked by the missing `cpbar` user-library routine (`CS-GAP-INCLUDE`); the
-runnable variant uses the same equations with the `CALL` form of `cpbar`.
+temperatures are outputs (second part of exercise 2). The native file takes
+the `cpbar` user-library routine from `CSL-0005` (`$INCLUDE
+cpbar_combustion_products`) and calls it with `CALL`; the runnable variant
+carries a copy of the routine and gives the same solution.
 
 | | |
 |---|---|
 | **Category** | Cycles and machines › Engines |
 | **Fluids** | Air (ideal gas, intake and products in the valve/cylinder), CH4 (ideal gas, fuel cp), constant `cp` for liquid water |
-| **Size** | 89 equations (largest block: 14) |
+| **Size** | 86 equations (largest block: 13) in the native file; 89 (largest block: 14) in the variant, which adds `cp_g_6 = cp_g_6_p`-type equations |
 | **Source** | `~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 08/SB/MSTh - R8 - Ex 2 SB.EES` (TM-0133) |
 | **Authors** | ULiège MSTh course (J. Lebrun, V. Lemort, S. Bertagnolio) |
 | **License** | MIT |
-| **CoolSolve** | 0.4.0@9768373 — native file blocked by `CS-GAP-INCLUDE`, variant verified |
+| **CoolSolve** | 0.4.0 — verified; the native file (with `$INCLUDE cpbar_combustion_products` and `CALL cpbar`) equals the variant |
 
 ## Problem statement
 
@@ -64,17 +65,19 @@ Outputs: `W_dot_sh`, `M_dot_f`, `T_6`, `T_7`, `T_8`, `Q_dot_gw`, `Q_dot_amb`,
 ## How to run
 
 ```
+coolsolve ./gas_engine_identified_nominal_point.eescode
 coolsolve ./gas_engine_identified_nominal_point_coolsolve.eescode
 ```
 
-The native file `gas_engine_identified_nominal_point.eescode` keeps the
-function-position `cpbar` calls of the original and stops at the
-`CS-GAP-INCLUDE` error quoted below; the variant
-`gas_engine_identified_nominal_point_coolsolve.eescode` differs only by the
-three `CALL cpbar(...)` statements (valid EES, the routine is the same
-five-output `PROCEDURE` copied from `CSL-0005`). Both files ship the
-`.initials` of the EES solution (the variant needs them for a clean start) and
-the variant has a `.sol` baseline, tested as `CSL-0272:coolsolve`.
+The native file `gas_engine_identified_nominal_point.eescode` includes `cpbar`
+from `CSL-0005` (`$INCLUDE cpbar_combustion_products`) and writes the three
+function-position `cpbar` calls of the original as `CALL cpbar(...)` statements
+(valid EES, see *Conversion log*); the variant
+`gas_engine_identified_nominal_point_coolsolve.eescode` has `CALL` statements
+too, through auxiliary outputs (`cp_g_6_p`…), and a copy of the same
+five-output `PROCEDURE` of `CSL-0005`. Both files ship the `.initials` of the
+EES solution (needed for a clean start) and a `.sol` baseline, tested as
+`CSL-0272` and `CSL-0272:coolsolve`.
 
 ## Results
 
@@ -99,9 +102,12 @@ Variant, default operating point (the identification recovered):
 
 ## Verification
 
-The native file does not run (blocked by `CS-GAP-INCLUDE`); the numbers above
-are those of the variant, checked against two EES stored solutions with
-`tools/compare_solution.py` (tolerance as printed, `rtol=0.001`):
+The numbers above were checked on the variant against two EES stored
+solutions with `tools/compare_solution.py` (tolerance as printed,
+`rtol=0.001`); since 2026-11-04 the native file gives the same solution (87
+common variables, largest difference 1.1e-13) and the same comparisons, with
+three CoolSolve-only variables fewer (`only in CoolSolve: 56` and `15`: the
+variant's auxiliaries `cp_g_6_p`, `cp_g_67_p`, `cp_g_78_p`):
 
 1. **TM-0133 (the imported file)** — `31 common variables, 0 differ (rtol=0.001);
    only in EES: 0; only in CoolSolve: 59`. The 31 stored values are the
@@ -161,17 +167,38 @@ maintainer's laboratory collection.
   going to new variables (`Q_4_a`/`x_a`/… , `Q_4_67`/…, `Q_4_78`/…) — the
   change forced by `CS-GAP-INCLUDE`, valid EES, variable names otherwise
   unchanged.
+- **2026-11-04 — native file runs**: CoolSolve now has `$INCLUDE`
+  (`CS-FEAT-IMPORT`, `CS-GAP-INCLUDE` closed). Two changes to the native file,
+  both valid EES: (i) the copied `cpbar` block (identical to CSL-0005) is
+  replaced by the line `$INCLUDE cpbar_combustion_products`; (ii) the three
+  function-position calls `cp_g_6 = cpbar(m_f,n_f,f,T_ref,T_6)`,
+  `cp_g_67 = cpbar(…,T_6,T_7)` and `cp_g_78 = cpbar(…,T_7,T_8)` are written as
+  `CALL cpbar(m_f,n_f,f,T_ref,T_6:cp_g_6,Q_4_a,x_a,e_min_a,e_a)` and the same
+  with the suffixes `_67` and `_78`, as `docs/model_workflow.md` §3 prescribes
+  for a library PROCEDURE called in function position (no equation changes;
+  the other outputs take the variant's names). With the include alone
+  CoolSolve stops at *"Procedure cpbar has 5 outputs and cannot be called as a
+  function"*; the only version of the library in the collection
+  (`CombCmHn_SI_PNG2003_V2.LIB`, 2007) defines this five-output PROCEDURE and
+  the EES help documents only the `CALL` form. The native file then solves
+  (39 iterations, its own `.initials`; 86 equations, largest block 13) and
+  equals the variant (87 common variables, largest difference 1.1e-13);
+  `.sol` baseline of the native file added, status `blocked` → `verified`.
 - **Level**: equations 89 → 0; largest block 14 → 1; a procedure (`cpbar`) → 1;
   no multi-zone/discretisation, no calibration or part-load, no special
   numerics (30 iterations from the EES guesses) → 0. Score 2 → **level 2**.
 
 ## Limitations and CoolSolve gaps
 
-- `CS-GAP-INCLUDE` (`missing_features`): `cpbar` is an implicit user-library
-  routine of the original; the native file keeps the function-position call of
-  the source and CoolSolve reports
-  `Procedure cpbar has 5 outputs and cannot be called as a function (inline
-  syntax requires exactly 1 output)`. The variant uses the `CALL` form.
+- `cpbar` is an implicit user-library routine of the original, included from
+  `CSL-0005` (`CS-GAP-INCLUDE` closed 2026-11-04). The original calls it in
+  function position, which CoolSolve refuses with the five-output procedure
+  (`Procedure cpbar has 5 outputs and cannot be called as a function (inline
+  syntax requires exactly 1 output)`), so both files use the valid-EES `CALL`
+  form. Whether EES accepts the function form with a multi-output procedure is
+  not established (the EES help documents only `CALL`; the 2005 exercise may
+  have used a one-output `cpbar`; unverified suggestion `CS-GAP-PROC-MULTIOUT`,
+  not registered).
 - Physics, as in the original: ideal-gas `Air` for the charge and the
   products in the valve/cylinder, ideal-gas `CH4` for `cp_f`, constant
   `cp = 4187 J/(kg·K)` for the water, complete combustion, air and fuel at
@@ -186,6 +213,6 @@ maintainer's laboratory collection.
   (throttled) operating point of the 2005-11-14 exercise 4.
 - `CSL-0149` (gas_engine_complete_model): the complete exercises 1-5 of this
   TP 08 series (including the stand-by map and the recovery exchangers), same
-  blocked native/verified-variant pattern; `CSL-0272` is the part-2 nominal
+  pattern (native file with `$INCLUDE` and `CALL cpbar`, equal to its variant); `CSL-0272` is the part-2 nominal
   point of exercise 2 only.
-- `CSL-0005` (cpbar_combustion_products): the `cpbar` routine used here.
+- `CSL-0005` (cpbar_combustion_products): the `cpbar` routine, included by the native file and copied into the variant.

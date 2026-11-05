@@ -67,7 +67,7 @@
     "date": "2026-10-18",
     "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": null,
-    "notes": "Blocked: documented reference values only (COP 3.0747, W_dot_cp 3004.20 W, Q_dot_cd 9237.10 W, M_dot_r 0.052602 kg/s). No variant: see README 'How to run' (re-check after C-134). Re-checked with CoolSolve 0.3.0@4798e2b: the file parses and is square (235 equations, largest block 45); the first error is Unknown procedure: BRINEPROP2."
+    "notes": "Blocked: documented reference values only (COP 3.0747, W_dot_cp 3004.20 W, Q_dot_cd 9237.10 W, M_dot_r 0.052602 kg/s). No variant: see README 'How to run' (re-check after C-134). Re-checked with CoolSolve 0.3.0@4798e2b: the file parses and is square (235 equations, largest block 45); the first error is Unknown procedure: BRINEPROP2. 2026-11-04: CS-GAP-INCLUDE is closed in CoolSolve, but no library model defines BRINEPROP2 (TM-0480 merged into CSL-0079, not added yet): native file unchanged, still stops at Unknown function BRINEPROP2 (block 23); CS-GAP-INCLUDE kept until the routine is in the library."
   },
   "missing_features": [
     "CS-GAP-INCLUDE"
@@ -125,6 +125,11 @@
       "date": "2026-10-18",
       "action": "re-checked (CoolSolve 0.3.0@4798e2b): CS-GAP-CONVERT-UNQUOTED, CS-GAP-GE-ARROW, CS-GAP-REPEAT-UNTIL-BARE and CS-GAP-INCOMPRESSIBLE are closed and CS-GAP-LKT is not a gap (maintainer decision 2026-10-12; the catalogue table is missing from the collection); the file is square (235 equations) and stops at the BRINEPROP2 procedure (CS-GAP-INCLUDE); still blocked, no variant",
       "by": "Claude for S. Quoilin"
+    },
+    {
+      "date": "2026-11-04",
+      "action": "re-checked for CS-GAP-INCLUDE (closed in CoolSolve): BRINEPROP2 is not in the library yet (TM-0480 merged into CSL-0079, to be added by a follow-up card), so no $INCLUDE line is added; the native file still stops at Unknown function BRINEPROP2; CS-GAP-INCLUDE kept in missing_features until the routine exists; status stays blocked",
+      "by": "Claude (Opus 5.5) for S. Quoilin"
     }
   ]
 }

@@ -1,10 +1,10 @@
 {
  "snapshot": {
-  "content_hash": "sha256:7d823447c604dadb",
-  "files": 1569,
-  "bytes": 11511007,
+  "content_hash": "sha256:8a78bdd9579fa270",
+  "files": 1578,
+  "bytes": 11545509,
   "models": 303,
-  "functions": 625,
+  "functions": 623,
   "taxonomy_version": "0.3"
  },
  "models": [
@@ -1993,7 +1993,7 @@
    "category": "engines/engine_models",
    "kind": "steady",
    "level": 2,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Steady-state model of the 5 L four-stroke natural-gas engine of the ULiege MSTh course at its maximum-power point (2400 rpm, shaft power solved from the indicated efficiency): butterfly valve and carburettor, intake pressure drop through the valve area, adiabatic combustion chamber with the cpbar mean specific heat, expansion, jacket and water-to-environment exchangers, and two recovery exchangers (exercise 5). The stand-by throttling pressure drop is read in an engine map (external lookup table recovered from the sibling file TM-0137).",
    "fluids": [
     "Air",
@@ -2022,9 +2022,7 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-INCLUDE"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0034",
     "CSL-0005",
@@ -2032,7 +2030,7 @@
    ],
    "coolsolve_version": "0.3.0@4798e2b",
    "verified_on": "2026-10-18",
-   "verification_summary": "Concerns the runnable variant (the native file is blocked: the five-output cpbar procedure called in function position, CS-GAP-INCLUDE): compared with the EES stored solution, 97 common variables, 6 differ at rtol=0.001, max 9.4e-3 on cp_f (ideal-gas vs real-fluid heat capacity), all deviations explained. The charge mass balance and chamber energy balance are closed.",
+   "verification_summary": "Concerns the runnable variant, which the native file (with $INCLUDE and CALL cpbar) equals: compared with the EES stored solution, 97 common variables, 6 differ at rtol=0.001, max 9.4e-3 on cp_f (ideal-gas vs real-fluid heat capacity), all deviations explained. The charge mass balance and chamber energy balance are closed.",
    "verification_checks": [
     "ees-stored-solution",
     "energy-balance"
@@ -2201,7 +2199,7 @@
    "category": "engines/engine_models",
    "kind": "steady",
    "level": 2,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Steady-state model of the natural-gas engine of the ULiège MSTh course at its maximum-power point (2400 rpm), recomputed from the engine characteristics identified in exercise 1 (valve area, jacket and water-to-environment conductance products, indicated efficiency, friction torque): carburettor, intake pressure drop through the valve, adiabatic combustion with the cpbar mean specific heat, expansion, jacket (eps-NTU) and ambient losses; shaft power and fuel flow are outputs (exercise 2, second part).",
    "fluids": [
     "Air",
@@ -2218,8 +2216,8 @@
     "eps-NTU",
     "exercise"
    ],
-   "n_equations": 89,
-   "largest_block": 14,
+   "n_equations": 86,
+   "largest_block": 13,
    "origin_type": "teaching",
    "source": "thermo_models",
    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 08/SB/MSTh - R8 - Ex 2 SB.EES",
@@ -2228,9 +2226,7 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-INCLUDE"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0034",
     "CSL-0149",
@@ -2238,7 +2234,7 @@
    ],
    "coolsolve_version": "0.4.0@9768373",
    "verified_on": "2026-10-22",
-   "verification_summary": "Variant checked (native file blocked, CS-GAP-INCLUDE): the 31 variables of the EES stored solution of TM-0133 agree at rtol=0.001; vs the full stored solution of TM-0132 (same engine point) 72 common variables, 11 differ - the air entropy reference offset, 9.4e-3 on cp_f (ideal-gas vs CoolProp) and 2.6e-3 max from the rounded identified inputs. Nominal data reproduced: 90 kW, 22 kg/h, 90 kW, 8 kW.",
+   "verification_summary": "Variant checked, the native file equals it: the 31 variables of the EES stored solution of TM-0133 agree at rtol=0.001; vs the full stored solution of TM-0132 (same engine point) 72 common variables, 11 differ - the air entropy reference offset, 9.4e-3 on cp_f (ideal-gas vs CoolProp) and 2.6e-3 max from the rounded identified inputs. Nominal data reproduced: 90 kW, 22 kg/h, 90 kW, 8 kW.",
    "verification_checks": [
     "ees-stored-solution",
     "cross-model",
@@ -8038,7 +8034,7 @@
    "category": "hvac/air_handling",
    "kind": "steady",
    "level": 3,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Run-around heat recovery between the extracted and the fresh air of an air handling unit: two epsilon-NTU coils under Braun's hypothesis (dry and wet regimes computed simultaneously, the regime of largest capacity kept), linked by a glycol loop with Colebrook piping pressure drop and a pump; glycol properties from the ULiège BrineProp library.",
    "fluids": [
     "AirH2O",
@@ -8069,20 +8065,19 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-INCLUDE",
-    "CS-BUG-NEWTON-CYCLE"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0074",
     "CSL-0079",
     "CSL-0161",
     "CSL-0163"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-08",
-   "verification_summary": "Not verified: the native file is blocked (CS-GAP-INCLUDE) and the runnable variant does not converge (CS-BUG-NEWTON-CYCLE). Only a pointwise check at the EES stored point was made (largest residual 57 J/kg).",
-   "verification_checks": [],
+   "coolsolve_version": "0.4.0@2f4860b",
+   "verified_on": "2026-11-04",
+   "verification_summary": "Native file compared with the EES stored solution of GLYCOL_RECOVERY_LOOP_SB080110.EES: 143 common variables, 29 differ above rtol=0.001, max 5.31e-03 on W_cooling_c_wet, all humid-air quantities (EES vs CoolProp); glycol properties within 1.9e-05, pump power 1.7e-07, epsilon_recovery 3.0e-05. The runnable variant reaches a nonphysical root (CS-BUG-NEWTON-CYCLE).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/hvac/air_handling/glycol_runaround_recovery_loop",
    "main_file": "glycol_runaround_recovery_loop.eescode",
    "figures": 0,
@@ -8390,7 +8385,6 @@
    "license": "MIT",
    "url": "",
    "missing_features": [
-    "CS-GAP-INCLUDE",
     "CS-GAP-IFSTR"
    ],
    "related": [
@@ -8407,7 +8401,7 @@
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
-   "verification_summary": "Concerns the runnable variant (native file blocked by CS-GAP-INCLUDE and CS-GAP-IFSTR). Against the 87 variables decoded from the EES file: 74 common variables, 21 differ above rtol = 0.001, maximum 7.81e-01 from one stale stored value; the other 19 deviations (1.2e-03 to 4.8e-03) are humid-air property differences.",
+   "verification_summary": "Concerns the runnable variant (native file blocked by CS-GAP-IFSTR). Against the 87 variables decoded from the EES file: 74 common variables, 21 differ above rtol = 0.001, maximum 7.81e-01 from one stale stored value; the other 19 deviations (1.2e-03 to 4.8e-03) are humid-air property differences.",
    "verification_checks": [
     "ees-stored-solution"
    ],
@@ -8425,7 +8419,7 @@
    "category": "hvac/cooling_coils",
    "kind": "steady",
    "level": 2,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Parameter identification of a cooling and dehumidifying coil from one measured wet-regime point (ULiège model bank PARAMID reference): a one-zone counter-flow exchanger whose conductance AU is the series of the air-side, metal and brine-side resistances; the fictitious wet-bulb gas and the semi-isothermal contact surface reproduce the measured capacity and exhaust air state, and the imposed resistance ratios fix the identified nominal resistances.",
    "fluids": [
     "AirH2O"
@@ -8455,9 +8449,7 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-INCLUDE"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0073",
     "CSL-0074",
@@ -8467,7 +8459,7 @@
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-09",
-   "verification_summary": "Concerns the runnable variant (the native file is blocked by CS-GAP-INCLUDE): compared with the EES stored solution, 79 common variables, 23 differ above rtol=0.001, maximum 1.05e-02 on M_dot_w_coil, all from EES vs CoolProp humid-air formulations; AU_coil agrees to 3.2e-05.",
+   "verification_summary": "Concerns the runnable variant, which the native file (BRINEPROP included from CSL-0079) equals: compared with the EES stored solution, 79 common variables, 23 differ above rtol=0.001, maximum 1.05e-02 on M_dot_w_coil, all from EES vs CoolProp humid-air formulations; AU_coil agrees to 3.2e-05.",
    "verification_checks": [
     "ees-stored-solution"
    ],
@@ -11889,7 +11881,7 @@
    "category": "power_cycles/gas_turbine_offdesign",
    "kind": "steady",
    "level": 2,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Steady-state model of a two-shaft gas turbine (single-spool compressor and combustor, two mechanically independent expanders) on air: the compressor is described by a performance map (reduced flow, pressure ratio and isentropic efficiency versus reduced speed), the combustor by an energy balance with the mean specific heats of the ULiege combustion library, and expander 1 by a power balance from which its isentropic efficiency is found. Revision exercise of the ULiege course 'Machines et systemes thermiques', in three parts.",
    "fluids": [
     "Air",
@@ -11910,8 +11902,8 @@
     "ideal gas",
     "exercise"
    ],
-   "n_equations": 44,
-   "largest_block": 7,
+   "n_equations": 52,
+   "largest_block": 11,
    "origin_type": "teaching",
    "source": "thermo_models",
    "source_path": "~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 09/Revision JL051223-02.EES",
@@ -11920,9 +11912,7 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-INCLUDE"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0005",
     "CSL-0035",
@@ -11935,7 +11925,7 @@
    ],
    "coolsolve_version": "0.3.0@4798e2b",
    "verified_on": "2026-10-18",
-   "verification_summary": "Not the main file (blocked by `CS-GAP-INCLUDE`): its runnable variants reproduce the EES stored solutions of the three revision files (TM-0150, TM-0151, TM-0149) with a max relative deviation of 1.6·10⁻³ and derived results within 1.1·10⁻³ (EES vs CoolProp air).",
+   "verification_summary": "Compared with the EES stored solutions of the three revision files (TM-0150, TM-0151, TM-0149): max relative deviation 1.6·10⁻³ (mean cp of air), derived results within 1.1·10⁻³ (EES vs CoolProp air); h_1, h_2, h_2s, s_1 differ by the air reference state. The main file, with $INCLUDE cpbar_combustion_products (CSL-0005) and CALL cpbar, equals its _coolsolve variant.",
    "verification_checks": [
     "ees-stored-solution"
    ],
@@ -15994,22 +15984,8 @@
    "function": "cpbar",
    "type": "PROCEDURE",
    "signature": "(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)",
-   "model_id": "CSL-0149",
-   "path": "models/engines/engine_models/gas_engine_complete_model/gas_engine_complete_model.eescode"
-  },
-  {
-   "function": "cpbar",
-   "type": "PROCEDURE",
-   "signature": "(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)",
    "model_id": "CSL-0034",
    "path": "models/engines/engine_models/gas_engine_full_power_cpbar/gas_engine_full_power_cpbar.eescode"
-  },
-  {
-   "function": "cpbar",
-   "type": "PROCEDURE",
-   "signature": "(m,n,f,T_p1,T_p2:c_bar_p,Q_4,x,e_min,e)",
-   "model_id": "CSL-0272",
-   "path": "models/engines/engine_models/gas_engine_identified_nominal_point/gas_engine_identified_nominal_point.eescode"
   },
   {
    "function": "cpbar",

@@ -1,6 +1,6 @@
 # Complete gas engine: throttle, carburettor, combustion, cooling and recovery circuits
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** (runnable variant verified) &nbsp;|&nbsp; `CSL-0149`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0149`
 
 Steady-state model of the 5 L four-stroke natural-gas engine of the ULiège
 *machines et systèmes thermiques* course (repetition TP 08, exercises 1–5) at
@@ -20,11 +20,11 @@ family.
 |---|---|
 | **Category** | Cycles and machines › Engines |
 | **Fluids** | Air, CH4 (ideal-gas fuel), Water |
-| **Size** | 105 equations (largest block: 10) — about 50 of them are the copied `cpbar` routine |
+| **Size** | 105 equations (largest block: 10), the eight unused outputs of the two `CALL cpbar` statements included; `cpbar` itself is included from CSL-0005 |
 | **Source** | ULiège MSTh repetition TP 08, exercises 1–5, S. Bertagnolio (`~/Nextcloud/thermo_models/machines et systemes thermiques/MSTh - Repetitions/TP 08/SB/MSTH-SB-R8-EX1-2-3-4-5.EES`, EES X7.458) |
 | **Authors** | ULiège MSTh course (J. Lebrun, V. Lemort, S. Bertagnolio) |
 | **License** | MIT |
-| **CoolSolve** | native file blocked (`cpbar` in function position, `CS-GAP-INCLUDE`); the runnable variant `gas_engine_complete_model_coolsolve.eescode` is verified against the stored EES solution (97 common variables, all deviations explained) |
+| **CoolSolve** | v0.4.0 — verified: the native file includes `cpbar` from CSL-0005 (`$INCLUDE cpbar_combustion_products`) and calls it with `CALL`; it gives the solution of the variant `gas_engine_complete_model_coolsolve.eescode`, verified against the stored EES solution (97 common variables, all deviations explained) |
 
 ## Problem statement
 
@@ -88,20 +88,24 @@ which interpolates cubically; CoolSolve interpolates linearly — the
 
 ## How to run
 
-The **native file** is blocked: it calls the five-output `cpbar` procedure in
-function position, which CoolSolve refuses (see *Limitations*). It is kept in
-valid EES syntax.
-
-The **runnable variant** solves as is (note the `./`):
+Both files solve as they are (note the `./`):
 
 ```bash
+coolsolve ./gas_engine_complete_model.eescode
 coolsolve ./gas_engine_complete_model_coolsolve.eescode
 ```
 
-It needs the companion files `gas_engine_complete_model_coolsolve.initials`
-(guess values from the EES stored solution; the flame temperature sits inside
-the `cpbar` calls), `gas_engine_complete_model_coolsolve-lookup_1.csv` (the
-engine map) and, for the native file, `gas_engine_complete_model-lookup_1.csv`.
+The **native file** takes `cpbar` from the library model CSL-0005
+(`$INCLUDE cpbar_combustion_products`) and writes its two calls with `CALL`
+(the original calls the five-output procedure in function position, which
+CoolSolve refuses; see *Conversion log*); it is valid EES. The **variant**
+has the same `CALL` statements and a copy of the routine instead of the
+include; both give the same solution and are regression targets (`CSL-0149`,
+`CSL-0149:coolsolve`).
+
+Each file needs its companion files: `.initials` (guess values from the EES
+stored solution; the flame temperature sits inside the `cpbar` calls) and
+`-lookup_1.csv` (the engine map).
 
 ## Results
 
@@ -119,8 +123,9 @@ ambient temperature in both exercises.
 Reference: the stored solution of the EES original (`reference/ees_variables.csv`
 produced by `tools/ees_extract.py` in the temporary work folder, not shipped;
 98 variables, of which 97 have a value — `m` is a phantom variable of the
-original, not present in any equation). The comparison concerns the **runnable
-variant**:
+original, not present in any equation). The comparison was made on the
+**runnable variant**; since 2026-11-04 the native file gives the same solution
+(106 common variables, identical) and prints the same line:
 
 ```
 97 common variables, 6 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 9
@@ -171,9 +176,9 @@ is handled correctly by this build (the `CS-BUG-INTERP-DESC` fix).
   83 275.40418 Pa in the stored solution (EES interpolates cubically) — the
   table is confirmed.
 * **`cpbar`**: `P. Ngendakumana`, *CombCmHn_SI_PNG2003_V2.LIB* (ULiège
-  Thermodynamics Laboratory, 2003), shipped as **CSL-0005** and copied into
-  this model as in CSL-0034/CSL-0006 (`CS-FEAT-IMPORT`, `$INCLUDE library:…`,
-  is not available yet).
+  Thermodynamics Laboratory, 2003), shipped as **CSL-0005**; the native file
+  includes it (`$INCLUDE cpbar_combustion_products`, since 2026-11-04), the
+  runnable variant still carries a copy, as in CSL-0034/CSL-0006.
 * All sources are published under the library license (MIT).
 
 ## Conversion log
@@ -227,6 +232,23 @@ is handled correctly by this build (the `CS-BUG-INTERP-DESC` fix).
   solution (the flame temperature sits inside the `cpbar` calls); no
   `coolsolve.conf` needed (the expansion is not degenerate here, unlike
   CSL-0034: `W_dot_sh ≈ 90 kW ≠ 0`).
+* **2026-11-04 — native file runs**: CoolSolve now has `$INCLUDE`
+  (`CS-FEAT-IMPORT`, `CS-GAP-INCLUDE` closed). Two changes to the native file,
+  both valid EES: (i) the copied `cpbar` block (identical to CSL-0005) is
+  replaced by the line `$INCLUDE cpbar_combustion_products`; (ii) the two
+  function-position calls `cp_p = cpbar(m_f,n_f,f,T_ref,T_6)` and
+  `cp_p_67 = cpbar(m_f,n_f,f,T_6,T_7)` are written as
+  `CALL cpbar(m_f,n_f,f,T_ref,T_6:cp_p,Q_4_a,x_a,e_min_a,e_a)` and
+  `CALL cpbar(m_f,n_f,f,T_6,T_7:cp_p_67,Q_4_67,x_67,e_min_67,e_67)`, as
+  `docs/model_workflow.md` §3 prescribes for a library PROCEDURE called in
+  function position (no equation changes; the other outputs take the variant's
+  names). With the include alone CoolSolve stops at *"Procedure cpbar has 5
+  outputs and cannot be called as a function"*; the only version of the
+  library in the collection (`CombCmHn_SI_PNG2003_V2.LIB`, 2007) defines this
+  five-output PROCEDURE and the EES help documents only the `CALL` form. The
+  native file then solves (38 iterations, its own `.initials`) and equals the
+  variant on all 106 common variables; `.sol` baseline of the native file
+  added, status `blocked` → `verified`.
 * **Level 2** (card): the taxonomy score is 6 (105 equations, largest block
   10, procedures, ≥ 3 coupled components, engine-map off-design data, curated
   guesses → level 3), lowered by one as for CSL-0034: about 50 of the 105
@@ -246,17 +268,14 @@ is handled correctly by this build (the `CS-BUG-INTERP-DESC` fix).
   can be overlaid (`CS-FEAT-DIAGRAM-IDEAL`, all fluids are ideal gases in
   EES); a sweep plot (e.g. `W_dot_sh` vs `rpm`) is the expected figure.
 * **Function-position `cpbar` calls with a multi-output `PROCEDURE`.** The
-  native file calls `cpbar(...)` in function position, exactly as in the EES
-  original (valid EES syntax); the library routine (CSL-0005) is a five-output
-  `PROCEDURE`, and CoolSolve refuses the function form with it (*"Procedure
-  cpbar has 5 outputs and cannot be called as a function (inline syntax
-  requires exactly 1 output)"*; minimal reproducer: a two-line call of the
-  CSL-0005 procedure in function position). Whether EES accepts the function
-  form with a multi-output procedure is an open question (unverified
+  EES original calls `cpbar(...)` in function position; the library routine
+  (CSL-0005) is a five-output `PROCEDURE`, and CoolSolve refuses the function
+  form with it (*"Procedure cpbar has 5 outputs and cannot be called as a
+  function (inline syntax requires exactly 1 output)"*), so both files use the
+  valid-EES `CALL` form (`docs/model_workflow.md` §3). Whether EES accepts the
+  function form with a multi-output procedure is an open question (unverified
   suggestion `CS-GAP-PROC-MULTIOUT` in the maintainer's pending list, not
-  registered — the 2005 exercise may have used a one-output `cpbar`): it is
-  therefore **not** listed in `missing_features`; the variant uses the
-  valid-EES `CALL` form.
+  registered — the 2005 exercise may have used a one-output `cpbar`).
 
 ## Related models
 
@@ -264,4 +283,4 @@ is handled correctly by this build (the `CS-BUG-INTERP-DESC` fix).
   operating point of the same engine family (TP 08 exercise 4); this model is
   its maximum-power counterpart with the recovery circuits of exercise 5.
 * **CSL-0005** *cpbar_combustion_products*: the `cpbar` routine (function
-  library) copied into this model.
+  library) included by the native file and copied into the variant.

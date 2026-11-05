@@ -15,11 +15,14 @@
 
   Source: ULiège model bank (Laborelec toolkit lineage), cooling coil PARAMID
   reference model, 21 March 2008, V. Lemort and J. Lebrun - see README.md.
-  License: MIT. Status: blocked in CoolSolve (CS-GAP-INCLUDE); the runnable
-  variant cooling_coil_paramid_coolsolve.eescode is verified against the EES
-  stored solution.
+  License: MIT. Status: VERIFIED - BRINEPROP and its tables come from the
+  library model CSL-0079 (line below); same solution as the variant
+  cooling_coil_paramid_coolsolve.eescode, verified against the EES stored
+  solution; needs the .initials (see README).
 
 =============================================================================}
+
+$INCLUDE brineprop_secondary_refrigerants   "BRINEPROP of the ULiège BrineProp library (CSL-0079), added to the EES source"
 
 "!Nomenclature (as in the original)"
 "AU_coil       Global heat transfer coefficient [W/K]"

@@ -5,7 +5,7 @@
   "summary": "Steady-state model of the 5 L four-stroke natural-gas engine of the ULiege MSTh course at its maximum-power point (2400 rpm, shaft power solved from the indicated efficiency): butterfly valve and carburettor, intake pressure drop through the valve area, adiabatic combustion chamber with the cpbar mean specific heat, expansion, jacket and water-to-environment exchangers, and two recovery exchangers (exercise 5). The stand-by throttling pressure drop is read in an engine map (external lookup table recovered from the sibling file TM-0137).",
   "kind": "steady",
   "level": 2,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "gas_engine_complete_model.eescode",
   "fluids": [
     "Air",
@@ -26,7 +26,7 @@
   ],
   "language_features": [
     "INTERPOLATE (native EES call form with a named argument)",
-    "user-library routine cpbar (implicit library, copied; function-position calls in the native file, CALL form in the variant)",
+    "user-library routine cpbar ($INCLUDE cpbar_combustion_products in the native file, copied in the variant; called with CALL in both)",
     "property functions"
   ],
   "stats": {
@@ -48,7 +48,7 @@
     "course": "Machines et systèmes thermiques (ULiège), repetition TP 08, exercises 1-5"
   },
   "verification": {
-    "summary": "Concerns the runnable variant (the native file is blocked: the five-output cpbar procedure called in function position, CS-GAP-INCLUDE): compared with the EES stored solution, 97 common variables, 6 differ at rtol=0.001, max 9.4e-3 on cp_f (ideal-gas vs real-fluid heat capacity), all deviations explained. The charge mass balance and chamber energy balance are closed.",
+    "summary": "Concerns the runnable variant, which the native file (with $INCLUDE and CALL cpbar) equals: compared with the EES stored solution, 97 common variables, 6 differ at rtol=0.001, max 9.4e-3 on cp_f (ideal-gas vs real-fluid heat capacity), all deviations explained. The charge mass balance and chamber energy balance are closed.",
     "checks": [
       "ees-stored-solution",
       "energy-balance"
@@ -57,11 +57,9 @@
     "date": "2026-10-18",
     "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": 0.0094,
-    "notes": "97 common variables, 6 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 9 (the constant PI and the 8 unused cpbar outputs). Excluding s_2 (absolute air entropy, CoolProp reference-state offset; its differences agree to 6e-5), the maximum is 9.4e-3 on cp_f = CP(CH4) (EES ideal-gas vs CoolProp real-fluid heat capacity, same deviation as CSL-0034). All other deviations explained in the README (cp_p_67 1.6e-3, W_dot_pumping 2.6e-3 on a small difference of two large pressures, Q_dot_recup_1 1.3e-3 on a 2.2 K temperature difference). Re-solved with CoolSolve 0.3.0@4798e2b: the variant now keeps the native INTERPOLATE call form (named argument); solution unchanged."
+    "notes": "97 common variables, 6 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 9 (the constant PI and the 8 unused cpbar outputs). Excluding s_2 (absolute air entropy, CoolProp reference-state offset; its differences agree to 6e-5), the maximum is 9.4e-3 on cp_f = CP(CH4) (EES ideal-gas vs CoolProp real-fluid heat capacity, same deviation as CSL-0034). All other deviations explained in the README (cp_p_67 1.6e-3, W_dot_pumping 2.6e-3 on a small difference of two large pressures, Q_dot_recup_1 1.3e-3 on a 2.2 K temperature difference). Re-solved with CoolSolve 0.3.0@4798e2b: the variant now keeps the native INTERPOLATE call form (named argument); solution unchanged. 2026-11-04: the native file runs with $INCLUDE cpbar_combustion_products (CSL-0005) and its two cpbar calls in CALL form (workflow §3); it equals the variant on all 106 common variables and prints the same comparison line vs the EES stored solution (CoolSolve 0.4.0@2f4860b)."
   },
-  "missing_features": [
-    "CS-GAP-INCLUDE"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0034",
     "CSL-0005",
@@ -85,6 +83,11 @@
       "date": "2026-10-18",
       "action": "re-checked (CoolSolve 0.3.0@4798e2b): CS-GAP-INTERP-EES is closed - the variant keeps the native INTERPOLATE call form (named argument; valid EES), solution unchanged; the native file is blocked by the five-output cpbar PROCEDURE called in function position (CS-GAP-INCLUDE) only",
       "by": "Claude for S. Quoilin"
+    },
+    {
+      "date": "2026-11-04",
+      "action": "native file runs: the copied cpbar block replaced by $INCLUDE cpbar_combustion_products (CSL-0005; CS-GAP-INCLUDE closed), the two function-position cpbar calls written with CALL (workflow §3); equals the variant; native .sol baseline; status blocked -> verified",
+      "by": "Claude (Opus 5.5) for S. Quoilin"
     }
   ]
 }

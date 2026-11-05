@@ -23,7 +23,7 @@ refrigerant hold-up.
 | **Source** | ULiège Thermodynamics Laboratory — consulting/study file `HeatPump_Vitocal 300G -110_CGSQ1112288.EES` |
 | **Authors** | Sylvain Quoilin (ULiège Thermodynamics Laboratory) — from the file-name initials `SQ`; the `{$ID$}` tag names the EES licence holder (J. Lebrun), not the author |
 | **License** | MIT |
-| **CoolSolve** | **blocked** (native file: `CS-GAP-INCLUDE`, the `BRINEPROP2` procedure). No runnable variant: the compressor catalogue table `ZH38K4E-TFD` is not recoverable (see *How to run*) |
+| **CoolSolve** | **blocked** (native file: the `BRINEPROP2` procedure, not yet in the library, so nothing to `$INCLUDE`; `CS-GAP-INCLUDE` kept until it is). No runnable variant: the compressor catalogue table `ZH38K4E-TFD` is not recoverable (see *How to run*) |
 
 ## Problem statement
 
@@ -79,7 +79,8 @@ exchanger results (areas, pressure drops, pinch points, hold-up).
 ## How to run
 
 Blocked: the native file parses in CoolSolve and the solve stops at the unknown
-procedure `BRINEPROP2` (`CS-GAP-INCLUDE`); no runnable variant is shipped. The `copeland` compressor correlation reads its coefficients in
+procedure `BRINEPROP2` (`CS-GAP-INCLUDE`; CoolSolve now has `$INCLUDE`, but no
+library model provides `BRINEPROP2` yet); no runnable variant is shipped. The `copeland` compressor correlation reads its coefficients in
 an **external lookup table `ZH38K4E-TFD` (columns `W`, `M`, `Vs`) that is not
 part of the source collection** (no `.lkt` file anywhere in
 `~/Nextcloud/thermo_models/`), so the ARI mode of the stored solution cannot
@@ -178,6 +179,17 @@ Source file (EES 8.940, comments in English), collection of S. Quoilin:
   isentropic exponent of the leakage model, fixed at 0.9955924 in the stored
   run; the alternative `{gamma_leak_cp=1,03}` is commented out in the
   original).
+- **2026-11-04 — `$INCLUDE` re-check**: CoolSolve now has `$INCLUDE`
+  (`CS-FEAT-IMPORT`, `CS-GAP-INCLUDE` closed), but `BRINEPROP2` is not in the
+  library: `CSL-0079` ships only `BRINEPROP` (its source `Brineprop2.LIB`,
+  inventory `TM-0480`, is merged into `CSL-0079` and still to be added by a
+  follow-up card) and no other library model defines it. The native file is
+  therefore unchanged (no `$INCLUDE` line) and still stops at *"Unknown
+  function 'BRINEPROP2'"* (block 23, 6 variables). `CS-GAP-INCLUDE` stays in
+  `missing_features` until the routine is added; the native file then gets the
+  line `$INCLUDE brineprop_secondary_refrigerants` (`BRINEPROP2` reads the
+  same `Brine1`/`Brine2` tables as `BRINEPROP`, which come with the included
+  library model).
 - **Level**: score of docs/taxonomy.md §3 — equations 392 → 2; largest block
   > 30 (45 in the CoolSolve analysis: the compressor envelope/leakage loop) → 2;
   procedures + arrays → 1; ≥ 3 coupled components → 1;
@@ -195,7 +207,12 @@ The native file is blocked by the ID of `model.json` `missing_features`:
 - `CS-GAP-INCLUDE` — `CALL BRINEPROP2('EG',30,-5:…)` is an implicit
   USERLIB procedure (ULiège BrineProp2 library) not shipped with the file;
   its single-output sibling `BRINEPROP` is library model `CSL-0079`. CoolSolve
-  stops on *"Unknown procedure: BRINEPROP2"* in the evaporator-side block.
+  stops on *"Unknown function 'BRINEPROP2'"* in the evaporator-side block.
+  `$INCLUDE` is implemented (2026-11-04), but no library model provides
+  `BRINEPROP2` yet; the ID is kept until `BRINEPROP2` is added to `CSL-0079`
+  (inventory `TM-0480`). The CoolSolve register (`docs/model_library_support.md`,
+  row `CS-GAP-INCLUDE`) lists this model as a pending re-check until a
+  BrineProp2 function model exists.
 
 Also open, but not a CoolSolve gap: the compressor catalogue coefficients of
 `copeland` live in an external lookup table `ZH38K4E-TFD` (read by name

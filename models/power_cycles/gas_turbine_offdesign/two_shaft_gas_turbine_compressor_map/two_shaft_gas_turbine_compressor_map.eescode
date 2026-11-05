@@ -40,11 +40,14 @@
   Source : ULiège, course "Machines et systèmes thermiques" (MECA0006), revision
            exercises of 2005-12-23 (JL), file "Revision JL051223-02.EES"
            - see README.md
-  Status : BLOCKED in CoolSolve: the cpbar and gamma routines, loaded
-           implicitly by EES from the ULiège combustion library, are not
-           available (CS-GAP-INCLUDE). The runnable transcription is
-           two_shaft_gas_turbine_compressor_map_coolsolve.eescode.
+  Status : VERIFIED - cpbar and gamma come from the library model CSL-0005
+           (line below); the two calls of the five-output cpbar PROCEDURE are
+           written with CALL (valid EES). Same solution as
+           two_shaft_gas_turbine_compressor_map_coolsolve.eescode; needs the
+           .initials (see README).
 =============================================================================}
+
+$INCLUDE cpbar_combustion_products   "cpbar, gamma and mmprod of the ULiège combustion library (CSL-0005), added to the EES source"
 
 "Revision JL051223-02"
 "Two-shaft gas turbine: back to nominal speed (values given by the exercise)"
@@ -87,14 +90,14 @@ t_2 = TEMPERATURE(Air,h=h_2)  "compressor discharge temperature [°C]"
 
 "!Combustion chamber (natural gas assumed to arrive at 25 °C)"
 q_1 = c_p_a*(25-t_2)           "sensible enthalpy of the compressor discharge air relative to 25 °C, sign reversed (balance term) [J/kg]"
-c_p_a = cpbar(1,4,0,25,T_2)   "mean specific heat of the air between 25 °C and t_2 [J/kg-K]"
+CALL cpbar(1,4,0,25,T_2 : c_p_a, Q_4_a, x_a, e_min_a, e_a)   "mean specific heat of the air between 25 °C and t_2 [J/kg-K]"
 q_2 = 0                        "heat loss of the combustion chamber: none (adiabatic) [J/kg]"
 q_3 = -f*LHV                   "heat released by the combustion of the natural gas (negative: released) [J/kg]"
 LHV = 50E6                     "lower heating value of the natural gas [J/kg]"
 q_4 = 0                        "energy loss by unburned CO: none (complete combustion) [J/kg]"
 q_5 = c_p_p_burner*(t_ex_burner-25)   "sensible enthalpy of the combustion products at t_ex_burner relative to 25 °C [J/kg]"
 "c_p_p = 1100"                 "not used: replaced by the cpbar routine below"
-c_p_p_burner = cpbar(1,4,f,25,T_ex_burner)   "mean specific heat of the products [J/kg-K]"
+CALL cpbar(1,4,f,25,T_ex_burner : c_p_p_burner, Q_4_p, x_p, e_min_p, e_p)   "mean specific heat of the products [J/kg-K]"
 "t_ex_burner = 802"            "given in revision part 1, solved here"
 q_1+q_2+q_3+q_4+q_5 = 0        "energy balance of the combustion chamber, sensible enthalpies counted from 25 °C [J/kg]"
 

@@ -25,7 +25,7 @@ exhaust air and refrigerant states and the condensate flow rate.
 | **Source** | ULiège model bank — *Cooling coil RefSim model*, 18 March 2008 (EES file inside `COOLINGCOIL_REFSIM_MODEL_VL080318.zip`) |
 | **Authors** | Vincent Lemort, Jean Lebrun (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | native file **blocked** by `CS-GAP-INCLUDE` and `CS-GAP-IFSTR`; the variant `cooling_coil_refsim_coolsolve.eescode` runs and is verified against the EES stored solution (see *Verification*) |
+| **CoolSolve** | native file **blocked** by `CS-GAP-IFSTR` only (`BRINEPROP` and its lookup tables are included from `CSL-0079`); the variant `cooling_coil_refsim_coolsolve.eescode` runs and is verified against the EES stored solution (see *Verification*) |
 
 ## Problem statement
 
@@ -106,8 +106,12 @@ below: `0.622·0.5·4246/(98000 − 0.5·4246) = 0.013771 kg/kg` at
 
 ## How to run
 
-The native file `cooling_coil_refsim.eescode` keeps the native EES syntax and
-does **not** run in CoolSolve (see *Limitations and CoolSolve gaps*). The
+The native file `cooling_coil_refsim.eescode` keeps the native EES syntax,
+plus the line `$INCLUDE brineprop_secondary_refrigerants` that brings in the
+`BRINEPROP` procedure of `CSL-0079` with its lookup tables, and does **not**
+run in CoolSolve: with its `.initials` every block solves up to the string
+output `WetHumide$`, written with the EES `IF$` (`CS-GAP-IFSTR`, see
+*Limitations and CoolSolve gaps*). The
 runnable variant `cooling_coil_refsim_coolsolve.eescode` changes only what the
 gaps force (every change is logged in the conversion log and in the header of
 the variant):
@@ -116,9 +120,10 @@ the variant):
 coolsolve ./cooling_coil_refsim_coolsolve.eescode
 ```
 
-A `.initials` file is needed: without it the wet block (19 equations) reaches
-*MaxIterations*; with the EES stored solution as initial values the model
-converges in 13 iterations (`System square: Yes`, 77 equations, 77 variables).
+A `.initials` file is needed (both files ship one, the EES stored solution):
+without it the wet block (19 equations) reaches *MaxIterations*; with the EES
+stored solution as initial values the variant converges in 13 iterations
+(`System square: Yes`, 77 equations, 77 variables).
 To study another operating point, change the supply state or the coil
 parameters; a sweep of `t_r_su_coil` (or of `M_dot_a_coil`) shows how the
 selected regime switches and how the capacity and the sensible heat ratio
@@ -163,8 +168,7 @@ is **cooled and dehumidified** (30 → 14.12 °C, 13.84 → 10.31 g/kg).
 
 ## Verification
 
-The **native file cannot be solved** by CoolSolve (`CS-GAP-INCLUDE`,
-`CS-GAP-IFSTR`), so the comparison concerns the runnable variant
+The **native file cannot be solved** by CoolSolve (`CS-GAP-IFSTR`), so the comparison concerns the runnable variant
 `cooling_coil_refsim_coolsolve.eescode`, which differs from the native file by
 the four changes of the conversion log. Compared with
 `compare_solution.py` against the 87 variables decoded from the source EES
@@ -317,6 +321,19 @@ drops the refrigerant side entirely. They have no `duplicate_group`.
   model, for which CoolSolve has no psychrometric diagram
   (`CS-FEAT-PSYCHRO`, decision D7): its figure is a parametric sweep plot, as
   for `CSL-0070` and `CSL-0073`.
+- **2026-11-04 — `$INCLUDE` re-check**: CoolSolve now has `$INCLUDE`
+  (`CS-FEAT-IMPORT`, `CS-GAP-INCLUDE` closed), and an included library model
+  brings its lookup tables; the line
+  `$INCLUDE brineprop_secondary_refrigerants` is added at the top of the native
+  file (the only change to the EES source), which then reads `BRINEPROP` and
+  its tables `Units`, `Brine1`, `Brine2` from `CSL-0079` (no table is copied
+  into this folder). The native file gets a `.initials`, a copy of the
+  variant's (the EES stored solution): without it the wet block (19 equations)
+  reaches *MaxIterations*, as the variant's does. With it every block solves up
+  to `WetHumide$` (80 equations, largest block 19), where the solve stops on
+  `CS-GAP-IFSTR` (*"String-valued function not supported: if$"*).
+  `missing_features`: `CS-GAP-INCLUDE` removed, `CS-GAP-IFSTR` kept (the only
+  blocker); status stays `blocked`.
 - **Level.** Score (taxonomy.md §3): equations 77 (50–300 → 1), largest block 19
   (6–30 → 1), no function or array defined in the file (0), single zone and
   single component (0), semi-empirical correlations and an operating-point
@@ -326,14 +343,10 @@ drops the refrigerant side entirely. They have no `duplicate_group`.
   explicit equations apart from the effectiveness loop.
 ## Limitations and CoolSolve gaps
 
-- **`CS-GAP-INCLUDE` (with `CS-GAP-LKT`) — the native file cannot be solved.**
-  The four `CALL BRINEPROP('Density'|'SpecHeat'|'Dynvisc'|'thermalc', …)` calls
-  resolve to the laboratory library procedure `Brineprop.lib` (and its two
-  binary lookup tables `Brine1.lkt`, `Brine2.lkt`), which CoolSolve neither
-  loads nor can read: the warning *"Unknown function 'BRINEPROP'"* is emitted
-  and the blocks that call it cannot be evaluated. The proper fix is the
-  function model of card `C-84`; the runnable variant uses the stored brine
-  properties.
+- The four `CALL BRINEPROP('Density'|'SpecHeat'|'Dynvisc'|'thermalc', …)`
+  calls resolve to the laboratory library procedure `Brineprop.lib`, included
+  with its lookup tables from the function model `CSL-0079` (`CS-GAP-INCLUDE`
+  closed 2026-11-04). The runnable variant uses the stored brine properties.
 - **`CS-GAP-IFSTR` — the native file cannot be solved.** The EES string
   conditional `IF$(cond,true$,false$)` raises *"Unknown or unsupported
   function: if$ with 3 arguments"* at every arity; it is used once here, for
@@ -367,8 +380,8 @@ drops the refrigerant side entirely. They have no `duplicate_group`.
 - `CSL-0077` *aircooled_chiller_refsim*: another model of the same ULiège model
   bank (IEA A43 PR2 A15), an air-cooled water chiller whose condenser and
   evaporator use the same three-resistances-in-series description.
-- `CSL-0079` *brineprop_secondary_refrigerants*: the BrineProp library this
-  model copies its `BRINEPROP` procedure from (brine properties of the
+- `CSL-0079` *brineprop_secondary_refrigerants*: the BrineProp library whose
+  `BRINEPROP` procedure the native file includes (brine properties of the
   ethylene-glycol solution of the coil).
 - `CSL-0164` *heating_coil_refsim*: the heating-coil RefSim of the same model
   bank (epsilon-NTU, hot water, humidity unchanged).

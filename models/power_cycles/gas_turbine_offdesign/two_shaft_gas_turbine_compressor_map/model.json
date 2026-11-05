@@ -5,7 +5,7 @@
   "summary": "Steady-state model of a two-shaft gas turbine (single-spool compressor and combustor, two mechanically independent expanders) on air: the compressor is described by a performance map (reduced flow, pressure ratio and isentropic efficiency versus reduced speed), the combustor by an energy balance with the mean specific heats of the ULiege combustion library, and expander 1 by a power balance from which its isentropic efficiency is found. Revision exercise of the ULiege course 'Machines et systemes thermiques', in three parts.",
   "kind": "steady",
   "level": 2,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "two_shaft_gas_turbine_compressor_map.eescode",
   "fluids": [
     "Air",
@@ -28,12 +28,12 @@
   ],
   "language_features": [
     "INTERPOLATE (native EES call form with a named argument)",
-    "user-library routines cpbar and gamma (implicit library, copied in the runnable variants)",
+    "$INCLUDE cpbar_combustion_products (CSL-0005) for the user-library routines cpbar and gamma (copied in the runnable variants); cpbar called with CALL",
     "property functions (Air and ideal-gas species)"
   ],
   "stats": {
-    "n_equations": 44,
-    "largest_block": 7
+    "n_equations": 52,
+    "largest_block": 11
   },
   "origin": {
     "type": "teaching",
@@ -50,7 +50,7 @@
     "course": "MECA0006 Machines et systèmes thermiques (ULiège), revision exercises of 2005-12-23, part 2"
   },
   "verification": {
-    "summary": "Not the main file (blocked by `CS-GAP-INCLUDE`): its runnable variants reproduce the EES stored solutions of the three revision files (TM-0150, TM-0151, TM-0149) with a max relative deviation of 1.6·10⁻³ and derived results within 1.1·10⁻³ (EES vs CoolProp air).",
+    "summary": "Compared with the EES stored solutions of the three revision files (TM-0150, TM-0151, TM-0149): max relative deviation 1.6·10⁻³ (mean cp of air), derived results within 1.1·10⁻³ (EES vs CoolProp air); h_1, h_2, h_2s, s_1 differ by the air reference state. The main file, with $INCLUDE cpbar_combustion_products (CSL-0005) and CALL cpbar, equals its _coolsolve variant.",
     "checks": [
       "ees-stored-solution"
     ],
@@ -58,11 +58,9 @@
     "date": "2026-10-18",
     "coolsolve_version": "0.3.0@4798e2b",
     "max_rel_diff": 0.0016,
-    "notes": "40 of the 44 EES variables agree within 1.6e-3 relative (largest: the mean specific heat of air, 1.6e-3); all derived results (powers, temperatures, efficiency, flows) within 1.1e-3. h_1, h_2, h_2s and s_1 differ by CoolProp's reference state for air; their differences agree to 6e-4. Same deviations for the ambient variant (max 1.4e-3) and for the 95 % speed case. Re-solved with CoolSolve 0.3.0@4798e2b: the variants now use the native INTERPOLATE call form (named argument), solutions unchanged."
+    "notes": "40 of the 44 EES variables agree within 1.6e-3 relative (largest: the mean specific heat of air, 1.6e-3); all derived results (powers, temperatures, efficiency, flows) within 1.1e-3. h_1, h_2, h_2s and s_1 differ by CoolProp's reference state for air; their differences agree to 6e-4. Same deviations for the ambient variant (max 1.4e-3) and for the 95 % speed case. Re-solved with CoolSolve 0.3.0@4798e2b: the variants now use the native INTERPOLATE call form (named argument), solutions unchanged. Concerns the variants until 2026-11-04; then the main file runs with $INCLUDE cpbar_combustion_products and its two cpbar calls in CALL form (workflow §3), from the variant's .initials, and equals the _coolsolve variant on all 52 common variables; vs TM-0150 it prints '44 common variables, 7 differ (rtol=0.001)', as the variant (CoolSolve 0.4.0@2f4860b)."
   },
-  "missing_features": [
-    "CS-GAP-INCLUDE"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0005",
     "CSL-0035",
@@ -91,6 +89,11 @@
       "date": "2026-10-18",
       "action": "re-checked (CoolSolve 0.3.0@4798e2b): CS-GAP-INTERP-EES is closed - the three INTERPOLATE calls of the _coolsolve and _ambient variants are the native EES form (named argument), the variants are valid EES and their solutions unchanged (baselines re-written); the main file stays blocked by CS-GAP-INCLUDE (cpbar, gamma); the five-output PROCEDURE cpbar still cannot be called in function position",
       "by": "Claude for S. Quoilin"
+    },
+    {
+      "date": "2026-11-04",
+      "action": "main file runs: $INCLUDE cpbar_combustion_products (CSL-0005) for cpbar and gamma (CS-GAP-INCLUDE closed), the two function-position cpbar calls written with CALL (workflow §3), .initials of the variant added (default guesses reach a non-physical root, f = -0.85); equals the _coolsolve variant; native .sol baseline; status blocked -> verified",
+      "by": "Claude (Opus 5.5) for S. Quoilin"
     }
   ]
 }

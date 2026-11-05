@@ -5,7 +5,7 @@
   "summary": "Run-around heat recovery between the extracted and the fresh air of an air handling unit: two epsilon-NTU coils under Braun's hypothesis (dry and wet regimes computed simultaneously, the regime of largest capacity kept), linked by a glycol loop with Colebrook piping pressure drop and a pump; glycol properties from the ULiège BrineProp library.",
   "kind": "steady",
   "level": 3,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "glycol_runaround_recovery_loop.eescode",
   "fluids": [
     "AirH2O",
@@ -29,7 +29,7 @@
   "language_features": [
     "$IF directive (winter/summer)",
     "IF with 5 arguments",
-    "library procedure call (Brineprop)",
+    "library procedure call (Brineprop, $INCLUDE brineprop_secondary_refrigerants with its lookup tables)",
     "humid-air properties",
     "min/max"
   ],
@@ -52,18 +52,17 @@
     "course": "ULiège model bank, air-to-air glycol recovery loop, 2008-01-10 (references Braun et al. 1989 and Ding et al. 1990)"
   },
   "verification": {
-    "summary": "Not verified: the native file is blocked (CS-GAP-INCLUDE) and the runnable variant does not converge (CS-BUG-NEWTON-CYCLE). Only a pointwise check at the EES stored point was made (largest residual 57 J/kg).",
-    "checks": [],
-    "reference": "EES stored solution in the source file (144 decoded variables) against the runnable variant glycol_runaround_recovery_loop_coolsolve.eescode - pointwise only: at the stored point all equations of the model are satisfied (largest residual 57 J/kg on the humid-air enthalpy h_cooling_c_wet, 0.22 %, EES vs CoolProp humid-air formulation; all others <= 0.04), but the variant does not converge in CoolSolve (CS-BUG-NEWTON-CYCLE), so no .sol and no compare_solution.py run yet",
-    "date": "2026-10-08",
-    "coolsolve_version": "0.3.0@7addbbc",
-    "max_rel_diff": null,
-    "notes": "Native file blocked by CS-GAP-IF-DIRECTIVE (both $IF regime branches kept: 169 equations / 144 unknowns), CS-GAP-IF5, CS-GAP-CALL-EXPR-OUT and CS-GAP-INCLUDE (BrineProp USERLIB). The winter-resolved variant is square (271 equations, largest block 65) and stops on the solver bug CS-BUG-NEWTON-CYCLE; a T-RECHECK after that bug should solve it, verify against the stored solution and commit the .sol."
+    "summary": "Native file compared with the EES stored solution of GLYCOL_RECOVERY_LOOP_SB080110.EES: 143 common variables, 29 differ above rtol=0.001, max 5.31e-03 on W_cooling_c_wet, all humid-air quantities (EES vs CoolProp); glycol properties within 1.9e-05, pump power 1.7e-07, epsilon_recovery 3.0e-05. The runnable variant reaches a nonphysical root (CS-BUG-NEWTON-CYCLE).",
+    "checks": [
+      "ees-stored-solution"
+    ],
+    "reference": "EES stored solution in the source file (144 decoded variables, tools/ees_extract.py) against the native file with tools/compare_solution.py; earlier, pointwise only against the runnable variant (all equations satisfied at the stored point, largest residual 57 J/kg on h_cooling_c_wet, 0.22 %, humid-air formulation)",
+    "date": "2026-11-04",
+    "coolsolve_version": "0.4.0@2f4860b",
+    "max_rel_diff": 0.00531,
+    "notes": "Native file blocked by CS-GAP-IF-DIRECTIVE (both $IF regime branches kept: 169 equations / 144 unknowns), CS-GAP-IF5, CS-GAP-CALL-EXPR-OUT and CS-GAP-INCLUDE (BrineProp USERLIB). The winter-resolved variant is square (271 equations, largest block 65) and stops on the solver bug CS-BUG-NEWTON-CYCLE; a T-RECHECK after that bug should solve it, verify against the stored solution and commit the .sol. 2026-11-04 (CoolSolve 0.4.0@2f4860b + loading of the tables of included models): the native file runs with $INCLUDE brineprop_secondary_refrigerants (BRINEPROP and its tables from CSL-0079) and the .initials of the EES stored solution (SingularJacobian on the 61-variable block from default guesses); compare_solution.py prints '143 common variables, 29 differ (rtol=0.001); only in EES: 1; only in CoolSolve: 4' (epsilon is a stale EES variable); the 29 are humidity ratios, humid-air enthalpies, wet-coil fictitious-air properties, condensate and latent power (1.1e-03 to 5.31e-03). The variant now converges to a nonphysical root (t_gp_a_ex -11.9 C vs 3.9 C) and keeps no .sol."
   },
-  "missing_features": [
-    "CS-GAP-INCLUDE",
-    "CS-BUG-NEWTON-CYCLE"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0074",
     "CSL-0079",
@@ -95,6 +94,11 @@
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @57b22d3 (T-RECHECK, CS-GAP-CALL-EXPR-OUT closed); still blocked by CS-GAP-INCLUDE (first error: the native file now parses completely, 146 equations square, and stops at Unknown procedure BRINEPROP) and CS-BUG-NEWTON-CYCLE (scratch copy with BRINEPROP supplied: the 61-variable block gives SingularJacobian); README and missing_features updated, variant kept (blocked by CS-BUG-NEWTON-CYCLE; its expression-output split is no longer forced)",
       "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-11-04",
+      "action": "native file runs: $INCLUDE brineprop_secondary_refrigerants (CSL-0079; CS-GAP-INCLUDE closed, the tables of the included model are loaded with it), .initials of the EES stored solution added (the 61-variable block fails from default guesses); verified against the EES stored solution (max 5.31e-03, humid air); native .sol baseline; status blocked -> verified; the variant now converges to a nonphysical root (CS-BUG-NEWTON-CYCLE), no .sol",
+      "by": "Claude (Opus 5.5) for S. Quoilin"
     }
   ]
 }

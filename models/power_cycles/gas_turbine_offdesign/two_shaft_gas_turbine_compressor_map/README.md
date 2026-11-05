@@ -1,6 +1,6 @@
 # Two-shaft gas turbine with a compressor map and two expanders
 
-🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ⛔ **Blocked** &nbsp;|&nbsp; `CSL-0011`
+🔵 **Level 2 · Intermediate** &nbsp;|&nbsp; ⚙️ **Steady-state** &nbsp;|&nbsp; ✅ **Verified** &nbsp;|&nbsp; `CSL-0011`
 
 Steady-state model of a two-shaft gas turbine on air: a single-spool compressor
 and combustion chamber, and two mechanically independent expanders, the first
@@ -18,11 +18,11 @@ gas turbine whose combustion side is described by mean specific heats.
 |---|---|
 | **Category** | Cycles and machines › Gas turbines and gas cycles |
 | **Fluids** | Air (compressor, expanders); N₂, O₂, CO₂, H₂O (combustion products, inside `cpbar`) |
-| **Size** | 44 equations in the main file (largest block: 7), 38 blocks; the runnable variant has 52 equations (largest block: 11) once the two copied library routines are inlined |
+| **Size** | 52 equations (largest block: 11) in the main file and in the runnable variant: the 44 equations of the original (largest block: 7 with the function-position calls) plus the eight unused outputs of the two `CALL cpbar` statements |
 | **Source** | ULiège — course *Machines et systèmes thermiques* (MECA0006), revision exercises of 2005-12-23 (EES file `Revision JL051223-02.EES`) |
 | **Authors** | Jean Lebrun (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | the main file is **blocked** by `CS-GAP-INCLUDE` (`cpbar` and `gamma`); the runnable variants are verified against the EES stored solutions of the three revision files |
+| **CoolSolve** | v0.4.0 — verified: the main file takes `cpbar` and `gamma` from `CSL-0005` (`$INCLUDE cpbar_combustion_products`) and calls `cpbar` with `CALL`; it gives the solution of the variant `two_shaft_gas_turbine_compressor_map_coolsolve.eescode`, verified against the EES stored solutions of the three revision files |
 
 ## Problem statement
 
@@ -74,8 +74,8 @@ $$\underbrace{c̄_{p,a}(25-t_2)}_{q_1}+\underbrace{0}_{q_2}+\underbrace{(-f\,\ma
 
 The mean specific heats `c̄_p,a` and `c̄_p,p` are those of the ULiège combustion
 library: `cpbar(1,4,0,25,t_2)` for the air and `cpbar(1,4,f,25,t_ex_burner)`
-for the products of CH₄ in simplified air (CSL-0005, copied in the runnable
-variant); the ratio of specific heats of the products comes from its `gamma`
+for the products of CH₄ in simplified air (CSL-0005, included by the main file,
+copied in the runnable variants); the ratio of specific heats of the products comes from its `gamma`
 routine. `q_1` and `q_5` are the sensible enthalpies of the compressed air and of
 the combustion products relative to the 25 °C reference (`q_1` is negative because
 the air is hotter than 25 °C), and `q_3` is the heat released by the combustion;
@@ -105,21 +105,25 @@ temperature `t_4` fixed by expander 1.
 
 ## How to run
 
-The main file `two_shaft_gas_turbine_compressor_map.eescode` keeps the original
-EES text and **does not run** in CoolSolve (see *Limitations and CoolSolve
-gaps*). The runnable transcription is:
-
 ```bash
+coolsolve ./two_shaft_gas_turbine_compressor_map.eescode
 coolsolve ./two_shaft_gas_turbine_compressor_map_coolsolve.eescode
 ```
 
-Keep `two_shaft_gas_turbine_compressor_map_coolsolve.initials` (the solution
-stored by EES): **without it the solver converges to a nonphysical branch**
-(`f` = −0.85, `t_ex_burner` = 51 000 °C) and reports SUCCESS. Two edits
-separate the two files: the two `cpbar` calls become `CALL` statements (the
-`CALL cpbar(...)` form is valid EES) and the `cpbar`/`gamma` routines of CSL-0005
-are copied in (details in *Conversion log*). Both files are valid EES. No
-equation of the machine was changed.
+The main file `two_shaft_gas_turbine_compressor_map.eescode` keeps the original
+EES text with two changes, both valid EES and logged in the *Conversion log*:
+the line `$INCLUDE cpbar_combustion_products` brings in `cpbar` and `gamma`
+from `CSL-0005`, and the two `cpbar` calls are written as `CALL` statements
+(the original calls the five-output procedure in function position, which
+CoolSolve refuses). The variant
+`two_shaft_gas_turbine_compressor_map_coolsolve.eescode` has the same `CALL`
+statements and a copy of the two routines instead of the include; both give
+the same solution and are regression targets (`CSL-0011`,
+`CSL-0011:coolsolve`). No equation of the machine was changed.
+
+Keep the `.initials` files (the solution stored by EES; the main file's is a
+copy of the variant's): **without them the solver converges to a nonphysical
+branch** (`f` = −0.85, `t_ex_burner` = 51 000 °C) and reports SUCCESS.
 
 Two cases are shipped as files:
 
@@ -197,7 +201,10 @@ longer agree with the rest of the machine, so that reading is not shipped here.
 The three EES files of the revision store the solution of their last run, all
 consistent with their own equations. Each of them was reproduced with this
 model (runnable transcription; `tools/compare_solution.py`, CoolSolve
-v0.3.0+`fix/library-gaps`):
+v0.3.0+`fix/library-gaps`); since 2026-11-04 the main file gives the solution
+of the `_coolsolve` variant (52 common variables, identical) and the same
+comparison with `TM-0150` (`44 common variables, 7 differ (rtol=0.001)`: the
+four reference-state variables, `c_p_a`, `f`, `q_3`):
 
 | Run | Variables compared | Max. rel. deviation | Largest deviation |
 |---|---:|---:|---|
@@ -286,6 +293,24 @@ Source file (EES X7.458, comments in French), collection of S. Quoilin:
   conditions and is shipped as the `_ambient` variant. The three files of *TP 13
   Révisions* (`TM-0175`, `TM-0176`, `TM-0177`) are byte-identical copies of the
   three files of *TP 09* and are recorded as duplicates.
+- **2026-11-04 — main file runs**: CoolSolve now has `$INCLUDE`
+  (`CS-FEAT-IMPORT`, `CS-GAP-INCLUDE` closed). Two changes to the main file,
+  both valid EES: (i) the line `$INCLUDE cpbar_combustion_products` at the top
+  brings in `cpbar` and `gamma` from `CSL-0005`; (ii) the two function-position
+  calls `c_p_a = cpbar(1,4,0,25,T_2)` and `c_p_p_burner = cpbar(1,4,f,25,T_ex_burner)`
+  are written as `CALL cpbar(1,4,0,25,T_2 : c_p_a, Q_4_a, x_a, e_min_a, e_a)`
+  and `CALL cpbar(1,4,f,25,T_ex_burner : c_p_p_burner, Q_4_p, x_p, e_min_p, e_p)`,
+  as `docs/model_workflow.md` §3 prescribes for a library PROCEDURE called in
+  function position (no equation changes; the four other outputs are
+  diagnostics with the variant's names). With the include alone CoolSolve stops
+  at *"Procedure cpbar has 5 outputs and cannot be called as a function"*; the
+  only version of the library in the collection (`CombCmHn_SI_PNG2003_V2.LIB`,
+  2007) defines this five-output PROCEDURE and the EES help documents only the
+  `CALL` form. The main file gets the `.initials` of the variant (the EES stored
+  solution): from the default guesses it converges to the nonphysical branch
+  `f` = −0.85 described in *How to run*. Solved in 18 iterations, it equals the
+  variant on all 52 common variables; `.sol` baseline of the main file added,
+  status `blocked` → `verified`.
 - **Level 2** — score 4 on the `taxonomy.md` §3 grid (largest block 7, four
   coupled components, semi-empirical combustion, guesses required), lowered by
   one point: the difficulty is pedagogical, not numerical — the implicit loop is
@@ -303,33 +328,30 @@ the mechanical losses of the turbine are neglected (`M_dot_p·w_exp1 =
 M_dot_a·w_cp`), expander 2 has no load, and expander 1 is described by a single
 isentropic efficiency.
 
-The main file is **blocked** by one CoolSolve gap (see CoolSolve
-`docs/model_library_support.md`), worked around in the runnable variants:
+The main file takes `cpbar` and `gamma` from the library model CSL-0005
+(`$INCLUDE cpbar_combustion_products`; `CS-GAP-INCLUDE` closed 2026-11-04); the
+runnable variants still carry a copy of the two routines.
 
-- `CS-GAP-INCLUDE` / `CS-FEAT-IMPORT` — `cpbar` and `gamma` come from an EES
-  `.LIB` loaded implicitly, which CoolSolve does not support; the two routines
-  are therefore copied from CSL-0005 in the runnable variants and should become
-  `$INCLUDE library:<name>` lines.
-
-Open question for the maintainer (to be checked in EES): the main file calls
-`cpbar(1,4,0,25,T_2)` and `cpbar(1,4,f,25,T_ex_burner)` as functions, whereas
-the `cpbar` of CSL-0005 is a PROCEDURE with five outputs, which CoolSolve
-refuses in an expression (*"Procedure cpbar has 5 outputs and cannot be called
-as a function"*); the runnable variants therefore use `CALL cpbar(...)`. It has
+Open question for the maintainer (to be checked in EES): the original file
+calls `cpbar(1,4,0,25,T_2)` and `cpbar(1,4,f,25,T_ex_burner)` as functions,
+whereas the `cpbar` of CSL-0005 is a PROCEDURE with five outputs, which
+CoolSolve refuses in an expression (*"Procedure cpbar has 5 outputs and cannot
+be called as a function"*); this model therefore uses `CALL cpbar(...)`. It has
 not been verified whether EES accepts such a function-call form for a
 multi-output procedure, nor which output it would return; the 2005 exercise
 most likely used an older version of `cpbar` with a single output. This is not
 a registered CoolSolve gap.
 
 Also worth knowing: the file emits the harmless hint *"Did you mean 'CO2'?"* on
-every ideal-gas `CO2` property call inside the copied library routines
+every ideal-gas `CO2` property call inside the library routines
 (`CS-BUG-FLUID-HINT-CO2`), and a `.initials` file is required (see *How to
 run*).
 
 ## Related models
 
 - `CSL-0005` (*cpbar_combustion_products*): the `cpbar` procedure and the
-  `gamma` function used by this model, copied into the runnable variant.
+  `gamma` function used by this model, included by the main file and copied
+  into the runnable variants.
 - `CSL-0293` (*two_shaft_gas_turbine_expander_map*): the two-shaft exercise 3
   of the SB R9 series of the same course, closed by compressor and expander
   maps versus the pressure ratios, a mechanical efficiency and a power
