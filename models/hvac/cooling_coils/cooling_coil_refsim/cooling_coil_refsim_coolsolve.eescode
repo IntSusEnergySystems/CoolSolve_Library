@@ -1,5 +1,5 @@
+{Variant: runnable variant of the blocked native file (see README.md, conversion log). One change, forced by CS-GAP-IFSTR: the string output WetHumide$, written with the EES intrinsic IF$ in the original, is removed (it feeds no equation). Everything else, including the $INCLUDE of the BrineProp library (CSL-0079), is the native file.}
 {=============================================================================
-{Variant: runnable variant of the blocked native file (see README.md, conversion log). Changes, logged there: (1) the variables K|star_r_n and K|star_r of the original are written Kstar_r_n and Kstar_r; (2) the four CALL BRINEPROP(...) library calls are replaced by the four brine properties stored by EES for the default operating point (CS-GAP-INCLUDE / CS-GAP-LKT); (3) the five EES 5-argument IF(A,B,X,Y,Z) calls are written in the 3-argument if(A-B,X,Z) form (CoolSolve-only syntax); (4) the string output WetHumide$, written with the EES intrinsic IF$ in the original, is removed (CS-GAP-IFSTR; the string feeds no equation). No other equation, name or value changes.}
   Cooling coil RefSim model (dry and wet regimes, one zone)
   CoolSolve Library model CSL-0074
  -----------------------------------------------------------------------------
@@ -35,13 +35,15 @@
            model, 18 March 2008, V. Lemort and J. Lebrun - see README.md
 =============================================================================}
 
+$INCLUDE brineprop_secondary_refrigerants   "BRINEPROP of the ULiège BrineProp library (CSL-0079), added to the EES source"
+
 "!Nomenclature (as in the original)"
 "AU           Global heat transfer coefficient [W/K]"
 "C_dot        Capacity flow rate [W/K]"
 "conc_r       Concentration of propylene or ethylene glycol [%]"
 "c_p          Specific heat [J/kg-K]"
 "h            Specific enthalpy [J/kg]"
-"Kstar       Thermal properties coefficient [(m.s)^(m-1).J/kg^m/K]"
+"K|star       Thermal properties coefficient [(m.s)^(m-1).J/kg^m/K]"
 "M_dot        Mass flow rate [kg/s]"
 "NTU          Number of transfer units [-]"
 "p            Pressure [Pa]"
@@ -76,7 +78,7 @@ M_dot_r_coil = 1.7      "refrigerant mass flow rate [kg/s]"
 t_r_su_coil = 6         "refrigerant supply temperature [°C]"
 
 "!2. PARAMETERS (entered in the diagram window of the original)"
-Kstar_r_n = 106         "nominal thermal properties coefficient [(m.s)^(m-1).J/kg^m/K]"
+K|star_r_n = 106        "nominal thermal properties coefficient [(m.s)^(m-1).J/kg^m/K]"
 refrigerant$ = 'EG'     "nature of the secondary refrigerant: 'EG' or 'PG'"
 conc_r = 35             "concentration of the secondary refrigerant [%]"
 R_a_coil_n = 0.0001319  "nominal air-side thermal resistance [K/W]"
@@ -106,14 +108,14 @@ v_a_su_coil = volume(AIRH2O,T=t_a_su_coil,P=P_atm,R=RH_su_coil)
 
 "4.2. Definition of thermal resistances:"
 R_a_coil = R_a_coil_n*(M_dot_a_coil_n / M_dot_a_coil)^0.6  "laminar flow between flat plates"
-R_r_coil = R_r_coil_n*Kstar_r_n/Kstar_r*(M_dot_r_coil_n / M_dot_r_coil)^0.8  "turbulent flow in circular tube"
+R_r_coil = R_r_coil_n*K|star_r_n/K|star_r*(M_dot_r_coil_n / M_dot_r_coil)^0.8  "turbulent flow in circular tube"
 m = 0.8   "exponent in the Dittus Boelter relationship, giving the Nusselt number as a function of Reynolds and Prandtl numbers (Incropera and DeWitt, 2002)"
 n = 0.3   "idem"
-Kstar_r = mu_r_coil^(n-m)*k_r_coil^(1-n)*c_p_r_coil^n  "variation of refrigerant side resistance with refrigerant properties"
-rho_r_coil = 1051.354719      "BrineProp 'Density' of the secondary refrigerant [kg/m^3]"
-c_p_r_coil = 3576.11699        "BrineProp 'SpecHeat' of the secondary refrigerant [J/kg-K]"
-mu_r_coil = 0.003951911085    "BrineProp 'DynVisc' of the secondary refrigerant [Pa.s]"
-k_r_coil = 0.4326901231       "BrineProp 'thermalc' of the secondary refrigerant [W/m-K]"
+K|star_r = mu_r_coil^(n-m)*k_r_coil^(1-n)*c_p_r_coil^n  "variation of refrigerant side resistance with refrigerant properties"
+CALL BRINEPROP('Density',refrigerant$,conc_r,t_r_su_coil:rho_r_coil)
+CALL BRINEPROP('SpecHeat',refrigerant$,conc_r,t_r_su_coil:c_p_r_coil/1000)
+CALL BRINEPROP('Dynvisc',refrigerant$,conc_r,t_r_su_coil:mu_r_coil*1000)
+CALL BRINEPROP('thermalc',refrigerant$,conc_r,t_r_su_coil:k_r_coil)
 
 "4.3. Dry regime description"
 
@@ -177,19 +179,19 @@ t_w_coil = t_c_coil_wet  "temperature of the condensate [°C]"
 "4.5. Cooling coil capacity"
 
 "4.5.1. Total cooling capacity"
-Q_dot_coil = if(Q_dot_coil_wet-Q_dot_coil_dry, Q_dot_coil_wet,Q_dot_coil_dry)
+Q_dot_coil = if(Q_dot_coil_dry, Q_dot_coil_wet,Q_dot_coil_wet,Q_dot_coil_dry,Q_dot_coil_dry)
 Q_dot_sens_coil = C_dot_a_coil*(t_a_su_coil-t_a_ex_coil)
 Q_dot_lat_coil = Q_dot_coil-Q_dot_sens_coil
 
 "4.6. Global heat transfer coefficient"
-AU_coil = if(Q_dot_coil_wet-Q_dot_coil_dry,AU_coil_wet,AU_coil_dry)
+AU_coil = if(Q_dot_coil_dry, Q_dot_coil_wet,AU_coil_wet,AU_coil_dry,AU_coil_dry)
 
 "4.5.2. Condensate flow rate:"
-M_dot_w_coil = if(Q_dot_coil_wet-Q_dot_coil_dry,M_dot_w_coil_wet,0)
+M_dot_w_coil = if(Q_dot_coil_dry, Q_dot_coil_wet,M_dot_w_coil_wet,0,0)
 
 "4.6. Exhaust air state:"
-t_a_ex_coil = if(Q_dot_coil_wet-Q_dot_coil_dry,t_a_ex_coil_wet,t_a_ex_coil_dry)
-W_ex_coil = if(Q_dot_coil_wet-Q_dot_coil_dry,W_ex_coil_wet,W_ex_coil_dry)
+t_a_ex_coil = if(Q_dot_coil_dry, Q_dot_coil_wet,t_a_ex_coil_wet,t_a_ex_coil_dry,t_a_ex_coil_dry)
+W_ex_coil = if(Q_dot_coil_dry, Q_dot_coil_wet,W_ex_coil_wet,W_ex_coil_dry,W_ex_coil_dry)
 RH_ex_coil = relhum(AIRH2O,T=t_a_ex_coil,P=P_atm,w=W_ex_coil)
 v_a_ex_coil = volume(AIRH2O,T=t_a_ex_coil,P=P_atm,w=W_ex_coil)
 

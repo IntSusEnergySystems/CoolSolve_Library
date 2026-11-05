@@ -52,11 +52,11 @@
     "course": "ULiège model bank (Laborelec toolkit lineage), cooling coil reference simulation model, 2008-01-16; published as Lemort, Cuevas, Lebrun, Teodorese, ASHRAE Transactions 114(1), 2008"
   },
   "verification": {
-    "summary": "Concerns the runnable variant (native file blocked by CS-GAP-IFSTR). Against the 87 variables decoded from the EES file: 74 common variables, 21 differ above rtol = 0.001, maximum 7.81e-01 from one stale stored value; the other 19 deviations (1.2e-03 to 4.8e-03) are humid-air property differences.",
+    "summary": "Concerns the runnable variant, the native file without the IF$ string output (CS-GAP-IFSTR). Against the 87 variables decoded from the EES file: 74 common variables, 21 differ above rtol = 0.001, maximum 7.81e-01 from one stale stored value; the other 19 deviations (1.2e-03 to 4.8e-03) are humid-air property differences.",
     "checks": ["ees-stored-solution"],
-    "reference": "EES stored solution in the source file (87 decoded variables) against the runnable variant cooling_coil_refsim_coolsolve.eescode; the native file cannot be solved (CS-GAP-NAME-PIPE, CS-GAP-INCLUDE, CS-GAP-IF5, CS-GAP-IFSTR)",
-    "date": "2026-10-05",
-    "coolsolve_version": "0.3.0@536d427",
+    "reference": "EES stored solution in the source file (87 decoded variables) against the runnable variant cooling_coil_refsim_coolsolve.eescode; the native file cannot be solved (CS-GAP-IFSTR)",
+    "date": "2026-11-05",
+    "coolsolve_version": "0.4.0@36493eb",
     "max_rel_diff": 0.781,
     "notes": "74 common variables, 21 differ above rtol=0.001, maximum relative difference 7.81e-01 (DELTA_t_cond, 10.107 K against 2.218 K). Cause: the stored EES value of t_dp_ex_coil_dry (4.28e-01) is stale and inconsistent with the equation W_ex_coil_dry = W_su_coil of the file itself (it equals t_a_ex_coil_dry exactly, while the dew point of W_su_coil = 0.0137708 kg/kg at 98000 Pa is 18.4 °C, the value stored for the identical supply call t_dp_su_coil = 18.442 °C); DELTA_t_cond is its only user. The 19 remaining deviations (1.2e-03 to 4.8e-03) come from the EES and CoolProp humid-air formulations (W_su_coil 4.64e-03, h_a_su_coil 2.14e-03, W_c_coil_wet and W_ex_coil 4.79e-03), as in the other humid-air models of the library (CSL-0070 4.4e-03, CSL-0016 5.1e-03). The algebraic results are reproduced to 7.9e-04 or better (resistances exact, epsilon_c_coil_wet 9.4e-06, RH_ex_coil 6.8e-06, t_a_ex_coil_dry 1.0e-04). No variable excluded; three variables only the variant has (the renamed Kstar_r, Kstar_r_n and the string input refrigerant$), one decoded EES variable (LAT) is not a variable of the model. 2026-11-04: the native file includes BRINEPROP and its tables from CSL-0079 ($INCLUDE brineprop_secondary_refrigerants); with the .initials of the variant (wet block MaxIterations from default guesses) it solves every block up to WetHumide$ and stops on CS-GAP-IFSTR (CoolSolve 0.4.0@2f4860b + loading of the tables of included models)."
   },
@@ -107,6 +107,11 @@
     {
       "date": "2026-11-04",
       "action": "re-checked for CS-GAP-INCLUDE (closed): $INCLUDE brineprop_secondary_refrigerants (CSL-0079, BRINEPROP and its tables) added to the native file, .initials of the variant added (the wet block reaches MaxIterations from default guesses); the native file now stops only at IF$ (WetHumide$); missing_features: CS-GAP-INCLUDE removed, CS-GAP-IFSTR kept; status stays blocked",
+      "by": "Claude (Opus 5.5) for S. Quoilin"
+    },
+    {
+      "date": "2026-11-05",
+      "action": "runnable variant reduced to the one change still forced (WetHumide$ = if$ removed, CS-GAP-IFSTR): K|star names, 5-argument IF and the BRINEPROP calls ($INCLUDE of CSL-0079) restored, native .initials; same results as the former variant at the default point (4.4e-10) and same EES comparison (74 common, 21 differ, max 7.81e-01 stale value); .sol regenerated",
       "by": "Claude (Opus 5.5) for S. Quoilin"
     }
   ]

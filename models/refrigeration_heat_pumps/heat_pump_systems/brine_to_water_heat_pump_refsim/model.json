@@ -33,12 +33,8 @@
     "property functions",
     "min/max",
     "bisection suffix {_bis}",
-    "user-library procedure BRINEPROP (implicit library, copied in the file)",
+    "user-library procedure BRINEPROP (implicit library in EES, $INCLUDE of CSL-0079)",
     "string arguments",
-    "IF/THEN/ELSE ladders closed by ENDIF;ENDIF groups",
-    "Uppercase$ string function",
-    "LOOKUP$ (unit labels in a lookup table)",
-    "lookup tables read inside a procedure",
     "expression as CALL output argument"
   ],
   "stats": {
@@ -119,6 +115,11 @@
       "date": "2026-11-01",
       "action": "failing -> verified: adapted from the original (assignments of P_ev, P_cd, M_dot_r added by the import removed; W_dot_in_cp = M_dot_s_cp*w_in_cp closes the compressor energy balance); 76-variable block converges from CoolProp-consistent initials; .initials/.sol added; _coolsolve variant and its tables removed",
       "by": "Claude Code for S. Quoilin"
+    },
+    {
+      "date": "2026-11-05",
+      "action": "the copy of BRINEPROP (another edition of Brineprop.lib, with two surplus ENDIFs reported P008) and of its three tables removed; $INCLUDE brineprop_secondary_refrigerants (CSL-0079) added after the header; the model reproduces its baseline (1.4e-8); .sol regenerated (auxiliary CALL-output variable renamed after its line)",
+      "by": "Claude (Opus 5.5) for S. Quoilin"
     }
   ],
   "diagnosis": null

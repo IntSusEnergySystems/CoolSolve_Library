@@ -25,7 +25,7 @@ with the measurement.
 | **Source** | ULiège model bank — *Cooling coil PARAMID reference model*, 21 March 2008 (EES file inside `COOLINGCOIL_PARAMID_REFERENCE_MODEL_VL080321.zip`) |
 | **Authors** | Vincent Lemort, Jean Lebrun (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
-| **CoolSolve** | v0.4.0 — verified: the native file includes `BRINEPROP` and its lookup tables from `CSL-0079` (`$INCLUDE brineprop_secondary_refrigerants`) and gives the solution of the variant `cooling_coil_paramid_coolsolve.eescode`, verified against the EES stored solution |
+| **CoolSolve** | v0.4.0 — verified: the native file includes `BRINEPROP` and its lookup tables from `CSL-0079` (`$INCLUDE brineprop_secondary_refrigerants`) and is verified against the EES stored solution |
 
 ## Problem statement
 
@@ -98,30 +98,24 @@ measured): the stored value re-derives as
 
 ```bash
 coolsolve ./cooling_coil_paramid.eescode
-coolsolve ./cooling_coil_paramid_coolsolve.eescode
 ```
 
 The native file `cooling_coil_paramid.eescode` keeps the native EES syntax,
 plus the line `$INCLUDE brineprop_secondary_refrigerants` that brings in the
-`BRINEPROP` procedure of `CSL-0079` with its lookup tables (`Units`, `Brine1`,
-`Brine2`), so the brine properties follow `conc_r` and the brine temperatures.
-The runnable variant `cooling_coil_paramid_coolsolve.eescode` replaces the
-calls by the stored brine properties (every change is logged in the conversion
-log and in the header of the variant); both give the same solution at the
-stored operating point and are regression targets (`CSL-0163`,
-`CSL-0163:coolsolve`).
+`BRINEPROP` procedure of `CSL-0079` with its lookup tables (`BrineSolutions`,
+`BrineCoefficients`), so the brine properties follow `conc_r` and the brine
+temperatures. It is the regression target `CSL-0163`.
 
-A `.initials` file is needed (both files ship one, the EES stored solution):
+A `.initials` file is needed (the model ships one, the EES stored solution):
 without it the coupled block (24 equations: effectiveness, contact surface,
 exhaust state) fails with *SingularJacobian*; with it the native file converges
-in 21 iterations (85 equations, three of them the expression outputs of the
-`CALL`s) and the variant in 10 (`System square: Yes`, 82 equations, 82
-variables). To identify
+in 21 iterations (`System square: Yes`, 85 equations, three of them the
+expression outputs of the `CALL`s). To identify
 another coil, replace the twelve measured/imposed values; to study the
 sensitivity of the identified resistances to the imposed ratios, sweep
 `ratio_R_a_r` or `ratio_R_m_a` (see the figure placeholder below).
 
-## Results (default run of the variant)
+## Results (default run)
 
 | Quantity | CoolSolve | EES (stored) | rel. diff |
 |---|---:|---:|---:|
@@ -159,15 +153,15 @@ The physical words check against the numbers: the brine leaves 5.4 K warmer
 
 ## Verification
 
-The comparison was made on the
-runnable variant `cooling_coil_paramid_coolsolve.eescode`, which differs from
-the native file by the two changes of the conversion log. Compared with
+The comparison concerns the native file. Compared with
 `compare_solution.py` against the stored solution of the source EES file
 (93 records, 80 of them with a value; the tool decodes 92, see below): **79 common variables, 23
 differ above rtol = 0.001, maximum relative difference 1.05e-02**
-(`M_dot_w_coil`, 2.925·10⁻³ against 2.895·10⁻³ kg/s). Since 2026-11-04 the
-native file gives the same solution (80 common variables, max relative
-difference 2.3e-10) and the same deviations.
+(`M_dot_w_coil`, 2.925·10⁻³ against 2.895·10⁻³ kg/s; the comparison was first
+made on the former runnable variant, which the native file equals to 2.3e-10,
+and repeated on the native file on 2026-11-05: 78 common variables, the
+hand-decoded `v_a_ex_coil` not being in the tool's reference, 23 differ, same
+maximum).
 
 - Property backend. All 23 deviations (1.45e-03 … 1.05e-02) have a single
   cause, the EES and CoolProp humid-air formulations: the humidity ratios
@@ -293,7 +287,7 @@ refrigerant side. They have no `duplicate_group`.
   measurement) and `h_a_ex_coil_meas = enthalpy(...,t=t_a_ex_coil_meas,...)`
   with the measurement; kept as in the original (both variables exist and are
   verified).
-- **Runnable variant** `cooling_coil_paramid_coolsolve.eescode`, two changes
+- **Runnable variant** `cooling_coil_paramid_coolsolve.eescode` (removed on 2026-11-05, see below), two changes
   (all logged in its header too):
   1. `K|star_r_n` → `Kstar_r_n` and `K|star_r` → `Kstar_r`: a renaming that
      CoolSolve no longer requires (the `|` character in a variable name is
@@ -329,6 +323,14 @@ refrigerant side. They have no `duplicate_group`.
   differ (rtol=0.001)`, maximum 1.05e-02 on `M_dot_w_coil`; 78, not 79: the
   hand-decoded `v_a_ex_coil` is not in the tool's reference). `.sol` baseline
   of the native file added, status `blocked` → `verified`.
+- **2026-11-05 — runnable variant removed**: the native file runs and equals
+  it (2.3e-10), and none of its two changes is forced any more (`|` names are
+  read, `BRINEPROP` is included), so `cooling_coil_paramid_coolsolve.eescode`,
+  its `.initials` and its `.sol` are deleted; the verification concerns the
+  native file (same comparison). The header of the native file loses a line, so the
+  `.sol` is regenerated: the auxiliary variables of the `CALL` outputs are
+  named after their line (`__out1_BRINEPROP_L…`); every other variable is
+  unchanged.
 - **No figure-ready state arrays.** This is a humid-air (`AirH2O`) component
   model, for which CoolSolve has no psychrometric diagram (`CS-FEAT-PSYCHRO`,
   decision D7): its figure is a parametric sweep plot, as for `CSL-0074`.
@@ -348,9 +350,8 @@ refrigerant side. They have no `duplicate_group`.
 
 - The six `CALL BRINEPROP('Density'|'SpecHeat'|'Dynvisc'|'thermalc', …)` calls
   resolve to the laboratory library procedure `Brineprop.lib`, included with
-  its lookup tables from `CSL-0079` (`CS-GAP-INCLUDE` closed 2026-11-04). The
-  runnable variant uses the stored brine properties, so only the native file
-  follows a change of `conc_r` or of the brine temperatures.
+  its lookup tables from `CSL-0079` (`CS-GAP-INCLUDE` closed 2026-11-04); the
+  brine properties follow `conc_r` and the brine temperatures.
 
 - Physical limitations of the model itself: one zone, wet regime only (the
   measured point must be wet — the card's dry-regime counterpart is the

@@ -112,9 +112,9 @@ plus the line `$INCLUDE brineprop_secondary_refrigerants` that brings in the
 run in CoolSolve: with its `.initials` every block solves up to the string
 output `WetHumide$`, written with the EES `IF$` (`CS-GAP-IFSTR`, see
 *Limitations and CoolSolve gaps*). The
-runnable variant `cooling_coil_refsim_coolsolve.eescode` changes only what the
-gaps force (every change is logged in the conversion log and in the header of
-the variant):
+runnable variant `cooling_coil_refsim_coolsolve.eescode` is the native file
+without that one line (logged in the conversion log and in the header of the
+variant):
 
 ```bash
 coolsolve ./cooling_coil_refsim_coolsolve.eescode
@@ -122,8 +122,8 @@ coolsolve ./cooling_coil_refsim_coolsolve.eescode
 
 A `.initials` file is needed (both files ship one, the EES stored solution):
 without it the wet block (19 equations) reaches *MaxIterations*; with the EES
-stored solution as initial values the variant converges in 13 iterations
-(`System square: Yes`, 77 equations, 77 variables).
+stored solution as initial values the variant converges in 20 iterations
+(`System square: Yes`, 79 equations, 79 variables).
 To study another operating point, change the supply state or the coil
 parameters; a sweep of `t_r_su_coil` (or of `M_dot_a_coil`) shows how the
 selected regime switches and how the capacity and the sensible heat ratio
@@ -170,13 +170,15 @@ is **cooled and dehumidified** (30 → 14.12 °C, 13.84 → 10.31 g/kg).
 
 The **native file cannot be solved** by CoolSolve (`CS-GAP-IFSTR`), so the comparison concerns the runnable variant
 `cooling_coil_refsim_coolsolve.eescode`, which differs from the native file by
-the four changes of the conversion log. Compared with
+one line (the string output `WetHumide$`). Compared with
 `compare_solution.py` against the 87 variables decoded from the source EES
 file: **74 common variables, 21 differ above rtol = 0.001, maximum relative
 difference 7.81e-01** (`DELTA_t_cond`, 10.107 K against 2.218 K). One EES
 variable (`LAT`) is not a variable of the model (leftover of the Diagram
-window), and three variables of the variant (`K|star_r_n` → `Kstar_r_n`,
-`Kstar_r`, `refrigerant$`) have no counterpart in the reference.
+window), and five variables of the variant have no counterpart in the
+reference: `K|star_r_n` and `K|star_r` (not in the decoded EES variables),
+the string input `refrigerant$` and the two auxiliary variables of the `CALL`
+outputs `c_p_r_coil/1000` and `mu_r_coil*1000`.
 
 The maximum is **not** a model error: it is the stale stored value discussed
 below, and the two variables concerned (`t_dp_ex_coil_dry`, 4.28e-01, and
@@ -210,9 +212,8 @@ below, and the two variables concerned (`t_dp_ex_coil_dry`, 4.28e-01, and
   `W_su_coil − W_ex_coil`, a difference of two humidity ratios) and
   `SHR` 1.2e-03.
 
-No variable is excluded from the comparison; the three variables that only the
-variant has are the renamed `K|star` coefficients and the string input
-`refrigerant$`.
+No variable is excluded from the comparison; the five variables that only the
+variant has are listed above.
 
 The stored EES solution was cross-checked against the equations before use, as
 required by `CS-BUG-EXTRACT-STALE`: `C_dot_r_coil = 1.7·3576.117 = 6079.4 W/K`,
@@ -286,7 +287,8 @@ drops the refrigerant side entirely. They have no `duplicate_group`.
   in the dry regime, since the dry exhaust air is not dehumidified). The list
   is kept as it is, as a comment.
 - **Runnable variant** `cooling_coil_refsim_coolsolve.eescode`, four changes,
-  each forced by a CoolSolve gap (all logged in its header too):
+  each forced by a CoolSolve gap at the time (all logged in its header too;
+  reduced to change 4 on 2026-11-05, see below):
   1. `K|star_r_n` → `Kstar_r_n` and `K|star_r` → `Kstar_r`: a renaming that
      CoolSolve no longer requires (the `|` character in a variable name is
      accepted). The equations are unchanged.
@@ -334,6 +336,17 @@ drops the refrigerant side entirely. They have no `duplicate_group`.
   `CS-GAP-IFSTR` (*"String-valued function not supported: if$"*).
   `missing_features`: `CS-GAP-INCLUDE` removed, `CS-GAP-IFSTR` kept (the only
   blocker); status stays `blocked`.
+- **2026-11-05 — variant reduced to the one change still forced**: the
+  `|` names and the 5-argument `IF` are read by CoolSolve and the native file
+  includes `BRINEPROP`, so the variant is now the native file without the line
+  `WetHumide$ = if$(…)` (`CS-GAP-IFSTR`): the `K|star` names, the five
+  5-argument `IF` calls and the four `CALL BRINEPROP(...)` (through the
+  `$INCLUDE` line) are back, and its `.initials` is the native one. The brine
+  properties now follow `conc_r` and `t_r_su_coil` instead of being the
+  stored values of the default point; at that point the results equal those
+  of the former variant to 4.4e-10 (66 variables) and the comparison with the
+  EES stored solution is unchanged (74 common, 21 differ, max 7.81e-01 on the
+  stale `DELTA_t_cond`, the others ≤ 4.8e-03). The `.sol` is regenerated.
 - **Level.** Score (taxonomy.md §3): equations 77 (50–300 → 1), largest block 19
   (6–30 → 1), no function or array defined in the file (0), single zone and
   single component (0), semi-empirical correlations and an operating-point
@@ -346,7 +359,7 @@ drops the refrigerant side entirely. They have no `duplicate_group`.
 - The four `CALL BRINEPROP('Density'|'SpecHeat'|'Dynvisc'|'thermalc', …)`
   calls resolve to the laboratory library procedure `Brineprop.lib`, included
   with its lookup tables from the function model `CSL-0079` (`CS-GAP-INCLUDE`
-  closed 2026-11-04). The runnable variant uses the stored brine properties.
+  closed 2026-11-04), in the native file and in the runnable variant.
 - **`CS-GAP-IFSTR` — the native file cannot be solved.** The EES string
   conditional `IF$(cond,true$,false$)` raises *"Unknown or unsupported
   function: if$ with 3 arguments"* at every arity; it is used once here, for

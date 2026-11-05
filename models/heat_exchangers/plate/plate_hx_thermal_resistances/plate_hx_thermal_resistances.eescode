@@ -17,8 +17,11 @@
   Source : ULiège Thermodynamics Laboratory, S. Bertagnolio & S. Quoilin
            (2008), ~/Nextcloud/thermo_models/modeles/plate_heat_exchanger_SB080104.EES
   Status : verified against the EES stored solution (water run, fluid$ =
-           'Water'; the EG branch needs BRINEPROP2, see README)
+           'Water'); the EG branch takes BRINEPROP2 from CSL-0079 (line
+           below) and runs too (see README)
 =============================================================================}
+
+$INCLUDE brineprop_secondary_refrigerants   "BRINEPROP2 of the ULiège BrineProp library (CSL-0079), added to the EES source"
 
 "!Single Phase Flow Plate Heat Exchanger
 Author : S.Bertagnolio, S.Quoilin
@@ -71,7 +74,7 @@ c_p_f=SPECHEAT(fluid$,T=T_m,P=P_m)
 $ENDIF
 $IF fluid$='EG'
 CALL BRINEPROP2(fluid$, X_EG,T_m:T_freezing, rho_f, c_p_f/1000, k_f,mu_f, Pr_f)
-CALL BRINEPROP2(fluid$, X_EG,T_w:T_freezing_w, rho_w, c_p_w/1000, k_w,mu_w, Pr_w)
+CALL BRINEPROP2(fluid$, X_EG,T_w:T_freezing_w, rho_w, c_p_w/1000, k_f_w,mu_w, Pr_w)  "brine conductivity at the wall temperature: k_w in the original, which is the plate conductivity input (see README)"
 $ENDIF
 "!Equations"
 "hydraulic diameter"

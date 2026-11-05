@@ -1,5 +1,5 @@
-__out1_BRINEPROP_L71 = 3.805352197873e+00
-__out1_BRINEPROP_L73 = 2.943403728303e+00
+__out1_BRINEPROP_L70 = 3.805352197873e+00
+__out1_BRINEPROP_L72 = 2.943403728303e+00
 AU_cooling_dry = 6.035003017502e+03
 AU_cooling_wet = 1.354537429047e+04
 AU_heating = 6.035003017501e+03
@@ -98,7 +98,7 @@ t_cooling_a_ex = 1.104238119266e+01
 t_cooling_a_ex_dry = 8.076062572012e+00
 t_cooling_a_ex_wet = 1.104238119266e+01
 t_cooling_a_su = 2.300000000000e+01
-t_cooling_c_dry = -1.633009436023e+00
+t_cooling_c_dry = -1.633009436022e+00
 t_cooling_c_wet = 8.466514304215e+00 "C"
 t_cooling_gw_ex = 1.522030869933e+01
 t_cooling_gw_ex_dry = 1.415846920509e+01

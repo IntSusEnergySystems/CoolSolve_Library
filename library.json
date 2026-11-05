@@ -1,8 +1,8 @@
 {
  "snapshot": {
-  "content_hash": "sha256:8a78bdd9579fa270",
-  "files": 1578,
-  "bytes": 11545509,
+  "content_hash": "sha256:4e7cca1d1aa81448",
+  "files": 1561,
+  "bytes": 11467949,
   "models": 303,
   "functions": 623,
   "taxonomy_version": "0.3"
@@ -3787,7 +3787,7 @@
    "kind": "function",
    "level": 2,
    "status": "verified",
-   "summary": "Single EES procedure BRINEPROP of the ULiège BrineProp library: freezing point, density, specific heat, thermal conductivity and dynamic viscosity of eleven aqueous secondary refrigerants (EG, PG, EA, MA, GL, NH3, K2CO3, CaCl2, MgCl2, NaCl, KAc) as a function of mass concentration and temperature, from an 18-term polynomial read in two coefficient lookup tables.",
+   "summary": "Freezing point, density, specific heat, thermal conductivity and dynamic viscosity of eleven aqueous secondary refrigerants (EG, PG, EA, MA, GL, NH3, K2CO3, CaCl2, MgCl2, NaCl, KAc) versus mass concentration and temperature, from the 18-term polynomials of the ULiège BrineProp library: a function BrineProperty in SI units, and the EES procedures BRINEPROP and BRINEPROP2 as wrappers of it.",
    "fluids": [
     "EG",
     "PG",
@@ -3809,13 +3809,14 @@
     "specific heat",
     "thermal conductivity",
     "dynamic viscosity",
+    "Prandtl number",
     "freezing point",
     "empirical correlation",
     "function library",
     "model bank"
    ],
-   "n_equations": 18,
-   "largest_block": 1,
+   "n_equations": 41,
+   "largest_block": 6,
    "origin_type": "software_library",
    "source": "thermo_models",
    "source_path": "~/Nextcloud/thermo_models/Model data bank/AHU_Components/Recovery_Systems/GLYCOLRECOVERYLOOP_REFSIM_EES_MODEL_SB080116.zip!/UserLib/BrineProp/Brineprop.lib",
@@ -3839,9 +3840,9 @@
     "CSL-0162",
     "CSL-0163"
    ],
-   "coolsolve_version": "0.3.0@a77efaa",
-   "verified_on": "2026-10-18",
-   "verification_summary": "Compared with the stored solution of the glycol run-around loop model of the same library: 3 common variables, 0 differ (rtol=0.001), maximum relative difference 4.77e-10 (rho_brine_2). The decoded tables also agree with those of CSL-0072.",
+   "coolsolve_version": "0.4.0@36493eb",
+   "verified_on": "2026-11-05",
+   "verification_summary": "BRINEPROP against the stored solution of the glycol run-around loop model of the same library, BRINEPROP2 against the stored solution of the Vitocal heat pump model (CSL-0116): 9 common variables, 0 differ (rtol=0.001), maximum relative difference 4.77e-10 (rho_brine_2). The rewrite on one function gives the values of the EES procedures (0.0 on cases 1-4).",
    "verification_checks": [
     "ees-stored-solution",
     "cross-model"
@@ -8074,16 +8075,13 @@
    ],
    "coolsolve_version": "0.4.0@2f4860b",
    "verified_on": "2026-11-04",
-   "verification_summary": "Native file compared with the EES stored solution of GLYCOL_RECOVERY_LOOP_SB080110.EES: 143 common variables, 29 differ above rtol=0.001, max 5.31e-03 on W_cooling_c_wet, all humid-air quantities (EES vs CoolProp); glycol properties within 1.9e-05, pump power 1.7e-07, epsilon_recovery 3.0e-05. The runnable variant reaches a nonphysical root (CS-BUG-NEWTON-CYCLE).",
+   "verification_summary": "Native file compared with the EES stored solution of GLYCOL_RECOVERY_LOOP_SB080110.EES: 143 common variables, 29 differ above rtol=0.001, max 5.31e-03 on W_cooling_c_wet, all humid-air quantities (EES vs CoolProp); glycol properties within 1.9e-05, pump power 1.7e-07, epsilon_recovery 3.0e-05.",
    "verification_checks": [
     "ees-stored-solution"
    ],
    "path": "models/hvac/air_handling/glycol_runaround_recovery_loop",
    "main_file": "glycol_runaround_recovery_loop.eescode",
-   "figures": 0,
-   "variants": [
-    "glycol_runaround_recovery_loop_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0164",
@@ -8399,9 +8397,9 @@
     "CSL-0163",
     "CSL-0164"
    ],
-   "coolsolve_version": "0.3.0@536d427",
-   "verified_on": "2026-10-05",
-   "verification_summary": "Concerns the runnable variant (native file blocked by CS-GAP-IFSTR). Against the 87 variables decoded from the EES file: 74 common variables, 21 differ above rtol = 0.001, maximum 7.81e-01 from one stale stored value; the other 19 deviations (1.2e-03 to 4.8e-03) are humid-air property differences.",
+   "coolsolve_version": "0.4.0@36493eb",
+   "verified_on": "2026-11-05",
+   "verification_summary": "Concerns the runnable variant, the native file without the IF$ string output (CS-GAP-IFSTR). Against the 87 variables decoded from the EES file: 74 common variables, 21 differ above rtol = 0.001, maximum 7.81e-01 from one stale stored value; the other 19 deviations (1.2e-03 to 4.8e-03) are humid-air property differences.",
    "verification_checks": [
     "ees-stored-solution"
    ],
@@ -8457,18 +8455,15 @@
     "CSL-0017",
     "CSL-0162"
    ],
-   "coolsolve_version": "0.3.0@7addbbc",
-   "verified_on": "2026-10-09",
-   "verification_summary": "Concerns the runnable variant, which the native file (BRINEPROP included from CSL-0079) equals: compared with the EES stored solution, 79 common variables, 23 differ above rtol=0.001, maximum 1.05e-02 on M_dot_w_coil, all from EES vs CoolProp humid-air formulations; AU_coil agrees to 3.2e-05.",
+   "coolsolve_version": "0.4.0@36493eb",
+   "verified_on": "2026-11-05",
+   "verification_summary": "Native file (BRINEPROP included from CSL-0079) compared with the EES stored solution: 79 common variables, 23 differ above rtol=0.001, maximum 1.05e-02 on M_dot_w_coil, all from EES vs CoolProp humid-air formulations; AU_coil agrees to 3.2e-05.",
    "verification_checks": [
     "ees-stored-solution"
    ],
    "path": "models/hvac/cooling_coils/cooling_coil_paramid",
    "main_file": "cooling_coil_paramid.eescode",
-   "figures": 0,
-   "variants": [
-    "cooling_coil_paramid_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0292",
@@ -14048,7 +14043,7 @@
    "category": "refrigeration_heat_pumps/heat_pump_systems",
    "kind": "steady",
    "level": 3,
-   "status": "blocked",
+   "status": "failing",
    "summary": "Water-to-water R134a heat pump of the Vaillant Vitocal 300G type: scroll compressor by the Winandy et al. (2002) semi-empirical model or the ARI/Copeland catalogue polynomial, plate evaporator on 30 % ethylene-glycol brine (Thonon + Hsieh) and plate condenser on the water circuit (Thonon + Kuo), both sized from their area with pressure drops, pinch points and hold-up as outputs.",
    "fluids": [
     "R134a",
@@ -14082,9 +14077,7 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-INCLUDE"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0007",
     "CSL-0037",
@@ -14093,9 +14086,9 @@
     "CSL-0123",
     "CSL-0155"
    ],
-   "coolsolve_version": "0.3.0@4798e2b",
-   "verified_on": "2026-10-18",
-   "verification_summary": "Not verified: the native file parses (235 equations) but stops at the BRINEPROP2 procedure (CS-GAP-INCLUDE) and no runnable variant exists; the EES stored solution is only documented as a future reference.",
+   "coolsolve_version": "0.4.0@36493eb",
+   "verified_on": "2026-11-05",
+   "verification_summary": "Not verified: the native file includes BRINEPROP2 from CSL-0079 and stops at the compressor catalogue table ZH38K4E-TFD, missing from the source collection (not a CoolSolve gap); no runnable variant exists; the EES stored solution is documented as a future reference.",
    "verification_checks": [],
    "path": "models/refrigeration_heat_pumps/heat_pump_systems/heat_pump_vitocal_300g",
    "main_file": "heat_pump_vitocal_300g.eescode",
@@ -15654,23 +15647,23 @@
   {
    "function": "BRINEPROP",
    "type": "PROCEDURE",
-   "signature": "(Pr$,Fl$,Conc,Temp:output)",
+   "signature": "(Pr$, Fl$, Conc, Temp : output)",
    "model_id": "CSL-0079",
    "path": "models/fundamentals/property_libraries/brineprop_secondary_refrigerants/brineprop_secondary_refrigerants.eescode"
   },
   {
-   "function": "BRINEPROP",
+   "function": "BRINEPROP2",
    "type": "PROCEDURE",
-   "signature": "(Pr$,Fl$,Conc,Temp:output)",
-   "model_id": "CSL-0072",
-   "path": "models/machines/pumps/centrifugal_brine_pump_refsim/centrifugal_brine_pump_refsim.eescode"
+   "signature": "(Fl$, Conc, Temp : FreezingPt, Density, SpecHeat, ThermalConductivity, DynamicViscosity, Pr)",
+   "model_id": "CSL-0079",
+   "path": "models/fundamentals/property_libraries/brineprop_secondary_refrigerants/brineprop_secondary_refrigerants.eescode"
   },
   {
-   "function": "BRINEPROP",
-   "type": "PROCEDURE",
-   "signature": "(Pr$,Fl$,Conc,Temp:output)",
-   "model_id": "CSL-0078",
-   "path": "models/refrigeration_heat_pumps/heat_pump_systems/brine_to_water_heat_pump_refsim/brine_to_water_heat_pump_refsim.eescode"
+   "function": "BrineProperty",
+   "type": "FUNCTION",
+   "signature": "(Prop$, Fl$, Conc, Temp)",
+   "model_id": "CSL-0079",
+   "path": "models/fundamentals/property_libraries/brineprop_secondary_refrigerants/brineprop_secondary_refrigerants.eescode"
   },
   {
    "function": "calc_Cmax",
@@ -20542,6 +20535,15 @@
    "text": "Not a solver built-in: the EES `HX(TypeHX$, NTU, C_dot_1, C_dot_2, Return$)` is the library function model `CSL-0332` *hx_ees_function* (all the EES flow types, `'epsilon'` and `'NTU'`, the 33 worked examples of the EES help reproduced), which an EES model …",
    "detail": "",
    "fixed_in": "post-v0.4.0, library `CSL-0332`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-CONVERT-MILLI": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "`milliPa` is a unit of `CONVERT` (= `mPa`): `convert(milliPa-s,Pa-s)` of the EES library `Brineprop2.LIB` (BrineProp2, whose procedure `CSL-0079` provides) is 0.001, as in EES (its stored `DynamicViscosity` of `CSL-0116`, 0.005305 Pa·s, is the mPa·s value of …",
+   "detail": "",
+   "fixed_in": "post-v0.4.0",
    "anchor": "7-closed-gaps-and-bugs"
   },
   "CS-BUG-IF-IGNORED": {

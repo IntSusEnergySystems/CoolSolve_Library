@@ -3,203 +3,147 @@
   (function library)
   CoolSolve Library model CSL-0079
  -----------------------------------------------------------------------------
-  Single procedure BRINEPROP of the ULiege model-bank library BrineProp, copied
-  here from Brineprop.lib (EES 4.631 library, loaded implicitly from the USERLIB
-  folder of EES). For a solution name, a mass concentration in % and a
-  temperature in °C it returns the freezing point, the density, the specific
-  heat, the thermal conductivity or the dynamic viscosity, from an 18-term
-  polynomial in the deviations of the concentration and the temperature from
-  the mean values of the solution.
+  Freezing point, density, specific heat, thermal conductivity and dynamic
+  viscosity of eleven aqueous secondary refrigerants (glycols, alcohols,
+  ammonia and salt brines) as a function of the mass concentration and the
+  temperature: an 18-term polynomial in the deviations of the concentration
+  and the temperature from the mean values of the solution, with the
+  coefficients of the ULiege BrineProp library (Brineprop.lib and
+  Brineprop2.LIB).
 
-  Inputs : Fl$ (solution name), Conc (mass concentration [%]), Temp [°C],
-           Pr$ (property name)
-  Outputs: output (freezing point [°C], density [kg/m^3], specific heat
-           [kJ/kg-K], thermal conductivity [W/m-K] or dynamic viscosity
-           [milliPa-s]; the unit labels are rows 1 to 5 of the lookup table Units)
+  Routines (include them with $INCLUDE brineprop_secondary_refrigerants):
+    rho = BrineProperty('Density', 'EG', 30, T)
+        FUNCTION, one property in SI units, for use in an equation
+    CALL BRINEPROP(Pr$, Fl$, Conc, Temp : output)
+        one property, in the units of the EES library
+    CALL BRINEPROP2(Fl$, Conc, Temp : FreezingPt, Density, SpecHeat,
+                    ThermalConductivity, DynamicViscosity, Pr)
+        the five properties and the Prandtl number, in the units of the EES
+        library
+  For a new model, CoolProp's incompressible solutions give the same
+  properties (a 2010 edition of the same IIR correlations, within about 1 %
+  at usual conditions) with the standard property functions and no
+  $INCLUDE: rho = density(EG, 30, T=T), cp(...), conductivity(...),
+  viscosity(...), for EG, PG, EthanolSolution, Methanol, Glycerol, CaCl2 and
+  NaCl; this library remains needed for the EES models that call BRINEPROP
+  or BRINEPROP2, for the freezing point and for NH3, K2CO3, MgCl2 and KAc
+  (see README.md, CoolProp incompressible solutions).
+
+  Inputs : property name 'Freeze', 'Density', 'SpecHeat', 'ThermalC' or
+           'DynVisc'; solution code Fl$ (EG, PG, EA, MA, GL, NH3, K2CO3,
+           CaCl2, MgCl2, NaCl, KAc), names in any case; Conc = mass
+           concentration [%], inside the range of the solution; Temp [C]
+  Outputs: freezing point [C], density [kg/m^3], specific heat [J/kg-K],
+           thermal conductivity [W/m-K], dynamic viscosity [Pa-s]; BRINEPROP
+           returns the specific heat in kJ/kg-K and the viscosity in
+           milliPa-s, BRINEPROP2 the specific heat in kJ/kg-K, as the EES
+           library does, so that the EES models that call them run unchanged
   Units  : SI - temperatures in °C, pressures in Pa, energies in J
-  Source : ULiege Thermodynamics Laboratory, Brineprop.lib (1997), collection of
-           S. Quoilin - see README.md
-  Companion tables: brineprop_secondary_refrigerants-Brine1.csv (198 x 5
-           polynomial coefficients) and -Brine2.csv (11 x 2 mean concentration
-           and temperature), decoded from the binary EES 4.631 lookup files
-           Brine1.lkt and Brine2.lkt of the library; -Units.csv (5 x 1 unit
-           labels of the outputs, read with LOOKUP$).
+  Source : ULiege Thermodynamics Laboratory, BrineProp library (Brineprop.lib,
+           1997; Brineprop2.LIB), collection of S. Quoilin - see README.md
+  Companion tables: brineprop_secondary_refrigerants-BrineSolutions.csv (the
+           11 solutions: code, name, concentration range, mean concentration
+           and mean temperature of the polynomial) and
+           -BrineCoefficients.csv (the 18 coefficients of each solution, one
+           column per property, 198 x 5)
  =============================================================================}
 
-{--- BRINEPROP, copied from the BrineProp library (Brineprop.lib, inventory
-     candidate TM-0479). Only the dead code that followed END in the library
-     file (a statement x=1 and a commented example block) and the commented
-     duplicate of the unit ladder are removed; the procedure is otherwise
-     unchanged, including its ELSE IF chains; the unit labels of its string
-     array are the rows of the lookup table Units, read with LOOKUP$. ---}
-
-Procedure BRINEPROP(Pr$,Fl$,Conc,Temp:output)
-
-IF (Fl$='EG') AND (Conc<0) THEN
-	Call ERROR('Concentration must be equal to or larger than 0.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-	IF (Fl$='EG') AND (Conc>56.1) THEN
-	Call ERROR('Concentration must be equal to or smaller than 56.1%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-IF (Fl$='PG') AND (Conc<15.2) THEN
-	Call ERROR('Concentration must be equal to or larger than 15.2%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-	IF (Fl$='PG') AND (Conc>57.0) THEN
-	Call ERROR('Concentration must be equal to or smaller than 57.0%. Try setting the upper limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-IF (Fl$='EA') AND (Conc<11.1) THEN
-	Call ERROR('Concentration must be equal to or larger than 11.1%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-	IF (Fl$='EA') AND (Conc>60.1) THEN
-	Call ERROR('Concentration must be equal or smaller than 60.1%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-IF (Fl$='MA') AND (Conc<7.8) THEN
-	Call ERROR('Concentration must be equal to or larger than 7.8%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-	IF (Fl$='MA') AND (Conc>44.3) THEN
-	Call ERROR('Concentration must be equal or smaller than 44.3%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-IF (Fl$='GL') AND (Conc<19.5) THEN
-	Call ERROR('Concentration must be equal to or larger than 19.5%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-	IF (Fl$='GL') AND (Conc>63.0) THEN
-	Call ERROR('Concentration must be equal or smaller than 63.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-IF (Fl$='NH3') AND (Conc<7.8) THEN
-	Call ERROR('Concentration must be equal to or larger than 7.8%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-	IF (Fl$='NH3') AND (Conc>23.6) THEN
-	Call ERROR('Concentration must be equal or smaller than 23.6%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-IF (Fl$='K2CO3') AND (Conc<13.3) THEN
-	Call ERROR('Concentration must be equal to or larger than 13.3%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-	IF (Fl$='K2CO3') AND (Conc>39.0) THEN
-	Call ERROR('Concentration must be equal to or smaller than 39.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-IF (Fl$='CaCl2') AND (Conc<9.0) THEN
-	Call ERROR('Concentration must be equal to or larger than 9.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-	IF (Fl$='CaCl2') AND (Conc>29.4) THEN
-	Call ERROR('Concentration must be equal or smaller than 29.4%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-IF (Fl$='MgCl2') AND (Conc<7.2) THEN
-	Call ERROR('Concentration must be equal to or larger than 7.2%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-	IF (Fl$='MgCl2') AND (Conc>20.5) THEN
-	Call ERROR('Concentration must be equal or smaller than 20.5%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-IF (Fl$='NaCl') AND (Conc<7.9) THEN
-	Call ERROR('Concentration must be equal to or larger than 7.9%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-	IF (Fl$='NaCl') AND (Conc>22.6) THEN
-	Call ERROR('Concentration must be equal or smaller than 22.6%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-IF (Fl$='KAc') AND (Conc<11.0) THEN
-	Call ERROR('Concentration must be equal to or larger than 11.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-	ELSE
-	IF (Fl$='KAc') AND (Conc>41.0) THEN
-	Call ERROR('Concentration must be equal or smaller than 41.0%. Try setting the lower limit in the Variables Info window according to the values indicated in the help file.',Conc)
-ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF
-
-"Sets property parameter"
-Pro=0
-Freeze=1;Density=2;SpecHeat=3;ThermalC=4;DynVisc=5
-"Unit labels (C, kg/m^3, kJ/kg-K, W/m-K, milliPa-s): rows Freeze ... DynVisc of the lookup table Units"
-Pr$=Uppercase$(Pr$)
-IF (Pr$='FREEZE') THEN Pro:=Freeze ELSE
-	IF (Pr$='DENSITY') THEN Pro:=Density ELSE
-		IF (Pr$='SPECHEAT') THEN Pro:=SpecHeat ELSE
-			IF (Pr$='THERMALC') THEN Pro:=ThermalC ELSE
-				IF (Pr$='DYNVISC') THEN Pro:=DynVisc
-ENDIF;ENDIF;ENDIF;ENDIF
-
-UO$=''
-Pr:=Pro
-UO$=LOOKUP$('Units',Pro,1)
-
-"Sets fluid parameter"
-EG=1;PG=2;EA=3;MA=4;GL=5;NH3=6;K2CO3=7;CaCl2=8;MgCl2=9;NaCl=10;KAc=11
-IF (Fl$='EG') THEN Flu:=EG ELSE
-	IF (Fl$='PG') THEN Flu:=PG ELSE
-		IF (Fl$='EA') THEN Flu:=EA ELSE
-			IF (Fl$='MA') THEN Flu:=MA ELSE
-				IF (Fl$='GL') THEN Flu:=GL ELSE
-					IF (Fl$='NH3') THEN Flu:=NH3 ELSE
-						IF (Fl$='K2CO3') THEN Flu:=K2CO3 ELSE
-							 IF (Fl$='CaCl2') THEN Flu:=CaCl2 ELSE
-								IF (Fl$='MgCl2') THEN Flu:=MgCl2 ELSE
-									IF (Fl$='NaCl') THEN Flu:=NaCl ELSE
-										IF (Fl$='KAc') THEN Flu:=KAc
-ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF;ENDIF
-Fl:=Flu
-
-"Coefficients"
-k=0
-repeat
-k=k+1
-Row[k]=k+(Fl-1)*18
-c[k]=lookup('Brine1',Row[k],Pr)
-until (k>=18)
-
-"Mean values"
-xm=lookup('Brine2',Fl,1)
-ym=lookup('Brine2',Fl,2)
-x=Conc-xm
-y=Temp-ym
-
-"Equation, f(temp,conc)"
-Funkt=c[1]+(c[2]*y)+(c[3]*y^2)+(c[4]*y^3)+(c[5]*x)+(c[6]*x*y)+(c[7]*x*y^2)+(c[8]*x*y^3)+(c[9]*x^2)+(c[10]*x^2*y)+(c[11]*x^2*y^2)+(c[12]*x^2*y^3)+(c[13]*x^3)+(c[14]*x^3*y)+(c[15]*x^3*y^2)+(c[16]*x^4)+(c[17]*x^4*y)+(c[18]*x^5)
-
-"Conditions
-Mode=mu   =>  output = exp(f)
-Mode<>mu =>  output = f
-"
-IF (Pr=5) THEN
-output=exp(Funkt)
-ELSE
-IF (Pr=3) THEN
-output=Funkt/1000
-ELSE
-output=Funkt
-ENDIF;ENDIF
+FUNCTION BrineProperty(Prop$, Fl$, Conc, Temp)
+  "Row of the solution in the table BrineSolutions (an unknown code is an error)"
+  i = LOOKUP$ROW('BrineSolutions', 'Code', Fl$)
+  IF (Conc < LOOKUP('BrineSolutions', i, 'Conc_min')) THEN CALL ERROR('BrineProperty: the mass concentration XXXA1 % is below the range of the solution (table BrineSolutions)', Conc)
+  IF (Conc > LOOKUP('BrineSolutions', i, 'Conc_max')) THEN CALL ERROR('BrineProperty: the mass concentration XXXA1 % is above the range of the solution (table BrineSolutions)', Conc)
+  "Column of the property in the table BrineCoefficients"
+  j = 0
+  IF (Prop$ = 'Freeze') THEN j = 1
+  IF (Prop$ = 'Density') THEN j = 2
+  IF (Prop$ = 'SpecHeat') THEN j = 3
+  IF (Prop$ = 'ThermalC') THEN j = 4
+  IF (Prop$ = 'DynVisc') THEN j = 5
+  IF (j = 0) THEN CALL ERROR('BrineProperty: unknown property XXX$ (Freeze, Density, SpecHeat, ThermalC or DynVisc)', Prop$)
+  "The 18 coefficients of the solution for this property"
+  k = 0
+  REPEAT
+    k = k + 1
+    c[k] = LOOKUP('BrineCoefficients', 18*(i - 1) + k, j)
+  UNTIL (k >= 18)
+  "Deviations from the mean concentration and temperature of the solution"
+  x = Conc - LOOKUP('BrineSolutions', i, 'Conc_mean')
+  y = Temp - LOOKUP('BrineSolutions', i, 'T_mean')
+  f = c[1] + c[2]*y + c[3]*y^2 + c[4]*y^3 + c[5]*x + c[6]*x*y + c[7]*x*y^2 + c[8]*x*y^3 + c[9]*x^2 + c[10]*x^2*y + c[11]*x^2*y^2 + c[12]*x^2*y^3 + c[13]*x^3 + c[14]*x^3*y + c[15]*x^3*y^2 + c[16]*x^4 + c[17]*x^4*y + c[18]*x^5
+  "The polynomial of the viscosity gives its logarithm, in milliPa-s"
+  IF (j = 5) THEN f = exp(f)/1000
+  BrineProperty := f
 END
 
-{--- Demonstration program, written for this model in the pattern of the
-     commented example block that followed END in the library file. ---}
+PROCEDURE BRINEPROP(Pr$, Fl$, Conc, Temp : output)
+  "One property in the units of the EES library: Pr$ = 'Freeze' [C], 'Density' [kg/m^3], 'SpecHeat' [kJ/kg-K], 'ThermalC' [W/m-K] or 'DynVisc' [milliPa-s]"
+  value = BrineProperty(Pr$, Fl$, Conc, Temp)
+  factor = 1
+  IF (Pr$ = 'SpecHeat') THEN factor = 0.001
+  IF (Pr$ = 'DynVisc') THEN factor = 1000
+  output = factor*value
+END
 
-"!Demonstration case 1: propylene glycol 50 % at 65 °C (the example block of"
-"!the original library, whose temperature argument is written 65 [K] there;"
-"!BRINEPROP takes its temperature in degrees Celsius, as the help file of the"
-"!library states)"
+PROCEDURE BRINEPROP2(Fl$, Conc, Temp : FreezingPt, Density, SpecHeat, ThermalConductivity, DynamicViscosity, Pr)
+  "The five properties and the Prandtl number in the units of the EES library: SpecHeat [kJ/kg-K], DynamicViscosity [Pa-s]"
+  FreezingPt = BrineProperty('Freeze', Fl$, Conc, Temp)
+  Density = BrineProperty('Density', Fl$, Conc, Temp)
+  c_p = BrineProperty('SpecHeat', Fl$, Conc, Temp)
+  ThermalConductivity = BrineProperty('ThermalC', Fl$, Conc, Temp)
+  DynamicViscosity = BrineProperty('DynVisc', Fl$, Conc, Temp)
+  SpecHeat = c_p/1000
+  Pr = c_p*DynamicViscosity/ThermalConductivity
+END
+
+"!Demonstration program (ignored by $INCLUDE)"
+
+"!Case 1 (BRINEPROP): propylene glycol 50 % at 65 °C, the example block that"
+"!followed END in Brineprop.lib (its temperature is written 65 [K] there;"
+"!the temperature of the library is in degrees Celsius, as its help file states)"
 brine_1$='PG'
 X_brine_1=50 [%]
 T_brine_1=65 [C]
-
-"!Demonstration case 2: ethylene glycol 25 % at the temperature stored by the"
-"!glycol run-around loop reference model of the same library (inventory"
-"!TM-0476): its stored solution holds rho_gw = 1036.228755 kg/m^3,"
-"!c_p_gw = 3805.350851 J/kg-K and mu_gw = 0.002943460833 Pa/s"
-brine_2$='EG'
-X_brine_2=25 [%]
-T_brine_2=6.324036551 [C]
-
-"!Case 1"
 CALL BRINEPROP('Freeze',brine_1$,X_brine_1,T_brine_1:T_freeze_1)
 CALL BRINEPROP('Density',brine_1$,X_brine_1,T_brine_1:rho_brine_1)
 CALL BRINEPROP('SpecHeat',brine_1$,X_brine_1,T_brine_1:c_p_brine_1_kJ)
 CALL BRINEPROP('ThermalC',brine_1$,X_brine_1,T_brine_1:k_brine_1)
 CALL BRINEPROP('DynVisc',brine_1$,X_brine_1,T_brine_1:mu_brine_1_mPa_s)
 
-"!Case 2"
+"!Case 2 (BRINEPROP): ethylene glycol 25 % at the temperature stored by the"
+"!glycol run-around loop reference model of the same library (inventory"
+"!TM-0476): its stored solution holds rho_gw = 1036.228755 kg/m^3,"
+"!c_p_gw = 3805.350851 J/kg-K and mu_gw = 0.002943460833 Pa-s"
+brine_2$='EG'
+X_brine_2=25 [%]
+T_brine_2=6.324036551 [C]
 CALL BRINEPROP('Freeze',brine_2$,X_brine_2,T_brine_2:T_freeze_2)
 CALL BRINEPROP('Density',brine_2$,X_brine_2,T_brine_2:rho_brine_2)
 CALL BRINEPROP('SpecHeat',brine_2$,X_brine_2,T_brine_2:c_p_brine_2_kJ)
 CALL BRINEPROP('ThermalC',brine_2$,X_brine_2,T_brine_2:k_brine_2)
 CALL BRINEPROP('DynVisc',brine_2$,X_brine_2,T_brine_2:mu_brine_2_mPa_s)
-
-"!SI versions of the two properties that the stored solution of the glycol"
-"!loop model holds (that model calls the library the same way, see the"
-"!conversion log)"
+"SI values of the two properties in kJ/kg-K and milliPa-s, as the stored solution of the glycol loop model holds them"
 c_p_brine_2=c_p_brine_2_kJ*1000 "[J/kg-K]"
-mu_brine_2=mu_brine_2_mPa_s/1000 "[Pa/s]"
+mu_brine_2=mu_brine_2_mPa_s/1000 "[Pa-s]"
+
+"!Case 3 (BRINEPROP2): ethylene glycol 30 % at -5 °C, the call of the"
+"!Vitocal 300-G heat pump model of the collection (CSL-0116), whose stored"
+"!solution holds the six outputs"
+brine_3$='EG'
+X_brine_3=30 [%]
+T_brine_3=-5 [C]
+CALL BRINEPROP2(brine_3$,X_brine_3,T_brine_3:T_freeze_3,rho_brine_3,c_p_brine_3_kJ,k_brine_3,mu_brine_3,Pr_brine_3)
+
+"!Case 4 (BRINEPROP2): calcium chloride 25 % at -4 °C, the example call that"
+"!followed END in Brineprop2.LIB, with its solution name in mixed case"
+brine_4$='Cacl2'
+X_brine_4=25 [%]
+T_brine_4=-4 [C]
+CALL BRINEPROP2(brine_4$,X_brine_4,T_brine_4:T_freeze_4,rho_brine_4,c_p_brine_4_kJ,k_brine_4,mu_brine_4,Pr_brine_4)
+
+"!Case 5 (BrineProperty, SI units, in equations): the state of case 2"
+T_freeze_5 = BrineProperty('Freeze', brine_2$, X_brine_2, T_brine_2)    "[C]"
+rho_brine_5 = BrineProperty('Density', brine_2$, X_brine_2, T_brine_2)  "[kg/m^3]"
+c_p_brine_5 = BrineProperty('SpecHeat', brine_2$, X_brine_2, T_brine_2) "[J/kg-K]"
+k_brine_5 = BrineProperty('ThermalC', brine_2$, X_brine_2, T_brine_2)   "[W/m-K]"
+mu_brine_5 = BrineProperty('DynVisc', brine_2$, X_brine_2, T_brine_2)   "[Pa-s]"

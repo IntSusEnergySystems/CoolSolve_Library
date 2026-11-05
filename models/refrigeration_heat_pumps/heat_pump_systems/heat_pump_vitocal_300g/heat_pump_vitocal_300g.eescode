@@ -1,6 +1,6 @@
 {=============================================================================
   Vitocal 300G brine-to-water heat pump (scroll compressor, two plate HXs)
-  CoolSolve Library model CSL-0116 - BLOCKED native file (see README.md)
+  CoolSolve Library model CSL-0116 - native file, FAILING (see README.md)
  -----------------------------------------------------------------------------
   Water-to-water heat pump of the Vaillant Vitocal 300G type: an R134a cycle
   with a scroll compressor described by the Winandy et al. (2002)
@@ -15,12 +15,13 @@
   pinch points and hold-up mass are returned.
   The brine properties come from the EES incompressible-substance library
   ('EG' with C=30) and from the ULiège BrineProp2 library procedure
-  (implicit USERLIB, not shipped with the file). The compressor catalogue
+  (implicit USERLIB in EES, included here from CSL-0079). The compressor catalogue
   coefficients are read in an external lookup table 'ZH38K4E-TFD' (columns
   W, M, Vs) that is not part of the source collection.
 
-  This file is the native EES file: it is kept in valid EES syntax and is
-  blocked in CoolSolve (gap IDs in README.md and model.json). Every edit is
+  This file is the native EES file: it is kept in valid EES syntax and does
+  not run in CoolSolve for want of the catalogue table ZH38K4E-TFD (see
+  README.md; no CoolSolve gap is left). Every edit is
   logged in the README conversion log. The (s,v) and (v,u) property calls are
   written with supported input pairs (decision D12, same states).
 
@@ -39,6 +40,8 @@
   Source : ULiège Thermodynamics Laboratory, HeatPump_Vitocal 300G
            -110_CGSQ1112288.EES (S. Quoilin) - see README.md
 =============================================================================}
+
+$INCLUDE brineprop_secondary_refrigerants   "BRINEPROP2 of the ULiège BrineProp library (CSL-0079), added to the EES source"
 
 "! Heat Pump with SCROLL Compressor"
 

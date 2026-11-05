@@ -52,13 +52,13 @@
     "course": "ULiège model bank (Laborelec toolkit lineage), cooling coil parameters identification model, 2008-01-16; theory published as Lemort, Cuevas, Lebrun, Teodorese, ASHRAE Transactions 114(1), 2008"
   },
   "verification": {
-    "summary": "Concerns the runnable variant, which the native file (BRINEPROP included from CSL-0079) equals: compared with the EES stored solution, 79 common variables, 23 differ above rtol=0.001, maximum 1.05e-02 on M_dot_w_coil, all from EES vs CoolProp humid-air formulations; AU_coil agrees to 3.2e-05.",
+    "summary": "Native file (BRINEPROP included from CSL-0079) compared with the EES stored solution: 79 common variables, 23 differ above rtol=0.001, maximum 1.05e-02 on M_dot_w_coil, all from EES vs CoolProp humid-air formulations; AU_coil agrees to 3.2e-05.",
     "checks": ["ees-stored-solution"],
-    "reference": "EES stored solution in the source file (93 records, 80 with a value; 92 decoded by the tool, one hand-decoded from the binary) against the runnable variant cooling_coil_paramid_coolsolve.eescode; the native file cannot be solved (CS-GAP-NAME-PIPE, CS-GAP-INCLUDE, CS-GAP-CALL-EXPR-OUT)",
-    "date": "2026-10-09",
-    "coolsolve_version": "0.3.0@7addbbc",
+    "reference": "EES stored solution in the source file (93 records, 80 with a value; 92 decoded by the tool, one hand-decoded from the binary) against the native file (first against the former runnable variant cooling_coil_paramid_coolsolve.eescode, which the native file equals to 2.3e-10)",
+    "date": "2026-11-05",
+    "coolsolve_version": "0.4.0@36493eb",
     "max_rel_diff": 0.0105,
-    "notes": "79 common variables, 23 differ above rtol=0.001, maximum relative difference 1.05e-02 (M_dot_w_coil, proportional to the difference W_su_coil - W_ex_coil of two humidity ratios, +1.30 % on the difference). All 23 deviations (1.45e-03 to 1.05e-02) come from the EES and CoolProp humid-air formulations (W_su_coil 5.52e-03, h_a_su_coil 2.22e-03, W_ex_coil 4.17e-03), as in the other humid-air models of the library (CSL-0074 4.8e-03, CSL-0070 4.4e-03). Q_dot_coil closes exactly on the brine side; the identified resistances agree to 6.0e-04 and AU_coil to 3.2e-05. The parametric Table 2 (3335x2) of the file is a leftover artifact (smooth R_a_coil sweep not containing the stored value; sparse junk k column) and is not used. 2026-11-04: the native file runs with $INCLUDE brineprop_secondary_refrigerants (BRINEPROP and its tables Units/Brine1/Brine2 from CSL-0079) and the variant's .initials; it equals the variant (80 common variables, max 2.3e-10) and prints '78 common variables, 23 differ (rtol=0.001)' vs the EES stored solution (CoolSolve 0.4.0@2f4860b + table loading of included models)."
+    "notes": "79 common variables, 23 differ above rtol=0.001, maximum relative difference 1.05e-02 (M_dot_w_coil, proportional to the difference W_su_coil - W_ex_coil of two humidity ratios, +1.30 % on the difference). All 23 deviations (1.45e-03 to 1.05e-02) come from the EES and CoolProp humid-air formulations (W_su_coil 5.52e-03, h_a_su_coil 2.22e-03, W_ex_coil 4.17e-03), as in the other humid-air models of the library (CSL-0074 4.8e-03, CSL-0070 4.4e-03). Q_dot_coil closes exactly on the brine side; the identified resistances agree to 6.0e-04 and AU_coil to 3.2e-05. The parametric Table 2 (3335x2) of the file is a leftover artifact (smooth R_a_coil sweep not containing the stored value; sparse junk k column) and is not used. 2026-11-04: the native file runs with $INCLUDE brineprop_secondary_refrigerants (BRINEPROP and its tables Units/Brine1/Brine2 from CSL-0079) and the variant's .initials; it equals the variant (80 common variables, max 2.3e-10) and prints '78 common variables, 23 differ (rtol=0.001)' vs the EES stored solution (CoolSolve 0.4.0@2f4860b + table loading of included models). 2026-11-05: the runnable variant is removed; the comparison repeated on the native file gives the same figures."
   },
   "missing_features": [],
   "related": [
@@ -90,6 +90,11 @@
     {
       "date": "2026-11-04",
       "action": "native file runs: $INCLUDE brineprop_secondary_refrigerants (CSL-0079; CS-GAP-INCLUDE closed, the tables of the included model are loaded with it), .initials of the variant added (the 24-equation block fails from default guesses); equals the variant; native .sol baseline; status blocked -> verified",
+      "by": "Claude (Opus 5.5) for S. Quoilin"
+    },
+    {
+      "date": "2026-11-05",
+      "action": "runnable variant cooling_coil_paramid_coolsolve.eescode (+ .initials, .sol) removed: the native file equals it (2.3e-10) and none of its changes is forced any more; verification repeated on the native file (78 decoded common variables + the hand-decoded one, 23 differ, max 1.05e-02, unchanged)",
       "by": "Claude (Opus 5.5) for S. Quoilin"
     }
   ]

@@ -54,7 +54,7 @@
     "date": "2026-10-10",
     "coolsolve_version": "0.3.0@6f10211",
     "max_rel_diff": 0.0203,
-    "notes": "Native file solved in 14 iterations (37 equations, fluid$ = 'Water'); the build also contains the uncommitted identifier-character fix of CoolSolve fix/library-gaps-2. 34 common variables, 4 differ (rtol=0.001); max relative deviation 2.03e-02 (Pr_f), inherited from the water thermal conductivity: EES 7.888 returns 0.59477 W/m-K at 25 C, CoolProp/IAPWS 0.60652 W/m-K (the IAPWS value, 2 % above the old EES library). Geometric/algebraic outputs match to 4.2e-05 (DELTAP). The EG branch needs BRINEPROP2 (not available), not covered."
+    "notes": "Native file solved in 14 iterations (37 equations, fluid$ = 'Water'); the build also contains the uncommitted identifier-character fix of CoolSolve fix/library-gaps-2. 34 common variables, 4 differ (rtol=0.001); max relative deviation 2.03e-02 (Pr_f), inherited from the water thermal conductivity: EES 7.888 returns 0.59477 W/m-K at 25 C, CoolProp/IAPWS 0.60652 W/m-K (the IAPWS value, 2 % above the old EES library). Geometric/algebraic outputs match to 4.2e-05 (DELTAP). The EG branch needed BRINEPROP2 (not available), not covered. 2026-11-05 (CoolSolve 0.4.0@36493eb): BRINEPROP2 is included from CSL-0079 and the k_w output of its second call is named k_f_w (error of the original, EG branch over-determined); the water run is unchanged (34 common, 4 differ, max 2.03e-02 on Pr_f), the EG branch solves (45 equations) and reproduces the stale EES value T_freezing = -10.95876809 C of an earlier EG run to 6e-11."
   },
   "missing_features": [],
   "related": [
@@ -85,6 +85,11 @@
       "date": "2026-10-10",
       "action": "re-checked with CoolSolve fix/library-gaps-2 @6f10211 + uncommitted identifier-character fix (T-RECHECK, CS-BUG-HASH-IDENT closed): blocked -> verified; native file verified, _coolsolve variant removed, .sol baseline added",
       "by": "Claude (Sonnet) for S. Quoilin"
+    },
+    {
+      "date": "2026-11-05",
+      "action": "$INCLUDE brineprop_secondary_refrigerants added (BRINEPROP2 now in CSL-0079); EG branch: the second BRINEPROP2 call wrote the brine conductivity into the plate-conductivity input k_w, renamed k_f_w (error of the original, logged); the EG branch solves, the water run and its .sol are unchanged",
+      "by": "Claude (Opus 5.5) for S. Quoilin"
     }
   ]
 }

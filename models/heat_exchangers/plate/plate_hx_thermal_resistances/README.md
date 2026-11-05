@@ -21,7 +21,7 @@ plate-HX modelling work of 2008.
 | **Source** | ULiège Thermodynamics Laboratory — `~/Nextcloud/thermo_models/modeles/plate_heat_exchanger_SB080104.EES` (inventory `TM-0319`) |
 | **Authors** | Stéphane Bertagnolio; Sylvain Quoilin (2008) |
 | **License** | MIT |
-| **CoolSolve** | **verified** against the EES stored solution (water run; 34 common variables, 4 differ because of the EES water conductivity, max 2.0 %) |
+| **CoolSolve** | **verified** against the EES stored solution (water run; 34 common variables, 4 differ because of the EES water conductivity, max 2.0 %); the EG branch runs too, with `BRINEPROP2` included from `CSL-0079` |
 
 ## Problem statement
 
@@ -58,13 +58,14 @@ Fluid properties: water branch `rho_f, mu_f, mu_w, k_f, Pr_f, c_p_f` from the
 EES built-in property functions; ethylene-glycol branch through two calls of
 `BRINEPROP2` (density, specific heat, conductivity, viscosity, Prandtl number
 and freezing point of the EG solution at `X_EG` %), the second-generation
-procedure of the BrineProp library (shipped with the `Brineprop2.LIB` of the
-same ULiège folder, inventory `TM-0480`, merged into `CSL-0079`). Only the
+procedure of the BrineProp library, included from the library model
+`CSL-0079` (line `$INCLUDE brineprop_secondary_refrigerants`). Only the
 `R_f` thermal resistance is computed in this version: no wall/plate
 resistance in series (the plate conductivity `k_w` and thickness `t` are
-inputs but unused by the equations; as in the original — note that in its EG
-branch the original reuses `k_w` as the brine-conductivity output of the
-second `BRINEPROP2` call, overwriting the plate conductivity).
+inputs but unused by the equations, as in the original). In its EG branch
+the original wrote the brine conductivity at the wall temperature, an output
+of the second `BRINEPROP2` call, into `k_w`, the plate conductivity input;
+it is `k_f_w` here (see *Conversion log*).
 
 Inputs: geometry (`A_bar`, `LAMBDA`, `L_p`, `L_w`, `beta`, `t`, `N_p`, `D_p`,
 `k_w`), `T_m`, `T_w`, `P_m`, `V_dot_f_m3h`, `fluid$`, `X_EG`. Outputs:
@@ -84,8 +85,10 @@ The file is the original EES text (stored water run, `fluid$ = 'Water'`): the
 `$IF fluid$` directives keep the water property block and drop the
 ethylene-glycol branch. It solves in 14 iterations without special guesses (no
 `.initials` needed); `plate_hx_thermal_resistances.sol` is the regression
-baseline. No lookup tables. The `fluid$ = 'EG'` branch calls `BRINEPROP2`,
-which CoolSolve does not provide (see *Limitations*).
+baseline. No lookup tables of its own. With `fluid$ = 'EG'` the other branch
+takes the brine properties from `BRINEPROP2` (included from `CSL-0079`, with
+its tables) and solves too (45 equations, 18 iterations from the default
+guesses; see *Results*).
 
 ## Results
 
@@ -105,6 +108,27 @@ Stored operating point (water, 25 °C, 1 bar, 150 m³/h, 105 plates,
 | `h_f` [W/m²-K] | 5454.51 | 5526.47 |
 | `R_f` [K/W] | 1.6815e-06 | 1.6596e-06 |
 | `DELTAP` [Pa] | 5387.35 | 5387.12 |
+
+Ethylene-glycol branch (`fluid$ = 'EG'`, the other inputs unchanged: EG
+25 %, 25 °C, 150 m³/h), no EES reference for the whole run:
+
+| Quantity | CoolSolve |
+|---|---:|
+| `T_freezing` [°C] | −10.95877 |
+| `rho_f` [kg/m³] | 1030.000 |
+| `c_p_f` [J/kg-K] | 3852.10 |
+| `k_f` [W/m-K] | 0.49173 |
+| `mu_f` [Pa-s] | 0.0016530 |
+| `Pr_f` [-] | 12.949 |
+| `Re_f` [-] | 2700.25 (TURBULENT) |
+| `h_f` [W/m²-K] | 3752.01 |
+| `R_f` [K/W] | 2.4444e-06 |
+| `DELTAP` [Pa] | 5751.97 |
+
+`T_freezing` equals the value that EES kept in the file from an earlier EG
+run (−10.95876809 °C, relative difference 6e-11, see *Verification*), and
+`rho_f`, `c_p_f` equal the EES values of `CSL-0072` for the same brine and
+temperature (1030.000008 kg/m³, 3852.099981 J/kg-K, within 6.2e-9).
 
 <!-- FIGURE (maintainer, docs/model_workflow.md §7): e.g. parametric sweep of
      h_f and DELTAP versus volume flow (0–300 m³/h) or chevron angle. -->
@@ -129,7 +153,8 @@ CoolSolve: 4`. Maximum relative deviation **2.03e-02** (`Pr_f`).
   the current text (leftovers of earlier edits of the file, values 1, 1 and
   0.8818 m/s); `T_freezing` = −10.959 °C — a stale value of an earlier run
   with the EG branch (it is the freezing point of EG 25 % per BrineProp);
-  the stored water run does not compute it and neither does this model.
+  the stored water run does not compute it and neither does this model. The
+  EG branch of this model reproduces it: −10.95876809 °C (6e-11).
 - Only in CoolSolve: `fluid$` (string variables are not exported by EES to
   the reference), `PI`, `Regime$`, and `Nu#_f`; EES does not store `Nu#_f`
   either (the value follows from the stored `h_f`, `d_h`, `k_f`:
@@ -175,6 +200,16 @@ inventory `TM-0480`). The copy `Steady-state models/plate_heat_exchanger_SB08010
   `mu_w` = `mu_f` = viscosity of water at 25 °C). With the data block active
   the model is square (37/37); the original equations are otherwise
   unchanged.
+- **2026-11-05 — `BRINEPROP2` included, `k_w` of the EG branch corrected**:
+  `BRINEPROP2` is now a procedure of the library model `CSL-0079`, so the
+  native file gets the line `$INCLUDE brineprop_secondary_refrigerants` after
+  its header. Correction of an error of the original (EG branch only): the
+  second `CALL BRINEPROP2(fluid$, X_EG,T_w: …)` wrote the brine conductivity at
+  the wall temperature into `k_w`, which the data block sets as the plate
+  conductivity (`k_w = 17`): the EG branch had one equation too many (45 for
+  44 unknowns). The output is named `k_f_w` (a comment on the line says so);
+  it feeds no equation, like the plate conductivity. The water run, its
+  results and its `.sol` are unchanged (1.9e-11).
 - **Level 2** although the raw score is 1 (37 equations → 0, largest block
   4 → 0, one procedure → 1, no multi-zone, no calibration, no curated
   guesses): moved +1 to the inventory guess — a complete component model
@@ -184,20 +219,17 @@ inventory `TM-0480`). The copy `Steady-state models/plate_heat_exchanger_SB08010
 
 ## Limitations and CoolSolve gaps
 
-The shipped run is water. The `fluid$ = 'EG'` branch is kept
-as in the original but is not a runnable model: it calls the `BRINEPROP2`
-procedure of `Brineprop2.LIB`, which CoolSolve cannot load yet (the procedure
-is implicit in EES — `USERLIB`; see `CSL-0079`), and its second call
-overwrites the plate conductivity input `k_w` (see *Model*), which makes the
-system non-square. Physics: single-phase side only, one fluid at a mean
+The shipped run is water; the `fluid$ = 'EG'` branch runs (its `BRINEPROP2`
+procedure, implicit in EES — `USERLIB`, comes from `CSL-0079`) but has no EES
+reference of its own beyond the freezing point (see *Results*). Physics: single-phase side only, one fluid at a mean
 state (no temperature profile, no LMTD); the correlations are valid for
 chevron plates inside the tested geometry (10 ≤ β ≤ 80° per Martin).
 
 ## Related models
 
 - `CSL-0079` *brineprop_secondary_refrigerants* — the BrineProp function
-  library whose second-generation procedure `BRINEPROP2` (candidate
-  `TM-0480`, merged there) computes the brine properties of the EG branch.
+  library whose second-generation procedure `BRINEPROP2` computes the brine
+  properties of the EG branch (`$INCLUDE` line of the native file).
 - `CSL-0111` *plate_hx_correlations* — ULiège procedure library for plate
   heat exchangers; its `martin` procedure implements the same Martin
   correlation with more plate-HX correlations around it.

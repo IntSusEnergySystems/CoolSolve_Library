@@ -52,7 +52,7 @@
     "course": "ULiège model bank, air-to-air glycol recovery loop, 2008-01-10 (references Braun et al. 1989 and Ding et al. 1990)"
   },
   "verification": {
-    "summary": "Native file compared with the EES stored solution of GLYCOL_RECOVERY_LOOP_SB080110.EES: 143 common variables, 29 differ above rtol=0.001, max 5.31e-03 on W_cooling_c_wet, all humid-air quantities (EES vs CoolProp); glycol properties within 1.9e-05, pump power 1.7e-07, epsilon_recovery 3.0e-05. The runnable variant reaches a nonphysical root (CS-BUG-NEWTON-CYCLE).",
+    "summary": "Native file compared with the EES stored solution of GLYCOL_RECOVERY_LOOP_SB080110.EES: 143 common variables, 29 differ above rtol=0.001, max 5.31e-03 on W_cooling_c_wet, all humid-air quantities (EES vs CoolProp); glycol properties within 1.9e-05, pump power 1.7e-07, epsilon_recovery 3.0e-05.",
     "checks": [
       "ees-stored-solution"
     ],
@@ -98,6 +98,11 @@
     {
       "date": "2026-11-04",
       "action": "native file runs: $INCLUDE brineprop_secondary_refrigerants (CSL-0079; CS-GAP-INCLUDE closed, the tables of the included model are loaded with it), .initials of the EES stored solution added (the 61-variable block fails from default guesses); verified against the EES stored solution (max 5.31e-03, humid air); native .sol baseline; status blocked -> verified; the variant now converges to a nonphysical root (CS-BUG-NEWTON-CYCLE), no .sol",
+      "by": "Claude (Opus 5.5) for S. Quoilin"
+    },
+    {
+      "date": "2026-11-05",
+      "action": "runnable variant glycol_runaround_recovery_loop_coolsolve.eescode removed with its .initials and its two companion tables (the native file is verified; the variant never reached the stored solution and had no .sol)",
       "by": "Claude (Opus 5.5) for S. Quoilin"
     }
   ]

@@ -22,10 +22,8 @@
     "model bank"
   ],
   "language_features": [
-    "user-library procedure BRINEPROP (implicit library, copied in the file; string arguments, IF ladders)",
-    "REPEAT loop",
-    "LOOKUP$ (unit labels in a lookup table)",
-    "lookup tables in procedures",
+    "user-library procedure BRINEPROP (implicit library in EES, $INCLUDE of CSL-0079)",
+    "string arguments",
     "expression as CALL output argument"
   ],
   "stats": {
@@ -98,6 +96,11 @@
       "date": "2026-10-31",
       "action": "ParamID variant added (roadmap card C-341, T-IMPORT of TM-0486, merged here instead of a new folder; pre-assigned ID CSL-0301 unused): centrifugal_brine_pump_refsim_paramid.eescode (+ .initials, .sol, own -Brine1/-Brine2/-Units tables) identifies the 8 characteristic coefficients from 4 measured points; the identified values are the main file's parameters rounded; verified vs the EES stored solution (88 common variables, 0 differ, max 9.99e-11); tag 'parameter identification' added",
       "by": "opencode worker (GLM) for S. Quoilin"
+    },
+    {
+      "date": "2026-11-05",
+      "action": "the copies of BRINEPROP (another edition of Brineprop.lib, with two surplus ENDIFs reported P008) and of its three tables removed from both files; $INCLUDE brineprop_secondary_refrigerants (CSL-0079) added after the header; both files reproduce their baselines (2.1e-10, 9.1e-13); main .sol regenerated (auxiliary CALL-output variable renamed after its line)",
+      "by": "Claude (Opus 5.5) for S. Quoilin"
     }
   ]
 }

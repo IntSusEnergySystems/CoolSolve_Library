@@ -15,7 +15,7 @@ closes the model.
 |---|---|
 | **Category** | Cycles and machines › Refrigeration and heat pumps |
 | **Fluids** | R407C (refrigerant, default), Water (constant `cp_w` = 4187 J/kg·K), PG 25 % brine (BrineProp library) |
-| **Size** | 161 equations in the main program (the model with its 12 inputs and 19 parameters restored from the stored run, the `(s, v)` rewrite and the 16 state points of the diagrams) plus the 115-line `BRINEPROP` procedure; 86 blocks, largest block 76 |
+| **Size** | 161 equations in the main program (the model with its 12 inputs and 19 parameters restored from the stored run, the `(s, v)` rewrite and the 16 state points of the diagrams); `BRINEPROP` comes from `CSL-0079`; 86 blocks, largest block 76 |
 | **Source** | ULiège model bank (Laborelec toolkit lineage), heat production by vapour compression, reference simulation model, 8 January 2008 (`BrinetoWaterHeatPump_RefSim_EES_Model_VL080108.EES`, EES 7.888) |
 | **Authors** | Vincent Lemort (ULiège Thermodynamics Laboratory) |
 | **License** | MIT |
@@ -109,7 +109,7 @@ coolsolve ./brine_to_water_heat_pump_refsim.eescode
 ```
 
 It converges from the shipped `.initials` (CoolProp-consistent values of the
-solution) in one Newton pass per block (84 iterations over 86 blocks). **Hard
+solution) in one Newton pass per block (12 iterations over 86 blocks). **Hard
 start otherwise:** the 76-variable block (compressor, both exchangers, the
 leakage orifice) fails from the default guesses (*SingularJacobian* at
 iteration 0, also with Try Harder) and, from the EES stored values (enthalpies
@@ -227,12 +227,10 @@ archive that the collection does not extract**:
 The same archive holds the **EXE version** of the model
 (`BrinetoWaterHeatPump_RefSim_EXE_Model_VL080108.EXE`) and the `UserLib/BrineProp`
 folder (`Brineprop.lib`, `Brineprop2.LIB`, `Brine1.lkt`, `Brine2.lkt`,
-`BrineProp.chm`, `BRINEPROP.hlp`) the model calls implicitly; the library
-procedure is function model `CSL-0079` and its binary lookup files are shipped
-here as the companion tables `brine_to_water_heat_pump_refsim-Brine1.csv`
-(198 × 5 polynomial coefficients) and `-Brine2.csv` (11 × 2 mean concentration
-and temperature), decoded from `Brine1.lkt`/`Brine2.lkt` by `CSL-0079`
-(`CS-GAP-LKT`).
+`BrineProp.chm`, `BRINEPROP.hlp`) the model calls implicitly; in CoolSolve the
+library procedure and its tables (decoded from `Brine1.lkt`/`Brine2.lkt`) come
+from the function model `CSL-0079`, through the line
+`$INCLUDE brineprop_secondary_refrigerants`.
 The candidate has **no `duplicate_group`** in the inventory: no ParamID
 (parameter-identification) or simplified version of this heat pump exists in the
 model bank, so nothing was merged into or split from this model.
@@ -348,6 +346,19 @@ model bank, so nothing was merged into or split from this model.
   multi-zone or array treatment — the same profile as the other component models
   of the bank (`CSL-0074`, `CSL-0076`, `CSL-0077`), also rated level 2.
 
+- **2026-11-05 — `$INCLUDE` instead of the copy**: the file carried a copy
+  of `BRINEPROP` (another edition of `Brineprop.lib` than the one of
+  `CSL-0079`: the same code and tables, other wording of the range-check
+  messages, two surplus `ENDIF`s that CoolSolve reported, `P008`) and copies of
+  its three tables. The copy and the three table files are removed; the file
+  gets the line `$INCLUDE brineprop_secondary_refrigerants` after its header,
+  and the header names `CSL-0079` instead of the companion tables. `BRINEPROP`
+  is now the wrapper of the SI function `BrineProperty` of `CSL-0079` (same
+  values; `'specheat'` in lower case is read as before). The model reproduces
+  its baseline (1.4e-8, `DELTAt_su_cp`); the baseline is regenerated because
+  the auxiliary variable of the `:cp_glw/1000` output is named after its line
+  (`__out1_BRINEPROP_L412` → `__out1_BRINEPROP_L262`).
+
 ## Limitations and CoolSolve gaps
 
 - **Adapted from the original** (2026-11-01, see *Conversion log*): the
@@ -393,8 +404,8 @@ model bank, so nothing was merged into or split from this model.
   four-step scroll compressor with its fictitious envelope; that model runs on
   R22 with an air-cooled condenser and humid air.
 - `CSL-0079` *brineprop_secondary_refrigerants*: the function library whose
-  `BRINEPROP` procedure (and the Brine1/Brine2 coefficient tables shipped here)
-  gives the density and specific heat of the 25 % propylene glycol solution.
+  `BRINEPROP` procedure (included, with its tables) gives the density and
+  specific heat of the 25 % propylene glycol solution.
 - `CSL-0072` *centrifugal_brine_pump_refsim*: another model of the bank
   that calls the same BrineProp library (verified on its native file).
 - `CSL-0007` *scroll_compressor_semi_empirical*: the same scroll machine at a

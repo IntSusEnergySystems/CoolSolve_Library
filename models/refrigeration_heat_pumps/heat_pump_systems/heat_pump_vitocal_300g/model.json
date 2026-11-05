@@ -5,7 +5,7 @@
   "summary": "Water-to-water R134a heat pump of the Vaillant Vitocal 300G type: scroll compressor by the Winandy et al. (2002) semi-empirical model or the ARI/Copeland catalogue polynomial, plate evaporator on 30 % ethylene-glycol brine (Thonon + Hsieh) and plate condenser on the water circuit (Thonon + Kuo), both sized from their area with pressure drops, pinch points and hold-up as outputs.",
   "kind": "steady",
   "level": 3,
-  "status": "blocked",
+  "status": "failing",
   "main_file": "heat_pump_vitocal_300g.eescode",
   "fluids": [
     "R134a",
@@ -61,17 +61,15 @@
     "course": ""
   },
   "verification": {
-    "summary": "Not verified: the native file parses (235 equations) but stops at the BRINEPROP2 procedure (CS-GAP-INCLUDE) and no runnable variant exists; the EES stored solution is only documented as a future reference.",
+    "summary": "Not verified: the native file includes BRINEPROP2 from CSL-0079 and stops at the compressor catalogue table ZH38K4E-TFD, missing from the source collection (not a CoolSolve gap); no runnable variant exists; the EES stored solution is documented as a future reference.",
     "checks": [],
-    "reference": "EES stored solution shipped in the source file (234 variables; key values in the README). Not reproduced by CoolSolve: the native file is blocked and no runnable variant exists. Re-check after C-134: the catalogue table of CSL-0123 (recovered from TM-0560) is a different vintage than the stored run's table (Vs 211.22 vs 82.61 cm3, factor 3-4 in W at the stored point), so it cannot reproduce the stored solution either.",
-    "date": "2026-10-18",
-    "coolsolve_version": "0.3.0@4798e2b",
+    "reference": "EES stored solution shipped in the source file (234 variables; key values in the README). Not reproduced by CoolSolve: the native file stops at the missing catalogue table and no runnable variant exists. Re-check after C-134: the catalogue table of CSL-0123 (recovered from TM-0560) is a different vintage than the stored run's table (Vs 211.22 vs 82.61 cm3, factor 3-4 in W at the stored point), so it cannot reproduce the stored solution either.",
+    "date": "2026-11-05",
+    "coolsolve_version": "0.4.0@36493eb",
     "max_rel_diff": null,
-    "notes": "Blocked: documented reference values only (COP 3.0747, W_dot_cp 3004.20 W, Q_dot_cd 9237.10 W, M_dot_r 0.052602 kg/s). No variant: see README 'How to run' (re-check after C-134). Re-checked with CoolSolve 0.3.0@4798e2b: the file parses and is square (235 equations, largest block 45); the first error is Unknown procedure: BRINEPROP2. 2026-11-04: CS-GAP-INCLUDE is closed in CoolSolve, but no library model defines BRINEPROP2 (TM-0480 merged into CSL-0079, not added yet): native file unchanged, still stops at Unknown function BRINEPROP2 (block 23); CS-GAP-INCLUDE kept until the routine is in the library."
+    "notes": "Blocked: documented reference values only (COP 3.0747, W_dot_cp 3004.20 W, Q_dot_cd 9237.10 W, M_dot_r 0.052602 kg/s). No variant: see README 'How to run' (re-check after C-134). Re-checked with CoolSolve 0.3.0@4798e2b: the file parses and is square (235 equations, largest block 45); the first error is Unknown procedure: BRINEPROP2. 2026-11-04: CS-GAP-INCLUDE is closed in CoolSolve, but no library model defines BRINEPROP2 (TM-0480 merged into CSL-0079, not added yet): native file unchanged, still stops at Unknown function BRINEPROP2 (block 23); CS-GAP-INCLUDE kept until the routine is in the library. 2026-11-05: BRINEPROP2 added to CSL-0079; the native file gets the line $INCLUDE brineprop_secondary_refrigerants, the BRINEPROP2 block solves (its six stored values are the EES reference of BRINEPROP2 in CSL-0079, within 3.6e-10) and the solve stops at block 29: lookup table 'ZH38K4E-TFD' not found (in FUNCTION 'copeland'). CS-GAP-INCLUDE removed; status failing (missing data)."
   },
-  "missing_features": [
-    "CS-GAP-INCLUDE"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0007",
     "CSL-0037",
@@ -129,6 +127,11 @@
     {
       "date": "2026-11-04",
       "action": "re-checked for CS-GAP-INCLUDE (closed in CoolSolve): BRINEPROP2 is not in the library yet (TM-0480 merged into CSL-0079, to be added by a follow-up card), so no $INCLUDE line is added; the native file still stops at Unknown function BRINEPROP2; CS-GAP-INCLUDE kept in missing_features until the routine exists; status stays blocked",
+      "by": "Claude (Opus 5.5) for S. Quoilin"
+    },
+    {
+      "date": "2026-11-05",
+      "action": "BRINEPROP2 added to CSL-0079: $INCLUDE brineprop_secondary_refrigerants added to the native file (logged); the BRINEPROP2 block solves, the solve stops at the missing compressor catalogue table ZH38K4E-TFD; CS-GAP-INCLUDE removed from missing_features; status blocked -> failing (no CoolSolve gap left, missing data)",
       "by": "Claude (Opus 5.5) for S. Quoilin"
     }
   ]

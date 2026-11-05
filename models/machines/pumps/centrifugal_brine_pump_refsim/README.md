@@ -9,9 +9,9 @@ $\phi = \dot V/(A\,U)$ give the pressure factor $\psi$ and the power factor
 $\Lambda$; the isentropic (hydraulic) efficiency follows as
 $\epsilon_s = \phi\,\psi/\Lambda$. The brine density and specific heat come
 from the BrineProp library procedure `BRINEPROP` (18-coefficient polynomials
-in temperature and antifreeze concentration, coefficient tables `Brine1` /
-`Brine2`), so the temperature rise across the pump follows from the shaft
-power. This model comes from the ULiège model bank (Laborelec toolkit
+in temperature and antifreeze concentration, library model `CSL-0079`,
+included with `$INCLUDE brineprop_secondary_refrigerants`), so the
+temperature rise across the pump follows from the shaft power. This model comes from the ULiège model bank (Laborelec toolkit
 lineage); its sibling parameter-identification (ParamID) model from the same
 collection is shipped in this folder as the variant
 `centrifugal_brine_pump_refsim_paramid.eescode` (inventory `TM-0486`, merged
@@ -21,7 +21,7 @@ here — see *ParamID variant* below).
 |---|---|
 | **Category** | Components › Pumps and fans |
 | **Fluids** | brine EG (ethylene glycol/water), any BrineProp fluid |
-| **Size** | 34 equations after analysis, largest block 1 (33 main-program equations + the `BRINEPROP` procedure, ≈ 45 statements) |
+| **Size** | 34 equations after analysis, largest block 1 (the main program; `BRINEPROP` comes from `CSL-0079`) |
 | **Source** | ULiège model bank *Model data bank*, Distribution_Systems/Pumps, 2008-02-18 |
 | **Authors** | Vincent Lemort (file header; inventory adds V. Teodorese, J. Lebrun) |
 | **License** | MIT |
@@ -70,7 +70,7 @@ from the EES stored solution (0.1333 m; 1.18, −1.466, −614, −6002; 0.01585
 coolsolve ./centrifugal_brine_pump_refsim.eescode
 ```
 
-`solve` in 82 iterations; the baseline is `centrifugal_brine_pump_refsim.sol`
+`solve` in 9 iterations; the baseline is `centrifugal_brine_pump_refsim.sol`
 (regression-tested as `CSL-0072`). The brine is changed by editing `brine$`
 (`'EG'`, `'PG'`, `'CaCl2'`, …) and `X_brine` within the validity range of the
 BrineProp library.
@@ -112,10 +112,9 @@ ParamID file): **88 common variables, 0 differ (rtol=0.001)**, maximum
 relative deviation 9.99·10⁻¹¹ (`V_dot_pump3`); only in EES: 12 dead leftovers
 of the variable-information table (11 fan variables `A, b, Phi, V_dot, U, D,
 N, psi, rpm, v, M_dot` and `D_loop_equ`), absent from the equations; only in
-CoolSolve: `brine$` and `pi`, as for the main file. The variant has its own
-companion tables (`centrifugal_brine_pump_refsim_paramid-Brine1/Brine2/Units.csv`,
-same content as the main file's) and is regression-tested as
-`CSL-0072:paramid`.
+CoolSolve: `brine$` and `pi`, as for the main file. Like the main file, the
+variant includes `BRINEPROP` and its tables from `CSL-0079`; it is
+regression-tested as `CSL-0072:paramid`.
 
 Two notes on the original: (1) the stored inputs differ from the input
 comments of the file (`rpm_pump` = 1750 stored vs "1300" in the comment;
@@ -146,8 +145,8 @@ earlier version of the equations (`b` = −0.236, `v` = 1), absent from the
 extracted equations; the three CoolSolve-only variables are the string
 `brine$`, the built-in constant `pi` and the auxiliary output of the
 expression `CALL` argument `:c_p_pump/1000`. The lookup tables were decoded
-by hand from the binary `.lkt` files and validated: the decoded
-`Brine1`/`Brine2` coefficients reproduce the stored
+by hand from the binary `.lkt` files and validated (they are now the tables
+of `CSL-0079`, same values): the decoded coefficients reproduce the stored
 `rho_pump` = 1030.000008 kg/m³ and `c_p_pump` = 3852.099981 J/kg-K to
 ≤ 6·10⁻⁹ relative.
 
@@ -168,7 +167,8 @@ The `BRINEPROP` procedure and the `Brine1`/`Brine2` coefficient tables come
 from the BrineProp library shipped in the same collection
 (`Brineprop.lib`, inventory `TM-0479`, EES 4.631 binary lookup tables
 `Brine1.lkt`/`Brine2.lkt`), which EES loads implicitly from the USERLIB
-folder.
+folder; in CoolSolve they come from the library model `CSL-0079`
+(`$INCLUDE brineprop_secondary_refrigerants`, the line added to both files).
 
 ## Conversion log
 
@@ -234,16 +234,28 @@ folder.
   0 differ (rtol=0.001), max 9.99·10⁻¹¹; solves in 244 iterations, largest
   block 4 (the coefficient identification).
 
+- **2026-11-05 — `$INCLUDE` instead of the copy**: both files carried a copy
+  of `BRINEPROP` (another edition of `Brineprop.lib` than the one of
+  `CSL-0079`: the same code and tables, other wording of the range-check
+  messages, two surplus `ENDIF`s that CoolSolve reported, `P008`) and copies
+  of its three tables. The copies and the six table files are removed; each
+  file gets the line `$INCLUDE brineprop_secondary_refrigerants` after its
+  header, and the header names `CSL-0079` instead of the companion tables.
+  `BRINEPROP` is now the wrapper of the SI function `BrineProperty` of
+  `CSL-0079` (same values). Both files reproduce their baselines (main file
+  2.1e-10, ParamID 9.1e-13); the baseline of the main file is regenerated
+  because the auxiliary variable of the `:c_p_pump/1000` output is named
+  after its line (`__out1_BRINEPROP_L282` → `__out1_BRINEPROP_L133`).
+
 ## Limitations
 
 The model has no figure yet (maintainer, workflow §7).
 
 ## Related models
 
-- `CSL-0079` *brineprop_secondary_refrigerants*: the BrineProp library this
-  model copies its `BRINEPROP` procedure and its two coefficient tables from,
-  as a function model of its own (same tables, same polynomial, verified
-  against an independent EES stored solution).
+- `CSL-0079` *brineprop_secondary_refrigerants*: the BrineProp library whose
+  `BRINEPROP` procedure and tables both files include (verified against
+  independent EES stored solutions).
 - `CSL-0078` *brine_to_water_heat_pump_refsim* — another model of the bank
   that calls the same BrineProp library (density and specific heat of a 25 %
   propylene glycol solution); its native file is over-determined as the
