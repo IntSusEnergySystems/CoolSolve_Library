@@ -42,8 +42,11 @@
   },
   "verification": {
     "summary": "Compared with the solution stored by EES in the source file: 20 common variables, 0 differ at rtol=0.001, largest relative deviation 4.12·10⁻¹⁰ (`W_dot_t`), i.e. agreement to round-off.",
-    "checks": ["ees-stored-solution"],
-    "reference": "EES stored solution of the source file (25 variables, 20 in common with the model), converted with --ees-units",
+    "checks": [
+      "ees-stored-solution",
+      "other-tool"
+    ],
+    "reference": "EES stored solution of the source file (25 variables, 20 in common with the model), converted with --ees-units; teacher Python/CoolProp solution (CoolProp 8.0.0) of the same exercise agrees (B-21, sources/thermo_models/python_refs/C-500.csv, max rel diff 4e-5); the 2017-2019 scripts of the same exercise agree too (C-501.csv)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
     "max_rel_diff": 4.12e-10,
@@ -59,7 +62,9 @@
   ],
   "related_external": [],
   "supersedes": [],
-  "previous_paths": ["models/fundamentals/processes/steam_turbine_exergy_balance"],
+  "previous_paths": [
+    "models/fundamentals/processes/steam_turbine_exergy_balance"
+  ],
   "history": [
     {
       "date": "2026-10-05",

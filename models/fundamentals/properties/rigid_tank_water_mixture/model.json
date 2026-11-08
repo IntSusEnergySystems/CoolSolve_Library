@@ -20,7 +20,10 @@
   "language_features": [
     "property functions"
   ],
-  "stats": {"n_equations": 12, "largest_block": 1},
+  "stats": {
+    "n_equations": 12,
+    "largest_block": 1
+  },
   "origin": {
     "type": "teaching",
     "source": "thermo_models",
@@ -37,15 +40,23 @@
   },
   "verification": {
     "summary": "Compared with the solution stored in the original EES file: 12 common variables, 0 differ at rtol=0.001 (the file also stores a stale variable `V`, ignored).",
-    "checks": ["ees-stored-solution"],
-    "reference": "EES stored solution of the source file (compare_solution.py --ees-units); companion CoolProp Python solution of the same exercise (ThAp21_R01E01.py) consistent with the results",
+    "checks": [
+      "ees-stored-solution",
+      "other-tool"
+    ],
+    "reference": "EES stored solution of the source file (compare_solution.py --ees-units); companion CoolProp Python solution of the same exercise (ThAp21_R01E01.py) consistent with the results; teacher Python/CoolProp solution (CoolProp 8.0.0) of the same exercise agrees (B-21, sources/thermo_models/python_refs/C-500.csv, max rel diff 5e-3); the 2017-2019 scripts of the same exercise agree too (C-501.csv)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0",
     "max_rel_diff": 0.0,
     "notes": "12 common variables, 0 differ (rtol=0.001); the EES file also stores a variable V (stale record of the tank volume under an older name), not part of the model."
   },
   "missing_features": [],
-  "related": ["CSL-0003", "CSL-0047", "CSL-0048", "CSL-0057"],
+  "related": [
+    "CSL-0003",
+    "CSL-0047",
+    "CSL-0048",
+    "CSL-0057"
+  ],
   "related_external": [],
   "supersedes": [],
   "previous_paths": [],

@@ -7,29 +7,33 @@ each tested and marked done. *How* each step is executed is described in
 [docs/model_workflow.md](docs/model_workflow.md); the classification rules are
 in [docs/taxonomy.md](docs/taxonomy.md).
 
-*Last update: 2026-11-03 (B-19/B-20 closed, taxonomy v0.3 applied, B-21 Python references started; handover at the top of §1).*
+*Last update: 2026-11-08 (B-21 closed: C-500/C-503/C-502 done, 28 models gain the `other-tool` check; §1 refreshed after the maintainer commits of 11-03 → 11-05; handover at the top of §1).*
 
 ---
 
 ## 1. Status at a glance
 
-| Library (2026-11-03, CoolSolve 0.4.0 build of 2026-11-01 and 2dc1367) | Count |
+| Library (2026-11-08, CoolSolve `main` @9c8a3a4, CoolProp 8eb3b778) | Count |
 |---|---:|
-| Models (`library.json`) | 302 |
-| … verified / blocked / failing / modified (`runs` merged into `verified`, D15) | 277 / 25 / 0 / 0 |
-| … blocked with a runnable `_coolsolve` variant (with `.sol`) / not runnable at all | 20 / 5 (`CSL-0081`, `CSL-0040`, `CSL-0116`, `CSL-0150`, `CSL-0264`); the 20 include `CSL-0155` and `CSL-0331` |
-| … steady / function / dynamic / optimization | 250 / 46 / 5 / 1 |
-| Functions and procedures (`library.json`) | 620 |
-| Regression (`test_models.py`) | 314 targets (277 main files + 37 variants), 0 failure on 2026-11-03 (CoolSolve build of 2026-11-01; run on the scratch copy with the taxonomy v0.3 moves applied, same models), excluding the slow `CSL-0009:coolsolve` |
-| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md) §4–§5) | 72 (43 gaps, 27 bugs, 2 doc issues; counted by row prefix, 2026-11-03) |
-| … closed (§7) | 100 (43 gaps, 56 bugs, 1 doc issue) |
+| Models (`library.json`) | 303 |
+| … verified / blocked / failing / modified (`runs` merged into `verified`, D15) | 284 / 18 / 1 / 0 |
+| … blocked with a runnable `_coolsolve` variant (with `.sol`) / not runnable at all | 14 / 4 (`CSL-0081`, `CSL-0040`, `CSL-0150`, `CSL-0264`); the 14 include `CSL-0155` and `CSL-0331` |
+| … steady / function / dynamic / optimization | 250 / 47 / 5 / 1 |
+| Functions and procedures (`library.json`) | 623 |
+| Regression (`test_models.py`) | 320 targets (284 main files + 36 variants), 0 failure on 2026-11-08 (CoolSolve `main` @9c8a3a4, CoolProp 8eb3b778 — the run warns that the baselines were produced with CoolProp 75af7816), excluding the slow `CSL-0009:coolsolve` |
+| CoolSolve gaps and bugs open (CoolSolve [`docs/model_library_support.md`](https://github.com/CoolProp/CoolSolve/blob/main/docs/model_library_support.md) §4–§5) | 68 (46 gaps, 20 bugs, 2 doc issues; counted by row prefix, 2026-11-08) |
+| … closed (§7) | 115 (47 gaps, 67 bugs, 1 doc issue) |
 | … unverified suggestions (§8 *Unverified by a reviewer*) | 9 |
 
-Not runnable at all (no verified variant): `CSL-0081` (borefield, dynamic; `CS-GAP-INTEGRALVALUE`), `CSL-0040` (biomass
-ORC CHP; `CS-GAP-IF-NO-CONSTANT`), `CSL-0116` (Vitocal heat pump; `CS-GAP-INCLUDE`, catalogue table missing), `CSL-0150`
-(flame with dissociation; `CS-GAP-CHEM-EQUIL`, `CS-GAP-FLUIDS-NASA-SPECIES`), `CSL-0264` — 5 blocked models. Failing: none
-(the 6 failing models of 2026-10-31 were resolved on 2026-11-01, handover below). All 25 blocked models were re-checked with
-CoolSolve 2dc1367 on 2026-11-02: none changes status.
+Not runnable at all (no verified variant): `CSL-0081` (borefield, dynamic; `CS-GAP-INTEGRALVALUE`),
+`CSL-0040` (biomass ORC CHP; `CS-GAP-IF-NO-CONSTANT`), `CSL-0150` (flame with dissociation;
+`CS-GAP-CHEM-EQUIL`, `CS-GAP-FLUIDS-NASA-SPECIES`), `CSL-0264` — 4 blocked models. Failing: 1,
+`CSL-0116` (Vitocal heat pump; reclassified by the maintainer on 2026-11-05: with `$INCLUDE`
+(`CS-GAP-INCLUDE` closed) it stops at the compressor catalogue table `ZH38K4E-TFD`, missing from
+the source collection — missing data, not a CoolSolve gap; no runnable variant). The maintainer's
+commits of 2026-11-04/05 (taxonomy v0.3 applied, `CSL-0332` HX function, `$INCLUDE`-based
+re-checks, BrineProp rewrite) took the library from 302 to 303 models and unblocked 6 models
+(`CSL-0011`, `CSL-0149`, `CSL-0162`, `CSL-0163`, `CSL-0272`, `CSL-0286` → verified).
 
 | Backlog (source inventories, 2026-11-03) | Candidates | todo | added | merged | duplicate | discarded | parked |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -54,7 +58,47 @@ TESPy 8 / 8 / 23 / 13 / 0.
 Refresh with `python3 tools/build_index.py` (models) and
 `python3 tools/backlog_stats.py` (candidates).
 
-### HANDOVER of 2026-11-03 (sessions of 2026-11-02 → 03; read this first)
+### HANDOVER of 2026-11-08 (review + B-21 closed; read this first)
+
+**State (2026-11-08).** 303 models (284 verified / 18 blocked / 1 failing), 623 functions. Full regression on the
+current CoolSolve `main` (@9c8a3a4, CoolProp 8eb3b778): 320 targets (284 main + 36 variants), **0 failure** (excl.
+`CSL-0009:coolsolve`; the run notes the CoolProp pin changed vs the baselines). The maintainer's commits
+`12149ac`…`fd2a6ef` (2026-11-03 → 05: taxonomy v0.3, `CSL-0332`, `$INCLUDE` re-checks, BrineProp) are in and clean;
+`build_index` 0 errors, `backlog_stats` clean. **Working tree: only this session's B-21 output is uncommitted**
+(`sources/thermo_models/python_refs/C-500.*`, `C-503.*`, the `other-tool` entries of 28 models, this roadmap).
+
+**Done this session (B-21 closed, all three cards):**
+- **C-500** (2022-2023 + Aout 2022, 82 scripts): 26 `match` (28 models), 6 `differs` (all diagnosed: 4 statement-data
+  variants — Otto/Diesel data, 14-bar extraction Rankine, first-law turbine — and 2 script-side property-reference
+  errors: the flame-T script mixes CoolProp HEOS sensible enthalpies with JANAF formation values, 48 K low, while the
+  model `CSL-0046` matches the textbook 962 K for octane + 400 % air; the gasoline-exhaust script has the same class
+  of mismatch vs `CSL-0266`), 3 `no-model` (none worth a card), 10 `not-comparable`, 36 `duplicate-of`, 1 NumPy-2
+  `not-runnable`. **Two C-501 verdicts upgraded to match:** `CSL-0210` (−258.05 kJ) and `CSL-0230` (−155.56 kJ).
+- **C-503** (Exam janv 2020, 146 scripts): all are per-student copies of one tri-generation exam question
+  (`ThAp_R12E01` family) with randomised data — 74 `duplicate-of` their `_corr`, 60 `no-model` (assembled system, no
+  library counterpart — consistent with C-501), 12 `not-runnable`; anonymised throughout; **no verification entries
+  and no import cards**. The glmfree lane CSV was reviewed, spot-checked (3 re-runs) and adopted; the `.md` written here.
+- **C-502**: `other-tool` added to `verification.checks` (+ reference line + README *Verification* paragraph) of the
+  28 matched models: C-501's 20 + `CSL-0210`, `CSL-0230`, `CSL-0182`, `CSL-0055`, `CSL-0065`, `CSL-0228`, `CSL-0229`,
+  `CSL-0248`. No `differs` row indicted a model; nothing else edited.
+- Worker lanes `glm` (C-500, t264) and `glmfree` (C-503, t266) were stuck `limited` since 2026-11-03 — both tasks
+  aborted, the partial C-503 output salvaged as above, C-500 redone in-session.
+
+**Open items after this session (for the maintainer, in rough order).**
+1. Commit the B-21 output (D9); then the library backlog is *fully* exhausted (only `skip` rows remain in every source).
+2. P6.3: tag the library at the next CoolSolve release (`origin/main` is at `7e8677e`; the local `main` is 1 commit
+   ahead — `fd2a6ef` BrineProp — push first).
+3. P6.0 maintainer track (printed by `build_index.py`): figures for ~300 runnable models, `TBD` authors in ~80 models,
+   4 over-long verification summaries (`CSL-0331`, `CSL-0130`, `CSL-0282`, `CSL-0296`), `CSL-0044` `coolsolve_version`
+   format, 3 one-way `related` links (`CSL-0266→0058`, `CSL-0277→0221/0223`).
+4. P1.8 (cross-source map) and P1.9 (function backlog) are the only unchecked Phase-1 items; both are de facto mostly
+   covered by B-09/B-10/B-16/B-18 — either write the summary card and tick, or drop with a note.
+5. Still open from 2026-11-03: CoolSolve `fix/ad-pow-negative-base` review, `CS-GAP-USER-STRING-FUNC`, TrustRegion
+   fallback after Newton (`CSL-0217`), the adaptations of `CSL-0326/0312/0155`, borderline pairs `CSL-0226/0295` and
+   `CSL-0032/0227`, TESPy `FuelCell` heat sign (report upstream), `CSL-0116` catalogue table (`ZH38K4E-TFD`).
+6. Phase 4C research models and Phase 5 (CoolSolve side) unchanged.
+
+### HANDOVER of 2026-11-03 (sessions of 2026-11-02 → 03; history; read the 2026-11-08 handover first)
 
 **State (2026-11-03 12:00).** 302 models (277 verified / 25 blocked / 0 failing), 620 functions; kinds 250 steady / 46 function / 5 dynamic / 1 optimization.
 Regression: 314 targets (277 main files + 37 variants), 0 failure. The backlog is exhausted: the only `todo` inventory rows left are `skip` rows.
@@ -1104,7 +1148,7 @@ Worker notes: `~/llm/scripts/csl/b11_extra.txt` (imports from the ULiège collec
 [x] C-346 T-IMPORT TM-0456 → cycles/refrigeration_heat_pumps/<name> — [std] Aug 2022 exam Q10: compressor isentropic efficiency of the heat pump (R113); verification: EES stored solution (12/12) — not imported (novelty pre-screen of 2026-10-22): merged into CSL-0229: Aug 2022 exam Q10: 50 % of its lines are in CSL-0228/CSL-0229, same exam example
 [x] C-347 T-IMPORT TM-0459 → cycles/refrigeration_heat_pumps/<name> — [std] Aug 2022 exam Q3: glycol-water flow rate in the heat pump condenser (83% effectiveness); verification: EES stored solution (18/18) — not imported (novelty pre-screen of 2026-10-22): merged into CSL-0228: Aug 2022 exam Q3: 18-line sub-question of the same exam example
 [x] C-348 T-IMPORT TM-0460 → cycles/refrigeration_heat_pumps/<name> — [std] Aug 2022 exam Q4: total COP of the combined ORC/heat-pump system (R113); verification: EES stored solution (12/12) — not imported (novelty pre-screen of 2026-10-22): merged into CSL-0229: Aug 2022 exam Q4: 12-line sub-question of the same exam example
-[x] C-349 T-IMPORT TM-0462 → cycles/refrigeration_heat_pumps/<name> — [std] Aug 2022 exam Q6: thermal losses of a heat pump with humid outdoor air (R113); verification: EES stored solution (32/32) — CSL-0309
+[x] C-349 T-IMPORT TM-0462 → cycles/refrigeration_heat_pumps/<name> — [std] Aug 2022 exam Q6: thermal losses of a heat pump with humid outdoor air (R113); verification: EES stored solution (32/32) — merged into CSL-0062 (same condensation calculation); CSL-0309 unused
 [x] C-350 T-IMPORT TM-0002 → components/valves_nozzles_piping/<name> — [std] Isentropic nozzle model with critical pressure (MSTh R1); verification: EES stored solution (4/16) — CSL-0310
 [x] C-351 T-IMPORT TM-0484 → components/valves_nozzles_piping/<name> — [hard] Return duct parameter-identification model (parametric study and curve fits); verification: EES stored solution (107/107) — CSL-0311
 ```
@@ -1192,10 +1236,10 @@ Exam scripts are used anonymised (no student name anywhere; credit "Thermodynami
 follow the repetition exercises, so most are expected to be duplicates of models already in the library. Notes: `~/llm/scripts/csl/b21_pyref.txt`.
 
 ```
-[ ] C-500 T-VERIFY python refs 2022-2023/ (78 scripts) + Aout 2022/code_base* → sources/thermo_models/python_refs/C-500 — [std] map, re-run, compare with the .sol; no model edits
+[x] C-500 T-VERIFY python refs 2022-2023/ (78 scripts) + Aout 2022/code_base* → sources/thermo_models/python_refs/C-500 — [std] map, re-run, compare with the .sol; no model edits — done 2026-11-08: 26 match (28 models) / 6 differs (4 statement variants + 2 script-side property-reference errors) / 3 no-model / 10 not-comparable / 36 duplicate-of / 1 not-runnable; C-501 verdicts of CSL-0210 and CSL-0230 upgraded to match
 [x] C-501 T-VERIFY python refs 2017-2018/ + 2018-2019/ + Exam passés/ + Exam janv 2021/ (≈ 96 scripts) → sources/thermo_models/python_refs/C-501 — [std] same as C-500
-[ ] C-503 T-VERIFY python refs Exam janv 2020/ (146 scripts: student submissions + `_corr` corrected versions, two sessions) → sources/thermo_models/python_refs/C-503 — [std] anonymised; identify the distinct exam questions first, map them to repetition exercises/library models (duplicates expected), compare only the corrected (`_corr`) versions that agree with each other; no import unless clearly new
-[ ] C-502 T-QUALITY apply C-500/C-501/C-503 — [std] add `other-tool` to verification.checks and a Verification paragraph for the `match` rows; `differs` rows diagnosed one by one (adapt only for a real model bug)
+[x] C-503 T-VERIFY python refs Exam janv 2020/ (146 scripts: student submissions + `_corr` corrected versions, two sessions) → sources/thermo_models/python_refs/C-503 — [std] anonymised; identify the distinct exam questions first, map them to repetition exercises/library models (duplicates expected), compare only the corrected (`_corr`) versions that agree with each other; no import unless clearly new — done 2026-11-08: one randomised tri-generation question set (ThAp_R12E01 family): 74 duplicate-of / 60 no-model (assembled system) / 12 not-runnable; lane CSV (glmfree) reviewed, spot-checked and adopted; no entries, no cards
+[x] C-502 T-QUALITY apply C-500/C-501/C-503 — [std] add `other-tool` to verification.checks and a Verification paragraph for the `match` rows; `differs` rows diagnosed one by one (adapt only for a real model bug) — done 2026-11-08: 28 models (C-501's 20 + CSL-0210/0230/0182/0055/0065/0228/0229/0248); every `differs` is a statement variant or a script-side error, no model bug found
 ```
 
 ## 7. Dispatching a batch to agents
@@ -1684,3 +1728,7 @@ and adds the log line in §8.
 | 2026-11-03 | T-VERIFY python refs | done (glmfree t265): 96 scripts re-run (CoolProp 8.0.0) -> 20 match, 5 differs (other statement data), 16 not-comparable, 26 duplicate-of, 17 not-runnable, 12 no-model; no model bug; R07E02 vs CSL-0029 re-checked by the orchestrator (other pressures and eta definition); exam scripts anonymised |
 | 2026-11-03 | T-MOVE taxonomy v0.3 | done: `move_model.py --plan docs/taxonomy.md` (259 folders `git mv`, 29 links in 12 files, `taxonomy.json` v0.3, `redirects.csv`), `docs/taxonomy.md` §1 and README tree updated; `build_index.py` 0 errors; `test_models.py` 314 targets (277 main + 37 variants), 0 failure (CoolSolve 0.4.0, CoolProp 75af7816). Not committed |
 | 2026-11-05 | T-FUNC TM-0480 → CSL-0079, BrineProp consolidation | done (Claude Opus 5.5, maintainer request: one library, simple and correct): `CSL-0079` rewritten as one SI function `BrineProperty` (tables `BrineSolutions`, `BrineCoefficients`) with `BRINEPROP` and the new `BRINEPROP2` as wrappers keeping the EES signatures and units; verified against the `CSL-0116` stored solution (6 values, ≤ 3.6e-10) and the glycol-loop one (3, ≤ 4.77e-10), same values as the EES procedures; surplus `ENDIF`s (P008 in every includer) gone; `CSL-0072` (2 files) and `CSL-0078` include it instead of their copies (6 + 3 table files removed); `CSL-0161` includes it (EG branch corrected `k_w` → `k_f_w`, runnable); `CSL-0116` includes it and goes `blocked` → `failing` (missing catalogue table `ZH38K4E-TFD`); CoolSolve `CS-GAP-CONVERT-MILLI` (`milliPa`) for the EES text of `Brineprop2.LIB` |
+| 2026-11-08 | Review + regression | session review: maintainer commits `d846501`…`fd2a6ef` (taxonomy v0.3, `CSL-0332` HX function, `$INCLUDE` re-checks, BrineProp) taken in — 303 models (284 verified / 18 blocked / 1 failing `CSL-0116`), 623 functions; full regression 320 targets (284 main + 36 variants), 0 failure (CoolSolve `main` @9c8a3a4, CoolProp 8eb3b778); `build_index` 0 errors, `backlog_stats` clean; stuck worker tasks t264/t266 aborted |
+| 2026-11-08 | C-500 | T-VERIFY python refs 2022-2023/ + Aout 2022 (82 scripts, CoolProp 8.0.0): 26 match (28 models, `C-500.csv/.md`) / 6 differs (Otto+Diesel statement data, 14-bar-extraction Rankine vs `CSL-0029`, first-law turbine; two script-side CoolProp-vs-JANAF reference errors — `CSL-0046` matches the textbook 962 K, the script is 48 K low) / 3 no-model / 10 not-comparable / 36 duplicate-of / 1 NumPy-2 not-runnable; **C-501 upgrades: `CSL-0210` (−258.05 kJ) and `CSL-0230` (−155.56 kJ) now match**; `code_base Q_COP` anonymised ("exam script COP") |
+| 2026-11-08 | C-503 | T-VERIFY python refs Exam janv 2020 (146 scripts): one randomised tri-generation question set (`ThAp_R12E01` family) — 74 duplicate-of their `_corr` / 60 no-model (assembled system, no library counterpart, as C-501) / 12 not-runnable; glmfree lane CSV reviewed, 3 scripts re-run as spot-checks, adopted with a new `C-503.md`; fully anonymised; no entries, no import cards |
+| 2026-11-08 | C-502 | `other-tool` verification check + reference line + README *Verification* paragraph applied to the 28 matched models (C-501's 20 + `CSL-0210`, `CSL-0230`, `CSL-0182`, `CSL-0055`, `CSL-0065`, `CSL-0228`, `CSL-0229`, `CSL-0248`); no `differs` row indicted a model; `build_index` 0 errors. **B-21 closed** |

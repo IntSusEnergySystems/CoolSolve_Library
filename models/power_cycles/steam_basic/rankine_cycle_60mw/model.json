@@ -44,8 +44,11 @@
   },
   "verification": {
     "summary": "Results were compared with the EES stored solution of the source file: all 40 common variables agree within 2·10⁻⁵ relative. A cross-check with the CoolSolve example `rankine1` (0.1 bar condenser) reproduces its results within 0.06 %.",
-    "checks": ["ees-stored-solution"],
-    "reference": "EES stored solution of the source file R07_E01_2022.EES (44 variables)",
+    "checks": [
+      "ees-stored-solution",
+      "other-tool"
+    ],
+    "reference": "EES stored solution of the source file R07_E01_2022.EES (44 variables); teacher Python/CoolProp solution (CoolProp 8.0.0) of the same exercise agrees (B-21, sources/thermo_models/python_refs/C-500.csv, max rel diff 1.2e-4); the 2017-2019 scripts of the same exercise agree too (C-501.csv)",
     "date": "2026-10-04",
     "coolsolve_version": "0.3.0@536d427",
     "max_rel_diff": 1.7e-05,
@@ -67,7 +70,9 @@
   "supersedes": [
     "coolsolve_examples:CSX-036"
   ],
-  "previous_paths": ["models/cycles/steam_power/rankine_cycle_60mw"],
+  "previous_paths": [
+    "models/cycles/steam_power/rankine_cycle_60mw"
+  ],
   "history": [
     {
       "date": "2026-10-04",

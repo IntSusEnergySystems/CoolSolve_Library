@@ -46,16 +46,25 @@
   },
   "verification": {
     "summary": "Not the native file but its runnable variant was compared with the EES stored solution: 58 common variables, 9 differ (rtol=0.001), only enthalpy reference states; e, lambda, far and Q_dot_utile agree within 5e-06 to 8e-05. The Python/CoolProp solution prints e = 89.4 %, lambda = 189.4 %.",
-    "checks": ["ees-stored-solution", "source-rerun"],
-    "reference": "EES stored solution of the source file (58 variables, --ees-units) and the Python/CoolProp solution of the same exercise in the collection (2018-2019 repetition folder); the comparison concerns the runnable variant diesel_engine_excess_air_exhaust_analysis_coolsolve.eescode, the native file being blocked",
+    "checks": [
+      "ees-stored-solution",
+      "source-rerun",
+      "other-tool"
+    ],
+    "reference": "EES stored solution of the source file (58 variables, --ees-units) and the Python/CoolProp solution of the same exercise in the collection (2018-2019 repetition folder); the comparison concerns the runnable variant diesel_engine_excess_air_exhaust_analysis_coolsolve.eescode, the native file being blocked; teacher Python/CoolProp solution (CoolProp 8.0.0) of the same exercise agrees (B-21, sources/thermo_models/python_refs/C-500.csv, max rel diff 1.0e-2); the 2017-2019 scripts of the same exercise agree too (C-501.csv)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
     "max_rel_diff": 1.2,
     "notes": "Native file: 'Unknown fluid: CarbonMonoxide' (CS-GAP-FLUIDS-ALIAS), square system otherwise (58/58). Variant vs EES: 9 of 58 variables differ above rtol=0.001: absolute enthalpies on different reference states (EES real-fluid anchors vs CoolProp; real-fluid CarbonMonoxide vs ideal-gas CO; air_ha vs Air) and q_O2 at 1.78e-03 (real-fluid O2, within the 0.5 % EES-vs-CoolProp tolerance). All differences and derived results agree: e, lambda, far, Q_dot_utile within 5e-06 to 8e-05. Python/CoolProp prints e = 89.4 %, lambda = 189.4 %, Q_dot_utile = -106.9 kW, as the variant."
   },
-  "missing_features": ["CS-GAP-FLUIDS-ALIAS"],
-  "related": ["CSL-0046", "CSL-0005",
-    "CSL-0139", "CSL-0278"
+  "missing_features": [
+    "CS-GAP-FLUIDS-ALIAS"
+  ],
+  "related": [
+    "CSL-0046",
+    "CSL-0005",
+    "CSL-0139",
+    "CSL-0278"
   ],
   "related_external": [],
   "supersedes": [],

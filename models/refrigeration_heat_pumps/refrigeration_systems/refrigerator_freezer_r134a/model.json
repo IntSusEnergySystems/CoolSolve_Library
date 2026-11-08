@@ -23,7 +23,10 @@
     "arrays",
     "string variables"
   ],
-  "stats": {"n_equations": 56, "largest_block": 1},
+  "stats": {
+    "n_equations": 56,
+    "largest_block": 1
+  },
   "origin": {
     "type": "teaching",
     "source": "thermo_models",
@@ -42,8 +45,13 @@
   },
   "verification": {
     "summary": "Compared with the solution stored in the source EES file: 55 common variables, 17 differ (rtol=0.001), all explained (reference-state offsets, L/s units); maximum deviation over the others 7.5e-4. The course Python/CoolProp solution prints the same results; the cycle energy balance closes.",
-    "checks": ["ees-stored-solution", "source-rerun", "energy-balance"],
-    "reference": "Solution stored in the source EES file (converted from its kPa/kJ unit system); independently cross-checked with the Python/CoolProp solution of the same exercise of the 2020 session (~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R8/old/ThAp20_R08E03.py)",
+    "checks": [
+      "ees-stored-solution",
+      "source-rerun",
+      "energy-balance",
+      "other-tool"
+    ],
+    "reference": "Solution stored in the source EES file (converted from its kPa/kJ unit system); independently cross-checked with the Python/CoolProp solution of the same exercise of the 2020 session (~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R8/old/ThAp20_R08E03.py); teacher Python/CoolProp solution (CoolProp 8.0.0) of the same exercise agrees (B-21, sources/thermo_models/python_refs/C-500.csv, max rel diff 9.6e-3); the 2017-2019 scripts of the same exercise agree too (C-501.csv)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
     "max_rel_diff": 0.00075,
@@ -51,15 +59,28 @@
   },
   "missing_features": [],
   "related": [
-    "CSL-0001", "CSL-0015", "CSL-0054", "CSL-0068"
+    "CSL-0001",
+    "CSL-0015",
+    "CSL-0054",
+    "CSL-0068"
   ],
   "related_external": [
     "~/Nextcloud/thermo_models/thermodynamique appliquee/2022-2023/R8/old/ThAp20_R08E03.py (Python/CoolProp solution of the same exercise, 2020 session; used as a cross-check only)"
   ],
   "supersedes": [],
-  "previous_paths": ["models/cycles/refrigeration_heat_pumps/refrigerator_freezer_r134a"],
+  "previous_paths": [
+    "models/cycles/refrigeration_heat_pumps/refrigerator_freezer_r134a"
+  ],
   "history": [
-    {"date": "2026-10-05", "action": "added (roadmap card C-65, batch B-05), status blocked, runnable _coolsolve variant verified", "by": "opencode worker for S. Quoilin"},
-    {"date": "2026-10-05", "action": "re-check (roadmap card C-88): the three (T,H) property calls of state 4 rewritten with (P,H) in the main file (decision D11), _coolsolve variant deleted, status verified, CS-GAP-PROP-TH removed from missing_features", "by": "opencode worker for S. Quoilin"}
+    {
+      "date": "2026-10-05",
+      "action": "added (roadmap card C-65, batch B-05), status blocked, runnable _coolsolve variant verified",
+      "by": "opencode worker for S. Quoilin"
+    },
+    {
+      "date": "2026-10-05",
+      "action": "re-check (roadmap card C-88): the three (T,H) property calls of state 4 rewritten with (P,H) in the main file (decision D11), _coolsolve variant deleted, status verified, CS-GAP-PROP-TH removed from missing_features",
+      "by": "opencode worker for S. Quoilin"
+    }
   ]
 }

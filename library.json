@@ -1,8 +1,8 @@
 {
  "snapshot": {
-  "content_hash": "sha256:4e7cca1d1aa81448",
+  "content_hash": "sha256:b266ddd4e6eeb2f5",
   "files": 1561,
-  "bytes": 11467949,
+  "bytes": 11489748,
   "models": 303,
   "functions": 623,
   "taxonomy_version": "0.3"
@@ -226,7 +226,8 @@
    "verification_summary": "compare_solution.py --ees-units on R04_E6_2022.EES: 13 common variables, 5 differ (rtol=0.001); only in EES: 2; only in CoolSolve: 4. Printed maximum 1.00e+00 on T_ext_s_MAX. Winter COP, heat and power match (max rel 2.50e-10). The five summer stored values are the EES guesses. Closed form agrees: COP_b = 14.782, Q_dot_F = 13447 W, T_ext_s_MAX = 45.170 °C.",
    "verification_checks": [
     "ees-stored-solution",
-    "analytical"
+    "analytical",
+    "other-tool"
    ],
    "path": "models/buildings/heat_pump_house_carnot",
    "main_file": "heat_pump_house_carnot.eescode",
@@ -1728,7 +1729,8 @@
    "verification_summary": "Concerns the runnable variant (native file blocked). Against the EES stored solution: 66 common variables, 13 differ (rtol=0.001), explained by reference-state offsets and EES's coarse quadrature; the other 53 agree, largest deviation 1.51e-05. A Python/CoolProp re-implementation agrees except the integrals (max 5.04e-05).",
    "verification_checks": [
     "ees-stored-solution",
-    "source-rerun"
+    "source-rerun",
+    "other-tool"
    ],
    "path": "models/engines/air_standard_cycles/stirling_cycle_ideal_regenerator",
    "main_file": "stirling_cycle_ideal_regenerator.eescode",
@@ -3117,7 +3119,8 @@
    "verification_summary": "Not the native file but its runnable variant was compared with the EES stored solution: 58 common variables, 9 differ (rtol=0.001), only enthalpy reference states; e, lambda, far and Q_dot_utile agree within 5e-06 to 8e-05. The Python/CoolProp solution prints e = 89.4 %, lambda = 189.4 %.",
    "verification_checks": [
     "ees-stored-solution",
-    "source-rerun"
+    "source-rerun",
+    "other-tool"
    ],
    "path": "models/fundamentals/combustion/diesel_engine_excess_air_exhaust_analysis",
    "main_file": "diesel_engine_excess_air_exhaust_analysis.eescode",
@@ -3474,7 +3477,8 @@
    "verified_on": "2026-10-15",
    "verification_summary": "compare_solution.py --ees-units on R2_E2_borguet.EES: 39 common variables, 2 differ (rtol=0.001); only in EES: 1; only in CoolSolve: 0. Maximum relative difference 1.00e+00 on x_4 (EES quality 100 outside the dome; CoolSolve 0; unused). k_ressort is 9.99e-01 because kN/m is not scaled. Work is -258050 J on both sides. No enthalpy is computed.",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool"
    ],
    "path": "models/fundamentals/piston_cylinders/piston_cylinder_spring_water",
    "main_file": "piston_cylinder_spring_water.eescode",
@@ -3514,7 +3518,8 @@
    "verified_on": "2026-10-15",
    "verification_summary": "Against the stored solution of R2_E4_2022.EES, compare_solution.py --ees-units reports: 17 common variables, 6 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. The maximum it prints is 9.99e-01 on iso_v (K/Pa; stored unit K/kPA is not scaled). Temperatures stay in kelvin; the tool rewrites K to °C. p_2 prints 1.27e-03 (CoolProp Air, Z=0.9987).",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool"
    ],
    "path": "models/fundamentals/piston_cylinders/piston_cylinder_stops_air",
    "main_file": "piston_cylinder_stops_air.eescode",
@@ -3608,7 +3613,8 @@
    "verified_on": "2026-10-05",
    "verification_summary": "Compared with the solution stored in the original EES file: 12 common variables, 0 differ at rtol=0.001 (the file also stores a stale variable `V`, ignored).",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool"
    ],
    "path": "models/fundamentals/properties/rigid_tank_water_mixture",
    "main_file": "rigid_tank_water_mixture.eescode",
@@ -3649,7 +3655,8 @@
    "verified_on": "2026-10-15",
    "verification_summary": "Against the stored solution of R1_E2_2022.EES, compare_solution.py --ees-units reports: 13 common variables, 5 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. The maximum it prints is 1.00e+00 on erreur and on x_CO2. T stays 308.15 K; the tool rewrites it to 35 °C. volume(CO2) follows the real equation of state, so m_gp equals m (7.591476 kg); EES ideal-gas m_gp is 6.871023 kg.",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool"
    ],
    "path": "models/fundamentals/properties/co2_tank_ideal_gas",
    "main_file": "co2_tank_ideal_gas.eescode",
@@ -4058,7 +4065,8 @@
    "verified_on": "2026-10-05",
    "verification_summary": "Compared with the solution stored by EES in the source file: 20 common variables, 0 differ at rtol=0.001, largest relative deviation 4.12·10⁻¹⁰ (`W_dot_t`), i.e. agreement to round-off.",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool"
    ],
    "path": "models/fundamentals/second_law/steam_turbine_exergy_balance",
    "main_file": "steam_turbine_exergy_balance.eescode",
@@ -4102,7 +4110,8 @@
    "verification_summary": "Compared with the solution stored in the source EES file: 17 common variables, 0 differ (rtol=0.001), largest relative deviation 4.15e-10 (T_f). The course Python solution of the same exercise prints 31.7 °C and 219.02 kJ, in agreement.",
    "verification_checks": [
     "ees-stored-solution",
-    "source-rerun"
+    "source-rerun",
+    "other-tool"
    ],
    "path": "models/fundamentals/second_law/iron_block_quench_water_tank",
    "main_file": "iron_block_quench_water_tank.eescode",
@@ -4192,7 +4201,8 @@
    "verification_summary": "compare_solution.py --ees-units on R04_E5_2022.EES: 10 common variables, 0 differ (rtol=0.001); only in EES: 4; only in CoolSolve: 0. Printed maximum 4.90e-11 on eta, from stored digits. Efficiency 0.359294, COP 4.0525 and heat ratio 0.686795 match. W_eng, Q_C_eng, Q_F_ref and W_ref are the guess 1, with no equation.",
    "verification_checks": [
     "ees-stored-solution",
-    "analytical"
+    "analytical",
+    "other-tool"
    ],
    "path": "models/fundamentals/second_law/carnot_engine_refrigerator",
    "main_file": "carnot_engine_refrigerator.eescode",
@@ -4548,7 +4558,8 @@
    "verified_on": "2026-10-04",
    "verification_summary": "Results were compared with the solution stored by EES in the source file: all 12 variables of the original model agree, with a largest relative deviation of 2.6·10⁻⁵ on the vapour specific volume.",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool"
    ],
    "path": "models/fundamentals/tanks_vessels/methane_tank_evaporation",
    "main_file": "methane_tank_evaporation.eescode",
@@ -4600,7 +4611,8 @@
    "verification_summary": "Compared with the solution stored by EES in the source file: 27 common variables, 12 differ at rtol=0.001, largest 1.97·10⁻², all due to the R12 saturated vapour volume (CoolProp vs EES); with the EES values substituted the stored solution is reproduced to 2.09·10⁻¹⁰. A hand reproduction of the course's Python method gives the CoolSolve results.",
    "verification_checks": [
     "ees-stored-solution",
-    "analytical"
+    "analytical",
+    "other-tool"
    ],
    "path": "models/fundamentals/tanks_vessels/two_tanks_connected_valve_r12",
    "main_file": "two_tanks_connected_valve_r12.eescode",
@@ -4681,7 +4693,8 @@
    "verified_on": "2026-10-15",
    "verification_summary": "Against the stored solution of R2_E1_2022.EES, compare_solution.py --ees-units reports: 12 common variables, 2 differ (rtol=0.001); only in EES: 1; only in CoolSolve: 0. The maximum over all common variables is 9.65e-01 on T_f. T_i and T_f stay 393.15 K and 283.15 K; the tool rewrites those kelvin values to °C. Q is -155559 J (stored -155.539 kJ), m_eau is 0.0934315 kg and x_f is 0.00502483.",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool"
    ],
    "path": "models/fundamentals/tanks_vessels/rigid_vessel_water_heat_removal",
    "main_file": "rigid_vessel_water_heat_removal.eescode",
@@ -4768,7 +4781,8 @@
    "verified_on": "2026-10-23",
    "verification_summary": "Against the EES stored solution of the 2017 file R2_E1_borguet.EES (TM-0359, identical equations; TM-0401 solved part a only): compare_solution.py --ees-units reports 17 common variables, 2 differ (rtol=0.001), max 6.30e-02 on v_he_i - CS-GAP-IDEAL-GAS-MODEL (EES ideal gas vs CoolSolve real-fluid He at 14 MPa). Part a (W=-p*dV, Vol_tank) agrees to 4.91e-11, v_he_f within 8.56e-04.",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool"
    ],
    "path": "models/fundamentals/tanks_vessels/helium_bottle_lox_displacement",
    "main_file": "helium_bottle_lox_displacement.eescode",
@@ -8615,7 +8629,8 @@
    "verification_summary": "Compared with the solution stored in the source EES file: 23 common variables, 8 differ (rtol=0.001), largest deviation 5.98e-03 on w_ex (humid-air backend). The four unsolved stored values were recomputed by hand from the stored EES properties; CoolSolve agrees within 0.40 %.",
    "verification_checks": [
     "ees-stored-solution",
-    "analytical"
+    "analytical",
+    "other-tool"
    ],
    "path": "models/hvac/cooling_towers/cooling_tower_condenser_water",
    "main_file": "cooling_tower_condenser_water.eescode",
@@ -9070,7 +9085,8 @@
    "verification_summary": "Compared with the solution stored in the source EES file: 27 common variables, 7 differ at rtol = 0.001, largest relative deviation 4.76e-03 (m_v), explained by humid-air formulations and a unit-spelling tool bug. Also agrees with the course Python/CoolProp solution to 4e-10 or better.",
    "verification_checks": [
     "ees-stored-solution",
-    "source-rerun"
+    "source-rerun",
+    "other-tool"
    ],
    "path": "models/hvac/psychrometrics/moist_air_room_psychrometrics",
    "main_file": "moist_air_room_psychrometrics.eescode",
@@ -9119,7 +9135,8 @@
    "verification_summary": "Compared with the EES stored solution of the source file: 26 common variables, 11 differ, maximum relative difference 4.57e-03 (humid-air formulations, temperatures agree to 1.5e-05). Identical to 1e-05 with the course Python/CoolProp solution.",
    "verification_checks": [
     "ees-stored-solution",
-    "source-rerun"
+    "source-rerun",
+    "other-tool"
    ],
    "path": "models/hvac/psychrometrics/moist_air_adiabatic_mixing",
    "main_file": "moist_air_adiabatic_mixing.eescode",
@@ -10928,7 +10945,8 @@
    "verified_on": "2026-10-15",
    "verification_summary": "Against the stored solution of R3_E8_2022.EES, compare_solution.py --ees-units: 17 common variables, 0 differ (rtol=0.001); only in EES: 1; only in CoolSolve: 16. Maximum relative difference 4.74e-05 on q_m_vap (2.54194 kg/s against 2.54182 kg/s). Power is the given -1e6 W. Hourly source flow 123056 kg/h against 123051 kg/h. h_1 matches; h_2 and h_3 differ by -16.2 and +2.4 J/kg.",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool"
    ],
    "path": "models/machines/steam_turbines/geothermal_steam_turbine",
    "main_file": "geothermal_steam_turbine.eescode",
@@ -11018,7 +11036,8 @@
    "verified_on": "2026-10-23",
    "verification_summary": "Against the stored solution of THD10_R03_E2.EES (EES X8.423), compare_solution.py --ees-units: 22 common variables, 2 differ (rtol=0.001); only in EES: 1 (leftover variable P, not in the equations); only in CoolSolve: 16 (state-point arrays). Maximum relative difference 3.25e-03 on W_dot_gen, from the steam inlet enthalpy (EES 8.4 water tables vs CoolProp, each h within 5e-04); all other variables within 2.8e-04.",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool"
    ],
    "path": "models/machines/steam_turbines/steam_turbine_n2_compressor",
    "main_file": "steam_turbine_n2_compressor.eescode",
@@ -12694,7 +12713,8 @@
    "verified_on": "2026-10-15",
    "verification_summary": "Against the stored solution of Q5_power_to_power_ratio.EES, compare_solution.py --ees-units reports: 18 common variables, 6 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum is 9.15e-01 on T2 (kelvin rewritten to °C). W_turb_fluide_elec is 18740.4 W in both. W_cp is 9437.15 W versus 9477.93 W and Power_to_power_ratio is 1.98581 versus 1.97727 (both 4.30e-03).",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool"
    ],
    "path": "models/power_cycles/orc_design/orc_r113_power_to_power_ratio",
    "main_file": "orc_r113_power_to_power_ratio.eescode",
@@ -12736,7 +12756,8 @@
    "verification_checks": [
     "ees-stored-solution",
     "energy-balance",
-    "order-of-magnitude"
+    "order-of-magnitude",
+    "other-tool"
    ],
    "path": "models/power_cycles/orc_design/orc_r113_turbine_outlet_temperature",
    "main_file": "orc_r113_turbine_outlet_temperature.eescode",
@@ -13090,7 +13111,8 @@
    "verified_on": "2026-10-04",
    "verification_summary": "Results were compared with the EES stored solution of the source file: all 40 common variables agree within 2·10⁻⁵ relative. A cross-check with the CoolSolve example `rankine1` (0.1 bar condenser) reproduces its results within 0.06 %.",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool"
    ],
    "path": "models/power_cycles/steam_basic/rankine_cycle_60mw",
    "main_file": "rankine_cycle_60mw.eescode",
@@ -13140,7 +13162,8 @@
    "verified_on": "2026-10-05",
    "verification_summary": "Compared with the solution stored in the source EES file: all 74 common variables agree at rtol = 0.001, largest relative deviation 7.87e-06 (on `rho_6`; enthalpies within 6e-07).",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool"
    ],
    "path": "models/power_cycles/steam_basic/steam_power_plant_elementary",
    "main_file": "steam_power_plant_elementary.eescode",
@@ -13275,7 +13298,8 @@
    "verified_on": "2026-10-15",
    "verification_summary": "Against the stored solution of THD09_R04_Ex04.EES, compare_solution.py without --ees-units reports: 13 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Maximum relative difference 3.63e-04 on t_cond, and the same on t_f. eta, Q_dot_cond and DELTAt_w stay inside rtol. All 13 equations are satisfied.",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool"
    ],
    "path": "models/power_cycles/steam_basic/power_plant_river_carnot",
    "main_file": "power_plant_river_carnot.eescode",
@@ -13772,7 +13796,8 @@
    "verification_summary": "Against the stored solution of Q1_rendement_II_principe.EES, compare_solution.py --ees-units reports: 15 common variables, 9 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 16. The maximum it prints is 9.15e-01 on T1 (stored kelvin rewritten to °C). COP_reel 3.33573 against 3.32517, COP_carnot 5.79692 against 5.81875, n_II_principe 57.5432 against 57.1458. All 31 equations are satisfied.",
    "verification_checks": [
     "ees-stored-solution",
-    "order-of-magnitude"
+    "order-of-magnitude",
+    "other-tool"
    ],
    "path": "models/refrigeration_heat_pumps/heat_pump_cycles/r113_heat_pump_second_law",
    "main_file": "r113_heat_pump_second_law.eescode",
@@ -14632,7 +14657,8 @@
    "verified_on": "2026-10-05",
    "verification_summary": "Compared with the solution stored in the original EES file `EES_ok/refrigeration1.EES` (39 variables): 29 agree within 0.07 %, the 9 absolute enthalpies and the inlet entropy differ by constant reference-state offsets, and all derived results agree (COP 4.81773 vs 4.81730).",
    "verification_checks": [
-    "ees-stored-solution"
+    "ees-stored-solution",
+    "other-tool"
    ],
    "path": "models/refrigeration_heat_pumps/refrigeration_cycles/refrigeration_cycle_basic_r134a",
    "main_file": "refrigeration_cycle_basic_r134a.eescode",
@@ -14862,7 +14888,8 @@
    "verification_checks": [
     "ees-stored-solution",
     "source-rerun",
-    "energy-balance"
+    "energy-balance",
+    "other-tool"
    ],
    "path": "models/refrigeration_heat_pumps/refrigeration_systems/refrigerator_freezer_r134a",
    "main_file": "refrigerator_freezer_r134a.eescode",
@@ -19819,12 +19846,12 @@
   },
   "CS-FEAT-LIB-TEST": {
    "kind": "feature",
-   "state": "open",
-   "priority": "P1",
-   "text": "Library regression test: solve every library model whose status is *verified* or *runs* and compare with its `.sol` (logic of `test_examples.cpp`, driven by `library.json`), in the CoolSolve CI and in the library CI",
+   "state": "closed",
+   "priority": "",
+   "text": "Library regression: `./coolsolve_tests \"[library-regression]\"` (hidden, about 5 min) solves in-process, with the CLI's pipeline (`coolsolve.conf`, CoolProp configuration, final verification at 1e-3), the main file of every *verified*/*modified* library model …",
    "detail": "",
-   "fixed_in": "",
-   "anchor": "3-features-and-implementation-plan"
+   "fixed_in": "2026-11-07, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
   },
   "CS-FEAT-LIB-CLI": {
    "kind": "feature",
@@ -20258,6 +20285,60 @@
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
+  "CS-GAP-FREEZINGPT": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P3",
+   "text": "The EES property function **`FreezingPt(fluid, C=…)`**: the freezing point of a solution (the concentration in mass %) or of an incompressible substance (no concentration); a `T` input is accepted and ignored.",
+   "detail": "The name is recognised by the parser but not evaluated: `T_1 = FreezingPt(CaCl2, C=20)` → *\"FreezingPt requires exactly 2 input properties (e.g.",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-GAP-INCOMP-EES-NAMES": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P3",
+   "text": "The **EES names of its brine solutions** (EES help, *Brine properties*, `hs612`: `CACL2`, `EA`, `EG`, `GLYC`, `K2CO3`, `KAC`, `KFO`, `KOH`, `LICL`, `MA`, `MGCL2`, `NACL`, `NaOH`, `NH3W`, `PG`), e.g.",
+   "detail": "`CACL2`, `EG`, `LICL`, `NACL`, `PG` are read (CoolProp `MCA`, `MEG`, `MLI`, `MNA`, `MPG`); the ten others are *\"Unknown fluid\"*.",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-GAP-IFNOT": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P2",
+   "text": "`IFNOT (c) THEN … [ELSE …]` in FUNCTION/PROCEDURE bodies, the negation of `IF` (EES help `gswpvg.htm`: `IFNOT (X=Y) THEN GOTO 10` is `IF (X<>Y) THEN GOTO 10`), single-line and block forms.",
+   "detail": "Parse error: `FUNCTION f(x)` ⏎ `IFNOT (x>1) THEN f=1 ELSE f=2` ⏎ `END` ⏎ `r = f(0)` → *\"Unexpected text 'THEN f' after the call 'IFNOT (x>1)'\"*; `IFNOT (x>1) THEN GOTO 10` → *\"Could not parse line\"* …",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-GAP-INTERP2D": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P3",
+   "text": "`INTERPOLATE2D('Table', X, Y, Z, X=v1, Y=v2 [, N])` (EES help `interpolate2d.htm`): interpolation in **scattered** three-column data (unlike `INTERPOLATE2DM`, a matrix); the column names quoted or not; N < 0 bi-quadratic, N > 0 multi-quadric radial basis …",
+   "detail": "Unknown function: unquoted column names are read as variables (*\"There are 3 equations and 6 unknowns\"*, misleading); quoted: warning *\"Unknown function 'INTERPOLATE2D'\"* and *\"Unknown fluid: …",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-GAP-ICE": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P3",
+   "text": "The solid region of water and the phase-boundary functions (EES help `steam_nbs.htm`, `hs804.htm`, `hs805.htm`, `hs821.htm`, `hs967.htm`): the fluid `Ice` (Hyland & Wexler 1983 below 0 °C; `temperature(Ice, v=1.088e-3, x=0)` = −16.85 °C), …",
+   "detail": "`enthalpy(Ice, T=-10, P=101325)` → *\"Unknown fluid: 'Ice'\"*; `P_melting(Water, T=270)`, `T_melting(Water, P=1e7)`, `P_sublimation(Water, T=-10)` → *\"requires exactly 2 input properties … got 1\"* …",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-BUG-BLOCK-EVAL-SCALING": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P2",
+   "text": "**Every evaluation of a block copies the whole state of the model**, so its cost grows with the number of variables of the model and the solve time with its square.",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
   "CS-BUG-LOOKUP-HINT": {
    "kind": "bug",
    "state": "open",
@@ -20312,38 +20393,11 @@
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
-  "CS-BUG-EXTRACT-LOOKUP-STRING": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P2",
-   "text": "`tools/ees_extract.py` mis-decodes embedded **Lookup** tables that have a string key column: the key columns are dropped, the numeric column of one table is chained to the *name* of the next table (invented row count, the bytes of the next strings read as …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-EXTRACT-NUL": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P2",
-   "text": "`tools/ees_extract.py` writes a **trailing NUL byte** (0x00) at the end of the `.eescode` it extracts from an EES file whose equations are stored as **RTF** (the converter keeps the last RTF control word).",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
   "CS-DOC-SQUARE-INTEGRAL": {
    "kind": "documentation",
    "state": "open",
    "priority": "P3",
    "text": "The `-d` analysis of a model with `INTEGRAL` calls reports `System square: No`, `Total blocks: 0`, `Largest block: 0`, `Explicit equations: 0` and the warning *\"There are N equations and N+1 unknowns.",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-EXTRACT-STALE": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P2",
-   "text": "`tools/ees_extract.py` presents the variable records of the binary `.EES` as **the stored solution** with no warning, but EES does not always rewrite the Variable Info records at save: the decoded values can be **stale** (a mix of older runs) and inconsistent …",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -20362,51 +20416,6 @@
    "state": "open",
    "priority": "P3",
    "text": "A display string (comment) whose **opening `\"` is the last character of a line**, so that its text starts on the next line, is not recognised as closed: the parser warns *\"The comment opened by a '\"' at line N is never closed: everything after it is ignored\"* …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-COMPARE-UNIT-CASE": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P3; also found independently in `CSL-0056` (C-60)",
-   "text": "tools/compare_solution.py --ees-units matches the unit names of the EES reference **case-sensitively** (_SCALE lists kPa, kJ, kW, …), but EES stores the units of a variable in **lower case** when it was declared with them (R_air = 0.28705 …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-EXTRACT-FMT-BYTE": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P2",
-   "text": "`tools/ees_extract.py` accepts a variable-information record only when the format byte at record offset **+74 equals 3**; valid records of EES 7.x files can carry other values (value **1** in the file below), so the tool **silently drops** them from the …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-IF-SINGLELINE": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P1 (silent)",
-   "text": "The **single-line form** `IF (c) THEN a ELSE b` **inside a `FUNCTION`/`PROCEDURE` body returns the `THEN`-branch value whatever the condition**: the condition is not evaluated (a false condition gives the `THEN` value, silently, with `SUCCESS`).",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-EXTRACT-TABLE-FP": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P2",
-   "text": "`tools/ees_extract.py` decodes a **phantom parametric table when the `.ees` file contains no table at all**: the table scan starts at the unit settings, before the variable records, and the bytes of those records parse as a table grid — invented row count, …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-EXTRACT-DECIMAL-RANGE": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P2",
-   "text": "`tools/ees_extract.py` mangles the **range clause** `i=1,4` of the indexed `SUM(expr,i=1,N)` and of `DUPLICATE i=1,N`: the comma of the range is rewritten as a decimal point (`i=1.4`), although the file is in the **dot** decimal format and its comma is only …",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -20510,11 +20519,11 @@
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
-  "CS-BUG-EXTRACT-NAME-CHARS": {
+  "CS-BUG-STRING-ORDER": {
    "kind": "bug",
    "state": "open",
-   "priority": "P2",
-   "text": "tools/ees_extract.py skips the variable-information records of variables whose **name contains a character outside [A-Za-z0-9_]** (its _NAME_RE does not allow \\, %, ",
+   "priority": "P3 (silent, but no known use)",
+   "text": "String comparisons with `<`, `>`, `<=`, `>=` in IF/UNTIL conditions are false whatever the strings: `evaluateBinaryOp` (`src/evaluator.cpp`) handles only `=` and `<>` for strings, while `ees_vs_coolsolve.csv` (IF-THEN-ELSE) and the Language Reference claimed …",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -21417,6 +21426,114 @@
    "text": "The EES ammonia-water mixture: the fluid `NH3H2O` (any three of `T`, `P`, `X` mass fraction, `Q`, `H`, `S`, `U`, `V`; `Enthalpy`, `Entropy`, `IntEnergy`, `Volume`, `Density`, `Temperature`, `Pressure`, `Quality`, `MassFraction`, `SpecHeat`, `VolExpCoef`) and …",
    "detail": "",
    "fixed_in": "v0.4 preparation, `feat/nh3h2o`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-IF-SINGLELINE": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "Not a bug (round-5 EES-help review, 2026-11-07): its reproducer `y = IF c THEN a ELSE b` is not EES syntax (help `gswpvg.htm`, `_if.htm`: `IF … THEN … ELSE` is a statement of FUNCTION/PROCEDURE bodies with one statement after `THEN` and after `ELSE`; none of …",
+   "detail": "",
+   "fixed_in": "2026-11-07, `fix/library-gaps-5` (review only)",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-EXTRACT-FMT-BYTE": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "`tools/ees_extract.py` recognises a variable record by its structure (display format 0–5, plausible floats, bounds ≠ [0, 0], a name that occurs in the code) instead of `byte+74 == 3`, and warns when a variable defined by an equation has no record.",
+   "detail": "",
+   "fixed_in": "2026-11-07, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-EXTRACT-NAME-CHARS": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "Records of names with `\\`, `%`, `|`, `#`, `°` and Latin-1 letters are decoded (names as CoolSolve accepts them, whole-word match in the code); string variables and the built-in constants `g#`, `R#`… are not listed; tests `tests/test_ees_tools.py`",
+   "detail": "",
+   "fixed_in": "2026-11-07, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-EXTRACT-DECIMAL-RANGE": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "The range comma of `SUM/PRODUCT(…, i=a,b)` and `DUPLICATE i=a,b` is never rewritten as a decimal point and no longer makes a dot-format file look like a comma file; tests `tests/test_ees_tools.py`",
+   "detail": "",
+   "fixed_in": "2026-11-07, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-EXTRACT-TABLE-FP": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "The table scan starts after the first block of variable records and validates the grid (row count from the column layout with its state bytes, plausible cells); a structure that fails is not emitted and is reported; tables of the same name no longer overwrite …",
+   "detail": "",
+   "fixed_in": "2026-11-07, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-EXTRACT-LOOKUP-STRING": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "String columns of embedded tables are decoded and written as text cells (layout 31 + 11n + 3 + strings), with correct table boundaries and names; tests `tests/test_ees_tools.py`",
+   "detail": "",
+   "fixed_in": "2026-11-07, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-EXTRACT-NUL": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "Control characters (NUL padding of plain-text and RTF equations alike, not only RTF) are stripped from every output; UTF-16 equations are decoded; tests `tests/test_ees_tools.py`",
+   "detail": "",
+   "fixed_in": "2026-11-07, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-EXTRACT-STALE": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "The extractor warns about inf/NaN stored values and about values that contradict an explicit equation of numbers and stored variables (MODULE bodies included), states the limitation in the `#` header of `ees_variables.csv`, the report and …",
+   "detail": "",
+   "fixed_in": "2026-11-07, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-COMPARE-UNIT-CASE": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "`compare_solution.py --ees-units` matches unit names without regard to case (`kj`, `kpa`, `k`); `mW`, `mJ`, `mPa` are not converted, and all-lower-case `mw`, `mj`, `mpa` are read as mega (documented); tests `tests/test_ees_tools.py`",
+   "detail": "",
+   "fixed_in": "2026-11-07, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-IF-ANDOR-ORDER": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "`AND`/`OR` in the IF, ELSE IF and UNTIL conditions of FUNCTION/PROCEDURE bodies are evaluated strictly left to right, as in EES (no priority of AND over OR; a parenthesised group first): `parseCondition` splits at the last top-level AND/OR (`src/parser.cpp`); …",
+   "detail": "",
+   "fixed_in": "2026-11-07, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-PSYCHPROPS-BASIS": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "`CALL psychprops` returns v, h, s and u per kg of **dry** air: each output is now the AirH2O property function of the same quantity (`evaluateHumidAirProperty`, the code path of `volume`/`enthalpy`/`entropy`/`intenergy(AirH2O, …)` extracted in …",
+   "detail": "",
+   "fixed_in": "2026-11-08, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-PSYCHPROPS-NAMED": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "Named inputs as in help `hs786.htm`: `CALL psychprops(T=T_1, P=P_1, R=RH_1 : …)`, P and two of T, R, W, B, D, H, V, S in any order, the substance `AirH2O` optional; skipped outputs keep their position (`: , , h_1`, `{v_1}`, trailing ones dropped); an output …",
+   "detail": "",
+   "fixed_in": "2026-11-08, `fix/library-gaps-5`",
    "anchor": "7-closed-gaps-and-bugs"
   }
  }

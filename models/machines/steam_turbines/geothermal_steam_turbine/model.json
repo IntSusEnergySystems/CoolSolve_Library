@@ -42,9 +42,10 @@
   "verification": {
     "summary": "Against the stored solution of R3_E8_2022.EES, compare_solution.py --ees-units: 17 common variables, 0 differ (rtol=0.001); only in EES: 1; only in CoolSolve: 16. Maximum relative difference 4.74e-05 on q_m_vap (2.54194 kg/s against 2.54182 kg/s). Power is the given -1e6 W. Hourly source flow 123056 kg/h against 123051 kg/h. h_1 matches; h_2 and h_3 differ by -16.2 and +2.4 J/kg.",
     "checks": [
-      "ees-stored-solution"
+      "ees-stored-solution",
+      "other-tool"
     ],
-    "reference": "EES stored solution in R3_E8_2022.EES (18 variables, EES X10.836)",
+    "reference": "EES stored solution in R3_E8_2022.EES (18 variables, EES X10.836); teacher Python/CoolProp solution (CoolProp 8.0.0) of the same exercise agrees (B-21, sources/thermo_models/python_refs/C-500.csv, max rel diff 2e-5)",
     "date": "2026-10-15",
     "coolsolve_version": "0.3.0@96e4c95",
     "max_rel_diff": 4.736955e-05,
@@ -54,7 +55,9 @@
   "related": [],
   "related_external": [],
   "supersedes": [],
-  "previous_paths": ["models/components/expanders_turbines/geothermal_steam_turbine"],
+  "previous_paths": [
+    "models/components/expanders_turbines/geothermal_steam_turbine"
+  ],
   "history": [
     {
       "date": "2026-10-15",

@@ -42,18 +42,28 @@
   },
   "verification": {
     "summary": "Compared with the EES stored solution: 40 common variables, 3 differ at rtol=0.001 (T[4] at 1.71e-03 near zero, and two quality values by convention). The companion CoolProp Python solution of the exercise agrees with the main results within 4e-6 relative.",
-    "checks": ["ees-stored-solution", "other-tool"],
-    "reference": "EES stored solution of the source file (--ees-units) and the companion CoolProp Python solution of the same exercise (R8/old/ThAp20_R08E02.py, N. Paulus)",
+    "checks": [
+      "ees-stored-solution",
+      "other-tool"
+    ],
+    "reference": "EES stored solution of the source file (--ees-units) and the companion CoolProp Python solution of the same exercise (R8/old/ThAp20_R08E02.py, N. Paulus); teacher Python/CoolProp solution (CoolProp 8.0.0) of the same exercise agrees (B-21, sources/thermo_models/python_refs/C-500.csv, max rel diff 8.3e-3); the 2017-2019 scripts of the same exercise agree too (C-501.csv)",
     "date": "2026-10-05",
     "coolsolve_version": "0.3.0@536d427",
     "max_rel_diff": 0.00171,
     "notes": "40 common variables, 3 differ (rtol=0.001): T[4] 1.71e-03 relative = 1.3e-5 °C absolute (near-zero denominator, EES vs CoolProp R410A properties; CoolSolve matches the CoolProp companion script exactly); x_2/x_3 quality convention (EES ±100 outside the dome, CoolSolve 0), CS-GAP-QUALITY-DOME, not blocking. Companion CoolProp script: all main results within 4e-6 relative."
   },
   "missing_features": [],
-  "related": ["CSL-0001", "CSL-0013", "CSL-0015", "CSL-0061"],
+  "related": [
+    "CSL-0001",
+    "CSL-0013",
+    "CSL-0015",
+    "CSL-0061"
+  ],
   "related_external": [],
   "supersedes": [],
-  "previous_paths": ["models/cycles/refrigeration_heat_pumps/heat_pump_r410a_air_evaporator"],
+  "previous_paths": [
+    "models/cycles/refrigeration_heat_pumps/heat_pump_r410a_air_evaporator"
+  ],
   "history": [
     {
       "date": "2026-10-05",

@@ -42,18 +42,29 @@
   },
   "verification": {
     "summary": "Results were compared with the solution stored by EES in the source file: all 12 variables of the original model agree, with a largest relative deviation of 2.6·10⁻⁵ on the vapour specific volume.",
-    "checks": ["ees-stored-solution"],
-    "reference": "EES stored solution (12 variables) of the source file, converted with --ees-units",
+    "checks": [
+      "ees-stored-solution",
+      "other-tool"
+    ],
+    "reference": "EES stored solution (12 variables) of the source file, converted with --ees-units; teacher Python/CoolProp solution (CoolProp 8.0.0) of the same exercise agrees (B-21, sources/thermo_models/python_refs/C-500.csv, max rel diff 4.6e-3); the 2017-2019 scripts of the same exercise agree too (C-501.csv)",
     "date": "2026-10-04",
     "coolsolve_version": "0.3.0@536d427",
     "max_rel_diff": 2.6e-05,
     "notes": "All 12 original variables agree; largest deviation 2.6e-5 (vapour specific volume), both tools using the reference equation of state of methane. Same import as CoolSolve docs/ees_import.md §12 Example 3."
   },
   "missing_features": [],
-  "related": ["CSL-0044", "CSL-0045", "CSL-0048", "CSL-0057", "CSL-0320"],
+  "related": [
+    "CSL-0044",
+    "CSL-0045",
+    "CSL-0048",
+    "CSL-0057",
+    "CSL-0320"
+  ],
   "related_external": [],
   "supersedes": [],
-  "previous_paths": ["models/fundamentals/properties/methane_tank_evaporation"],
+  "previous_paths": [
+    "models/fundamentals/properties/methane_tank_evaporation"
+  ],
   "history": [
     {
       "date": "2026-10-04",

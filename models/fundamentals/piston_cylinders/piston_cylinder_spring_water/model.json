@@ -7,16 +7,32 @@
   "level": 1,
   "status": "verified",
   "main_file": "piston_cylinder_spring_water.eescode",
-  "fluids": ["Water"],
-  "tags": ["exercise", "closed system", "piston-cylinder", "spring", "two-phase"],
-  "language_features": ["property functions", "array variables"],
-  "stats": {"n_equations": 39, "largest_block": 1},
+  "fluids": [
+    "Water"
+  ],
+  "tags": [
+    "exercise",
+    "closed system",
+    "piston-cylinder",
+    "spring",
+    "two-phase"
+  ],
+  "language_features": [
+    "property functions",
+    "array variables"
+  ],
+  "stats": {
+    "n_equations": 39,
+    "largest_block": 1
+  },
   "origin": {
     "type": "teaching",
     "source": "thermo_models",
     "source_path": "~/Nextcloud/thermo_models/thermodynamique appliquee/2017-2018/THD10_R02/R2_E2_borguet.EES",
     "candidate_id": "TM-0360",
-    "authors": ["TBD (ULiège THD)"],
+    "authors": [
+      "TBD (ULiège THD)"
+    ],
     "url": "",
     "license": "MIT",
     "ees_version": "X8.423",
@@ -25,8 +41,11 @@
   },
   "verification": {
     "summary": "compare_solution.py --ees-units on R2_E2_borguet.EES: 39 common variables, 2 differ (rtol=0.001); only in EES: 1; only in CoolSolve: 0. Maximum relative difference 1.00e+00 on x_4 (EES quality 100 outside the dome; CoolSolve 0; unused). k_ressort is 9.99e-01 because kN/m is not scaled. Work is -258050 J on both sides. No enthalpy is computed.",
-    "checks": ["ees-stored-solution"],
-    "reference": "EES stored solution in R2_E2_borguet.EES (40 variables, EES X8.423)",
+    "checks": [
+      "ees-stored-solution",
+      "other-tool"
+    ],
+    "reference": "EES stored solution in R2_E2_borguet.EES (40 variables, EES X8.423); teacher Python/CoolProp solution (CoolProp 8.0.0) of the same exercise agrees (B-21, sources/thermo_models/python_refs/C-500.csv, max rel diff 2e-4)",
     "date": "2026-10-15",
     "coolsolve_version": "0.3.0@d1e1203",
     "max_rel_diff": 1.0,
@@ -36,8 +55,14 @@
   "related": [],
   "related_external": [],
   "supersedes": [],
-  "previous_paths": ["models/fundamentals/processes/piston_cylinder_spring_water"],
+  "previous_paths": [
+    "models/fundamentals/processes/piston_cylinder_spring_water"
+  ],
   "history": [
-    {"date": "2026-10-15", "action": "added", "by": "Cursor agent for S. Quoilin"}
+    {
+      "date": "2026-10-15",
+      "action": "added",
+      "by": "Cursor agent for S. Quoilin"
+    }
   ]
 }
