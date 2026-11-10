@@ -1242,6 +1242,26 @@ follow the repetition exercises, so most are expected to be duplicates of models
 [x] C-502 T-QUALITY apply C-500/C-501/C-503 — [std] add `other-tool` to verification.checks and a Verification paragraph for the `match` rows; `differs` rows diagnosed one by one (adapt only for a real model bug) — done 2026-11-08: 28 models (C-501's 20 + CSL-0210/0230/0182/0055/0065/0228/0229/0248); every `differs` is a statement variant or a script-side error, no model bug found
 ```
 
+### G-1 — Greenhouse models from the Greenhouses Modelica library (T-TRANSLATE, new source) ✅
+
+Prepared 2026-11-09 at the maintainer's request: the [Greenhouses Modelica library](https://github.com/QueraltAltes/Greenhouses-Library)
+of Q. Altes-Buch (ULiège; BSD-3; clone at `~/git/Greenhouses-Library`, commit `89ae0e8`) is translated flat, per m2 of floor, from its
+components and its example `Greenhouse_2` (Venlo tomato greenhouse, Brussels TMY). Boundary conditions: directly in the file (steady
+design point) or in lookup tables (six days of 10–15 Dec TMY weather + set-points, + a weather-compensated heating schedule for the
+pipe model). New subcategory `buildings/greenhouses` (taxonomy v0.3 note below); no CoolSolve gaps were met.
+
+```
+[x] G-1a  T-TRANSLATE  Greenhouse_2.mo (climate, steady)   → buildings/greenhouses/greenhouse_steady_state        — night design point; verified vs scipy fsolve re-implementation (28 quantities, max 3.6e-5) — CSL-0333
+[x] G-1b  T-TRANSLATE  Greenhouse_2.mo (climate, dynamic)  → buildings/greenhouses/greenhouse_climate_dynamic     — 10 states, weather/set-point lookup; verified vs independent RK4 (≤ 0.0073 K, 0.6 Pa) — CSL-0334
+[x] G-1c  T-TRANSLATE  HeatingPipe.mo + Greenhouse_2.mo    → buildings/greenhouses/greenhouse_heating_pipe_dynamic — 5-cell finite-volume pipe rail, heating schedule in the table; verified vs independent RK4 (≤ 0.004 K pipes) — CSL-0335
+```
+
+Taxonomy: `buildings` now holds 9 models (6 direct + `greenhouses` 3): the GUI menu takes direct models and subcategories together
+(`LibraryStore::menu`); a future split of the 6 direct ones (e.g. `buildings/zone_models`) is left to the maintainer.
+Numeric notes for future re-runs: the dynamic models need a fixed RK4 step (`INTEGRAL` 5th argument, 120 s / 60 s) — the automatic
+step is above the air/cover stability limit; case-insensitive EES names bit twice (`c_cov`/`C_cov`, `C_w` wind coefficient vs water
+capacitance).
+
 ## 7. Dispatching a batch to agents
 
 Prompt for a worker agent (one card per agent; several agents in parallel only
@@ -1732,3 +1752,7 @@ and adds the log line in §8.
 | 2026-11-08 | C-500 | T-VERIFY python refs 2022-2023/ + Aout 2022 (82 scripts, CoolProp 8.0.0): 26 match (28 models, `C-500.csv/.md`) / 6 differs (Otto+Diesel statement data, 14-bar-extraction Rankine vs `CSL-0029`, first-law turbine; two script-side CoolProp-vs-JANAF reference errors — `CSL-0046` matches the textbook 962 K, the script is 48 K low) / 3 no-model / 10 not-comparable / 36 duplicate-of / 1 NumPy-2 not-runnable; **C-501 upgrades: `CSL-0210` (−258.05 kJ) and `CSL-0230` (−155.56 kJ) now match**; `code_base Q_COP` anonymised ("exam script COP") |
 | 2026-11-08 | C-503 | T-VERIFY python refs Exam janv 2020 (146 scripts): one randomised tri-generation question set (`ThAp_R12E01` family) — 74 duplicate-of their `_corr` / 60 no-model (assembled system, no library counterpart, as C-501) / 12 not-runnable; glmfree lane CSV reviewed, 3 scripts re-run as spot-checks, adopted with a new `C-503.md`; fully anonymised; no entries, no import cards |
 | 2026-11-08 | C-502 | `other-tool` verification check + reference line + README *Verification* paragraph applied to the 28 matched models (C-501's 20 + `CSL-0210`, `CSL-0230`, `CSL-0182`, `CSL-0055`, `CSL-0065`, `CSL-0228`, `CSL-0229`, `CSL-0248`); no `differs` row indicted a model; `build_index` 0 errors. **B-21 closed** |
+| 2026-11-09 | G-1a `CSL-0333` | Added *greenhouse_steady_state* — T-TRANSLATE from the Greenhouses Modelica library (Q. Altes-Buch, BSD-3): night design point of a Venlo greenhouse, all correlations flat per m²; verified vs an independent scipy fsolve re-implementation (28 quantities, max rel 3.6e-5); new subcategory `buildings/greenhouses` (taxonomy.json children added) |
+| 2026-11-09 | G-1b `CSL-0334` | Added *greenhouse_climate_dynamic* — 10-state climate model (air/canopy/cover/floor/5 soil/moisture), weather + set-points from an hourly lookup table (Brussels TMY 10–15 Dec of the source library), P-controlled pipe heating and vents; verified vs independent RK4 (h=30 s): temperatures ≤ 0.0073 K, VP ≤ 0.6 Pa over 145 rows; fixed step 120 s (automatic step unstable) |
+| 2026-11-09 | G-1c `CSL-0335` | Added *greenhouse_heating_pipe_dynamic* — same climate core + 5-cell finite-volume pipe rail (eq. 28 of the paper) with weather-compensated T_su/ṁ schedule in the lookup table; verified vs independent RK4: pipe cells ≤ 0.004 K, T_air ≤ 0.045 K; fixed step 60 s (moisture-state accuracy) |
+| 2026-11-10 | review `CSL-0333`–`CSL-0335` | Floor balance was missing −q_rad_flr_cov (long-wave to the cover). Corrected in the three models, re-solved, re-checked (scipy for the steady point, max rel 1.1e-11; RK4 for the two trajectories). README result ranges rewritten from the new hourly tables. |

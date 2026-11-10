@@ -1,354 +1,361 @@
 {
-  "version": "0.3",
-  "description": "Folder taxonomy of the CoolSolve Library. A model's category is its parent folder under models/. Kind, level and status are facets stored in model.json (see docs/taxonomy.md). Change this file together with the folders (docs/taxonomy.md, section 'Changing the taxonomy').",
-  "categories": [
+ "version": "0.3",
+ "description": "Folder taxonomy of the CoolSolve Library. A model's category is its parent folder under models/. Kind, level and status are facets stored in model.json (see docs/taxonomy.md). Change this file together with the folders (docs/taxonomy.md, section 'Changing the taxonomy').",
+ "categories": [
+  {
+   "key": "fundamentals",
+   "title": "Fundamentals",
+   "description": "Thermodynamic basics: properties, closed and open systems, first and second law, combustion chemistry.",
+   "children": [
     {
-      "key": "fundamentals",
-      "title": "Fundamentals",
-      "description": "Thermodynamic basics: properties, closed and open systems, first and second law, combustion chemistry.",
-      "children": [
-        {
-          "key": "properties",
-          "title": "Properties",
-          "description": "Exercises on fluid states and property functions: real versus ideal gas, constant cp versus property calls, two-phase states, densities."
-        },
-        {
-          "key": "property_libraries",
-          "title": "Property libraries",
-          "description": "Function libraries of thermophysical properties not built into CoolSolve: brines, heat-transfer fluids, single-fluid correlations, pseudo-critical properties."
-        },
-        {
-          "key": "tanks_vessels",
-          "title": "Tanks and vessels",
-          "description": "Rigid tanks and vessels: constant-volume heating and cooling, connected tanks, charge and discharge of a tank (uniform-state open systems)."
-        },
-        {
-          "key": "piston_cylinders",
-          "title": "Piston-cylinder devices",
-          "description": "Closed systems with boundary work: piston-cylinders with springs or stops, isothermal, adiabatic and polytropic compression and expansion."
-        },
-        {
-          "key": "steady_flow",
-          "title": "Steady-flow processes",
-          "description": "First-law exercises on steady-flow processes: ideal and staged compression, mixing of streams, hydraulic power."
-        },
-        {
-          "key": "second_law",
-          "title": "Second law and exergy",
-          "description": "Entropy generation, exergy destruction, reversible work, Carnot engines and refrigerators."
-        },
-        {
-          "key": "combustion",
-          "title": "Combustion",
-          "description": "Stoichiometry, excess air and exhaust-gas analysis, mean specific heat of the products (cpbar), combustion chamber, adiabatic flame temperature, dissociation."
-        }
-      ]
+     "key": "properties",
+     "title": "Properties",
+     "description": "Exercises on fluid states and property functions: real versus ideal gas, constant cp versus property calls, two-phase states, densities."
     },
     {
-      "key": "heat_transfer",
-      "title": "Heat transfer",
-      "description": "Heat-transfer mechanisms and correlations, independent of a specific component (mostly function libraries).",
-      "children": [
-        {
-          "key": "conduction_radiation",
-          "title": "Conduction, fins and radiation",
-          "description": "Thermal resistances and shape factors, fin efficiency, radiative exchange between surfaces."
-        },
-        {
-          "key": "internal_convection",
-          "title": "Internal convection",
-          "description": "Single-phase convection inside pipes, curved and printed-circuit channels, near-critical fluids and engine cylinders."
-        },
-        {
-          "key": "external_convection",
-          "title": "External convection",
-          "description": "Forced convection over plates, cylinders, tube banks, finned bundles, shell sides and packed beds."
-        },
-        {
-          "key": "natural_convection",
-          "title": "Natural convection",
-          "description": "Free convection from plates, spheres and cylinders, in enclosures and jacketed vessels."
-        },
-        {
-          "key": "two_phase",
-          "title": "Boiling and condensation",
-          "description": "Pool and flow boiling, critical heat flux, film condensation, two-phase non-boiling flow, void fraction."
-        },
-        {
-          "key": "pressure_drop",
-          "title": "Pressure drop",
-          "description": "Friction factors, straight-pipe and two-phase pressure drop, bends, tube banks and shell sides."
-        }
-      ]
+     "key": "property_libraries",
+     "title": "Property libraries",
+     "description": "Function libraries of thermophysical properties not built into CoolSolve: brines, heat-transfer fluids, single-fluid correlations, pseudo-critical properties."
     },
     {
-      "key": "heat_exchangers",
-      "title": "Heat exchangers",
-      "description": "Heat-exchanger models and the methods to rate and size them.",
-      "children": [
-        {
-          "key": "methods",
-          "title": "Rating and sizing methods",
-          "description": "Function libraries: effectiveness-NTU, P-NTU, LMTD and correction factors, zone procedures, shell-and-tube sizing, part-load UA scaling."
-        },
-        {
-          "key": "effectiveness_lmtd",
-          "title": "Single-phase exchangers",
-          "description": "Single-phase counterflow, crossflow and generic exchangers rated by effectiveness-NTU, a constant effectiveness or UA-LMTD."
-        },
-        {
-          "key": "plate",
-          "title": "Plate heat exchangers",
-          "description": "Plate heat exchangers: heat-transfer and pressure-drop correlations, thermal-resistance and three-zone condenser/evaporator models."
-        },
-        {
-          "key": "zoned_discretised",
-          "title": "Zoned and discretised models",
-          "description": "Multi-zone (pinch-based), finite-volume, moving-boundary and row-by-row discretised exchangers."
-        },
-        {
-          "key": "condensers_evaporators",
-          "title": "Condensers and evaporators",
-          "description": "Air-cooled, water-cooled and shell-and-tube condensers, wet-coil evaporators."
-        }
-      ]
+     "key": "tanks_vessels",
+     "title": "Tanks and vessels",
+     "description": "Rigid tanks and vessels: constant-volume heating and cooling, connected tanks, charge and discharge of a tank (uniform-state open systems)."
     },
     {
-      "key": "machines",
-      "title": "Compressors, turbines and pumps",
-      "description": "Models of rotating and reciprocating machines: compressors, expanders, turbines, pumps and fans.",
-      "children": [
-        {
-          "key": "reciprocating_compressors",
-          "title": "Reciprocating compressors",
-          "description": "Piston compressors: parameter identification, suction pressure drop, leakage, speed laws."
-        },
-        {
-          "key": "rotary_compressors",
-          "title": "Scroll, screw and Roots compressors",
-          "description": "Rotary positive-displacement compressors: semi-empirical scroll, screw and Roots models."
-        },
-        {
-          "key": "compressor_maps",
-          "title": "Compressor catalogues and maps",
-          "description": "Compressors described by catalogue data and polynomials (ARI, EN 12900, manufacturer tables)."
-        },
-        {
-          "key": "turbocompressors",
-          "title": "Turbocompressors",
-          "description": "Centrifugal compressors: performance, power, performance maps and design similarity."
-        },
-        {
-          "key": "turbomachine_design",
-          "title": "Turbomachine design",
-          "description": "Similarity laws, specific speed and diameter (Cordier), axial and radial loss models."
-        },
-        {
-          "key": "steam_turbines",
-          "title": "Steam turbines",
-          "description": "Steam turbines: isentropic efficiency, heat loss, wet expansion (Baumann), off-design (Stodola cone law)."
-        },
-        {
-          "key": "expanders",
-          "title": "Expanders and turbo-expanders",
-          "description": "Scroll and volumetric expanders, empirical ORC expander maps, turbo-expanders and small gas or vapour turbines."
-        },
-        {
-          "key": "pumps",
-          "title": "Pumps",
-          "description": "Centrifugal pumps: manufacturer curves, similarity laws, dimensionless polynomials, variable speed."
-        },
-        {
-          "key": "fans",
-          "title": "Fans",
-          "description": "Centrifugal and variable-speed fans: reference models and dimensionless polynomials."
-        }
-      ]
+     "key": "piston_cylinders",
+     "title": "Piston-cylinder devices",
+     "description": "Closed systems with boundary work: piston-cylinders with springs or stops, isothermal, adiabatic and polytropic compression and expansion."
     },
     {
-      "key": "components",
-      "title": "Other components",
-      "description": "Boilers, nozzles and ejectors, pipes, ducts, valves and flow meters, thermal storage.",
-      "children": [
-        {
-          "key": "boilers_burners",
-          "title": "Boilers and burners",
-          "description": "Fuel-oil, gas and condensing boilers, modulating and on/off burners, parameter identification."
-        },
-        {
-          "key": "nozzles_ejectors",
-          "title": "Nozzles, diffusers and ejectors",
-          "description": "Isentropic and steam nozzles, critical flow, diffusers, single- and two-phase ejectors."
-        },
-        {
-          "key": "piping_valves",
-          "title": "Pipes, valves and flow meters",
-          "description": "Pipe and duct models, valve authority, orifice plates and nozzle flow measurement."
-        },
-        {
-          "key": "storage",
-          "title": "Thermal storage",
-          "description": "Hot-water and ice storage tanks (dynamic)."
-        }
-      ]
+     "key": "steady_flow",
+     "title": "Steady-flow processes",
+     "description": "First-law exercises on steady-flow processes: ideal and staged compression, mixing of streams, hydraulic power."
     },
     {
-      "key": "power_cycles",
-      "title": "Power cycles",
-      "description": "Thermodynamic power cycles: steam Rankine, organic Rankine, gas turbines, jet propulsion, supercritical CO2 and combined cycles.",
-      "children": [
-        {
-          "key": "steam_basic",
-          "title": "Steam power plants",
-          "description": "Simple steam Rankine cycles and plants: component balances, cooling by a river, part load."
-        },
-        {
-          "key": "steam_advanced",
-          "title": "Reheat and regenerative steam cycles",
-          "description": "Steam cycles with reheat, extractions and feedwater heaters, solar steam plant."
-        },
-        {
-          "key": "orc_design",
-          "title": "Organic Rankine cycles",
-          "description": "ORC design points: simple, recuperated, with extraction, double-stage plants, power ratios."
-        },
-        {
-          "key": "orc_applications",
-          "title": "ORC off-design and applications",
-          "description": "ORC off-design and charge, waste-heat recovery and biomass CHP."
-        },
-        {
-          "key": "gas_turbine_design",
-          "title": "Gas turbine cycles",
-          "description": "Brayton cycles and gas turbines at design: open cycle, intercooling, reheat, regeneration, inlet cooling."
-        },
-        {
-          "key": "gas_turbine_offdesign",
-          "title": "Gas turbines off design",
-          "description": "Gas turbines at part load and any regime: reduced quantities, compressor and expander maps."
-        },
-        {
-          "key": "jet_propulsion",
-          "title": "Jet propulsion",
-          "description": "Turbojets: ideal, with component efficiencies, with afterburner."
-        },
-        {
-          "key": "supercritical_combined",
-          "title": "Supercritical and combined cycles",
-          "description": "Supercritical CO2 cycles and combined gas-steam cycles."
-        }
-      ]
+     "key": "second_law",
+     "title": "Second law and exergy",
+     "description": "Entropy generation, exergy destruction, reversible work, Carnot engines and refrigerators."
     },
     {
-      "key": "engines",
-      "title": "Engines",
-      "description": "Reciprocating internal-combustion engines: ideal cycles, engine and boost models, sizing, performance and emissions.",
-      "children": [
-        {
-          "key": "air_standard_cycles",
-          "title": "Air-standard cycles",
-          "description": "Ideal-gas Otto, Diesel and Stirling cycles."
-        },
-        {
-          "key": "engine_models",
-          "title": "Engine and boost models",
-          "description": "Crank-angle and operating-point models of gas engines; supercharged and turbocharged engines (air flow, compressor and turbine matching)."
-        },
-        {
-          "key": "sizing",
-          "title": "Engine sizing",
-          "description": "Cylinder count and geometry, intake valves, valve timing, fuel injection."
-        },
-        {
-          "key": "performance",
-          "title": "Performance and emissions",
-          "description": "Dynamometer tests, data-sheet coherence, bsfc, ISO 3046 derating, fuel consumption, exhaust emissions and CO2 per km."
-        }
-      ]
-    },
-    {
-      "key": "refrigeration_heat_pumps",
-      "title": "Refrigeration and heat pumps",
-      "description": "Vapour-compression, gas and absorption refrigeration cycles and heat pumps.",
-      "children": [
-        {
-          "key": "refrigeration_cycles",
-          "title": "Refrigeration cycles",
-          "description": "Basic vapour-compression refrigeration cycles: compressor models, volume ratio, losses, unloaded cylinders."
-        },
-        {
-          "key": "refrigeration_systems",
-          "title": "Refrigeration systems and chillers",
-          "description": "Chillers, domestic refrigerators, CO2 booster systems, reverse Brayton air cycles."
-        },
-        {
-          "key": "absorption",
-          "title": "Absorption chillers",
-          "description": "LiBr-water and ammonia-water absorption cycles."
-        },
-        {
-          "key": "heat_pump_cycles",
-          "title": "Heat pump cycles",
-          "description": "Basic heat pump cycles: COP, second-law efficiency, pinch-sized exchangers."
-        },
-        {
-          "key": "heat_pump_systems",
-          "title": "Heat pump systems",
-          "description": "Air-source, brine-to-water and inverter heat pumps from component and catalogue models, zeotropic mixtures."
-        },
-        {
-          "key": "high_temperature",
-          "title": "High-temperature heat pumps",
-          "description": "Industrial heat pumps with a sink at about 80 °C and above: cascade, two-stage NH3, R245fa, R1336mzz(Z), Brayton."
-        }
-      ]
-    },
-    {
-      "key": "hvac",
-      "title": "HVAC",
-      "description": "Heating, ventilation and air conditioning: moist air, coils, air handling, cooling towers.",
-      "children": [
-        {
-          "key": "psychrometrics",
-          "title": "Psychrometrics",
-          "description": "Moist-air states, adiabatic mixing, saturation, wet bulb, steam injection."
-        },
-        {
-          "key": "cooling_coils",
-          "title": "Cooling coils",
-          "description": "Air cooling and dehumidifying coils: contact factor, dry and wet regimes, control, reheat."
-        },
-        {
-          "key": "air_handling",
-          "title": "Air handling",
-          "description": "Air handling units, humidifiers, heating coils and heat-recovery loops."
-        },
-        {
-          "key": "cooling_towers",
-          "title": "Cooling towers",
-          "description": "Wet cooling towers: direct contact, catalogue data, fan speed and air-flow control."
-        },
-        {
-          "key": "evaporative_coolers",
-          "title": "Evaporative condensers and fluid coolers",
-          "description": "Evaporative condensers and indirect-contact cooling towers (fluid coolers)."
-        }
-      ]
-    },
-    {
-      "key": "buildings",
-      "title": "Buildings",
-      "description": "Building thermal models, terminal units and comfort."
-    },
-    {
-      "key": "renewables",
-      "title": "Renewables",
-      "description": "Solar collectors and geometry, photovoltaic modules, solar ORC, ground-source boreholes."
-    },
-    {
-      "key": "energy_systems",
-      "title": "Energy systems",
-      "description": "Cogeneration, district heating, hydrogen and the economics of energy investments."
+     "key": "combustion",
+     "title": "Combustion",
+     "description": "Stoichiometry, excess air and exhaust-gas analysis, mean specific heat of the products (cpbar), combustion chamber, adiabatic flame temperature, dissociation."
     }
-  ]
+   ]
+  },
+  {
+   "key": "heat_transfer",
+   "title": "Heat transfer",
+   "description": "Heat-transfer mechanisms and correlations, independent of a specific component (mostly function libraries).",
+   "children": [
+    {
+     "key": "conduction_radiation",
+     "title": "Conduction, fins and radiation",
+     "description": "Thermal resistances and shape factors, fin efficiency, radiative exchange between surfaces."
+    },
+    {
+     "key": "internal_convection",
+     "title": "Internal convection",
+     "description": "Single-phase convection inside pipes, curved and printed-circuit channels, near-critical fluids and engine cylinders."
+    },
+    {
+     "key": "external_convection",
+     "title": "External convection",
+     "description": "Forced convection over plates, cylinders, tube banks, finned bundles, shell sides and packed beds."
+    },
+    {
+     "key": "natural_convection",
+     "title": "Natural convection",
+     "description": "Free convection from plates, spheres and cylinders, in enclosures and jacketed vessels."
+    },
+    {
+     "key": "two_phase",
+     "title": "Boiling and condensation",
+     "description": "Pool and flow boiling, critical heat flux, film condensation, two-phase non-boiling flow, void fraction."
+    },
+    {
+     "key": "pressure_drop",
+     "title": "Pressure drop",
+     "description": "Friction factors, straight-pipe and two-phase pressure drop, bends, tube banks and shell sides."
+    }
+   ]
+  },
+  {
+   "key": "heat_exchangers",
+   "title": "Heat exchangers",
+   "description": "Heat-exchanger models and the methods to rate and size them.",
+   "children": [
+    {
+     "key": "methods",
+     "title": "Rating and sizing methods",
+     "description": "Function libraries: effectiveness-NTU, P-NTU, LMTD and correction factors, zone procedures, shell-and-tube sizing, part-load UA scaling."
+    },
+    {
+     "key": "effectiveness_lmtd",
+     "title": "Single-phase exchangers",
+     "description": "Single-phase counterflow, crossflow and generic exchangers rated by effectiveness-NTU, a constant effectiveness or UA-LMTD."
+    },
+    {
+     "key": "plate",
+     "title": "Plate heat exchangers",
+     "description": "Plate heat exchangers: heat-transfer and pressure-drop correlations, thermal-resistance and three-zone condenser/evaporator models."
+    },
+    {
+     "key": "zoned_discretised",
+     "title": "Zoned and discretised models",
+     "description": "Multi-zone (pinch-based), finite-volume, moving-boundary and row-by-row discretised exchangers."
+    },
+    {
+     "key": "condensers_evaporators",
+     "title": "Condensers and evaporators",
+     "description": "Air-cooled, water-cooled and shell-and-tube condensers, wet-coil evaporators."
+    }
+   ]
+  },
+  {
+   "key": "machines",
+   "title": "Compressors, turbines and pumps",
+   "description": "Models of rotating and reciprocating machines: compressors, expanders, turbines, pumps and fans.",
+   "children": [
+    {
+     "key": "reciprocating_compressors",
+     "title": "Reciprocating compressors",
+     "description": "Piston compressors: parameter identification, suction pressure drop, leakage, speed laws."
+    },
+    {
+     "key": "rotary_compressors",
+     "title": "Scroll, screw and Roots compressors",
+     "description": "Rotary positive-displacement compressors: semi-empirical scroll, screw and Roots models."
+    },
+    {
+     "key": "compressor_maps",
+     "title": "Compressor catalogues and maps",
+     "description": "Compressors described by catalogue data and polynomials (ARI, EN 12900, manufacturer tables)."
+    },
+    {
+     "key": "turbocompressors",
+     "title": "Turbocompressors",
+     "description": "Centrifugal compressors: performance, power, performance maps and design similarity."
+    },
+    {
+     "key": "turbomachine_design",
+     "title": "Turbomachine design",
+     "description": "Similarity laws, specific speed and diameter (Cordier), axial and radial loss models."
+    },
+    {
+     "key": "steam_turbines",
+     "title": "Steam turbines",
+     "description": "Steam turbines: isentropic efficiency, heat loss, wet expansion (Baumann), off-design (Stodola cone law)."
+    },
+    {
+     "key": "expanders",
+     "title": "Expanders and turbo-expanders",
+     "description": "Scroll and volumetric expanders, empirical ORC expander maps, turbo-expanders and small gas or vapour turbines."
+    },
+    {
+     "key": "pumps",
+     "title": "Pumps",
+     "description": "Centrifugal pumps: manufacturer curves, similarity laws, dimensionless polynomials, variable speed."
+    },
+    {
+     "key": "fans",
+     "title": "Fans",
+     "description": "Centrifugal and variable-speed fans: reference models and dimensionless polynomials."
+    }
+   ]
+  },
+  {
+   "key": "components",
+   "title": "Other components",
+   "description": "Boilers, nozzles and ejectors, pipes, ducts, valves and flow meters, thermal storage.",
+   "children": [
+    {
+     "key": "boilers_burners",
+     "title": "Boilers and burners",
+     "description": "Fuel-oil, gas and condensing boilers, modulating and on/off burners, parameter identification."
+    },
+    {
+     "key": "nozzles_ejectors",
+     "title": "Nozzles, diffusers and ejectors",
+     "description": "Isentropic and steam nozzles, critical flow, diffusers, single- and two-phase ejectors."
+    },
+    {
+     "key": "piping_valves",
+     "title": "Pipes, valves and flow meters",
+     "description": "Pipe and duct models, valve authority, orifice plates and nozzle flow measurement."
+    },
+    {
+     "key": "storage",
+     "title": "Thermal storage",
+     "description": "Hot-water and ice storage tanks (dynamic)."
+    }
+   ]
+  },
+  {
+   "key": "power_cycles",
+   "title": "Power cycles",
+   "description": "Thermodynamic power cycles: steam Rankine, organic Rankine, gas turbines, jet propulsion, supercritical CO2 and combined cycles.",
+   "children": [
+    {
+     "key": "steam_basic",
+     "title": "Steam power plants",
+     "description": "Simple steam Rankine cycles and plants: component balances, cooling by a river, part load."
+    },
+    {
+     "key": "steam_advanced",
+     "title": "Reheat and regenerative steam cycles",
+     "description": "Steam cycles with reheat, extractions and feedwater heaters, solar steam plant."
+    },
+    {
+     "key": "orc_design",
+     "title": "Organic Rankine cycles",
+     "description": "ORC design points: simple, recuperated, with extraction, double-stage plants, power ratios."
+    },
+    {
+     "key": "orc_applications",
+     "title": "ORC off-design and applications",
+     "description": "ORC off-design and charge, waste-heat recovery and biomass CHP."
+    },
+    {
+     "key": "gas_turbine_design",
+     "title": "Gas turbine cycles",
+     "description": "Brayton cycles and gas turbines at design: open cycle, intercooling, reheat, regeneration, inlet cooling."
+    },
+    {
+     "key": "gas_turbine_offdesign",
+     "title": "Gas turbines off design",
+     "description": "Gas turbines at part load and any regime: reduced quantities, compressor and expander maps."
+    },
+    {
+     "key": "jet_propulsion",
+     "title": "Jet propulsion",
+     "description": "Turbojets: ideal, with component efficiencies, with afterburner."
+    },
+    {
+     "key": "supercritical_combined",
+     "title": "Supercritical and combined cycles",
+     "description": "Supercritical CO2 cycles and combined gas-steam cycles."
+    }
+   ]
+  },
+  {
+   "key": "engines",
+   "title": "Engines",
+   "description": "Reciprocating internal-combustion engines: ideal cycles, engine and boost models, sizing, performance and emissions.",
+   "children": [
+    {
+     "key": "air_standard_cycles",
+     "title": "Air-standard cycles",
+     "description": "Ideal-gas Otto, Diesel and Stirling cycles."
+    },
+    {
+     "key": "engine_models",
+     "title": "Engine and boost models",
+     "description": "Crank-angle and operating-point models of gas engines; supercharged and turbocharged engines (air flow, compressor and turbine matching)."
+    },
+    {
+     "key": "sizing",
+     "title": "Engine sizing",
+     "description": "Cylinder count and geometry, intake valves, valve timing, fuel injection."
+    },
+    {
+     "key": "performance",
+     "title": "Performance and emissions",
+     "description": "Dynamometer tests, data-sheet coherence, bsfc, ISO 3046 derating, fuel consumption, exhaust emissions and CO2 per km."
+    }
+   ]
+  },
+  {
+   "key": "refrigeration_heat_pumps",
+   "title": "Refrigeration and heat pumps",
+   "description": "Vapour-compression, gas and absorption refrigeration cycles and heat pumps.",
+   "children": [
+    {
+     "key": "refrigeration_cycles",
+     "title": "Refrigeration cycles",
+     "description": "Basic vapour-compression refrigeration cycles: compressor models, volume ratio, losses, unloaded cylinders."
+    },
+    {
+     "key": "refrigeration_systems",
+     "title": "Refrigeration systems and chillers",
+     "description": "Chillers, domestic refrigerators, CO2 booster systems, reverse Brayton air cycles."
+    },
+    {
+     "key": "absorption",
+     "title": "Absorption chillers",
+     "description": "LiBr-water and ammonia-water absorption cycles."
+    },
+    {
+     "key": "heat_pump_cycles",
+     "title": "Heat pump cycles",
+     "description": "Basic heat pump cycles: COP, second-law efficiency, pinch-sized exchangers."
+    },
+    {
+     "key": "heat_pump_systems",
+     "title": "Heat pump systems",
+     "description": "Air-source, brine-to-water and inverter heat pumps from component and catalogue models, zeotropic mixtures."
+    },
+    {
+     "key": "high_temperature",
+     "title": "High-temperature heat pumps",
+     "description": "Industrial heat pumps with a sink at about 80 °C and above: cascade, two-stage NH3, R245fa, R1336mzz(Z), Brayton."
+    }
+   ]
+  },
+  {
+   "key": "hvac",
+   "title": "HVAC",
+   "description": "Heating, ventilation and air conditioning: moist air, coils, air handling, cooling towers.",
+   "children": [
+    {
+     "key": "psychrometrics",
+     "title": "Psychrometrics",
+     "description": "Moist-air states, adiabatic mixing, saturation, wet bulb, steam injection."
+    },
+    {
+     "key": "cooling_coils",
+     "title": "Cooling coils",
+     "description": "Air cooling and dehumidifying coils: contact factor, dry and wet regimes, control, reheat."
+    },
+    {
+     "key": "air_handling",
+     "title": "Air handling",
+     "description": "Air handling units, humidifiers, heating coils and heat-recovery loops."
+    },
+    {
+     "key": "cooling_towers",
+     "title": "Cooling towers",
+     "description": "Wet cooling towers: direct contact, catalogue data, fan speed and air-flow control."
+    },
+    {
+     "key": "evaporative_coolers",
+     "title": "Evaporative condensers and fluid coolers",
+     "description": "Evaporative condensers and indirect-contact cooling towers (fluid coolers)."
+    }
+   ]
+  },
+  {
+   "key": "buildings",
+   "title": "Buildings",
+   "description": "Building thermal models, terminal units, greenhouses and comfort.",
+   "children": [
+    {
+     "key": "greenhouses",
+     "title": "Greenhouses",
+     "description": "Greenhouse climate and heating models: steady-state energy balance, dynamic climate simulation, heating pipe circuits."
+    }
+   ]
+  },
+  {
+   "key": "renewables",
+   "title": "Renewables",
+   "description": "Solar collectors and geometry, photovoltaic modules, solar ORC, ground-source boreholes."
+  },
+  {
+   "key": "energy_systems",
+   "title": "Energy systems",
+   "description": "Cogeneration, district heating, hydrogen and the economics of energy investments."
+  }
+ ]
 }

@@ -161,7 +161,8 @@ def main(argv=None):
                     help="CoolSolve executable (default: $COOLSOLVE or 'coolsolve' on PATH)")
     ap.add_argument("--rtol", type=float, default=1e-6)
     ap.add_argument("--atol", type=float, default=1e-9)
-    ap.add_argument("--timeout", type=int, default=600)
+    ap.add_argument("--timeout", type=int, default=2000,
+                    help="per-target solve limit in seconds (CSL-0335 needs about 25 min)")
     args = ap.parse_args(argv)
 
     exe = shutil.which(args.coolsolve) or args.coolsolve

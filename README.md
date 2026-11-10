@@ -88,7 +88,7 @@ models/
 │                      heat_pump_cycles · heat_pump_systems · high_temperature
 ├── hvac/              psychrometrics · cooling_coils · air_handling ·
 │                      cooling_towers · evaporative_coolers
-├── buildings/
+├── buildings/          zone models · greenhouses
 ├── renewables/
 └── energy_systems/
 ```

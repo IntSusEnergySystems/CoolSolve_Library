@@ -49,7 +49,7 @@ the categories in `taxonomy.json` order, shows only `verified` models (sorted by
 
 ### Tree and counts
 
-302 models (277 verified, shown in the GUI), 12 top categories, 57 leaf categories; leaf size 2–7, median 5.
+305 models (280 verified, shown in the GUI), 12 top categories, 58 leaf categories; leaf size 2–7, median 5.
 Counts are *all models / verified models (GUI)*, as of 2026-11-03.
 
 - **Fundamentals** `fundamentals` — 39 / 35, 7 subcategories
@@ -115,7 +115,9 @@ Counts are *all models / verified models (GUI)*, as of 2026-11-03.
   - Air handling `hvac/air_handling` — 4 / 2
   - Cooling towers `hvac/cooling_towers` — 7 / 7
   - Evaporative condensers and fluid coolers `hvac/evaporative_coolers` — 3 / 2
-- **Buildings** `buildings` — 6 / 6 (no subcategories)
+- **Buildings** `buildings` — 9 / 9, 1 subcategory + 6 direct models
+  - Greenhouses `buildings/greenhouses` — 3 / 3
+  - (six zone/comfort models sit directly in `buildings/`; split into a sibling subcategory when more arrive)
 - **Renewables** `renewables` — 7 / 5 (no subcategories)
 - **Energy systems** `energy_systems` — 7 / 6 (no subcategories)
 

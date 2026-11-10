@@ -1,0 +1,56 @@
+{
+  "id": "CSL-0333",
+  "name": "greenhouse_steady_state",
+  "title": "Steady-state energy and moisture balance of a Venlo greenhouse",
+  "summary": "Night design point of a single-glass Venlo tomato greenhouse: the pipe-rail heating power that holds the air at its set-point, and the canopy, cover, floor and pipe temperatures, air humidity and all heat and vapour fluxes, from the correlations of the Greenhouses Modelica library (de Zwart, Bot, Stanghellini, Boulard & Baille).",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "greenhouse_steady_state.eescode",
+  "fluids": [],
+  "tags": [
+    "greenhouse",
+    "energy balance",
+    "moisture balance",
+    "design heat load",
+    "convection correlations",
+    "long-wave radiation",
+    "transpiration",
+    "condensation",
+    "Venlo"
+  ],
+  "language_features": [],
+  "stats": {"n_equations": 147, "largest_block": 36},
+  "origin": {
+    "type": "research",
+    "source": "greenhouses_library",
+    "source_path": "~/git/Greenhouses-Library/Greenhouses/Examples/Greenhouse_2.mo",
+    "candidate_id": "",
+    "authors": ["Queralt Altes-Buch (ULiège / KU Leuven)"],
+    "url": "https://github.com/QueraltAltes/Greenhouses-Library",
+    "license": "MIT (translation); original library BSD-3 (Modelica Association)",
+    "ees_version": "",
+    "language": "modelica",
+    "course": ""
+  },
+  "verification": {
+    "summary": "Flat EES translation of the Greenhouses Modelica library equations; the solution was checked against an independent scipy re-implementation of the same equations (27 quantities): max relative difference 1.1e-11. Plausibility: Q_pip = 198 W/m2 and K_glob = 7.1 W/m2K at -10 degC, typical for single glass. A control-volume check that is not a model equation closes to 2e-10 W/m2.",
+    "checks": ["other-tool", "order-of-magnitude", "energy-balance"],
+    "reference": "greenhouse_steady_state_ref.py in this folder (scipy.optimize.root of the same equations); correlations of the Greenhouses library and Altes-Buch et al.",
+    "date": "2026-11-10",
+    "coolsolve_version": "0.4.0@cc582a6",
+    "max_rel_diff": 1.14e-11,
+    "notes": "No Dymola/OM result was available for this boundary condition (the Modelica example runs a full year with controls). 2026-11-10: the floor balance was missing -q_rad_flr_cov; the model was corrected, re-solved and compared again."
+  },
+  "missing_features": [],
+  "related": ["CSL-0334", "CSL-0335", "CSL-0042"],
+  "related_external": [
+    "Greenhouses Modelica library, example Greenhouse_2 (source of the translation; stays in its own repository)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-11-09", "action": "added (roadmap card G-1; T-TRANSLATE from the Greenhouses Modelica library)", "by": "opencode worker for S. Quoilin"},
+    {"date": "2026-11-10", "action": "floor balance corrected (-q_rad_flr_cov); re-solved and re-verified", "by": "review"}
+  ]
+}

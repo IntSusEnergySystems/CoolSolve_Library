@@ -1,0 +1,57 @@
+{
+  "id": "CSL-0334",
+  "name": "greenhouse_climate_dynamic",
+  "title": "Dynamic greenhouse climate model with weather lookup",
+  "summary": "Six-day simulation (Brussels TMY, 10-15 Dec) of the climate of a Venlo tomato greenhouse: air, canopy, cover, floor and five ground layers as dynamic nodes plus the air vapour pressure, heated by a pipe rail under proportional control, with roof vents opening above the set-point; weather and set-points are read from an hourly lookup table.",
+  "kind": "dynamic",
+  "level": 3,
+  "status": "verified",
+  "main_file": "greenhouse_climate_dynamic.eescode",
+  "fluids": [],
+  "tags": [
+    "greenhouse",
+    "dynamic",
+    "climate model",
+    "weather file",
+    "lookup table",
+    "transpiration",
+    "condensation",
+    "ventilation",
+    "soil heat storage",
+    "proportional control"
+  ],
+  "language_features": ["INTEGRAL", "$IntegralTable", "lookup tables"],
+  "stats": {"n_equations": 186, "largest_block": 64},
+  "origin": {
+    "type": "research",
+    "source": "greenhouses_library",
+    "source_path": "~/git/Greenhouses-Library/Greenhouses/Examples/Greenhouse_2.mo",
+    "candidate_id": "",
+    "authors": ["Queralt Altes-Buch (ULiège / KU Leuven)"],
+    "url": "https://github.com/QueraltAltes/Greenhouses-Library",
+    "license": "MIT (translation); original library BSD-3 (Modelica Association)",
+    "ees_version": "",
+    "language": "modelica",
+    "course": ""
+  },
+  "verification": {
+    "summary": "The 145-row trajectory (10 states, hourly output) agrees with an independent RK4 integration (h = 30 s, same equations, hourly linear interpolation of the same table): temperatures within 0.0031 K, T_air within 0.0014 K, VP_air within 0.019 Pa over six days.",
+    "checks": ["other-tool", "order-of-magnitude"],
+    "reference": "greenhouse_climate_dynamic_ref.py in this folder (RK4, h = 30 s); same equations as CSL-0333 with capacitances",
+    "date": "2026-11-10",
+    "coolsolve_version": "0.4.0@cc582a6",
+    "max_rel_diff": 1.73e-04,
+    "notes": "max_rel_diff is the largest relative deviation of the ten states over the trajectory (T_can). Q_pip, set by the controller from T_air, stays within 0.15 W/m2. The deviation is the integration step (CoolSolve RK4 h = 120 s vs reference h = 30 s). 2026-11-10: floor balance corrected (-q_rad_flr_cov) and the trajectory re-checked."
+  },
+  "missing_features": [],
+  "related": ["CSL-0333", "CSL-0335", "CSL-0042"],
+  "related_external": [
+    "Greenhouses Modelica library, example Greenhouse_2 (source of the translation; stays in its own repository)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-11-09", "action": "added (roadmap card G-2; T-TRANSLATE from the Greenhouses Modelica library)", "by": "opencode worker for S. Quoilin"},
+    {"date": "2026-11-10", "action": "floor balance corrected (-q_rad_flr_cov); re-solved and re-verified", "by": "review"}
+  ]
+}

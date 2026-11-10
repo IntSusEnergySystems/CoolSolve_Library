@@ -1,0 +1,56 @@
+{
+  "id": "CSL-0335",
+  "name": "greenhouse_heating_pipe_dynamic",
+  "title": "Greenhouse heating pipe rail: discretized dynamic model",
+  "summary": "Six-day simulation (Brussels TMY, 10-15 Dec) of the pipe-rail heating circuit of a Venlo tomato greenhouse: five pipe cells in series with the water temperature as state (finite-volume energy balance), exchanging hindered convection and long-wave radiation with the climate core of CSL-0334; supply temperature and mass flow follow a weather-compensated schedule read from the lookup table.",
+  "kind": "dynamic",
+  "level": 3,
+  "status": "verified",
+  "main_file": "greenhouse_heating_pipe_dynamic.eescode",
+  "fluids": [],
+  "tags": [
+    "greenhouse",
+    "heating pipe",
+    "pipe rail",
+    "dynamic",
+    "finite volume",
+    "discretized",
+    "lookup table",
+    "weather-compensated control",
+    "ventilation"
+  ],
+  "language_features": ["INTEGRAL", "$IntegralTable", "lookup tables", "arrays"],
+  "stats": {"n_equations": 222, "largest_block": 90},
+  "origin": {
+    "type": "research",
+    "source": "greenhouses_library",
+    "source_path": "~/git/Greenhouses-Library/Greenhouses/Examples/Greenhouse_2.mo",
+    "candidate_id": "",
+    "authors": ["Queralt Altes-Buch (ULiège / KU Leuven)"],
+    "url": "https://github.com/QueraltAltes/Greenhouses-Library",
+    "license": "MIT (translation); original library BSD-3 (Modelica Association)",
+    "ees_version": "",
+    "language": "modelica",
+    "course": ""
+  },
+  "verification": {
+    "summary": "The 145-row trajectory (15 states, hourly output) agrees with an independent RK4 integration (h = 30 s, same equations, same table): pipe cell temperatures within 0.0015 K, T_air within 0.018 K, VP_air within 1.1 Pa over six days.",
+    "checks": ["other-tool", "order-of-magnitude"],
+    "reference": "greenhouse_heating_pipe_dynamic_ref.py in this folder (RK4, h = 30 s); climate core identical to CSL-0334, pipe cells follow eq. (28) of Altes-Buch et al.",
+    "date": "2026-11-10",
+    "coolsolve_version": "0.4.0@cc582a6",
+    "max_rel_diff": 8.3e-04,
+    "notes": "max_rel_diff is the largest relative deviation of the 15 states over the trajectory (T_air). Integration step 60 s. At 120 s, against the same 30 s reference, VP_air drifts by about 1.2 % and T_air by 0.5 K. 2026-11-10: floor balance corrected (-q_rad_flr_cov) and the trajectory re-checked."
+  },
+  "missing_features": [],
+  "related": ["CSL-0333", "CSL-0334"],
+  "related_external": [
+    "Greenhouses Modelica library, example Greenhouse_2 / Components/Greenhouse/HeatingPipe.mo (source of the translation; stays in its own repository)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-11-09", "action": "added (roadmap card G-3; T-TRANSLATE from the Greenhouses Modelica library)", "by": "opencode worker for S. Quoilin"},
+    {"date": "2026-11-10", "action": "floor balance corrected (-q_rad_flr_cov); re-solved and re-verified", "by": "review"}
+  ]
+}

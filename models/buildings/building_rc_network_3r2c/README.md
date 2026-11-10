@@ -199,3 +199,4 @@ does not use that form (its bases are the variables `T_in_0`, `T_c_wall_0`,
   category (also from the CLIM course; its native file is still blocked, with a
   runnable `_coolsolve` variant).
 - `CSL-0106` *conduction_resistances_and_shapes*: the conduction function library of the `ht` source (plane-wall resistance, cylindrical-wall resistance, shape factors, R-value conversions) - the wall resistances written inline in this model as `R = t/(k*A)` are available there as reusable functions.
+- `CSL-0333` / `CSL-0334`: greenhouse climate models (steady design point and six-day weather run). Same lumped-node idea, different physics (moisture, transpiration, pipe rail).

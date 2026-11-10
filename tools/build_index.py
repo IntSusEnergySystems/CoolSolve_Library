@@ -23,8 +23,11 @@ repository, or --register PATH); without it the dashboard shows the IDs only.
 Model folders contain CoolSolve files and documentation only: source files
 (.ees, .lib, .lkt, .py, notebooks, archives) and `original/` or `reference/`
 folders are rejected -- the source is referenced by its path (with ~), URL or
-library name in model.json.  Authors not known yet are written "TBD"; the
-script lists them, and the models without figure, for the maintainer.
+library name in model.json.  A `*_ref.py` file is the exception: the model's
+own reference solver (the independent check), not a copy of the original
+source, and it is not embedded in CoolSolve.  Authors not known yet are
+written "TBD"; the script lists them, and the models without figure, for the
+maintainer.
 
 IDs are never reused: removed models are listed in `retired.csv`
 (id,date,reason,replaced_by) and count when the next free ID is computed.
@@ -65,6 +68,7 @@ REQUIRED = ["id", "name", "title", "summary", "kind", "level", "status", "main_f
 ID_RE = re.compile(r"^CSL-\d{4}$")
 GAP_RE = re.compile(r"^CS-(GAP|BUG|FEAT|DOC)-[A-Z0-9-]+$")
 SOURCE_EXT = {".ees", ".lib", ".lkt", ".py", ".ipynb", ".m", ".mo", ".zip", ".7z", ".rar", ".xls", ".xlsx"}
+REF_PY = re.compile(r"_ref\.py$", re.I)
 FORBIDDEN_DIRS = {"original", "reference"}
 FIGURE_EXT = {".png", ".svg", ".jpg", ".jpeg", ".gif", ".webp"}
 FIGURE_MAX_BYTES = 100_000
@@ -182,6 +186,8 @@ def validate(folder, meta, tax_paths, errors):
         if item.is_dir() and item.name.lower() in FORBIDDEN_DIRS:
             errors.append("%s: folder '%s' is not allowed (reference the source in model.json)" % (where, item.name))
         elif item.is_file() and item.suffix.lower() in SOURCE_EXT:
+            if item.suffix.lower() == ".py" and REF_PY.search(item.name):
+                continue
             errors.append("%s: source file '%s' must not be stored in the library (give its path or URL "
                           "in model.json origin.source_path / origin.url)" % (where, item.relative_to(folder)))
 

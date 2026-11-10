@@ -1,9 +1,9 @@
 {
  "snapshot": {
-  "content_hash": "sha256:b266ddd4e6eeb2f5",
-  "files": 1561,
-  "bytes": 11489748,
-  "models": 303,
+  "content_hash": "sha256:4b93fdb51a5e9d81",
+  "files": 1577,
+  "bytes": 11696846,
+  "models": 306,
   "functions": 623,
   "taxonomy_version": "0.3"
  },
@@ -93,7 +93,9 @@
    "missing_features": [],
    "related": [
     "CSL-0012",
-    "CSL-0106"
+    "CSL-0106",
+    "CSL-0333",
+    "CSL-0334"
    ],
    "coolsolve_version": "0.3.0@d5d6b37",
    "verified_on": "2026-10-10",
@@ -271,6 +273,151 @@
    ],
    "path": "models/buildings/heat_pump_house_seasonal_power",
    "main_file": "heat_pump_house_seasonal_power.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0333",
+   "name": "greenhouse_steady_state",
+   "title": "Steady-state energy and moisture balance of a Venlo greenhouse",
+   "category": "buildings/greenhouses",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Night design point of a single-glass Venlo tomato greenhouse: the pipe-rail heating power that holds the air at its set-point, and the canopy, cover, floor and pipe temperatures, air humidity and all heat and vapour fluxes, from the correlations of the Greenhouses Modelica library (de Zwart, Bot, Stanghellini, Boulard & Baille).",
+   "fluids": [],
+   "tags": [
+    "greenhouse",
+    "energy balance",
+    "moisture balance",
+    "design heat load",
+    "convection correlations",
+    "long-wave radiation",
+    "transpiration",
+    "condensation",
+    "Venlo"
+   ],
+   "n_equations": 147,
+   "largest_block": 36,
+   "origin_type": "research",
+   "source": "greenhouses_library",
+   "source_path": "~/git/Greenhouses-Library/Greenhouses/Examples/Greenhouse_2.mo",
+   "authors": [
+    "Queralt Altes-Buch (ULiège / KU Leuven)"
+   ],
+   "license": "MIT (translation); original library BSD-3 (Modelica Association)",
+   "url": "https://github.com/QueraltAltes/Greenhouses-Library",
+   "missing_features": [],
+   "related": [
+    "CSL-0334",
+    "CSL-0335",
+    "CSL-0042"
+   ],
+   "coolsolve_version": "0.4.0@cc582a6",
+   "verified_on": "2026-11-10",
+   "verification_summary": "Flat EES translation of the Greenhouses Modelica library equations; the solution was checked against an independent scipy re-implementation of the same equations (27 quantities): max relative difference 1.1e-11. Plausibility: Q_pip = 198 W/m2 and K_glob = 7.1 W/m2K at -10 degC, typical for single glass. A control-volume check that is not a model equation closes to 2e-10 W/m2.",
+   "verification_checks": [
+    "other-tool",
+    "order-of-magnitude",
+    "energy-balance"
+   ],
+   "path": "models/buildings/greenhouses/greenhouse_steady_state",
+   "main_file": "greenhouse_steady_state.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0334",
+   "name": "greenhouse_climate_dynamic",
+   "title": "Dynamic greenhouse climate model with weather lookup",
+   "category": "buildings/greenhouses",
+   "kind": "dynamic",
+   "level": 3,
+   "status": "verified",
+   "summary": "Six-day simulation (Brussels TMY, 10-15 Dec) of the climate of a Venlo tomato greenhouse: air, canopy, cover, floor and five ground layers as dynamic nodes plus the air vapour pressure, heated by a pipe rail under proportional control, with roof vents opening above the set-point; weather and set-points are read from an hourly lookup table.",
+   "fluids": [],
+   "tags": [
+    "greenhouse",
+    "dynamic",
+    "climate model",
+    "weather file",
+    "lookup table",
+    "transpiration",
+    "condensation",
+    "ventilation",
+    "soil heat storage",
+    "proportional control"
+   ],
+   "n_equations": 186,
+   "largest_block": 64,
+   "origin_type": "research",
+   "source": "greenhouses_library",
+   "source_path": "~/git/Greenhouses-Library/Greenhouses/Examples/Greenhouse_2.mo",
+   "authors": [
+    "Queralt Altes-Buch (ULiège / KU Leuven)"
+   ],
+   "license": "MIT (translation); original library BSD-3 (Modelica Association)",
+   "url": "https://github.com/QueraltAltes/Greenhouses-Library",
+   "missing_features": [],
+   "related": [
+    "CSL-0333",
+    "CSL-0335",
+    "CSL-0042"
+   ],
+   "coolsolve_version": "0.4.0@cc582a6",
+   "verified_on": "2026-11-10",
+   "verification_summary": "The 145-row trajectory (10 states, hourly output) agrees with an independent RK4 integration (h = 30 s, same equations, hourly linear interpolation of the same table): temperatures within 0.0031 K, T_air within 0.0014 K, VP_air within 0.019 Pa over six days.",
+   "verification_checks": [
+    "other-tool",
+    "order-of-magnitude"
+   ],
+   "path": "models/buildings/greenhouses/greenhouse_climate_dynamic",
+   "main_file": "greenhouse_climate_dynamic.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0335",
+   "name": "greenhouse_heating_pipe_dynamic",
+   "title": "Greenhouse heating pipe rail: discretized dynamic model",
+   "category": "buildings/greenhouses",
+   "kind": "dynamic",
+   "level": 3,
+   "status": "verified",
+   "summary": "Six-day simulation (Brussels TMY, 10-15 Dec) of the pipe-rail heating circuit of a Venlo tomato greenhouse: five pipe cells in series with the water temperature as state (finite-volume energy balance), exchanging hindered convection and long-wave radiation with the climate core of CSL-0334; supply temperature and mass flow follow a weather-compensated schedule read from the lookup table.",
+   "fluids": [],
+   "tags": [
+    "greenhouse",
+    "heating pipe",
+    "pipe rail",
+    "dynamic",
+    "finite volume",
+    "discretized",
+    "lookup table",
+    "weather-compensated control",
+    "ventilation"
+   ],
+   "n_equations": 222,
+   "largest_block": 90,
+   "origin_type": "research",
+   "source": "greenhouses_library",
+   "source_path": "~/git/Greenhouses-Library/Greenhouses/Examples/Greenhouse_2.mo",
+   "authors": [
+    "Queralt Altes-Buch (ULiège / KU Leuven)"
+   ],
+   "license": "MIT (translation); original library BSD-3 (Modelica Association)",
+   "url": "https://github.com/QueraltAltes/Greenhouses-Library",
+   "missing_features": [],
+   "related": [
+    "CSL-0333",
+    "CSL-0334"
+   ],
+   "coolsolve_version": "0.4.0@cc582a6",
+   "verified_on": "2026-11-10",
+   "verification_summary": "The 145-row trajectory (15 states, hourly output) agrees with an independent RK4 integration (h = 30 s, same equations, same table): pipe cell temperatures within 0.0015 K, T_air within 0.018 K, VP_air within 1.1 Pa over six days.",
+   "verification_checks": [
+    "other-tool",
+    "order-of-magnitude"
+   ],
+   "path": "models/buildings/greenhouses/greenhouse_heating_pipe_dynamic",
+   "main_file": "greenhouse_heating_pipe_dynamic.eescode",
    "figures": 0
   },
   {
@@ -20096,24 +20243,6 @@
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
-  "CS-GAP-IDEAL-GAS-MODEL": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P2 (silent with T and P)",
-   "text": "**EES's ideal-gas substances are exactly ideal** (NASA-type polynomials: pv = RT, h and u functions of T only).",
-   "detail": "`u = intenergy(CO2, T=25)` ⏎ `h = enthalpy(CO2, T=25)` → h − u − R·T = −284 J/kg (Z = 0.995; N2 Z−1 = −1.9e-4, Air −3.2e-4, H2O vapour −6e-5); `intenergy(CO2, T=25, P=1E6)` differs from the T-alone …",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
-  "CS-GAP-QUALITY-DOME": {
-   "kind": "gap",
-   "state": "open",
-   "priority": "P3",
-   "text": "The EES QUALITY function **outside the saturation dome**: it returns 100 for a superheated state and −100 for a compressed (subcooled) liquid (documented EES behaviour; stored solution of thermo_models/thermodynamique …",
-   "detail": "Returns 0 for both single-phase states (two-phase values are right): a diagnostic output silently loses the phase information.",
-   "fixed_in": "",
-   "anchor": "4-gap-register-ees-features-missing-or-different"
-  },
   "CS-GAP-PROP-TH": {
    "kind": "gap",
    "state": "open",
@@ -20348,11 +20477,38 @@
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
-  "CS-BUG-UNIT-VOLUME": {
+  "CS-BUG-V-ALIAS": {
    "kind": "bug",
    "state": "open",
-   "priority": "P2",
-   "text": "Unit inference labels specific volumes from `VOLUME(...)` as `kg/m^3` in the `.sol` file (should be `m^3/kg`).",
+   "priority": "P2 (silent)",
+   "text": "`v(...)` as a property function returns the **viscosity**, not the specific volume: in `getCoolPropOutputParam` (`src/evaluator.cpp`) the test `name == \"mu\" || name == \"v\"` (viscosity) comes before the volume alias.",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-QUALITY-ALIAS-PARSE": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3 (loud)",
+   "text": "The aliases `x(` and `q(` of `quality` are listed in `language_reference.md` and accepted by the evaluator, but the parser does not take a fluid argument for them: `src/parser.cpp` (~line 40) and `src/ir.cpp` (~line 554) list only `quality` among the property …",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-HUMIDAIR-GUESS": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3",
+   "text": "The initial guesses of humid-air properties are those of real-gas Air: inference stores the fluid `Air_ha`, which `FluidRegistry` reads as Air, so the humid-air branches of `initializeVariables` and `computeThermoGuessAt` (`src/variable_inference.cpp`) are …",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-INCOMP-GUESS": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3",
+   "text": "No initial guess is computed for an incompressible fluid: `initializeVariables` throws (\"could not compute D for INCOMP::MEG\") and the runner swallows it in a bare `catch (...)`, so every remaining variable keeps the guess 1.0.",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -20429,38 +20585,11 @@
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
   },
-  "CS-BUG-INTEGRAL-OUTPUT-INTERVAL": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P3",
-   "text": "The configuration key **`integralOutputInterval`** (*\"default row interval when `$IntegralTable` omits `:n`\"*, `examples/coolsolve.conf`, Language Reference §12.5, GUI Configuration Editor) is parsed but **never used**: the integral table keeps a row at every …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
   "CS-BUG-NONSQUARE-DIAG": {
    "kind": "bug",
    "state": "open",
    "priority": "P3",
    "text": "The diagnostic of a **non-square system is of little use**: CoolSolve lists **every** variable and **every** equation as unmatched, the equations by index only (`StructuralAnalyzer::analyze` returns at the square test, `src/structural_analysis.cpp`, before …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-INTEGRAL-TABLE-INTERVAL": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P3",
-   "text": "**`$IntegralTable t:n` places its rows on the integration steps**, so an output interval that is not a multiple of the step is rounded up to one.",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-CALL-ERROR-ITERATE": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P3",
-   "text": "**`CALL ERROR` raised at an intermediate iterate does not stop the calculation**: the error is caught as an evaluation failure, the line search backtracks and the solver may converge elsewhere; EES halts the calculation (help `_error.htm`).",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -20479,24 +20608,6 @@
    "state": "open",
    "priority": "P3",
    "text": "An **assignment `x := 3` in the main program** (also in a main-program DUPLICATE) is dropped by `IR::fromAST`, which ignores `Assignment` statements: the model loses the statement; when `x` is used elsewhere the run ends with a structural error that does not …",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-NEWTON1D-BRACKET-COLLAPSE": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P3",
-   "text": "Phase 3 of Newton1D declares convergence when the bracket width falls below `stepTolerance` without checking",
-   "detail": "",
-   "fixed_in": "",
-   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
-  },
-  "CS-BUG-TINY-IMPLICIT": {
-   "kind": "bug",
-   "state": "open",
-   "priority": "P2 (silent)",
-   "text": "An **implicit block cannot recover a tiny value**: its absolute residual tolerance (1e-9) is met while the unknown is still far from a solution of order 1e-20, so the solve reports SUCCESS with a wrong value.",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
@@ -21534,6 +21645,60 @@
    "text": "Named inputs as in help `hs786.htm`: `CALL psychprops(T=T_1, P=P_1, R=RH_1 : …)`, P and two of T, R, W, B, D, H, V, S in any order, the substance `AirH2O` optional; skipped outputs keep their position (`: , , h_1`, `{v_1}`, trailing ones dropped); an output …",
    "detail": "",
    "fixed_in": "2026-11-08, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-IDEAL-GAS-MODEL": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "The 17 ideal-gas substances are exactly ideal: the ideal-gas part (alpha0) of their CoolProp equation of state on a separate per-thread HEOS state with the gas phase imposed (`src/ideal_gas.cpp`), with CoolProp's R and M, re-anchored to the NASA-Glenn Δh_f …",
+   "detail": "",
+   "fixed_in": "2026-11-08, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-TINY-IMPLICIT": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "The convergence tests weight each residual by the scale S of its equation's terms (sum of the term magnitudes + Σ",
+   "detail": "",
+   "fixed_in": "∂F/∂x·x",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-GAP-QUALITY-DOME": {
+   "kind": "gap",
+   "state": "closed",
+   "priority": "",
+   "text": "`QUALITY` outside the dome returns 100 on the vapour side and −100 on the liquid side, as EES (help `a0ftve.htm`), for every input pair: the side is CoolProp's phase (`qualityOutsideDome` in `src/evaluator.cpp`; also on the PropsSI fallback), for pure, …",
+   "detail": "",
+   "fixed_in": "2026-11-08, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-UNIT-VOLUME": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "A `VOLUME()` output and a `v=` / `volume=` input are labelled `m^3/kg` and start from a specific volume (1/D at 20 °C, 1 atm; 1.0e-3 for water instead of 998): new `UnitType::SpecificVolume` and `inferredProperty` code `VOL` (`src/variable_inference.cpp`, one …",
+   "detail": "",
+   "fixed_in": "2026-11-09, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-NEWTON1D-BRACKET-COLLAPSE": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "Newton1D Phase 3 accepts a bracket that shrank below `stepTolerance` only when its weighted residual is below `lsRelaxedTolerance` (as Phase 4 and BisectionND); otherwise F jumps across it (a pole, or the penalty 1e4 that a failed CoolProp call returns at the …",
+   "detail": "",
+   "fixed_in": "2026-11-09, `fix/library-gaps-5`",
+   "anchor": "7-closed-gaps-and-bugs"
+  },
+  "CS-BUG-CALL-ERROR-ITERATE": {
+   "kind": "bug",
+   "state": "closed",
+   "priority": "",
+   "text": "A `CALL ERROR` reached by an iterate from the user's guesses is a fatal evaluation error (`isFatalEvaluationError` + `rethrowIfFatalEvaluationError` in `solver_common.h`): the initial-guess evaluation, line searches, every pipeline solver and its …",
+   "detail": "",
+   "fixed_in": "2026-11-09, `fix/library-gaps-5`",
    "anchor": "7-closed-gaps-and-bugs"
   }
  }
