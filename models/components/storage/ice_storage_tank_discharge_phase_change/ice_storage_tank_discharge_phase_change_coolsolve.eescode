@@ -17,11 +17,12 @@
        v_ice and v_liq take the values of ice (916.7 kg/m^3) and liquid
        water at 0 °C; the original calls are kept in comments
        (CS-BUG-WATER-NEAR-FREEZING);
-   Solve time is a few seconds (6000 steps of 8.33 s, rows every second step);
-   the trajectory is written to
-   ice_storage_tank_discharge_phase_change_coolsolve-integral.csv
-   (coolsolve.conf sets integralMaxSteps = 6000: the INTEGRAL call has no
-   explicit step, so this is the number of steps).
+   Solve time is a few seconds (6000 RK4 steps of 8.33 s). $IntegralTable
+   tau:10 writes a row every 10 s; the committed .sol table is the older
+   every-second-step grid (3001 rows, 16.7 s). coolsolve.conf sets
+   integralMaxSteps = 6000 (the INTEGRAL call has no step). The run starts
+   on the phase boundary: BDF and RK45 complete, RK45 rows between steps
+   are interpolated (README).
 
    Verified against the EES stored solution of the sibling copy of the same
    exercise (AU = 1 MW/K, P = 1 bar) and against the closed-form solution of

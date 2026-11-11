@@ -1258,8 +1258,9 @@ pipe model). New subcategory `buildings/greenhouses` (taxonomy v0.3 note below);
 
 Taxonomy: `buildings` now holds 9 models (6 direct + `greenhouses` 3): the GUI menu takes direct models and subcategories together
 (`LibraryStore::menu`); a future split of the 6 direct ones (e.g. `buildings/zone_models`) is left to the maintainer.
-Numeric notes for future re-runs: the dynamic models need a fixed RK4 step (`INTEGRAL` 5th argument, 120 s / 60 s) — the automatic
-step is above the air/cover stability limit; case-insensitive EES names bit twice (`c_cov`/`C_cov`, `C_w` wind coefficient vs water
+Numeric notes for future re-runs: the shipped dynamic files are RK4 at the step in `INTEGRAL` (120 s / 60 s).
+Without that step RK4 is above the air/cover stability limit and diverges; BDF (`integralMethod`, tolerances
+1e-4 / 1e-6) does not need the step and stays within 0.03 K (the models' Solving time). Case-insensitive EES names bit twice (`c_cov`/`C_cov`, `C_w` wind coefficient vs water
 capacitance).
 
 ## 7. Dispatching a batch to agents

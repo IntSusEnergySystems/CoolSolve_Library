@@ -24,6 +24,10 @@
            (theta_s = -20 deg, theta_d = 40 deg), so no fuel is burned in the
            simulated stroke and Q_tot stays zero (see README.md).
 
+  Note  : the intake flow is an IF on the cylinder pressure, a state, and the
+           trajectory stays on p = p_out. BDF and EulerImplicit have no
+           solution there and stop; the shipped run is RK4 at 1 deg (README).
+
   Inputs : cylinder geometry, speed, ambient state, air/fuel ratio, Weibe
            parameters, wall temperature and heat transfer coefficient
   Outputs: pressure, temperature and mass along the crank angle, piston work

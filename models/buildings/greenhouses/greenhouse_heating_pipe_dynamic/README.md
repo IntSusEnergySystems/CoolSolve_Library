@@ -90,17 +90,23 @@ feedback controller would throttle).
 coolsolve ./greenhouse_heating_pipe_dynamic.eescode
 ```
 
-Fifteen states, RK4 at a fixed step of 60 s (8640 steps, about 25 min). At 120 s the
-moisture state drifts by about 1.2 % and `T_air` by 0.5 K against a 30 s
-reference, so the shorter step is kept. The trajectory is written hourly. The
-reference itself is
+Fifteen states, RK4 at the step written in `INTEGRAL` (60 s, 8640 steps).
+At 120 s the moisture state drifts by about 1.2 % and `T_air` by 0.5 K
+against a 30 s reference, so the shorter step is kept; while the vents move
+the explicit stability limit also drops below 60 s (the run at 60 s stays
+right because the vent opening saturates). The trajectory is written hourly,
+and 60 s divides the hour, so each row is a step. `integralMethod = BDF`
+with `integralRelTol = 1e-4` and `integralAbsTol = 1e-6` does not need the
+step: the hourly temperatures stay within 0.03 K of RK4 at 15 s. The shipped
+file keeps 60 s, which is what the table below compares. Times are in
+*Solving time*. The reference itself is
 
 ```bash
 python3 greenhouse_heating_pipe_dynamic_ref.py
 ```
 
-(numpy, classical RK4 at 30 s, about 7 s). It prints the max difference
-against the CoolSolve hourly table when that file is present.
+(numpy, classical RK4 at 30 s). It prints the max difference against the
+CoolSolve hourly table when that file is present.
 
 ## Results
 
@@ -143,39 +149,27 @@ heat; on the hourly rows the storage term reaches tens of W/m².
 
 ## Solving time
 
-Measured 2026-11-10, CoolSolve 0.4.0, six days (518400 s):
+Release build, one thread, six days (518 400 s). The file is RK4 at 60 s.
+BDF is `integralMethod = BDF` in `coolsolve.conf`, with
+`integralAbsTol = integralRelTol / 100`. Evaluations include the Jacobians
+and the rejected steps.
 
-| | step | steps | wall time |
-|---|---|---|---|
-| `greenhouse_heating_pipe_dynamic_ref.py` | 30 s | 17280 | 6.8 s |
-| `coolsolve` | 60 s | 8640 | 25.1 min (1503 s) |
+| | evaluations | wall time | hourly temperatures vs RK4 at 15 s |
+|---|---:|---:|---:|
+| this file, RK4 at 60 s | 34 560 | 0.94 s | 0.018 K |
+| BDF, `integralRelTol` 1e-4 | 4 811 | 0.15 s | 0.026 K |
+| BDF at the default 1e-6 | 13 400 | | 0.0005 K |
+| `greenhouse_heating_pipe_dynamic_ref.py`, RK4 at 30 s | | about 2 s | the reference |
 
-CoolSolve is slower although it takes half as many steps, and although this
-model is explicit once the fifteen states are pinned: there is no algebraic
-unknown left. Each RK4 stage still calls the full algebraic solver (four
-solves per step, about 43 ms each, about 34600 solves). The Python script
-evaluates the cell and climate fluxes directly.
+One evaluation of the right-hand side takes 27 µs. Once the fifteen states
+are pinned there is no algebraic unknown left, and a stage is the evaluation
+of the blocks that depend on the time or a state. The 25.1 min (1503 s) of
+2026-11-10 was the algebraic solver copying the state at every block of
+every stage, on a machine about three times slower than these figures (the
+Python script took 6.8 s there, 2 s here).
 
-Four changes would close most of that gap, in this order:
-
-1. A march residual that substitutes the explicit equations and runs Newton
-   only on the blocks that stay implicit. On this model that set is empty,
-   so a stage should be one residual evaluation. The integrator needs the
-   integrands, not a full solve report.
-2. A cached map of the pinned variables and a reused automatic-differentiation
-   tape. Today both are rebuilt at every stage, and the cost grows with the
-   number of blocks times the number of variables. That walk, not an implicit
-   unknown, is why this model is slower than CSL-0334.
-3. A Jacobian kept along the trajectory, refreshed from one residual per
-   smooth stage. The default rebuilds it at every Newton iteration, and
-   nothing is kept from one stage to the next.
-4. A BDF or DASSL step, which can take longer steps than the fixed RK4 the
-   air and cover time constants currently force. That cuts the number of
-   stages; it does not make one stage cheaper. Index reduction does not
-   apply: the pipe cells are explicit ODEs.
-
-The algebraic sibling CSL-0333 does not show this gap: there the 1.3 s
-CoolSolve run against a 1 ms scipy root is process startup and the report.
+The fixed step stays in the file because it is the verified trajectory.
+BDF's step follows the tolerance.
 
 ## Source and attribution
 
@@ -212,10 +206,11 @@ CoolSolve run against a 1 ms scipy root is process startup and the report.
 - Integration step fixed at 60 s (moisture-state accuracy: at 120 s,
   `VP_air` drifts by about 1.2 % and `T_air` by 0.5 K against a 30 s step).
 - **2026-11-10 — correction**: same missing floor term as `CSL-0333`
-  (`- q_rad_flr_cov`). Re-solved (about 25 min, 8640 steps) and re-checked
-  against RK4. The check is `greenhouse_heating_pipe_dynamic_ref.py`; the
-  Solving time section records why that 30 s Python run takes 7 s and the
-  60 s CoolSolve run takes 25 min.
+  (`- q_rad_flr_cov`). Re-solved and re-checked against RK4. The check is
+  `greenhouse_heating_pipe_dynamic_ref.py`.
+- **2026-11-10 — solving time**: the 25 min figure was the march before a
+  stage stopped copying the state. Current times, and BDF, are in *Solving
+  time*.
 - **Level**: equations 222 (1) + largest block 90 (2) + arrays, 15 states
   (1) + multi-zone/discretized (1) + dynamics (1) + default guesses (0)
   = 6 → level 3.

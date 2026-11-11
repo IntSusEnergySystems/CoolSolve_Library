@@ -262,7 +262,8 @@ CoolSolve gap blocking the native file (CoolSolve
   `q_week`, …) are assigned by `PROCEDURE mean` and read by `PROCEDURE
   summation`, so the file is rejected at the parse by the check of variables
   read before their assignment in a procedure (lines 119, 156–159). It is a
-  planned improvement in CoolSolve (`docs/integral_table.md` §7.2, item 4).
+  planned improvement in CoolSolve (`docs/integral_table.md` §7.2,
+  `INTEGRALVALUE` evaluator dispatch).
 - `CS-DOC-SQUARE-INTEGRAL` — the `-d` analysis of a model with `INTEGRAL`
   calls reports `System square: No` and lists *all* variables as unmatched
   (`Equations: 74, Variables: 70`), which is why the real diagnosis comes from

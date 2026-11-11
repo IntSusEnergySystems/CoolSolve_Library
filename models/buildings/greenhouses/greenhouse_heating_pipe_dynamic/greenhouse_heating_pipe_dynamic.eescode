@@ -273,7 +273,7 @@ Q_cap_so4 = q_cnd_so34 - q_cnd_so45   "net heat to soil layer 4 [W/m^2]"
 Q_cap_so5 = q_cnd_so45 - q_cnd_so5_dp   "net heat to soil layer 5 [W/m^2]"
 MV_air = MV_can_air - MV_air_cov - MV_air_out   "net vapour flow to the air moisture state [kg/m^2-s]"
 
-"!State equations (integrated)"
+"!State equations. The 60 s step keeps VP_air and T_air within the README tolerances; BDF does not need it (Solving time)."
 T_air = 19 + INTEGRAL(Q_cap_air/C_air, tau, 0, 518400, 60)        "air temperature [C]"
 T_can = 19 + INTEGRAL(Q_cap_can/C_can, tau, 0, 518400, 60)        "canopy temperature [C]"
 T_cov = 8 + INTEGRAL(Q_cap_cov/C_cov, tau, 0, 518400, 60)         "cover temperature [C]"

@@ -115,19 +115,21 @@ soil 14/12/10/8/5 °C, `VP_air` = 80 % RH at 19 °C.
 coolsolve ./greenhouse_climate_dynamic.eescode
 ```
 
-The ten states are integrated with RK4 at a fixed step of 120 s (4320
-steps, about 8 min). The trajectory is written hourly. The automatic step
-(default, 518 s here) is *unstable*: the air and cover nodes have time
-constants of 100–600 s, so the explicit scheme needs the fixed step. At 120 s
-the integration error against the reference below stays under 0.004 K. The
-reference itself is
+The ten states are integrated with RK4 at the step written in `INTEGRAL`
+(120 s, 4320 steps). The trajectory is written hourly, and 120 s divides
+the hour, so each row is a step. Without that step the default RK4 step is
+above the stability limit of the air and cover (about 50–175 s) and the run
+diverges. `integralMethod = BDF` with `integralRelTol = 1e-4` and
+`integralAbsTol = 1e-6` does not need the step: the hourly temperatures stay
+within 0.03 K of RK4 at 15 s. The shipped file keeps 120 s, which is what
+the table below compares. Times are in *Solving time*. The reference itself is
 
 ```bash
 python3 greenhouse_climate_dynamic_ref.py
 ```
 
-(numpy and scipy, classical RK4 at 30 s, about 20 s). It prints the max
-difference against the CoolSolve hourly table when that file is present.
+(numpy and scipy, classical RK4 at 30 s). It prints the max difference
+against the CoolSolve hourly table when that file is present.
 
 ## Results
 
@@ -174,39 +176,27 @@ physical plausibility check.
 
 ## Solving time
 
-Measured 2026-11-10, CoolSolve 0.4.0, six days (518400 s):
+Release build, one thread, six days (518 400 s). The file is RK4 at 120 s.
+BDF is `integralMethod = BDF` in `coolsolve.conf`, with
+`integralAbsTol = integralRelTol / 100`. Evaluations include the Jacobians
+and the rejected steps.
 
-| | step | steps | wall time |
-|---|---|---|---|
-| `greenhouse_climate_dynamic_ref.py` | 30 s | 17280 | 20 s |
-| `coolsolve` | 120 s | 4320 | 8.0 min (477 s) |
+| | evaluations | wall time | hourly temperatures vs RK4 at 15 s |
+|---|---:|---:|---:|
+| this file, RK4 at 120 s | 17 280 | 0.57 s | 0.003 K |
+| BDF, `integralRelTol` 1e-4 | 2 921 | 0.12 s | 0.021 K |
+| BDF at the default 1e-6 | 10 700 | | 0.0005 K |
+| `greenhouse_climate_dynamic_ref.py`, RK4 at 30 s | | about 6 s | the reference |
 
-CoolSolve is slower although it takes four times fewer steps. Each RK4 stage
-pins the time and the states and then calls the full algebraic solver: four
-solves per step, about 28 ms each, about 17300 solves for this run. The
-Python script evaluates the derivatives directly and solves only the pipe
-temperature, with one scalar root.
+One evaluation of the right-hand side takes 33 µs: only the blocks that
+depend on the time or a state are solved, by slots, and an explicit block
+carries no Jacobian. The pipe balance is the one block that stays implicit.
+The 8.0 min (477 s) of 2026-11-10 was the algebraic solver copying the state
+at every block of every stage, on a machine about three times slower than
+these figures (the Python script took 20 s there, 6 s here).
 
-Four changes would close most of that gap, in this order:
-
-1. A march residual that substitutes the explicit equations and runs Newton
-   only on the blocks that stay implicit. Here that block is the pipe
-   balance (one unknown, which is what the Python `brentq` already does).
-   The integrator needs the integrands, not a full solve report.
-2. A cached map of the pinned variables and a reused automatic-differentiation
-   tape. Today both are rebuilt at every stage, and the cost grows with the
-   number of blocks times the number of variables.
-3. A Jacobian kept along the trajectory, refreshed from one residual per
-   smooth stage. The default rebuilds it at every Newton iteration, and
-   nothing is kept from one stage to the next.
-4. A BDF or DASSL step, which can take longer steps than the fixed RK4 the
-   air and cover time constants currently force (the automatic step diverges).
-   That cuts the number of stages; it does not make one stage cheaper. Index
-   reduction does not apply: once the pipe temperature is known this is an
-   explicit ODE.
-
-The algebraic sibling CSL-0333 does not show this gap: there the 1.3 s
-CoolSolve run against a 1 ms scipy root is process startup and the report.
+The fixed step stays in the file because it is the verified trajectory.
+RK4 without it diverges. BDF's step follows the tolerance.
 
 ## Source and attribution
 
@@ -242,10 +232,11 @@ CoolSolve run against a 1 ms scipy root is process startup and the report.
   solver diverges at t ≈ 1000 s).
 - **2026-11-10 — correction**: the floor balance did not subtract
   `q_rad_flr_cov` (the cover receives that long-wave flow; the floor must
-  lose it). Re-solved (about 8 min, 4320 steps) and re-checked against RK4.
-  The check is `greenhouse_climate_dynamic_ref.py`; the Solving time section
-  records why that 30 s Python run takes 20 s and the 120 s CoolSolve run
-  takes 8 min.
+  lose it). Re-solved and re-checked against RK4. The check is
+  `greenhouse_climate_dynamic_ref.py`.
+- **2026-11-10 — solving time**: the 8 min figure was the march before a
+  stage stopped copying the state. Current times, and BDF, are in *Solving
+  time*.
 - **Level**: equations 186 (1) + largest block 64 (2) + no function or
   array (0) + multi-zone (1) + dynamics (1) + default guesses (0) = 5
   → level 3.
@@ -256,9 +247,9 @@ CoolSolve run against a 1 ms scipy root is process startup and the report.
   growth; the heating pipe is lumped (see [`CSL-0335`](../greenhouse_heating_pipe_dynamic/)
   for the discretized pipe rail).
 - P controllers leave a steady offset to the set-point (by design).
-- The fixed 120 s step fits December ventilation rates; high ventilation
-  (vents open in summer) shortens the air time constant below 100 s and
-  would need a smaller step.
+- The fixed 120 s step is the RK4 stability limit of the air and cover
+  (about 50–175 s; high ventilation in summer goes below 100 s). BDF with a
+  tolerance replaces that step (*Solving time*). The shipped file keeps 120 s.
 - No CoolSolve gaps (`missing_features` empty).
 
 ## Related models

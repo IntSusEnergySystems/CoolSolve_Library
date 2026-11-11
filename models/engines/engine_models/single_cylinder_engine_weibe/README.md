@@ -289,7 +289,13 @@ Sources (not copied into the library):
 - The intake mass flow uses the three-argument `IF(x, a, b)` of CoolSolve
   (value `a` when `x > 0`, else `b`): CoolSolve-only syntax, not valid EES
   (the EES `IF` has five arguments, `CS-GAP-IF5`). With no EES original
-  the file is a CoolSolve model, not a verified EES one.
+  the file is a CoolSolve model, not a verified EES one. The flow is an
+  `IF` on the cylinder pressure, which is a state, and the trajectory stays
+  on `p = p_out`: the flow switches off as soon as the pressure reaches the
+  outside pressure and on again below it. An implicit method has no solution
+  on that switch. `BDF` and `EulerImplicit` stop, and the message says so.
+  RK4 at the 1° step of the file steps across it. RK45 follows it with very
+  short steps and needs `integralMaxSteps` of about 50 000.
 - Single homogeneous ideal gas with constant γ = 1.3 and a constant molar mass
   29 kg/kmol: no dissociation, no composition change after combustion, no
   blow-by, no friction, no heat transfer to the surroundings other than the

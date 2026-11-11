@@ -220,41 +220,21 @@ the latent heat carried out by the ventilation — closes to 2·10⁻¹⁰ W/m²
 
 ## Solving time
 
-Measured 2026-11-10, CoolSolve 0.4.0. The design point alone:
+Release build, one thread, the same runs as the dynamic siblings.
 
 | | wall time |
 |---|---|
 | `greenhouse_steady_state_ref.py` (scipy `root`, 14 evaluations) | 0.001 s |
-| `coolsolve` (7 Newton iterations, startup and the LaTeX report included) | 1.3 s |
+| `coolsolve`, the solve | about 2 ms |
 
-On this algebraic model the gap is the process startup and the report, not
-the Newton loop. The same solver, called once per Runge–Kutta stage, is what
-makes the dynamic variants slow: CSL-0334 takes 8.0 min in CoolSolve against
-20 s in Python, and CSL-0335 takes 25.1 min against 6.8 s.
+The 1.3 s of 2026-11-10 was process startup: CoolSolve loaded the CoolProp
+library for a model that never calls a property, and wrote the report, on a
+slower machine. The library is no longer loaded when there is no property
+call. The Newton loop was not the cost.
 
-CoolSolve integrates by pinning the time and the states, then calling the
-full algebraic solver at every stage (four solves per RK4 step). The Python
-scripts evaluate the derivatives directly; the climate script solves only
-the pipe temperature, with one scalar `brentq`. Four changes would close
-most of that gap, in this order:
-
-1. A march residual that substitutes the explicit equations and runs Newton
-   only on the blocks that stay implicit. The integrator needs the
-   integrands, not a full solve report.
-2. A cached map of the pinned variables and a reused automatic-differentiation
-   tape. Today both are rebuilt at every stage, and the cost grows with the
-   number of blocks times the number of variables. The pipe model has no
-   implicit unknown once the states are pinned, and it is still the slower of
-   the two.
-3. A Jacobian kept along the trajectory, refreshed from one residual per
-   smooth stage. The default rebuilds it at every Newton iteration, and
-   nothing is kept from one stage to the next.
-4. A BDF or DASSL step, which can take longer steps than the fixed RK4 the
-   air and cover time constants currently force. That cuts the number of
-   stages; it does not make one stage cheaper. Index reduction does not
-   apply: once the pipe temperature is known these are explicit ODEs.
-   Tearing that pipe balance down to one unknown, as the Python script does,
-   is a small extra on CSL-0334.
+CSL-0334 and CSL-0335 are RK4 at the step in the file, 0.57 s and 0.94 s,
+against about 6 s and 2 s for their Python references. What a stage costs,
+and BDF, are in their *Solving time* sections.
 
 ## Source and attribution
 
@@ -302,7 +282,7 @@ the library license (MIT) with full credit to the original authors.
   both heat ports in `Radiation_T4`) was a source. `Q_pip` was 183 W/m² and
   is 198 W/m² after the fix. Re-solved and re-checked the same day. The
   check is `greenhouse_steady_state_ref.py`; the Solving time section
-  records why the dynamic variants are much slower in CoolSolve.
+  records the cost of this solve and of the dynamic siblings.
 - **Level**: equations 147 (1) + largest block 36 (2) + multi-zone, five
   coupled components (1) + no dynamics/calibration (0) + solves from default
   guesses (0) = 4 → level 3.

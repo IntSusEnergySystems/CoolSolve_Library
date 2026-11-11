@@ -71,10 +71,13 @@ CoolSolve gaps*). The runnable transcription is:
 coolsolve ./ice_storage_tank_discharge_phase_change_coolsolve.eescode
 ```
 
-(a few seconds). `coolsolve.conf` sets `integralMaxSteps = 6000`: the `INTEGRAL`
-call has no explicit step, so CoolSolve takes exactly that number of steps over
-0–50 000 s (8.33 s each; one row of the integral table every second step, i.e.
-every 16.7 s, 3001 rows in the `.sol`). The trajectory is written to
+(a few seconds, 6000 RK4 steps). `coolsolve.conf` sets `integralMaxSteps = 6000`:
+the `INTEGRAL` call has no step, so RK4 takes exactly that many steps of
+8.33 s. `$IntegralTable tau:10` writes a row every 10 s; a row that is not
+on a step is interpolated between the two steps around it. The committed
+`.sol` table is coarser (3001 rows, every 16.7 s): it was written when the
+output interval was not applied and a row was kept every second step. The
+trajectory is also written to
 `ice_storage_tank_discharge_phase_change_coolsolve-integral.csv` (10 columns)
 and shown in the GUI *Integral* tab.
 
@@ -185,6 +188,14 @@ model in the library.
 - Fully mixed tank (no stratification), constant cp for ice and liquid,
   linear phase-change relation between `u_ice_0` and `u_liq_0`, ε-NTU with a
   constant cold-side coefficient — the level of detail of the exercise.
+- The integration starts on the phase boundary, with the discharged heat,
+  a state, at 0. An adaptive method (BDF, RK45) passes that jump only with
+  a first step short enough for `integralAbsTol` to dominate the weight of
+  that state; the automatic minimum step is the resolution of the
+  integration variable, and both methods then complete. RK45's long steps
+  leave a row up to about 7 % of a column off, because a row between two
+  steps is interpolated; BDF solves the row at the states of its
+  interpolant. The shipped run is the fixed RK4 of `coolsolve.conf`.
 - The native file is **blocked** by `CS-BUG-WATER-NEAR-FREEZING` (see CoolSolve
   `docs/model_library_support.md`): `INTENERGY`/`VOLUME` of Water at or below
   0 °C return NaN (CoolProp has no ice/metastable-liquid region), while EES

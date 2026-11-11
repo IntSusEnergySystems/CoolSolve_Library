@@ -41,7 +41,7 @@
     "date": "2026-11-10",
     "coolsolve_version": "0.4.0@cc582a6",
     "max_rel_diff": 1.73e-04,
-    "notes": "max_rel_diff is the largest relative deviation of the ten states over the trajectory (T_can). Q_pip, set by the controller from T_air, stays within 0.15 W/m2. The deviation is the integration step (CoolSolve RK4 h = 120 s vs reference h = 30 s). 2026-11-10: floor balance corrected (-q_rad_flr_cov) and the trajectory re-checked."
+    "notes": "max_rel_diff is the largest relative deviation of the ten states over the trajectory (T_can). Q_pip, set by the controller from T_air, stays within 0.15 W/m2. The deviation is the integration step (CoolSolve RK4 h = 120 s vs reference h = 30 s). 2026-11-10: floor balance corrected (-q_rad_flr_cov) and the trajectory re-checked. The 8 min run of that day is obsolete: RK4 at 120 s is 0.57 s, BDF at 1e-4 is 0.12 s within 0.03 K (README, Solving time)."
   },
   "missing_features": [],
   "related": ["CSL-0333", "CSL-0335", "CSL-0042"],
@@ -52,6 +52,7 @@
   "previous_paths": [],
   "history": [
     {"date": "2026-11-09", "action": "added (roadmap card G-2; T-TRANSLATE from the Greenhouses Modelica library)", "by": "opencode worker for S. Quoilin"},
-    {"date": "2026-11-10", "action": "floor balance corrected (-q_rad_flr_cov); re-solved and re-verified", "by": "review"}
+    {"date": "2026-11-10", "action": "floor balance corrected (-q_rad_flr_cov); re-solved and re-verified", "by": "review"},
+    {"date": "2026-11-10", "action": "solving time rewritten: the march no longer copies the state; RK4 0.57 s, BDF at 1e-4 within 0.03 K", "by": "review"}
   ]
 }

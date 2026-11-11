@@ -40,7 +40,7 @@
     "date": "2026-11-10",
     "coolsolve_version": "0.4.0@cc582a6",
     "max_rel_diff": 8.3e-04,
-    "notes": "max_rel_diff is the largest relative deviation of the 15 states over the trajectory (T_air). Integration step 60 s. At 120 s, against the same 30 s reference, VP_air drifts by about 1.2 % and T_air by 0.5 K. 2026-11-10: floor balance corrected (-q_rad_flr_cov) and the trajectory re-checked."
+    "notes": "max_rel_diff is the largest relative deviation of the 15 states over the trajectory (T_air). Integration step 60 s. At 120 s, against the same 30 s reference, VP_air drifts by about 1.2 % and T_air by 0.5 K. 2026-11-10: floor balance corrected (-q_rad_flr_cov) and the trajectory re-checked. The 25 min run of that day is obsolete: RK4 at 60 s is 0.94 s, BDF at 1e-4 is 0.15 s within 0.03 K (README, Solving time)."
   },
   "missing_features": [],
   "related": ["CSL-0333", "CSL-0334"],
@@ -51,6 +51,7 @@
   "previous_paths": [],
   "history": [
     {"date": "2026-11-09", "action": "added (roadmap card G-3; T-TRANSLATE from the Greenhouses Modelica library)", "by": "opencode worker for S. Quoilin"},
-    {"date": "2026-11-10", "action": "floor balance corrected (-q_rad_flr_cov); re-solved and re-verified", "by": "review"}
+    {"date": "2026-11-10", "action": "floor balance corrected (-q_rad_flr_cov); re-solved and re-verified", "by": "review"},
+    {"date": "2026-11-10", "action": "solving time rewritten: the march no longer copies the state; RK4 0.94 s, BDF at 1e-4 within 0.03 K", "by": "review"}
   ]
 }

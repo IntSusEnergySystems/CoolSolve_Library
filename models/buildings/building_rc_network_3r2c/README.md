@@ -20,7 +20,7 @@ equation-based time integration.
 | **Source** | CoolSolve example `examples/building_rc_network.eescode`, itself simplified from the EES model of the CLIM R06 repetition exercise 2 (University of Liège) |
 | **Authors** | S. Quoilin and the ULiège Thermodynamics Laboratory (CoolSolve example); course author of the original EES model `TBD` |
 | **License** | MIT |
-| **CoolSolve** | **verified** against an independent RK4 integration of the same equations (max 0.0028 K on `T_in`, 0.0002 K on the two wall temperatures); the native file runs as written (about 8 s) |
+| **CoolSolve** | **verified** against an independent RK4 integration of the same equations (max 0.0028 K on `T_in`, 0.0002 K on the two wall temperatures); the native file runs as written (about 0.06 s) |
 
 ## Problem statement
 
@@ -53,10 +53,11 @@ Three capacitances, three resistances, as in the original:
   `R_in = 1/h_in + R_w/2` with `h_in = 8 W/m²·K` and `R_w = 0.1429 m²·K/W`.
 
 Each state is written in the EES integral form and integrated over
-`[0, 604800] s` with `INTEGRAL` (CoolSolve time march, RK45 by default); the
-trajectory (`$IntegralTable tau:600 …`: 1001 rows, 604.8 s apart in the CoolSolve
-output) is written to `building_rc_network_3r2c-integral.csv` and at the end of the
-`.sol` file.
+`[0, 604800] s` with `INTEGRAL`. The call has no step, so the default method
+(RK4) takes `integralMaxSteps` = 1000 steps of 604.8 s. `$IntegralTable
+tau:600` asks for a row every 600 s; the committed trajectory in the `.sol`
+is the step grid (1001 rows), from the run that verified the model. A
+current run also writes the 600 s rows (see *Limitations*).
 
 The weather signals are the columns `T_out` [°C], `I_dot_south` [W/m²] and
 `f_occ` [−] of the table `building_rc_network_3r2c-week.csv` (169 hourly
@@ -90,7 +91,7 @@ rows, `tau` = 0 … 604800 s; a July sunny week, from the tables p. 4.12 and
 ## How to run
 
 ```bash
-coolsolve ./building_rc_network_3r2c.eescode        # about 8 s
+coolsolve ./building_rc_network_3r2c.eescode        # about 0.06 s, 1000 RK4 steps
 ```
 
 No `.initials` and no `coolsolve.conf` are needed. The file keeps the three
@@ -117,7 +118,7 @@ file), done on the native file:
 2. **Trajectory against an independent integration.** Classical RK4 integration
    (Python, fixed step 15 s, hourly linear interpolation of the same table) of
    the *same* equations written in the native file, compared with the
-   CoolSolve trajectory (RK45, 1001 output rows) at the output times:
+   CoolSolve trajectory (RK4, 1000 steps of 604.8 s, 1001 output rows) at the output times:
 
    | Variable | max &#124;CoolSolve − RK4(h = 15 s)&#124; | at |
    |---|---|---|
@@ -185,13 +186,18 @@ CoolSolve does not accept a lookup written *inline in the base of a state*,
 does not use that form (its bases are the variables `T_in_0`, `T_c_wall_0`,
 `T_c_in_0`).
 
-- *Unverified suggestion (not registered)*: the `$IntegralTable tau:600`
-  output interval over 604800 s gives 1001 rows 604.8 s apart (1000 equal
-  intervals of the solver's own steps) instead of 1009 rows 600 s apart.
-  Reproduced on a 2-equation minimal model
-  (`y = 1 + integral(dydt, tau, 0, 604800)`, `dydt = -1e-5·y + 2e-4`,
-  `$IntegralTable tau:600 y`), so it is not specific to this import; whether
-  EES writes one row per output interval was not verified here.
+- No step is given, so the default RK4 takes `integralMaxSteps` = 1000
+  steps of 604.8 s. The model is not stiff at that step. `$IntegralTable
+  tau:600` asks for a row every 600 s; a current run writes those rows, and
+  a row between two steps is the linear interpolation of the step rows.
+  Where the occupancy switches inside a step, `Q_dot_capa_in` is about 12 %
+  of its range off. The temperatures stay within 0.01 K of a fine RK4. The
+  committed `.sol` table is the step grid (1001 rows, 604.8 s), from the
+  verifying run, when the output interval was not yet applied. BDF
+  (`integralMethod = BDF`) solves each output row from its own interpolant;
+  at the default tolerance the temperatures are within 0.0005 K of a fine
+  RK4, and at 1e-6 it takes more evaluations than these 1000 RK4 steps
+  (fewer at 1e-4).
 
 ## Related models
 

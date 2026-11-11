@@ -61,7 +61,7 @@ The native file `dhw_tank_dynamic.eescode` keeps the EES syntax (5-argument
 the CoolSolve GUI and press *Solve*, or from a terminal:
 
 ```bash
-coolsolve ./dhw_tank_dynamic.eescode    # ~1.5 min, 18 000 RK4 steps of 1 s
+coolsolve ./dhw_tank_dynamic.eescode    # about 0.7 s, 18 000 RK4 steps of 1 s
 ```
 
 No `coolsolve.conf` is needed: the explicit step of the `INTEGRAL` call (1 s)
@@ -159,8 +159,15 @@ Source file (EES X10.836, comments in French), collection of S. Quoilin:
 - Fully mixed tank (no stratification), constant water cp, constant tank
   mass, UA_amb independent of temperature — the level of detail of the
   exercise.
-- Solve time ≈ 1.5 min (18 000 RK4 steps, one property call per step for the
-  initial state only).
+- The 1.5 min once quoted for this run was the march before a stage stopped
+  copying the state. The same 18 000 RK4 steps take about 0.7 s (Release,
+  one thread; the property call is the initial state only). BDF at the
+  default tolerance reproduces the table within 2·10⁻⁵ of the largest value
+  of each column, in 372 right-hand-side evaluations. RK45 is not a
+  substitute here: its steps are long, a row between two steps is
+  interpolated, and the tank temperature is then 0.14 K off (the tap power,
+  most of its range, at one row). The shipped file keeps the 1 s step, which
+  is what the EES table compares.
 
 ## Related models
 
