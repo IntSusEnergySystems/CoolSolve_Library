@@ -1,0 +1,49 @@
+{=============================================================================
+  Lumped-capacitance cooling of a sphere in a fluid - runnable variant
+  CoolSolve Library model CSL-0343 (variant of lumped_capacitance_cooling)
+  -----------------------------------------------------------------------------
+  Same model as the native file lumped_capacitance_cooling.eescode: a solid
+  sphere initially at 400 °C is cooled by convection to a fluid medium at
+  20 °C (h = 10 W/m2-K).  The energy balance of the lump,
+      rho*V*c*dTdt = -h*A*(T-T_infinity),
+  is integrated in time and the closed-form solution T_exact is computed
+  beside it.  Only the gap CS-GAP-INTEGRAL-2ARG forces the changes below:
+    - the two-argument table-based INTEGRAL(dTdt, Time) of the original, whose
+      limits come from the EES parametric table, becomes the equation-based
+      INTEGRAL(dTdt, Time, 0, Time_final);
+    - the end of the integration is given by the input Time_final = 1000 s
+      (the last row of the EES parametric table); Time is now the integration
+      variable itself;
+    - the trajectory is tabulated every 100 s ($IntegralTable Time:100), which
+      reproduces the 11 rows of the EES parametric table.
+  Units  : SI - temperatures in °C, energies in J (the model uses no pressure)
+  Source : S. A. Klein, F-Chart Software, EES example "Difeqn1"
+           (MIT, via EES-Community/ees-examples) - see README.md
+  Status : verified against the solution stored in the EES file (see README.md)
+=============================================================================}
+
+"Physical properties"
+r = 0.005 [m]                   "radius of the sphere"
+A = 4*pi*r^2                    "area of the lump [m^2]"
+V = 4/3*pi*r^3                  "volume of the lump [m^3]"
+
+"Material properties"
+rho = 3000 [kg/m3]              "density of the lump [kg/m3]"
+c = 1000 [J/kg-K]               "specific heat of the lump [J/kg-K]"
+
+"Constants"
+T_infinity = 20 [C]            "temperature of the fluid medium [°C]"
+T_i = 400 [C]                  "initial temperature of the lump [°C]"
+h = 10 [W/m2-K]                "heat transfer coefficient [W/m2-K]"
+Time_final = 1000 [s]          "end of the integration: last row of the EES parametric table"
+
+"Energy balance to determine dTdt"
+rho*V*c*dTdt = -h*A*(T-T_infinity)
+
+"Integrate dTdt to find T as a function of time"
+T = T_i + INTEGRAL(dTdt, Time, 0, Time_final)
+
+"Exact solution"
+(T_exact-T_infinity)/(T_i-T_infinity) = exp(-h*A/(rho*c*V)*Time)
+
+$IntegralTable Time:100 T T_exact

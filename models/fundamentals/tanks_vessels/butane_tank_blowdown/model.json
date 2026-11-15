@@ -1,0 +1,71 @@
+{
+  "id": "CSL-0351",
+  "name": "butane_tank_blowdown",
+  "title": "Emptying a butane tank (blowdown, saturated-liquid outflow)",
+  "summary": "Rigid tank of 0.54 l with 0.23 kg of two-phase n-butane at 25 C is emptied at 0.035 g/s for 20 min, the outflow being saturated liquid at the state of the tank. The unsteady uniform-state mass and energy balances are integrated over time (total internal energy as state variable) and the final tank and outflow states are reported.",
+  "kind": "dynamic",
+  "level": 1,
+  "status": "verified",
+  "main_file": "butane_tank_blowdown.eescode",
+  "fluids": [
+    "n-Butane"
+  ],
+  "tags": [
+    "rigid tank",
+    "blowdown",
+    "unsteady",
+    "uniform-state",
+    "saturated liquid outflow",
+    "integral",
+    "textbook example"
+  ],
+  "language_features": [
+    "property functions",
+    "INTEGRAL (dynamic model)",
+    "string-valued PHASE$"
+  ],
+  "stats": {
+    "n_equations": 21,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_examples",
+    "source_path": "",
+    "candidate_id": "EEX-021",
+    "authors": [
+      "S. A. Klein",
+      "G. F. Nellis"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/uncategorized/example_4.5-3.ees",
+    "license": "MIT",
+    "ees_version": "X11.912",
+    "language": "en",
+    "course": "",
+    "notes": "Example 4.5-3 of Klein & Nellis, Thermodynamics (Cambridge University Press, 2011); EES example (c) F-Chart Software, MIT via EES-Community/ees-examples. The binary .eez companion (EES 11.912) carries the stored solution used as verification reference. Original download page in the file header: https://fchartsoftware.com/ees/examples/examples_thermodynamics_2011/chapter%204/example%204.5-3.eez"
+  },
+  "verification": {
+    "summary": "Compared with the EES solution stored in the .eez companion of the source file (20 variables, --ees-units): 17 agree within rtol 0.001; P and P_1 differ by 1.7e-3 (EES vs CoolProp n-butane property models, within the 0.5 % different-EOS band) and P_kPa is a kPa-vs-Pa unit-scale difference. Mass and energy balances checked at 20 min.",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance"
+    ],
+    "reference": "EES stored solution (20 variables) of the .eez companion ees-examples-raw/uncategorized/example_4.5-3.eez (EES 11.912), compared with tools/compare_solution.py --ees-units",
+    "date": "2026-11-15",
+    "coolsolve_version": "0.4.0@00a4daa",
+    "max_rel_diff": 0.00178,
+    "notes": "Tool summary: '20 common variables, 3 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 2'. The largest printed relative deviation, 9.99e-1, is P_kPa: the original reports it in kPa (241.296) and CoolSolve computes it in kPa too (240.88), while the tool converts the kPa reference to Pa. The largest same-unit deviation is 1.78e-3 on P_1 and 1.72e-3 on P (EES vs CoolProp n-butane models; u and T agree to 3.2e-4). The 2 'only in CoolSolve' variables are h_1 and the string Phase_1$, added by the Phase$ rewrite (README conversion log). Mass balance 0.042 kg on both sides at 20 min; energy balance dUdt = -m_dot_out*h_out = -9.0537493 W exact."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-15",
+      "action": "added (T-IMPORT card C-519 of roadmap.md section 6, candidate EEX-021 of the ees_examples inventory); verified against the EES stored solution of the .eez companion",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

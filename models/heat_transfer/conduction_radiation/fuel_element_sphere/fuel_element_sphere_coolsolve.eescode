@@ -1,0 +1,77 @@
+{=============================================================================
+  Spherical fuel element with exponential heat generation (runnable variant)
+  CoolSolve Library model CSL-0348 - variant of fuel_element_sphere.eescode
+ -----------------------------------------------------------------------------
+  Same model as fuel_element_sphere.eescode (the native file, blocked): a
+  50-node finite-volume model of a spherical fuel element with an
+  exponentially decaying volumetric heat generation, a cladding shell and
+  convection to a gas at 500 °C, plus the analytical (b = 0) solution.
+
+  Inputs : r_fuel, r_clad, k_fuel, k_clad, h_bar, T_infinity, N, and in
+           FUNCTION gen: g_dot_0, b
+  Outputs: nodal temperatures T[i] (K), T_max_C, cladding resistances
+  Units  : SI - temperatures computed in K (ConvertTemp for the °C outputs),
+           pressures Pa, energies J
+  Source : Nellis & Klein, Heat Transfer, Cambridge University Press, 2009,
+           example 1.4-1 - MIT licence via EES-Community/ees-examples
+  Variant: three changes forced by CoolSolve gaps, physics unchanged:
+           the prime/backtick names renamed (g```_dot_0 -> g_dot_0,
+           g```_dot -> g_dot, CS-GAP-NAME-PRIME); the four EES line
+           continuations & joined into single equations
+           (CS-GAP-LINE-CONTINUATION); and in the node-N balance the
+           variable indices T[N], T[N-1], r[N-1], r[N] written as T[50],
+           T[49], r[49], r[50] (CS-GAP-INDEX-VAR; N = 50 in the model).
+           Valid EES, no CoolSolve-only syntax.
+=============================================================================}
+
+"!EXAMPLE 1.4-1: Fuel Element"
+
+FUNCTION gen(r, r_fuel)
+	"This function defines the volumetric heat generation in the fuel element
+	Inputs:	r: radius (m)
+		r_fuel: radius of fuel sphere (m)
+	Output: volumetric heat generation at r (W/m^3)"
+	g_dot_0=5e5 [W/m^3]	"volumetric generation rate at the center"
+	b = 1.0	"constant that describes rate of decay (dimensionless)"
+	gen=g_dot_0*Exp(-b*r/r_fuel)	"volumetric rate of generation"
+END
+
+"Inputs"
+r_fuel = 5.0 [cm]*Convert(cm,m)	"fuel radius (5 cm in the original)"
+r_clad = 7.0 [cm]*Convert(cm,m)	"cladding radius (7 cm in the original)"
+$ifnot ParametricTable
+k_fuel = 1.0 [W/m-K]	"fuel conductivity"
+$endif
+k_clad= 300 [W/m-K]	"cladding conductivity"
+h_bar = 100 [W/m^2-K]	"average convection coefficient"
+T_infinity = ConvertTemp(C,K,500[C])	"gas temperature (500 C)"
+
+"Setup nodes"
+N=50	"number of nodes"
+DUPLICATE i=1,N
+	r[i]=r_fuel*(i-1)/(N-1)	"radial position of each node"
+END
+DELTAr=r_fuel/(N-1)	"distance between adjacent nodes"
+
+DUPLICATE i=3,(N-1)
+	4*pi*k_fuel*(T[i-1]-T[i])/(1/r[i-1]-1/r[i])+4*pi*k_fuel*(T[i+1]-T[i])/(1/r[i]-1/r[i+1])+4*pi*((r[i]+DELTAr/2)^3-(r[i]-DELTAr/2)^3)*gen(r[i],r_fuel)/3=0
+END
+4*pi*k_fuel*(r[1]+DELTAr/2)^2*(T[1]-T[2])/DELTAr+4*pi*k_fuel*(T[3]-T[2])/(1/r[2]-1/r[3])+4*pi*((r[2]+DELTAr/2)^3-(r[2]-DELTAr/2)^3)*gen(r[2],r_fuel)/3=0   "node 2 energy balance"
+R_cond_clad=(1/r_fuel-1/r_clad)/(4*pi*k_clad)	"conduction resistance of cladding"
+R_conv=1/(4*pi*r_clad^2*h_bar)	"convection resistance from surface of cladding"
+4*pi*k_fuel*(T[49]-T[50])/(1/r[49]-1/r[50])+(T_infinity-T[50])/(R_cond_clad+R_conv)+4*pi*(r[50]^3-(r[50]-DELTAr/2)^3)*gen(r[50],r_fuel)/3=0	"node N energy balance (N = 50; CS-GAP-INDEX-VAR)"
+4*pi*k_fuel*(r[1]+DELTAr/2)^2*(T[2]-T[1])/DELTAr+4*pi*((r[1]+DELTAr/2)^3-r[1]^3)*gen(r[1],r_fuel)/3=0
+	"node 1 energy balance"
+
+DUPLICATE i=1,N
+	T_C[i]=ConvertTemp(K,C,T[i])	"temperature in C"
+END
+T_max_C=Max(T_C[1..N])	"maximum temperature of the fuel, in C"
+
+"Analytical solution for b=0"
+g_dot=gen(0 [m],r_fuel)	"rate of volumetric generation to use in analytical solution"
+-k_fuel*4*pi*r_fuel^2*(-g_dot*r_fuel/(3*k_fuel))=(-g_dot*r_fuel^2/(6*k_fuel)+C_2-T_infinity)/(R_cond_clad+R_conv)  "boundary condition at r=r_fuel"
+DUPLICATE i=1,N
+	T_an[i]=-g_dot*r[i]^2/(6*k_fuel)+C_2	"analytical solution"
+	T_an_C[i]=ConvertTemp(K,C,T_an[i])	"in C"
+END

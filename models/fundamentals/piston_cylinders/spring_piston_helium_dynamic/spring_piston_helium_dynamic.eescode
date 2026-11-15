@@ -1,0 +1,51 @@
+{=============================================================================
+  Spring-loaded piston with helium: damped dynamic oscillation
+  CoolSolve Library model CSL-0342
+  -----------------------------------------------------------------------------
+  A steel piston latched in a well-insulated cylinder encloses helium at
+  400 kPa and 290 K; a compressed spring in the evacuated compartment on the
+  other side pushes the piston back. When the latch is released, the piston
+  oscillates and the dynamic friction damps the motion; the work of the gas
+  and the friction dissipation change the temperature of the helium, which
+  follows the ideal-gas law. Newton's law is integrated in time (INTEGRAL)
+  and the model returns the trajectory of the piston position, pressure,
+  volume and temperature over 1 s.
+  Fluid  : Helium (ideal-gas behaviour, as in the original)
+  Inputs : d, x_1, T_1, P_1, K, k_fric, thk, density_steel, time_final
+  Outputs: x, vel, acc, P, V, T (trajectory; F_net, m_p, n, c_v)
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. A. Klein, F-Chart Software, EES example "spring" (MIT, via
+           EES-Community/ees-examples) - see README.md
+  Status : verified against the solution and integral table stored in the
+           original EES file
+=============================================================================}
+
+"Known information"
+d = 0.2 [m]                    "piston diameter"
+x_1 = 0.3 [m]                  "initial (latched) location of the piston"
+A = pi*(d^2/4)                 "cross-sectional area of the piston [m^2]"
+V_1 = A*x_1                    "initial volume of helium [m^3]"
+T_1 = 16.85 [°C]               "initial temperature of helium: 290 K in the original"
+T_1_abs = T_1 + 273.15         "initial temperature of helium [K]"
+P_1 = 400000 [Pa]              "initial pressure of helium: 400 kPa in the original"
+K = 6000 [N/m]                 "spring constant"
+k_fric = 10 [N-s/m]            "coefficient of dynamic friction: 0.01 kN-s/m in the original"
+thk = 0.005 [m]                "thickness of the piston"
+density_steel = 8000 [kg/m^3]  "density of steel"
+m_p = A*density_steel*thk      "mass of the piston [kg]"
+time_final = 1 [s]             "end of the integration (value stored by EES)"
+R = R#                         "universal gas constant [J/kmol-K]"
+c_v = MOLARMASS(Helium)*cv(Helium,T=T_1,P=P_1)  "molar specific heat of helium at constant volume [J/kmol-K]"
+n = P_1*V_1/(R*T_1_abs)        "moles of helium at start, ideal gas law [kmol]"
+
+"Dynamic analysis"
+F_net = m_p*acc                "Newton's law [N]"
+F_net = P*A - K*x - k_fric*vel "net force: spring and friction oppose the motion [N]"
+vel = integral(acc,time,0,time_final)      "integrate acceleration to obtain velocity [m/s]"
+x = x_1 + integral(vel,time,0,time_final)  "integrate velocity to obtain the position [m]"
+V = A*x                        "current volume of helium [m^3]"
+T_abs = T + 273.15             "temperature of the helium [K]"
+P*V = n*R*T_abs                "ideal gas law relates pressure and temperature"
+n*c_v*(T-T_1) = integral(-P*A*vel+k_fric*vel^2,time,0,time_final)  "energy balance determines the temperature [J]"
+
+$IntegralTable time:0.001 x, P, V, T

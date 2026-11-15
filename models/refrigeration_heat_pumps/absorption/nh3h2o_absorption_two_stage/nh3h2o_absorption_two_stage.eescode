@@ -1,0 +1,306 @@
+{=============================================================================
+  Two-stage ammonia-water (NH3H2O) absorption system with condensate precooling
+  CoolSolve Library model CSL-0352 - BLOCKED in CoolSolve (see README)
+ -----------------------------------------------------------------------------
+  Two-stage NH3H2O absorption refrigeration cycle (Herold, Radermacher and
+  Klein, "Absorption Chillers and Heat Pumps", CRC Press, 2nd ed., 2015,
+  Example 10.1). Desorber 1 is driven internally by the heat rejected by
+  Absorber 2 and Rectifier 2; Desorber 2 receives the external driving heat.
+  The vapour is rectified in R1, R2 and R3; the condensate precooler (RHX)
+  subcools the condensed liquid. SHX1 and SHX2 are effectiveness models
+  (PROCEDURE shx, Min() = smaller of the two heat rates). Given the heat
+  rejection temperatures (40 C), the evaporator temperature (-10 C) and the
+  design goals (x[9] = 0.99, DELTAx_1 = DELTAx_2 = 0.04), the model solves
+  the 29 state points, the heat rates and the COP.
+  Inputs : m_dot[1], eta_pump, epsilon_shx, epsilon_cpc, T[1], T[10], T[13],
+           qualities Q[i], x[9], DELTAx_1, DELTAx_2
+  Units  : SI - temperatures in C, pressures in Pa, energies in J (converted
+           by hand from the original SI-C-kPa-kJ; no value changed, see README)
+  Source : ex10_1.ees, F-Chart Software EES example (S.A. Klein / F-Chart),
+           from Herold, Radermacher and Klein 2015, Example 10.1
+  Status : native file blocked by CS-BUG-PROP-QLIMIT (state 25); the runnable
+           variant was compared with the stored solution (see README)
+  Licence: MIT (library)
+=============================================================================}
+
+
+"Input Parameters from the problem statement"
+
+PROCEDURE shx(epsilon,m_dot_c,m_dot_h,h_in_c,h_in_h,h_out_h_min,h_out_c_max:h_out_h,h_out_c,Q_dot)
+"Implements effectiveness model for the solution heat exchangers"
+  Q_dot_c=m_dot_c*(h_out_c_max-h_in_c)  
+  Q_dot_h=m_dot_h*(h_in_h-h_out_h_min)
+  Q_dot_min=Min(Q_dot_c,Q_dot_h)
+  Q_dot=epsilon*Q_dot_min
+    h_out_c=h_in_c+epsilon*Q_dot_min/m_dot_c  
+  h_out_h=h_in_h-epsilon*Q_dot_min/m_dot_h
+END
+
+"Input Parameters from the problem statement"
+
+"mass flow "
+m_dot[1]=1 [kg/s]  "assume mass flow rate at point 1"
+"Note that the mass flow rate through pump 2 is dependent - calculated to enable the energy balance bewteen Desorber 1 and Absorber 2 + R2"
+
+"efficiencies"
+eta_pump=1  "efficiency of the pump"
+epsilon_shx=0.8   "solution heat exchanger efectiveness"
+epsilon_cpc=0.8  "effectiveness of condensate precooler"
+
+"temperatures (for state point, see diagram window)"
+T[1]=40 [C]  "absorber heat rejection temperature"
+T[10]=40 [C]  "condenser heat rejection temperature"
+T[13]=-10 [C]  "evaporator temperature"
+
+"vapor quality"
+Q[1]=0  "saturated liquid at 8 states"
+Q[4]=0
+Q[7]=1  "saturated vapor at 5 states"
+Q[8]=0  
+Q[9]=1
+Q[10]=0
+Q[13]=0.88  "two phase at evaporator outlet, to minimize temperature glide"
+Q[16]=0
+Q[19]=0
+Q[22]=1
+Q[23]=0
+Q[24]=1
+Q[27]=1
+Q[28]=0  
+
+"concentrations"
+x[9]=0.99  "rectifier design goal"
+x[1]-x[4]=DELTAx_1
+DELTAx_1=0.04  "solutuion loop design goal"
+x[16]-x[19]=DELTAx_2
+DELTAx_2=0.04  "solution loop design goal"
+
+"Set  pressures  assuming no frictional losses"
+P_low=Pressure(NH3H2O,T=T[1],x=x[1],Q=Q[1])  "define P_low in terms of absorber 1 conditions"
+P_high=Pressure(NH3H2O,T=T[10],x=x[10],Q=Q[10])  "define P_high in terms of condenser conditions"
+P[1]=P_low  "set values of all components of pressure array"
+P[2]=P_high
+P[3]=P_high
+P[4]=P_high
+P[5]=P_high
+P[6]=P_low
+P[7]=P_high
+P[8]=P_high
+P[9]=P_high
+P[10]=P_high
+P[11]=P_high
+P[12]=P_low
+P[13]=P_low
+P[14]=P_low
+P[15]=P_low
+P[16]=P_low
+P[17]=P_high
+P[18]=P_high
+P[19]=P_high
+P[20]=P_high
+P[21]=P_low
+P[22]=P_high
+P[23]=P_high
+P[24]=P_high
+P[25]=P_high
+P[26]=P_low
+P[27]=P_high
+P[28]=P_high
+P[29]=P_low
+
+"governing equations"
+
+"ABSORBER 1"
+m_dot[26]+m_dot[6]=m_dot[1]  "mass balance"
+m_dot[26]*x[26]+m_dot[6]*x[6]=m_dot[1]*x[1]  "ammonia balance"
+m_dot[29]=m_dot[15]  "mass balance on stream 15-29"
+x[29]=x[15]  "ammonia balance on stream 15-29"
+m_dot[26]*h[26]+m_dot[6]*h[6]+m_dot[15]*h[15]=m_dot[1]*h[1]+m_dot[29]*h[29]+Q_dot_abs_1  "energy balance"
+Q_dot_abs1_int=m_dot[15]*(h[29]-h[15])  "energy balance on vapor side of internal heat exchange"
+T[29]=T[6]          "design goal for internal heat exchange"
+T[26]=Temperature(NH3H2O,h=h[26],x=x[26],P=P[26])    
+Q[26]=Quality(NH3H2O,T=T[26],x=x[26],P=P[26])
+h[15]=Enthalpy(NH3H2O,T=T[15],x=x[15],P=P[15])
+Q[15]=Quality(NH3H2O,T=T[15],x=x[15],P=P[15])
+h[1]=Enthalpy(NH3H2O,T=T[1],x=x[1],Q=Q[1])
+h[29]=Enthalpy(NH3H2O,T=T[29],x=x[29],P=P[29])
+Q[29]=Quality(NH3H2O,T=T[29],x=x[29],P=P[29])
+h[6]=Enthalpy(NH3H2O,P=P[6],T=T[6],x=x[6])
+Q[6]=Quality(NH3H2O,P=P[6],h=h[6],x=x[6])
+
+"DESORBER 1"
+err_abs_mass1=m_dot[8]+m_dot[3]-(m_dot[7]+m_dot[4])  "mass balance"
+err_absammonia_1=m_dot[8]*x[8]+m_dot[3]*x[3]-(m_dot[7]*x[7]+m_dot[4]*x[4])  "ammonia balance"
+m_dot[3]*h[3]+m_dot[8]*h[8]+Q_dot_des_1=m_dot[7]*h[7]+m_dot[4]*h[4]    "energy balance"
+Q_dot_des_1=Q_dot_abs_2+Q_dot_rect_2  "equate as model of internal heat exchange"
+T[7]=Temperature(NH3H2O,P=P[3],x=x[3],Q=0)  "assume vapor outlet temp equals saturation temp at P_high and x[3]"
+T[3]=Temperature(NH3H2O,h=h[3],x=x[3],P=P[3])
+Q[3]=Quality(NH3H2O,h=h[5],x=x[3],P=P[3])
+h[4]=Enthalpy(NH3H2O,P=P[4],x=x[4],Q=Q[4])
+T[4]=Temperature(NH3H2O,P=P[4],x=x[4],Q=Q[4])
+
+"RECTIFIER R1"
+m_dot[7]=m_dot[9]+m_dot[8]  "mass balance"
+m_dot[7]*x[7]=m_dot[9]*x[9]+m_dot[8]*x[8]  "ammonia balance"
+m_dot[7]*h[7]=m_dot[9]*h[9]+m_dot[8]*h[8]+Q_dot_rect_1  "energy balance"
+T[7]=T[8]  "enforce equilibrium between entering vapor and exiting liquid streams"
+h[7]=Enthalpy(NH3H2O,T=T[7],P=P[7],Q=Q[7])
+x[7]=MassFraction(NH3H2O,T=T[7],P=P[7],Q=Q[7])
+h[8]=Enthalpy(NH3H2O,T=T[8],P=P[8],Q=Q[8])
+x[8]=MassFraction(NH3H2O,T=T[8],P=P[8],Q=Q[8])
+h[9]=Enthalpy(NH3H2O,P=P[9],x=x[9],Q=Q[9])
+T[9]=Temperature(NH3H2O,P=P[9],x=x[9],Q=Q[9])
+
+"PUMP 1"
+m_dot[1]=m_dot[2]  "mass balance"
+x[1]=x[2]  "ammonia balance"
+v[1]=Volume(NH3H2O,T=T[1],P=P[1],Q=Q[1])  "specific volume of liquid at state 1"
+swp1=v[1]*(P[2]-P[1])/eta_pump  "specific pump work"
+h[2]=h[1]+swp1  "energy balance per unit mass"
+W_dot_p1=m_dot[1]*(h[2]-h[1])  "pump power"
+T[2]=Temperature(NH3H2O,P=P[2],h=h[2],x=x[2])  "temperature at state 2"
+Q[2]=Quality(NH3H2O,P=P[2],h=h[2],x=x[2])  "quality at state 2"
+
+"EXPANSION VALVE"
+m_dot[5]=m_dot[6]  "mass balance on throttle"
+x[5]=x[6]  "ammonia balance on throttle"
+h[5]=h[6]  "energy balance on throttle"
+T[5]=Temperature(NH3H2O,P=P[5],h=h[5],x=x[5])
+Q[5]=Quality(NH3H2O,P=P[5],h=h[5],x=x[5])
+
+"SOLUTION HEAT EXCHANGER 1"
+m_dot[2]=m_dot[3]  "mass balance on stream 2-3"
+x[2]=x[3]  "ammonia balance on stream 2-3"
+m_dot[4]=m_dot[5]  "mass balance on stream 4-5"
+x[4]=x[5]  "ammonia balance on stream 4-5"
+h_5_min=Enthalpy(NH3H2O,T=T[2],P=P[5],x=x[5])
+h_3_max=Enthalpy(NH3H2O,T=T[4],P=P[3],x=x[3])
+CALL shx(epsilon_shx,m_dot[2],m_dot[4],h[2],h[4],h_5_min,h_3_max:h[5],h[3],Q_dot_shx_1)
+
+"MIXING STREAMS BEFORE CONDENSER"
+m_dot[27]+m_dot[9]=m_dot[25]  "mass balance"
+m_dot[27]*x[27]+m_dot[9]*x[9]=m_dot[25]*x[25]  "ammonia balance"
+m_dot[27]*h[27]+m_dot[9]*h[9]=m_dot[25]*h[25]  "energy balance"
+h[25]=Enthalpy(NH3H2O,P=P[25],x=x[25],Q=Q[25])
+T[25]=Temperature(NH3H2O,P=P[25],x=x[25],Q=Q[25])
+T[27]=Temperature(NH3H2O,P=P[27],x=x[27],Q=Q[27])
+h[27]=Enthalpy(NH3H2O,P=P[27],x=x[27],Q=Q[27])
+
+"CONDENSER"
+m_dot[25]=m_dot[10]  "mass balance on condenser"
+x[25]=x[10]  "ammonia balance on condenser"
+Q_dot_cond=m_dot[25]*(h[25]-h[10])  "energy balance on condenser"
+h[10]=Enthalpy(NH3H2O,P=P[10],x=x[10],Q=Q[10])
+
+"EVAPORATOR"
+m_dot[12]=m_dot[13]  "mass balance on evaporator"
+x[12]=x[13]  "ammonia balance on evaporator"
+Q_dot_evap=m_dot[13]*(h[13]-h[12])  "energy balance on evaporator"
+h[13]=Enthalpy(NH3H2O,T=T[13],x=x[13],Q=Q[13])
+P[13]=Pressure(NH3H2O,T=T[13],x=x[13],Q=Q[13])
+T[12]=Temperature(NH3H2O,h=h[12],P=P[12],x=x[12])
+Q[12]=Quality(NH3H2O,h=h[12],P=P[12],x=x[12])
+
+"SPLITTING STREAMS BEFORE ABSORBERS"
+m_dot[14]=m_dot[26]+m_dot[15]  "overall mass balance"
+x[26]=x[14]  "ammonia mass balance"
+x[15]=x[14]  
+h[26]=h[14]  
+h[15]=h[14]  
+h[14]=Enthalpy(NH3H2O,T=T[14],P=P[14],x=x[14])
+Q[14]=Quality(NH3H2O,T=T[14],P=P[14],x=x[14])
+
+"EXPANSION VALVE"
+m_dot[11]=m_dot[12]  "mass balance"
+x[11]=x[12]  "ammonia balance"
+h[11]=h[12]  "energy balance"
+T[11]=Temperature(NH3H2O,h=h[11],P=P[11],x=x[11])
+Q[11]=Quality(NH3H2O,T=T[11],P=P[11],x=x[11])
+
+"REFRIGERANT HEAT EXCHANGER"
+m_dot[10]=m_dot[11]  "mass balance on left side of RHX"
+x[10]=x[11]  "ammonia balance on left side of RHX"
+m_dot[13]=m_dot[14]  "mass balance on right side of RHX"
+x[13]=x[14]  "ammonia balance on right side of RHX"
+h_14_max=Enthalpy(NH3H2O,T=T[10],P=P[14],x=x[14])
+h_11_min=Enthalpy(NH3H2O,T=T[13],P=P[11],x=x[11])
+CALL shx(epsilon_cpc,m_dot[13],m_dot[10],h[13],h[10],h_11_min,h_14_max:h[11],h[14],Q_dot_rhx)
+
+"ABSORBER 2"
+m_dot[29]+m_dot[21]=m_dot[16]  "mass balance"
+m_dot[29]*x[29]+m_dot[21]*x[21]=m_dot[16]*x[16]  "ammonia balance"
+m_dot[29]*h[29]+m_dot[21]*h[21]=m_dot[16]*h[16]+Q_dot_abs_2  "energy balance"
+T[16]=T[4]  "design goal for internal heat exchange btwn Abs 2 and Des 1"
+h[21]=Enthalpy(NH3H2O,T=T[21],P=P[21],Q=Q[21])
+x[21]=MassFraction(NH3H2O,T=T[21],P=P[21],Q=Q[21])
+h[16]=Enthalpy(NH3H2O,T=T[16],P=P[16],Q=Q[16])
+x[16]=MassFraction(NH3H2O,T=T[16],P=P[16],Q=Q[16])
+
+"DESORBER 2"
+0=m_dot[18]+m_dot[23]+m_dot[28]-(m_dot[19]+m_dot[22])  "mass balance"
+0=m_dot[18]*x[18]+m_dot[23]*x[23]+m_dot[28]*x[28]-(m_dot[19]*x[19]+m_dot[22]*x[22])  "ammonia balance"
+m_dot[23]*h[23]+m_dot[18]*h[18]+m_dot[28]*h[28]+Q_dot_des_2=m_dot[19]*h[19]+m_dot[22]*h[22]  "energy balance"
+T[22]=Temperature(NH3H2O,P=P[18],x=x[18],Q=0)  "assume vapor outlet temp equals saturation temp at P_high and x[18]"
+h[22]=Enthalpy(NH3H2O,T=T[22],P=P[22],Q=Q[22])
+x[22]=MassFraction(NH3H2O,T=T[22],P=P[22],Q=Q[22])
+h[19]=Enthalpy(NH3H2O,P=P[19],x=x[19],Q=Q[19])
+T[19]=Temperature(NH3H2O,P=P[19],x=x[19],Q=Q[19])
+
+"RECTIFIER R2"
+m_dot[22]=m_dot[23]+m_dot[24]  "mass balance"
+m_dot[22]*x[22]=m_dot[23]*x[23]+m_dot[24]*x[24]  "ammonia balance"
+m_dot[22]*h[22]=m_dot[23]*h[23]+m_dot[24]*h[24]+Q_dot_rect_2  "energy balance"
+T[22]=T[23]  "enforce equilibrium between entering vapor and exiting liquid streams"
+T[24]=T[16]  "design goal for internal heat exchange btwn Rect 2 and Des 1"
+x[23]=MassFraction(NH3H2O,T=T[23],P=P[23],Q=Q[23])
+h[23]=Enthalpy(NH3H2O,T=T[23],P=P[23],Q=Q[23])
+T[24]=Temperature(NH3H2O,x=x[24],P=P[24],Q=Q[24])
+h[24]=Enthalpy(NH3H2O,x=x[24],P=P[24],Q=Q[24])
+
+"RECTIFIER R3"
+m_dot[24]=m_dot[27]+m_dot[28]  "mass balance"
+m_dot[24]*x[24]=m_dot[27]*x[27]+m_dot[28]*x[28]  "ammonia balance"
+m_dot[24]*h[24]=m_dot[27]*h[27]+m_dot[28]*h[28]+Q_dot_rect_3  "energy balance"
+T[28]=T[24]  "enforce equilibrium between entering vapor and exiting liquid streams"
+h[28]=Enthalpy(NH3H2O,T=T[28],P=P[28],Q=Q[28])
+x[28]=MassFraction(NH3H2O,T=T[28],P=P[28],Q=Q[28])
+
+"PUMP 2"
+m_dot[16]=m_dot[17]  "mass balance"
+x[16]=x[17]  "ammonia balance"
+v[16]=Volume(NH3H2O,T=T[16],P=P[16],Q=Q[16])  "specific volume of entering liquid"
+swp2=v[16]*(P[17]-P[16])/eta_pump  "work per unit mass"
+h[17]=h[16]+swp2  "energy balance"
+W_dot_p2=m_dot[16]*(h[17]-h[16])  "required pump power for pump 2"
+Q[17]=Quality(NH3H2O,h=h[17],P=P[17],x=x[17])
+T[17]=Temperature(NH3H2O,P=P[17],x=x[17],h=h[17])
+
+"EXPANSION VALVE"
+m_dot[20]=m_dot[21]  "mass balance"
+x[20]=x[21]  "ammonia balance"
+h[20]=h[21]  "energy balance"
+h[20]=Enthalpy(NH3H2O,T=T[20],P=P[20],x=x[20])
+Q[20]=Quality(NH3H2O,T=T[20],P=P[20],x=x[20])
+
+"SOLUTION HEAT EXCHANGER 2"
+m_dot[17]=m_dot[18]  "mass balance on left side"
+x[17]=x[18]  "ammonia balance on left side"
+m_dot[19]=m_dot[20]  "mass balance on right side"
+x[19]=x[20]  "ammonia balance on right side"
+h_20_min=Enthalpy(NH3H2O,T=T[17],P=P[20],x=x[20])  "enthalpy at state 20 if T[20] were equal to T[17]"
+h_18_max=Enthalpy(NH3H2O,T=T[19],P=P[18],x=x[18])  "enthalpy at state 18 if T[18] were equal to T[19]"
+CALL shx(epsilon_shx,m_dot[17],m_dot[19],h[17],h[19],h_20_min,h_18_max:h[20],h[18],Q_dot_shx_2)
+T[18]=Temperature(NH3H2O,h=h[18],P=P[18],x=x[18])
+Q[18]=Quality(NH3H2O,T=T[18],P=P[18],x=x[18])
+
+"OVERALL"
+COP=Q_dot_evap/(W_dot_p1+W_dot_p2+Q_dot_des_2)  "COP including pump power"
+COP_c=Q_dot_evap/Q_dot_des_2  "COP excluding pump power"
+checkQ=Q_dot_des_2+Q_dot_evap+W_dot_p1+W_dot_p2-(Q_dot_rect_1+Q_dot_rect_3+Q_dot_cond+Q_dot_abs_1) "check"
+P_ratio=P_high/P_low  "definition of pressure ratio"
+T_glide=T[13]-T[12]  "temperature glide in evaporator"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+DUPLICATE i=1,29
+  s[i]=ENTROPY(NH3H2O,P=P[i],X=x[i],H=h[i])  "specific entropy [J/kg-K]"
+END

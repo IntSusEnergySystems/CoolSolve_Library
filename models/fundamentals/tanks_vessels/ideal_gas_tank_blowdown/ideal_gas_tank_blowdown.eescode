@@ -1,0 +1,33 @@
+{=============================================================================
+  Emptying an adiabatic tank filled with an ideal gas
+  CoolSolve Library model CSL-0356
+ -----------------------------------------------------------------------------
+  Example 4.5-2 of Klein & Nellis, "Thermodynamics" (Cambridge University
+  Press, 2011): a rigid, well-insulated tank of ideal gas (air with constant
+  heat capacities) is blown down from P_1 to the ambient pressure P_2. As in
+  the original, the gas remaining in the tank is treated with an
+  isentropic-type relation on absolute temperatures:
+  T_2_K = T_1_K*(P_2/P_1)^(R/c_P). The tank cools from 20 °C to about
+  -104 °C.
+
+  Inputs : T_1 (initial temperature), c_v, P_1, P_2 (final pressure)
+  Outputs: T_2 (final temperature), R, c_P
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S.A. Klein & G.F. Nellis, Thermodynamics, Example 4.5-2 (F-Chart
+           Software example file) - see README.md
+=============================================================================}
+
+"Inputs"
+T_1 = 20                       "initial temperature [°C]"
+P_1 = 689475.7                 "initial pressure [Pa] (100 psi in the original)"
+c_v = 717.6                    "specific heat capacity at constant volume [J/kg-K]"
+P_2 = 101352.9279              "final pressure [Pa] (14.7 psi in the original)"
+
+"Gas properties"
+R = R#/MolarMass(Air)          "ideal gas constant of air [J/kg-K]"
+c_P = c_v + R                  "specific heat capacity at constant pressure [J/kg-K]"
+
+"Blowdown of the rigid adiabatic tank"
+T_1_K = T_1 + 273.15           "initial temperature, absolute [K]"
+T_2_K = T_1_K*(P_2/P_1)^(R/c_P)     "final temperature (isentropic-type relation, as in the original) [K]"
+T_2 = T_2_K - 273.15           "final temperature [°C]"

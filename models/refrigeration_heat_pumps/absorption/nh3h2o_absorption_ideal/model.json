@@ -1,0 +1,74 @@
+{
+  "id": "CSL-0347",
+  "name": "nh3h2o_absorption_ideal",
+  "title": "Single-effect ammonia-water absorption cycle (ideal generator)",
+  "summary": "Single-effect NH3-H2O absorption refrigeration cycle of the EES example Absorp.ees at one operating point: saturated vapour and weak solution at the generator outlet, no rectifier, pump work neglected, no refrigerant heat exchanger; solution heat exchanger with its effectiveness computed as an output; heat rates, COP and the 10 state points as arrays for the diagrams.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "nh3h2o_absorption_ideal.eescode",
+  "fluids": [
+    "NH3H2O"
+  ],
+  "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "chiller",
+    "COP",
+    "cycle",
+    "exercise",
+    "reference model"
+  ],
+  "language_features": [
+    "NH3H2O fluid (three of T, P, X, Q, H, S)",
+    "arrays (state points)"
+  ],
+  "stats": {
+    "n_equations": 108,
+    "largest_block": 2
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_library",
+    "source_path": "~/Nextcloud/thermo_models/EES_library/Absorp.ees",
+    "candidate_id": "EEL-014",
+    "authors": [
+      "S. A. Klein (University of Wisconsin-Madison / F-Chart Software)"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/absorp.ees",
+    "license": "MIT",
+    "ees_version": "8.821",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "Compared with the solution stored in Absorp.ees (EES 8.821): temperatures, compositions and SHX effectiveness within 0.3-2.4%; heat rates and COP within 2.8-9%, explained by the 2.4% composition difference between the two NH3H2O formulations (Ibrahim-Klein vs IAPWS G4-01) amplified by the circulation ratio; absolute h, s not comparable (different reference states).",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "stored solution of ~/Nextcloud/thermo_models/EES_library/Absorp.ees (EES 8.821)",
+    "date": "2026-11-14",
+    "coolsolve_version": "0.4.0@cc582a6",
+    "max_rel_diff": 0.0897,
+    "notes": "max_rel_diff is the maximum over the comparable variables (temperatures, compositions, mass flows, heat rates, COP, epsilon); the absolute enthalpies/entropies carry the documented reference-state difference of the two NH3H2O formulations and four EES records carry mislabelled units (see README Verification)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0249"
+  ],
+  "related_external": [
+    "CoolSolve docs/nh3h2o_review.md (the NH3H2O property model)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-14",
+      "action": "added (import of EEL-014, the EES example Absorp.ees; simpler cycle than CSL-0249)",
+      "by": "Claude for S. Quoilin"
+    }
+  ]
+}

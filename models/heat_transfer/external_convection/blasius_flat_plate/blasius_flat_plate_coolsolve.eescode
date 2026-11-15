@@ -1,0 +1,72 @@
+{=============================================================================
+  <Title>
+  CoolSolve Library model CSL-0336 (runnable variant) - Blasius flat-plate
+  boundary layer
+ -----------------------------------------------------------------------------
+  Same model as blasius_flat_plate.eescode (the native file, blocked by
+  CS-GAP-NAME-PRIME): the classic Blasius equation of the laminar boundary
+  layer over a flat plate, w``` + 0.5*w*w`` = 0, integrated with the Integral
+  function from eta = 0 to eta = 5, with the initial conditions w(0) = 0,
+  w'(0) = 0 and w''(0) = 0.33206 (the shooting parameter). The dimensionless
+  velocity w'(eta) is mapped to the dimensional coordinates x and y for air at
+  25 °C.
+
+  Inputs : w''(0) = 0.33206, eta_end = 5, step = 0.1, Re = 1e5, x = 0.5 m,
+           T_air = 25 °C
+  Outputs: w(eta), w'(eta), w''(eta) at eta_end; u, y, u_inf, mu, rho, nu
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ~/Nextcloud/thermo_models/EES_library/Blasius.EES (EES X8.805),
+           (c) F-Chart Software / S. A. Klein, MIT via EES-Community/ees-examples
+  Variant: the five variables whose names carry the EES prime notation are
+           renamed (w' -> w_1, w`` -> w_2, w``` -> w_3, w'_0 -> w_1_0,
+           w``_0 -> w_2_0); nothing else is changed (CS-GAP-NAME-PRIME).
+=============================================================================}
+
+"!Solution to Blasius problem - laminar flow over a flat plate."
+
+"The boundary layer flow over a flat plate can be reduced to the solution of the following nonlinear ordinary differential equation.  Three different solutions are presented here: use of the parametric table, use of a fixed step integration and use of the EES automatic step size.  "
+
+ w_3 + 0.5* w *w_2 = 0
+
+"The initial conditions are:"
+w_0=0
+w_1_0=0
+w_2_0=0.33206  "This is a so called `shooting problem`, you need to find the value of w_2_0 by trial and error so that w_1=1 at large eta. Use Newton's method."
+
+$if ParametricTable
+"This set uses the Parametric table.  With a step of 0.01 the solution is exact to the number of digits in the table."
+w=w_0+Integral(w_1, eta)
+w_1=w_1_0+Integral(w_2,eta)
+w_2=w_2_0+Integral(w_3,eta)
+$elseIf
+
+$integralTable eta:1  w, w_1, w_2, w_3
+"This set uses the fixed step integration - gives exactly the same answer as Parametric table method when step=parametric table step but also does very well with step=0.1."
+w=w_0+Integral(w_1, eta, start, stop, step)
+w_1=w_1_0+Integral(w_2,eta,start, stop, step)
+w_2=w_2_0+Integral(w_3,eta,start, stop, step)
+
+"This set uses the automatic step size routine in EES.  "
+{w=w_0+Integral(w_1, eta, start, stop)
+w_1=w_1_0+Integral(w_2,eta,start, stop)
+w_2=w_2_0+Integral(w_3,eta,start, stop)}
+$endif
+
+Start=0
+Stop=5 "it is traditional to use eta=5 as the top of the boundary layer."
+step=0.1
+
+
+"Integral solution"
+u\u_infinity=1.5*(eta/5)-0.5*(eta/5)^3
+
+"Dimensional quantities"
+Re=1e5
+Re=(u_infinity*x)/nu
+x=0.5
+T_air=25
+mu=viscosity(air, T=T_air)
+rho=density(air, T=T_air, P=101300)
+nu=mu/rho
+eta=y/sqrt((x*nu)/u_infinity)
+u/u_infinity=w_1

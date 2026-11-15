@@ -1,0 +1,70 @@
+{
+  "id": "CSL-0345",
+  "name": "r134a_isenthalpic_throttle",
+  "title": "Isenthalpic throttle with kinetic energy (R134a)",
+  "summary": "Outlet state of a refrigerant throttle: the stagnation enthalpy (h + Vel^2/2) is conserved and the mass flow rate is the same in the inlet and in the outlet section of equal area; the model returns the outlet temperature, enthalpy, entropy, specific volume and velocity of an R134a stream expanded from 1000 kPa to 100 kPa.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "r134a_isenthalpic_throttle.eescode",
+  "fluids": [
+    "R134a",
+    "R1234yf"
+  ],
+  "tags": [
+    "throttle",
+    "expansion valve",
+    "isenthalpic",
+    "stagnation enthalpy",
+    "refrigerant",
+    "R134a",
+    "kinetic energy",
+    "component"
+  ],
+  "language_features": [
+    "string variables",
+    "property functions"
+  ],
+  "stats": {
+    "n_equations": 16,
+    "largest_block": 4
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_library",
+    "source_path": "~/Nextcloud/thermo_models/EES_library/Throttle.EES",
+    "candidate_id": "EEL-115",
+    "authors": [
+      "S.A. Klein (F-Chart Software)"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Diagram_Window/throttle.ees",
+    "license": "MIT",
+    "ees_version": "X9.067",
+    "language": "en",
+    "course": "EES for Engineers, Chapter 15 (Diagram Window) example"
+  },
+  "verification": {
+    "summary": "The R1234yf variant of the same equations reproduces the stored solution of the source EES file: 12 common variables, 8 differ (rtol=0.001), max rel. diff 6.9e-2 on T[2], 4.6e-3 on the enthalpies (EES property tables vs CoolProp HEOS). The shipped R134a file satisfies the energy and mass balances.",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance"
+    ],
+    "reference": "EES stored solution of ~/Nextcloud/thermo_models/EES_library/Throttle.EES (Diagram-window configuration: R1234yf, P[1] = 1000 kPa, P[2] = 100 kPa, T[1] = 50 °C, Vel[1] = 15 m/s, A = 0.005 m^2)",
+    "date": "2026-11-14",
+    "coolsolve_version": "0.4.0@cc582a6",
+    "max_rel_diff": 0.0685,
+    "notes": "compare_solution.py (rtol=0.001): 12 common variables, 8 differ (rtol=0.001); only in EES: 1 (the unused scalar m_dot of the original); only in CoolSolve: 4 (P[2], s[1], s[2] and the fluid string). Deviations: EES R1234yf property tables vs CoolProp HEOS (h[1] 4.4e-3), amplified into the outlet temperature (T[2] 21.1958 vs 19.7436 °C) at the low outlet pressure of 100 kPa. The .sol baselines were produced with the CoolProp revision 8eb3b778 of the build used here (the library baselines were produced with 75af7816)."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-14",
+      "action": "added (card C-517, T-IMPORT of EEL-115 Throttle.EES; R1234yf variant ships the configuration of the stored EES solution)",
+      "by": "worker minimax for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{=============================================================================
+  Emptying a butane tank (blowdown, saturated-liquid outflow)
+  CoolSolve Library model CSL-0351
+ -----------------------------------------------------------------------------
+  Rigid tank of n-butane, initially two-phase (25 C, 0.23 kg in 0.54 l), is
+  emptied at a constant mass flow rate of 0.035 g/s for 20 min. The outflow
+  is saturated liquid (x = 0, as in the original); the tank state is solved
+  from mass and energy balances, the internal energy being the integrated
+  state variable. Unsteady uniform-state problem.
+
+  Inputs : Vol, m_1, T_1, m_dot_out
+  Outputs: final state m, T, P, u, v, h_out, dUdt at 20 min
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Klein & Nellis, "Thermodynamics", Cambridge University Press
+           2011, example 4.5-3 (F-Chart Software EES example) - see README.md
+  Status : verified (see README.md)
+=============================================================================}
+
+"Inputs"
+Vol=0.00054 [m^3]	"tank volume (0.54 liter in the original)"
+m_1=0.23 [kg]	"initial mass of butane"
+T_1=25 [C]	"initial temperature"
+m_dot_out=3.5E-5 [kg/s]	"mass flow rate (0.035 g/s in the original)"
+
+v_1=Vol/m_1	"initial specific volume [m^3/kg]"
+P_1=pressure('n-Butane',T=T_1,v=v_1)	"initial pressure [Pa]"
+u_1=intenergy('n-Butane',T=T_1,v=v_1)	"initial specific internal energy [J/kg]"
+h_1=u_1+P_1*v_1	"initial specific enthalpy [J/kg] (identity)"
+Phase_1$=Phase$('n-Butane',P=P_1,h=h_1)	"initial phase"
+U_tot_1=u_1*m_1	"initial internal energy [J]"
+
+{"arbitrary state variable"
+U_tot=U_tot_1	"Internal energy"
+time=0 [s]	"time"}
+
+0=m_dot_out*time+m-m_1	"mass"
+v=Vol/m	"specific volume [m^3/kg]"
+u=U_tot/m	"specific internal energy [J/kg]"
+T=temperature('n-Butane',v=v,u=u)	"temperature [C]"
+T_C=T	"in C (temperature is in °C)"
+P=pressure('n-Butane',v=v,u=u)	"pressure [Pa]"
+P_kPa=P/1000	"in kPa"
+
+{"h_out=enthalpy('n-Butane',P=P,x=1) saturated vapor leaves (as in the original, not used)"}
+h_out=enthalpy('n-Butane',P=P,x=0)	"saturated liquid leaves [J/kg]"
+
+0=m_dot_out*h_out+dUdt	"energy balance [W]"
+
+U_tot=U_tot_1+Integral(dUdt,time,0,1200 [s])	"integrate state equation (20 min in the original)"
+time_min=time/60	"in min"

@@ -1,0 +1,74 @@
+{
+  "id": "CSL-0342",
+  "name": "spring_piston_helium_dynamic",
+  "title": "Spring-loaded piston with helium: damped dynamic oscillation",
+  "summary": "A steel piston latched in a well-insulated cylinder encloses helium at 400 kPa and 290 K; a compressed spring in the evacuated compartment pushes it back. When the latch is released the piston oscillates, damped by dynamic friction, while the gas expands and cools following the ideal-gas law. Newton's law is integrated in time (INTEGRAL) and the model returns the trajectory of the piston position, pressure, volume and temperature over 1 s.",
+  "kind": "dynamic",
+  "level": 1,
+  "status": "verified",
+  "main_file": "spring_piston_helium_dynamic.eescode",
+  "fluids": [
+    "Helium"
+  ],
+  "tags": [
+    "piston-cylinder",
+    "spring",
+    "oscillator",
+    "damping",
+    "friction",
+    "adiabatic expansion",
+    "ideal gas",
+    "animation demo",
+    "EES example"
+  ],
+  "language_features": [
+    "INTEGRAL",
+    "$IntegralTable"
+  ],
+  "stats": {
+    "n_equations": 24,
+    "largest_block": 0
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_library",
+    "source_path": "~/Nextcloud/thermo_models/EES_library/spring.EES",
+    "candidate_id": "EEL-106",
+    "authors": [
+      "S. A. Klein"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/spring.ees",
+    "license": "MIT",
+    "ees_version": "X8.802",
+    "language": "en",
+    "course": "",
+    "notes": "Example of the EES example library (© F-Chart Software); the plain-text mirror of the same example is published under MIT by EES-Community/ees-examples (commit 5c703d0, 2026-03-01), which is the source of the licence. The EES licence stamp of the file ({$ID$ #0001: For use only by Professor S.A. Klein University of Wisconsin - Madison klein}) identifies the licence holder, who is here also the author. The animation objects of the original are not imported (see README)."
+  },
+  "verification": {
+    "summary": "Against the solution stored in the original EES file (hand-converted from kPa/K/kJ/kmole): re-run at the stop time of the stored EES run (t = 0.7212 s) gives 23 common variables, 6 differ (rtol=0.001), of which 4 physics diffs (vel 3.02e-01, acc 6.26e-03, T 3.91e-03) are the EES integration phase error, confirmed by an independent RK4 integration that agrees with CoolSolve to 2e-6 m on x; statics agree to 1.01e-04. The 722-row trajectory agrees with the integral table stored in the file to 4e-3 on x.",
+    "checks": [
+      "ees-stored-solution",
+      "ees-parametric-table",
+      "other-tool"
+    ],
+    "reference": "EES stored solution of ~/Nextcloud/thermo_models/EES_library/spring.EES (29 variable records) and the integral table stored in the same file (722 filled rows, t = 0 to 0.721 s); independent Runge-Kutta 4 integration of the equations of the model",
+    "date": "2026-11-14",
+    "coolsolve_version": "0.4.0@cc582a6",
+    "max_rel_diff": 0.302,
+    "notes": "compare_solution.py --ees-units of the model re-run at the stop time of the stored EES run (time_final = 0.7212471652 s): 23 common variables, 6 differ (rtol=0.001); only in EES: 1 (SF, an animation scale factor not imported); only in CoolSolve: 4 (T_abs, T_1_abs and the built-in constants pi, R#). The six differing variables: k_fric (the reference stores 0.01 kN-s/m, which --ees-units does not convert; 0.01 kN-s/m = 10 N-s/m, the value of the model), time_final (the value of the re-run itself) and the four physics diffs acc 6.26e-03, F_net 6.26e-03, T 3.91e-03, vel 3.02e-01. x (1.90e-04), P (4.91e-04), V (1.90e-04) and time (0) agree. The velocity deviation is a phase effect at the end of a lightly damped oscillation of period 0.055 s: an independent RK4 integration (step 1e-5 s) of the same equations gives x = 0.6805755 m against CoolSolve 0.680577 m at t = 0.7212 s, and confirms the EES stored trajectory as the outlier (its phase lags by about 0.5 ms). Against the 722 filled rows of the EES integral table (hand-converted kPa/K): max relative deviation 4.952e-03 on x (3.98e-03 m absolute), 7.858e-03 on P (1208 Pa), 4.951e-03 on V, 2.457e-01 on T at t = 0.11 s where T crosses the 0.01 °C of the reference (0.79 K absolute over the whole table); the statics agree to 1.01e-04 on c_v (EES vs CoolProp helium). At t = 1 s the model gives x = 0.695414 m, vel = 0.106138 m/s, P = 136538 Pa, T = -43.6873 °C against RK4 x = 0.695414 m, vel = 0.105356 m/s, T = -43.6861 °C."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0339"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-14",
+      "action": "added (T-IMPORT card C-514, candidate EEL-106 of the ees_library triage)",
+      "by": "opencode worker (t274) for S. Quoilin"
+    }
+  ]
+}

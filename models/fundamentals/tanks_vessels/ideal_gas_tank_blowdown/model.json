@@ -1,0 +1,69 @@
+{
+  "id": "CSL-0356",
+  "name": "ideal_gas_tank_blowdown",
+  "title": "Emptying an adiabatic tank filled with an ideal gas",
+  "summary": "Rigid adiabatic tank of ideal gas (air, constant heat capacities) blown down from 100 psi to ambient 14.7 psi: the isentropic-type relation on absolute temperatures T_2_K = T_1_K*(P_2/P_1)^(R/c_P) gives the final tank temperature, from 20 C to about -104 C.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "ideal_gas_tank_blowdown.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "rigid tank",
+    "blowdown",
+    "adiabatic",
+    "ideal gas",
+    "isentropic relation",
+    "textbook example"
+  ],
+  "language_features": [
+    "built-in constant R#",
+    "MolarMass"
+  ],
+  "stats": {
+    "n_equations": 9,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_examples",
+    "source_path": "uncategorized/example_4.5-2.ees",
+    "candidate_id": "EEX-020",
+    "authors": [
+      "S. A. Klein",
+      "G. F. Nellis"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/uncategorized/example_4.5-2.ees",
+    "license": "MIT",
+    "ees_version": "X11.912",
+    "language": "en",
+    "course": "",
+    "notes": "Example 4.5-2 of Klein & Nellis, Thermodynamics (Cambridge University Press, 2011); EES example (c) F-Chart Software, MIT via EES-Community/ees-examples. The binary .eez companion (EES 11.912) carries the stored solution used as verification reference. Original download page in the file header: https://fchartsoftware.com/ees/examples/examples_thermodynamics_2011/chapter%204/example%204.5-2.eez"
+  },
+  "verification": {
+    "summary": "Compared with the EES solution stored in the .eez companion of the source file (7 common variables with --ees-units, --all): 0 differ at rtol 0.001; largest printed relative deviation 1.51e-05 on R (molar mass of Air, EES vs CoolProp) and 9.66e-06 on T_2. Stored point recomputed by hand: 293.15*0.147^(287.043/1004.643) = 169.50351 K matches the stored T_2.",
+    "checks": [
+      "ees-stored-solution",
+      "analytical"
+    ],
+    "reference": "EES stored solution (8 variables) of the .eez companion ees-examples-raw/uncategorized/example_4.5-2.eez (EES 11.912), compared with tools/compare_solution.py --ees-units --all",
+    "date": "2026-11-15",
+    "coolsolve_version": "0.4.0@00a4daa",
+    "max_rel_diff": 1.51e-05,
+    "notes": "Tool summary: '7 common variables, 0 differ (rtol=0.001); only in EES: 1; only in CoolSolve: 3'. The only-in-EES variable is P_2_psi (dropped by the unit conversion, its value 14.7 psi is kept as the P_2 input). The only-in-CoolSolve variables are T_1_K, T_2_K (added by the °C storage of temperatures) and R#."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-15",
+      "action": "added (T-IMPORT card C-519 of roadmap.md section 6, candidate EEX-020 of the ees_examples inventory); verified against the EES stored solution of the .eez companion",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

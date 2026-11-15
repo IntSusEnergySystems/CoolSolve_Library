@@ -1,0 +1,47 @@
+{=============================================================================
+  von Karman viscous pump (rotating disk)
+  CoolSolve Library model CSL-0338 (runnable variant)
+ -----------------------------------------------------------------------------
+  Same model as von_karman_viscous_pump.eescode. Two changes, both forced:
+  prime names renamed (f` -> f_1, f`` -> f_2, g` -> g_1, g`` -> g_2,
+  h` -> h_1, and the _0 slopes) because of CS-GAP-NAME-PRIME, and
+  f_2 = -(g^2) + ... because CoolSolve reads -g^2 as (-g)^2
+  (CS-BUG-UNARY-POW). Both forms are valid EES. Details in README.md.
+
+  Source : ~/Nextcloud/thermo_models/EES_library/von Karman.EES (EES X8.807).
+           (c) F-Chart Software / S. A. Klein, MIT via ees-examples.
+=============================================================================}
+
+"The differential equations"
+f_2=-(g^2)+f^2+f_1*h
+g_2=2*f*g+h*g_1
+h_1=-2*f
+
+"Initial boundary conditions"
+f_0=0
+g_0=1
+h_0=0
+
+step=0 "force automatic step size adjustment"
+
+"Numerical solution using Integral function"
+f_1=f_1_0+integral(f_2,x,0,10,step)
+f=f_0+integral(f_1,x,0,10,step)
+g_1=g_1_0+integral(g_2,x,0,10,step)
+g=g_0+integral(g_1,x,0,10,step)
+h=h_0+integral(h_1,x,0,10,step)
+
+"Specified values  at the end condition"
+f_inf_exact=0
+g_inf_exact=0
+
+"Objective function - minimize to determine the values of f`_0 and g`_0"
+Obj=abs(g-g_inf_exact)+abs(f -f_inf_exact)
+
+"Shooting parameters: the slopes at the origin, set to the values that
+reproduce the stored EES solution (EES minimises Obj over them, with the ranges
+0 to 1 for f`_0 and -1 to 0 for g`_0)"
+f_1_0=0.510226344786
+g_1_0=-0.615925074583
+
+"The exact result, provided in White, is f`_0=0.5102 and g`_0=-0.6159"

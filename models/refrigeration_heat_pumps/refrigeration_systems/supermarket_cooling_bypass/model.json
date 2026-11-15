@@ -1,0 +1,77 @@
+{
+  "id": "CSL-0337",
+  "name": "supermarket_cooling_bypass",
+  "title": "Supermarket cooling system with cooling-coil bypass",
+  "summary": "Mixed-air air-conditioning of a retail space: outdoor air mixes with return air, part of the mix bypasses a cooling coil with saturated outlet, the streams re-mix and are reheated to the supply state; coil and reheat loads as functions of the bypass fraction.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "supermarket_cooling_bypass.eescode",
+  "fluids": [
+    "AirH2O"
+  ],
+  "tags": [
+    "supermarket",
+    "air conditioning",
+    "mixed air",
+    "bypass",
+    "cooling coil",
+    "reheat",
+    "psychrometrics",
+    "exercise"
+  ],
+  "language_features": [
+    "property functions",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 35,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_library",
+    "source_path": "~/Nextcloud/thermo_models/EES_library/Supermkt.ees",
+    "candidate_id": "EEL-110",
+    "authors": [
+      "S. A. Klein"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/supermkt.ees",
+    "license": "MIT",
+    "ees_version": "X8.868",
+    "language": "en",
+    "course": "Computer Applications in Engineering Education Vol 1(3), pp. 265-275, 1993",
+    "notes": "© F-Chart Software / S. A. Klein, MIT via EES-Community/ees-examples. The problem statement is in the Diagram window of the original file; the Diagram window is not imported."
+  },
+  "verification": {
+    "summary": "Not the native file (blocked by CS-GAP-PSYCHRO-SAT): the _coolsolve variant was compared with the solution stored in Supermkt.ees and with parametric-table rows 1, 9, 16 (SI by hand). Loads agree within 0.2 %; humidity ratios within 0.5 % (EES vs CoolProp humid air); T[3] within 0.12 %; absolute enthalpies carry a constant ~17.8 kJ/kg dry-air reference offset, differences within 0.16 %.",
+    "checks": [
+      "ees-stored-solution",
+      "ees-parametric-table"
+    ],
+    "reference": "Solution stored in Supermkt.ees (EES 8.868) and its parametric table Table 1 (ByPass 0 to 0.75), converted to SI by hand; tools/compare_solution.py",
+    "date": "2026-11-12",
+    "coolsolve_version": "0.4.0@cc582a6",
+    "max_rel_diff": 1.23,
+    "notes": "35 common variables, 15 differ (rtol=0.001). All h[i] differ by a near-constant +17.8 to +17.9 kJ/kg of dry air (EES humid-air enthalpy reference vs CoolProp/ASHRAE, h_da=0 at 0 °C); with this offset the enthalpy differences agree within 0.16 % (coil 0.157 %, reheat 0.066 %). Remaining diffs: w[i] +0.24 to +0.45 % (EES vs CoolProp humid-air formulation, as CSL-0028), T[3] 1.21e-03, Q_C 1.93e-03, Q_H 1.03e-03."
+  },
+  "missing_features": [
+    "CS-GAP-PSYCHRO-SAT"
+  ],
+  "related": [
+    "CSL-0028",
+    "CSL-0292"
+  ],
+  "related_external": [
+    "CoolSolve misc/EES_ok.zip and the F-Chart EES example collection (supermkt.ees is a built-in EES example)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-12",
+      "action": "added (roadmap card C-515, EEL-110, ID CSL-0337 pre-assigned)",
+      "by": "opencode worker (t267) for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "id": "CSL-0346",
+  "name": "blackbody_band_fraction",
+  "title": "Blackbody band fraction f_1_2 (Planck law integral)",
+  "summary": "Fraction of the blackbody emissive power emitted between two wavelengths lambda_1 and lambda_2 at the absolute temperature T: the Planck spectral emissive power is integrated with the EES INTEGRAL function (step 0.01 um) and divided by sigma#*T^4. As in the original EES example, T is in K and lambda in um.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "blackbody_band_fraction.eescode",
+  "fluids": [],
+  "tags": [
+    "radiation",
+    "blackbody",
+    "planck law",
+    "band fraction",
+    "emissive power",
+    "integral",
+    "example"
+  ],
+  "language_features": [
+    "INTEGRAL (definite integral, fixed step)"
+  ],
+  "stats": {
+    "n_equations": 8,
+    "largest_block": 0
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_library",
+    "source_path": "~/Nextcloud/thermo_models/EES_library/Blackbody.EES",
+    "candidate_id": "EEL-024",
+    "authors": [
+      "S. A. Klein (F-Chart Software)"
+    ],
+    "url": "https://fchartsoftware.com/ees/examples/blackbody.ees",
+    "license": "MIT",
+    "ees_version": "X8.806",
+    "language": "en",
+    "course": "",
+    "notes": "Example of the F-Chart Software EES example set (plain-text MIT mirror: https://github.com/EES-Community/ees-examples, uncategorized/blackbody.ees)."
+  },
+  "verification": {
+    "summary": "Compared with the solution stored in the source EES file: 7 common variables, 0 differ (rtol=0.001), largest deviation 1.35e-4 on E_b (Stefan-Boltzmann constant: CoolSolve sigma# is the CODATA value, the stored value implies 5.66961e-8); f_1_2 agrees to 4.9e-6. The transcribed constants C1/C2 reproduce all 100 rows of the stored parametric table (Planck sweep).",
+    "checks": ["ees-stored-solution", "ees-parametric-table"],
+    "reference": "EES stored solution of ~/Nextcloud/thermo_models/EES_library/Blackbody.EES (ees_variables.csv) and its stored parametric table (100 rows of E_lambda_b at T = 5000 K)",
+    "date": "2026-11-14",
+    "coolsolve_version": "0.4.0@cc582a6",
+    "max_rel_diff": 1.35e-4,
+    "notes": "compare_solution.py --all: 7 common variables, 0 differ (rtol=0.001); only in CoolSolve: 3 (C1, C2, sigma#, constants of the transcription). The triage check f_1_2 = 0.3700 at T = 5000 K between 0.3 and 0.7 um is reproduced (0.370047 vs 0.370049 stored)."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0107"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-14",
+      "action": "added (T-IMPORT card C-517, EEL-024)",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

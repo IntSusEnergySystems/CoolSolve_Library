@@ -1,0 +1,49 @@
+{=============================================================================
+  von Karman viscous pump (rotating disk)
+  CoolSolve Library model CSL-0338
+ -----------------------------------------------------------------------------
+  Three coupled ODEs for the laminar flow over an infinite rotating disk
+  (White, Viscous Fluid Flow, 2005, p. 162), integrated from x = 0 to 10.
+  The wall slopes f`_0 and g`_0 are shooting parameters; Obj measures
+  f and g at x = 10. Dimensionless. Details in README.md.
+
+  Status : blocked. Prime names are CS-GAP-NAME-PRIME; -g^2 is read as
+           (-g)^2 (CS-BUG-UNARY-POW). The runnable variant renames the
+           derivatives and writes -(g^2).
+  Source : ~/Nextcloud/thermo_models/EES_library/von Karman.EES (EES X8.807).
+           (c) F-Chart Software / S. A. Klein, MIT via ees-examples.
+=============================================================================}
+
+"The differential equations"
+f``=-g^2+f^2+f`*h
+g``=2*f*g+h*g`
+h`=-2*f
+
+"Initial boundary conditions"
+f_0=0
+g_0=1
+h_0=0
+
+step=0 "force automatic step size adjustment"
+
+"Numerical solution using Integral function"
+f`=f`_0+integral(f``,x,0,10,step)
+f=f_0+integral(f`,x,0,10,step)
+g`=g`_0+integral(g``,x,0,10,step)
+g=g_0+integral(g`,x,0,10,step)
+h=h_0+integral(h`,x,0,10,step)
+
+"Specified values  at the end condition"
+f_inf_exact=0
+g_inf_exact=0
+
+"Objective function - minimize to determine the values of f`_0 and g`_0"
+Obj=abs(g-g_inf_exact)+abs(f -f_inf_exact)
+
+"Shooting parameters: the slopes at the origin, set to the values that
+reproduce the stored EES solution (EES minimises Obj over them, with the ranges
+0 to 1 for f`_0 and -1 to 0 for g`_0)"
+f`_0=0.510226344786
+g`_0=-0.615925074583
+
+"The exact result, provided in White, is f`_0=0.5102 and g`_0=-0.6159"

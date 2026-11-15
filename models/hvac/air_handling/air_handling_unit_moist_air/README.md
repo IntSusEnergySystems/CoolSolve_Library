@@ -234,3 +234,4 @@ unit). All `thermo_models` rows therefore stay `todo` for their own cards.
 - `CSL-0070` *adiabatic_humidifier_simplified*: humidifier component on
   `AirH2O` (effectiveness-NTU), one stage of an air-handling chain.
 - `CSL-0292` *room_air_conditioning_coil_reheat*: the same exercise (2010 version, `THD10_R10_E3`) with the other classic coil closure — a saturated coil-outlet state with the condensate enthalpy in the first law, instead of the contact factor.
+- `CSL-0337` *supermarket_cooling_bypass*: supermarket mixed-air system with a saturated cooling coil and a bypass fraction; blocked by the same gap (`CS-GAP-PSYCHRO-SAT`), same `dewpoint()` pattern in its `_coolsolve` variant.

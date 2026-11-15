@@ -1,0 +1,77 @@
+{
+  "id": "CSL-0339",
+  "name": "gas_spring_oscillator",
+  "title": "Gas spring: a ball oscillating on a gas column",
+  "summary": "A ball of 15 g is displaced by 5 cm in a glass tube holding 1 litre of helium; the adiabatic gas column below the ball acts as a spring and the friction damps the motion. The model integrates Newton's law for the ball with the Integral function over 5 s and returns the trajectory of the ball position, of the pressure and of the gas temperature, the period of the small oscillations and the specific heat ratio of the gas.",
+  "kind": "dynamic",
+  "level": 2,
+  "status": "verified",
+  "main_file": "gas_spring_oscillator.eescode",
+  "fluids": [
+    "Helium"
+  ],
+  "tags": [
+    "gas spring",
+    "oscillator",
+    "damping",
+    "adiabatic compression",
+    "ideal gas",
+    "piston-cylinder",
+    "animation demo",
+    "EES example"
+  ],
+  "language_features": [
+    "INTEGRAL",
+    "FUNCTION",
+    "IF/THEN/ELSE",
+    "string variables",
+    "property functions",
+    "molarmass"
+  ],
+  "stats": {
+    "n_equations": 28,
+    "largest_block": 0
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_library",
+    "source_path": "~/Nextcloud/thermo_models/EES_library/gas spring.EES",
+    "candidate_id": "EEL-058",
+    "authors": [
+      "S. A. Klein"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/gas_spring.ees",
+    "license": "MIT",
+    "ees_version": "X9.067",
+    "language": "en",
+    "course": "",
+    "notes": "Example of the EES example library (\u00a9 F-Chart Software); the plain-text mirror of the same file is published under MIT by EES-Community/ees-examples (commit 5c703d0, 2026-03-01), which is the source of the licence. The EES licence stamp of the file ({$ID$ #2177: For use by students and faculty, D\u00e9pt Ing\u00e9nieur Industriel, HENALLUX, Belgium klein}) identifies the licence holder, not the author of the model. The string variable G$ (the gas of the column) is undefined in the source file; it was restored as 'Helium' from the stored solution (see README)."
+  },
+  "verification": {
+    "summary": "Against the solution stored in the original EES file (hand-converted): 18 common variables, 0 differ (rtol=0.001), max 5.78e-05 on c_v (EES vs CoolProp helium properties). The trajectory agrees with the integral table stored in the file to 9e-5 m and with an independent RK4 integration of the same equations to 1.2e-7 m at the end of the integration.",
+    "checks": [
+      "ees-stored-solution",
+      "ees-parametric-table",
+      "other-tool"
+    ],
+    "reference": "EES stored solution of ~/Nextcloud/thermo_models/EES_library/gas spring.EES (29 variables, 1 stale record dropped) and the integral table stored in the same file (502 rows); independent Runge-Kutta 4 integration of the equations of the model",
+    "date": "2026-11-12",
+    "coolsolve_version": "0.4.0@cc582a6",
+    "max_rel_diff": 5.78e-05,
+    "notes": "compare_solution.py on the shipped model against the hand-converted EES stored solution: 18 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 14 (the nine states and diagnostics acc, F, Friction, L, P, T, T_abs, V, Velocity, the integration variable time, the string variable G$ and the built-in constants g#, R#, pi). The largest deviation, 5.78e-05 on c_v, comes from the properties of the helium (EES 20785.47 J/kmol-K against CoolProp 20786.31); R differs by 1.5e-05 (EES R# 8314.34 against CoolSolve R# 8314.462618 J/kmol-K) and g by 3.6e-05. The stored EES run stopped at t = 2.5725 s (its integral table is inf beyond t = 2.57 s) while the model integrates to 5 s: the variables that depend on the end of the integration were therefore compared separately, with a re-run of the model at Time_final = 2.5725 s (28 common variables, 6 differ; the largest are L 2.89e-01 and acc 1.52e-01, i.e. 0.21 mm on an excursion of 47 mm, and Time_final 4.86e-01, the value of the re-run itself). Those deviations are the integration error of EES: an independent RK4 integration (step 1e-4 s) of the same equations with the EES constants gives L = 7.4535e-4 m at t = 2.5725 s, against 7.3508e-4 m for CoolSolve and 5.2260e-4 m for the stored EES solution. Against the integral table stored in the file (rows 51, 151 and 251, t = 0.5, 1.5 and 2.5 s): 4 common variables, 1 differ (rtol=0.001) at t = 0.5 s (L, 4.79e-03) and at t = 1.5 s (L, 3.75e-03), 0 differ at t = 2.5 s; the position differs by at most 0.09 mm, P by 3.0e-05 and T by 1.6e-04."
+  },
+  "missing_features": [],
+  "related": [
+    "CSL-0342"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-12",
+      "action": "added (T-IMPORT card C-514, candidate EEL-058 of the ees_library triage)",
+      "by": "opencode worker (t273) for S. Quoilin"
+    }
+  ]
+}

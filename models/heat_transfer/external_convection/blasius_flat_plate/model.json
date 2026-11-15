@@ -1,0 +1,74 @@
+{
+  "id": "CSL-0336",
+  "name": "blasius_flat_plate",
+  "title": "Blasius boundary layer over a flat plate",
+  "summary": "Solution of the classic Blasius equation of the laminar boundary layer over a flat plate: the third-order ODE f''' + 0.5*f*f'' = 0 is integrated with the Integral function between the similarity coordinates eta = 0 and eta = 5, the shooting parameter f''(0) being the classical 0.33206; the dimensionless velocity profile f'(eta) is mapped to the dimensional coordinates x and y for air at 25 °C.",
+  "kind": "dynamic",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "blasius_flat_plate.eescode",
+  "fluids": [
+    "Air"
+  ],
+  "tags": [
+    "external convection",
+    "laminar boundary layer",
+    "flat plate",
+    "blasius",
+    "similarity solution",
+    "shooting problem",
+    "ODE integration",
+    "skin friction"
+  ],
+  "language_features": [
+    "INTEGRAL (fixed step)",
+    "$IntegralTable",
+    "$IF directive (ParametricTable)",
+    "prime notation in the variable names (not supported by CoolSolve)"
+  ],
+  "stats": {
+    "n_equations": 20,
+    "largest_block": 0
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_library",
+    "source_path": "~/Nextcloud/thermo_models/EES_library/Blasius.EES",
+    "candidate_id": "EEL-025",
+    "authors": [
+      "S. A. Klein"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/blasius.ees",
+    "license": "MIT",
+    "ees_version": "X8.805",
+    "language": "en",
+    "course": "",
+    "notes": "Example of the EES example library (© F-Chart Software); the plain-text mirror of the same file is published under MIT by EES-Community/ees-examples (commit 5c703d0, 2026-03-01), which is the source of the licence. The EES licence stamp of the file ({$ID$ #0001: For use only by Professor S.A. Klein University of Wisconsin - Madison klein}) identifies the licence holder, not the author of the model."
+  },
+  "verification": {
+    "summary": "Runnable variant vs the EES stored solution of the binary source: 16 common variables, 4 differ (rtol=0.001), max 2.91e-03 on mu (EES vs CoolProp air viscosity). Newton shooting on f''(0) with the model gives 0.33205734, the classic Blasius value 0.3320573362.",
+    "checks": ["ees-stored-solution", "publication"],
+    "reference": "EES stored solution of ~/Nextcloud/thermo_models/EES_library/Blasius.EES (16 decoded variables) and its parametric table (501 rows); classic Blasius value f''(0) = 0.3320573362 (Blasius 1908, in White, Viscous Fluid Flow)",
+    "date": "2026-11-12",
+    "coolsolve_version": "0.4.0@cc582a6",
+    "max_rel_diff": 0.00291,
+    "notes": "compare_solution.py: 16 common variables, 4 differ (rtol=0.001), only in EES: 0, only in CoolSolve: 5 (the renamed derivatives w_1, w_1_0, w_2, w_2_0, w_3; the extractor did not decode the EES names that carry the prime notation). Largest relative difference 2.91e-03 on mu (1.84874e-05 Pa.s in EES against 1.84337e-05 Pa.s in CoolProp); nu, u and u_infinity follow from it (2.8e-03). No variable excluded. The EES parametric table (step 0.01) gives w = 3.283289405 and w' = 0.991547628 at eta = 5 against 3.283295772 and 0.991547343 (1.94e-06 and 2.87e-07); the stored EES solution is the one of the fixed-step integration of EES (1.92e-04 on w). Shooting on f''(0) (Newton on f'(eta) - 1 at the end of the integration, eta = 30, with the model) gives 0.332057344620 (RK4, step 0.1) and 0.332057336215 with an accurate adaptive integration (DOP853, rtol = 1e-13)."
+  },
+  "missing_features": [
+    "CS-GAP-NAME-PRIME"
+  ],
+  "related": [
+    "CSL-0101",
+    "CSL-0338"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-12",
+      "action": "added (T-IMPORT card C-512, candidate EEL-025 of the ees_library triage); native file blocked by CS-GAP-NAME-PRIME, runnable variant blasius_flat_plate_coolsolve.eescode verified against the EES stored solution",
+      "by": "opencode worker (t268) for S. Quoilin"
+    }
+  ]
+}

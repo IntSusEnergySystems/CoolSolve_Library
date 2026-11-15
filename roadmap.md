@@ -7,7 +7,7 @@ each tested and marked done. *How* each step is executed is described in
 [docs/model_workflow.md](docs/model_workflow.md); the classification rules are
 in [docs/taxonomy.md](docs/taxonomy.md).
 
-*Last update: 2026-11-08 (B-21 closed: C-500/C-503/C-502 done, 28 models gain the `other-tool` check; §1 refreshed after the maintainer commits of 11-03 → 11-05; handover at the top of §1).*
+*Last update: 2026-11-15 (C-519 through CSL-0356. EEX-023 and EEX-081 left todo. Ideal-gas tank blowdown merged. GLM quota until 19:35. MiniMax not answering probes. Nothing committed.)*
 
 ---
 
@@ -38,6 +38,7 @@ re-checks, BrineProp rewrite) took the library from 302 to 303 models and unbloc
 | Backlog (source inventories, 2026-11-03) | Candidates | todo | added | merged | duplicate | discarded | parked |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | ULiège collection `thermo_models` | 602 | 27 (all `skip`) | 218 | 116 | 166 | 74 | 1 |
+| EES example library `ees_library` | 122 | 38 | 0 | 0 | 4 | 79 | 1 |
 | CoolSolve examples | 47 | 0 | 34 | 9 | 1 | 3 | 0 |
 | `ht` (Caleb Bell), one row per correlation family | 24 | 0 | 24 | 0 | 0 | 0 | 0 |
 | ThermoCycle | 21 | 0 | 4 | 3 | 0 | 14 | 0 |
@@ -53,12 +54,71 @@ rows (workflow §2). Every library model has its `added` row (cross-check of
 Priorities of the candidates (wave1 / high / medium / low / skip):
 `thermo_models` 38 / 37 / 154 / 268 / 105 · CoolSolve examples 12 / 24 / 7 / 0 / 3 ·
 `ht` 4 / 9 / 8 / 3 / 0 · ThermoCycle 1 / 1 / 2 / 3 / 14 · LaboThapPy 9 / 8 / 17 / 26 / 14 ·
-TESPy 8 / 8 / 23 / 13 / 0.
+TESPy 8 / 8 / 23 / 13 / 0 · EES example library 0 / 5 / 13 / 20 / 84.
 
 Refresh with `python3 tools/build_index.py` (models) and
 `python3 tools/backlog_stats.py` (candidates).
 
-### HANDOVER of 2026-11-08 (review + B-21 closed; read this first)
+### SESSION 2026-11-11 — new source `ees_library` (B-22) + domain expansion (B-23); read the 2026-11-08 handover for the library state
+
+The maintainer added `~/Nextcloud/thermo_models/EES_library/` (the F-Chart EES example set,
+124 files) and asked for a triage and an exploration of *new domains* for library models
+(anything that needs a solver, ideally with substance properties — material strength and
+chemical reactions named). Done this session, nothing committed:
+
+- **`sources/ees_library/`** (new): sweep + triage of all 122 EES files
+  (`inventory.csv`, `curation.csv`, `make_inventory.py`, README with the **review table**).
+  38 `todo` (5 high / 13 medium / 20 low), 79 feature/animation demos discarded, 4 intra
+  duplicates, 1 merged companion. Highlights: a **four-method chemical-equilibrium set**
+  (ChemEq / LaGrange / min_G / janaf, octane + 120 % air), Blasius and von Karman boundary
+  layers, a supermarket system (CAE 1993), 2-D and transient conduction, Curzon-Ahlborn max
+  power, gas-spring and spring-piston dynamics, a psychrometric calculator. Three **new
+  CoolSolve gaps** surfaced for the register: diagram windows (import policy in the README
+  §3), `$Complex` complex-number mode (`Steam_flow vectors`), the EES solid-property
+  functions (`Solid-Liquid_Props`, ties into `docs/solid_phase_properties.md`). **Licence
+  largely resolved after the triage:** F-Chart's official EES-Community/ees-examples GitHub
+  repo publishes the same examples under **MIT** (113 of 121 local files matched) — and holds
+  **366 additional files** (331 distinct: Nellis & Klein heat-transfer textbook set, ACHP
+  absorption book set, statics with `$Vector2D`, ice properties) plus `ees-examples-raw.zip`
+  (280 `.eez` binary originals = stored solutions, tables and provenance for verification),
+whose sweep is card **C-519**. **Batch B-22 holds the import cards.**
+
+**Orchestrator decisions, 2026-11-12** (add / defer / duplicate). Licence accepted
+for publication: MIT via EES-Community/ees-examples, credit © F-Chart / S. A. Klein.
+
+- **Add** (no library counterpart, or a different level of detail): EEL-025 Blasius
+  (done, `CSL-0336`; not a duplicate of the correlation library `CSL-0101`),
+  EEL-121 von Karman (done, `CSL-0338`), EEL-110 supermarket bypass (done, `CSL-0337`;
+  AirH2O, CAEE 1993; not the R744 booster `CSL-0145`),   EEL-009 2-D conduction field and EEL-117 transient
+  plane wall (not the resistance library `CSL-0106`), EEL-058 gas spring (done, `CSL-0339`),
+  EEL-106 spring piston (done, `CSL-0342`; not the steady water exercise `CSL-0210`),
+  EEL-049 lumped cooling (done, `CSL-0343`),
+  EEL-026 effectiveness heat pump (done, `CSL-0344`),
+  EEL-014 ideal absorption cycle (done, `CSL-0347`; no rectifier, not `CSL-0249`).
+- **Defer**: the combustion set EEL-015/029/030/057/068/069/077 until `CS-GAP-FLUIDS-NASA-SPECIES`
+  closes (EEL-015 and EEL-057 are then re-checked against `CSL-0046` / `CSL-0150` before any add);
+  EEL-104 solid properties (solid-phase design); EEL-107 velocity triangles (`$Complex`);
+  EEL-076 Curzon-Ahlborn and EEL-094 optimum extraction (need Min/Max, or an import at the
+  known optimum); the two property calculators EEL-091 and EEL-092 (not system models);
+  EEL-105 speed of sound (discarded: the file says the built-in SoundSpeed replaces it).
+- **Duplicate-likely, not imported** (equation diff still required before the inventory
+  cell is written, card C-517): EEL-034, EEL-099 (Min/Max, deferred with that class).
+  Decided 2026-11-14 after an equation diff: EEL-080 duplicate of `CSL-0130` (Churchill
+  already there); EEL-095 duplicate of `CSL-0001`; EEL-059 merged into `CSL-0204`,
+  EEL-063 into `CSL-0002`, EEL-083 into `CSL-0310`, EEL-096 into `CSL-0001`,
+  EEL-108 into `CSL-0191`, EEL-036 into `CSL-0101`, EEL-097 into `CSL-0143`,
+  EEL-101 into `CSL-0162`. EEL-014 done (`CSL-0347`).
+  EEL-024 done (`CSL-0346`). EEL-115 done (`CSL-0345`). EEL-034 left todo:
+  a refrigeration compressor map on `INTERPOLATE2D`, not `CSL-0035`, still blocked by `CS-GAP-INTERP2D`.
+- **Domain expansion (B-23, first instalment done)**: domain map, fit criteria and a
+  10-candidate table in `sources/domain_expansion/README.md` — EES ecosystem beyond
+  thermodynamics (ees-examples, C-519; F-Chart add-on property libraries as CoolSolve feature
+  leads), chemical reactions/ChE (Cantera BSD, gated on `CS-GAP-FLUIDS-NASA-SPECIES`; pycse
+  GPL — ideas only), material strength (EES Statics + python-mechanics as oracle → authored
+  models), propulsion (CEA/RocketCEA as oracle → authored models). Recommendation: raise the
+  NASA-species gap priority (unlocks three domains) and decide the authored-models policy.
+
+### HANDOVER of 2026-11-08 (review + B-21 closed; history)
 
 **State (2026-11-08).** 303 models (284 verified / 18 blocked / 1 failing), 623 functions. Full regression on the
 current CoolSolve `main` (@9c8a3a4, CoolProp 8eb3b778): 320 targets (284 main + 36 variants), **0 failure** (excl.
@@ -663,6 +723,7 @@ Open questions (from the `C-14` review, for the maintainer):
 | LaboThapPy | [inventory](sources/labothappy/inventory.csv) | [README](sources/labothappy/README.md) | Components (constant-efficiency, semi-empirical, ε-NTU, moving boundary), correlation libraries, cycles; few reference results |
 | TESPy | [inventory](sources/tespy/inventory.csv) | [README](sources/tespy/README.md) | Component equations with doctests, validated plants (CGAM, SEGS vs Ebsilon, sCO2 state table) |
 | ThermoCycle | [inventory](sources/thermocycle/inventory.csv) | [README](sources/thermocycle/README.md) | Modelica, 665 files: 441 infrastructure and 123 dynamic models excluded; 7 steady candidates (solar receiver and collector fits, expander/pump maps, flow-boiling and in-cylinder correlations); no stored reference results |
+| EES example library `ees_library` | [inventory](sources/ees_library/inventory.csv) | [README](sources/ees_library/README.md) | F-Chart example set shipped with EES (© F-Chart, licence to confirm): 38 import candidates — chemical equilibrium (4 methods), Blasius/von Karman boundary layers, 2-D and transient conduction, supermarket system, gas-spring/piston dynamics, calculators — and 79 discarded feature/animation demos; many advanced Diagram windows (not imported: gap) |
 
 ---
 
@@ -1242,6 +1303,48 @@ follow the repetition exercises, so most are expected to be duplicates of models
 [x] C-502 T-QUALITY apply C-500/C-501/C-503 — [std] add `other-tool` to verification.checks and a Verification paragraph for the `match` rows; `differs` rows diagnosed one by one (adapt only for a real model bug) — done 2026-11-08: 28 models (C-501's 20 + CSL-0210/0230/0182/0055/0065/0228/0229/0248); every `differs` is a statement variant or a script-side error, no model bug found
 ```
 
+### B-22 — EES example library `ees_library` (new source) ⏸ awaiting maintainer review
+
+Source swept and triaged 2026-11-11 (see [sources/ees_library/README.md](sources/ees_library/README.md),
+review table §4). The 38 `todo` rows are grouped below into cards; **nothing is imported before
+the maintainer reviews the table** (mark rows keep / drop / merge-with-CSL). **Licence largely
+resolved after the triage: F-Chart's official [EES-Community/ees-examples](https://github.com/EES-Community/ees-examples)
+repo publishes the same examples under MIT** (113 of the 121 local files have a counterpart
+there), so imports can be published under MIT with credit — maintainer to confirm. Diagram-window
+models import with the standard note that the diagram is not imported (new register gap
+`CS-GAP-DIAGRAM-WINDOW`, card C-518). The MIT repo also holds **366 files absent from the local
+folder** (Nellis & Klein heat-transfer textbook examples, ACHP absorption book examples, statics,
+ice properties) — swept by card C-519, which is the first recommendation of the domain-expansion
+exploration (B-23).
+
+```
+[ ] C-510 T-DECISION  maintainer review of sources/ees_library/README.md §4 — licence (MIT mirror confirmed; confirm publication) + row-by-row keep/merge/drop; outcome recorded in inventory.csv decision/library_id columns
+[ ] C-511 T-IMPORT    EEL-029 ChemEq + EEL-069 LaGrange + EEL-030 ChemEq_converge + EEL-068 janaf + EEL-077 min_G + EEL-015/057 flame-T exercises → fundamentals/combustion/… — four-method chemical-equilibrium set (octane + 120 % air); native blocked by CS-GAP-FLUIDS-NASA-SPECIES (and Min/Max for EEL-077/094/099): ship as documented + runnable variants once species data exist; verification: EES stored solutions + textbook Kp values
+[x] C-512 T-IMPORT    EEL-025 Blasius (CSL-0336) + EEL-121 von Karman (CSL-0338, 2026-11-12) → heat_transfer/external_convection/… — ODE boundary layers (integral + shooting); verification: f''(0)=0.33206, White 2005 values
+[x] C-513 T-IMPORT    EEL-009 2-D Conduction (CSL-0341) + EEL-117 Transient Conduction Plane Wall (CSL-0340) → heat_transfer/conduction_radiation/… — 2-D steady field (arrays) and 1-D transient (series vs numerical); verification: energy balance + analytic limits
+[x] C-514 T-IMPORT    EEL-106 spring (done 2026-11-14 → CSL-0342) + EEL-058 gas spring (done 2026-11-12 → CSL-0339) → fundamentals/piston_cylinders/… — damped piston dynamics (helium/spring, ball on gas column); animation outputs dropped (diagram gap); verification: final-state energy balance + period estimate
+[x] C-515 T-IMPORT    EEL-110 Supermkt → refrigeration_heat_pumps/refrigeration_systems/supermarket_cooling_bypass — CAE 1993 system model; credit the paper; verification: paper tables / EES stored solution — CSL-0337 (2026-11-12)
+[ ] C-516 T-IMPORT    EEL-092 psych + EEL-091 Property_Calculator + EEL-105 sonic_v + EEL-104 Solid-Liquid_Props → fundamentals/property_libraries + fundamentals/properties — calculators as function libraries; string-$IF (CS-GAP-IF-NO-CONSTANT) and solid props (new gap) expected to block natives: _coolsolve variants
+[ ] C-517 T-TRIAGE    the 20 low rows (duplicate-likely of existing CSL models): EEL-014/024/034/036/049/059/063/080/083/095/096/097/099/101/108/115 + EEL-026 capvst + EEL-076 Maxpower + EEL-094 Rankine — decide merge/duplicate/import one by one against the CSL models named in the README table; import only what adds value (Maxpower: second_law optimisation showcase)
+[ ] C-518 T-GAP-REPORT propose register rows: CS-GAP-DIAGRAM-WINDOW (diagram windows not imported — policy + per-model note), CS-GAP-COMPLEX ($Complex mode, EEL-107), CS-GAP-VECTOR2D ($Vector2D vector algebra, the ees-examples Statics files), solid-property functions k_/rho_/c_/… (EEL-104, links to CoolSolve docs/solid_phase_properties.md design study); evidence from the triage
+[ ] C-519 T-TRIAGE    sweep + triage the 366 repo-only files of EES-Community/ees-examples (MIT) → sources/ees_examples/ — 299 Case_Study (Nellis & Klein heat-transfer textbook set + ACHP absorption book set), 29 uncategorized real models, Properties 2 (ice!), Statics 2 ($Vector2D), 34 further feature/plot demos; 331 distinct by name (≈35 intra-repo duplicate variants); verification reference and companion tables come from ees-examples-raw.zip (280 .eez binary originals with stored solutions + book/chapter provenance paths), extract with tools/ees_extract.py; statements paraphrased (© Cambridge/CRC/McGraw-Hill)
+```
+
+### B-23 — Domain expansion: sources and domains beyond thermodynamics 🔄 open
+
+Open exploration (maintainer, 2026-11-11): *anything that requires a solver is a good idea,
+even better if it involves substance properties — material strength, chemical reactions are
+examples*. Working notes and lead inventories: [sources/domain_expansion/README.md](sources/domain_expansion/README.md).
+Each accepted lead becomes a `sources/<name>/inventory.csv` (same columns) and import cards
+in a new batch.
+
+```
+[x] C-520 T-EXPLORE   first instalment of sources/domain_expansion/README.md — done 2026-11-11: domain map (EES ecosystem beyond thermo, chemical reactions/ChE, material strength/mechanics, propulsion/compressible flow, screened-out domains), 10-candidate summary table with licences and first steps; key findings: the MIT ees-examples repo (331 unseen files → C-519), NASA-species gap as the unlock of three domains, authored-models policy question. Maintainer picks the leads.
+[ ] C-521+ T-TRIAGE   one card per accepted lead: sweep + inventory + triage (pattern of sources/tespy or sources/ees_library)
+```
+
+
+
 ### G-1 — Greenhouse models from the Greenhouses Modelica library (T-TRANSLATE, new source) ✅
 
 Prepared 2026-11-09 at the maintainer's request: the [Greenhouses Modelica library](https://github.com/QueraltAltes/Greenhouses-Library)
@@ -1757,3 +1860,44 @@ and adds the log line in §8.
 | 2026-11-09 | G-1b `CSL-0334` | Added *greenhouse_climate_dynamic* — 10-state climate model (air/canopy/cover/floor/5 soil/moisture), weather + set-points from an hourly lookup table (Brussels TMY 10–15 Dec of the source library), P-controlled pipe heating and vents; verified vs independent RK4 (h=30 s): temperatures ≤ 0.0073 K, VP ≤ 0.6 Pa over 145 rows; fixed step 120 s (automatic step unstable) |
 | 2026-11-09 | G-1c `CSL-0335` | Added *greenhouse_heating_pipe_dynamic* — same climate core + 5-cell finite-volume pipe rail (eq. 28 of the paper) with weather-compensated T_su/ṁ schedule in the lookup table; verified vs independent RK4: pipe cells ≤ 0.004 K, T_air ≤ 0.045 K; fixed step 60 s (moisture-state accuracy) |
 | 2026-11-10 | review `CSL-0333`–`CSL-0335` | Floor balance was missing −q_rad_flr_cov (long-wave to the cover). Corrected in the three models, re-solved, re-checked (scipy for the steady point, max rel 1.1e-11; RK4 for the two trajectories). README result ranges rewritten from the new hourly tables. |
+| 2026-11-11 | C-520/B-22 prep | New source `sources/ees_library` (maintainer's `~/Nextcloud/thermo_models/EES_library/`, the F-Chart EES example set): all 122 EES files read and triaged (`inventory.csv`/`curation.csv`/`make_inventory.py` + README review table) — 38 `todo` (5 high / 13 medium / 20 low), 79 feature/animation demos discarded, 4 duplicates, 1 merged companion; four new gaps surfaced for the register (diagram windows, `$Complex`, `$Vector2D`, EES solid-property functions). Licence largely resolved: F-Chart's official EES-Community/ees-examples repo is **MIT** and matches 113 of the 121 files; it also holds 366 unseen files (331 distinct: Nellis & Klein heat-transfer set, ACHP absorption set, statics, ice properties) plus `ees-examples-raw.zip` (280 `.eez` binary originals = stored solutions, tables, provenance) → card C-519. Batch B-22 proposed, awaiting the maintainer's table review. Domain-expansion exploration (B-23) first instalment written in `sources/domain_expansion/README.md`. Nothing committed. |
+| 2026-11-12 | C-512 `CSL-0336` | Added *blasius_flat_plate* (EEL-025, dynamic): native file blocked by new `CS-GAP-NAME-PRIME` (EES derivative names use a backtick; CoolSolve rejects `` ` `` and `'`; reproducer re-run by the orchestrator); runnable variant verified vs the EES stored solution (16 common variables, 4 differ at rtol 0.001, max 2.91e-03 on air viscosity; `w` at η=5 within 1.92e-4). Worker minimax (t268); orchestrator re-ran compare_solution, fixed the native file (apostrophes restored to the source backticks) and the CSL-0101 back-link wording. von Karman (EEL-121) still open on this card. |
+| 2026-11-12 | C-515 `CSL-0337` | Added *supermarket_cooling_bypass* (EEL-110, Klein & Al-Habdan, CAEE 1993): English units converted by hand; native file blocked by `CS-GAP-PSYCHRO-SAT`; runnable variant verified by the orchestrator against the stored solution (T[3] 1.2e-3, Q_C 1.9e-3, Q_H 1.0e-3; humidity ratios ≤ 0.45 %; enthalpies offset by a near-constant ~17.8 kJ/kg dry air). Not the R744 booster `CSL-0145`. Worker glm (t267); headers shortened on review. |
+| 2026-11-12 | C-512 `CSL-0338` | Added *von_karman_viscous_pump* (EEL-121, dynamic, level 3). Native file blocked by `CS-GAP-NAME-PRIME` and new `CS-BUG-UNARY-POW` (CoolSolve reads `-x^2` as `(-x)^2`; reproducer `x=3`, `y=-x^2` gives 9, re-run by the orchestrator). Variant writes `-(g^2)`. Compared with the EES stored solution: 11 common variables, only `Obj` differs (stored objective is stale: it is not `|f|+|g|` of the stored f and g). Wall slopes 0.51023 and −0.61593. Worker minimax (t270, 98 min); headers shortened on review. Card C-512 closed. |
+| 2026-11-12 | C-513 `CSL-0340` | Added *transient_conduction_plane_wall* (EEL-117). Radians converted by hand. Native file blocked by `CS-BUG-UNARY-POW` (`-zeta^2` in the series); variant writes `-(zeta^2*Fo)`. 69 stored variables agree (0 differ at rtol 0.001, max 6.3e-7). New `CS-BUG-ERF-WARNING`: `erfc` computes correctly (erfc(1)=0.1573) but warns "Unknown function". Worker minimax (t271, 7 min). EEL-009 still open. |
+| 2026-11-12 | C-513 `CSL-0341` | Added *conduction_2d_square_plate* (EEL-009). Native file blocked by `CS-GAP-INDEX-VAR` (`T[N+1,j]`); variant writes the indices 26 and 25. 730 stored temperatures agree (0 differ at rtol 0.001). Worker minimax (t272, 8 min). Card C-513 closed. |
+| 2026-11-12 | C-514 `CSL-0339` | Added *gas_spring_oscillator* (EEL-058, helium, verified). Units converted by hand (kPa, K, cm). Inputs missing from the equations window (`L_o` = 5 cm, `k_friction` = 0.01, `G$` = Helium) restored from the stored solution. 18 common variables, 0 differ at rtol 0.001, max 5.78e-05 on `c_v`. The stored EES run stops at 2.57 s. GLM was aborted after 2.5 h on the z.ai quota; minimax (t273, 16 min). Orchestrator removed related links to the boundary-layer models. EEL-106 still open. |
+| 2026-11-14 | C-517 `CSL-0343` | Added *lumped_capacitance_cooling* (EEL-049, dynamic, level 1). Native file blocked by new `CS-GAP-INTEGRAL-2ARG` (two-argument table-based `INTEGRAL(f, t)`; reproducer re-run). Variant uses explicit limits. 12 stored variables, 2 differ (T 4.8e-3, dTdt 6.7e-3); `T_exact` agrees to 1e-12. Worker minimax (t275). Orchestrator moved the inventory reason out of the authors cell and dropped the gas-spring back-link. |
+| 2026-11-14 | C-514 `CSL-0342` | Added *spring_piston_helium_dynamic* (EEL-106, helium, verified). Units converted by hand (kPa, K, kN·s/m). Not the steady water exercise `CSL-0210`. Re-solved at the stored stop time 0.721 s: 722 table rows, worst relative difference 0.49% on `x` and 0.80% on `P`; early times within 0.1%. The stored EES table stops at 0.721 s while `time_final` is 1 s. Animation objects dropped, no new gap. Worker glm (t274, 11 min). Orchestrator renamed the spring constant in the force balance from `k` to `K`. Card closed. |
+| 2026-11-14 | C-517 triage | Equation diff only, no new model. EEL-080 duplicate of `CSL-0130` (Churchill formula confirmed in `f_Churchill`). EEL-095 duplicate of `CSL-0001`. Merged, not imported: EEL-059 → `CSL-0204`, EEL-063 → `CSL-0002`, EEL-083 → `CSL-0310`, EEL-096 → `CSL-0001`, EEL-108 → `CSL-0191`. EEL-115 left todo (isenthalpic R134a throttle, no valve counterpart). Worker minimax (t276, 6 min). |
+| 2026-11-14 | C-517 triage | Second batch, no new model. Merged, not imported: EEL-036 → `CSL-0101` (the laminar flat-plate Nusselt number is already there), EEL-097 → `CSL-0143`, EEL-101 → `CSL-0162`. EEL-024 left todo (band fraction absent from `CSL-0107`). EEL-014 put back to todo: the worker showed an ideal generator and no rectifier, which is a simpler cycle than `CSL-0249`, not the same model. Worker minimax (t278, 3 min). |
+| 2026-11-14 | C-517 `CSL-0344` | Added *r134a_heat_pump_effectiveness* (EEL-026, steady, level 2, verified). Evaporator and condenser are effectiveness-capacitance exchangers, so the cycle temperatures float with outdoor air. kPa/kJ converted by hand. After the R134a reference-state shift (+148.1 kJ/kg, +0.796 kJ/kg-K), the only difference above 0.001 is `T[1]` at 1.28e-3. Worker glm (t277, 9 min). |
+| 2026-11-14 | C-517 `CSL-0345` | Added *r134a_isenthalpic_throttle* (EEL-115, steady, level 1). Stagnation enthalpy and equal-area continuity; not the metering valves or the isentropic nozzle. The stored EES run is R1234yf at 1000/100 kPa and is the variant; the main file is the file's default fluid R134a with the same equations. Energy balance closes. Outlet temperature differs by 1.45 K (EES R1234yf tables vs CoolProp). Worker minimax (t279, 5 min). |
+| 2026-11-14 | C-517 `CSL-0346` | Added *blackbody_band_fraction* (EEL-024, steady, level 1, verified). Planck integral between 0.3 and 0.7 µm at 5000 K. 7 common variables, 0 differ; `f_1_2` agrees to 4.9e-6. Diagram inputs copied into the equations. Related to `CSL-0107`. Worker glm (t280, 9 min). |
+| 2026-11-14 | C-517 triage | EEL-034 left todo. It is a refrigeration compressor map on `INTERPOLATE2D` (evaporating and condensing temperature), with no equation in common with the centrifugal air map `CSL-0035`. Still blocked by `CS-GAP-INTERP2D`. Worker glm (t282). EEL-105 discarded: `sonic_v.ees` says the built-in SoundSpeed replaces the function, and CoolSolve rejects the zero-argument `UnitSystem()` call. |
+| 2026-11-14 | C-517 `CSL-0347` | Added *nh3h2o_absorption_ideal* (EEL-014, steady, level 2). Ideal generator, no rectifier, pump work neglected. External NH3H2O procedure replaced by built-in calls. Compositions within 2.4%, COP 2.8% (0.322 vs 0.331), condenser heat 9.0%; absolute enthalpies are a different reference state. Energy balance closes. Related to `CSL-0249`. MiniMax was aborted on the rate limit; worker glm (t283, 16 min). |
+| 2026-11-14 | C-518 gaps | Registered `CS-GAP-DIAGRAM-WINDOW`, `CS-GAP-COMPLEX` and `CS-GAP-VECTOR2D`. Reproducers re-run: `$Complex` and `$Vector2D` are ignored and the names become ordinary unknowns. No solid-property row: `solid-liquid_props.ees` is covered by `CS-BUG-INCOMP-SOLIDS` and the incompressible-fluid gaps. Worker glm (t284, 4 min). |
+| 2026-11-14 | C-519 triage | Inventory of `ees-examples/uncategorized` only (51 files, `EEX-001`–`EEX-051`). 15 discarded, 10 duplicate, 26 todo. The worker had marked seven textbook exercises duplicate of a library model that is a different system; those were put back to todo (conveyor belt, ammonia freezer, acetylene flame, two-heater Rankine, CD nozzle, crossflow performance). Nothing imported. Worker glm (t286, 8 min). |
+| 2026-11-14 | C-519 triage | First 40 `Case_Study` files, `EEX-052`–`EEX-091` (`2-d_conduction.ees` through `ex4_11.ees`). 5 discarded, 6 duplicate (the files already imported as `CSL-0336`, `CSL-0341`, `CSL-0343`, `CSL-0344`, `CSL-0345`, `CSL-0347`), 29 todo. The open rows include double-effect and GAX absorption cycles. Nothing imported. Worker glm (t287, 9 min). |
+| 2026-11-14 | C-519 triage | Next 40 `Case_Study` files, `EEX-092`–`EEX-131`, ending at `example_10.5-2`. 38 todo, 2 marked duplicate and put back to todo: the nitrogen liquefier exchanger is not `CSL-0002`, and the solar UV band is an application of `CSL-0346`, not the same run. Open rows include a LiBr heat transformer. Nothing imported. Worker glm (t288, 11 min). |
+| 2026-11-14 | C-519 triage | Next 40 `Case_Study` files, `EEX-132`–`EEX-171` (`example_10.5-3` through `example_2.10`). 40 todo, nothing discarded or duplicate. The slice is radiation networks, gas mixtures, psychrometrics, combustion, chemical equilibrium, nozzles, and cryogenic conduction. Nothing imported. Worker glm (t289, 7 min). |
+| 2026-11-14 | C-519 triage | Next 40 `Case_Study` files, `EEX-172`–`EEX-211` (`example_2.11` through `example_4.1`). 40 todo. Fins, composite walls, tanks, and cryogenic conduction. Two extra copies of the radiant window stay open rather than discarded. Nothing imported. Worker glm (t291, 9 min). |
+| 2026-11-14 | C-519 triage | Next 40 `Case_Study` files, `EEX-212`–`EEX-251` (`example_4.2` through `example_6.6-1`). 38 todo, 2 duplicate: the rigid-tank water entropy change is `CSL-0243` (`EEX-249`), and the steam-turbine isentropic efficiency is `CSL-0174` (`EEX-251`). Nothing imported. Worker glm (t292, 9 min). |
+| 2026-11-14 | C-519 triage | Next 40 `Case_Study` files, `EEX-252`–`EEX-291` (`example_6.6-2` through `example_8.2-1`). 40 todo. A blackbody call at 20 K was marked duplicate of `CSL-0346` and put back to todo: it calls `BlackBody()`, it does not integrate Planck's law. Nothing imported. Worker glm (t293, 8 min). |
+| 2026-11-14 | C-519 triage | Next 40 `Case_Study` files, `EEX-292`–`EEX-331` (`example_8.2` through `example_9.7`). 40 todo, nothing discarded or duplicate. Nothing imported. Worker glm (t294, 10 min). |
+| 2026-11-14 | C-519 triage | Last named `Case_Study` window, `EEX-332`–`EEX-367` (`example_9.9` through `tungsten.ees`). 26 todo, 6 discarded (guess, plot, curve-fit, shooting-method, and interpolation demos, plus a byte-identical gas-spring copy), 4 duplicate: `gas_spring.ees` and `spring.ees_2.ees` are `CSL-0339`, `spring.ees` is `CSL-0342`, `supermkt.ees` is `CSL-0337`. Eighteen files between `ex9_6.ees` and `example_10.1-1.ees` were skipped by the earlier 40-file window. Nothing imported. Worker glm (t296, 11 min). |
+| 2026-11-14 | C-519 triage | The 18 skipped `Case_Study` files, `EEX-368`–`EEX-385` (`example_1-2` through `example_10-7`). 18 todo. `Case_Study` is now fully inventoried. Nothing imported. Worker glm (t297, 6 min). |
+| 2026-11-14 | C-519 triage | `Diagram_Window`, `Directives`, and `Plots`, `EEX-386`–`EEX-433`. 9 todo, 37 discarded (GUI, plot, and directive demos with no physical system), 2 duplicate of the isenthalpic throttle `CSL-0345` (`diagrmw.ees`, `plot_in_diagram.ees`). The open rows include a gas turbine, a counterflow exchanger, and a 2-D conduction series. Nothing imported. Worker glm (t298, 8 min). |
+| 2026-11-14 | C-519 triage | Remaining feature folders, `EEX-434`–`EEX-479`. 8 todo, 34 discarded, 4 duplicate: the plane-wall series is `CSL-0340`, the Churchill function is `CSL-0130`, the cooling sphere is `CSL-0343`, and the methane flame-temperature sweep is the complete-combustion branch of `CSL-0150`. Every plain-text `.ees` file in the clone is now inventoried. Nothing imported. Worker glm (t300, 8 min). |
+| 2026-11-14 | C-519 triage | Matched all 280 `.eez` members of `ees-examples-raw.zip` to inventory rows by folder and filename. `companion_files` holds the zip path and `stored_solution` is `yes` on those rows. No ambiguous names and no member left over. The worker's rewrite duplicated 18 ids; the match was rebuilt from the merged inventory before merging. Nothing imported. Worker glm (t301, 2 min). |
+| 2026-11-14 | C-519 `CSL-0348` | Added *fuel_element_sphere* (EEX-011, steady, level 3, blocked). 50-node spherical fuel element with exponential generation, cladding, and convection. Native file blocked by `CS-GAP-NAME-PRIME`, new `CS-GAP-LINE-CONTINUATION` (`&`), and `CS-GAP-INDEX-VAR` (`T[N]`). The variant renames the backtick symbols, joins the continued lines, and writes the fixed index 50. Stored temperatures are stale (all 1). The grid and resistances: 60 common, 0 differ, worst 3.6e-10. Energy balance closes to 2.2e-5. Worker glm (t302, 18 min); merged after the quota reset slipped to 22:33. |
+| 2026-11-15 | C-519 `CSL-0349` | Added *circular_fin_transient* (EEX-448, dynamic, level 2, blocked). 11-node circular fin, 0.5 W at the base, convection to air at 20 °C, 50 s. Native file blocked by `CS-GAP-INTEGRAL-DUPLICATE` and `CS-GAP-INDEX-VAR`. The variant writes the 11 integrals one by one and uses `T[11]`. No stored solution. Energy balance closes to 3.4e-13 J. Weak links to the steady fin-efficiency library and the plane-wall series were removed. Worker minimax (t307, 15 min). |
+| 2026-11-15 | C-519 EEX-023 | Left the air-heater tube as todo. The example calls `PipeFlow_N` and `PipeFlow_n_Local`; those procedure bodies are not in the examples clone, so the correlation was not guessed. No model. Worker glm (t309, 3 min). |
+| 2026-11-15 | C-519 `CSL-0350` | Added *curzon_ahlborn_max_power* (EEX-036, steady, level 2, verified). Endoreversible Carnot engine at the Lagrange optimum, with conductances converted from kW/K to W/K. Efficiency matches `1 - sqrt(T_L/T_H)` to 3.3e-11 absolute, and the energy balance is 0. Re-solved: 17 equations satisfied, max residual 2.7e-8. No Min/Max search. Worker glm (t310, 9 min). |
+| 2026-11-15 | C-519 `CSL-0351` | Added *butane_tank_blowdown* (EEX-021, dynamic, level 1, verified). Rigid tank of n-butane emptied as saturated liquid over 20 min. `Phase$(T,v)` rewritten as `Phase$(P,h)` of the same state. Re-solved and compared with the stored solution: 20 common, 3 differ. `P` and `P_1` differ by 1.7e-3 and 1.8e-3 (equation of state). `P_kPa` is the kPa-to-Pa scale of the comparison tool. Worker glm (t311, 10 min). |
+| 2026-11-15 | C-519 `CSL-0352` | Added *nh3h2o_absorption_two_stage* (EEX-077, steady, level 3, blocked). Two-stage ammonia-water absorption cycle with condensate precooling. Native file blocked by new `CS-BUG-PROP-QLIMIT` (a quality unknown at the saturation limit stops the solve; the reduced reproducer fails the same way). The variant changes only the two state-25 calls to the enthalpy pair. COP 0.479 versus 0.496. The dilute mass fraction `x[19]` is 0.0097 versus 0.021, so the status stays blocked. Whole-cycle balance closes to 1.6e-6 W. Worker glm (t312, 25 min). |
+| 2026-11-15 | C-519 `CSL-0353` | Added *bent_beam_actuator* (EEX-019, dynamic, level 3, blocked). Six-node Joule-heated bent beam, 25 ms. Native file blocked by `CS-GAP-INTEGRAL-DUPLICATE`, `CS-GAP-LINE-CONTINUATION` and `CS-GAP-INDEX-VAR`. The variant writes the six integrals, joins the continued lines and uses index 6. Temperatures converted from kelvin to °C. Compared with the stored solution: 64 common, 5 differ, all five the nodal rates at 9.07e-3. Temperatures and the apex displacement agree. Worker glm (t313, 15 min). |
+| 2026-11-15 | C-519 `CSL-0354` | Added *nh3h2o_absorption_recirculation* (EEX-112, steady, level 3, verified). Single-stage ammonia-water cycle with absorber recirculation and a condensate precooler. The native file solves. COP 0.465 versus 0.467. The poor-solution mass fraction is 0.174 versus 0.180. Heat rates within 1.1 percent. Absolute enthalpies differ by the reference state. `J/g-K` specific heats are a comparison-tool scale, registered as `CS-BUG-COMPARE-JGK`. Worker glm (t314, 10 min). |
+| 2026-11-15 | C-519 | EEX-081, the conventional GAX cycle, was left todo. Two long solves of the transcribed file returned no solution. Removing the duplicate `Q[6]=Quality` line left 124 equations and 125 unknowns. No model folder. Worker glm (t315, 44 min). |
+| 2026-11-15 | C-519 `CSL-0355` | Added *nitrogen_van_der_waals* (EEX-113, steady, level 1, verified). Nitrogen at P_r = 1.2 and T_r = 1.2. The van der Waals residual on the shipped solution is 2e-13. The stored EES solution is a stale run at P_r = 40; a copy at that pressure matched it with 12 common variables and 0 differences. Temperatures are in °C. Worker glm (t316, 7 min). |
+| 2026-11-15 | C-519 `CSL-0356` | Added *ideal_gas_tank_blowdown* (EEX-020, steady, level 1, verified). Adiabatic ideal-gas tank from 100 psi and 20 °C to 14.7 psi. Final temperature −103.647 °C. Compared with the stored solution: 7 common variables, 0 differ. The largest difference is 1.51e-05 on the gas constant. Worker glm (t317, aborted at the quota gate after the files were complete). |

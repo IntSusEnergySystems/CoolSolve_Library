@@ -1,0 +1,101 @@
+{=============================================================================
+  Transient response of a bent-beam electrothermal actuator
+  CoolSolve Library model CSL-0353 (native file, blocked)
+ -----------------------------------------------------------------------------
+  A Joule-heated bent-beam actuator is discretised into N = 6 nodes along one
+  side of the beam: each node has a transient energy balance (conduction from
+  its neighbours, uniform Joule generation, convection to the air), integrated
+  from the initial temperature over t_sim. The beam elongation by thermal
+  expansion gives the displacement of the apex, compared with the analytical
+  fin solution of example 1.7-1 (same book).
+  Inputs : geometry L_a, w, th, theta; Current; T_a, T_ini, T_infinity;
+           h_bar, k, rho_e, CTE, c, rho; N; t_sim
+  Outputs: T[i], DELTAy (DELTAy_micron), T_an[i] (analytical)
+  Units  : SI - temperatures in °C (the original kelvin values, less 273.15),
+           trigonometric arguments in rad (theta in rad in Cos(theta));
+           CoolSolve: SI - Pa - J, temperatures in °C, trig in degrees
+  Source : Nellis & Klein, Heat Transfer, Cambridge University Press, 2009,
+           example 3.8-1 - MIT licence via EES-Community/ees-examples
+  Status : blocked - the INTEGRAL calls inside a DUPLICATE loop
+           (CS-GAP-INTEGRAL-DUPLICATE), the &-continued equations
+           (CS-GAP-LINE-CONTINUATION) and the array elements indexed by the
+           variable N outside loops (CS-GAP-INDEX-VAR); runnable variant
+           bent_beam_actuator_coolsolve.eescode, see README.md
+=============================================================================}
+
+"!EXAMPLE 3.8-1: Transient Response of a Bent-beam Actuator"
+"Heat Transfer
+G.F. Nellis and S.A. Klein
+Cambridge University Press, 2009"
+
+"Inputs"
+L_a=1 [mm]*Convert(mm,m)	"distance between anchors"
+w=10 [micron]*Convert(micron,m)	"width of beam"
+th=5 [micron]*Convert(micron,m)	"thickness of beam"
+Current=0.010 [Amp]	"current"
+theta=0.5 [rad]	"slope of beam"
+T_a=20 [C]	"temperature of pillars (20 C; the original stored 293.15 K)"
+T_ini=20 [C]	"initial temperature of the beam"
+T_infinity=20 [C]	"temperature of air"
+h_bar=100 [W/m^2-K]	"heat transfer coefficient"
+k=80 [W/m-K]	"conductivity"
+rho_e=1e-5 [ohm-m]	"electrical resistivity"
+CTE=3.5e-6 [1/K]	"coefficient of thermal expansion"
+c=700 [J/kg-K]	"specific heat capacity"
+rho=2300 [kg/m^3]	"density"
+
+L=L_a/(2*Cos(theta))	"length of one side of the beam"
+N=6	"number of nodes"
+DELTAs=L/(N-1)	"distance between adjacent nodes"
+DUPLICATE i=1,N
+	s[i]=L*(i-1)/(N-1)	"position of each node"
+	s_mm[i]=s[i]*Convert(m,mm)	"in mm"
+END
+
+C_beam=w*th*L*rho*c	"heat capacity of beam"
+R_conv_beam=1/(2*(w+th)*L*h_bar)	"convection resistance between beam and air"
+tau_lumped=C_beam*R_conv_beam	"lumped time constant"
+alpha=k/(rho*c)	"thermal diffusivity"
+tau_diff=L^2/alpha	"diffusive time constant"
+
+t_sim=0.025 [s]	"simulation duration"
+
+{C_node=w*th*DELTAs*rho*c	"heat capacity of a node"
+R_cond_node=DELTAs/(k*w*th)	"node-to-node conduction"
+R_conv_node=1/(h_bar*2*DELTAs*(th+w))	"node-to-air convection"
+R_node=(2/R_cond_node+1/R_conv_node)^(-1) 	"thermal resistance of a node"
+tau_node=C_node*R_node	"nodal time constant"
+
+t_sim=0.025 [s]	"simulation duration"}
+
+dTdt[1]=0 [K/s]	"pillar temperature never changes"
+DUPLICATE i=2,(N-1)
+	dTdt[i]=k*(T[i-1]+T[i+1]-2*T[i])/(DELTAs^2*rho*c)+rho_e*Current^2/(w^2*th^2*rho*c)&
+		+2*(w+th)*h_bar*(T_infinity-T[i])/(w*th*rho*c)	           "internal nodes"
+END
+dTdt[N]=2*k*(T[N-1]-T[N])/(DELTAs^2*rho*c)+rho_e*Current^2/(w^2*th^2*rho*c)&
+	+2*(w+th)*h_bar*(T_infinity-T[N])/(w*th*rho*c)			"node at apex"
+DUPLICATE i=1,N
+	T[i]=T_ini+Integral(dTdt[i],time,0,t_sim)	"integrate forward in time"
+END
+
+$IntegralTable time:0.0005, T[1..N], DELTAy_micron
+
+DELTAL=Sum(CTE*(T[i]-T_ini)*Deltas,i=2,(N-1))+Deltas*CTE*(T[N]-T_ini)/2 "elongation of beam"
+DELTAy=Sqrt((L+DELTAL)^2-(L_a/2)^2)-sqrt(L^2-(L_a/2)^2)	"displacement of apex"
+DELTAy_micron=DELTAy*Convert(m,micron)	"in µm"
+
+"Analytical solution from EXAMPLE 1.7-1"
+"Calculations"
+per=2*(w+th)	"perimeter"
+A_c=w*th		"area"
+m_an=Sqrt(h_bar*per/(k*A_c))	"fin parameter"
+R_beam=rho_e*L*2/A_c	"resistance of beam structure"
+gvol=current^2*R_beam/(2*L*A_c)	"volumetric generation"
+"Determine constants"
+T_a=T_infinity+C_1+C_2+gvol*A_c/(h_bar*per)
+C_1*m_an*Exp(m_an*L)-C_2*m_an*exp(-m_an*L)=0
+"Solution"
+DUPLICATE i=1,N
+	T_an[i]=T_infinity+C_1*Exp(m_an*s[i])+C_2*exp(-m_an*s[i])+gvol*A_c/(h_bar*per)
+END

@@ -1,0 +1,74 @@
+{
+  "id": "CSL-0340",
+  "name": "transient_conduction_plane_wall",
+  "title": "Transient conduction in a plane wall with a convective boundary condition",
+  "summary": "1-D transient conduction in a plane wall of half-thickness a, initially at a uniform temperature and suddenly submitted to a convective boundary condition (h, Tinf) at t = 0: the separation-of-variables series (eigenvalues solving tan(zeta) = Bi/zeta, searched with arrays) is compared with the semi-infinite-wall (erfc) solution.",
+  "kind": "dynamic",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "transient_conduction_plane_wall.eescode",
+  "fluids": [],
+  "tags": [
+    "conduction",
+    "transient conduction",
+    "plane wall",
+    "separation of variables",
+    "eigenvalues",
+    "Biot number",
+    "Fourier number",
+    "semi-infinite wall"
+  ],
+  "language_features": [
+    "DUPLICATE loops",
+    "arrays",
+    "sum of an array range",
+    "erfc"
+  ],
+  "stats": {
+    "n_equations": 76,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_library",
+    "source_path": "~/Nextcloud/thermo_models/EES_library/Transient Conduction through a Plane Wall.EES",
+    "candidate_id": "EEL-117",
+    "authors": [
+      "S. A. Klein (University of Wisconsin-Madison)"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Arrays/transient_conduction_through_a_plane_wall.ees",
+    "license": "MIT",
+    "ees_version": "X8.806",
+    "language": "en",
+    "course": "",
+    "notes": "EES example of F-Chart Software, distributed by the EES-Community/ees-examples repository (commit 5c703d0, folder Arrays/). EES ID stamp: EES licence #0001: For use only by Professor S.A. Klein University of Wisconsin - Madison klein. Credit: (c) F-Chart Software / S. A. Klein, MIT via EES-Community/ees-examples."
+  },
+  "verification": {
+    "summary": "Runnable variant vs the solution stored in the original EES file: 69 common variables, 0 differ (rtol=0.001), largest relative deviation 6.3e-07 (theta[3]). The same model reproduces the transient table stored in that file (rows Fo = 0.05 and Fo = 5). The native file is blocked by CS-BUG-UNARY-POW.",
+    "checks": ["ees-stored-solution", "ees-parametric-table", "analytical"],
+    "reference": "EES stored solution of ~/Nextcloud/thermo_models/EES_library/Transient Conduction through a Plane Wall.EES (69 decoded variables) and the transient table (101x4) stored in the same file; first eigenvalue and C[1] checked by hand against tan(zeta) = Bi/zeta",
+    "date": "2026-11-12",
+    "coolsolve_version": "0.4.0@cc582a6",
+    "max_rel_diff": 6.3e-07,
+    "notes": "compare_solution.py (runnable variant vs the EES stored solution): 69 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 8 (the seven terms theta[4]..theta[10], for which EES stores no record, and the built-in constant pi). Largest relative deviation 6.3e-07 (theta[3] = 4.84e-92); theta_t 1.5e-07, theta_si 3.9e-11. Against the transient table of the same file (the curve data of the EES plot window): row 2 (Fo = 0.05) and row 101 (Fo = 5) give 4 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 73, the largest deviation being 2.5e-09 on theta[1]."
+  },
+  "missing_features": [
+    "CS-BUG-UNARY-POW"
+  ],
+  "related": [
+    "CSL-0106",
+    "CSL-0341"
+  ],
+  "related_external": [
+    "CoolSolve examples: none; the plain-text mirror of the source example is in the EES-Community/ees-examples repository (Arrays/transient_conduction_through_a_plane_wall.ees, commit 5c703d0)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-12",
+      "action": "added (T-IMPORT card C-513, candidate EEL-117 of the ees_library triage); native file blocked by CS-BUG-UNARY-POW, runnable variant transient_conduction_plane_wall_coolsolve.eescode verified against the EES stored solution",
+      "by": "opencode worker (t271) for S. Quoilin"
+    }
+  ]
+}

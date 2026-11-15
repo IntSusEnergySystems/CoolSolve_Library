@@ -1,0 +1,70 @@
+{=============================================================================
+  R134a heat pump with effectiveness heat exchangers (capvst)
+  CoolSolve Library model CSL-0344
+ -----------------------------------------------------------------------------
+  An R134a heat-pump cycle in which the evaporator and the condenser are
+  characterised by effectiveness-capacitance rate products (Alpha, Beta in
+  W/K): the evaporating and condensing temperatures adjust to the outdoor
+  (T_amb) and building (T_H) air temperatures through heat-transfer
+  relations instead of being fixed. The compressor has a given isentropic
+  efficiency (0.60) and a fixed suction volumetric flow (4.3E-3 m^3/s).
+  The model returns the heat rates, the mass flow and the COP; the original
+  file sweeps T_amb from -15 to 15 °C in a parametric table, this file runs
+  the default case T_amb = 15 °C (the stored EES solution).
+
+  Inputs : T_amb (outdoor air temperature [°C]); T_H, Alpha, Beta, VolFlow,
+           ComEff given
+  Outputs: COP, Q_H, Q_evap, m_dot and the cycle state points P[i], h[i],
+           T[i], s[i]
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. A. Klein / F-Chart Software, EES example capvst.ees (MIT) -
+           ~/Nextcloud/thermo_models/EES_library/capvst.ees - see README.md
+=============================================================================}
+
+"!Heat pump cycle with heat exchange considerations"
+T_amb = 15          "outdoor air temperature [°C] (default run; the original sweeps -15..15 °C in its parametric table)"
+
+COP=abs(Q_H/W_c)    "definition of the coefficient of performance"
+
+"!Evaporator"
+Alpha=750                       "HX effectiveness-capacitance rate product [W/K] (0.75 kW/C in the original)"
+Q_evap=m_dot*(h[1]-h[4])        "energy balance [W]"
+Q_evap=Alpha*(T_amb-T[1])       "heat transfer relation [W]"
+
+"!Compressor"
+x[1]=1                          "saturated vapor at compressor inlet"
+P[1]=pressure(R134a,T=T[1],x=x[1])
+h[1]=enthalpy(R134a,T=T[1],x=x[1])
+s[1]=entropy(R134a,T=T[1],x=x[1])
+s_ID[2]=s[1]                    "ideal compressor is isentropic"
+P[2]=pressure(R134a,T=T[3],x=1)
+h_ID[2]=enthalpy(R134a,P=P[2],s=s_ID[2])
+W_c_ID=-(h_ID[2]-h[1])*m_dot    "power requirement for ideal compressor [W]"
+ComEff=0.60                     "isentropic efficiency"
+W_c=W_c_ID/ComEff               "power requirement for actual compressor [W]"
+h[2]=h[1]-W_c/m_dot             "energy balance on adiabatic compressor [J/kg]"
+VolFlow=m_dot*volume(R134a,T=T[1],x=x[1])
+VolFlow=4.3E-3                  "compressor volumetric flowrate [m^3/s]"
+
+"!Condenser"
+T_H=20                          "building air temperature [°C]"
+Beta=1750                       "HX effectiveness-capacitance rate product [W/K] (1.75 kW/C in the original)"
+Q_H=Beta*(T[3]-T_H)             "heat exchanger relationship [W]"
+Q_H=(h[2]-h[3])*m_dot           "energy balance [W]"
+h[3]=enthalpy(R134a,T=T[3],x=0) "saturated liquid at condenser outlet [J/kg]"
+P[3]=P[2]
+
+"!Valve"
+h[4]=h[3]                       "valve is isenthalpic [J/kg]"
+P[4]=P[1]
+x[4]=quality(R134a,h=h[4],P=P[4])   "quality at evaporator inlet"
+
+"!State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+T[2]=temperature(R134a,h=h[2],P=P[2])
+T[4]=temperature(R134a,h=h[4],P=P[4])
+s[2]=entropy(R134a,h=h[2],P=P[2])
+s[3]=entropy(R134a,T=T[3],x=0)
+s[4]=entropy(R134a,h=h[4],P=P[4])
+
+$SUMROW ON
+{The $SUMROW directive causes a row to be added to each parametric table with the sum of all values in each column.}

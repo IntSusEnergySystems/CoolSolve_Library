@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0355",
+  "name": "nitrogen_van_der_waals",
+  "title": "Van der Waals equation of state for nitrogen",
+  "summary": "Single state of nitrogen at the reduced conditions P_r = 1.2, T_r = 1.2: specific volume and compressibility factor from the van der Waals equation of state, compared with the built-in real-fluid properties (2.9 % volume deviation at this state).",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "nitrogen_van_der_waals.eescode",
+  "fluids": ["Nitrogen"],
+  "tags": ["equation of state", "van der Waals", "cubic EOS", "compressibility factor", "reduced properties", "nitrogen", "exercise", "textbook"],
+  "language_features": ["property functions", "string variables"],
+  "stats": {"n_equations": 17, "largest_block": 1},
+  "origin": {
+    "type": "textbook",
+    "source": "ees_examples",
+    "source_path": "ees-examples-raw/Case_Study/example_10.1-1.eez",
+    "candidate_id": "EEX-113",
+    "authors": ["S. A. Klein", "G. F. Nellis"],
+    "url": "https://fchartsoftware.com/ees/examples/examples_thermodynamics_2011/chapter%2010/example%2010.1-1.eez",
+    "license": "MIT (F-Chart Software EES examples collection)",
+    "ees_version": "X11.913",
+    "language": "en",
+    "course": "Thermodynamics (Klein & Nellis, Cambridge University Press, 2011), example 10.1-1"
+  },
+  "verification": {
+    "summary": "A copy of the converted model run at the state stored in the EES file (P_r = 40, T_r = 1.2) was compared with the stored solution (ees_variables.csv, --ees-units, K->°C): 12 common variables, 0 differ at rtol=0.001; v 1.19e-05, Z 7.51e-09, v_EES 2.86e-06, Z_EES 1.47e-05, max 2.38e-05 on a (EES R# = 8314.34 vs CoolSolve 8314.462618 J/kmol-K).",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution in example_10.1-1.eez (Variable Information records of the file)",
+    "date": "2026-11-15",
+    "coolsolve_version": "0.4.0@00a4daa",
+    "max_rel_diff": 2.38e-05,
+    "notes": "Shipped model runs at P_r = 1.2 (single point of the card); the EES stored solution is a stale P_r = 40 run, so the comparison used a temporary copy at P_r = 40 (deleted with the work folder). v and Z of the shipped point re-checked by hand."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-11-15", "action": "added (card C-519, EEX-113)", "by": "GLM (Zai) for S. Quoilin"}
+  ]
+}

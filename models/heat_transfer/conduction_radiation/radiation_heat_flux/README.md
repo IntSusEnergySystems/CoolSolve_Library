@@ -222,6 +222,11 @@ J. H. Lambert (1760) and A. Beer (1852) for the attenuation law
 
 ## Related models
 
+- `CSL-0346` *blackbody_band_fraction*: the band fraction
+  $f_{1\to2} = \int_{\lambda_1}^{\lambda_2} E_{\lambda b}\,\mathrm{d}\lambda / E_b$
+  built on the Planck law of `blackbody_spectral_radiance` — the spectral-band
+  integration this library does not carry (EES example *Blackbody*, F-Chart).
+
 - `CSL-0087` *internal_turbulent_nusselt*: the first `ht` function library of
   the batch; same layout, comment blocks and demonstration program (two cases
   *A* doctest values and *B* Python values, README verification table

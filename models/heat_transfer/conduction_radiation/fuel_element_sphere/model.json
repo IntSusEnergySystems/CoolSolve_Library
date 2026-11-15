@@ -1,0 +1,76 @@
+{
+  "id": "CSL-0348",
+  "name": "fuel_element_sphere",
+  "title": "Spherical fuel element with exponential heat generation",
+  "summary": "50-node finite-volume model of a spherical fuel element whose volumetric heat generation decays exponentially from the centre (gen = g```_dot_0*exp(-b*r/r_fuel)), covered by a cladding shell and cooled by convection to a gas at 500 °C; the nodal energy balances are solved together with the analytical solution for a uniform generation (b = 0) for comparison.",
+  "kind": "steady",
+  "level": 3,
+  "status": "blocked",
+  "main_file": "fuel_element_sphere.eescode",
+  "fluids": [],
+  "tags": [
+    "conduction",
+    "finite volume",
+    "discretised",
+    "spherical coordinates",
+    "heat generation",
+    "cladding",
+    "convection boundary",
+    "exercise"
+  ],
+  "language_features": [
+    "FUNCTION",
+    "DUPLICATE",
+    "array ranges (Max(T_C[1..N]))",
+    "$IF directive (ParametricTable)",
+    "CONVERT",
+    "ConvertTemp",
+    "prime/backtick notation in the variable names (not supported by CoolSolve)",
+    "line continuation & (not supported by CoolSolve)"
+  ],
+  "stats": {
+    "n_equations": 263,
+    "largest_block": 50
+  },
+  "origin": {
+    "type": "textbook",
+    "source": "ees_examples",
+    "source_path": "",
+    "candidate_id": "EEX-011",
+    "authors": [
+      "G. F. Nellis",
+      "S. A. Klein"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/uncategorized/example_1.4-1_fuel_element.ees",
+    "license": "MIT",
+    "ees_version": "X11.908",
+    "language": "en",
+    "course": "",
+    "notes": "Example 1.4-1 of Nellis & Klein, Heat Transfer, Cambridge University Press, 2009, from the EES example set of F-Chart Software; the binary example was saved by EES X11.908. Plain-text mirror published under MIT by EES-Community/ees-examples (commit 5c703d0); the stored solution was extracted from ees-examples-raw/uncategorized/example_1.4-1_fuel_element.eez of the same repository."
+  },
+  "verification": {
+    "summary": "Runnable variant vs the EES stored solution (ees-examples-raw .eez): 60 common variables, 0 differ (rtol=0.001); the 203 stored temperature records are stale (value = guess = 1, provably inconsistent with the model's own ConvertTemp/analytics) and were excluded. Profile agrees with the exact continuous solution to 2.0e-4, with the stored N=1000 records to 1.4e-4; energy balance 2.2e-5.",
+    "checks": ["ees-stored-solution", "analytical", "energy-balance"],
+    "reference": "Stored solution of ees-examples-raw/uncategorized/example_1.4-1_fuel_element.eez (EES-Community/ees-examples); analytical solution for b = 0 (in the model) and the exact continuous solution of the exponential-generation sphere",
+    "date": "2026-11-14",
+    "coolsolve_version": "0.4.0@00a4daa",
+    "max_rel_diff": 3.63e-10,
+    "notes": "compare_solution.py vs the full stored CSV: 262 common variables, 202 differ (rtol=0.001), only in EES: 2852, only in CoolSolve: 2 — every difference is a stale stored record (value = guess default 1, while T_C[i] = T[i] - 273.15 and C_2 = 1024.4 by the model's own boundary condition; the file also holds leftover records r/T/T_C[51..1000] of an older N=1000 run whose values are physical, e.g. T[1000] = 793.826 K = the CoolSolve surface temperature). On the 60 records that are not provably stale (inputs, grid r[1..50], DELTAr, R_cond_clad, R_conv, N): 60 common variables, 0 differ (rtol=0.001), max rel diff 3.6e-10 on r[12]. C_2 = 1024.397166 K exact against 1024.397165533 (1.2e-13); profile vs the exact continuous solution 2.0e-4 (node 1, 50-node discretisation); vs the stored N=1000 records interpolated at the node radii, 47 nodes, 1.4e-4; energy balance Q_gen = 126.137 W against Q_rej = 126.134 W (2.2e-5)."
+  },
+  "missing_features": [
+    "CS-GAP-NAME-PRIME",
+    "CS-GAP-LINE-CONTINUATION",
+    "CS-GAP-INDEX-VAR"
+  ],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-14",
+      "action": "added (T-IMPORT card C-519, candidate EEX-011 of the ees_examples inventory); native file blocked by CS-GAP-NAME-PRIME, CS-GAP-LINE-CONTINUATION (registered) and CS-GAP-INDEX-VAR, runnable variant fuel_element_sphere_coolsolve.eescode verified against the EES stored solution",
+      "by": "opencode worker (t302) for S. Quoilin"
+    }
+  ]
+}
