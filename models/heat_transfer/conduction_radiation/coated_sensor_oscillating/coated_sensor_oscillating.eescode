@@ -1,0 +1,49 @@
+{=============================================================================
+  Coated temperature sensor in an oscillating ambient
+  CoolSolve Library model CSL-0358
+ -----------------------------------------------------------------------------
+  A spherical sensor (conductivity k_s, specific heat c_s, density rho_s)
+  coated with a layer of thickness th_c and conductivity k_c sits in an
+  ambient whose temperature oscillates as a sine around a mean. The sensor
+  is lumped (Biot number below = 0.0018 << 1) and the coating is a conduction
+  resistance in series with the convection resistance; the analytical
+  response of the resulting first-order system (solution from Maple, as in
+  the original) gives the sensor temperature Temp at time t, started at T_ini.
+
+  Inputs : T_infinity_bar, DT_infinity, f, t (ambient, time)
+           D, k_s, c_s, rho_s, th_c, k_c, h_bar (sensor, coating, convection)
+  Outputs: Temp, T_infinity, C_1, tau, Bi
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Nellis & Klein, "Heat Transfer", Cambridge University Press 2009,
+           example 3.1-2 (EES file of F-Chart Software) - see README.md
+=============================================================================}
+
+"Inputs"
+T_infinity_bar = 320      "average temperature of reactor [°C] (593.15 K in the original)"
+T_ini = 260               "initial temperature of sensor [°C] (533.15 K in the original)"
+DT_infinity = 50          "amplitude of reactor temperature change [K]"
+f = 3.141592654           "frequency of reactor temperature change [rad/s] (0.5 Hz in the original: value stored by EES)"
+t = 10                    "time at which the response is evaluated [s] (time of the stored solution)"
+D = 0.001                 "diameter of sensor [m] (1 mm in the original)"
+k_s = 50                  "conductivity of sensor material [W/m-K]"
+c_s = 150                 "specific heat capacity of sensor material [J/kg-K]"
+rho_s = 16000             "density of sensor material [kg/m^3]"
+th_c = 100e-6             "thickness of coating [m] (100 micron in the original)"
+k_c = 0.2                 "conductivity of coating [W/m-K]"
+h_bar = 500               "heat transfer coefficient [W/m^2-K]"
+
+"Resistances, capacitance and time constant"
+R_conv = 1/(h_bar*4*pi*(D/2+th_c)^2)              "convective resistance [K/W]"
+R_cond_c = (1/(D/2)-1/(D/2+th_c))/(4*pi*k_c)      "conduction resistance of coating [K/W]"
+V = 4*pi*(D/2)^3/3                                "volume of sensor [m^3]"
+A_s = 4*pi*(D/2)^2                                "surface area of sensor [m^2]"
+L_c = V/A_s                                       "approximate conduction length [m]"
+R_cond_int = L_c/(k_s*A_s)                        "internal conduction resistance [K/W]"
+Bi = R_cond_int/(R_conv+R_cond_c)                 "Biot number (dimensionless)"
+C = V*rho_s*c_s                                   "capacitance of the sensor [J/K]"
+tau = (R_conv+R_cond_c)*C                         "time constant of the sensor [s]"
+
+"!Analytical response (as in the original)"
+Temp = Exp(-1/tau*t)*C_1+(T_infinity_bar+4*T_infinity_bar*f^2*pi^2*tau^2-2*DT_infinity*Cos(2*pi*f*t*180/pi)*f*pi*tau+DT_infinity*Sin(2*pi*f*t*180/pi))/(1+4*f^2*pi^2*tau^2)   "sensor temperature [°C] (solution from Maple, in K in the original)"
+C_1+(T_infinity_bar+4*T_infinity_bar*f^2*pi^2*tau^2-2*DT_infinity*f*pi*tau)/(1+4*f^2*pi^2*tau^2) = T_ini   "initial condition"
+T_infinity = T_infinity_bar+DT_infinity*Sin(2*pi*f*t*180/pi)   "ambient temperature [°C]"

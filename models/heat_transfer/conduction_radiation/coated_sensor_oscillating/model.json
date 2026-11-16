@@ -1,0 +1,55 @@
+{
+  "id": "CSL-0358",
+  "name": "coated_sensor_oscillating",
+  "title": "Coated temperature sensor in an oscillating ambient",
+  "summary": "Lumped spherical sensor with a coating (spherical-shell conduction resistance in series with convection) in a sinusoidally oscillating ambient: analytical first-order response gives the sensor temperature at a given time, with Biot number, capacitance and time constant.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "coated_sensor_oscillating.eescode",
+  "fluids": [],
+  "tags": [
+    "heat transfer",
+    "transient response",
+    "lumped capacitance",
+    "Biot number",
+    "sensor",
+    "exercise"
+  ],
+  "language_features": [
+    "Exp",
+    "Sin/Cos (degrees)",
+    "line continuation & joined (CS-GAP-LINE-CONTINUATION)"
+  ],
+  "stats": {"n_equations": 24, "largest_block": 1},
+  "origin": {
+    "type": "textbook",
+    "source": "ees_examples",
+    "source_path": "",
+    "candidate_id": "EEX-017",
+    "authors": ["G.F. Nellis", "S.A. Klein"],
+    "url": "https://fchartsoftware.com/ees/examples/examples_heat_transfer_2009/chapter%203/example%203.1-2%20temperature%20sensor.eez",
+    "license": "MIT",
+    "ees_version": "X11.911",
+    "language": "en",
+    "course": "Nellis & Klein, Heat Transfer (Cambridge University Press, 2009), example 3.1-2",
+    "notes": "Example 3.1-2 of Nellis & Klein, Heat Transfer, from the EES example set of F-Chart Software (plain-text MIT mirror: EES-Community/ees-examples, uncategorized/example_3.1-2_temperature_sensor.ees)."
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of the original .eez (single solve at t = 10 s) using compare_solution.py --ees-units: 24 common variables, 0 differ (rtol=0.001); at rtol=1e-12 the largest relative difference is 3.35e-09 (on T_infinity). The stored time t = 10 s is the model evaluation time, so no closed-form hand check was needed.",
+    "checks": ["ees-stored-solution"],
+    "reference": "EES stored solution (ees_variables.csv) of example 3.1-2 temperature sensor.eez, Nellis & Klein Heat Transfer example 3.1-2",
+    "date": "2026-11-15",
+    "coolsolve_version": "0.4.0@00a4daa",
+    "max_rel_diff": 3.35e-09,
+    "notes": "Only in EES reference: T_C, T_infinity_C (dropped °C aliases of Temp/T_infinity, values equal). Only in CoolSolve: the built-in pi."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-11-15", "action": "added", "by": "GLM (opencode) for S. Quoilin"}
+  ]
+}

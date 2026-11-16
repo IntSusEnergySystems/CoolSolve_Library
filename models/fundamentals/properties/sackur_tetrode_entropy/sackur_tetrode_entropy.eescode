@@ -1,0 +1,29 @@
+{=============================================================================
+  Sackur-Tetrode absolute entropy of helium
+  CoolSolve Library model CSL-0365
+ -----------------------------------------------------------------------------
+  Absolute molar entropy of a monatomic ideal gas (helium at 1 atm and
+  300 K) from the Sackur-Tetrode equation of statistical mechanics,
+  checked against the absolute entropy of the EES/NASA ideal-gas database.
+  Example 15.5-1 of Klein & Nellis, "Thermodynamics", Cambridge University
+  Press, 2011. All equations are explicit; the example is a verification
+  curiosity: s_bar and s_bar_EES agree within about 1e-4.
+
+  Inputs : gas G$ = 'He', T = 26.85 degC (300 K in the original), P = 101325 Pa
+  Outputs: s_bar, s_bar_EES [J/kmol-K]
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : F-Chart Software EES example (Klein & Nellis 2011, ex 15.5-1) - see README.md
+  Status : verified (EES stored solution stale; verified analytically - see README.md)
+=============================================================================}
+
+"Inputs (as in the original)"
+G$='He'                "gas (the commented-out 'Ar' line of the original is dropped)"
+T=26.85 [C]            "temperature (300 K in the original)"
+P=101325 [Pa]          "pressure (1 atm in the original)"
+
+"Sackur-Tetrode equation"
+MW=MolarMass(G$)       "molar mass [kg/kmol]"
+m=MW/(NA#*1000)        "mass of a particle [kg] (MW/NA# in the original: in EES's molar unit system NA# is per kmol)"
+T_K=T+273.15           "absolute temperature [K] (needed by the Sackur-Tetrode equation)"
+s_bar=R#*(ln(k#*T_K*(2*pi*m*k#*T_K/(h#^2))^(3/2)/P)+5/2)      "Sackur-Tetrode equation [J/kmol-K]"
+s_bar_EES=MolarMass(G$)*Entropy(G$,T=T,P=P)                   "check using the EES/NASA database [J/kmol-K] (entropy() is per kg in CoolSolve)"

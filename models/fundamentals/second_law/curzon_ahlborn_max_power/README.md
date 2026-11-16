@@ -136,6 +136,6 @@ not apply to this file).
 
 ## Related models
 
-None yet (`related` stays empty per the card): `CSL-0186` (Carnot engine
-driving a Carnot refrigerator) treats reversible Carnot cycles between
-reservoirs, without the heat-transfer limit.
+`CSL-0359` is the same maximum-power engine with the reservoir exchange
+limited by boiler and condenser effectivenesses, plus an irreversibility
+factor. `CSL-0186` is a reversible Carnot pair and is not the same system.

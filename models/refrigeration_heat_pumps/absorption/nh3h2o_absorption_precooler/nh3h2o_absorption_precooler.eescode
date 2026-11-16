@@ -1,0 +1,183 @@
+{=============================================================================
+  Single-stage ammonia-water (NH3H2O) absorption cycle with a condensate
+  precooler
+  CoolSolve Library model CSL-0360 - see README for status
+ -----------------------------------------------------------------------------
+  Single-stage NH3H2O absorption refrigeration cycle (Herold, Radermacher and
+  Klein, "Absorption Chillers and Heat Pumps", CRC Press, 2nd ed., 2015,
+  Example 9.3): the condensed refrigerant (10) is subcooled in the condensate
+  precooler (effectiveness model, PROCEDURE shx; Min() = smaller of the two
+  capacity rates) by the cold evaporator outlet (13/14). Given the heat
+  rejection temperatures (absorber and condenser at 40 C), the evaporator
+  temperature (-10 C) and the design goals (x[9] = 0.9996, DELTAx = 0.1), the
+  model solves the 14 state points, the component heat rates and the COP.
+  Inputs : m_dot[1], eta_pump, epsilon_shx, epsilon_sc, T[1], T[10], T[13],
+           qualities Q[i], x[9], DELTAx
+  Units  : SI - temperatures in C, pressures in Pa, energies in J (converted
+           by hand from the original SI-C-kPa-kJ; no value changed, see README)
+  Source : ex9_3.ees, F-Chart Software EES example (S.A. Klein / F-Chart),
+           from Herold, Radermacher and Klein 2015, Example 9.3
+  Licence: MIT (library)
+=============================================================================}
+
+
+"Input Parameters from the problem statement"
+
+"efficiencies"
+eta_pump=1.0 	"isentropic efficiency of pump"
+epsilon_shx=0.8 	"solution heat exchanger effectiveness"
+epsilon_sc=0.8	"effectiveness of condensate precooler, if epsilon_sc=0, no subcooler is used"
+
+"temperatures (for state points, see diagram window)"
+T[13]=-10 [C]	"temperature at exit of the evaporator"
+T[10]=40 [C]	"temperature at the exit of the condenser"
+T[1]=40 [C]	"temperature at the exit of the absorber"
+
+"mass fractions"
+x[9]=0.9996	"mass fraction at the exit of the rectifier"
+DELTAx=0.1	"difference between the mass fraction to and from the generator"
+
+"mass flow"
+m_dot[1]=1 [kg/s]	"mass flow rate of solution through the pump"
+
+"quality"
+Q[1]=0	"quality of liquid exiting absorber entering the pump"
+Q[4]=0	"quality of liquid exiting the generator"
+Q[7]=1	"quality at vapor exit of generator"
+Q[8]=0	"quality of liquid returning from rectifier"
+Q[9]=1	"quality at exit of rectifier"
+Q[10]=0.00	"quality at exit of condenser"
+Q[13]=0.975	"quality at exit of evaporator"
+
+"pressures"
+P_high=Pressure(NH3H2O,T=T[10],x=x[10],Q=Q[10])	"pressure at condenser exit [Pa]"
+P_low=Pressure(NH3H2O,T=T[13],x=x[13],Q=Q[13])	"pressure at evaporator exit [Pa]"
+P[1]=P_low	"set all pressures assuming pressure changes occur only across valves [Pa]"
+P[2]=P_high
+P[3]=P_high
+P[4]=P_high
+P[5]=P_high
+P[6]=P_low
+P[7]=P_high
+P[8]=P_high
+P[9]=P_high
+P[10]=P_high
+P[11]=P_high
+P[12]=P_low
+P[13]=P_low
+P[14]=P_low
+
+"Definitions"
+x[1]-x[4]=DELTAx	"definition of the difference between mass fractions"
+f=(x[9]-x[4])/(x[3]-x[4]) 	"definition of solution circulation ratio"
+
+"Governing Equations"
+
+"PUMP"
+m_dot[1]=m_dot[2]	"mass balance"
+x[1]=x[2]	"ammonia balance"
+swp=v[1]*(P[2]-P[1])/eta_pump	"specific work of the pump, assuming 100% efficiency [J/kg]"
+h[2]=h[1]+swp	"energy balance on the pump"
+W_dot_pump=m_dot[1]*(h[2]-h[1])	"pump power [W]"
+
+"SOLUTION HEAT EXCHANGER"
+m_dot[2]=m_dot[3]	"mass balances"
+m_dot[4]=m_dot[5]
+x[2]=x[3]	"ammonia balances"
+x[4]=x[5]
+cp_23=(h[2]-h[3])/(T[2]-T[3])	"specific heat of stream 2-3 [J/kg-K]"
+cp_45=(h[4]-h[5])/(T[4]-T[5])	"specific heat of stream 4-5 [J/kg-K]"
+CALL shx(epsilon_shx,m_dot[2],m_dot[4],T[2],T[4],cp_45,cp_23:T[5],T[3],Q_dot_shx)
+
+"DESORBER"
+m_dot[8]+m_dot[3]=(m_dot[7]+m_dot[4])	"mass balance"
+m_dot[8]*x[8]+m_dot[3]*x[3]=(m_dot[7]*x[7]+m_dot[4]*x[4])	"ammonia balance"
+m_dot[3]*h[3]+m_dot[8]*h[8]+Q_dot_des=m_dot[7]*h[7]+m_dot[4]*h[4]  "energy balance"
+
+"RECTIFIER"
+T[8]=T[7]	"see explanation in the example"
+x[8]=x[3]	"see explanation in the example"
+m_dot[7]=m_dot[9]+m_dot[8]	"mass balance"
+m_dot[7]*x[7]=m_dot[9]*x[9]+m_dot[8]*x[8]	"ammonia balance"
+m_dot[7]*h[7]=m_dot[9]*h[9]+m_dot[8]*h[8]+Q_dot_rect	"energy balance"
+
+"EXPANSION VALVE"
+m_dot[5]=m_dot[6]	"mass balance"
+x[5]=x[6]	"ammonia balance"
+h[5]=h[6]	"energy balance on the valve"
+
+"CONDENSER"
+m_dot[9]=m_dot[10]	"mass balance"
+x[9]=x[10]	"ammonia balance"
+Q_dot_cond=m_dot[9]*(h[9]-h[10])	"energy balance to determine the heat transfer rate in the condenser [W]"
+
+"EVAPORATOR"
+m_dot[12]=m_dot[13]	"mass balance"
+x[12]=x[13]	"ammonia balance"
+Q_dot_evap=m_dot[13]*(h[13]-h[12])	"energy balance to determine the heat transfer rate in the evaporator [W]"
+
+"EXPANSION VALVE"
+m_dot[11]=m_dot[12]	"mass balance"
+x[11]=x[12]	"ammonia balance"
+h[11]=h[12]	"energy balance on the valve"
+
+"ABSORBER"
+m_dot[14]+m_dot[6]=m_dot[1]+err_absmass	"mass balance"
+m_dot[14]*x[14]+m_dot[6]*x[6]=m_dot[1]*x[1]+err_absammonia   "ammonia balance"
+m_dot[14]*h[14]+m_dot[6]*h[6]=m_dot[1]*h[1]+Q_dot_abs   "energy balance"
+
+"Condensate precooler HX"
+cp_1011=(h[10]-h[11])/(T[10]-T[11])	"specific heat of stream 10-11 [J/kg-K]"
+cp_1314=(h[13]-h[14])/(T[13]-T[14])	"specific heat of stream 13-14 [J/kg-K]"
+CALL shx(epsilon_sc,m_dot[13],m_dot[10],T[13],T[10],cp_1011,cp_1314:T[11],T[14],Q_dot_precooler)
+m_dot[11]=m_dot[10]
+x[11]=x[10]
+m_dot[14]=m_dot[13]
+x[14]=x[13]
+
+"OVERALL"
+COP_1=Q_dot_evap/(W_dot_pump+Q_dot_des)	"definition of coefficient of performance including pump power"
+COP_2=Q_dot_evap/Q_dot_des	"definition of coefficient of performance"
+checkQ=Q_dot_des+Q_dot_evap+W_dot_pump-(Q_dot_rect+Q_dot_cond+Q_dot_abs)  "check the energy balance [W]"
+P_ratio=P_high/P_low	"pressure ratio"
+DELTAt_glide=T[13]-T[12]	"definition of temperature glide [K]"
+
+"STATE POINTS:  The ammonia-water property relations fix all properties when three are specified"
+h[1]=Enthalpy(NH3H2O,T=T[1],P=P[1],Q=Q[1])	"Point 1 assumed saturated liquid at given temperature"
+v[1]=Volume(NH3H2O,T=T[1],P=P[1],Q=Q[1])	"Volume needed for pumping power calculation [m3/kg]"
+x[1]=MassFraction(NH3H2O,T=T[1],P=P[1],Q=Q[1])	"Relate mass fraction to temperature and pressure"
+T[2]=Temperature(NH3H2O,P=P[2],h=h[2],x=x[2])	"Point 2 - relate temperature to enthalpy from pump model"
+T[3]=Temperature(NH3H2O,P=P[3],h=h[3],x=x[3])	"Point 3 - relate temperature to enthalpy from solution heat exchanger model"
+h[4]=Enthalpy(NH3H2O,P=P[4],x=x[4],Q=Q[4])	"Point 4 - assumed saturated liquid at high pressure and given delta X"
+T[4]=Temperature(NH3H2O,P=P[4],x=x[4],Q=Q[4])          "Temperature is obtained as well"
+T[5]=Temperature(NH3H2O,P=P[5],h=h[5],x=x[5])	"Point 5 - relate temperature to enthalpy from solution heat exchanger model"
+Q[6]=Quality(NH3H2O,P=P[6],h=h[6],x=x[6])	"Point 6 - obtain vapor quality from energy balance on expansion valve"
+T[6]=Temperature(NH3H2O,P=P[6],h=h[6],x=x[6])	"Temperature is obtained as well"
+x[7]=MassFraction(NH3H2O,T=T[7],P=P[7],Q=Q[7])	"Point 7 - saturated vapour in equilibrium with the solution at 3"
+h[7]=Enthalpy(NH3H2O,T=T[7],P=P[7],Q=Q[7])            	"Enthalpy obtained as well"
+T[8]=Temperature(NH3H2O,x=x[8],P=P[8],Q=Q[8])	"Point 8 - assumed to be liquid in equilibrium with point 7"
+h[8]=Enthalpy(NH3H2O,x=x[8],P=P[8],Q=Q[8])	"Enthalpy obtained as well"
+h[9]=Enthalpy(NH3H2O,P=P[7],x=x[9],Q=Q[9])	"Point 9 - assumed to be saturated vapor at given mass fraction"
+T[9]=Temperature(NH3H2O,P=P[7],x=x[9],Q=Q[9])	"Temperature obtained as well"
+h[10]=Enthalpy(NH3H2O,T=T[10],x=x[10],Q=Q[10])	"Point 10 - assumed to be saturated liquid"
+T[11]=Temperature(NH3H2O,P=P[11],h=h[11],x=x[11])	"Point 11 - relate temperature to enthalpy from condensate precooler model"
+T[12]=Temperature(NH3H2O,P=P[12],h=h[12],x=x[12])	"Point 12 - relate temperature to enthalpy from expansion valve"
+Q[12]=Quality(NH3H2O,P=P[12],h=h[12],x=x[12])	"Quality obtained as well"
+h[13]=Enthalpy(NH3H2O,x=x[13],T=T[13],Q=Q[13])	"Point 13 - relate enthalpy to given temperature and vapor quality"
+T[14]=Temperature(NH3H2O,P=P[14],h=h[14],x=x[14])	"Point 14 - relate temperature to enthalpy from condensate precooler model"
+Q[14]=Quality(NH3H2O,P=P[14],h=h[14],x=x[14])	"State is superheated"
+
+PROCEDURE shx(epsilon,m_dot_c,m_dot_h,T_in_c,T_in_h,cph,cpc:T_out_h,T_out_c,Q_dot)
+"Implements effectiveness model for the solution heat exchangers"
+	C_dot_c=m_dot_c*cpc	"cold side thermal capacitance [W/K]"
+	C_dot_h=m_dot_h*cph	"hot side thermal capacitance [W/K]"
+	C_dot_min=Min(C_dot_c,C_dot_h)	"minimum thermal capacitance (smaller of the two rates) [W/K]"
+	Q_dot=epsilon*C_dot_min*(T_in_h-T_in_c)	"heat transfer rate [W]"
+  	T_out_c=T_in_c+Q_dot/C_dot_c	"outlet temperature on cold side [C]"
+	T_out_h=T_in_h-Q_dot/C_dot_h                            	"outlet temperature on hot side [C]"
+END
+
+"State points for the thermodynamic diagrams (post-processing, no effect on the results)"
+DUPLICATE i=1,14
+  s[i]=Entropy(NH3H2O,P=P[i],X=x[i],H=h[i])
+END

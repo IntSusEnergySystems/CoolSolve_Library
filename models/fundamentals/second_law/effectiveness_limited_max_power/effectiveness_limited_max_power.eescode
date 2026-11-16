@@ -1,0 +1,53 @@
+{=============================================================================
+  Effectiveness-limited heat engine at maximum power
+  CoolSolve Library model CSL-0359
+ -----------------------------------------------------------------------------
+  Maximum power of a heat engine whose heat exchange with the hot and the
+  cold stream is limited by the effectiveness of its boiler and condenser
+  (effectiveness - NTU relations). The endoreversible engine runs at the
+  maximum-power efficiency eta_mp = 1 - sqrt(T_C_in/(phi*T_H_in)) with an
+  irreversibility factor phi, and the maximum power W_dot_max follows from
+  the two effectiveness relations. Active block of EES example 8.6-1: the
+  toluene Rankine plant of the original sits inside one comment block and is
+  not imported.
+
+  Inputs : T_H_in, T_C_in (stream inlet temperatures), V_dot_H, V_dot_C,
+           rho_H, rho_C, c_H, c_C, UA_b, UA_cond, eta_HPt (phi = eta_HPt)
+  Outputs: eta_mp, eta_max, eff_b, eff_cond, W_dot_max
+  Units  : SI - temperatures in °C, conductances in W/K, power in W
+  Source : EES example 8.6-1, THERMODYNAMICS, S.A. Klein and G.F. Nellis,
+           Cambridge University Press, 2011 (F-Chart Software, MIT)
+           - see README.md
+=============================================================================}
+
+"Heat-exchanger and stream data (unit conversion of the original, ees_import.md §6)"
+T_H_in = 180 [C]   "hot fluid inlet temperature [°C]; stored in K in the original"
+V_dot_H = 65*6.30901964e-5   "hot fluid volumetric flow rate [m^3/s]; 65 gpm in the original"
+rho_H = 1000 [kg/m^3]   "hot fluid density [kg/m^3]"
+c_H = 4200 [J/kg-K]   "hot fluid heat capacity [J/kg-K]"
+T_C_in = 25 [C]   "cooling air inlet temperature [°C]; stored in K in the original"
+V_dot_C = 23500*4.71947443e-4   "cooling air volumetric flow rate [m^3/s]; 23500 cfm in the original"
+rho_C = 1 [kg/m^3]   "density of cooling air [kg/m^3]"
+c_C = 1000 [J/kg-K]   "specific heat capacity of cooling air [J/kg-K]"
+UA_b = 33000 [W/K]   "conductance of boiler [W/K]; 33 kW/K in the original"
+UA_cond = 35000 [W/K]   "conductance of condenser [W/K]; 35 kW/K in the original"
+F$ = 'Toluene'   "working fluid of the original Rankine section (unused by the active equations)"
+T_t_in = 170 [C]   "turbine inlet temperature [°C], unused by the active equations; stored in K in the original"
+eta_HPt = 0.87   "high pressure turbine efficiency, feeds phi"
+eta_LPt = 0.84   "low pressure turbine efficiency, unused by the active equations"
+eta_HPp = 0.58   "high pressure pump efficiency, unused by the active equations"
+eta_LPp = 0.52   "low pressure pump efficiency, unused by the active equations"
+
+"Maximum-power engine, as in the original (absolute temperatures inside the formulas)"
+phi = eta_HPt   "irreversibility factor"
+eta_mp = 1-Sqrt((T_C_in+273.15)/(phi*(T_H_in+273.15)))   "maximum power efficiency"
+eta_max = 1-(T_C_in+273.15)/(phi*(T_H_in+273.15))   "maximum possible efficiency"
+
+"Effectiveness relations and maximum power"
+m_dot_H = V_dot_H*rho_H   "hot fluid mass flow rate [kg/s]"
+C_dot_H = m_dot_H*c_H   "hot fluid capacitance rate [W/K]"
+eff_b = 1-Exp(-UA_b/C_dot_H)   "effectiveness of the boiler"
+m_dot_C = V_dot_C*rho_C   "cooling air mass flow rate [kg/s]"
+C_dot_C = m_dot_C*c_C   "cooling air capacitance rate [W/K]"
+eff_cond = 1-Exp(-UA_cond/C_dot_C)   "effectiveness of the condenser"
+W_dot_max = eff_cond*C_dot_C*eff_b*C_dot_H*phi*(Sqrt(T_H_in+273.15)-sqrt((T_C_in+273.15)/phi))^2/(eff_b*C_dot_H+eff_cond*C_dot_C*phi)   "maximum power [W]"

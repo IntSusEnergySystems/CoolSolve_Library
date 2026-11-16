@@ -1,0 +1,79 @@
+{
+  "id": "CSL-0364",
+  "name": "nh3h2o_absorption_precooler_ua",
+  "title": "Single-stage ammonia-water absorption cycle with a condensate precooler and UA models on the four corners",
+  "summary": "The Example 9.3 single-stage NH3H2O absorption cycle with condensate precooler, modified as Example 9.3b: the corner temperatures (absorber, condenser, evaporator, desorber) are no longer imposed; each corner is coupled to an external water loop by a UA*LMTD model, which closes the system.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "nh3h2o_absorption_precooler_ua.eescode",
+  "fluids": [
+    "NH3H2O"
+  ],
+  "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "single-stage",
+    "condensate precooler",
+    "rectifier",
+    "solution heat exchanger",
+    "UA-LMTD corners",
+    "external loops",
+    "COP",
+    "cycle",
+    "textbook example"
+  ],
+  "language_features": [
+    "NH3H2O fluid (any three of T, P, X, Q, H, S, U, V)",
+    "PROCEDURE shx (kept; Min() = smaller of two capacity rates)",
+    "LMTD_F (log-mean temperature difference)",
+    "arrays (state points)"
+  ],
+  "stats": {
+    "n_equations": 143,
+    "largest_block": 80
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_examples",
+    "source_path": "Case_Study/ex9_3_ua.ees",
+    "candidate_id": "EEX-110",
+    "authors": [
+      "S. A. Klein (F-Chart Software)"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/ex9_3_ua.ees",
+    "license": "MIT",
+    "ees_version": "X11.926",
+    "language": "en",
+    "course": "",
+    "notes": "Example 9.3b (modified ex9_3 with UA models on the four corners) of Herold, Radermacher and Klein, Absorption Chillers and Heat Pumps, CRC Press, 2nd ed., 2015; EES example of F-Chart Software, distributed by the EES-Community/ees-examples repository (commit 5c703d0, folder Case_Study/; the file itself links https://fchartsoftware.com/ees/examples/examples_achp_2015/chapter%209/ex9_3_ua.eez). The .eez companion stores the binary .EES with the solution used as verification reference. Credit: (c) F-Chart Software / S. A. Klein, MIT via EES-Community/ees-examples."
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution of the binary Ex9_3_UA.EES inside ex9_3_ua.eez (compare_solution.py --ees-units, 143 common variables): COP within 1.4 %, heat rates within 3.6 %, pressures within 0.64 %, temperatures within 2.7 %, mass fractions within 3.0 %. Deviations explained by the NH3H2O property backend as for CSL-0360.",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of the binary Ex9_3_UA.EES inside ex9_3_ua.eez (ees_variables.csv), compared with tools/compare_solution.py --ees-units",
+    "date": "2026-11-15",
+    "coolsolve_version": "0.4.0@a53de60",
+    "max_rel_diff": 0.0731,
+    "notes": "Compared set: 143 common variables. Excluded: h[i], s[i] (absolute NH3H2O enthalpy/entropy, different reference state in EES and CoolProp; the EES s[i], v[2..14], Q[2], Q[3], Q[5], Q[11], T[16] records are stale, the file computes none of them), checkQ (balance residual: EES 9.1e-05 W, CoolSolve -2.5e-07 W), cp/cp_1011/cp_1314 (reference units J/g-K and J/g-DELTAK not converted by --ees-units, CS-BUG-COMPARE-JGK; converted by hand: cp exact, cp_1011 5.4e-03, cp_1314 9.8e-03), C_dot_min and m_dot_c (procedure-local). Max kept rel diff as printed: DELTAt_glide 7.31e-02 (absolute 0.027 K on a 0.35 K glide); cp_23 3.67e-02; Q_dot_shx 3.62e-02; x[4] 2.96e-02; COP_1 1.42e-02. Q[6] and Q[14] agree exactly (boundary clamp values -0.001/1.001 in both tools)."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [
+    "EES-Community/ees-examples Case_Study ex9_1 to ex9_5 (single-stage NH3H2O absorption family, Herold chapter 9)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-15",
+      "action": "added (native file solves in CoolSolve; compared with the EES stored solution)",
+      "by": "GLM (zai) for S. Quoilin"
+    }
+  ]
+}

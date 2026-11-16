@@ -1,0 +1,47 @@
+{=============================================================================
+  Approximate temperature of the Earth
+  CoolSolve Library model CSL-0357
+ -----------------------------------------------------------------------------
+  The Sun-Earth-space system is written as a radiation resistance network,
+  as in the original: the Sun (blackbody, 5800 K) and the Earth (blackbody)
+  exchange with each other and with space (2.7 K). In steady state the
+  Sun-to-Earth heat rate equals the Earth-to-space rate, which fixes the
+  blackbody emissive power of the Earth and hence its effective temperature
+  (about 6 °C = 279.4 K). Textbook example 10.3-3 of Nellis & Klein, "Heat
+  Transfer", Cambridge University Press, 2009.
+
+  Inputs : D_1, T_1, T_3, R, D_2
+  Outputs: E_b_2, T_2 (effective temperature of the Earth)
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : G.F. Nellis and S.A. Klein, Heat Transfer (F-Chart Software
+           EES example 10.3-3) - see README.md
+=============================================================================}
+
+"Inputs"
+D_1=1.390e9 [m]	"diameter of the sun"
+T_1=5526.85 [C] 	"temperature of the sun (5800 K in the original)"
+T_3=-270.45 [C]	"temperature of space (2.7 K in the original)"
+R=1.497e11 [m]	"distance between the earth and the sun"
+D_2=1.276e7 [m]	"diameter of earth"
+T_1_K=T_1+273.15	"absolute temperature of the sun [K] (needed by the Stefan-Boltzmann law)"
+T_3_K=T_3+273.15	"absolute temperature of space [K]"
+E_b_1=sigma#*T_1_K^4	"emissive power of sun [W/m^2]"
+E_b_3=sigma#*T_3_K^4	"emissive power of space [W/m^2]"
+
+A_1=pi*D_1^2                                     	"surface area of sun [m^2]"
+F_13=1	                                            	"view factor between the sun and space (dimensionless)"
+R_13=1/(A_1*F_13)	 "sun-to-space resistance [1/m^2]"
+
+A_2=pi*D_2^2	"surface area of earth [m^2]"
+F_23=1		"view factor between the earth and the space (dimensionless)"
+R_23=1/(A_2*F_23)	"earth-to-space resistance [1/m^2]"
+
+F_12=(pi*D_2^2/4)/(4*pi*R^2)	"view factor between the sun and the earth (dimensionless)"
+R_12=1/(A_1*F_12)	"sun-to-earth resistance [1/m^2]"
+
+q_dot_1to2=(E_b_1-E_b_3)/(R_12+R_23)	"sun-to-earth heat transfer rate [W]"
+q_dot_2to3=q_dot_1to2	"earth-to-space heat transfer rate [W]"
+
+E_b_2=E_b_1-q_dot_1to2*R_12	"blackbody emissive power of earth [W/m^2]"
+T_2_K=(E_b_2/sigma#)^(1/4)	"temperature of the earth [K]"
+T_2=T_2_K-273.15	"temperature of the earth [C]"

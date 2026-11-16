@@ -1,0 +1,63 @@
+{
+  "id": "CSL-0365",
+  "name": "sackur_tetrode_entropy",
+  "title": "Sackur-Tetrode absolute entropy of helium",
+  "summary": "Absolute molar entropy of helium (300 K, 1 atm) from the Sackur-Tetrode equation of statistical mechanics, checked against the absolute entropy of the EES/NASA ideal-gas database: the two values agree within 1e-6 relative (126.172 J/mol-K).",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "sackur_tetrode_entropy.eescode",
+  "fluids": ["He"],
+  "tags": [
+    "entropy",
+    "absolute entropy",
+    "statistical mechanics",
+    "Sackur-Tetrode",
+    "ideal gas",
+    "exercise"
+  ],
+  "language_features": [
+    "built-in constants NA#, k#, h#, R#"
+  ],
+  "stats": {
+    "n_equations": 8,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "textbook",
+    "source": "ees_examples",
+    "source_path": "Case_Study/example_15.5-1.ees",
+    "candidate_id": "EEX-160",
+    "authors": [
+      "S. A. Klein",
+      "G. F. Nellis"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/example_15.5-1.ees",
+    "license": "MIT",
+    "ees_version": "X11.915",
+    "language": "en",
+    "course": "",
+    "notes": "Example 15.5-1 of Klein & Nellis, Thermodynamics (Cambridge University Press, 2011); EES example (c) F-Chart Software, MIT via EES-Community/ees-examples. The binary .eez companion (EES 11.915) carries the stored solution: stale for the equations as saved (stored T record 1000 K vs the saved T = 300 K), re-checked at its own run point only. Original download page in the file header: https://fchartsoftware.com/ees/examples/examples_thermodynamics_2011/chapter%2015/example%2015.5-1.eez"
+  },
+  "verification": {
+    "summary": "Runs in 0 iterations. Shipped 300 K run: s_bar equals an analytical recomputation to 2.6e-13; s_bar_EES = 126172.11 J/kmol-K matches the JANAF helium entropy (126.150 J/mol-K at 298.15 K, 1 bar, cp = 5/2 R, adjusted to 300 K, 1 atm) to 2.4e-5; the two agree within 9.6e-7. Stale EES stored records (T = 1000 K) reproduced by a work-folder re-run at that point, max rel diff 6.7e-4.",
+    "checks": ["ees-stored-solution", "analytical", "publication"],
+    "reference": "Analytical recomputation of the Sackur-Tetrode value; JANAF/NIST absolute entropy of helium (S(298.15 K, 1 bar) = 126.150 J/mol-K, cp = 5/2 R); stale EES stored solution of the .eez companion, compared with tools/compare_solution.py --ees-units",
+    "date": "2026-11-15",
+    "coolsolve_version": "0.4.0@a53de60",
+    "max_rel_diff": 6.68e-4,
+    "notes": "max_rel_diff is the maximum actual relative difference of the stored-point re-run (T = 1000 K, in the work folder, not the shipped baseline): 6.7e-4 on s_bar_EES (EES/CoolProp ideal-gas He data), 1.8e-5 on s_bar, 4.7e-6 on m; compare_solution.py reports '0 differ (rtol=0.001)'. At the shipped 300 K run point the maximum deviation against the analytical/publication references is 2.4e-5 (on s_bar_EES vs JANAF). The 7 only-in-CoolSolve variables are the built-in constants, T_K and G$."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-15",
+      "action": "added (T-IMPORT card C-519, candidate EEX-160 of the ees_examples inventory); verified analytically, against the published JANAF helium entropy, and against the stale EES stored solution at its own 1000 K run point",
+      "by": "opencode worker (t328) for S. Quoilin"
+    }
+  ]
+}

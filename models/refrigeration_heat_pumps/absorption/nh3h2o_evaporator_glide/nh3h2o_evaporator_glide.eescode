@@ -1,0 +1,45 @@
+{=============================================================================
+  NH3/H2O evaporator temperature glide (Herold et al., Example 9.1)
+  CoolSolve Library model CSL-0362
+ -----------------------------------------------------------------------------
+  Three equilibrium states of an ammonia-water absorption system, as in
+  Example 9.1 of Herold, Radermacher and Klein, "Absorption Chillers and
+  Heat Pumps", CRC Press, 2nd edition, 2015. The desorber vapour is in
+  equilibrium with the entering rich solution (state 1: 150 C, x = 0.3);
+  the evaporator receives saturated liquid of the same mass fraction as
+  that vapour, at 0 C (state 2); it leaves as a saturated two-phase
+  mixture with liquid mass fraction 0.25, all at constant pressure.
+  Outputs: vapour mass fractions, saturation pressures, evaporator outlet
+  temperature, temperature glide, outlet vapour quality and the minimum
+  liquid mass fraction x_e2_min.
+  Properties: EES fluid NH3H2O (ammonia mass fraction x, quality Q).
+  Inputs : T[1], T[2] [C], x[1], x[3] [kg/kg]
+  Outputs: P[i] [Pa], y[i] [kg/kg], T[3] [C], T_glide [C], Q[3], x_e2_min
+  Units  : SI - temperatures in °C, pressures in Pa (bar in the original)
+  Source : EES example ex9_1.ees (S. A. Klein, F-Chart Software), textbook
+           example of Herold et al. (2015) - see README.md
+=============================================================================}
+
+"1) Determine the mass fraction of the vapor in equilibrium with the liquid in the desorber - point d"
+T[1]=150 [C]	"temperature in desorber"
+x[1]=0.3	"mass fraction of ammonia in liquid in desorber [kg/kg]"
+P[1]=Pressure(NH3H2O,T=T[1],x=x[1],Q=0)	"pressure in desorber [Pa]"
+y[1]=MassFraction(NH3H2O,T=T[1],P=P[1],Q=1)	"mass fraction of ammonia in vapor phase [kg/kg]"
+
+"2)  Assume that saturated liquid of the same mass fraction as the vapor enters the evaporator at 0°C.  What is the mass fraction of the vapor in equilibrium with this liquid? - point e1"
+T[2]=0 [C]	"temperature of liquid"
+x[2]=y[1]	"mass fraction of the liquid [kg/kg]"
+P[2]=Pressure(NH3H2O,T=T[2],x=x[2],Q=0)	"saturation pressure [Pa]"
+y[2]=MassFraction(NH3H2O,T=T[2],P=P[2],Q=1)	"mass fraction of ammonia in vapor phase [kg/kg]"
+
+"3)  Assume that the entire liquid is evaporated at constant pressure.  What is the temperature glide? - point e2"
+P[3]=P[2]	"evaporated at constant pressure [Pa]"
+x[3]=0.25	"mass fraction of liquid outlet from evaporator [kg/kg]"
+T[3]=Temperature(NH3H2O,P=P[3],x=x[3],Q=0)	"temperature of the saturated evaporator outlet [C]"
+y[3]=MassFraction(NH3H2O,P=P[3],T=T[3],Q=1)	"mass fraction of the vapor in equilibrium with the saturated liquid [kg/kg]"
+Q[3]*y[3]+(1-Q[3])*x[3]=x[2]	"mass balance on evaporator gives vapor quality at outlet"
+T_glide=T[3]-T[2]	"temperature glide [C]"
+
+"Compute minimum value of x"
+T_e2_min=Temperature(NH3H2O,P=P[3],x=x[2],Q=1)	"temperature at P=P[2] and composition y=y[1], as in the original"
+x_e2_min=MassFraction(NH3H2O,P=P[3],T=T_e2_min,Q=0)	"saturated liquid pair to y=y[1] at P=P[2] [kg/kg]"

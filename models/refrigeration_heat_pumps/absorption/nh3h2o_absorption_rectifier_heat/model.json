@@ -1,0 +1,76 @@
+{
+  "id": "CSL-0361",
+  "name": "nh3h2o_absorption_rectifier_heat",
+  "title": "Single-stage ammonia-water absorption cycle with rectifier heat recovery",
+  "summary": "Single-stage NH3H2O absorption refrigeration cycle, Herold, Radermacher and Klein Example 9.5: the cycle of Example 9.3 (condensate precooler, CSL-0360) with all the rectifier heat recovered into the rich solution instead of rejected - the solution stream 2 is heated to 16 by the rectifier duty and enters the solution heat exchanger at 16. Given the heat rejection temperatures (40 C), the evaporator temperature (-10 C) and the design goals (x[9] = 0.99, DELTAx = 0.1), the model computes the state points, the component heat rates and the COP.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "nh3h2o_absorption_rectifier_heat.eescode",
+  "fluids": [
+    "NH3H2O"
+  ],
+  "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "single-stage",
+    "rectifier heat recovery",
+    "condensate precooler",
+    "solution heat exchanger",
+    "COP",
+    "cycle",
+    "textbook example"
+  ],
+  "language_features": [
+    "NH3H2O fluid (any three of T, P, X, Q, H, S, U, V)",
+    "PROCEDURE shx (kept; Min() = smaller of two capacity rates)",
+    "arrays (state points)"
+  ],
+  "stats": {
+    "n_equations": 127,
+    "largest_block": 7
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_examples",
+    "source_path": "Case_Study/ex9_5.ees",
+    "candidate_id": "EEX-111",
+    "authors": [
+      "S. A. Klein (F-Chart Software)"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/ex9_5.ees",
+    "license": "MIT",
+    "ees_version": "X11.926",
+    "language": "en",
+    "course": "",
+    "notes": "Example 9.5 of Herold, Radermacher and Klein, Absorption Chillers and Heat Pumps, CRC Press, 2nd ed., 2015; EES example of F-Chart Software, distributed by the EES-Community/ees-examples repository (commit 5c703d0, folder Case_Study/). The .eez companion stores the binary .EES with the solution used as verification reference. Credit: (c) F-Chart Software / S. A. Klein, MIT via EES-Community/ees-examples."
+  },
+  "verification": {
+    "summary": "The native file was solved in CoolSolve and compared with the EES stored solution (compare_solution.py --ees-units, 126 common variables): COP within 1.3 %, heat rates within 1.8 %, pressures within 2.2 %, temperatures within 2.4 %. Whole-cycle balance closes to -6.3e-06 W on 499 kW. Mass fractions differ by up to 3.4e-02, explained by the NH3H2O property backend (P_low at identical inputs differs 2.13e-02).",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of the binary Ex9_5.EES inside ex9_5.eez (ees_variables.csv), compared with tools/compare_solution.py --ees-units",
+    "date": "2026-11-15",
+    "coolsolve_version": "0.4.0@a53de60",
+    "max_rel_diff": 0.0511,
+    "notes": "Compared set: 126 common variables. Excluded: h[i], s[i], swp (absolute NH3H2O enthalpy/entropy, different reference state in EES and CoolProp; the EES v[2..14], Q[2], Q[3], Q[5], Q[11], Q[14] records are stale, the file computes none of them), checkQ (balance residual: EES -3.4e-07 J, CoolSolve -6.3e-06 W on 499 kW), cp_1011/cp_1314/cp_163 (reference units J/g-K not converted by --ees-units, CS-BUG-COMPARE-JGK; true diffs 3.8e-03, 5.1e-03 and 3.4e-02). Max kept rel diff as printed: Q[6] 5.11e-02 (two-phase quality inheriting the composition shift); x[4] 3.34e-02; DELTAt_glide 2.64e-02 (17.72 K vs 17.25 K); P_low 2.13e-02; COP_1 1.23e-02."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [
+    "EES-Community/ees-examples Case_Study ex9_1 to ex9_5 (single-stage NH3H2O absorption family, Herold chapter 9)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-15",
+      "action": "added (native file solves in CoolSolve; compared with the EES stored solution)",
+      "by": "GLM (zai) for S. Quoilin"
+    }
+  ]
+}
