@@ -184,3 +184,5 @@ Source file (EES 7.458, comments in French), collection of S. Quoilin:
   geometric input and the pressure ratio it develops is an output.
 - `CSL-0319` *r22_chiller_r407c_heat_pump*: R22 chiller of the same ULiège series (repetition 10) with water circuits, an R407C
   heat pump on its condenser heat, global COP and part-load factors.
+- `CSL-0344` *r134a_heat_pump_effectiveness*: same cycle at a different level of detail; its evaporator and
+  condenser are effectiveness-capacitance exchangers, so the cycle points float with the outdoor temperature.

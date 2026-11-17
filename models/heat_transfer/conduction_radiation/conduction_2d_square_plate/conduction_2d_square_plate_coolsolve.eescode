@@ -1,0 +1,40 @@
+{=============================================================================
+  Two-dimensional steady conduction in a square plate
+  CoolSolve Library model CSL-0341 - runnable variant
+ -----------------------------------------------------------------------------
+  Same model as conduction_2d_square_plate.eescode (the native file), with
+  the only change forced by the CoolSolve gap CS-GAP-INDEX-VAR: the array
+  indices that are expressions of the model variable N (T[N+1,j] and
+  T[i,N+1], T[i,N]) are written with the value of N (26 and 25), which is
+  what EES resolves at run time.  The loop bounds (duplicate i=0,N+1) and
+  every other equation, input and variable name are unchanged; the file is
+  valid EES.
+
+  Inputs : N (number of nodes in the X and Y directions) [-]
+  Outputs: T[i,j] (temperature of the node i,j) [C]
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : S. A. Klein (Univ. of Wisconsin-Madison), F-Chart Software EES
+           example - see README.md
+  Status : verified against the solution stored in the original EES file
+           (README.md, "Verification")
+=============================================================================}
+
+"!Number of nodes in the X and Y directions"
+N=25  "number of nodes in the X and Y directions [-]"
+
+"!Energy balance on interior nodes.  Interior nodes run from 1 to N."
+duplicate i=1,N
+	duplicate j=1,n
+		T[i,j]=(T[i+1,j]+T[i-1,j]+T[i,j+1]+T[i,j-1])/4
+	end
+end
+
+"!Boundary conditions.  Boundary nodes are 0 and N+1."
+duplicate  i=0,N+1
+	T[i,0]=100          "left hand side set to 100 [C]"
+	T[i,26]=T[i,25]    "insulated right hand side - no temperature gradient"
+end
+duplicate j=1,N
+	T[0,j]=100          "bottom surface at 100 [C]"
+	T[26,j]=0          "top surface at 0 [C]"
+end

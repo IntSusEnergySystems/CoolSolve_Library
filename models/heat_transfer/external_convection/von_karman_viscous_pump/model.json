@@ -1,0 +1,65 @@
+{
+  "id": "CSL-0338",
+  "name": "von_karman_viscous_pump",
+  "title": "von Karman's viscous pump (rotating disk)",
+  "summary": "Solution of the von Karman viscous pump problem (White, Viscous Fluid Flow, 2005, p. 162): three coupled differential equations in the similarity variables f, g and h are integrated with the Integral function from x = 0 to x = 10, the two slopes at the origin being determined by a shooting method.",
+  "kind": "dynamic",
+  "level": 3,
+  "status": "blocked",
+  "main_file": "von_karman_viscous_pump.eescode",
+  "fluids": [],
+  "tags": [
+    "external convection",
+    "rotating disk",
+    "viscous pump",
+    "similarity solution",
+    "shooting problem",
+    "ODE integration",
+    "wall gradients"
+  ],
+  "language_features": [
+    "INTEGRAL (fixed step)",
+    "prime notation in the variable names (not supported by CoolSolve)"
+  ],
+  "stats": {"n_equations": 17, "largest_block": 0},
+  "origin": {
+    "type": "software_library",
+    "source": "ees_library",
+    "source_path": "~/Nextcloud/thermo_models/EES_library/von Karman.EES",
+    "candidate_id": "EEL-121",
+    "authors": [
+      "S. A. Klein"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/uncategorized/von_karman.ees",
+    "license": "MIT",
+    "ees_version": "X8.807",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "Runnable variant vs the EES stored solution of the binary source: 11 common variables, 1 differ (rtol=0.001); the stored Obj is stale (it does not equal |g|+|f| of the stored f and g) and is excluded. The shooting slopes agree with White (2005, p. 162) to 5.2e-05 and 4.1e-05 relatively.",
+    "checks": ["ees-stored-solution", "publication", "analytical"],
+    "reference": "EES stored solution of ~/Nextcloud/thermo_models/EES_library/von Karman.EES (11 decoded variables); shooting solution of the model (f'(0) = 0.510213591117, g'(0) = -0.615909650561) against the published values of White, Viscous Fluid Flow, (2005) p. 162 (f'(0) = 0.5102, g'(0) = -0.6159)",
+    "date": "2026-11-12",
+    "coolsolve_version": "0.4.0@cc582a6",
+    "max_rel_diff": 5.2e-4,
+    "notes": "compare_solution.py: 11 common variables, 1 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 7 (the renamed derivatives f_1, f_2, f_1_0, g_1, g_2, g_1_0, h_1; the extractor does not decode the EES names that carry the prime notation). Excluded variable: Obj (EES 8.37739e-05, CoolSolve 2.49901e-04) - the stored EES Objective is a stale record of an earlier iteration of the EES optimisation, since |g|+|f| of the stored f and g is 2.49901e-04. No other variable excluded. Max relative difference over the compared variables: 5.20e-04 (h, -0.884575 against -0.884116); f and g agree to 2.1e-08 and 3.2e-08. Shooting on the model (Newton on f(10) = g(10) = 0): f'(0) = 0.510213591117 and g'(0) = -0.615909650561, against White (2005) p. 162 (0.5102 and -0.6159): 2.7e-05 and 1.6e-05 relatively; the shipped slopes 0.510226344786 and -0.615925074583 agree to 5.2e-05 and 4.1e-05. The stored EES f'' and g'' satisfy the algebraic relations with -(g^2) to a relative difference of 0.0 and with +(g^2) to 2.6e-04, which shows that EES reads -g^2 as -(g^2) while CoolSolve reads it as (-g)^2 (CS-BUG-UNARY-POW)."
+  },
+  "missing_features": [
+    "CS-GAP-NAME-PRIME",
+    "CS-BUG-UNARY-POW"
+  ],
+  "related": [
+    "CSL-0336"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-12",
+      "action": "added (T-IMPORT card C-512, candidate EEL-121 of the ees_library triage); native file blocked by CS-GAP-NAME-PRIME and CS-BUG-UNARY-POW, runnable variant von_karman_viscous_pump_coolsolve.eescode verified against the EES stored solution",
+      "by": "opencode worker (t270) for S. Quoilin"
+    }
+  ]
+}

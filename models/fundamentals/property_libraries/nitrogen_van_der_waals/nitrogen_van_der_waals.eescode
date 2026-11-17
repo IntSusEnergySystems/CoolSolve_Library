@@ -1,0 +1,41 @@
+{=============================================================================
+  Van der Waals equation of state for nitrogen
+  CoolSolve Library model CSL-0355
+ -----------------------------------------------------------------------------
+  Single state of nitrogen at the reduced conditions P_r = 1.2, T_r = 1.2:
+  the specific volume and the compressibility factor follow from the van
+  der Waals equation of state and are compared with the built-in real-fluid
+  properties of the same substance.
+
+  Inputs : reduced pressure P_r = 1.2, reduced temperature T_r = 1.2
+  Outputs: v, Z (van der Waals) and v_EES, Z_EES (built-in properties)
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : Thermodynamics, S.A. Klein and G.F. Nellis, Cambridge University
+           Press, 2011, example 10.1-1 (F-Chart Software EES example)
+           - see README.md
+=============================================================================}
+
+"Fluid constants"
+F$='Nitrogen'                  "fluid"
+MW=MolarMass(F$)               "molar mass [kg/kmol]"
+R=R#/MW                        "specific ideal-gas constant [J/kg-K]"
+P_c=P_crit(F$)                 "critical pressure [Pa]"
+T_c=T_crit(F$)                 "critical temperature [°C]"
+T_c_abs=T_c+273.15             "critical temperature [K]"
+
+"Van der Waals coefficients (as in the original)"
+a=27*R^2*T_c_abs^2/(64*P_c)    "coefficient a for van der Waals EOS [Pa*m^6/kg^2]"
+b=R*T_c_abs/(8*P_c)            "coefficient b for van der Waals EOS [m^3/kg]"
+
+"State at the reduced point"
+P_r=1.2                        "reduced pressure, dimensionless"
+T_r=1.2                        "reduced temperature, dimensionless"
+P=P_r*P_c                      "pressure [Pa]"
+T=T_r*T_c_abs-273.15           "state temperature [°C]"
+T_abs=T+273.15                 "state temperature [K]"
+
+"Van der Waals EOS and comparison with the built-in properties"
+P=R*T_abs/(v-b)-a/v^2          "specific volume from van der Waals EOS [m^3/kg]"
+Z=P*v/(R*T_abs)                "compressibility factor from van der Waals EOS, dimensionless"
+v_EES=Volume(F$,T=T,P=P)       "specific volume from the built-in nitrogen properties (as 'from EES' in the original) [m^3/kg]"
+Z_EES=P*v_EES/(R*T_abs)        "compressibility factor from the built-in properties, dimensionless"

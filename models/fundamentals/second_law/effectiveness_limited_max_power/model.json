@@ -1,0 +1,64 @@
+{
+  "id": "CSL-0359",
+  "name": "effectiveness_limited_max_power",
+  "title": "Effectiveness-limited heat engine at maximum power",
+  "summary": "Maximum power of an endoreversible heat engine whose heat exchange with the hot and the cold stream is limited by the effectivenesses of its boiler (eff_b) and condenser (eff_cond), from the effectiveness relations of the original; the engine runs at the Curzon-Ahlborn-type efficiency eta_mp = 1 - sqrt(T_C_in/(phi*T_H_in)) with an irreversibility factor phi.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "effectiveness_limited_max_power.eescode",
+  "fluids": [],
+  "tags": [
+    "maximum power",
+    "endoreversible",
+    "effectiveness",
+    "NTU",
+    "heat exchanger",
+    "exercise"
+  ],
+  "language_features": [],
+  "stats": {
+    "n_equations": 26,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "textbook",
+    "source": "ees_examples",
+    "source_path": "",
+    "candidate_id": "EEX-302",
+    "authors": [
+      "S. A. Klein",
+      "G. F. Nellis"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/example_8.6-1.ees",
+    "license": "MIT",
+    "ees_version": "X11.912",
+    "language": "en",
+    "course": "",
+    "notes": "Example 8.6-1 of Klein & Nellis, THERMODYNAMICS, Cambridge University Press, 2011, from the F-Chart Software EES example set. Only the active maximum-power block is imported (hot-fluid inlet through W_dot_max); the toluene Rankine plant of the original sits inside one comment block and PROCEDURE Turbine/Pump are not used by it. Binary source and stored solution from ees-examples-raw/Case_Study/example_8.6-1.eez of the same mirror (commit 5c703d0)."
+  },
+  "verification": {
+    "summary": "Solved natively in CoolSolve and compared with the EES stored solution of the companion .eez (ees-examples-raw): 25 common variables, 0 differ (rtol=0.001); max rel diff 5.7e-08 on m_dot_H (EES stores 7-digit values). The 50 reference-only records (toluene Rankine cycle of the commented block and older runs, e.g. eta_t, eta_p) are out of scope per the card.",
+    "checks": [
+      "ees-stored-solution",
+      "order-of-magnitude"
+    ],
+    "reference": "Stored solution of ees-examples-raw/Case_Study/example_8.6-1.eez (EES-Community/ees-examples), compared with compare_solution.py --ees-units",
+    "date": "2026-11-15",
+    "coolsolve_version": "0.4.0@a53de60",
+    "max_rel_diff": 5.71e-08,
+    "notes": "compare_solution.py output: 25 common variables, 0 differ (rtol=0.001); only in EES: 50; only in CoolSolve: 1 (F$, a string variable with no stored record). Key values, EES vs CoolSolve: W_dot_max 43675.46 vs 43675.46139 W (2.5e-09 rel), eff_b 0.85280146 vs 0.852801480 (1.9e-08), eff_cond 0.95739479 vs 0.957394790 (2.0e-10), eta_mp 0.13036544 vs 0.130365446 (1.0e-09), eta_max 0.24373574 vs 0.243735740 (5.7e-12). Plausibility: eta_mp < eta_max < 1, 0 < eff_b, eff_cond < 1, W_dot_max far below the upper bound eff_cond*C_dot_C*(T_H_in-T_C_in) = 1.64 MW."
+  },
+  "missing_features": [],
+  "related": ["CSL-0350"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-15",
+      "action": "added (T-IMPORT card C-519, candidate EEX-302 of the ees_examples inventory); native file runs and is verified against the EES stored solution",
+      "by": "opencode worker (t322) for S. Quoilin"
+    }
+  ]
+}

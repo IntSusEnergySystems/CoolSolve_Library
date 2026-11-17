@@ -1,0 +1,35 @@
+{=============================================================================
+  Blackbody band fraction f_1_2 (Planck law integrated between two wavelengths)
+  CoolSolve Library model CSL-0346
+ -----------------------------------------------------------------------------
+  Fraction of the blackbody emissive power emitted between the wavelengths
+  lambda_1 and lambda_2 by a blackbody at the absolute temperature T:
+
+    f_1_2 = integral(E_lambda_b, lambda, lambda_1, lambda_2, 0.01)/E_b
+
+  with E_lambda_b the Planck spectral emissive power and E_b = sigma#*T^4
+  the total blackbody emissive power. As in the original EES example, T is
+  the absolute temperature [K] and lambda is in micrometres, so the two
+  radiation constants carry the micrometre units of the original. The
+  original entered T, lambda_1 and lambda_2 in the Diagram window; the
+  values of the stored solution are written in the equations instead.
+
+  Inputs : T [K], lambda_1 [um], lambda_2 [um]
+  Outputs: f_1_2, E_b [W/m2], E_lambda_b [W/m2-um]
+  Units  : absolute temperature in K, wavelength in um, energies in J
+  Source : EES example Blackbody.EES (F-Chart Software, S. A. Klein), MIT -
+           ~/Nextcloud/thermo_models/EES_library/Blackbody.EES - see README.md
+  Status : VERIFIED against the solution stored in the source file
+=============================================================================}
+
+"!Spectral emissive power"
+"Fraction f_1_2 of the blackbody emissive power between the wavelengths
+lambda_1 and lambda_2 at temperature T, as in the original EES example."
+C1 = 3.7420E8   "first radiation constant [W-um^4/m^2] (EES built-in constant C1#)"
+C2 = 14388   "second radiation constant [um-K] (EES built-in constant C2#)"
+E_b = sigma#*T^4   "total blackbody emissive power [W/m2]"
+E_lambda_b = C1/(lambda^5*(exp(C2/(lambda*T))-1))   "Planck spectral emissive power [W/m2-um]"
+f_1_2 = integral(E_lambda_b, lambda, lambda_1, lambda_2, 0.01)/E_b   "band fraction"
+T = 5000   "absolute temperature [K] (Diagram-window input, value of the stored solution)"
+lambda_1 = 0.3   "lower wavelength [um] (Diagram-window input, value of the stored solution)"
+lambda_2 = 0.7   "upper wavelength [um] (Diagram-window input, value of the stored solution)"

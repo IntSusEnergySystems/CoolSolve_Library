@@ -1,0 +1,65 @@
+{
+  "id": "CSL-0357",
+  "name": "earth_effective_temperature",
+  "title": "Approximate temperature of the Earth",
+  "summary": "Sun-Earth-space radiation resistance network: view factors from the disc-to-sphere geometry give the Sun-to-Earth and Earth-to-space resistances; the steady-state heat rate fixes the blackbody emissive power of the Earth and its effective temperature (6.3 °C = 279.4 K).",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "earth_effective_temperature.eescode",
+  "fluids": [],
+  "tags": [
+    "radiation",
+    "resistance network",
+    "view factor",
+    "blackbody",
+    "Stefan-Boltzmann",
+    "sun",
+    "earth",
+    "exercise"
+  ],
+  "language_features": [
+    "built-in constant sigma#"
+  ],
+  "stats": {
+    "n_equations": 22,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "textbook",
+    "source": "ees_examples",
+    "source_path": "uncategorized/example_10.3-3_approximate_temperature_of_the_earth.ees",
+    "candidate_id": "EEX-012",
+    "authors": [
+      "G. F. Nellis",
+      "S. A. Klein"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/uncategorized/example_10.3-3_approximate_temperature_of_the_earth.ees",
+    "license": "MIT",
+    "ees_version": "X11.912",
+    "language": "en",
+    "course": "",
+    "notes": "Example 10.3-3 of Nellis & Klein, Heat Transfer (Cambridge University Press, 2009); EES example (c) F-Chart Software, MIT via EES-Community/ees-examples. The binary .eez companion (EES 11.912) carries the stored solution used as verification reference. Original download page in the file header: https://fchartsoftware.com/ees/examples/examples_heat_transfer_2009/chapter%2010/example%2010.3-3%20approximate%20temperature%20of%20the%20earth.eez"
+  },
+  "verification": {
+    "summary": "Compared with the EES solution stored in the .eez companion of the source file (19 common variables with --ees-units): 0 differ at rtol 0.001; maximum relative difference 2.5e-7 on the sigma*T^4 quantities (EES stores the Stefan-Boltzmann constant with slightly different last digits), all others to 2.4e-9. T_2 recomputed by hand from the stored E_b_2: 279.44342 K against the stored 279.44344 K.",
+    "checks": ["ees-stored-solution", "analytical", "order-of-magnitude"],
+    "reference": "EES stored solution (22 variables) of the .eez companion ees-examples-raw/uncategorized/example_10.3-3_approximate_temperature_of_the_earth.eez (EES 11.912), compared with tools/compare_solution.py --ees-units",
+    "date": "2026-11-15",
+    "coolsolve_version": "0.4.0@00a4daa",
+    "max_rel_diff": 2.5e-7,
+    "notes": "Tool summary: '19 common variables, 0 differ (rtol=0.001); only in EES: 2; only in CoolSolve: 5' (Only in EES reference: T_2C, T_2F). The two only-in-EES variables are the Fahrenheit and deg.C output conversions of the original, dropped by the card decision; the five only-in-CoolSolve variables are pi, sigma# and the absolute-temperature helpers T_1_K, T_2_K, T_3_K."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-15",
+      "action": "added (T-IMPORT card C-519, candidate EEX-012 of the ees_examples inventory); verified against the EES stored solution of the .eez companion",
+      "by": "opencode worker (t318) for S. Quoilin"
+    }
+  ]
+}

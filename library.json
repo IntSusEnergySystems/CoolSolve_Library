@@ -1,10 +1,10 @@
 {
  "snapshot": {
-  "content_hash": "sha256:e94b24c56e12e3ea",
-  "files": 1579,
-  "bytes": 11708107,
-  "models": 306,
-  "functions": 623,
+  "content_hash": "sha256:224cb16e820de6b4",
+  "files": 1728,
+  "bytes": 12752559,
+  "models": 336,
+  "functions": 631,
   "taxonomy_version": "0.3"
  },
  "models": [
@@ -95,7 +95,8 @@
     "CSL-0012",
     "CSL-0106",
     "CSL-0333",
-    "CSL-0334"
+    "CSL-0334",
+    "CSL-0343"
    ],
    "coolsolve_version": "0.3.0@d5d6b37",
    "verified_on": "2026-10-10",
@@ -1325,6 +1326,55 @@
    "path": "models/components/piping_valves/return_duct_paramid",
    "main_file": "return_duct_paramid.eescode",
    "figures": 0
+  },
+  {
+   "id": "CSL-0345",
+   "name": "r134a_isenthalpic_throttle",
+   "title": "Isenthalpic throttle with kinetic energy (R134a)",
+   "category": "components/piping_valves",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Outlet state of a refrigerant throttle: the stagnation enthalpy (h + Vel^2/2) is conserved and the mass flow rate is the same in the inlet and in the outlet section of equal area; the model returns the outlet temperature, enthalpy, entropy, specific volume and velocity of an R134a stream expanded from 1000 kPa to 100 kPa.",
+   "fluids": [
+    "R134a",
+    "R1234yf"
+   ],
+   "tags": [
+    "throttle",
+    "expansion valve",
+    "isenthalpic",
+    "stagnation enthalpy",
+    "refrigerant",
+    "R134a",
+    "kinetic energy",
+    "component"
+   ],
+   "n_equations": 16,
+   "largest_block": 4,
+   "origin_type": "software_library",
+   "source": "ees_library",
+   "source_path": "~/Nextcloud/thermo_models/EES_library/Throttle.EES",
+   "authors": [
+    "S.A. Klein (F-Chart Software)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Diagram_Window/throttle.ees",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.4.0@cc582a6",
+   "verified_on": "2026-11-14",
+   "verification_summary": "The R1234yf variant of the same equations reproduces the stored solution of the source EES file: 12 common variables, 8 differ (rtol=0.001), max rel. diff 6.9e-2 on T[2], 4.6e-3 on the enthalpies (EES property tables vs CoolProp HEOS). The shipped R134a file satisfies the energy and mass balances.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance"
+   ],
+   "path": "models/components/piping_valves/r134a_isenthalpic_throttle",
+   "main_file": "r134a_isenthalpic_throttle.eescode",
+   "figures": 0,
+   "variants": [
+    "r134a_isenthalpic_throttle_r1234yf.eescode"
+   ]
   },
   {
    "id": "CSL-0009",
@@ -3721,6 +3771,103 @@
    "figures": 0
   },
   {
+   "id": "CSL-0339",
+   "name": "gas_spring_oscillator",
+   "title": "Gas spring: a ball oscillating on a gas column",
+   "category": "fundamentals/piston_cylinders",
+   "kind": "dynamic",
+   "level": 2,
+   "status": "verified",
+   "summary": "A ball of 15 g is displaced by 5 cm in a glass tube holding 1 litre of helium; the adiabatic gas column below the ball acts as a spring and the friction damps the motion. The model integrates Newton's law for the ball with the Integral function over 5 s and returns the trajectory of the ball position, of the pressure and of the gas temperature, the period of the small oscillations and the specific heat ratio of the gas.",
+   "fluids": [
+    "Helium"
+   ],
+   "tags": [
+    "gas spring",
+    "oscillator",
+    "damping",
+    "adiabatic compression",
+    "ideal gas",
+    "piston-cylinder",
+    "animation demo",
+    "EES example"
+   ],
+   "n_equations": 28,
+   "largest_block": 0,
+   "origin_type": "software_library",
+   "source": "ees_library",
+   "source_path": "~/Nextcloud/thermo_models/EES_library/gas spring.EES",
+   "authors": [
+    "S. A. Klein"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/gas_spring.ees",
+   "missing_features": [],
+   "related": [
+    "CSL-0342"
+   ],
+   "coolsolve_version": "0.4.0@cc582a6",
+   "verified_on": "2026-11-12",
+   "verification_summary": "Against the solution stored in the original EES file (hand-converted): 18 common variables, 0 differ (rtol=0.001), max 5.78e-05 on c_v (EES vs CoolProp helium properties). The trajectory agrees with the integral table stored in the file to 9e-5 m and with an independent RK4 integration of the same equations to 1.2e-7 m at the end of the integration.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "ees-parametric-table",
+    "other-tool"
+   ],
+   "path": "models/fundamentals/piston_cylinders/gas_spring_oscillator",
+   "main_file": "gas_spring_oscillator.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0342",
+   "name": "spring_piston_helium_dynamic",
+   "title": "Spring-loaded piston with helium: damped dynamic oscillation",
+   "category": "fundamentals/piston_cylinders",
+   "kind": "dynamic",
+   "level": 1,
+   "status": "verified",
+   "summary": "A steel piston latched in a well-insulated cylinder encloses helium at 400 kPa and 290 K; a compressed spring in the evacuated compartment pushes it back. When the latch is released the piston oscillates, damped by dynamic friction, while the gas expands and cools following the ideal-gas law. Newton's law is integrated in time (INTEGRAL) and the model returns the trajectory of the piston position, pressure, volume and temperature over 1 s.",
+   "fluids": [
+    "Helium"
+   ],
+   "tags": [
+    "piston-cylinder",
+    "spring",
+    "oscillator",
+    "damping",
+    "friction",
+    "adiabatic expansion",
+    "ideal gas",
+    "animation demo",
+    "EES example"
+   ],
+   "n_equations": 24,
+   "largest_block": 0,
+   "origin_type": "software_library",
+   "source": "ees_library",
+   "source_path": "~/Nextcloud/thermo_models/EES_library/spring.EES",
+   "authors": [
+    "S. A. Klein"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/spring.ees",
+   "missing_features": [],
+   "related": [
+    "CSL-0339"
+   ],
+   "coolsolve_version": "0.4.0@cc582a6",
+   "verified_on": "2026-11-14",
+   "verification_summary": "Against the solution stored in the original EES file (hand-converted from kPa/K/kJ/kmole): re-run at the stop time of the stored EES run (t = 0.7212 s) gives 23 common variables, 6 differ (rtol=0.001), of which 4 physics diffs (vel 3.02e-01, acc 6.26e-03, T 3.91e-03) are the EES integration phase error, confirmed by an independent RK4 integration that agrees with CoolSolve to 2e-6 m on x; statics agree to 1.01e-04. The 722-row trajectory agrees with the integral table stored in the file to 4e-3 on x.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "ees-parametric-table",
+    "other-tool"
+   ],
+   "path": "models/fundamentals/piston_cylinders/spring_piston_helium_dynamic",
+   "main_file": "spring_piston_helium_dynamic.eescode",
+   "figures": 0
+  },
+  {
    "id": "CSL-0044",
    "name": "rigid_tank_water_mixture",
    "title": "Rigid tank with a liquid-vapour water mixture",
@@ -3931,6 +4078,51 @@
    ],
    "path": "models/fundamentals/properties/helium_balloon_buoyancy",
    "main_file": "helium_balloon_buoyancy.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0365",
+   "name": "sackur_tetrode_entropy",
+   "title": "Sackur-Tetrode absolute entropy of helium",
+   "category": "fundamentals/properties",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Absolute molar entropy of helium (300 K, 1 atm) from the Sackur-Tetrode equation of statistical mechanics, checked against the absolute entropy of the EES/NASA ideal-gas database: the two values agree within 1e-6 relative (126.172 J/mol-K).",
+   "fluids": [
+    "He"
+   ],
+   "tags": [
+    "entropy",
+    "absolute entropy",
+    "statistical mechanics",
+    "Sackur-Tetrode",
+    "ideal gas",
+    "exercise"
+   ],
+   "n_equations": 8,
+   "largest_block": 1,
+   "origin_type": "textbook",
+   "source": "ees_examples",
+   "source_path": "Case_Study/example_15.5-1.ees",
+   "authors": [
+    "S. A. Klein",
+    "G. F. Nellis"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/example_15.5-1.ees",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.4.0@a53de60",
+   "verified_on": "2026-11-15",
+   "verification_summary": "Runs in 0 iterations. Shipped 300 K run: s_bar equals an analytical recomputation to 2.6e-13; s_bar_EES = 126172.11 J/kmol-K matches the JANAF helium entropy (126.150 J/mol-K at 298.15 K, 1 bar, cp = 5/2 R, adjusted to 300 K, 1 atm) to 2.4e-5; the two agree within 9.6e-7. Stale EES stored records (T = 1000 K) reproduced by a work-folder re-run at that point, max rel diff 6.7e-4.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical",
+    "publication"
+   ],
+   "path": "models/fundamentals/properties/sackur_tetrode_entropy",
+   "main_file": "sackur_tetrode_entropy.eescode",
    "figures": 0
   },
   {
@@ -4168,6 +4360,51 @@
    ],
    "path": "models/fundamentals/property_libraries/pseudo_critical_properties",
    "main_file": "pseudo_critical_properties.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0355",
+   "name": "nitrogen_van_der_waals",
+   "title": "Van der Waals equation of state for nitrogen",
+   "category": "fundamentals/property_libraries",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Single state of nitrogen at the reduced conditions P_r = 1.2, T_r = 1.2: specific volume and compressibility factor from the van der Waals equation of state, compared with the built-in real-fluid properties (2.9 % volume deviation at this state).",
+   "fluids": [
+    "Nitrogen"
+   ],
+   "tags": [
+    "equation of state",
+    "van der Waals",
+    "cubic EOS",
+    "compressibility factor",
+    "reduced properties",
+    "nitrogen",
+    "exercise",
+    "textbook"
+   ],
+   "n_equations": 17,
+   "largest_block": 1,
+   "origin_type": "textbook",
+   "source": "ees_examples",
+   "source_path": "ees-examples-raw/Case_Study/example_10.1-1.eez",
+   "authors": [
+    "S. A. Klein",
+    "G. F. Nellis"
+   ],
+   "license": "MIT (F-Chart Software EES examples collection)",
+   "url": "https://fchartsoftware.com/ees/examples/examples_thermodynamics_2011/chapter%2010/example%2010.1-1.eez",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.4.0@00a4daa",
+   "verified_on": "2026-11-15",
+   "verification_summary": "A copy of the converted model run at the state stored in the EES file (P_r = 40, T_r = 1.2) was compared with the stored solution (ees_variables.csv, --ees-units, K->°C): 12 common variables, 0 differ at rtol=0.001; v 1.19e-05, Z 7.51e-09, v_EES 2.86e-06, Z_EES 1.47e-05, max 2.38e-05 on a (EES R# = 8314.34 vs CoolSolve 8314.462618 J/kmol-K).",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/fundamentals/property_libraries/nitrogen_van_der_waals",
+   "main_file": "nitrogen_van_der_waals.eescode",
    "figures": 0
   },
   {
@@ -4441,6 +4678,93 @@
    ],
    "path": "models/fundamentals/second_law/rigid_tank_compressor_exergy",
    "main_file": "rigid_tank_compressor_exergy.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0350",
+   "name": "curzon_ahlborn_max_power",
+   "title": "Endoreversible Carnot engine at maximum power (Curzon-Ahlborn)",
+   "category": "fundamentals/second_law",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Heat-transfer-limited (endoreversible) Carnot engine between two reservoirs: the cycle temperatures that maximise the power output follow from the Lagrange undetermined-multiplier equations of the original ($ifnot MinMax branch, solved as a square steady system). At the optimum the efficiency is 1 - sqrt(T_L/T_H) whatever the conductances.",
+   "fluids": [],
+   "tags": [
+    "Carnot",
+    "endoreversible",
+    "maximum power",
+    "Curzon-Ahlborn",
+    "finite-time thermodynamics",
+    "Lagrange multipliers"
+   ],
+   "n_equations": 17,
+   "largest_block": 9,
+   "origin_type": "software_library",
+   "source": "ees_examples",
+   "source_path": "",
+   "authors": [
+    "S.A. Klein / F-Chart Software"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/uncategorized/maxpower1.ees",
+   "missing_features": [],
+   "related": [
+    "CSL-0359"
+   ],
+   "coolsolve_version": "0.4.0@00a4daa",
+   "verified_on": "2026-11-15",
+   "verification_summary": "No stored solution exists in the plain-text source. The solved model was checked analytically: eta agrees with 1 - sqrt(T_L/T_H) to 3.29e-11 absolute (6.36e-11 relative) and W_dot equals Q_dot_H - Q_dot_L to 0.00e+00 W (machine precision). T_1, T_2, W_dot and eta also match the closed-form Curzon-Ahlborn optimum with unequal conductances to 8 significant digits.",
+   "verification_checks": [
+    "analytical",
+    "energy-balance"
+   ],
+   "path": "models/fundamentals/second_law/curzon_ahlborn_max_power",
+   "main_file": "curzon_ahlborn_max_power.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0359",
+   "name": "effectiveness_limited_max_power",
+   "title": "Effectiveness-limited heat engine at maximum power",
+   "category": "fundamentals/second_law",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Maximum power of an endoreversible heat engine whose heat exchange with the hot and the cold stream is limited by the effectivenesses of its boiler (eff_b) and condenser (eff_cond), from the effectiveness relations of the original; the engine runs at the Curzon-Ahlborn-type efficiency eta_mp = 1 - sqrt(T_C_in/(phi*T_H_in)) with an irreversibility factor phi.",
+   "fluids": [],
+   "tags": [
+    "maximum power",
+    "endoreversible",
+    "effectiveness",
+    "NTU",
+    "heat exchanger",
+    "exercise"
+   ],
+   "n_equations": 26,
+   "largest_block": 1,
+   "origin_type": "textbook",
+   "source": "ees_examples",
+   "source_path": "",
+   "authors": [
+    "S. A. Klein",
+    "G. F. Nellis"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/example_8.6-1.ees",
+   "missing_features": [],
+   "related": [
+    "CSL-0350"
+   ],
+   "coolsolve_version": "0.4.0@a53de60",
+   "verified_on": "2026-11-15",
+   "verification_summary": "Solved natively in CoolSolve and compared with the EES stored solution of the companion .eez (ees-examples-raw): 25 common variables, 0 differ (rtol=0.001); max rel diff 5.7e-08 on m_dot_H (EES stores 7-digit values). The 50 reference-only records (toluene Rankine cycle of the commented block and older runs, e.g. eta_t, eta_p) are out of scope per the card.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "order-of-magnitude"
+   ],
+   "path": "models/fundamentals/second_law/effectiveness_limited_max_power",
+   "main_file": "effectiveness_limited_max_power.eescode",
    "figures": 0
   },
   {
@@ -4981,6 +5305,144 @@
    ],
    "path": "models/fundamentals/tanks_vessels/r12_tank_discharge_heat_supply",
    "main_file": "r12_tank_discharge_heat_supply.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0343",
+   "name": "lumped_capacitance_cooling",
+   "title": "Lumped-capacitance cooling of a sphere in a fluid",
+   "category": "fundamentals/tanks_vessels",
+   "kind": "dynamic",
+   "level": 1,
+   "status": "blocked",
+   "summary": "A solid sphere initially at 400 °C is cooled by convection to a fluid medium at 20 °C; the energy balance of the lump (a single thermal capacitance) is integrated in time with the EES Integral function and the closed-form solution of the same equation is computed beside it. The native file keeps the EES table-based two-argument Integral and is blocked by CS-GAP-INTEGRAL-2ARG; a runnable variant uses the equation-based Integral with explicit limits.",
+   "fluids": [],
+   "tags": [
+    "lumped capacitance",
+    "transient cooling",
+    "convection",
+    "sphere",
+    "textbook ODE",
+    "EES example"
+   ],
+   "n_equations": 12,
+   "largest_block": 2,
+   "origin_type": "software_library",
+   "source": "ees_library",
+   "source_path": "~/Nextcloud/thermo_models/EES_library/Difeqn1.ees",
+   "authors": [
+    "S. A. Klein"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/difeqn1.ees",
+   "missing_features": [
+    "CS-GAP-INTEGRAL-2ARG"
+   ],
+   "related": [
+    "CSL-0042"
+   ],
+   "coolsolve_version": "0.4.0@cc582a6",
+   "verified_on": "2026-11-14",
+   "verification_summary": "The runnable variant was compared with the solution stored in the EES file (12 common variables, 2 differ at rtol=0.001): T 4.81e-03 and dTdt 6.68e-03, both from the coarse 100 s step of the EES table-based integral, while the closed form T_exact agrees to 1.26e-12. The 11-row trajectory agrees with the EES parametric table (T_exact to 1.9e-06).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "ees-parametric-table",
+    "analytical"
+   ],
+   "path": "models/fundamentals/tanks_vessels/lumped_capacitance_cooling",
+   "main_file": "lumped_capacitance_cooling.eescode",
+   "figures": 0,
+   "variants": [
+    "lumped_capacitance_cooling_coolsolve.eescode"
+   ]
+  },
+  {
+   "id": "CSL-0351",
+   "name": "butane_tank_blowdown",
+   "title": "Emptying a butane tank (blowdown, saturated-liquid outflow)",
+   "category": "fundamentals/tanks_vessels",
+   "kind": "dynamic",
+   "level": 1,
+   "status": "verified",
+   "summary": "Rigid tank of 0.54 l with 0.23 kg of two-phase n-butane at 25 C is emptied at 0.035 g/s for 20 min, the outflow being saturated liquid at the state of the tank. The unsteady uniform-state mass and energy balances are integrated over time (total internal energy as state variable) and the final tank and outflow states are reported.",
+   "fluids": [
+    "n-Butane"
+   ],
+   "tags": [
+    "rigid tank",
+    "blowdown",
+    "unsteady",
+    "uniform-state",
+    "saturated liquid outflow",
+    "integral",
+    "textbook example"
+   ],
+   "n_equations": 21,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ees_examples",
+   "source_path": "",
+   "authors": [
+    "S. A. Klein",
+    "G. F. Nellis"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/uncategorized/example_4.5-3.ees",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.4.0@00a4daa",
+   "verified_on": "2026-11-15",
+   "verification_summary": "Compared with the EES solution stored in the .eez companion of the source file (20 variables, --ees-units): 17 agree within rtol 0.001; P and P_1 differ by 1.7e-3 (EES vs CoolProp n-butane property models, within the 0.5 % different-EOS band) and P_kPa is a kPa-vs-Pa unit-scale difference. Mass and energy balances checked at 20 min.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance"
+   ],
+   "path": "models/fundamentals/tanks_vessels/butane_tank_blowdown",
+   "main_file": "butane_tank_blowdown.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0356",
+   "name": "ideal_gas_tank_blowdown",
+   "title": "Emptying an adiabatic tank filled with an ideal gas",
+   "category": "fundamentals/tanks_vessels",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Rigid adiabatic tank of ideal gas (air, constant heat capacities) blown down from 100 psi to ambient 14.7 psi: the isentropic-type relation on absolute temperatures T_2_K = T_1_K*(P_2/P_1)^(R/c_P) gives the final tank temperature, from 20 C to about -104 C.",
+   "fluids": [
+    "Air"
+   ],
+   "tags": [
+    "rigid tank",
+    "blowdown",
+    "adiabatic",
+    "ideal gas",
+    "isentropic relation",
+    "textbook example"
+   ],
+   "n_equations": 9,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ees_examples",
+   "source_path": "uncategorized/example_4.5-2.ees",
+   "authors": [
+    "S. A. Klein",
+    "G. F. Nellis"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/uncategorized/example_4.5-2.ees",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.4.0@00a4daa",
+   "verified_on": "2026-11-15",
+   "verification_summary": "Compared with the EES solution stored in the .eez companion of the source file (7 common variables with --ees-units, --all): 0 differ at rtol 0.001; largest printed relative deviation 1.51e-05 on R (molar mass of Air, EES vs CoolProp) and 9.66e-06 on T_2. Stored point recomputed by hand: 293.15*0.147^(287.043/1004.643) = 169.50351 K matches the stored T_2.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical"
+   ],
+   "path": "models/fundamentals/tanks_vessels/ideal_gas_tank_blowdown",
+   "main_file": "ideal_gas_tank_blowdown.eescode",
    "figures": 0
   },
   {
@@ -6569,7 +7031,9 @@
     "CSL-0107",
     "CSL-0087",
     "CSL-0042",
-    "CSL-0012"
+    "CSL-0012",
+    "CSL-0340",
+    "CSL-0341"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-08",
@@ -6616,7 +7080,8 @@
    "missing_features": [],
    "related": [
     "CSL-0087",
-    "CSL-0106"
+    "CSL-0106",
+    "CSL-0346"
    ],
    "coolsolve_version": "0.3.0@7addbbc",
    "verified_on": "2026-10-07",
@@ -6671,6 +7136,388 @@
    ],
    "path": "models/heat_transfer/conduction_radiation/fin_efficiency_and_wall_factors",
    "main_file": "fin_efficiency_and_wall_factors.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0340",
+   "name": "transient_conduction_plane_wall",
+   "title": "Transient conduction in a plane wall with a convective boundary condition",
+   "category": "heat_transfer/conduction_radiation",
+   "kind": "dynamic",
+   "level": 2,
+   "status": "blocked",
+   "summary": "1-D transient conduction in a plane wall of half-thickness a, initially at a uniform temperature and suddenly submitted to a convective boundary condition (h, Tinf) at t = 0: the separation-of-variables series (eigenvalues solving tan(zeta) = Bi/zeta, searched with arrays) is compared with the semi-infinite-wall (erfc) solution.",
+   "fluids": [],
+   "tags": [
+    "conduction",
+    "transient conduction",
+    "plane wall",
+    "separation of variables",
+    "eigenvalues",
+    "Biot number",
+    "Fourier number",
+    "semi-infinite wall"
+   ],
+   "n_equations": 76,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ees_library",
+   "source_path": "~/Nextcloud/thermo_models/EES_library/Transient Conduction through a Plane Wall.EES",
+   "authors": [
+    "S. A. Klein (University of Wisconsin-Madison)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Arrays/transient_conduction_through_a_plane_wall.ees",
+   "missing_features": [
+    "CS-BUG-UNARY-POW"
+   ],
+   "related": [
+    "CSL-0106",
+    "CSL-0341"
+   ],
+   "coolsolve_version": "0.4.0@cc582a6",
+   "verified_on": "2026-11-12",
+   "verification_summary": "Runnable variant vs the solution stored in the original EES file: 69 common variables, 0 differ (rtol=0.001), largest relative deviation 6.3e-07 (theta[3]). The same model reproduces the transient table stored in that file (rows Fo = 0.05 and Fo = 5). The native file is blocked by CS-BUG-UNARY-POW.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "ees-parametric-table",
+    "analytical"
+   ],
+   "path": "models/heat_transfer/conduction_radiation/transient_conduction_plane_wall",
+   "main_file": "transient_conduction_plane_wall.eescode",
+   "figures": 0,
+   "variants": [
+    "transient_conduction_plane_wall_coolsolve.eescode"
+   ]
+  },
+  {
+   "id": "CSL-0341",
+   "name": "conduction_2d_square_plate",
+   "title": "Two-dimensional steady conduction in a square plate",
+   "category": "heat_transfer/conduction_radiation",
+   "kind": "steady",
+   "level": 2,
+   "status": "blocked",
+   "summary": "Finite-difference solution of the 2-D steady conduction equation in a square plate: the temperature of every node of a (N+2)x(N+2) grid is the average of its four neighbours, with two edges at 100 C, one edge at 0 C and one insulated.",
+   "fluids": [],
+   "tags": [
+    "conduction",
+    "two-dimensional conduction",
+    "square plate",
+    "finite differences",
+    "discretisation",
+    "insulated boundary",
+    "arrays"
+   ],
+   "n_equations": 730,
+   "largest_block": 650,
+   "origin_type": "software_library",
+   "source": "ees_library",
+   "source_path": "~/Nextcloud/thermo_models/EES_library/2-D Conduction.EES",
+   "authors": [
+    "S. A. Klein (University of Wisconsin-Madison)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/2-d_conduction.ees",
+   "missing_features": [
+    "CS-GAP-INDEX-VAR"
+   ],
+   "related": [
+    "CSL-0106",
+    "CSL-0340"
+   ],
+   "coolsolve_version": "0.4.0@cc582a6",
+   "verified_on": "2026-11-12",
+   "verification_summary": "Runnable variant vs the solution stored in the original EES file: 730 common variables, 0 differ (rtol=0.001), largest relative deviation 1.6e-08. The discrete energy balance of the plate closes to 9e-12 and the boundary conditions are met exactly. The native file is blocked by CS-GAP-INDEX-VAR.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance"
+   ],
+   "path": "models/heat_transfer/conduction_radiation/conduction_2d_square_plate",
+   "main_file": "conduction_2d_square_plate.eescode",
+   "figures": 0,
+   "variants": [
+    "conduction_2d_square_plate_coolsolve.eescode"
+   ]
+  },
+  {
+   "id": "CSL-0346",
+   "name": "blackbody_band_fraction",
+   "title": "Blackbody band fraction f_1_2 (Planck law integral)",
+   "category": "heat_transfer/conduction_radiation",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Fraction of the blackbody emissive power emitted between two wavelengths lambda_1 and lambda_2 at the absolute temperature T: the Planck spectral emissive power is integrated with the EES INTEGRAL function (step 0.01 um) and divided by sigma#*T^4. As in the original EES example, T is in K and lambda in um.",
+   "fluids": [],
+   "tags": [
+    "radiation",
+    "blackbody",
+    "planck law",
+    "band fraction",
+    "emissive power",
+    "integral",
+    "example"
+   ],
+   "n_equations": 8,
+   "largest_block": 0,
+   "origin_type": "software_library",
+   "source": "ees_library",
+   "source_path": "~/Nextcloud/thermo_models/EES_library/Blackbody.EES",
+   "authors": [
+    "S. A. Klein (F-Chart Software)"
+   ],
+   "license": "MIT",
+   "url": "https://fchartsoftware.com/ees/examples/blackbody.ees",
+   "missing_features": [],
+   "related": [
+    "CSL-0107"
+   ],
+   "coolsolve_version": "0.4.0@cc582a6",
+   "verified_on": "2026-11-14",
+   "verification_summary": "Compared with the solution stored in the source EES file: 7 common variables, 0 differ (rtol=0.001), largest deviation 1.35e-4 on E_b (Stefan-Boltzmann constant: CoolSolve sigma# is the CODATA value, the stored value implies 5.66961e-8); f_1_2 agrees to 4.9e-6. The transcribed constants C1/C2 reproduce all 100 rows of the stored parametric table (Planck sweep).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "ees-parametric-table"
+   ],
+   "path": "models/heat_transfer/conduction_radiation/blackbody_band_fraction",
+   "main_file": "blackbody_band_fraction.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0348",
+   "name": "fuel_element_sphere",
+   "title": "Spherical fuel element with exponential heat generation",
+   "category": "heat_transfer/conduction_radiation",
+   "kind": "steady",
+   "level": 3,
+   "status": "blocked",
+   "summary": "50-node finite-volume model of a spherical fuel element whose volumetric heat generation decays exponentially from the centre (gen = g```_dot_0*exp(-b*r/r_fuel)), covered by a cladding shell and cooled by convection to a gas at 500 °C; the nodal energy balances are solved together with the analytical solution for a uniform generation (b = 0) for comparison.",
+   "fluids": [],
+   "tags": [
+    "conduction",
+    "finite volume",
+    "discretised",
+    "spherical coordinates",
+    "heat generation",
+    "cladding",
+    "convection boundary",
+    "exercise"
+   ],
+   "n_equations": 263,
+   "largest_block": 50,
+   "origin_type": "textbook",
+   "source": "ees_examples",
+   "source_path": "",
+   "authors": [
+    "G. F. Nellis",
+    "S. A. Klein"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/uncategorized/example_1.4-1_fuel_element.ees",
+   "missing_features": [
+    "CS-GAP-NAME-PRIME",
+    "CS-GAP-LINE-CONTINUATION",
+    "CS-GAP-INDEX-VAR"
+   ],
+   "related": [],
+   "coolsolve_version": "0.4.0@00a4daa",
+   "verified_on": "2026-11-14",
+   "verification_summary": "Runnable variant vs the EES stored solution (ees-examples-raw .eez): 60 common variables, 0 differ (rtol=0.001); the 203 stored temperature records are stale (value = guess = 1, provably inconsistent with the model's own ConvertTemp/analytics) and were excluded. Profile agrees with the exact continuous solution to 2.0e-4, with the stored N=1000 records to 1.4e-4; energy balance 2.2e-5.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical",
+    "energy-balance"
+   ],
+   "path": "models/heat_transfer/conduction_radiation/fuel_element_sphere",
+   "main_file": "fuel_element_sphere.eescode",
+   "figures": 0,
+   "variants": [
+    "fuel_element_sphere_coolsolve.eescode"
+   ]
+  },
+  {
+   "id": "CSL-0349",
+   "name": "circular_fin_transient",
+   "title": "Transient temperature distribution in a 1-D circular fin",
+   "category": "heat_transfer/conduction_radiation",
+   "kind": "dynamic",
+   "level": 2,
+   "status": "blocked",
+   "summary": "Transient temperature field of a straight circular fin (3 cm long, 3 mm diameter) discretised into 11 finite-volume nodes and integrated in time: a constant heat flow of 0.5 W enters the base, the fin loses heat to the ambient air by convection, and the temperature of the 11 nodes is tabulated along the trajectory.",
+   "fluids": [],
+   "tags": [
+    "conduction",
+    "transient conduction",
+    "circular fin",
+    "extended surface",
+    "finite volume",
+    "integral",
+    "trajectory"
+   ],
+   "n_equations": 62,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ees_examples",
+   "source_path": "",
+   "authors": [
+    "S. A. Klein (University of Wisconsin-Madison)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Integral/1-d_transient_conduction.ees",
+   "missing_features": [
+    "CS-GAP-INTEGRAL-DUPLICATE",
+    "CS-GAP-INDEX-VAR"
+   ],
+   "related": [],
+   "coolsolve_version": "0.4.0@00a4daa",
+   "verified_on": "2026-11-15",
+   "verification_summary": "No EES reference exists (plain-text source, no stored solution). The runnable variant was checked with the energy balance of the fin: 25 J supplied = 10.506 J stored + 14.494 J convected to the air, closure 3.4e-13 J; the convected heat recomputed by trapezoidal integration of the tabulated trajectory agrees to 2.9e-7, and doubling the integration step changes no temperature.",
+   "verification_checks": [
+    "energy-balance",
+    "analytical"
+   ],
+   "path": "models/heat_transfer/conduction_radiation/circular_fin_transient",
+   "main_file": "circular_fin_transient.eescode",
+   "figures": 0,
+   "variants": [
+    "circular_fin_transient_coolsolve.eescode"
+   ]
+  },
+  {
+   "id": "CSL-0353",
+   "name": "bent_beam_actuator",
+   "title": "Transient response of a bent-beam electrothermal actuator",
+   "category": "heat_transfer/conduction_radiation",
+   "kind": "dynamic",
+   "level": 3,
+   "status": "blocked",
+   "summary": "Joule-heated bent-beam actuator discretised into six nodes along one side of the beam: transient nodal energy balances (conduction, uniform Joule generation, convection) integrated over 25 ms, apex displacement from the thermal elongation, compared with the analytical fin solution of example 1.7-1.",
+   "fluids": [],
+   "tags": [
+    "conduction",
+    "transient",
+    "discretised",
+    "Joule heating",
+    "electrothermal actuator",
+    "thermal expansion",
+    "fin",
+    "exercise"
+   ],
+   "n_equations": 63,
+   "largest_block": 0,
+   "origin_type": "textbook",
+   "source": "ees_examples",
+   "source_path": "",
+   "authors": [
+    "G. F. Nellis",
+    "S. A. Klein"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/uncategorized/example_3.8-1_transient_response_of_a_bent-beam_actuator.ees",
+   "missing_features": [
+    "CS-GAP-INTEGRAL-DUPLICATE",
+    "CS-GAP-LINE-CONTINUATION",
+    "CS-GAP-INDEX-VAR"
+   ],
+   "related": [],
+   "coolsolve_version": "0.4.0@00a4daa",
+   "verified_on": "2026-11-15",
+   "verification_summary": "Runnable variant, temperatures in °C, compared with the EES stored solution (.eez, --ees-units): 64 common variables, 5 differ. Stored temperatures and the apex displacement agree (the temperature diffs are below 0.001). The five stored dTdt differ by 9.07e-03 relative: conduction and Joule terms of about 2.4e5 K/s nearly cancel.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/heat_transfer/conduction_radiation/bent_beam_actuator",
+   "main_file": "bent_beam_actuator.eescode",
+   "figures": 0,
+   "variants": [
+    "bent_beam_actuator_coolsolve.eescode"
+   ]
+  },
+  {
+   "id": "CSL-0357",
+   "name": "earth_effective_temperature",
+   "title": "Approximate temperature of the Earth",
+   "category": "heat_transfer/conduction_radiation",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Sun-Earth-space radiation resistance network: view factors from the disc-to-sphere geometry give the Sun-to-Earth and Earth-to-space resistances; the steady-state heat rate fixes the blackbody emissive power of the Earth and its effective temperature (6.3 °C = 279.4 K).",
+   "fluids": [],
+   "tags": [
+    "radiation",
+    "resistance network",
+    "view factor",
+    "blackbody",
+    "Stefan-Boltzmann",
+    "sun",
+    "earth",
+    "exercise"
+   ],
+   "n_equations": 22,
+   "largest_block": 1,
+   "origin_type": "textbook",
+   "source": "ees_examples",
+   "source_path": "uncategorized/example_10.3-3_approximate_temperature_of_the_earth.ees",
+   "authors": [
+    "G. F. Nellis",
+    "S. A. Klein"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/uncategorized/example_10.3-3_approximate_temperature_of_the_earth.ees",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.4.0@00a4daa",
+   "verified_on": "2026-11-15",
+   "verification_summary": "Compared with the EES solution stored in the .eez companion of the source file (19 common variables with --ees-units): 0 differ at rtol 0.001; maximum relative difference 2.5e-7 on the sigma*T^4 quantities (EES stores the Stefan-Boltzmann constant with slightly different last digits), all others to 2.4e-9. T_2 recomputed by hand from the stored E_b_2: 279.44342 K against the stored 279.44344 K.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "analytical",
+    "order-of-magnitude"
+   ],
+   "path": "models/heat_transfer/conduction_radiation/earth_effective_temperature",
+   "main_file": "earth_effective_temperature.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0358",
+   "name": "coated_sensor_oscillating",
+   "title": "Coated temperature sensor in an oscillating ambient",
+   "category": "heat_transfer/conduction_radiation",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Lumped spherical sensor with a coating (spherical-shell conduction resistance in series with convection) in a sinusoidally oscillating ambient: analytical first-order response gives the sensor temperature at a given time, with Biot number, capacitance and time constant.",
+   "fluids": [],
+   "tags": [
+    "heat transfer",
+    "transient response",
+    "lumped capacitance",
+    "Biot number",
+    "sensor",
+    "exercise"
+   ],
+   "n_equations": 24,
+   "largest_block": 1,
+   "origin_type": "textbook",
+   "source": "ees_examples",
+   "source_path": "",
+   "authors": [
+    "G.F. Nellis",
+    "S.A. Klein"
+   ],
+   "license": "MIT",
+   "url": "https://fchartsoftware.com/ees/examples/examples_heat_transfer_2009/chapter%203/example%203.1-2%20temperature%20sensor.eez",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.4.0@00a4daa",
+   "verified_on": "2026-11-15",
+   "verification_summary": "Compared with the EES stored solution of the original .eez (single solve at t = 10 s) using compare_solution.py --ees-units: 24 common variables, 0 differ (rtol=0.001); at rtol=1e-12 the largest relative difference is 3.35e-09 (on T_infinity). The stored time t = 10 s is the model evaluation time, so no closed-form hand check was needed.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
+   "path": "models/heat_transfer/conduction_radiation/coated_sensor_oscillating",
+   "main_file": "coated_sensor_oscillating.eescode",
    "figures": 0
   },
   {
@@ -6891,7 +7738,8 @@
     "CSL-0094",
     "CSL-0095",
     "CSL-0100",
-    "CSL-0091"
+    "CSL-0091",
+    "CSL-0336"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-06",
@@ -7000,6 +7848,110 @@
    "path": "models/heat_transfer/external_convection/shell_side_htc",
    "main_file": "shell_side_htc.eescode",
    "figures": 0
+  },
+  {
+   "id": "CSL-0336",
+   "name": "blasius_flat_plate",
+   "title": "Blasius boundary layer over a flat plate",
+   "category": "heat_transfer/external_convection",
+   "kind": "dynamic",
+   "level": 2,
+   "status": "blocked",
+   "summary": "Solution of the classic Blasius equation of the laminar boundary layer over a flat plate: the third-order ODE f''' + 0.5*f*f'' = 0 is integrated with the Integral function between the similarity coordinates eta = 0 and eta = 5, the shooting parameter f''(0) being the classical 0.33206; the dimensionless velocity profile f'(eta) is mapped to the dimensional coordinates x and y for air at 25 °C.",
+   "fluids": [
+    "Air"
+   ],
+   "tags": [
+    "external convection",
+    "laminar boundary layer",
+    "flat plate",
+    "blasius",
+    "similarity solution",
+    "shooting problem",
+    "ODE integration",
+    "skin friction"
+   ],
+   "n_equations": 20,
+   "largest_block": 0,
+   "origin_type": "software_library",
+   "source": "ees_library",
+   "source_path": "~/Nextcloud/thermo_models/EES_library/Blasius.EES",
+   "authors": [
+    "S. A. Klein"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/blasius.ees",
+   "missing_features": [
+    "CS-GAP-NAME-PRIME"
+   ],
+   "related": [
+    "CSL-0101",
+    "CSL-0338"
+   ],
+   "coolsolve_version": "0.4.0@cc582a6",
+   "verified_on": "2026-11-12",
+   "verification_summary": "Runnable variant vs the EES stored solution of the binary source: 16 common variables, 4 differ (rtol=0.001), max 2.91e-03 on mu (EES vs CoolProp air viscosity). Newton shooting on f''(0) with the model gives 0.33205734, the classic Blasius value 0.3320573362.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "publication"
+   ],
+   "path": "models/heat_transfer/external_convection/blasius_flat_plate",
+   "main_file": "blasius_flat_plate.eescode",
+   "figures": 0,
+   "variants": [
+    "blasius_flat_plate_coolsolve.eescode"
+   ]
+  },
+  {
+   "id": "CSL-0338",
+   "name": "von_karman_viscous_pump",
+   "title": "von Karman's viscous pump (rotating disk)",
+   "category": "heat_transfer/external_convection",
+   "kind": "dynamic",
+   "level": 3,
+   "status": "blocked",
+   "summary": "Solution of the von Karman viscous pump problem (White, Viscous Fluid Flow, 2005, p. 162): three coupled differential equations in the similarity variables f, g and h are integrated with the Integral function from x = 0 to x = 10, the two slopes at the origin being determined by a shooting method.",
+   "fluids": [],
+   "tags": [
+    "external convection",
+    "rotating disk",
+    "viscous pump",
+    "similarity solution",
+    "shooting problem",
+    "ODE integration",
+    "wall gradients"
+   ],
+   "n_equations": 17,
+   "largest_block": 0,
+   "origin_type": "software_library",
+   "source": "ees_library",
+   "source_path": "~/Nextcloud/thermo_models/EES_library/von Karman.EES",
+   "authors": [
+    "S. A. Klein"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/uncategorized/von_karman.ees",
+   "missing_features": [
+    "CS-GAP-NAME-PRIME",
+    "CS-BUG-UNARY-POW"
+   ],
+   "related": [
+    "CSL-0336"
+   ],
+   "coolsolve_version": "0.4.0@cc582a6",
+   "verified_on": "2026-11-12",
+   "verification_summary": "Runnable variant vs the EES stored solution of the binary source: 11 common variables, 1 differ (rtol=0.001); the stored Obj is stale (it does not equal |g|+|f| of the stored f and g) and is excluded. The shooting slopes agree with White (2005, p. 162) to 5.2e-05 and 4.1e-05 relatively.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "publication",
+    "analytical"
+   ],
+   "path": "models/heat_transfer/external_convection/von_karman_viscous_pump",
+   "main_file": "von_karman_viscous_pump.eescode",
+   "figures": 0,
+   "variants": [
+    "von_karman_viscous_pump_coolsolve.eescode"
+   ]
   },
   {
    "id": "CSL-0086",
@@ -8126,7 +9078,8 @@
     "CSL-0063",
     "CSL-0066",
     "CSL-0070",
-    "CSL-0292"
+    "CSL-0292",
+    "CSL-0337"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -8667,7 +9620,8 @@
     "CSL-0062",
     "CSL-0055",
     "CSL-0063",
-    "CSL-0065"
+    "CSL-0065",
+    "CSL-0337"
    ],
    "coolsolve_version": "0.4.0@9768373",
    "verified_on": "2026-10-24",
@@ -13684,7 +14638,8 @@
    "url": "",
    "missing_features": [],
    "related": [
-    "CSL-0043"
+    "CSL-0043",
+    "CSL-0347"
    ],
    "coolsolve_version": "0.3.0@4798e2b",
    "verified_on": "2026-10-18",
@@ -13695,6 +14650,395 @@
    ],
    "path": "models/refrigeration_heat_pumps/absorption/nh3h2o_absorption_chiller",
    "main_file": "nh3h2o_absorption_chiller.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0347",
+   "name": "nh3h2o_absorption_ideal",
+   "title": "Single-effect ammonia-water absorption cycle (ideal generator)",
+   "category": "refrigeration_heat_pumps/absorption",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "Single-effect NH3-H2O absorption refrigeration cycle of the EES example Absorp.ees at one operating point: saturated vapour and weak solution at the generator outlet, no rectifier, pump work neglected, no refrigerant heat exchanger; solution heat exchanger with its effectiveness computed as an output; heat rates, COP and the 10 state points as arrays for the diagrams.",
+   "fluids": [
+    "NH3H2O"
+   ],
+   "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "chiller",
+    "COP",
+    "cycle",
+    "exercise",
+    "reference model"
+   ],
+   "n_equations": 108,
+   "largest_block": 2,
+   "origin_type": "software_library",
+   "source": "ees_library",
+   "source_path": "~/Nextcloud/thermo_models/EES_library/Absorp.ees",
+   "authors": [
+    "S. A. Klein (University of Wisconsin-Madison / F-Chart Software)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/absorp.ees",
+   "missing_features": [],
+   "related": [
+    "CSL-0249"
+   ],
+   "coolsolve_version": "0.4.0@cc582a6",
+   "verified_on": "2026-11-14",
+   "verification_summary": "Compared with the solution stored in Absorp.ees (EES 8.821): temperatures, compositions and SHX effectiveness within 0.3-2.4%; heat rates and COP within 2.8-9%, explained by the 2.4% composition difference between the two NH3H2O formulations (Ibrahim-Klein vs IAPWS G4-01) amplified by the circulation ratio; absolute h, s not comparable (different reference states).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance",
+    "order-of-magnitude"
+   ],
+   "path": "models/refrigeration_heat_pumps/absorption/nh3h2o_absorption_ideal",
+   "main_file": "nh3h2o_absorption_ideal.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0352",
+   "name": "nh3h2o_absorption_two_stage",
+   "title": "Two-stage ammonia-water absorption system with condensate precooling",
+   "category": "refrigeration_heat_pumps/absorption",
+   "kind": "steady",
+   "level": 3,
+   "status": "blocked",
+   "summary": "Two-stage (double-effect) NH3H2O absorption refrigeration cycle, Herold, Radermacher and Klein Example 10.1: Desorber 1 is driven internally by the heat of Absorber 2 and Rectifier 2, three rectifiers purify the vapour and a condensate precooler (RHX) subcools the condensed liquid; all 29 state points, the component heat rates and the COP are computed.",
+   "fluids": [
+    "NH3H2O"
+   ],
+   "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "two-stage",
+    "condensate precooler",
+    "rectifier",
+    "solution heat exchanger",
+    "COP",
+    "cycle",
+    "textbook example"
+   ],
+   "n_equations": 213,
+   "largest_block": 119,
+   "origin_type": "software_library",
+   "source": "ees_examples",
+   "source_path": "",
+   "authors": [
+    "S. A. Klein (F-Chart Software)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/ex10_1.ees",
+   "missing_features": [
+    "CS-BUG-PROP-QLIMIT"
+   ],
+   "related": [],
+   "coolsolve_version": "0.4.0@00a4daa",
+   "verified_on": "2026-11-15",
+   "verification_summary": "The runnable variant was compared with the EES stored solution (same inputs, kPa/kJ converted; the native file is blocked): COP 0.479 vs 0.496 (3.5 %), pressures within 1.0 %, mass flows within 5.0 %. Whole-cycle balance closes to 1.6e-6 W. Deviations explained by the NH3H2O property backend (identical calls differ up to 6 %); dilute-loop compositions up to 54 % (x[19]).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance",
+    "order-of-magnitude"
+   ],
+   "path": "models/refrigeration_heat_pumps/absorption/nh3h2o_absorption_two_stage",
+   "main_file": "nh3h2o_absorption_two_stage.eescode",
+   "figures": 0,
+   "variants": [
+    "nh3h2o_absorption_two_stage_coolsolve.eescode"
+   ]
+  },
+  {
+   "id": "CSL-0354",
+   "name": "nh3h2o_absorption_recirculation",
+   "title": "Single-stage ammonia-water absorption cycle with absorber recirculation and condensate precooler",
+   "category": "refrigeration_heat_pumps/absorption",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Single-stage NH3H2O absorption refrigeration cycle, Herold, Radermacher and Klein Example 9.6: condensate precooler between the condenser and evaporator outlets, absorber solution recirculation heated to the poor-solution saturation temperature (state 15), and preheating of the rich solution by the rectifier coolant; all 16 state points, the component heat rates and the COP are computed.",
+   "fluids": [
+    "NH3H2O"
+   ],
+   "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "single-stage",
+    "absorber recirculation",
+    "condensate precooler",
+    "rectifier",
+    "solution heat exchanger",
+    "COP",
+    "cycle",
+    "textbook example"
+   ],
+   "n_equations": 134,
+   "largest_block": 13,
+   "origin_type": "software_library",
+   "source": "ees_examples",
+   "source_path": "",
+   "authors": [
+    "S. A. Klein (F-Chart Software)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/ex9_6.ees",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.4.0@00a4daa",
+   "verified_on": "2026-11-15",
+   "verification_summary": "The native file was solved in CoolSolve and compared with the EES stored solution (compare_solution.py --ees-units, 132 common variables): COP within 0.53 %, heat rates within 1.1 %, temperatures within 0.9 %, mass fractions within 3.4 %. Whole-cycle balance closes to 2.3e-7 W. Deviations explained by the NH3H2O property backend (identical calls differ up to 3.2 %); absolute h and s excluded (reference-state offsets).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance",
+    "order-of-magnitude"
+   ],
+   "path": "models/refrigeration_heat_pumps/absorption/nh3h2o_absorption_recirculation",
+   "main_file": "nh3h2o_absorption_recirculation.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0360",
+   "name": "nh3h2o_absorption_precooler",
+   "title": "Single-stage ammonia-water absorption cycle with a condensate precooler",
+   "category": "refrigeration_heat_pumps/absorption",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Single-stage NH3H2O absorption refrigeration cycle, Herold, Radermacher and Klein Example 9.3: the condensed refrigerant (10) is subcooled in the condensate precooler (capacity-rate effectiveness model) by the cold evaporator outlet (13/14). Given the heat rejection temperatures (40 C), the evaporator temperature (-10 C) and the design goals (x[9] = 0.9996, DELTAx = 0.1), the model computes the 14 state points, the component heat rates and the COP.",
+   "fluids": [
+    "NH3H2O"
+   ],
+   "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "single-stage",
+    "condensate precooler",
+    "rectifier",
+    "solution heat exchanger",
+    "COP",
+    "cycle",
+    "textbook example"
+   ],
+   "n_equations": 122,
+   "largest_block": 7,
+   "origin_type": "software_library",
+   "source": "ees_examples",
+   "source_path": "",
+   "authors": [
+    "S. A. Klein (F-Chart Software)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/ex9_3.ees",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.4.0@a53de60",
+   "verified_on": "2026-11-15",
+   "verification_summary": "The native file was solved in CoolSolve and compared with the EES stored solution (compare_solution.py --ees-units, 122 common variables): COP within 1.8 %, heat rates within 4.2 %, pressures within 0.11 %, temperatures within 2.8 %, mass fractions within 3.5 %. Whole-cycle balance closes to 8e-7 W. Deviations explained by the NH3H2O property backend (bubble composition at identical inputs differs 2.6 %).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance",
+    "order-of-magnitude"
+   ],
+   "path": "models/refrigeration_heat_pumps/absorption/nh3h2o_absorption_precooler",
+   "main_file": "nh3h2o_absorption_precooler.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0361",
+   "name": "nh3h2o_absorption_rectifier_heat",
+   "title": "Single-stage ammonia-water absorption cycle with rectifier heat recovery",
+   "category": "refrigeration_heat_pumps/absorption",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Single-stage NH3H2O absorption refrigeration cycle, Herold, Radermacher and Klein Example 9.5: the cycle of Example 9.3 (condensate precooler, CSL-0360) with all the rectifier heat recovered into the rich solution instead of rejected - the solution stream 2 is heated to 16 by the rectifier duty and enters the solution heat exchanger at 16. Given the heat rejection temperatures (40 C), the evaporator temperature (-10 C) and the design goals (x[9] = 0.99, DELTAx = 0.1), the model computes the state points, the component heat rates and the COP.",
+   "fluids": [
+    "NH3H2O"
+   ],
+   "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "single-stage",
+    "rectifier heat recovery",
+    "condensate precooler",
+    "solution heat exchanger",
+    "COP",
+    "cycle",
+    "textbook example"
+   ],
+   "n_equations": 127,
+   "largest_block": 7,
+   "origin_type": "software_library",
+   "source": "ees_examples",
+   "source_path": "Case_Study/ex9_5.ees",
+   "authors": [
+    "S. A. Klein (F-Chart Software)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/ex9_5.ees",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.4.0@a53de60",
+   "verified_on": "2026-11-15",
+   "verification_summary": "The native file was solved in CoolSolve and compared with the EES stored solution (compare_solution.py --ees-units, 126 common variables): COP within 1.3 %, heat rates within 1.8 %, pressures within 2.2 %, temperatures within 2.4 %. Whole-cycle balance closes to -6.3e-06 W on 499 kW. Mass fractions differ by up to 3.4e-02, explained by the NH3H2O property backend (P_low at identical inputs differs 2.13e-02).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance",
+    "order-of-magnitude"
+   ],
+   "path": "models/refrigeration_heat_pumps/absorption/nh3h2o_absorption_rectifier_heat",
+   "main_file": "nh3h2o_absorption_rectifier_heat.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0362",
+   "name": "nh3h2o_evaporator_glide",
+   "title": "Evaporator temperature glide of ammonia-water (Herold et al., Example 9.1)",
+   "category": "refrigeration_heat_pumps/absorption",
+   "kind": "steady",
+   "level": 1,
+   "status": "verified",
+   "summary": "Three equilibrium states of an ammonia-water absorption system (Herold, Radermacher and Klein, Example 9.1): the desorber vapour in equilibrium with the rich solution (150 C, x = 0.3), the evaporator fed with saturated liquid of that composition at 0 C, and the saturated two-phase outlet with liquid mass fraction 0.25. Outputs: saturation pressures, vapour mass fractions, temperature glide (about 75 K) and outlet quality.",
+   "fluids": [
+    "NH3H2O"
+   ],
+   "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "temperature glide",
+    "evaporator",
+    "equilibrium",
+    "textbook example",
+    "exercise"
+   ],
+   "n_equations": 16,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ees_examples",
+   "source_path": "",
+   "authors": [
+    "S. A. Klein (F-Chart Software)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/ex9_1.ees",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.4.0@a53de60",
+   "verified_on": "2026-11-15",
+   "verification_summary": "Solved in CoolSolve and compared with the EES stored solution (compare_solution.py --ees-units, 16 common variables): mass fractions y[1], y[2] agree within 0.02 %, y[3] 0.8 %, x_e2_min 3.4 %, temperatures/glide 0.9-3.1 %, Q[3] 1.1 %, pressures 1.9-4.3 % - the documented difference between the EES (Ibrahim-Klein) and CoolSolve (IAPWS G4-01) NH3H2O formulations.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance",
+    "order-of-magnitude"
+   ],
+   "path": "models/refrigeration_heat_pumps/absorption/nh3h2o_evaporator_glide",
+   "main_file": "nh3h2o_evaporator_glide.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0363",
+   "name": "nh3h2o_absorption_rectifier",
+   "title": "Single-stage ammonia-water absorption cycle with rectifier",
+   "category": "refrigeration_heat_pumps/absorption",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "Single-stage NH3H2O absorption refrigeration cycle, Herold, Radermacher and Klein Example 9.2: a rectifier purifies the generator vapour (x[9] = 0.9996) and an effectiveness solution heat exchanger preheats the rich solution; given the corner temperatures and DELTAx = 0.1, the 13 state points, the component heat rates and the COP are computed.",
+   "fluids": [
+    "NH3H2O"
+   ],
+   "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "single-stage",
+    "rectifier",
+    "solution heat exchanger",
+    "COP",
+    "cycle",
+    "textbook example"
+   ],
+   "n_equations": 105,
+   "largest_block": 7,
+   "origin_type": "software_library",
+   "source": "ees_examples",
+   "source_path": "Case_Study/ex9_2.ees",
+   "authors": [
+    "S. A. Klein (F-Chart Software)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/ex9_2.ees",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.4.0@a53de60",
+   "verified_on": "2026-11-15",
+   "verification_summary": "The native file was solved in CoolSolve and compared with the EES stored solution (compare_solution.py --ees-units, 105 common variables): COP within 1.91e-02, temperatures within 4.67e-03, mass fractions within 3.42e-02, heat rates within 1.62e-02 except Q_dot_rect (1.59e-01, kept; small difference of large enthalpy streams). Deviations explained by the NH3H2O property backend (identical calls differ up to 2.5 % on composition); absolute h and s excluded (reference-state offsets).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance",
+    "order-of-magnitude"
+   ],
+   "path": "models/refrigeration_heat_pumps/absorption/nh3h2o_absorption_rectifier",
+   "main_file": "nh3h2o_absorption_rectifier.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0364",
+   "name": "nh3h2o_absorption_precooler_ua",
+   "title": "Single-stage ammonia-water absorption cycle with a condensate precooler and UA models on the four corners",
+   "category": "refrigeration_heat_pumps/absorption",
+   "kind": "steady",
+   "level": 3,
+   "status": "verified",
+   "summary": "The Example 9.3 single-stage NH3H2O absorption cycle with condensate precooler, modified as Example 9.3b: the corner temperatures (absorber, condenser, evaporator, desorber) are no longer imposed; each corner is coupled to an external water loop by a UA*LMTD model, which closes the system.",
+   "fluids": [
+    "NH3H2O"
+   ],
+   "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "single-stage",
+    "condensate precooler",
+    "rectifier",
+    "solution heat exchanger",
+    "UA-LMTD corners",
+    "external loops",
+    "COP",
+    "cycle",
+    "textbook example"
+   ],
+   "n_equations": 143,
+   "largest_block": 80,
+   "origin_type": "software_library",
+   "source": "ees_examples",
+   "source_path": "Case_Study/ex9_3_ua.ees",
+   "authors": [
+    "S. A. Klein (F-Chart Software)"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/ex9_3_ua.ees",
+   "missing_features": [],
+   "related": [],
+   "coolsolve_version": "0.4.0@a53de60",
+   "verified_on": "2026-11-15",
+   "verification_summary": "Compared with the EES stored solution of the binary Ex9_3_UA.EES inside ex9_3_ua.eez (compare_solution.py --ees-units, 143 common variables): COP within 1.4 %, heat rates within 3.6 %, pressures within 0.64 %, temperatures within 2.7 %, mass fractions within 3.0 %. Deviations explained by the NH3H2O property backend as for CSL-0360.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "energy-balance",
+    "order-of-magnitude"
+   ],
+   "path": "models/refrigeration_heat_pumps/absorption/nh3h2o_absorption_precooler_ua",
+   "main_file": "nh3h2o_absorption_precooler_ua.eescode",
    "figures": 0
   },
   {
@@ -13986,6 +15330,52 @@
    ],
    "path": "models/refrigeration_heat_pumps/heat_pump_cycles/heat_pump_room_cop",
    "main_file": "heat_pump_room_cop.eescode",
+   "figures": 0
+  },
+  {
+   "id": "CSL-0344",
+   "name": "r134a_heat_pump_effectiveness",
+   "title": "R134a heat pump with effectiveness heat exchangers",
+   "category": "refrigeration_heat_pumps/heat_pump_cycles",
+   "kind": "steady",
+   "level": 2,
+   "status": "verified",
+   "summary": "R134a heat-pump cycle whose evaporator and condenser are effectiveness-capacitance exchangers (Alpha, Beta in W/K): the evaporation and condensation temperatures float with the outdoor and building air temperatures. Isentropic compressor (0.60) sized by a fixed suction volumetric flow; COP vs outdoor temperature.",
+   "fluids": [
+    "R134a"
+   ],
+   "tags": [
+    "heat pump",
+    "effectiveness",
+    "heat exchanger",
+    "outdoor temperature",
+    "COP",
+    "exercise"
+   ],
+   "n_equations": 32,
+   "largest_block": 15,
+   "origin_type": "software_library",
+   "source": "ees_library",
+   "source_path": "~/Nextcloud/thermo_models/EES_library/capvst.ees",
+   "authors": [
+    "S. A. Klein"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/capvst.ees",
+   "missing_features": [],
+   "related": [
+    "CSL-0001",
+    "CSL-0015"
+   ],
+   "coolsolve_version": "0.4.0@cc582a6",
+   "verified_on": "2026-11-14",
+   "verification_summary": "Compared with the EES stored solution (capvst.ees, T_amb = 15 °C run) after subtracting the documented R134a reference-state offsets (+148.1 kJ/kg, +0.796 kJ/kg-K): 27 common variables, max rel. diff 1.28e-03 (T[1], EES vs CoolProp properties); parametric-table row T_amb = -15 °C checked by hand: max 3.68e-04 (Q_H).",
+   "verification_checks": [
+    "ees-stored-solution",
+    "ees-parametric-table"
+   ],
+   "path": "models/refrigeration_heat_pumps/heat_pump_cycles/r134a_heat_pump_effectiveness",
+   "main_file": "r134a_heat_pump_effectiveness.eescode",
    "figures": 0
   },
   {
@@ -14748,7 +16138,8 @@
     "CSL-0136",
     "CSL-0133",
     "CSL-0148",
-    "CSL-0319"
+    "CSL-0319",
+    "CSL-0344"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-04",
@@ -14798,7 +16189,8 @@
     "CSL-0031",
     "CSL-0054",
     "CSL-0061",
-    "CSL-0068"
+    "CSL-0068",
+    "CSL-0344"
    ],
    "coolsolve_version": "0.3.0@536d427",
    "verified_on": "2026-10-05",
@@ -15250,6 +16642,59 @@
    "path": "models/refrigeration_heat_pumps/refrigeration_systems/r22_chiller_r407c_heat_pump",
    "main_file": "r22_chiller_r407c_heat_pump.eescode",
    "figures": 0
+  },
+  {
+   "id": "CSL-0337",
+   "name": "supermarket_cooling_bypass",
+   "title": "Supermarket cooling system with cooling-coil bypass",
+   "category": "refrigeration_heat_pumps/refrigeration_systems",
+   "kind": "steady",
+   "level": 2,
+   "status": "blocked",
+   "summary": "Mixed-air air-conditioning of a retail space: outdoor air mixes with return air, part of the mix bypasses a cooling coil with saturated outlet, the streams re-mix and are reheated to the supply state; coil and reheat loads as functions of the bypass fraction.",
+   "fluids": [
+    "AirH2O"
+   ],
+   "tags": [
+    "supermarket",
+    "air conditioning",
+    "mixed air",
+    "bypass",
+    "cooling coil",
+    "reheat",
+    "psychrometrics",
+    "exercise"
+   ],
+   "n_equations": 35,
+   "largest_block": 1,
+   "origin_type": "software_library",
+   "source": "ees_library",
+   "source_path": "~/Nextcloud/thermo_models/EES_library/Supermkt.ees",
+   "authors": [
+    "S. A. Klein"
+   ],
+   "license": "MIT",
+   "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/supermkt.ees",
+   "missing_features": [
+    "CS-GAP-PSYCHRO-SAT"
+   ],
+   "related": [
+    "CSL-0028",
+    "CSL-0292"
+   ],
+   "coolsolve_version": "0.4.0@cc582a6",
+   "verified_on": "2026-11-12",
+   "verification_summary": "Not the native file (blocked by CS-GAP-PSYCHRO-SAT): the _coolsolve variant was compared with the solution stored in Supermkt.ees and with parametric-table rows 1, 9, 16 (SI by hand). Loads agree within 0.2 %; humidity ratios within 0.5 % (EES vs CoolProp humid air); T[3] within 0.12 %; absolute enthalpies carry a constant ~17.8 kJ/kg dry-air reference offset, differences within 0.16 %.",
+   "verification_checks": [
+    "ees-stored-solution",
+    "ees-parametric-table"
+   ],
+   "path": "models/refrigeration_heat_pumps/refrigeration_systems/supermarket_cooling_bypass",
+   "main_file": "supermarket_cooling_bypass.eescode",
+   "figures": 0,
+   "variants": [
+    "supermarket_cooling_bypass_coolsolve.eescode"
+   ]
   },
   {
    "id": "CSL-0081",
@@ -16197,6 +17642,13 @@
    "path": "models/power_cycles/gas_turbine_offdesign/two_shaft_gas_turbine_expander_map/two_shaft_gas_turbine_expander_map.eescode"
   },
   {
+   "function": "cpg",
+   "type": "FUNCTION",
+   "signature": "(G$,T,P)",
+   "model_id": "CSL-0339",
+   "path": "models/fundamentals/piston_cylinders/gas_spring_oscillator/gas_spring_oscillator.eescode"
+  },
+  {
    "function": "crossflow_effectiveness_to_int",
    "type": "FUNCTION",
    "signature": "(v, NTU, t0)",
@@ -16853,6 +18305,13 @@
    "signature": "(m,n,f,T_p1,T_p2)",
    "model_id": "CSL-0293",
    "path": "models/power_cycles/gas_turbine_offdesign/two_shaft_gas_turbine_expander_map/two_shaft_gas_turbine_expander_map.eescode"
+  },
+  {
+   "function": "gen",
+   "type": "FUNCTION",
+   "signature": "(r, r_fuel)",
+   "model_id": "CSL-0348",
+   "path": "models/heat_transfer/conduction_radiation/fuel_element_sphere/fuel_element_sphere.eescode"
   },
   {
    "function": "GenericCentrifugalPump_IsentropicEfficiency",
@@ -19417,6 +20876,48 @@
    "path": "models/heat_exchangers/methods/shell_and_tube_sizing/shell_and_tube_sizing.eescode"
   },
   {
+   "function": "shx",
+   "type": "PROCEDURE",
+   "signature": "(epsilon,m_dot_c,m_dot_h,T_in_c,T_in_h,cph,cpc:T_out_h,T_out_c,Q_dot)",
+   "model_id": "CSL-0360",
+   "path": "models/refrigeration_heat_pumps/absorption/nh3h2o_absorption_precooler/nh3h2o_absorption_precooler.eescode"
+  },
+  {
+   "function": "shx",
+   "type": "PROCEDURE",
+   "signature": "(epsilon,m_dot_c,m_dot_h,T_in_c,T_in_h,cph,cpc:T_out_h,T_out_c,Q_dot)",
+   "model_id": "CSL-0364",
+   "path": "models/refrigeration_heat_pumps/absorption/nh3h2o_absorption_precooler_ua/nh3h2o_absorption_precooler_ua.eescode"
+  },
+  {
+   "function": "shx",
+   "type": "PROCEDURE",
+   "signature": "(epsilon,m_dot_c,m_dot_h,T_in_c,T_in_h,cph,cpc:T_out_h,T_out_c,Q_dot)",
+   "model_id": "CSL-0354",
+   "path": "models/refrigeration_heat_pumps/absorption/nh3h2o_absorption_recirculation/nh3h2o_absorption_recirculation.eescode"
+  },
+  {
+   "function": "shx",
+   "type": "PROCEDURE",
+   "signature": "(epsilon,m_dot_c,m_dot_h,T_in_c,T_in_h,cph,cpc:T_out_h,T_out_c,Q_dot)",
+   "model_id": "CSL-0363",
+   "path": "models/refrigeration_heat_pumps/absorption/nh3h2o_absorption_rectifier/nh3h2o_absorption_rectifier.eescode"
+  },
+  {
+   "function": "shx",
+   "type": "PROCEDURE",
+   "signature": "(epsilon,m_dot_c,m_dot_h,T_in_c,T_in_h,cph,cpc:T_out_h,T_out_c,Q_dot)",
+   "model_id": "CSL-0361",
+   "path": "models/refrigeration_heat_pumps/absorption/nh3h2o_absorption_rectifier_heat/nh3h2o_absorption_rectifier_heat.eescode"
+  },
+  {
+   "function": "shx",
+   "type": "PROCEDURE",
+   "signature": "(epsilon,m_dot_c,m_dot_h,h_in_c,h_in_h,h_out_h_min,h_out_c_max:h_out_h,h_out_c,Q_dot)",
+   "model_id": "CSL-0352",
+   "path": "models/refrigeration_heat_pumps/absorption/nh3h2o_absorption_two_stage/nh3h2o_absorption_two_stage.eescode"
+  },
+  {
    "function": "SigmaR1233zdE",
    "type": "FUNCTION",
    "signature": "(T_C)",
@@ -21716,7 +23217,7 @@
    "priority": "",
    "text": "A block whose equations have terms of very different sizes (the `CSL-0150` flame with its unknowns `H[i]`) stalled: fixed by the option `enableEquationScaling` (default off, on in Try Harder: equilibrated Newton steps of Newton, TrustRegion, KINSOL); tests …",
    "detail": "",
-   "fixed_in": "2026-11-16, `feat/equation-scaling` (under review)",
+   "fixed_in": "2026-11-16, `feat/equation-scaling` (solver roadmap §4.8)",
    "anchor": "7-closed-gaps-and-bugs"
   }
  }

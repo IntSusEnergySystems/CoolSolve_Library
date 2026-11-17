@@ -1,0 +1,39 @@
+{=============================================================================
+  Isenthalpic throttle with kinetic energy (R134a)
+  CoolSolve Library model CSL-0345
+ -----------------------------------------------------------------------------
+  Outlet state of a refrigerant throttle: the stagnation enthalpy is conserved
+  (h + Vel^2/2) and the mass flow rate is the same in the inlet and in the
+  outlet section of equal area, as in the original EES file.
+  Inputs : R$, T[1], P[1], Vel[1], P[2], A
+  Outputs: T[2], h[2], s[2], v[2], Vel[2], m_dot[1], m_dot[2]
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : ~/Nextcloud/thermo_models/EES_library/Throttle.EES (EES X9.067)
+  Authors: S.A. Klein (F-Chart Software). Licence: MIT.
+  Status : verified in CoolSolve 0.4.0 against the EES stored solution (the
+           R1234yf variant of the same equations); see README.md
+=============================================================================}
+
+"!Inputs"
+R$ = 'R1234yf'       "refrigerant (the setting of the stored EES solution)"
+T[1] = 50             "inlet temperature [°C]"
+P[1] = 1000E3         "inlet pressure [Pa] (1000 kPa in the original)"
+Vel[1] = 15           "inlet velocity [m/s]"
+P[2] = 100E3          "outlet pressure [Pa] (100 kPa in the original)"
+A = 0.005             "cross-sectional area [m^2]"
+
+"!Mass flow rate and specific volumes"
+m_dot[1] = A*Vel[1]/v[1]        "mass flow rate at inlet [kg/s]"
+v[1] = volume(R$, T=T[1], P=P[1])  "specific volume at inlet state [m^3/kg]"
+m_dot[2] = m_dot[1]             "steady-state mass balance [kg/s]"
+m_dot[2] = A*Vel[2]/v[2]        "fixes velocity at outlet state [kg/s]"
+v[2] = volume(R$, T=T[2], P=P[2])  "specific volume at outlet state [m^3/kg]"
+
+"!Steady-state energy balance"
+h[1] + Vel[1]^2/2 = h[2] + Vel[2]^2/2   "stagnation enthalpy conserved [J/kg]"
+h[1] = enthalpy(R$, T=T[1], P=P[1])     "specific enthalpy at inlet state [J/kg]"
+h[2] = enthalpy(R$, T=T[2], P=P[2])     "specific enthalpy at outlet state [J/kg]"
+
+"!State points for the thermodynamic diagram (added for the library)"
+s[1] = entropy(R$, T=T[1], P=P[1])      "specific entropy at inlet state [J/kg-K]"
+s[2] = entropy(R$, T=T[2], P=P[2])      "specific entropy at outlet state [J/kg-K]"

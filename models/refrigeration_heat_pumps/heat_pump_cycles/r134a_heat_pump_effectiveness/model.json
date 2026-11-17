@@ -1,0 +1,43 @@
+{
+  "id": "CSL-0344",
+  "name": "r134a_heat_pump_effectiveness",
+  "title": "R134a heat pump with effectiveness heat exchangers",
+  "summary": "R134a heat-pump cycle whose evaporator and condenser are effectiveness-capacitance exchangers (Alpha, Beta in W/K): the evaporation and condensation temperatures float with the outdoor and building air temperatures. Isentropic compressor (0.60) sized by a fixed suction volumetric flow; COP vs outdoor temperature.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "r134a_heat_pump_effectiveness.eescode",
+  "fluids": ["R134a"],
+  "tags": ["heat pump", "effectiveness", "heat exchanger", "outdoor temperature", "COP", "exercise"],
+  "language_features": ["array variables", "property functions", "$SUMROW"],
+  "stats": {"n_equations": 32, "largest_block": 15},
+  "origin": {
+    "type": "software_library",
+    "source": "ees_library",
+    "source_path": "~/Nextcloud/thermo_models/EES_library/capvst.ees",
+    "candidate_id": "EEL-026",
+    "authors": ["S. A. Klein"],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/capvst.ees",
+    "license": "MIT",
+    "ees_version": "X9.227",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "Compared with the EES stored solution (capvst.ees, T_amb = 15 °C run) after subtracting the documented R134a reference-state offsets (+148.1 kJ/kg, +0.796 kJ/kg-K): 27 common variables, max rel. diff 1.28e-03 (T[1], EES vs CoolProp properties); parametric-table row T_amb = -15 °C checked by hand: max 3.68e-04 (Q_H).",
+    "checks": ["ees-stored-solution", "ees-parametric-table"],
+    "reference": "EES stored solution and parametric Table 1 (7 runs, T_amb -15..15 °C) of ~/Nextcloud/thermo_models/EES_library/capvst.ees",
+    "date": "2026-11-14",
+    "coolsolve_version": "0.4.0@cc582a6",
+    "max_rel_diff": 0.00128,
+    "notes": "h/s compared after reference-state shift (CoolProp-EES = +148.1 kJ/kg, +0.796 kJ/kg-K, ees_import §11); raw comparison shows 6.24e-01 on absolute h/s. Remaining 1.28e-03 on T[1] (0.13 %) is within the 0.5 % tolerance for different R134a formulations."
+  },
+  "missing_features": [],
+  "related": ["CSL-0001", "CSL-0015"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-11-14", "action": "added", "by": "Claude (GLM) for S. Quoilin"}
+  ]
+}

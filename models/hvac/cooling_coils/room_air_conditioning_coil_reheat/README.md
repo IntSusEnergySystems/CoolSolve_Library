@@ -223,3 +223,7 @@ S. Quoilin:
 - `CSL-0055` / `CSL-0063` / `CSL-0065`: the other three exercises of the same
   session (room psychrometrics, air mixing, cooling tower), imported from the
   same archive `THD10_R10.zip`.
+- `CSL-0337` *supermarket_cooling_bypass*: supermarket mixed-air system whose
+  coil is closed by the same saturated-outlet condition, with a bypass
+  fraction instead of a reheat-controlled supply; blocked by the same gap,
+  same `dewpoint()` pattern in its `_coolsolve` variant.

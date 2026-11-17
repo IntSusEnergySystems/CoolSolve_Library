@@ -180,3 +180,6 @@ solution of 40 variables, no tables).
 - `CSL-0061` *refrigerator_freezer_r134a*: another R134a cycle of the same
   ULiège course; a fridge-freezer with two evaporators (two low pressures) and
   two expansion valves, sized from a required capacity.
+- `CSL-0344` *r134a_heat_pump_effectiveness*: same cycle at a different level of detail; its
+  evaporator and condenser are effectiveness-capacitance exchangers, so the cycle points float
+  with the outdoor temperature instead of being fixed.

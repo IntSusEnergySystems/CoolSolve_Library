@@ -1,0 +1,63 @@
+{=============================================================================
+  Gas spring: a ball oscillating on a gas column
+  CoolSolve Library model CSL-0339
+  -----------------------------------------------------------------------------
+  A small mass (a ball) is displaced in a glass tube and then oscillates, its
+  amplitude damped by friction. The gas below the ball (in the bottle) is
+  compressed and expanded adiabatically and behaves as a spring: the
+  differential analysis of the original gives a force linearly related to the
+  displacement of the ball from its equilibrium position, i.e. simple
+  harmonic motion of period Tau. The model integrates Newton's law for the
+  ball (INTEGRAL) and gives the trajectory of the ball position, of the
+  pressure and of the gas temperature.
+  Gas : helium (the string variable G$ is undefined in the source file; the
+        gas was identified from the solution stored by EES, see README.md)
+  Inputs : P_atm, Rad, M_ball, V_o, T_o, L_o, k_friction, Time_final
+  Outputs: L, Velocity, acc, P, T, V, k, Tau
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : S. A. Klein, F-Chart Software, EES example "gas spring"
+           (MIT, via EES-Community/ees-examples) - see README.md
+  Status : verified against the solution stored in the original EES file
+=============================================================================}
+
+FUNCTION cpg(G$,T,P)
+  IF (isIdealGas(G$)=1) THEN cpg=cp(G$,T=T) ELSE cpg=cp(G$,T=T,P=P)
+END
+
+"Known information"
+P_atm = 101151.7 [Pa]            "atmospheric pressure: 758.7 mmHg in the original"
+Rad = 0.008 [m]                  "internal radius of the glass tube: 1.6 cm/2 in the original"
+Area = pi*Rad^2                  "cross-section of the tube [m^2]"
+g = g#                           "gravitational acceleration [m/s^2]"
+R = R#                           "molar gas constant [J/kmol-K]"
+M_ball = 0.015 [kg]              "mass of the ball [kg]"
+V_o = 0.001 [m^3]                "initial (equilibrium) volume: 1 litre in the original"
+P_o = P_static                   "initial (equilibrium) pressure [Pa]"
+T_o = 24 [°C]                    "initial (equilibrium) temperature: 297.15 K in the original"
+T_o_abs = T_o + 273.15           "initial (equilibrium) temperature [K]"
+L_o = 0.05 [m]                   "initial displacement from the equilibrium position: 5 cm in the original"
+P_static = P_atm + M_ball*g/Area "force balance at the initial condition [Pa]"
+Time_final = 5 [s]               "end of the integration: 5 s in the original"
+
+G$ = 'Helium'                    "gas of the column (restored, see README.md)"
+k_friction = 0.01                "coefficient of friction [N.s/m]"
+
+"Force balance on the ball"
+F = P*Area - (P_atm*Area + M_ball*g) - Friction   "net force on the ball [N]"
+Friction = k_friction*Velocity                      "friction force [N]"
+F = M_ball*acc                    "Newton's law: acceleration of the ball [m/s^2]"
+Velocity = INTEGRAL(acc,time,0,Time_final)   "integrate acceleration to determine the velocity [m/s]"
+L = L_o + INTEGRAL(Velocity,time,0,Time_final) "integrate velocity to determine the position [m]"
+
+"Analysis"
+P*V/T_abs = P_o*V_o/T_o_abs          "ideal gas law"
+V = L*Area + V_o                      "volume as a function of the ball position [m^3]"
+-R*ln(V/V_o) = c_v*ln(T_abs/T_o_abs)  "adiabatic process: -P dv = c_v dT, with P = R T / V"
+T_abs = T + 273.15                    "temperature of the gas [K]"
+
+"Specific heat information from EES"
+k = c_p/c_v                           "specific heat ratio [-]"
+c_p = MOLARMASS(G$)*cp(G$,T=T_o,P=P_o)   "molar specific heat at the equilibrium state [J/kmol-K]"
+c_p = c_v + R                         "molar specific heat: c_v = c_p - R [J/kmol-K]"
+
+Tau = 2*pi*sqrt(M_ball*V_o/(k*P_o*Area^2))  "period of the simple harmonic motion [s]"

@@ -1,0 +1,71 @@
+{=============================================================================
+  Supermarket cooling system with cooling-coil bypass
+  CoolSolve Library model CSL-0337
+ -----------------------------------------------------------------------------
+  Mixed-air retail air-conditioning: outdoor air mixes with return air, a
+  fraction (1 - ByPass) passes a cooling coil with a saturated outlet, the
+  rest bypasses, the streams re-mix and are reheated to the supply state.
+  Coil load Q_C and reheat Q_H versus ByPass. Humid air (AirH2O).
+  Units converted by hand from English (F, cfm, psia, Btu) to SI.
+
+  Status : blocked. enthalpy/temperature(AirH2O, P, w, R=1) is
+           CS-GAP-PSYCHRO-SAT. The runnable variant uses dewpoint().
+           Diagram window not imported. Details in README.md.
+  Source : S. A. Klein, CAEE 1(3) 1993, 265-275; Supermkt.ees.
+           (c) F-Chart Software / S. A. Klein, MIT via ees-examples.
+=============================================================================}
+
+"Supermarket cooling system with bypass (problem statement paraphrased: it appears in the Diagram window of the original file, not imported)"
+
+"!Supply air"
+Vol[5]=1.8878    "supply volume flow rate [m^3/s] (4000 cfm in the original)"
+T[5]=16.667      "supply air temperature [°C] (62 F in the original)"
+rh[5]=0.55       "supply air relative humidity"
+P_atm=101353     "atmospheric pressure [Pa] (14.7 psia in the original)"
+v[5]=volume(AIRH2O,P=P_atm,T=T[5],R=rh[5])     "specific volume of the supply air [m^3/kg dry air]"
+m_dot[5]=Vol[5]/v[5]                           "mass flow rate of dry air [kg/s]"
+h[5]=enthalpy(AIRH2O,P=P_atm,T=T[5],R=rh[5])   "supply air enthalpy [J/kg dry air]"
+w[5]=humrat(AIRH2O,P=P_atm,T=T[5],R=rh[5])     "supply air humidity ratio [kg/kg dry air]"
+
+"!Return air"
+T[6]=23.333     "return air temperature [°C] (74 F in the original)"
+rh[6]=0.54      "return air relative humidity"
+h[6]=enthalpy(AIRH2O,P=P_atm,T=T[6],R=rh[6])   "return air enthalpy [J/kg dry air]"
+w[6]=humrat(AIRH2O,P=P_atm,T=T[6],R=rh[6])     "return air humidity ratio [kg/kg dry air]"
+m_dot[1]=0.15*m_dot[5]                         "outdoor-air mass flow rate (15 % of the supply) [kg/s]"
+
+"!Outside air"
+T[1]=27.778     "outdoor air temperature [°C] (82 F in the original)"
+rh[1]=0.48      "outdoor air relative humidity"
+h[1]=enthalpy(AIRH2O,P=P_atm,T=T[1],R=rh[1])   "outdoor air enthalpy [J/kg dry air]"
+w[1]=humrat(AIRH2O,P=P_atm,T=T[1],R=rh[1])     "outdoor air humidity ratio [kg/kg dry air]"
+
+"!Mix return and outdoor"
+m_dot[7]=0.85*m_dot[5]*(1-ByPass)               "flow through the coil branch [kg/s]"
+m_dot[2]=m_dot[1]+m_dot[7]                      "mix of outdoor and return air [kg/s]"
+w[2]*m_dot[2]=m_dot[1]*w[1]+m_dot[7]*w[6]       "water balance (as in the original)"
+m_dot[1]*h[1]+m_dot[7]*h[6]=m_dot[2]*h[2]       "energy balance (as in the original)"
+
+"!Cooling coil"
+rh[3]=1                                         "coil outlet is saturated"
+m_dot[3]=m_dot[2]                               "coil air flow [kg/s]"
+Q_C=m_dot[3]*(h[3]-h[2])                        "cooling coil load (negative) [W]"
+h[3]=enthalpy(AIRH2O,P=P_atm,w=w[3],R=rh[3])    "coil-outlet enthalpy of the saturated air [J/kg dry air]"
+T[3]=temperature(AIRH2O,P=P_atm,w=w[3],R=rh[3]) "coil-outlet temperature of the saturated air [°C]"
+
+"!Mix coil outlet with bypass"
+m_dot[8]=0.85*m_dot[5]*ByPass                   "bypassed flow [kg/s]"
+m_dot[4]=m_dot[3]+m_dot[8]                      "mix of coil outlet and bypass [kg/s]"
+w[6]*m_dot[8]+w[3]*m_dot[3]=m_dot[4]*w[4]       "water balance (as in the original)"
+m_dot[8]*h[6]+m_dot[3]*h[3]=m_dot[4]*h[4]       "energy balance (as in the original)"
+
+"!Reheat coil"
+w[5]=w[4]                                       "reheat at constant humidity (as in the original)"
+Q_H=(h[5]-h[4])*m_dot[5]                        "reheat coil load [W]"
+
+"!Get missing temperatures for plotting the states on the psychrometric chart (as in the original)"
+T[2]=temperature(AIRH2O,P=P_atm,w=w[2],h=h[2])  "mix temperature upstream of the coil [°C]"
+T[4]=temperature(AIRH2O,P=P_atm,w=w[4],h=h[4])  "mix temperature downstream of the coil [°C]"
+
+"!Bypass fraction: input taken from the original parametric table (Table 1 sweeps it from 0 to 0.75; the stored solution is the ByPass=0.75 run)"
+ByPass=0.75                                     "bypassed fraction of the supply flow"

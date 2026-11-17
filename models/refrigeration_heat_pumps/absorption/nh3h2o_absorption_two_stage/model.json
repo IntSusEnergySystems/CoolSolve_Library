@@ -1,0 +1,78 @@
+{
+  "id": "CSL-0352",
+  "name": "nh3h2o_absorption_two_stage",
+  "title": "Two-stage ammonia-water absorption system with condensate precooling",
+  "summary": "Two-stage (double-effect) NH3H2O absorption refrigeration cycle, Herold, Radermacher and Klein Example 10.1: Desorber 1 is driven internally by the heat of Absorber 2 and Rectifier 2, three rectifiers purify the vapour and a condensate precooler (RHX) subcools the condensed liquid; all 29 state points, the component heat rates and the COP are computed.",
+  "kind": "steady",
+  "level": 3,
+  "status": "blocked",
+  "main_file": "nh3h2o_absorption_two_stage.eescode",
+  "fluids": [
+    "NH3H2O"
+  ],
+  "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "two-stage",
+    "condensate precooler",
+    "rectifier",
+    "solution heat exchanger",
+    "COP",
+    "cycle",
+    "textbook example"
+  ],
+  "language_features": [
+    "NH3H2O fluid (any three of T, P, X, Q, H, S, U, V)",
+    "PROCEDURE shx (kept; Min() = smaller of two heat rates)",
+    "arrays (state points)"
+  ],
+  "stats": {
+    "n_equations": 213,
+    "largest_block": 119
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_examples",
+    "source_path": "",
+    "candidate_id": "EEX-077",
+    "authors": [
+      "S. A. Klein (F-Chart Software)"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/ex10_1.ees",
+    "license": "MIT",
+    "ees_version": "X11.926",
+    "language": "en",
+    "course": "",
+    "notes": "Example 10.1 of Herold, Radermacher and Klein, Absorption Chillers and Heat Pumps, CRC Press, 2nd ed., 2015; EES example of F-Chart Software, distributed by the EES-Community/ees-examples repository (commit 5c703d0, folder Case_Study/). The .eez companion stores the binary .EES with the solution used as verification reference. Credit: (c) F-Chart Software / S. A. Klein, MIT via EES-Community/ees-examples."
+  },
+  "verification": {
+    "summary": "The runnable variant was compared with the EES stored solution (same inputs, kPa/kJ converted; the native file is blocked): COP 0.479 vs 0.496 (3.5 %), pressures within 1.0 %, mass flows within 5.0 %. Whole-cycle balance closes to 1.6e-6 W. Deviations explained by the NH3H2O property backend (identical calls differ up to 6 %); dilute-loop compositions up to 54 % (x[19]).",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of the binary Ex10_1.EES (ees_variables.csv), compared with tools/compare_solution.py --ees-units; direct NH3H2O property calls at identical inputs quantify the backend difference",
+    "date": "2026-11-15",
+    "coolsolve_version": "0.4.0@00a4daa",
+    "max_rel_diff": 0.536,
+    "notes": "Compared set: 241 common variables. Excluded: h*, swp*, s[i] (NH3H2O reference-state offsets; the EES s[i] records are stale: the file computes no entropy), checkQ (balance residual: EES -2.3 mW, CoolSolve 1.6e-6 W on 271.5 kW). Max rel diff as printed: x[19] 5.36e-01; COP 3.45e-02; P[12] 1.01e-02; T[26] 3.43e-02. Q_dot_des_2 has no stored EES value (implied 179.5 kW from COP_c, CoolSolve 181.5 kW)."
+  },
+  "missing_features": [
+    "CS-BUG-PROP-QLIMIT"
+  ],
+  "related": [],
+  "related_external": [
+    "EES example ex10_1_mass.ees (mass-balance-only teaching subset of the same cycle, candidate EEX-078)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-15",
+      "action": "added (native file blocked by CS-BUG-PROP-QLIMIT; runnable _coolsolve variant compared with the EES stored solution)",
+      "by": "GLM (zai) for S. Quoilin"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{=============================================================================
+  Lumped-capacitance cooling of a sphere in a fluid
+  CoolSolve Library model CSL-0343
+  -----------------------------------------------------------------------------
+  A solid sphere (radius 5 mm, density 3000 kg/m3, specific heat 1000 J/kg-K)
+  initially at 400 °C is cooled by convection to a fluid medium at 20 °C
+  (heat transfer coefficient 10 W/m2-K).  The energy balance of the lump,
+      rho*V*c*dTdt = -h*A*(T-T_infinity),
+  is integrated with the EES table-based Integral function; the independent
+  variable Time comes from the EES parametric table (0 to 1000 s; the value of
+  its last row is kept below).  The closed-form solution of the same equation,
+  T_exact, is computed beside it.
+  Inputs : r, rho, c, T_i, T_infinity, h
+  Outputs: T, T_exact, dTdt
+  Units  : SI - temperatures in °C, energies in J (the model uses no pressure)
+  Source : S. A. Klein, F-Chart Software, EES example "Difeqn1"
+           (MIT, via EES-Community/ees-examples) - see README.md
+  Status : blocked by CS-GAP-INTEGRAL-2ARG (the two-argument table-based
+           INTEGRAL is not supported); the runnable variant
+           lumped_capacitance_cooling_coolsolve.eescode uses the
+           equation-based INTEGRAL with explicit limits (see README.md)
+=============================================================================}
+
+"Physical properties"
+r = 0.005 [m]                   "radius of the sphere"
+A = 4*pi*r^2                    "area of the lump [m^2]"
+V = 4/3*pi*r^3                  "volume of the lump [m^3]"
+
+"Material properties"
+rho = 3000 [kg/m3]              "density of the lump [kg/m3]"
+c = 1000 [J/kg-K]               "specific heat of the lump [J/kg-K]"
+
+"Constants"
+T_infinity = 20 [C]            "temperature of the fluid medium [°C]"
+T_i = 400 [C]                  "initial temperature of the lump [°C]"
+h = 10 [W/m2-K]                "heat transfer coefficient [W/m2-K]"
+Time = 1000 [s]                "time of the stored solution: last row of the EES parametric table (see README.md)"
+
+"Energy balance to determine dTdt"
+rho*V*c*dTdt = -h*A*(T-T_infinity)
+
+"Integrate dTdt to find T as a function of time"
+T = T_i + integral(dTdt,Time)
+
+"Exact solution"
+(T_exact-T_infinity)/(T_i-T_infinity) = exp(-h*A/(rho*c*V)*Time)

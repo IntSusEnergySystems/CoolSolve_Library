@@ -270,3 +270,4 @@ each function and in `model.json` (`origin.authors`).
   *condensation_film*: the other `ht` convection families of the library, same
   layout (definitions + demonstration program).
 - `CSL-0091` *internal_laminar_and_curved_nu*: the laminar, entry-region and curved-duct (spiral, helical) internal-convection family of the same `ht` triage, same layout; it complements `CSL-0087` (turbulent pipe flow) at low Reynolds number and non-circular geometries.
+- `CSL-0336` *blasius_flat_plate*: the Blasius boundary-layer ODE for this flat-plate flow, integrated with `INTEGRAL` (velocity profile `f'(eta)`, skin friction from `f''(0) = 0.33206`), where this file gives the average Nusselt number from a correlation.

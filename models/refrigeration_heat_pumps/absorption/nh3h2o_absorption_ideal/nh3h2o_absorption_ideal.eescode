@@ -1,0 +1,144 @@
+{=============================================================================
+  Single-effect ammonia-water absorption refrigeration cycle (ideal generator)
+  CoolSolve Library model CSL-0347
+ -----------------------------------------------------------------------------
+  Performance of a simple absorption refrigeration cycle using ammonia-water as
+  the refrigerant-absorbent working fluid, as in the original. One operating
+  point: the generator produces a saturated vapour (state 2) and a saturated
+  weak solution (state 3) at T_gen; the refrigerant is condensed, throttled and
+  evaporated; the weak solution is cooled in a solution heat exchanger,
+  throttled and absorbs the refrigerant vapour. Pump work is neglected; there
+  is no rectifier and no refrigerant heat exchanger; the solution heat
+  exchanger effectiveness is an output.
+  Properties: EES fluid NH3H2O (ammonia mass fractions x); the original called
+  the NH3H2O external procedure, replaced here by the built-in property calls
+  that the source itself documents (external routines are not supported).
+  Inputs : P_high, P_low, m_dot_1, T_1, x_1 and the fixed component temperatures
+  Outputs: compositions, mass flows, state points, heat rates [W], COP
+  Units  : SI - temperatures in °C, pressures in Pa, energies in J
+  Source : EES example Absorp.ees (S. A. Klein, F-Chart Software, MIT) - see README.md
+=============================================================================}
+
+"!Generator"
+P_high = 1350000       "high pressure of the cycle [Pa] (13.5 bar in the original)"
+m_dot_1 = 1            "reference mass flow of the strong solution [kg/s]"
+T_1 = 80               "strong solution temperature at the generator inlet [C] (TK(80) in the original)"
+P_1 = P_high           "[Pa]"
+x_1 = 0.38             "ammonia mass fraction of the strong solution [kg/kg]"
+h_1 = ENTHALPY(NH3H2O,T=T_1,P=P_1,X=x_1)     "[J/kg]"
+s_1 = ENTROPY(NH3H2O,T=T_1,P=P_1,X=x_1)      "[J/kg-K]"
+T_2 = 115              "generator outlet (refrigerant vapour) temperature [C] (TK(115) in the original)"
+P_2 = P_high           "[Pa]"
+x_2 = MASSFRACTION(NH3H2O,T=T_2,P=P_2,Q=1)   "ammonia mass fraction of the saturated vapour [kg/kg]"
+h_2 = ENTHALPY(NH3H2O,T=T_2,P=P_2,Q=1)       "[J/kg]"
+s_2 = ENTROPY(NH3H2O,T=T_2,P=P_2,Q=1)        "[J/kg-K]"
+T_3 = 115              "generator outlet (weak solution) temperature [C]"
+P_3 = P_high           "[Pa]"
+x_3 = MASSFRACTION(NH3H2O,T=T_3,P=P_3,Q=0)   "ammonia mass fraction of the saturated weak solution [kg/kg]"
+h_3 = ENTHALPY(NH3H2O,T=T_3,P=P_3,Q=0)       "[J/kg]"
+s_3 = ENTROPY(NH3H2O,T=T_3,P=P_3,Q=0)        "[J/kg-K]"
+m_dot_1 = m_dot_2 + m_dot_3                  "overall mass balance [kg/s]"
+m_dot_1*x_1 = m_dot_2*x_2 + m_dot_3*x_3      "ammonia balance [kg/s]"
+h_1*m_dot_1 - h_2*m_dot_2 - h_3*m_dot_3 + Q_gen = 0   "energy balance [W]"
+
+"!Condenser"
+T_4 = 27               "condenser outlet (liquid refrigerant) temperature [C] (TK(27) in the original)"
+P_4 = P_high           "[Pa]"
+x_4 = x_2              "ammonia mass fraction of the refrigerant [kg/kg]"
+h_4 = ENTHALPY(NH3H2O,T=T_4,P=P_4,X=x_4)     "[J/kg]"
+s_4 = ENTROPY(NH3H2O,T=T_4,P=P_4,X=x_4)      "[J/kg-K]"
+Q_cond = (h_2 - h_4)*m_dot_2                 "condenser heat rate [W]"
+
+"!Throttle"
+P_low = 170000         "low pressure of the cycle [Pa] (1.7 bar in the original)"
+P_5 = P_low            "[Pa]"
+x_5 = x_2              "ammonia mass fraction of the refrigerant [kg/kg]"
+h_5 = h_4              "isenthalpic throttling [J/kg]"
+T_5 = TEMPERATURE(NH3H2O,P=P_5,X=x_5,H=h_5)  "[C]"
+s_5 = ENTROPY(NH3H2O,P=P_5,X=x_5,H=h_5)      "[J/kg-K]"
+
+"!Evaporator"
+T_6 = -1               "evaporator outlet (refrigerant) temperature [C] (TK(-1) in the original)"
+P_6 = P_low            "[Pa]"
+x_6 = x_2              "ammonia mass fraction of the refrigerant [kg/kg]"
+h_6 = ENTHALPY(NH3H2O,T=T_6,P=P_6,X=x_6)     "[J/kg]"
+s_6 = ENTROPY(NH3H2O,T=T_6,P=P_6,X=x_6)      "[J/kg-K]"
+Q_evap = m_dot_2*(h_6 - h_5)                 "evaporator heat rate [W]"
+T_min = TEMPERATURE(NH3H2O,P=P_low,X=x_2,Q=1)   "temperature at which all of the refrigerant is vapour [C] (as in the original)"
+
+"!Absorber"
+T_7 = 27               "absorber outlet (strong solution) temperature [C] (TK(27) in the original)"
+P_7 = P_low            "[Pa]"
+x_7 = x_1              "ammonia mass fraction of the strong solution [kg/kg]"
+h_7 = ENTHALPY(NH3H2O,T=T_7,P=P_7,X=x_7)     "[J/kg]"
+s_7 = ENTROPY(NH3H2O,T=T_7,P=P_7,X=x_7)      "[J/kg-K]"
+h_9 = h_10             "isenthalpic expansion of the weak solution [J/kg]"
+h_6*m_dot_2 + h_10*m_dot_3 - Q_abs = h_7*m_dot_1   "energy balance [W]"
+
+"!Solution heat exchanger (generator heat exchanger, as in the original)"
+h_7 = h_8              "neglect pump work [J/kg]"
+m_dot_1*(h_1 - h_8) = m_dot_3*(h_3 - h_e)    "solution heat exchanger balance [W]"
+P_9 = P_high           "[Pa]"
+x_9 = x_3              "ammonia mass fraction of the weak solution [kg/kg]"
+h_9 = h_e              "[J/kg]"
+T_9 = TEMPERATURE(NH3H2O,P=P_9,X=x_9,H=h_9)  "[C]"
+s_9 = ENTROPY(NH3H2O,P=P_9,X=x_9,H=h_9)      "[J/kg-K]"
+T_m_9 = T_7            "T_7 is the lowest possible temperature at state 9 [C] (as in the original)"
+h_m_9 = ENTHALPY(NH3H2O,T=T_m_9,P=P_high,X=x_3)   "[J/kg]"
+epsilon = (h_3 - h_e)/(h_3 - h_m_9)               "effectiveness of the solution heat exchanger"
+
+"!Overall"
+COP = Q_evap/Q_gen     "coefficient of performance of the cycle"
+CheckQ = Q_gen + Q_evap - Q_abs - Q_cond     "check of the overall energy balance [W]"
+
+"!State points for the thermodynamic diagrams"
+P[1] = P_1
+T[1] = T_1
+x[1] = x_1
+h[1] = h_1
+s[1] = s_1
+P[2] = P_2
+T[2] = T_2
+x[2] = x_2
+h[2] = h_2
+s[2] = s_2
+P[3] = P_3
+T[3] = T_3
+x[3] = x_3
+h[3] = h_3
+s[3] = s_3
+P[4] = P_4
+T[4] = T_4
+x[4] = x_4
+h[4] = h_4
+s[4] = s_4
+P[5] = P_5
+T[5] = T_5
+x[5] = x_5
+h[5] = h_5
+s[5] = s_5
+P[6] = P_6
+T[6] = T_6
+x[6] = x_6
+h[6] = h_6
+s[6] = s_6
+P[7] = P_7
+T[7] = T_7
+x[7] = x_7
+h[7] = h_7
+s[7] = s_7
+P[8] = P_high
+x[8] = x_1
+h[8] = h_8
+T[8] = TEMPERATURE(NH3H2O,P=P[8],X=x[8],H=h[8])
+s[8] = ENTROPY(NH3H2O,P=P[8],X=x[8],H=h[8])
+P[9] = P_9
+T[9] = T_9
+x[9] = x_9
+h[9] = h_9
+s[9] = s_9
+P[10] = P_low
+x[10] = x_3
+h[10] = h_10
+T[10] = TEMPERATURE(NH3H2O,P=P[10],X=x[10],H=h[10])
+s[10] = ENTROPY(NH3H2O,P=P[10],X=x[10],H=h[10])

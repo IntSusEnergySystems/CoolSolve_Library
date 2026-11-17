@@ -310,3 +310,11 @@ or paper quoted in its comment block (Bergman, Lavine, Incropera & DeWitt,
   which set the layout of this file.
 - `sources/labothappy` LTP-047 (pipe heat loss): an application model that
   could use `R_cylinder` and `S_isothermal_pipe_to_plane` from this file.
+- `CSL-0340` *transient_conduction_plane_wall*: the **transient** counterpart
+  of the steady plane-wall relations of this file (separation-of-variables
+  series, eigenvalues `tan(zeta) = Bi/zeta`, comparison with the
+  semi-infinite-wall solution).
+- `CSL-0341` *conduction_2d_square_plate*: the **two-dimensional** steady
+  counterpart of these one-dimensional relations: a discretised temperature
+  field of a square plate (two edges at 100 C, one at 0 C, one insulated),
+  which a resistance or a shape factor cannot give.

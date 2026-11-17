@@ -1,0 +1,53 @@
+{
+  "id": "CSL-0350",
+  "name": "curzon_ahlborn_max_power",
+  "title": "Endoreversible Carnot engine at maximum power (Curzon-Ahlborn)",
+  "summary": "Heat-transfer-limited (endoreversible) Carnot engine between two reservoirs: the cycle temperatures that maximise the power output follow from the Lagrange undetermined-multiplier equations of the original ($ifnot MinMax branch, solved as a square steady system). At the optimum the efficiency is 1 - sqrt(T_L/T_H) whatever the conductances.",
+  "kind": "steady",
+  "level": 2,
+  "status": "verified",
+  "main_file": "curzon_ahlborn_max_power.eescode",
+  "fluids": [],
+  "tags": [
+    "Carnot",
+    "endoreversible",
+    "maximum power",
+    "Curzon-Ahlborn",
+    "finite-time thermodynamics",
+    "Lagrange multipliers"
+  ],
+  "language_features": [
+    "$if/$ifnot directive",
+    "backslash variable names"
+  ],
+  "stats": {"n_equations": 17, "largest_block": 9},
+  "origin": {
+    "type": "software_library",
+    "source": "ees_examples",
+    "source_path": "",
+    "candidate_id": "EEX-036",
+    "authors": ["S.A. Klein / F-Chart Software"],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/uncategorized/maxpower1.ees",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": ""
+  },
+  "verification": {
+    "summary": "No stored solution exists in the plain-text source. The solved model was checked analytically: eta agrees with 1 - sqrt(T_L/T_H) to 3.29e-11 absolute (6.36e-11 relative) and W_dot equals Q_dot_H - Q_dot_L to 0.00e+00 W (machine precision). T_1, T_2, W_dot and eta also match the closed-form Curzon-Ahlborn optimum with unequal conductances to 8 significant digits.",
+    "checks": ["analytical", "energy-balance"],
+    "reference": "Closed-form Curzon-Ahlborn efficiency eta = 1 - sqrt(T_L/T_H) and the closed-form optimum of the conductance-limited engine; energy balance of the cycle",
+    "date": "2026-11-15",
+    "coolsolve_version": "0.4.0@00a4daa",
+    "max_rel_diff": 6.36e-11,
+    "notes": "Residuals: |eta - (1-sqrt(T_L/T_H))| = 3.29e-11 (relative 6.36e-11); |W_dot - (Q_dot_H-Q_dot_L)| = 0.00e+00 W. Analytical optimum T_1 = (A*T_H + B*sqrt(T_H*T_L))/(A+B), T_2 = T_1*sqrt(T_L/T_H): 712.376276 / 203.678426 degC, W 400639.4 W, eta 0.51616873 - all match the .sol."
+  },
+  "missing_features": [],
+  "related": ["CSL-0359"],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {"date": "2026-11-15", "action": "added", "by": "glm (opencode worker, card C-519) for S. Quoilin"}
+  ]
+}

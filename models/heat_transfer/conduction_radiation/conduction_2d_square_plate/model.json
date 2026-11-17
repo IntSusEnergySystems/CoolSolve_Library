@@ -1,0 +1,72 @@
+{
+  "id": "CSL-0341",
+  "name": "conduction_2d_square_plate",
+  "title": "Two-dimensional steady conduction in a square plate",
+  "summary": "Finite-difference solution of the 2-D steady conduction equation in a square plate: the temperature of every node of a (N+2)x(N+2) grid is the average of its four neighbours, with two edges at 100 C, one edge at 0 C and one insulated.",
+  "kind": "steady",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "conduction_2d_square_plate.eescode",
+  "fluids": [],
+  "tags": [
+    "conduction",
+    "two-dimensional conduction",
+    "square plate",
+    "finite differences",
+    "discretisation",
+    "insulated boundary",
+    "arrays"
+  ],
+  "language_features": [
+    "DUPLICATE loops",
+    "nested DUPLICATE loops",
+    "arrays"
+  ],
+  "stats": {
+    "n_equations": 730,
+    "largest_block": 650
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_library",
+    "source_path": "~/Nextcloud/thermo_models/EES_library/2-D Conduction.EES",
+    "candidate_id": "EEL-009",
+    "authors": [
+      "S. A. Klein (University of Wisconsin-Madison)"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/2-d_conduction.ees",
+    "license": "MIT",
+    "ees_version": "X8.821",
+    "language": "en",
+    "course": "",
+    "notes": "EES example of F-Chart Software, distributed by the EES-Community/ees-examples repository (commit 5c703d0, folder Case_Study/). EES ID stamp: EES licence #0001: For use only by Professor S.A. Klein University of Wisconsin - Madison klein. Credit: (c) F-Chart Software / S. A. Klein, MIT via EES-Community/ees-examples. The byte-identical copy 2-D Conduction (1).EES of the same folder is inventory row EEL-008."
+  },
+  "verification": {
+    "summary": "Runnable variant vs the solution stored in the original EES file: 730 common variables, 0 differ (rtol=0.001), largest relative deviation 1.6e-08. The discrete energy balance of the plate closes to 9e-12 and the boundary conditions are met exactly. The native file is blocked by CS-GAP-INDEX-VAR.",
+    "checks": ["ees-stored-solution", "energy-balance"],
+    "reference": "EES stored solution of ~/Nextcloud/thermo_models/EES_library/2-D Conduction.EES (730 decoded variables: the 729 node temperatures and N); discrete energy balance of the plate and boundary conditions checked by hand on the CoolSolve solution; grid-convergence check with N = 51",
+    "date": "2026-11-12",
+    "coolsolve_version": "0.4.0@cc582a6",
+    "max_rel_diff": 1.63e-08,
+    "notes": "compare_solution.py (runnable variant vs the EES stored solution): 730 common variables, 0 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 0. Largest relative deviation 1.63e-08 (T[23,26] and T[23,25], 13.71 C); the same order (1.6e-08) on every node, from the six significant digits of the EES display format. The system is linear and converges in 2 iterations; the .initials file (the EES values) is not needed. Grid refinement to N = 51 moves a node temperature by at most 0.04 K."
+  },
+  "missing_features": [
+    "CS-GAP-INDEX-VAR"
+  ],
+  "related": [
+    "CSL-0106",
+    "CSL-0340"
+  ],
+  "related_external": [
+    "CoolSolve examples: none; the plain-text mirror of the source example is in the EES-Community/ees-examples repository (Case_Study/2-d_conduction.ees, commit 5c703d0)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-12",
+      "action": "added (T-IMPORT card C-513, candidate EEL-009 of the ees_library triage); native file blocked by CS-GAP-INDEX-VAR, runnable variant conduction_2d_square_plate_coolsolve.eescode verified against the EES stored solution",
+      "by": "opencode worker (t272) for S. Quoilin"
+    }
+  ]
+}

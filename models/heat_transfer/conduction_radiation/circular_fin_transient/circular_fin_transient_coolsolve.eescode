@@ -1,0 +1,79 @@
+{=============================================================================
+  Transient temperature distribution in a 1-D circular fin - runnable variant
+  CoolSolve Library model CSL-0349 (variant of circular_fin_transient)
+  -----------------------------------------------------------------------------
+  Same model as the native file circular_fin_transient.eescode: the transient
+  temperature distribution in a 1-D circular fin discretised into 11 nodes and
+  integrated in time.  The changes below are the ones the gaps of the native
+  file force, plus a post-processing block:
+    - CS-GAP-INTEGRAL-DUPLICATE: the 11 integral equations, written inside a
+      DUPLICATE loop in the original, are written one by one here;
+    - CS-GAP-INDEX-VAR: the node indices N and N-1 of the last node are
+      written 11 and 10; N itself stays 11;
+    - the range of the $IntegralTable directive is written with the literal
+      bounds 1..11 (CoolSolve does not expand a range whose bound is a
+      variable: it warns and leaves the column empty);
+    - a post-processing block adds the energy balance of the fin (E_in,
+      E_stored, E_conv); it does not change the physics of the model.
+  The node-position loop (x[i]) and the loop of the initial temperatures are
+  not unrolled.  No CoolSolve-only syntax is used here.
+  Units  : SI - temperatures in °C, energies in J, lengths in m
+  Source : S. A. Klein, F-Chart Software, EES example "1-d transient
+           conduction" (MIT, via EES-Community/ees-examples) - see README.md
+  Status : verified (energy balance, see README.md)
+=============================================================================}
+
+"Inputs"
+q_dot = 0.5 [W]           "heat transfer to fin base [W]"
+T_infinity = 20 [C]       "ambient temperature [°C]"
+h_bar = 50 [W/m2-K]       "heat transfer coefficient [W/m2-K]"
+rho = 4000 [kg/m3]        "density of the fin [kg/m3]"
+k = 10 [W/m-K]            "conductivity of the fin [W/m-K]"
+c = 400 [J/kg-K]          "specific heat capacity of the fin [J/kg-K]"
+L = 0.03 [m]              "fin length [m] (3 cm in the original)"
+D = 0.003 [m]             "fin diameter [m] (3 mm in the original)"
+
+"Derived quantities"
+alpha = k/(rho*c)         "thermal diffusivity [m2/s]"
+Ac = pi*D^2/4             "cross-sectional area [m2]"
+per = pi*D                "perimeter [m]"
+
+"Discretisation of the fin"
+N = 11                    "number of nodes [-]"
+DUPLICATE i=1,N
+  x[i] = (i-1)*L/(N-1)      "position of each node [m]"
+END
+Dx = L/(N-1)              "distance between nodes [m]"
+
+DUPLICATE i=1,N
+  T_ini[i] = T_infinity    "initial temperature of the nodes [°C]"
+END
+
+"Time derivatives of the node temperatures"
+dTdt[1] = 2*alpha*(T[2]-T[1])/Dx^2 + h_bar*per*(T_infinity-T[1])/(Ac*rho*c) + 2*q_dot/(rho*c*Ac*Dx)
+DUPLICATE i=2,(N-1)
+  dTdt[i] = alpha*(T[i+1]+T[i-1]-2*T[i])/Dx^2 + h_bar*per*(T_infinity-T[i])/(Ac*rho*c)
+END
+dTdt[11] = 2*alpha*(T[10]-T[11])/Dx^2 + h_bar*per*(T_infinity-T[11])/(Ac*rho*c)
+
+"Integration in time"
+t_sim = 50 [s]
+T[1] = T_ini[1] + Integral(dTdt[1], time, 0, t_sim)
+T[2] = T_ini[2] + Integral(dTdt[2], time, 0, t_sim)
+T[3] = T_ini[3] + Integral(dTdt[3], time, 0, t_sim)
+T[4] = T_ini[4] + Integral(dTdt[4], time, 0, t_sim)
+T[5] = T_ini[5] + Integral(dTdt[5], time, 0, t_sim)
+T[6] = T_ini[6] + Integral(dTdt[6], time, 0, t_sim)
+T[7] = T_ini[7] + Integral(dTdt[7], time, 0, t_sim)
+T[8] = T_ini[8] + Integral(dTdt[8], time, 0, t_sim)
+T[9] = T_ini[9] + Integral(dTdt[9], time, 0, t_sim)
+T[10] = T_ini[10] + Integral(dTdt[10], time, 0, t_sim)
+T[11] = T_ini[11] + Integral(dTdt[11], time, 0, t_sim)
+
+"Energy balance of the fin (post-processing block, see README.md)"
+E_in = q_dot*t_sim   "energy supplied at the base over the simulation [J]"
+E_stored = rho*c*Ac*Dx*(0.5*(T[1]-T_infinity) + SUM(T[i]-T_infinity, i=2,10) + 0.5*(T[11]-T_infinity))   "energy stored in the fin at the end of the simulation [J]"
+E_conv = 0 + Integral(h_bar*per*Dx*(0.5*(T[1]-T_infinity) + SUM(T[i]-T_infinity, i=2,10) + 0.5*(T[11]-T_infinity)), time, 0, t_sim)   "heat convected to the air over the simulation [J]"
+E_balance = E_in - (E_stored + E_conv)   "closure error of the energy balance [J]"
+
+$IntegralTable time, T[1..11]

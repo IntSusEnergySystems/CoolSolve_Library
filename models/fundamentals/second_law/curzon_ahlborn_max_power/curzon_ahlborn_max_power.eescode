@@ -1,0 +1,45 @@
+{=============================================================================
+  Endoreversible Carnot engine at maximum power (Curzon-Ahlborn)
+  CoolSolve Library model CSL-0350
+ -----------------------------------------------------------------------------
+  Heat-transfer-limited Carnot cycle: internally reversible, but heat is
+  exchanged with the hot and cold reservoirs at finite rates through the
+  overall conductances A and B. The cycle temperatures T_1 and T_2 that
+  maximise the power output are found with the Lagrange undetermined
+  multiplier method (the $ifnot MinMax branch of the original, solved as a
+  square steady system). At the optimum the efficiency is
+  1 - sqrt(T_L/T_H), independent of A and B.
+
+  Inputs : T_H, T_L (reservoir temperatures), A, B (overall conductances)
+  Outputs: T_1, T_2, Q_dot_H, Q_dot_L, W_dot, eta
+  Units  : SI - temperatures in °C, powers in W
+  Source : EES example maxpower1.ees, S.A. Klein / F-Chart Software (MIT)
+           - see README.md
+=============================================================================}
+
+"Data (the original reservoir temperatures are 1273 K and 298 K)"
+T_H = 999.85 [C]   "hot reservoir temperature [°C]; 1273 K in the original"
+T_L = 24.85 [C]    "cold reservoir temperature [°C]; 298 K in the original"
+A = 2700 [W/K]     "overall conductance of the high-temperature heat exchanger [W/K]; 2.7 kW/K in the original"
+B = 2100 [W/K]     "overall conductance of the low-temperature heat exchanger [W/K]; 2.1 kW/K in the original"
+
+"Heat transfer with the reservoirs, as in the original"
+Q_dot_H = A*(T_H - T_1)   "heat transfer rate to the engine [W]; T_1 is the high temperature in the cycle"
+Q_dot_L = B*(T_2 - T_L)   "heat transfer rate from the engine [W]; T_2 is the low temperature in the cycle"
+
+"Engine"
+W_dot = Q_dot_H - Q_dot_L   "energy balance; W_dot is the power of the cycle [W]"
+eta = W_dot/Q_dot_H   "definition of the thermal efficiency"
+eta = 1 - (T_2 + 273.15)/(T_1 + 273.15)   "efficiency of a Carnot cycle operating between T_1 and T_2 (absolute temperatures)"
+eta_Carnot = 1 - (T_L + 273.15)/(T_H + 273.15)   "efficiency of a Carnot cycle without heat-transfer concerns"
+
+"Lagrange undetermined multiplier method, as in the original"
+$ifnot MinMax   "solve using Lagrange Undetermined Multiplier method"
+	dW\dT1 = -A   "derivative of the power W_dot with respect to T_1 [W/K]"
+	dW\dT2 = -B   "derivative of the power W_dot with respect to T_2 [W/K]"
+	psi = Q_dot_L/Q_dot_H - (T_2 + 273.15)/(T_1 + 273.15)   "constraint of the optimum, from W_dot/Q_dot_H = 1 - T_2/T_1"
+	dpsi\dT1 = B*(T_2 - T_L)/A/(T_H - T_1)^2 + (T_2 + 273.15)/(T_1 + 273.15)^2   "derivative of the constraint wrt T_1 [1/K]"
+	dpsi\dT2 = B/A/(T_H - T_1) - 1/(T_1 + 273.15)   "derivative of the constraint wrt T_2 [1/K]"
+	dW\dT1 + lambda*dpsi\dT1 = 0   "stationarity of the Lagrangian wrt T_1"
+	dW\dT2 + lambda*dpsi\dT2 = 0   "stationarity of the Lagrangian wrt T_2"
+$endif

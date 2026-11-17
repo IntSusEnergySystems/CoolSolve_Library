@@ -1,0 +1,75 @@
+{
+  "id": "CSL-0353",
+  "name": "bent_beam_actuator",
+  "title": "Transient response of a bent-beam electrothermal actuator",
+  "summary": "Joule-heated bent-beam actuator discretised into six nodes along one side of the beam: transient nodal energy balances (conduction, uniform Joule generation, convection) integrated over 25 ms, apex displacement from the thermal elongation, compared with the analytical fin solution of example 1.7-1.",
+  "kind": "dynamic",
+  "level": 3,
+  "status": "blocked",
+  "main_file": "bent_beam_actuator.eescode",
+  "fluids": [],
+  "tags": [
+    "conduction",
+    "transient",
+    "discretised",
+    "Joule heating",
+    "electrothermal actuator",
+    "thermal expansion",
+    "fin",
+    "exercise"
+  ],
+  "language_features": [
+    "DUPLICATE",
+    "INTEGRAL",
+    "$IntegralTable",
+    "CONVERT",
+    "ConvertTemp",
+    "line continuation & (not supported by CoolSolve)",
+    "array elements indexed by a variable outside loops (not supported by CoolSolve)"
+  ],
+  "stats": {
+    "n_equations": 63,
+    "largest_block": 0
+  },
+  "origin": {
+    "type": "textbook",
+    "source": "ees_examples",
+    "source_path": "",
+    "candidate_id": "EEX-019",
+    "authors": [
+      "G. F. Nellis",
+      "S. A. Klein"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/uncategorized/example_3.8-1_transient_response_of_a_bent-beam_actuator.ees",
+    "license": "MIT",
+    "ees_version": "X11.911",
+    "language": "en",
+    "course": "",
+    "notes": "Example 3.8-1 of Nellis & Klein, Heat Transfer, Cambridge University Press, 2009, from the EES example set of F-Chart Software (raw example: https://fchartsoftware.com/ees/examples/examples_heat_transfer_2009/chapter%203/example%203.8-1%20transient%20response%20of%20a%20bent-beam%20actuator.eez, saved by EES X11.911). Plain-text mirror published under MIT by EES-Community/ees-examples (commit 5c703d0); the stored solution was extracted from ees-examples-raw/uncategorized/example_3.8-1_transient_response_of_a_bent-beam_actuator.eez of the same repository."
+  },
+  "verification": {
+    "summary": "Runnable variant, temperatures in °C, compared with the EES stored solution (.eez, --ees-units): 64 common variables, 5 differ. Stored temperatures and the apex displacement agree (the temperature diffs are below 0.001). The five stored dTdt differ by 9.07e-03 relative: conduction and Joule terms of about 2.4e5 K/s nearly cancel.",
+    "checks": ["ees-stored-solution"],
+    "reference": "Stored solution of ees-examples-raw/uncategorized/example_3.8-1_transient_response_of_a_bent-beam_actuator.eez (EES-Community/ees-examples), extracted with tools/ees_extract.py",
+    "date": "2026-11-15",
+    "coolsolve_version": "0.4.0@00a4daa",
+    "max_rel_diff": 0.00907,
+    "notes": "compare_solution.py vs the stored CSV: 64 common variables, 5 differ (rtol=0.001), all five the dTdt rates at 9.07e-03; only in EES: 6 (the five variables of the dead commented block and the loop index i, stored as inf); only in CoolSolve: pi. Verified criterion of the card: stored temperatures (max 2.3e-7) and apex displacement (3.0e-7) agree."
+  },
+  "missing_features": [
+    "CS-GAP-INTEGRAL-DUPLICATE",
+    "CS-GAP-LINE-CONTINUATION",
+    "CS-GAP-INDEX-VAR"
+  ],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-15",
+      "action": "added (T-IMPORT card C-519, candidate EEX-019 of the ees_examples inventory); native file blocked by CS-GAP-INTEGRAL-DUPLICATE, CS-GAP-LINE-CONTINUATION and CS-GAP-INDEX-VAR, runnable variant bent_beam_actuator_coolsolve.eescode verified against the EES stored solution",
+      "by": "opencode worker (t313) for S. Quoilin"
+    }
+  ]
+}

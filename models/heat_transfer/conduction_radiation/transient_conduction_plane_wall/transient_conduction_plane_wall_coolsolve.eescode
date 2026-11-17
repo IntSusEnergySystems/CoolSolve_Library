@@ -1,0 +1,60 @@
+{=============================================================================
+  Transient conduction in a plane wall with a convective boundary condition
+  CoolSolve Library model CSL-0340 - runnable variant
+ -----------------------------------------------------------------------------
+  Same model as transient_conduction_plane_wall.eescode (the native file),
+  with one change forced by the CoolSolve bug CS-BUG-UNARY-POW: the power
+  -zeta[i]^2 (EES: -(zeta[i]^2)) is written -(zeta[i]^2*Fo), which both
+  EES and CoolSolve read as -(zeta[i]^2*Fo).  No other equation, input or
+  variable name is changed; the file is valid EES.
+
+  Inputs : Tinf, Tin [C]; h [W/m^2-K]; k [W/m-K]; a [m]; rho [kg/m^3];
+           c [J/kg-K]; t [s]
+  Outputs: Fo [-], theta_t [-], theta_si [-]
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : S. A. Klein (Univ. of Wisconsin-Madison), F-Chart Software EES
+           example - see README.md
+  Status : verified against the solution stored in the original EES file
+           (README.md, "Verification")
+=============================================================================}
+
+"!Problem data"
+Tinf=100 [C]  "ambient temperature"
+Tin=10 [C]  "initial temperature"
+h=20 [W/m^2-K]  "heat transfer coefficient"
+k=1 [W/m-K]  "thermal conductivity"
+a=0.05 [m]  "half-width of wall"
+rho=4000 [kg/m^3]  "density"
+c=350 [J/kg-K]  "specific heat capacity"
+t=17500 [s]  "elapsed time since the boundary condition was applied"
+
+alpha=k/(rho*c)  "thermal diffusivity [m^2/s]"
+Bi=h*a/k  "Biot number"
+
+Nterm=10  "number of terms to use in solution"
+
+"!Eigenvalues: the i'th root of tan(zeta) = Bi/zeta, searched in the
+ interval ((i-1)*pi, (i-1)*pi + pi/2); the trig arguments are converted
+ from radians (EES setting) to degrees, the unit system of CoolSolve"
+duplicate i=1,Nterm
+	lowerlimit[i]=(i-1)*pi  "lower limit to use for the i'th eigenvalue"
+	upperlimit[i]=lowerlimit[i]+pi/2  "upper limit to use for the i'th eigenvalue"
+	guess[i]=lowerlimit[i]+pi/4  "guess value to use for the i'th eigenvalue"
+	tan(zeta[i]*180/pi)=Bi/zeta[i]  "eigenvalue equation"
+end
+
+xbar=0.0  "dimensionless axial location"
+{Fo=0.05}  "Fourier number, dimensionless time (alternative to the time t)"
+
+Fo=alpha*t/a^2  "used to determine actual time [s]"
+x=xbar*a  "used to determine actual axial location [m]"
+
+"!Dimensionless temperature of the wall, as a series of Nterm terms"
+duplicate i=1,Nterm
+	C[i]=4*sin(zeta[i]*180/pi)/(2*zeta[i]+sin(2*zeta[i]*180/pi))  "constant for the i'th term"
+	theta[i]=C[i]*exp(-(zeta[i]^2*Fo))*cos(zeta[i]*xbar*180/pi)  "i'th term in solution"
+end
+theta_t=sum(theta[1..Nterm])  "sum of all terms"
+
+"semi-infinite body solution"
+theta_si=1-(erfc((a-x)/sqrt(4*alpha*t))-exp(h*(a-x)/k+(h/k)^2*alpha*t)*erfc((a-x)/sqrt(4*alpha*t)+h*sqrt(alpha*t)/k))

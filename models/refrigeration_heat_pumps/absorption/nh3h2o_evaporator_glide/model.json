@@ -1,0 +1,73 @@
+{
+  "id": "CSL-0362",
+  "name": "nh3h2o_evaporator_glide",
+  "title": "Evaporator temperature glide of ammonia-water (Herold et al., Example 9.1)",
+  "summary": "Three equilibrium states of an ammonia-water absorption system (Herold, Radermacher and Klein, Example 9.1): the desorber vapour in equilibrium with the rich solution (150 C, x = 0.3), the evaporator fed with saturated liquid of that composition at 0 C, and the saturated two-phase outlet with liquid mass fraction 0.25. Outputs: saturation pressures, vapour mass fractions, temperature glide (about 75 K) and outlet quality.",
+  "kind": "steady",
+  "level": 1,
+  "status": "verified",
+  "main_file": "nh3h2o_evaporator_glide.eescode",
+  "fluids": [
+    "NH3H2O"
+  ],
+  "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "temperature glide",
+    "evaporator",
+    "equilibrium",
+    "textbook example",
+    "exercise"
+  ],
+  "language_features": [
+    "NH3H2O fluid (three of T, P, X, Q)",
+    "arrays (state points)"
+  ],
+  "stats": {
+    "n_equations": 16,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_examples",
+    "source_path": "",
+    "candidate_id": "EEX-107",
+    "authors": [
+      "S. A. Klein (F-Chart Software)"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/ex9_1.ees",
+    "license": "MIT",
+    "ees_version": "X11.926",
+    "language": "en",
+    "course": "",
+    "notes": "Example 9.1 of Herold, Radermacher and Klein, Absorption Chillers and Heat Pumps, CRC Press, 2nd ed., 2015; EES example of F-Chart Software, distributed by the EES-Community/ees-examples repository (commit 5c703d0, folder Case_Study/). The .eez companion stores the binary .EES with the solution used as verification reference. Credit: (c) F-Chart Software / S. A. Klein, MIT via EES-Community/ees-examples."
+  },
+  "verification": {
+    "summary": "Solved in CoolSolve and compared with the EES stored solution (compare_solution.py --ees-units, 16 common variables): mass fractions y[1], y[2] agree within 0.02 %, y[3] 0.8 %, x_e2_min 3.4 %, temperatures/glide 0.9-3.1 %, Q[3] 1.1 %, pressures 1.9-4.3 % - the documented difference between the EES (Ibrahim-Klein) and CoolSolve (IAPWS G4-01) NH3H2O formulations.",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of the binary Ex9_1.EES inside ex9_1.eez (ees_variables.csv), compared with tools/compare_solution.py --ees-units",
+    "date": "2026-11-15",
+    "coolsolve_version": "0.4.0@a53de60",
+    "max_rel_diff": 0.0434,
+    "notes": "max_rel_diff is the maximum over all 16 common variables (P[1], 4.34e-02). The 'only in EES' records (Q[1], Q[2], T[4..6], P[4..6], x[4..6]) are stale records of variables the equations do not define. The evaporator mass balance closes in both tools (hand-checked)."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [
+    "EES-Community/ees-examples Case_Study ex9_1 to ex9_5 (single-stage NH3H2O absorption family, Herold chapter 9)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-15",
+      "action": "added (native file solves in CoolSolve; compared with the EES stored solution)",
+      "by": "GLM (zai) for S. Quoilin"
+    }
+  ]
+}

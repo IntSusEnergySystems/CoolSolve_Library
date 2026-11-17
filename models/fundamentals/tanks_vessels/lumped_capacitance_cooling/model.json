@@ -1,0 +1,71 @@
+{
+  "id": "CSL-0343",
+  "name": "lumped_capacitance_cooling",
+  "title": "Lumped-capacitance cooling of a sphere in a fluid",
+  "summary": "A solid sphere initially at 400 \u00b0C is cooled by convection to a fluid medium at 20 \u00b0C; the energy balance of the lump (a single thermal capacitance) is integrated in time with the EES Integral function and the closed-form solution of the same equation is computed beside it. The native file keeps the EES table-based two-argument Integral and is blocked by CS-GAP-INTEGRAL-2ARG; a runnable variant uses the equation-based Integral with explicit limits.",
+  "kind": "dynamic",
+  "level": 1,
+  "status": "blocked",
+  "main_file": "lumped_capacitance_cooling.eescode",
+  "fluids": [],
+  "tags": [
+    "lumped capacitance",
+    "transient cooling",
+    "convection",
+    "sphere",
+    "textbook ODE",
+    "EES example"
+  ],
+  "language_features": [
+    "INTEGRAL",
+    "exp"
+  ],
+  "stats": {
+    "n_equations": 12,
+    "largest_block": 2
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_library",
+    "source_path": "~/Nextcloud/thermo_models/EES_library/Difeqn1.ees",
+    "candidate_id": "EEL-049",
+    "authors": [
+      "S. A. Klein"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/difeqn1.ees",
+    "license": "MIT",
+    "ees_version": "X8.806",
+    "language": "en",
+    "course": "",
+    "notes": "Example of the EES example library (\u00a9 F-Chart Software); the plain-text mirror of the same file is published under MIT by EES-Community/ees-examples (commit 5c703d0, 2026-03-01), which is the source of the licence. The EES licence stamp of the file ({$ID$ #0001: For use only by Professor S.A. Klein University of Wisconsin - Madison klein}) identifies the licence holder, not the author of the model."
+  },
+  "verification": {
+    "summary": "The runnable variant was compared with the solution stored in the EES file (12 common variables, 2 differ at rtol=0.001): T 4.81e-03 and dTdt 6.68e-03, both from the coarse 100 s step of the EES table-based integral, while the closed form T_exact agrees to 1.26e-12. The 11-row trajectory agrees with the EES parametric table (T_exact to 1.9e-06).",
+    "checks": [
+      "ees-stored-solution",
+      "ees-parametric-table",
+      "analytical"
+    ],
+    "reference": "Solution and parametric table (11 rows) stored in ~/Nextcloud/thermo_models/EES_library/Difeqn1.ees; closed-form solution of the same ODE computed by the model itself",
+    "date": "2026-11-14",
+    "coolsolve_version": "0.4.0@cc582a6",
+    "max_rel_diff": 0.00668,
+    "notes": "compare_solution.py on the runnable variant against reference/ees_variables.csv: 12 common variables, 2 differ (rtol=0.001); only in EES: 0; only in CoolSolve: 2 (Time_final and pi). The deviations are the integration error of EES: the stored EES trajectory is the table-based integral marched with a 100 s step (the trapezoidal rule with that step reproduces the 11 values of the EES parametric table to 1.2e-09 relative), which lies 0.063 % below the closed form at 100 s and 0.48 % at 1000 s. The variant integrates with RK4 (1 s steps) and follows the closed form to 1.6e-10 at 1000 s. Analytical check: T_exact(1000 s) = 20 + 380*exp(-0.002*1000) = 71.42740763 \u00b0C (EES and CoolSolve)."
+  },
+  "missing_features": [
+    "CS-GAP-INTEGRAL-2ARG"
+  ],
+  "related": [
+    "CSL-0042"
+  ],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-14",
+      "action": "added (T-IMPORT card C-517, candidate EEL-049 of the ees_library triage)",
+      "by": "opencode worker (t275) for S. Quoilin"
+    }
+  ]
+}

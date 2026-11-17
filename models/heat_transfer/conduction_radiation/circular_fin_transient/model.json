@@ -1,0 +1,70 @@
+{
+  "id": "CSL-0349",
+  "name": "circular_fin_transient",
+  "title": "Transient temperature distribution in a 1-D circular fin",
+  "summary": "Transient temperature field of a straight circular fin (3 cm long, 3 mm diameter) discretised into 11 finite-volume nodes and integrated in time: a constant heat flow of 0.5 W enters the base, the fin loses heat to the ambient air by convection, and the temperature of the 11 nodes is tabulated along the trajectory.",
+  "kind": "dynamic",
+  "level": 2,
+  "status": "blocked",
+  "main_file": "circular_fin_transient.eescode",
+  "fluids": [],
+  "tags": [
+    "conduction",
+    "transient conduction",
+    "circular fin",
+    "extended surface",
+    "finite volume",
+    "integral",
+    "trajectory"
+  ],
+  "language_features": [
+    "DUPLICATE loops",
+    "arrays",
+    "INTEGRAL",
+    "$IntegralTable",
+    "SUM over an array range"
+  ],
+  "stats": {
+    "n_equations": 62,
+    "largest_block": 1
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_examples",
+    "source_path": "",
+    "candidate_id": "EEX-448",
+    "authors": [
+      "S. A. Klein (University of Wisconsin-Madison)"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Integral/1-d_transient_conduction.ees",
+    "license": "MIT",
+    "ees_version": "",
+    "language": "en",
+    "course": "",
+    "notes": "EES example of F-Chart Software, distributed by the EES-Community/ees-examples repository (commit 5c703d0, folder Integral/). Plain-text export of the EES equations window: it stores no solution and has no .eez companion, so no EES reference could be extracted. Credit: (c) F-Chart Software / S. A. Klein, MIT via EES-Community/ees-examples. The file itself names no author; the attribution follows the credit of the collection and the authors column of the inventory row EEX-448."
+  },
+  "verification": {
+    "summary": "No EES reference exists (plain-text source, no stored solution). The runnable variant was checked with the energy balance of the fin: 25 J supplied = 10.506 J stored + 14.494 J convected to the air, closure 3.4e-13 J; the convected heat recomputed by trapezoidal integration of the tabulated trajectory agrees to 2.9e-7, and doubling the integration step changes no temperature.",
+    "checks": ["energy-balance", "analytical"],
+    "reference": "energy balance of the fin computed by the model (post-processing block of the variant) and recomputed by trapezoidal integration of the trajectory circular_fin_transient_coolsolve-integral.csv; limiting case q*t/(rho*c*V) = 73.68 K computed by hand",
+    "date": "2026-11-15",
+    "coolsolve_version": "0.4.0@00a4daa",
+    "max_rel_diff": 2.9e-07,
+    "notes": "Energy balance of the variant at t = 50 s: E_in = q_dot*t_sim = 25.000000 J, E_stored = 10.505827 J, E_conv = 14.494174 J, closure error -3.4e-13 J (1.3e-14 relative). Trapezoidal integration of the 1001-row trajectory gives E_conv = 14.494169 J (2.9e-07 relative, quadrature error). Time-step refinement (1000 -> 2000 steps): T[1] = 102.7823538774 degC in both runs, all temperatures identical to 10 significant digits. The native file is blocked by CS-GAP-INTEGRAL-DUPLICATE and CS-GAP-INDEX-VAR and was not verified."
+  },
+  "missing_features": [
+    "CS-GAP-INTEGRAL-DUPLICATE",
+    "CS-GAP-INDEX-VAR"
+  ],
+  "related": [],
+  "related_external": [],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-15",
+      "action": "added (T-IMPORT card C-519 of roadmap.md section 6); native file blocked by CS-GAP-INTEGRAL-DUPLICATE and CS-GAP-INDEX-VAR, runnable _coolsolve variant verified by the energy balance of the fin",
+      "by": "opencode worker for S. Quoilin"
+    }
+  ]
+}

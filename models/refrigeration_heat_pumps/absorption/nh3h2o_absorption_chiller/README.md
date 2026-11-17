@@ -127,3 +127,4 @@ Properties: IAPWS Guideline G4-01 (2001), the formulation of R. Tillner-Roth and
 ## Related models
 
 - `CSL-0043` (LiBr-water absorption chiller with a solution heat exchanger): the same cycle family with the other working pair (LiBr-H2O, no rectifier).
+- `CSL-0347` (*nh3h2o_absorption_ideal*): the simpler single-effect NH3-H2O cycle of the EES example Absorp.ees (no rectifier, pump work neglected, no refrigerant heat exchanger, SHX effectiveness computed), same pressure level.

@@ -1,0 +1,60 @@
+{=============================================================================
+  Transient temperature distribution in a 1-D circular fin
+  CoolSolve Library model CSL-0349
+  -----------------------------------------------------------------------------
+  The temperature field of a straight circular fin is computed on 11 nodes:
+  the transient conduction equation is discretised in space (half a control
+  volume at the base, where the heat is injected, and at the adiabatic tip)
+  and integrated in time with the EES equation-based Integral function.  A
+  constant heat flow of 0.5 W enters the base; the fin loses heat to the air
+  by convection.  The trajectory of the 11 node temperatures is tabulated.
+  Inputs : q_dot, T_infinity, h_bar, rho, k, c, L, D, t_sim
+  Outputs: T[1..11] (temperature of the nodes), dTdt[1..11]
+  Units  : SI - temperatures in °C, energies in J, lengths in m
+  Source : S. A. Klein, F-Chart Software, EES example "1-d transient
+           conduction" (MIT, via EES-Community/ees-examples) - see README.md
+  Status : blocked by CS-GAP-INTEGRAL-DUPLICATE and CS-GAP-INDEX-VAR; the
+           runnable variant circular_fin_transient_coolsolve.eescode runs
+           (see README.md)
+=============================================================================}
+
+"Inputs"
+q_dot = 0.5 [W]           "heat transfer to fin base [W]"
+T_infinity = 20 [C]       "ambient temperature [°C]"
+h_bar = 50 [W/m2-K]       "heat transfer coefficient [W/m2-K]"
+rho = 4000 [kg/m3]        "density of the fin [kg/m3]"
+k = 10 [W/m-K]            "conductivity of the fin [W/m-K]"
+c = 400 [J/kg-K]          "specific heat capacity of the fin [J/kg-K]"
+L = 0.03 [m]              "fin length [m] (3 cm in the original)"
+D = 0.003 [m]             "fin diameter [m] (3 mm in the original)"
+
+"Derived quantities"
+alpha = k/(rho*c)         "thermal diffusivity [m2/s]"
+Ac = pi*D^2/4             "cross-sectional area [m2]"
+per = pi*D                "perimeter [m]"
+
+"Discretisation of the fin"
+N = 11                    "number of nodes [-]"
+DUPLICATE i=1,N
+  x[i] = (i-1)*L/(N-1)      "position of each node [m]"
+END
+Dx = L/(N-1)              "distance between nodes [m]"
+
+DUPLICATE i=1,N
+  T_ini[i] = T_infinity    "initial temperature of the nodes [°C]"
+END
+
+"Time derivatives of the node temperatures"
+dTdt[1] = 2*alpha*(T[2]-T[1])/Dx^2 + h_bar*per*(T_infinity-T[1])/(Ac*rho*c) + 2*q_dot/(rho*c*Ac*Dx)
+DUPLICATE i=2,(N-1)
+  dTdt[i] = alpha*(T[i+1]+T[i-1]-2*T[i])/Dx^2 + h_bar*per*(T_infinity-T[i])/(Ac*rho*c)
+END
+dTdt[N] = 2*alpha*(T[N-1]-T[N])/Dx^2 + h_bar*per*(T_infinity-T[N])/(Ac*rho*c)
+
+"Integration in time"
+t_sim = 50 [s]
+DUPLICATE i=1,N
+  T[i] = T_ini[i] + Integral(dTdt[i], time, 0, t_sim)
+END
+
+$IntegralTable time, T[1..N]

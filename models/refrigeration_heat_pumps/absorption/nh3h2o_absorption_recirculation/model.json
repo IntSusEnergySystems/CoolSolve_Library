@@ -1,0 +1,77 @@
+{
+  "id": "CSL-0354",
+  "name": "nh3h2o_absorption_recirculation",
+  "title": "Single-stage ammonia-water absorption cycle with absorber recirculation and condensate precooler",
+  "summary": "Single-stage NH3H2O absorption refrigeration cycle, Herold, Radermacher and Klein Example 9.6: condensate precooler between the condenser and evaporator outlets, absorber solution recirculation heated to the poor-solution saturation temperature (state 15), and preheating of the rich solution by the rectifier coolant; all 16 state points, the component heat rates and the COP are computed.",
+  "kind": "steady",
+  "level": 3,
+  "status": "verified",
+  "main_file": "nh3h2o_absorption_recirculation.eescode",
+  "fluids": [
+    "NH3H2O"
+  ],
+  "tags": [
+    "absorption",
+    "ammonia-water",
+    "NH3H2O",
+    "single-stage",
+    "absorber recirculation",
+    "condensate precooler",
+    "rectifier",
+    "solution heat exchanger",
+    "COP",
+    "cycle",
+    "textbook example"
+  ],
+  "language_features": [
+    "NH3H2O fluid (any three of T, P, X, Q, H, S, U, V)",
+    "PROCEDURE shx (kept; Min() = smaller of two capacity rates)",
+    "arrays (state points)"
+  ],
+  "stats": {
+    "n_equations": 134,
+    "largest_block": 13
+  },
+  "origin": {
+    "type": "software_library",
+    "source": "ees_examples",
+    "source_path": "",
+    "candidate_id": "EEX-112",
+    "authors": [
+      "S. A. Klein (F-Chart Software)"
+    ],
+    "url": "https://github.com/EES-Community/ees-examples/blob/5c703d0/Case_Study/ex9_6.ees",
+    "license": "MIT",
+    "ees_version": "X11.926",
+    "language": "en",
+    "course": "",
+    "notes": "Example 9.6 of Herold, Radermacher and Klein, Absorption Chillers and Heat Pumps, CRC Press, 2nd ed., 2015; EES example of F-Chart Software, distributed by the EES-Community/ees-examples repository (commit 5c703d0, folder Case_Study/). The .eez companion stores the binary .EES with the solution used as verification reference. Credit: (c) F-Chart Software / S. A. Klein, MIT via EES-Community/ees-examples."
+  },
+  "verification": {
+    "summary": "The native file was solved in CoolSolve and compared with the EES stored solution (compare_solution.py --ees-units, 132 common variables): COP within 0.53 %, heat rates within 1.1 %, temperatures within 0.9 %, mass fractions within 3.4 %. Whole-cycle balance closes to 2.3e-7 W. Deviations explained by the NH3H2O property backend (identical calls differ up to 3.2 %); absolute h and s excluded (reference-state offsets).",
+    "checks": [
+      "ees-stored-solution",
+      "energy-balance",
+      "order-of-magnitude"
+    ],
+    "reference": "EES stored solution of the binary Ex9_6.EES inside ex9_6.eez (ees_variables.csv), compared with tools/compare_solution.py --ees-units; direct NH3H2O property calls at identical inputs quantify the backend difference",
+    "date": "2026-11-15",
+    "coolsolve_version": "0.4.0@00a4daa",
+    "max_rel_diff": 0.0334,
+    "notes": "Compared set: 132 common variables. Excluded: h[i], swp, s[i] (absolute NH3H2O enthalpy/entropy, different reference state in EES and CoolProp; the EES s[1..14], v[2..14] and Q[2]/Q[5]/Q[11]/Q[14] records are stale, the file computes none of them), checkQ (balance residual: EES 1.2e-4 W, CoolSolve 2.3e-7 W on 460 kW), cp_1011/cp_1314/cp_163 (reference units J/g-K not converted by --ees-units, CS-BUG-COMPARE-JGK; true diffs 3.8e-03, 5.1e-03, 2.1e-02). Max kept rel diff as printed: x[4] 3.34e-02; COP_1 5.27e-03; P_low 2.13e-02; Q_dot_evap 1.06e-02."
+  },
+  "missing_features": [],
+  "related": [],
+  "related_external": [
+    "EES-Community/ees-examples Case_Study ex9_1 to ex9_5 (single-stage NH3H2O absorption family, Herold chapter 9)"
+  ],
+  "supersedes": [],
+  "previous_paths": [],
+  "history": [
+    {
+      "date": "2026-11-15",
+      "action": "added (native file solves in CoolSolve; compared with the EES stored solution)",
+      "by": "GLM (zai) for S. Quoilin"
+    }
+  ]
+}

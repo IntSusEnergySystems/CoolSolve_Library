@@ -1,0 +1,40 @@
+{=============================================================================
+  Two-dimensional steady conduction in a square plate
+  CoolSolve Library model CSL-0341
+ -----------------------------------------------------------------------------
+  Finite-difference solution of the two-dimensional steady conduction
+  equation in a square plate: the temperature of every node of the grid is
+  the average of its four neighbours, with two edges at 100 C, one edge at
+  0 C and one insulated (no temperature gradient), as in the original.
+
+  Inputs : N (number of nodes in the X and Y directions) [-]
+  Outputs: T[i,j] (temperature of the node i,j) [C]
+  Units  : SI - temperatures in C, pressures in Pa, energies in J
+  Source : S. A. Klein (Univ. of Wisconsin-Madison), F-Chart Software EES
+           example - see README.md
+  Status : blocked by CS-GAP-INDEX-VAR (CoolSolve does not resolve an array
+           index that is an expression of a model variable: T[N+1,j] and
+           T[i,N+1]); the runnable variant
+           conduction_2d_square_plate_coolsolve.eescode changes only those
+           indices (see README.md)
+=============================================================================}
+
+"!Number of nodes in the X and Y directions"
+N=25  "number of nodes in the X and Y directions [-]"
+
+"!Energy balance on interior nodes.  Interior nodes run from 1 to N."
+duplicate i=1,N
+	duplicate j=1,n
+		T[i,j]=(T[i+1,j]+T[i-1,j]+T[i,j+1]+T[i,j-1])/4
+	end
+end
+
+"!Boundary conditions.  Boundary nodes are 0 and N+1."
+duplicate  i=0,N+1
+	T[i,0]=100          "left hand side set to 100 [C]"
+	T[i,N+1]=T[i,N]    "insulated right hand side - no temperature gradient"
+end
+duplicate j=1,N
+	T[0,j]=100          "bottom surface at 100 [C]"
+	T[N+1,j]=0          "top surface at 0 [C]"
+end
