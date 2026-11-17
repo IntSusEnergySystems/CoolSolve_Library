@@ -17,7 +17,7 @@ in [docs/taxonomy.md](docs/taxonomy.md).
 |---|---:|
 | Models (`library.json`) | 303 |
 | … verified / blocked / failing / modified (`runs` merged into `verified`, D15) | 284 / 18 / 1 / 0 |
-| … blocked with a runnable `_coolsolve` variant (with `.sol`) / not runnable at all | 14 / 4 (`CSL-0081`, `CSL-0040`, `CSL-0150`, `CSL-0264`); the 14 include `CSL-0155` and `CSL-0331` |
+| … blocked with a runnable `_coolsolve` variant (with `.sol`) / not runnable at all | 14 / 3 (`CSL-0081`, `CSL-0040`, `CSL-0264`; `CSL-0150` verified on 2026-11-16, §8); the 14 include `CSL-0155` and `CSL-0331` |
 | … steady / function / dynamic / optimization | 250 / 47 / 5 / 1 |
 | Functions and procedures (`library.json`) | 623 |
 | Regression (`test_models.py`) | 320 targets (284 main files + 36 variants), 0 failure on 2026-11-08 (CoolSolve `main` @9c8a3a4, CoolProp 8eb3b778 — the run warns that the baselines were produced with CoolProp 75af7816), excluding the slow `CSL-0009:coolsolve` |
@@ -26,8 +26,8 @@ in [docs/taxonomy.md](docs/taxonomy.md).
 | … unverified suggestions (§8 *Unverified by a reviewer*) | 9 |
 
 Not runnable at all (no verified variant): `CSL-0081` (borefield, dynamic; `CS-GAP-INTEGRALVALUE`),
-`CSL-0040` (biomass ORC CHP; `CS-GAP-IF-NO-CONSTANT`), `CSL-0150` (flame with dissociation;
-`CS-GAP-CHEM-EQUIL`, `CS-GAP-FLUIDS-NASA-SPECIES`), `CSL-0264` — 4 blocked models. Failing: 1,
+`CSL-0040` (biomass ORC CHP; `CS-GAP-IF-NO-CONSTANT`), `CSL-0264` — 3 blocked models (`CSL-0150`, the flame
+with dissociation, is verified since 2026-11-16, §8). Failing: 1,
 `CSL-0116` (Vitocal heat pump; reclassified by the maintainer on 2026-11-05: with `$INCLUDE`
 (`CS-GAP-INCLUDE` closed) it stops at the compressor catalogue table `ZH38K4E-TFD`, missing from
 the source collection — missing data, not a CoolSolve gap; no runnable variant). The maintainer's
@@ -1757,3 +1757,4 @@ and adds the log line in §8.
 | 2026-11-09 | G-1b `CSL-0334` | Added *greenhouse_climate_dynamic* — 10-state climate model (air/canopy/cover/floor/5 soil/moisture), weather + set-points from an hourly lookup table (Brussels TMY 10–15 Dec of the source library), P-controlled pipe heating and vents; verified vs independent RK4 (h=30 s): temperatures ≤ 0.0073 K, VP ≤ 0.6 Pa over 145 rows; fixed step 120 s (automatic step unstable) |
 | 2026-11-09 | G-1c `CSL-0335` | Added *greenhouse_heating_pipe_dynamic* — same climate core + 5-cell finite-volume pipe rail (eq. 28 of the paper) with weather-compensated T_su/ṁ schedule in the lookup table; verified vs independent RK4: pipe cells ≤ 0.004 K, T_air ≤ 0.045 K; fixed step 60 s (moisture-state accuracy) |
 | 2026-11-10 | review `CSL-0333`–`CSL-0335` | Floor balance was missing −q_rad_flr_cov (long-wave to the cover). Corrected in the three models, re-solved, re-checked (scipy for the steady point, max rel 1.1e-11; RK4 for the two trajectories). README result ranges rewritten from the new hourly tables. |
+| 2026-11-16 | T-RECHECK `CSL-0150` | *adiabatic_flame_dissociation* verified with CoolSolve 0.4.0@9990291 (branch `feat/equation-scaling`: `CALL CHEM_EQUIL`, NASA-Glenn species, option `enableEquationScaling`): `T = T_adiab` passed to `CHEM_EQUIL` (units of the model), new `coolsolve.conf` with `enableEquationScaling = true` (the flame block of 45 unknowns stalls without it), native `.sol`; shipped case 1776.08 °C; the EES stored run is the fuel oil at e = 0 and 1 atm (its CH4 records are stale): T_adiab 2412.01 K vs 2417.129 K (−0.21 %), ntot −0.02 % (the README's former "inconsistent ntot" caveat is that run's per-kg value); README explains the author's fuel-oil puzzle (the LHV branch omits the dissociation energy). Depends on CoolSolve `feat/equation-scaling` being merged: with `main` the key is unknown and the flame block fails. `test_models.py CSL-0150` OK; `build_index` 0 errors. Uncommitted, for the maintainer |

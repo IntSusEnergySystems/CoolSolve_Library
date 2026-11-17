@@ -17,8 +17,9 @@
            equilibrium species, in the order of x[i]) and -Species4.csv (the 4
            complete-combustion products), the species names read with LOOKUP$
            (they were the string array Prod$ of the original)
-  Status : blocked in CoolSolve (CS-GAP-CHEM-EQUIL, CS-GAP-FLUIDS-NASA-
-           SPECIES, CS-GAP-SUM-INDEXED); native valid EES kept
+  Solver : coolsolve.conf sets enableEquationScaling = true (equilibrated
+           Newton steps): the flame block holds enthalpies of 1E8 J/kmol
+           beside mole fractions down to 1E-20
 =============================================================================}
 
 "Case selection: comment/uncomment the alternatives, as in the original"
@@ -69,7 +70,7 @@ e = 0.2                     "excess air [-]"
 $ENDIF
 
 "!Combustion products"
-T_adiab_K = T_adiab+273.15  "absolute adiabatic flame temperature [K] (Chem_Equil data are defined in K)"
+T_adiab_K = T_adiab+273.15  "absolute adiabatic flame temperature [K] (the temperature the original passes to Chem_Equil)"
 
 $IF DISSOCIATION$ = 'YES'
 "!CHEM_EQUIL external routine"
@@ -79,7 +80,7 @@ C\O = m/(2*(m+n/4)*(1+e))   "don't set a value to zero"
 H\O = n/(2*(m+n/4)*(1+e))   "don't set a value to zero"
 N\O = 79/21                 "don't set a value to zero"
 P = P_comb
-T = T_adiab_K
+T = T_adiab                 "CHEM_EQUIL takes T and P in the units of the model (°C, Pa); the original passes K and kPa"
 CALL CHEM_EQUIL(P,T,A\O,C\O,H\O,N\O:x_H2,x_O2,x_H2O,x_CO,x_CO2,x_OH,x_H,x_O,x_N2,x_N,x_NO,x_NO2,x_CH4,x_Ar)
 
 "Array variables"

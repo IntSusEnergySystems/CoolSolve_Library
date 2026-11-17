@@ -2,10 +2,10 @@
   "id": "CSL-0150",
   "name": "adiabatic_flame_dissociation",
   "title": "Adiabatic flame temperature of CH4 or fuel oil with or without dissociation",
-  "summary": "Adiabatic, constant-pressure combustion of CH4 or fuel oil with excess air: adiabatic flame temperature from H_reactants = H_products, with either complete-combustion products (CO2, H2O, O2, N2) or the 14-species chemical-equilibrium mixture from the EES built-in Chem_Equil procedure; species enthalpies as ideal-gas property calls (formation enthalpy included).",
+  "summary": "Adiabatic, constant-pressure combustion of CH4 or fuel oil with excess air: adiabatic flame temperature from H_reactants = H_products, with either complete-combustion products (CO2, H2O, O2, N2) or the 14-species chemical-equilibrium mixture of CALL CHEM_EQUIL; species enthalpies as ideal-gas property calls (formation enthalpy included).",
   "kind": "steady",
   "level": 2,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "adiabatic_flame_dissociation.eescode",
   "fluids": [
     "CH4",
@@ -44,7 +44,7 @@
   ],
   "stats": {
     "n_equations": 84,
-    "largest_block": 2
+    "largest_block": 45
   },
   "origin": {
     "type": "teaching",
@@ -62,17 +62,18 @@
     "course": "MCI (ULiège), TP1 exercises 3-4 (2016)"
   },
   "verification": {
-    "summary": "Not verified: the native file is blocked (CS-GAP-CHEM-EQUIL, CS-GAP-FLUIDS-NASA-SPECIES) and no runnable variant is shipped. Only a scratch copy of the no-dissociation case (DISSOCIATION$ = 'NO', one line changed) was checked against a hand balance (1788.7 vs 1787.85 degC).",
-    "checks": [],
-    "reference": "EES stored solution of the source file (last run: CH4, DISSOCIATION$ = 'YES', e = 0.2, 30 bar, reactants at 288 K): T_adiab = 2417.129 K, H_react = H_prod = -78333.02 kJ/kmol fuel. The native file is blocked in CoolSolve (missing_features); no CoolSolve comparison of the full model yet - to be re-verified when the gaps close (T-RECHECK). No-dissociation case (CH4, e = 0.2, 288 K) run in a scratch copy of the native file (species names read from the lookup table Species4 with LOOKUP$) with DISSOCIATION$ = 'NO' as the only change: T_adiab = 1788.7 degC, H_react = -78351 kJ/kmol fuel, against an independent hand balance with the NASA-Glenn data (thermo.inp) of 1787.85 degC and -78344 kJ/kmol.",
-    "date": "2026-10-18",
-    "coolsolve_version": "0.3.0@4798e2b",
-    "notes": "26 of the 28 stored variables carry values (CO and NO cleared); the Oil-case records (MM_f, LHV_f, c_f, H_rf, H_ra, HHV, LHV_f_bis) belong to the alternative fuel case of this multi-case file. The stored ntot = 0.54286 kmol is inconsistent with the stored H-atom balance for the same run (flagged in the README, not resolvable without EES). Re-run with CoolSolve 0.3.0@4798e2b: the scratch copy needs no other change (the indexed sum and the variable DUPLICATE bound are supported); the scratch run changes no status (still blocked). The stored H_react is 0.02 % less negative than the scratch value (0.34 % with the former Cengel and Boles formation enthalpy of CH4), of the size of the R = 8.314 scaling of the EES enthalpies and of CoolProp's specific heats."
+    "summary": "Fuel oil, stoichiometric, 1 atm (the run stored in the EES file, three case lines changed in a scratch copy): T_adiab 2412.01 K vs EES 2417.129 K (-0.21 %), ntot 0.54275 vs 0.542859 kmol/kg (-0.02 %). Shipped case (CH4, e = 0.2, 30 bar): T_adiab 1776.08 C, 1.0 K above an independent Python implementation with the NASA-Glenn enthalpies (2048.2268 K).",
+    "checks": [
+      "ees-stored-solution",
+      "other-tool"
+    ],
+    "reference": "EES stored solution of the source file: its last run is the fuel oil at e = 0 and 1 atm with dissociation (CHEM_EQUIL inputs P = 101.325 kPa, T = 2417.129 K, C\\O = 0.3442947702, H\\O = 0.6228209192: CoolSolve gives the same ratios to 10 digits), T_adiab = 2417.129 K, ntot = 0.5428590671 kmol per kg of fuel and the 14 mole fractions; the records H_react = -78333.02 kJ/kmol, P_comb = 3000 kPa, m = 1, n = 4 are stale CH4 records of the multi-case file. Independent Python implementation of the CH4 flame (Gibbs equilibrium and enthalpies from the NASA-Glenn polynomials, CoolSolve register CS-GAP-CHEM-EQUIL): 2048.2268 K.",
+    "date": "2026-11-16",
+    "coolsolve_version": "0.4.0@9990291",
+    "max_rel_diff": 0.0021,
+    "notes": "Stored run reproduced in a scratch copy with FUEL$ = 'Oil', e = 0, P_comb = 101325 (9 iterations): mole fractions H2O +0.005 %, N2 +0.04 %, CO2 +0.32 %, CO -1.3 %, O2 -1.5 %, H2 -3.1 %, OH +6.1 %, NO -6.6 % (EES's older JANAF data in Chem_Equil, CoolSolve the NASA-Glenn data, and the 5 K lower flame). Shipped case: 10 iterations from the guess file, 30 from T_adiab = 1775, ntot = 12.5; it needs enableEquationScaling = true (coolsolve.conf): without it the flame block (45 unknowns) stalls with LineSearchFailed. x_CH4 = -1.4e-20 is rounding noise of that block (W002). The other cases run too: CH4 without dissociation 1788.95 C (hand balance with the NASA-Glenn data 1787.85 C), fuel oil at 30 bar 1858.06 C with and 1858.12 C without dissociation. CoolSolve 0.4.0@9990291 is the branch feat/equation-scaling (the option enableEquationScaling)."
   },
-  "missing_features": [
-    "CS-GAP-CHEM-EQUIL",
-    "CS-GAP-FLUIDS-NASA-SPECIES"
-  ],
+  "missing_features": [],
   "related": [
     "CSL-0005",
     "CSL-0046",
@@ -122,6 +123,11 @@
     {
       "date": "2026-10-18",
       "action": "re-checked (CoolSolve 0.3.0@4798e2b): CS-GAP-SUM-INDEXED and CS-BUG-DUPLICATE-VAR-BOUND are closed; the file is square (78 equations) and the no-dissociation case (DISSOCIATION$ = 'NO') runs unchanged (T_adiab 1788.66 C); still blocked by CS-GAP-CHEM-EQUIL and CS-GAP-FLUIDS-NASA-SPECIES (dissociation case), no variant",
+      "by": "Claude for S. Quoilin"
+    },
+    {
+      "date": "2026-11-16",
+      "action": "re-checked (CoolSolve 0.4.0@9990291, feat/equation-scaling; CS-GAP-CHEM-EQUIL, CS-GAP-FLUIDS-NASA-SPECIES and CS-BUG-BLOCK-SCALE-SPREAD closed): T = T_adiab passed to CHEM_EQUIL (the units of the model), coolsolve.conf with enableEquationScaling = true; the native file solves (1776.08 C); verified against the EES stored run (fuel oil, e = 0, 1 atm: T_adiab -0.21 %) in a scratch copy; status verified, missing_features emptied, native .sol added",
       "by": "Claude for S. Quoilin"
     }
   ]
