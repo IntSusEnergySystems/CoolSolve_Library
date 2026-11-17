@@ -21683,7 +21683,7 @@
   "CS-GAP-INTEGRAL-DUPLICATE": {
    "kind": "gap",
    "state": "open",
-   "priority": "P3",
+   "priority": "P2",
    "text": "An `INTEGRAL` call inside a **`DUPLICATE` loop** (`DUPLICATE i=1,N` ⏎ `y[i] = y0[i] + INTEGRAL(dydt[i], t, 0, 10)` ⏎ `END`), valid EES",
    "detail": "*\"INTEGRAL() calls inside a DUPLICATE loop are not supported: write the equations one by one\"* (was *\"INTEGRAL() must appear on the right-hand side of a scalar variable equation\"* for an array …",
    "fixed_in": "",
@@ -21863,7 +21863,7 @@
   "CS-GAP-INDEX-VAR": {
    "kind": "gap",
    "state": "open",
-   "priority": "P3",
+   "priority": "P1",
    "text": "**An array element indexed by a main-program variable that an equation sets to a constant**: `mean = ceil(imax#/2)` ⏎ `Q_dot_col_bis = M_dot_htf*cp_1ave[mean]*(T_htf_ex_col - T_htf_su_col)` in the EES file `EES_ok/orc_solar_complex.EES` (CoolSolve …",
    "detail": "`cp_1ave[mean]` is a variable of its own with no defining equation (`x[n]` and `x[2]` are two unknowns; loud: the system is not square).",
    "fixed_in": "",
@@ -21902,6 +21902,33 @@
    "priority": "P3",
    "text": "`INTERPOLATE2D('Table', X, Y, Z, X=v1, Y=v2 [, N])` (EES help `interpolate2d.htm`): interpolation in **scattered** three-column data (unlike `INTERPOLATE2DM`, a matrix); the column names quoted or not; N < 0 bi-quadratic, N > 0 multi-quadric radial basis …",
    "detail": "Unknown function: unquoted column names are read as variables (*\"There are 3 equations and 6 unknowns\"*, misleading); quoted: warning *\"Unknown function 'INTERPOLATE2D'\"* and *\"Unknown fluid: …",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-GAP-NAME-PRIME": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P2",
+   "text": "A `'` or a backtick in a variable name, the EES derivative notation (`w'`, `w''`, `f` with a backtick).",
+   "detail": "*\"Invalid variable name 'w'': the character ''' is not allowed in a name\"* and the same for a backtick.",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-GAP-LINE-CONTINUATION": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P2",
+   "text": "A trailing `&` continues an equation on the next line (valid EES; the native files of `CSL-0348` and `CSL-0353` use it and store a solution)",
+   "detail": "*\"Could not parse line\"* on the continued line and on the next one.",
+   "fixed_in": "",
+   "anchor": "4-gap-register-ees-features-missing-or-different"
+  },
+  "CS-GAP-INTEGRAL-2ARG": {
+   "kind": "gap",
+   "state": "open",
+   "priority": "P3",
+   "text": "The table-based two-argument `Integral(f, t)`: the integrand and the integration variable, with the limits taken from the parametric table.",
+   "detail": "*\"INTEGRAL() expects 4 or 5 arguments (integrand, var, lo, hi[, step]); got 2 (line 3)\"* and the block fails.",
    "fixed_in": "",
    "anchor": "4-gap-register-ees-features-missing-or-different"
   },
@@ -22090,6 +22117,24 @@
    "state": "open",
    "priority": "P3",
    "text": "The alias **`internalenergy`** of `intenergy` is evaluated but missing from the parser's list of thermophysical functions, so an unquoted fluid (`internalenergy(Water, T=20, P=1e5)`) is read as a variable: structural error *\"1 equations and 2 unknowns\"* …",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-UNARY-POW": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P1",
+   "text": "**`-x^2` is evaluated as `(-x)^2`.** `parsePower` (`src/parser.cpp`) takes a unary expression as the left operand of `^`, so the power binds inside the unary minus.",
+   "detail": "",
+   "fixed_in": "",
+   "anchor": "5-bugs-and-documentation-issues-found-while-importing"
+  },
+  "CS-BUG-PROP-QLIMIT": {
+   "kind": "bug",
+   "state": "open",
+   "priority": "P3",
+   "text": "**An NH3H2O call whose quality input depends on an unknown of its block aborts as soon as a trial value leaves [0, 1].** `clampTrialPoint` (`src/evaluator_nh3h2o.cpp`) treats `Q` outside [0, 1] as a limit violation and the block ends, including a guess or a …",
    "detail": "",
    "fixed_in": "",
    "anchor": "5-bugs-and-documentation-issues-found-while-importing"
