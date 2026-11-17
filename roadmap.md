@@ -17,7 +17,7 @@ in [docs/taxonomy.md](docs/taxonomy.md).
 |---|---:|
 | Models (`library.json`) | 303 |
 | … verified / blocked / failing / modified (`runs` merged into `verified`, D15) | 284 / 18 / 1 / 0 |
-| … blocked with a runnable `_coolsolve` variant (with `.sol`) / not runnable at all | 14 / 3 (`CSL-0081`, `CSL-0040`, `CSL-0264`; `CSL-0150` verified on 2026-11-16, §8); the 14 include `CSL-0155` and `CSL-0331` |
+| … blocked with a runnable `_coolsolve` variant (with `.sol`) / not runnable at all | 14 / 3 on 2026-11-08 (`CSL-0081`, `CSL-0040`, `CSL-0264`; the 14 included `CSL-0155` and `CSL-0331`). Since then: `CSL-0150` verified 2026-11-16; `CSL-0264`, `CSL-0278`, `CSL-0331` verified 2026-11-17 (§8) |
 | … steady / function / dynamic / optimization | 250 / 47 / 5 / 1 |
 | Functions and procedures (`library.json`) | 623 |
 | Regression (`test_models.py`) | 320 targets (284 main files + 36 variants), 0 failure on 2026-11-08 (CoolSolve `main` @9c8a3a4, CoolProp 8eb3b778 — the run warns that the baselines were produced with CoolProp 75af7816), excluding the slow `CSL-0009:coolsolve` |
@@ -26,8 +26,9 @@ in [docs/taxonomy.md](docs/taxonomy.md).
 | … unverified suggestions (§8 *Unverified by a reviewer*) | 9 |
 
 Not runnable at all (no verified variant): `CSL-0081` (borefield, dynamic; `CS-GAP-INTEGRALVALUE`),
-`CSL-0040` (biomass ORC CHP; `CS-GAP-IF-NO-CONSTANT`), `CSL-0264` — 3 blocked models (`CSL-0150`, the flame
-with dissociation, is verified since 2026-11-16, §8). Failing: 1,
+`CSL-0040` (biomass ORC CHP; `CS-GAP-IF-NO-CONSTANT`). `CSL-0264` (dissociation composition) is verified
+since 2026-11-17, with `CSL-0278` and `CSL-0331` (§8). `CSL-0150`, the flame with dissociation, is verified
+since 2026-11-16. Failing: 1,
 `CSL-0116` (Vitocal heat pump; reclassified by the maintainer on 2026-11-05: with `$INCLUDE`
 (`CS-GAP-INCLUDE` closed) it stops at the compressor catalogue table `ZH38K4E-TFD`, missing from
 the source collection — missing data, not a CoolSolve gap; no runnable variant). The maintainer's
@@ -1913,3 +1914,4 @@ and adds the log line in §8.
 | 2026-11-15 | C-519 `CSL-0364` | Added *nh3h2o_absorption_precooler_ua* (EEX-110, steady, level 3, verified). The precooler cycle with UA models on the four corners. COP 0.488 versus 0.495. The poor-solution mass fraction is 0.285 versus 0.294. `LMTD_F` computes and warns that the name is unknown. Worker glm (t327, 11 min). |
 | 2026-11-15 | C-519 `CSL-0365` | Added *sackur_tetrode_entropy* (EEX-160, steady, level 1, verified). Helium at 26.85 °C and 1 atm. The Sackur-Tetrode value matches the formula to 3e-13 and the database entropy to 1e-6. The stored solution is a stale 1000 K run; a copy at that point matched. Worker glm (t328, aborted at the quota gate after the files were complete). |
 | 2026-11-16 | T-RECHECK `CSL-0150` | *adiabatic_flame_dissociation* verified with CoolSolve 0.4.0@9990291 (branch `feat/equation-scaling`: `CALL CHEM_EQUIL`, NASA-Glenn species, option `enableEquationScaling`): `T = T_adiab` passed to `CHEM_EQUIL` (units of the model), new `coolsolve.conf` with `enableEquationScaling = true` (the flame block of 45 unknowns stalls without it), native `.sol`; shipped case 1776.08 °C; the EES stored run is the fuel oil at e = 0 and 1 atm (its CH4 records are stale): T_adiab 2412.01 K vs 2417.129 K (−0.21 %), ntot −0.02 % (the README's former "inconsistent ntot" caveat is that run's per-kg value); README explains the author's fuel-oil puzzle (the LHV branch omits the dissociation energy). Depends on CoolSolve `feat/equation-scaling` being merged: with `main` the key is unknown and the flame block fails. `test_models.py CSL-0150` OK; `build_index` 0 errors. Uncommitted, for the maintainer |
+| 2026-11-17 | T-RECHECK CoolSolve 0.5 | The 27 blocked models were checked against the gaps closed in 0.5. Three native files now solve and are **verified**: `CSL-0264` *temperature_pressure_effects_dissociation* (`CS-GAP-CHEM-EQUIL`; EES point at 3000 K, `x_NO2` 9.41e-02, NASA-Glenn vs JANAF), `CSL-0278` *vehicle_exhaust_emissions* (`CS-GAP-FLUIDS-NASA-SPECIES`; `molarmass(NO2)`, max 3.13e-05, variant removed), `CSL-0331` *engine_cylinder_count* (`CS-GAP-HEATING-VALUE`; `LowerHeatingValue(H2)`, max 1.21e-04 excluding the blank-units `r` row, variant removed). The other 24 stay blocked on gaps that 0.5 did not close. CoolSolve 0.5.0@793f378. |

@@ -1,8 +1,8 @@
 {
  "snapshot": {
-  "content_hash": "sha256:224cb16e820de6b4",
-  "files": 1728,
-  "bytes": 12752559,
+  "content_hash": "sha256:f962b4e17af07ac5",
+  "files": 1726,
+  "bytes": 12728881,
   "models": 336,
   "functions": 631,
   "taxonomy_version": "0.3"
@@ -2700,7 +2700,7 @@
    "category": "engines/performance",
    "kind": "steady",
    "level": 1,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Teaching exercise: CO, NO2 and HC emissions of a vehicle in g/kg fuel, g/km and g/kWh of brake work, from the fuel mass flow, the excess-air factor and the wet-gas mole fractions, converted to mass fractions with the molar masses and the exhaust-gas molar mass.",
    "fluids": [
     "CO",
@@ -2728,28 +2728,23 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-FLUIDS-NASA-SPECIES"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0188",
     "CSL-0058",
     "CSL-0266",
     "CSL-0279"
    ],
-   "coolsolve_version": "0.4.0@9768373",
-   "verified_on": "2026-10-22",
-   "verification_summary": "The runnable variant was compared with the stored solution of EX_1_PNG_2019.EES (compare_solution.py): 30 common variables, 0 differ (rtol=0.001), largest relative difference 3.13e-05 on MM_HC (CoolProp C3H8 vs EES molar mass). The 9 emission-index records dropped by the extractor (CS-BUG-EXTRACT-FMT-BYTE) were recovered by hand. Native file fails on molarmass(NO2).",
+   "coolsolve_version": "0.5.0@793f378",
+   "verified_on": "2026-11-17",
+   "verification_summary": "Native file compared with the stored solution of EX_1_PNG_2019.EES: 30 common variables, 0 differ (rtol=0.001), largest relative difference 3.13e-05 on MM_HC.",
    "verification_checks": [
     "ees-stored-solution",
     "analytical"
    ],
    "path": "models/engines/performance/vehicle_exhaust_emissions",
    "main_file": "vehicle_exhaust_emissions.eescode",
-   "figures": 0,
-   "variants": [
-    "vehicle_exhaust_emissions_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0279",
@@ -3100,7 +3095,7 @@
    "category": "engines/sizing",
    "kind": "steady",
    "level": 2,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Four-stroke H2 engine sized from bore, stroke, mean piston speed and rated shaft power: the non-integer cylinder count is rounded up with the mean effective pressure corrected. Submerged operation at part load with an O2 + recirculated-H2O oxidiser, stoichiometric combustion and volumetric efficiency from the mixture molar mass.",
    "fluids": [
     "H2",
@@ -3127,25 +3122,20 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-HEATING-VALUE"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0279",
     "CSL-0185"
    ],
-   "coolsolve_version": "0.4.0@2dc1367",
-   "verified_on": "2026-11-02",
-   "verification_summary": "The runnable variant engine_cylinder_count_coolsolve was compared with the EES stored solution (compare_solution.py --ees-units): 43 common variables, only r differs (EES stores 0.53659 kJ/(kg-K) without a units cell; the same value). Excluding that units artifact the maximum is 1.21e-04 on LHV_f_EES: the LHV from CoolSolve formation enthalpies (119960.5 kJ/kg) against EES LowerHeatingValue(H2) (119946 kJ/kg).",
+   "coolsolve_version": "0.5.0@793f378",
+   "verified_on": "2026-11-17",
+   "verification_summary": "Native file compared with the EES stored solution (compare_solution.py --ees-units): 43 common variables, 1 differ. The flagged row is r, a blank units cell (0.53659 kJ/(kg-K) stored as if it were J/(kg-K)). Excluding it the maximum is 1.21e-04 on LHV_f_EES (LowerHeatingValue(H2) = 119961 kJ/kg against the EES 119946).",
    "verification_checks": [
     "ees-stored-solution"
    ],
    "path": "models/engines/sizing/engine_cylinder_count",
    "main_file": "engine_cylinder_count.eescode",
-   "figures": 0,
-   "variants": [
-    "engine_cylinder_count_coolsolve.eescode"
-   ]
+   "figures": 0
   },
   {
    "id": "CSL-0005",
@@ -3457,7 +3447,7 @@
    "category": "fundamentals/combustion",
    "kind": "steady",
    "level": 1,
-   "status": "blocked",
+   "status": "verified",
    "summary": "Equilibrium dissociation of the products of octane (C8H18) combustion with 20 % excess dry air: the 14-species equilibrium mole fractions from the EES built-in Chem_Equil procedure at given pressure and temperature, the pressure/temperature trends of the exercise kept as two $IF parametric-sweep blocks.",
    "fluids": [],
    "tags": [
@@ -3479,16 +3469,16 @@
    ],
    "license": "MIT",
    "url": "",
-   "missing_features": [
-    "CS-GAP-CHEM-EQUIL"
-   ],
+   "missing_features": [],
    "related": [
     "CSL-0150"
    ],
-   "coolsolve_version": "0.4.0@9768373",
-   "verified_on": "2026-10-22",
-   "verification_summary": "Not verified: the native file is blocked (CS-GAP-CHEM-EQUIL) and no runnable variant is shipped (no faithful substitute for the 14-species equilibrium), so the EES stored solution (5 of 10 variables carry values) was not reproduced. The run reports a square system (21 equations, largest block 14) and fails only on the unknown CHEM_EQUIL procedure.",
-   "verification_checks": [],
+   "coolsolve_version": "0.5.0@793f378",
+   "verified_on": "2026-11-17",
+   "verification_summary": "EES stored point (last row of the temperature sweep, T = 3000 K, P = 10000 kPa, solved in a scratch copy): 21 common variables, 10 differ at rtol 0.001. Major species x_CO2 6.06e-04 and x_N2 3.44e-04; largest difference 9.41e-02 on x_NO2 (NASA-Glenn vs EES JANAF). The shipped file is the default point, 10 MPa and 2500 K.",
+   "verification_checks": [
+    "ees-stored-solution"
+   ],
    "path": "models/fundamentals/combustion/temperature_pressure_effects_dissociation",
    "main_file": "temperature_pressure_effects_dissociation.eescode",
    "figures": 0

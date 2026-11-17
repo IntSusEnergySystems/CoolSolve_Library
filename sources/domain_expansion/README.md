@@ -65,25 +65,23 @@ files (331 distinct). Biggest single addition available to the library, and it
 is MIT. Verification material: `ees-examples-raw.zip` (280 `.eez` stored
 solutions + provenance).
 
-### B. Chemical reactions, combustion and process engineering — *strong fit, gated on species data*
+### B. Chemical reactions, combustion and process engineering — *strong fit; species data are in CoolSolve 0.5*
 
 | collection | licence | content | verdict |
 |---|---|---|---|
-| [Cantera](https://github.com/Cantera/cantera) `samples/python` (70 scripts: kinetics, reactors, onedim flames, thermo, transport) | BSD | shock tubes, PSR/CSTR/PFR networks, ignition delay, adiabatic flames, SOFC, Li-ion battery deg., diamond CVD | equations are mostly ODE mass/energy balances + Arrhenius rates — translatable *in principle*; **all blocked by `CS-GAP-FLUIDS-NASA-SPECIES`** (species thermochemistry). Keep as the anchor source for the day the gap closes; pick 5-8 showcase models (ignition delay, PSR, PFR, equilibrium, SOFC) |
-| EES `ChemEq` four-method set (B-22) | MIT | mass action / Lagrange / Gibbs-min / JANAF on octane-air | in-batch already; same gap |
+| [Cantera](https://github.com/Cantera/cantera) `samples/python` (70 scripts: kinetics, reactors, onedim flames, thermo, transport) | BSD | shock tubes, PSR/CSTR/PFR networks, ignition delay, adiabatic flames, SOFC, Li-ion battery deg., diamond CVD | species thermochemistry is in CoolSolve 0.5 (`OH`, `NO`, `CHEM_EQUIL`, heating values). What remains is the translation: ODE balances and Arrhenius rates, not a missing species table. Pick 5-8 showcase models (ignition delay, PSR, PFR, equilibrium, SOFC) |
+| EES `ChemEq` four-method set (B-22) | MIT | mass action / Lagrange / Gibbs-min / JANAF on octane-air | in-batch already; species properties are available (`CS-GAP-FLUIDS-NASA-SPECIES` closed in 0.5) |
 | [pycse](https://github.com/jkitchin/pycse) (J. Kitchin, CMU; ~300 solved ChE problems: material & energy balances, reactors, VLE, units, fitting) | **GPL-3.0** | excellent problem bank, exactly the right level | GPL blocks copying; use as *ideas* only (equations of physical laws are not copyrightable, but do not mirror structure/wording); better: ask Kitchin (or verify) whether examples may be relicensed |
 | [LearnChemE](https://github.com/LearnChemE) (CU Boulder) | site CC-BY-NC-SA-ish | interactive JS sims, Mathematica | poor fit (not equation models); skip |
 | APMonitor examples (apmonitor.com wiki, J. Hedengren) | to verify | CSTR/distillation/HX/kinetics in APMonitor syntax | syntax is EES-like (equation-based); check licence + whether models are original or from textbooks (Fogler etc.) before any use |
 | NASA CEA (Fortran) / RocketCEA (Python wrapper) | US government work / wrapper licence to verify | rocket combustion equilibrium + nozzle performance | see domain D; CEA is the reference *oracle* for chemical-equilibrium models |
 
-Chemical-reaction models the library could have, gated on the NASA-species gap
-(ordered by teaching value): equilibrium composition (4 methods — already in
-B-22), adiabatic flame T with dissociation (CSL-0150 family), ignition delay
-(H2/O2, n-heptane), PSR/CSTR extinction curves, PFR with heat loss, SOFC Nernst
-+ voltage model (Cantera `sofc.py`), Li-ion battery (single-particle ODE).
-**Recommendation: raise the priority of `CS-GAP-FLUIDS-NASA-SPECIES` on the
-CoolSolve side — it unlocks three domains at once (combustion, chemistry,
-propulsion).**
+Chemical-reaction models the library could still add (species data are in
+CoolSolve 0.5): equilibrium composition by the other three methods (B-22),
+ignition delay (H2/O2, n-heptane), PSR/CSTR extinction curves, PFR with heat
+loss, SOFC Nernst + voltage (Cantera `sofc.py`), Li-ion battery
+(single-particle ODE). Adiabatic flames with dissociation are already in
+(`CSL-0150`, `CSL-0264`).
 
 ### C. Material strength / mechanics of materials — *fit is real but sources are thin; mostly authored models*
 
@@ -155,11 +153,10 @@ for equilibrium; real-fluid nozzle parts run today.
 1. **Approve C-519** (ees-examples sweep): the largest, best-licensed,
    nearest-language addition available; fills `heat_transfer` and `absorption`
    with textbook-grade graduated sets (with the standard paraphrase rule).
-2. **CoolSolve-side gap priority**: `CS-GAP-FLUIDS-NASA-SPECIES` unlocks
-   combustion + chemistry + propulsion (three domains at once). New gaps to
-   register from B-22/C-518: diagram window (import policy), `$Vector2D`
-   (mechanics domain), solid-property functions (materials domain, ties into
-   `docs/solid_phase_properties.md`).
+2. **CoolSolve 0.5** closed `CS-GAP-FLUIDS-NASA-SPECIES`, `CS-GAP-NASA`,
+   `CS-GAP-CHEM-EQUIL` and `CS-GAP-HEATING-VALUE`. Still open for these
+   domains: diagram window (import policy), `$Vector2D` (mechanics),
+   solid-property functions (materials, `docs/solid_phase_properties.md`).
 3. **Decide the authored-models policy**: domains C and D are mostly *authored*
    models with open-source oracles (python-mechanics, CEA/RocketCEA) rather
    than translations — a new model *kind* of work for the library (the workflow

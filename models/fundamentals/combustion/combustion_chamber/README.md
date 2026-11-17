@@ -272,8 +272,8 @@ result table `tests/test_models/cgam-ebsilon-results.csv` (CGAM benchmark).
   demand. No gas turbine or burner in the library needs another fuel today
   (`CSL-0152` builds the composition from the elemental analysis).
 - **2026-10-13 — not modelled** (out of scope of the card, documented in
-  *Limitations*): NO formation (`f_nox`, needs the Pyromat back end and the
-  `NO` species, `CS-GAP-FLUIDS-NASA-SPECIES`), air deficiency (λ < 1, the
+  *Limitations*): NO formation (`f_nox`; the source uses the Pyromat back
+  end for it), air deficiency (λ < 1, the
   branch that returns the unburned fuel of the source), the convective
   `convergence_check` of TESPy (a solver aid, no equation).
 - **Level**: taxonomy §3 score 2 → level 2: 81 equations (1), largest block 1
@@ -287,9 +287,8 @@ result table `tests/test_models/cgam-ebsilon-results.csv` (CGAM benchmark).
 - Complete combustion only: no CO, no soot, no unburned fuel, no
   dissociation (the source returns unburned fuel and products below λ = 1 and
   the library model `CSL-0150` covers dissociation).
-- No NO formation (`f_nox`): the species `NO` is not a CoolSolve fluid
-  (`CS-GAP-FLUIDS-NASA-SPECIES`), and the source needs the Pyromat back end
-  for it.
+- No NO formation (`f_nox`): the source computes it with the Pyromat back
+  end. `NO` is an ideal-gas fluid in CoolSolve; this model does not use it.
 - Ideal-gas species only (as the source); a real-fluid pressure effect on the
   flue-gas enthalpy (`CSL-0046` shows it at 3.9 % on H₂O) is not modelled, so
   the pressure of the chamber only appears through `pr`.
@@ -302,8 +301,8 @@ result table `tests/test_models/cgam-ebsilon-results.csv` (CGAM benchmark).
   written with constant `Cp` chemistry for a single fuel and λ = 4; this
   model is the species-resolved, general version.
 - `CSL-0150` *adiabatic_flame_dissociation*: adiabatic flame temperature of
-  CH₄ or fuel oil with chemical equilibrium (14 species, blocked by
-  `CS-GAP-CHEM-EQUIL`); the dissociation this model ignores.
+  CH₄ or fuel oil with chemical equilibrium (14 species); the dissociation
+  this model ignores.
 - `CSL-0005` *cpbar_combustion_products*: mean specific heat of the products
   of a CmHn fuel (`f`-based, simplified air), the other route to combustion
   properties.

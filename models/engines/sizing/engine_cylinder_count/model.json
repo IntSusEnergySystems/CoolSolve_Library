@@ -5,7 +5,7 @@
   "summary": "Four-stroke H2 engine sized from bore, stroke, mean piston speed and rated shaft power: the non-integer cylinder count is rounded up with the mean effective pressure corrected. Submerged operation at part load with an O2 + recirculated-H2O oxidiser, stoichiometric combustion and volumetric efficiency from the mixture molar mass.",
   "kind": "steady",
   "level": 2,
-  "status": "blocked",
+  "status": "verified",
   "main_file": "engine_cylinder_count.eescode",
   "fluids": ["H2", "O2", "H2O"],
   "tags": ["engine", "cylinder count", "mean effective pressure", "hydrogen", "oxy-combustion", "volumetric efficiency", "exercise"],
@@ -27,15 +27,15 @@
     "course": "Machines et combustion industrielle (ULiège), TP2 exercise 3"
   },
   "verification": {
-    "summary": "The runnable variant engine_cylinder_count_coolsolve was compared with the EES stored solution (compare_solution.py --ees-units): 43 common variables, only r differs (EES stores 0.53659 kJ/(kg-K) without a units cell; the same value). Excluding that units artifact the maximum is 1.21e-04 on LHV_f_EES: the LHV from CoolSolve formation enthalpies (119960.5 kJ/kg) against EES LowerHeatingValue(H2) (119946 kJ/kg).",
+    "summary": "Native file compared with the EES stored solution (compare_solution.py --ees-units): 43 common variables, 1 differ. The flagged row is r, a blank units cell (0.53659 kJ/(kg-K) stored as if it were J/(kg-K)). Excluding it the maximum is 1.21e-04 on LHV_f_EES (LowerHeatingValue(H2) = 119961 kJ/kg against the EES 119946).",
     "checks": ["ees-stored-solution"],
     "reference": "EES stored solution of TM-0236 (Exercice_3_Param opératoires et combustion.EES)",
-    "date": "2026-11-02",
-    "coolsolve_version": "0.4.0@2dc1367",
-    "max_rel_diff": 0.999,
-    "notes": "Printed maximum 9.99e-01 is the r row, a units artifact (blank units cell in the EES reference, kJ/(kg-K) vs J/(kg-K)); excluding it the maximum is 1.21e-04. The native file is blocked and was not solved."
+    "date": "2026-11-17",
+    "coolsolve_version": "0.5.0@793f378",
+    "max_rel_diff": 1.21e-04,
+    "notes": "compare_solution.py --ees-units: '43 common variables, 1 differ (rtol=0.001)'. The differ row is r (printed 9.99e-01): EES stores 0.53659 kJ/(kg-K) with a blank units cell. Excluding it the maximum is 1.21e-04 on LHV_f_EES. The CoolSolve-only name of the old variant (the three formation enthalpies) is gone."
   },
-  "missing_features": ["CS-GAP-HEATING-VALUE"],
+  "missing_features": [],
   "related": ["CSL-0279", "CSL-0185"],
   "related_external": [],
   "supersedes": [],
@@ -45,6 +45,11 @@
       "date": "2026-11-02",
       "action": "added (C-237, re-dispatch of the stopped import; gap CS-GAP-HEATING-VALUE registered)",
       "by": "GLM (glm-5.3-flash) for S. Quoilin"
+    },
+    {
+      "date": "2026-11-17",
+      "action": "re-checked on CoolSolve 0.5.0 (CS-GAP-HEATING-VALUE closed): native LowerHeatingValue(H2) solves and matches the former formation-enthalpy variant to 5e-9; status verified, missing_features emptied, variant removed",
+      "by": "agent for S. Quoilin"
     }
   ]
 }
